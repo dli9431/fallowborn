@@ -29,6 +29,14 @@ There is no build. **Testing is manual, by the human, in a browser.**
 Deployment: zip the folder contents with `index.html` at the zip root, upload to itch.io as an
 HTML5 project ("played in the browser"), enable *Mobile friendly*.
 
+## Git workflow
+
+When work is done in a worktree, do not commit straight onto `main`. Instead:
+
+1. Create a commit on a temporary branch inside the worktree.
+2. Merge that temp branch into `main`.
+3. Delete the temp branch to clean up.
+
 ## Architecture
 
 `index.html` loads classic (non-module) scripts in a fixed order; everything hangs off two
