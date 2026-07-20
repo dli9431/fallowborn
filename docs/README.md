@@ -16,7 +16,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   deeds, event options, and dialog items, and `Shift+1–9` reaches items 10–18 (badges show
   the numbers; the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
-  `Z` opens autoresolve settings · `[` `]` cycle panels · `Esc` menu/back/close ·
+  `Z` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege) ·
+  `[` `]` cycle panels · `Esc` menu/back/close ·
   `Tab` moves between buttons.
 - **Mobile / touch:** drag to pan, pinch to zoom, tap provinces. In portrait the map sits
   above a full-width Deeds/Land/Chronicle panel with the time controls fixed at the bottom

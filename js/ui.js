@@ -81,7 +81,7 @@ window.FB = window.FB || {};
       function (pid) { return s.holder ? s.holder[pid] : s.owner[pid]; }
     );
     FB.map.buildBase();
-    FB.map.select(FB.map.selected); // realm highlight tracks conquests
+    FB.map.select(FB.map.selected, mapGroupOf); // realm highlight tracks conquests
     FB.map.request();
   }
 
@@ -633,10 +633,60 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
   };
 
+  /* ---------- map filters: what a selection highlights ---------- */
+  let mapMode = 'realm'; // 'realm' | 'mine' | 'liege'
+
+  /* is pid held by the player or by one of the player's vassals? */
+  function inPlayerRealm(s, pid) {
+    const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
+    if (holdId === 'player') return true;
+    const chain = FB.liegeChain(s, holdId);
+    for (const cid of chain) if (s.realms[cid] && s.realms[cid].liege === 'player') return true;
+    return false;
+  }
+
+  /* is pid part of the player's liege's sub-realm (his lands + his vassals')? */
+  function inLiegeRealm(s, pid) {
+    if (!s.player.liege) return false;
+    const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
+    if (holdId === 'player') return true; // your own lands sit inside his realm
+    return FB.liegeChain(s, holdId).indexOf(s.player.liege) >= 0;
+  }
+
+  /* highlight group key for the current filter; null = no group */
+  function mapGroupOf(pid) {
+    const s = FB.state;
+    if (!s) return null;
+    if (mapMode === 'mine') return inPlayerRealm(s, pid) ? 'player' : null;
+    if (mapMode === 'liege') return inLiegeRealm(s, pid) ? 'liege' : null;
+    // realm: your own province lights YOUR realm, a foreign one its sovereign's
+    return inPlayerRealm(s, pid) ? 'player' : (s.owner[pid] || null);
+  }
+
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege' };
+  UI.cycleMapMode = function () {
+    const s = FB.state;
+    if (!s) return;
+    const order = ['realm', 'mine', 'liege'];
+    let next = order[(order.indexOf(mapMode) + 1) % order.length];
+    if (next === 'liege' && !s.player.liege) {
+      UI.toast('🗺 You answer to no one — no liege to show.');
+      next = 'realm';
+    }
+    mapMode = next;
+    const btn = $('btn-mapmode');
+    if (btn) {
+      btn.classList.toggle('on', mapMode !== 'realm');
+      btn.title = 'Map filter: ' + MAPMODES[mapMode] + ' (R)';
+    }
+    UI.toast('🗺 Map filter: ' + MAPMODES[mapMode]);
+    FB.map.select(FB.map.selected || s.player.provinceId, mapGroupOf);
+  };
+
   let selectedProv = null;
   UI.selectProvince = function (pid) {
     selectedProv = pid;
-    FB.map.select(pid);
+    FB.map.select(pid, mapGroupOf);
     activeTab = 'prov';
     setTab('prov');
   };
@@ -2112,6 +2162,7 @@ window.FB = window.FB || {};
     $('btn-home').addEventListener('click', function () {
       if (FB.state) FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
+    $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
     FB.map.onTap = function (pr) {
       if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }
       if (pr) UI.selectProvince(pr.id);

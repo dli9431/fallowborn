@@ -152,19 +152,22 @@ window.FB = window.FB || {};
      province itself, a faint tint over the rest of the realm, and a golden
      outline along the realm's outer border, so its full extent reads at a
      glance. */
-  M.select = function (provId) {
+  /* groupOf: optional (pid) => groupKey|null deciding what counts as "the
+     realm" for the highlight (map filters); defaults to sovereign ownership */
+  M.select = function (provId, groupOf) {
     M.selected = provId;
+    if (!groupOf) groupOf = M.ownerOf;
     const hc = M.hiliteCtx;
     hc.clearRect(0, 0, M.hilite.width, M.hilite.height);
     if (provId) {
       const w = FB.world, pr = w.byId[provId];
       if (pr) {
         // realm membership by province index (wastelands and unowned stay out)
-        const own = M.ownerOf ? M.ownerOf(provId) : null;
+        const own = groupOf ? groupOf(provId) : null;
         const inRealm = [];
         for (let i = 0; i < w.provs.length; i++) {
           const p2 = w.provs[i];
-          inRealm.push(own != null && !p2.wasteland && M.ownerOf(p2.id) === own);
+          inRealm.push(own != null && !p2.wasteland && groupOf(p2.id) === own);
         }
         const img = hc.createImageData(w.W, w.H);
         const d = img.data;
