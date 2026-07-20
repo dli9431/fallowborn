@@ -15,6 +15,9 @@ interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 `swear_fealty` / independence) and, once sovereign, runs vassals of their own
 (`grant_county`, `demand_taxes`, `revoke_county`; vassal opinion lives in
 `player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate`).
+AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial), not
+full chars — the Deeds banner's "vassal of X" links to their sheet via
+`UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`.
 
 **Tiers** 0–7 (serf…emperor) + `profession` gate actions (`js/actions.js`) and events. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a

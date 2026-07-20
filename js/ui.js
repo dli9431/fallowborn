@@ -186,8 +186,10 @@ window.FB = window.FB || {};
       }).join('') + (hg ? ' · +' + (Math.round(hg * 10) / 10) + ' gold/season' : '') + '</div>';
     }
     if (s.player.tier >= 3) {
+      const lg = s.player.liege && s.realms[s.player.liege];
       h += '<div class="progressnote">💰 Seasonal revenue ~' + FB.playerTax(s) + ' gold · 🛡 levy ~' + FB.playerLevy(s) + ' men' +
-        (s.player.liege && s.realms[s.player.liege] ? ' · vassal of ' + esc(s.realms[s.player.liege].name) : ' · independent') + '</div>';
+        (lg ? ' · vassal of <span class="linklike" data-liege="' + esc(s.player.liege) +
+          '" title="See your liege’s sheet">' + esc(lg.name) + '</span>' : ' · independent') + '</div>';
       const parts = [];
       for (const bp of FB.demesne(s)) {
         const blt = FB.builtIn(s, bp);
@@ -1225,6 +1227,37 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* the liege lord's sheet — AI rulers are lightweight realm.ruler objects,
+     not full chars, so this renders the realm rather than a character card */
+  UI.showLiegeModal = function (rid) {
+    const s = FB.state;
+    const r = rid && s.realms[rid];
+    if (!r || !r.alive || !r.ruler) return;
+    const cap = FB.world.byId[r.capital];
+    const cul = FB.cultureOf(r.ruler.culture);
+    const rel = cap ? FB.religionOf(cap.religion) : null;
+    const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * 0.3);
+    const op = Math.round(FB.liegeOpOf(s, rid));
+    const liege = r.liege && s.realms[r.liege];
+    let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
+      '<div><div class="ccname">' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) + '</div>' +
+      '<div class="ccmeta">Man of ' + r.ruler.age + ' · ' + esc(cul.name) +
+      (rel ? ' · ' + rel.icon + ' ' + esc(rel.name) : '') + '</div>' +
+      '<div class="ccmeta">' + (liege ? 'Himself a vassal of ' + esc(liege.name) : 'Sovereign — kneels to no one') + '</div>' +
+      '<div class="ccmeta">⚔ martial ' + r.ruler.mar + ' · favor <span class="' + FB.opClass(op) + '">' +
+      (op > 0 ? '+' : '') + op + '</span></div></div></div>' +
+      '<div style="margin-top:10px">' +
+      '<div class="kv"><span>Realm</span><b>' + esc(r.name) + '</b></div>' +
+      '<div class="kv"><span>Counties</span><b>' + FB.realmProvinces(s, rid).length + '</b></div>' +
+      '<div class="kv"><span>Realm host</span><b>~' + men + ' men</b></div>' +
+      (cap ? '<div class="kv"><span>Capital</span><b>' + esc(cap.name) + '</b></div>' : '') +
+      '</div>';
+    h += '<button class="btn" id="gm-cancel">Close</button>';
+    openModal(rid === s.player.liege ? 'Your Liege' : 'Realm Ruler', h);
+    FB.drawCrest($('liegecrest'), rid);
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* give a demesne county to a sworn man */
   UI.showGrantCounty = function () {
     const s = FB.state;
@@ -2084,9 +2117,12 @@ window.FB = window.FB || {};
       if (pr) UI.selectProvince(pr.id);
     };
     // click any character row → their sheet; any trait chip → its meaning;
-    // item chips open the item card (a toast while an event holds the stage)
+    // item chips open the item card (a toast while an event holds the stage);
+    // a liege link opens the liege's sheet
     document.addEventListener('click', function (e) {
       if (!e.target || !e.target.closest) return;
+      const lnk = e.target.closest('[data-liege]');
+      if (lnk && FB.state && !UI.eventsBusy()) { UI.showLiegeModal(lnk.getAttribute('data-liege')); return; }
       const chip = e.target.closest('.traitchip[data-trait]');
       if (chip) { UI.showTraitModal(chip.getAttribute('data-trait')); return; }
       const ichip = e.target.closest('.traitchip[data-item], .traitchip[data-itemview]');

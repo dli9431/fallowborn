@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.1.0';
+  FB.VERSION = '1.2.0';
   FB.CHANGELOG = [
+    { v: '1.2.0', date: '2026-07-20', changes: [
+      'The liege’s name in the Deeds banner opens his sheet.'
+    ] },
     { v: '1.1.0', date: '2026-07-20', changes: [
       'Title screen shows the game version.',
       'Changelog opens from the title screen.'
