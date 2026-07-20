@@ -15,3 +15,10 @@ The go-into-town deed queues `visit_*` events (events_common.js) with the name i
 
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
+
+**Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) lights
+up every province sharing the clicked one's group key (strong tint + golden outer border).
+`groupOf` comes from `mapGroupOf` in ui.js and follows the map filter (`R` key / 🗺 HUD
+button): **Realm** (default — your own province lights your own realm, demesne + vassals;
+a foreign one lights its sovereign's), **Mine** (only your realm), **Liege** (your liege's
+whole sub-realm). Membership walks `FB.liegeChain` over `state.holder`.

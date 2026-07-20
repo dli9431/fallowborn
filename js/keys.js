@@ -155,6 +155,9 @@ window.FB = window.FB || {};
       case 'h': case 'H': case 'Home':
         if (FB.state) M.centerOn(FB.state.player.provinceId, 2.2);
         return;
+      case 'r': case 'R':
+        if (FB.state) FB.ui.cycleMapMode();
+        return;
       case 'Enter': {
         if (onButton) return; // let the focused button click natively
         const pr = centerProvince();

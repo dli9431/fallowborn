@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.2.0';
+  FB.VERSION = '1.3.0';
   FB.CHANGELOG = [
+    { v: '1.3.0', date: '2026-07-20', changes: [
+      'Clicking your own province highlights your own realm, not your liege’s.',
+      'New map filter (🗺 button or R key) cycles the highlight: Realm → Mine → Liege.'
+    ] },
     { v: '1.2.0', date: '2026-07-20', changes: [
       'The liege’s name in the Deeds banner opens his sheet.'
     ] },
