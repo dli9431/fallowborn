@@ -98,3 +98,6 @@ about to touch, and update it when you change that system.**
   text tokens, balance). Consult it before touching event or map data, and update it when you
   add new trigger/effect keys.
 - `docs/designs/` — per-system design decisions (index above).
+- `docs/VERSIONS.md` — version numbering (semver) and changelog rules. Current
+  version and entries live in `FB.VERSION` / `FB.CHANGELOG` at the top of
+  `js/main.js`; bump them with every player-facing change.

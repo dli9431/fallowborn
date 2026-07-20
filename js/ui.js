@@ -1973,6 +1973,18 @@ window.FB = window.FB || {};
     $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };
 
+  UI.showChangelog = function () {
+    let h = '<div class="gm-body-text">';
+    for (const rel of FB.CHANGELOG) {
+      h += '<h4>v' + esc(rel.v) + (rel.date ? ' &mdash; ' + esc(rel.date) : '') + '</h4><ul>';
+      for (const c of rel.changes) h += '<li>' + esc(c) + '</li>';
+      h += '</ul>';
+    }
+    h += '</div><button class="btn primary" id="gm-ok">Close</button>';
+    openModal('Changelog', h);
+    $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+  };
+
   UI.showMods = function () {
     const bundled = FB.mods.bundled();
     const mods = FB.mods.list();

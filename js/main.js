@@ -8,6 +8,18 @@ window.FB = window.FB || {};
   FB.game = G;
   FB.state = null;
 
+  /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
+  FB.VERSION = '1.1.0';
+  FB.CHANGELOG = [
+    { v: '1.1.0', date: '2026-07-20', changes: [
+      'Title screen shows the game version.',
+      'Changelog opens from the title screen.'
+    ] },
+    { v: '1.0.0', date: '2026-07-20', changes: [
+      'First release.'
+    ] }
+  ];
+
   function $(id) { return document.getElementById(id); }
 
   /* ================= scenarios ================= */
@@ -65,6 +77,7 @@ window.FB = window.FB || {};
   /* the title screen must say which world it will spawn: with mods active
      (bundled or stored), new lives and the map behind the menu are modded ones */
   function refreshTitle() {
+    $('title-version').textContent = 'v' + FB.VERSION;
     $('btn-continue').classList.toggle('hidden', !FB.save.hasAuto());
     const note = $('title-mods');
     if (!note) return;
@@ -86,6 +99,7 @@ window.FB = window.FB || {};
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
+    $('btn-changelog').addEventListener('click', function () { FB.ui.showChangelog(); });
     $('btn-ng-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
     $('btn-pick-back').addEventListener('click', function () {
       G.pickMode = false;
