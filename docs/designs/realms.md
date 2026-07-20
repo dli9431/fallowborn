@@ -15,6 +15,10 @@ interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 `swear_fealty` / independence) and, once sovereign, runs vassals of their own
 (`grant_county`, `demand_taxes`, `revoke_county`; vassal opinion lives in
 `player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate`).
+Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
+with his home county: the granting count yields it (dissolving if left landless) and
+the player answers to the granter's own liege — a liege must outrank his man, and
+`FB.checkTierPromotions` walks broken chains back up.
 AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial), not
 full chars — the Deeds banner's "vassal of X" links to their sheet via
 `UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`.

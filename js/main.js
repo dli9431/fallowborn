@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.4.0';
+  FB.VERSION = '1.5.0';
   FB.CHANGELOG = [
+    { v: '1.5.0', date: '2026-07-20', changes: [
+      'Only gentle households (gentry and above) may send a child to be educated by the lord.',
+      'A baron raised to a county answers to the granting lord’s own liege — counts no longer answer to counts.',
+      'A lord who grants away his last county no longer lingers as a landless realm.'
+    ] },
     { v: '1.4.0', date: '2026-07-20', changes: [
       'Clicking the dead in the family tree opens their sheet: birth and death years, skills, and traits.'
     ] },

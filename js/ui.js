@@ -1855,6 +1855,8 @@ window.FB = window.FB || {};
       }
     }
     for (const r of ['priest', 'friend', 'lord']) {
+      // the lord fosters only gentle children — a serf's child has no place in his hall
+      if (r === 'lord' && FB.playerStation(s) < 2) continue;
       const rc = FB.getRole(s, r, false);
       if (rc && !rc.dead && (r !== 'lord' || rc.opinion >= 0)) {
         cands.push({ id: rc.id, c: rc, name: rc.name + ' (' + (r === 'priest' ? FB.holyWord(me.religion) : r) + ')' });
