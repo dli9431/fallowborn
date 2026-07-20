@@ -96,6 +96,7 @@ window.FB = window.FB || {};
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
     c.dead = true;
+    c.died = state.date.year; // remembered on their sheet: born–died
     if (c.betrothedId && c.dowryAsk) {
       state.player.gold += c.dowryAsk;
       delete c.dowryAsk;
