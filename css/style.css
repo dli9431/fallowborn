@@ -230,6 +230,8 @@ body.picking #mapwrap { flex: 1 1 auto; }
 }
 .charrow[data-cid] { cursor: pointer; }
 .charrow[data-cid]:hover { border-color: #c9a24a; }
+.linklike { color: #d8b24a; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.linklike:hover { color: #ecd9a0; }
 .charcard[data-cid] { cursor: pointer; }
 .charcard[data-cid]:hover { border-color: #c9a24a; }
 .charrow .cname { color: #ecd9a0; }
