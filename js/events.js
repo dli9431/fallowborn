@@ -974,11 +974,39 @@ window.FB = window.FB || {};
   FB.grantByLiege = function (state) {
     const p = state.player;
     if (p.tier === 3) {
-      // granted the home county
+      // raised to count of the home county. A count cannot make a peer of
+      // himself: the granter yields the county and the player answers from
+      // now on to the granter's OWN liege (the duke), never to a fellow count.
       p.provs = p.provs || [];
       if (p.provs.indexOf(p.provinceId) < 0) p.provs.push(p.provinceId);
       if (state.holder) state.holder[p.provinceId] = 'player';
       p.tier = 4;
+      const old = p.liege && state.realms[p.liege];
+      if (old) {
+        // favor earned with the old lord stays on his name; the new liege
+        // keeps whatever opinion the player had already built with him
+        if (p.liegeOp) {
+          p.liegeOps = p.liegeOps || {};
+          p.liegeOps[old.id] = FB.clamp((p.liegeOps[old.id] || 0) + p.liegeOp, -100, 100);
+        }
+        p.liege = old.liege || null;
+        p.liegeOp = (p.liege && p.liegeOps && p.liegeOps[p.liege]) || 0;
+        if (p.liege && p.liegeOps) delete p.liegeOps[p.liege];
+        FB.invalidateRealmCache();
+        // a granter left holding no county at all dissolves — any vassals of
+        // his reattach upward, exactly as in FB.transferProvince
+        const terr = FB.realmTerritory(state, old.id);
+        if (!terr.length) {
+          old.alive = false; old.war = null;
+          for (const vid in state.realms) if (state.realms[vid].liege === old.id) state.realms[vid].liege = old.liege || null;
+        } else if (old.capital === p.provinceId) {
+          old.capital = terr[0];
+        }
+        if (p.liege && state.realms[p.liege]) {
+          FB.news(state, '👑 Invested, you answer now to ' + state.realms[p.liege].name + '.');
+        }
+        if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+      }
     } else if (p.tier >= 4 && p.liege) {
       const cands = FB.liegeGrantCandidates(state);
       if (cands.length) {

@@ -955,6 +955,17 @@ window.FB = window.FB || {};
     const p = state.player;
     const n = p.provs ? p.provs.length : 0;
     const indep = state.realms.player && state.realms.player.alive;
+    // a liege must outrank his man (a count answers to a duke, a duke to a
+    // king): older grants could leave the player kneeling to a mere peer —
+    // walk up the chain to the first lord of truly higher rank
+    if (p.tier >= 4) {
+      const pRank = Math.max(1, p.tier - 3);
+      let guard = 0;
+      while (p.liege && state.realms[p.liege] && state.realms[p.liege].rank <= pRank &&
+             state.realms[p.liege].liege && guard++ < 10) {
+        p.liege = state.realms[p.liege].liege;
+      }
+    }
     let newTier = p.tier;
     if (n >= 1 && p.tier < 4) newTier = 4;
     if (FB.playerDuchy(state) && p.tier < 5) newTier = 5;

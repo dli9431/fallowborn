@@ -11,5 +11,10 @@ Never write `c.skills[k]++` directly outside it.
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.
 
+**Tutors are household and neighbors.** A child aged 6–15 with an education focus learns
+from a named tutor: a parent, a spouse, the priest, a friend, or a hired master. The lord
+fosters only gentle children — the tutor picker offers him only at
+`FB.playerStation(state) >= 2` (gentry and up); a serf's child is never sent to his hall.
+
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.
