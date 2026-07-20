@@ -1,0 +1,23 @@
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (only used for `node --check` syntax validation; no dependencies)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Secrets
+.env
+.env.*
+
+# Deployment artifacts (itch.io zips are built from the folder contents)
+*.zip

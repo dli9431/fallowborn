@@ -1,0 +1,855 @@
+/* Fallowborn — boot, scenarios, turn loop, life & death */
+window.FB = window.FB || {};
+
+(function () {
+  'use strict';
+
+  const G = {};
+  FB.game = G;
+  FB.state = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  /* ================= scenarios ================= */
+  G.SCENARIOS = [
+    { id: 'serf', name: 'Serf', diff: '★★★★★ hardest',
+      desc: 'Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for.',
+      tier: 0, profession: 'farmer', gold: 5, prestige: 0, piety: 0,
+      intro: 'You are {name}, a serf of {province}. The lord owns your labor; the church owns your Sundays; the soil will own your bones — unless you claw your way to something more.' },
+    { id: 'farmer', name: 'Free Farmer', diff: '★★★★ hard',
+      desc: 'A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth.',
+      tier: 1, profession: 'farmer', gold: 20, prestige: 5, piety: 0,
+      intro: 'You are {name}, a free farmer of {province}. Your land is small, your debts are few, and your ambitions need not be.' },
+    { id: 'apprentice', name: 'Craftsman’s Apprentice', diff: '★★★★ hard',
+      desc: 'Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb.',
+      tier: 1, profession: 'craftsman', gold: 15, prestige: 5, piety: 0,
+      intro: 'You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know.' },
+    { id: 'monk', name: 'Novice of the Faith', diff: '★★★ tricky',
+      desc: 'The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat.',
+      tier: 1, profession: 'monk', gold: 2, prestige: 0, piety: 25,
+      intro: 'You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
+      intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.' },
+    { id: 'soldier', name: 'Man-at-Arms', diff: '★★★ tricky',
+      desc: 'Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them.',
+      tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3,
+      intro: 'You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies.' },
+    { id: 'knight', name: 'Hedge Knight', diff: '★★ fair',
+      desc: 'Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted.',
+      tier: 2, profession: 'noble', gold: 40, prestige: 60, piety: 0, mar: 4, focus: 'train_arms',
+      intro: 'You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force.' },
+    { id: 'baron', name: 'Petty Baron', diff: '★ classic',
+      desc: 'A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start.',
+      tier: 3, profession: 'noble', gold: 80, prestige: 150, piety: 0,
+      intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
+  ];
+
+  /* ================= boot ================= */
+  document.addEventListener('DOMContentLoaded', function () {
+    FB.mods.applyStored();
+    FB.generateWorld(
+      function (frac, msg) {
+        $('loadbar').style.width = Math.round(frac * 100) + '%';
+        $('loadmsg').textContent = msg;
+      },
+      function () {
+        FB.map.init($('map'));
+        FB.ui.wire();
+        wireMenus();
+        FB.drawCrest($('titlecrest'), 'Fallowborn');
+        refreshTitle();
+        FB.ui.showScreen('title');
+      }
+    );
+  });
+
+  /* the title screen must say which world it will spawn: with mods active
+     (bundled or stored), new lives and the map behind the menu are modded ones */
+  function refreshTitle() {
+    $('btn-continue').classList.toggle('hidden', !FB.save.hasAuto());
+    const note = $('title-mods');
+    if (!note) return;
+    const names = FB.mods.bundled()
+      .filter(function (m) { return FB.mods.isEnabled(m.id); })
+      .map(function (m) { return m.name; });
+    FB.mods.list().forEach(function (m) { names.push(m.name); });
+    if (names.length) {
+      note.textContent = '🧩 ' + (names.length > 1 ? 'Mods' : 'Mod') + ' active: ' + names.join(' · ');
+      note.classList.remove('hidden');
+    } else {
+      note.classList.add('hidden');
+    }
+  }
+
+  function wireMenus() {
+    $('btn-newgame').addEventListener('click', function () { showScenarios(); });
+    $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
+    $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
+    $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
+    $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
+    $('btn-ng-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
+    $('btn-pick-back').addEventListener('click', function () {
+      G.pickMode = false;
+      document.body.classList.remove('picking');
+      FB.ui.showScreen('newgame');
+    });
+    $('btn-pick-random').addEventListener('click', function () {
+      const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
+      G.pickProvince(FB.pick(cands));
+    });
+    $('btn-pick-next').addEventListener('click', function () {
+      if (!G.pending.provinceId) {
+        const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
+        G.pickProvince(FB.pick(cands));
+      }
+      G.pickMode = false;
+      document.body.classList.remove('picking');
+      showChargen();
+    });
+    $('cg-reroll').addEventListener('click', function () {
+      const sex = document.querySelector('input[name=cg-sex]:checked').value;
+      $('cg-name').value = FB.randomName(G.pending.culture, sex);
+    });
+    document.querySelectorAll('input[name=cg-sex]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        $('cg-name').value = FB.randomName(G.pending.culture, r.value);
+      });
+    });
+    $('btn-cg-back').addEventListener('click', function () { showPickProv(); });
+    $('btn-cg-start').addEventListener('click', function () { G.start(); });
+  }
+
+  function showScenarios() {
+    const box = $('scenariolist');
+    box.innerHTML = '';
+    for (const sc of G.SCENARIOS) {
+      const el = document.createElement('button');
+      el.className = 'scencard';
+      el.innerHTML = '<h3>' + FB.esc(sc.name) + '</h3><div class="diff">' + FB.esc(sc.diff) + '</div><p>' + FB.esc(sc.desc) + '</p>';
+      (function (scenario) {
+        el.addEventListener('click', function () {
+          G.pending = { scenario: scenario, provinceId: null };
+          showPickProv();
+        });
+      })(sc);
+      box.appendChild(el);
+    }
+    FB.ui.showScreen('newgame');
+  }
+
+  function showPickProv() {
+    FB.ui.showScreen('pickprov');
+    $('pickprov').classList.add('asbar');
+    $('game').classList.remove('hidden');
+    G.pickMode = true;
+    document.body.classList.add('picking'); // mobile: hides the fixed time bar
+    // paint the 867 map from static data (no game state yet)
+    const realmById = {};
+    for (const r of FBDATA.realms) realmById[r.id] = r;
+    function topOf(rid) { // resolve authored vassal realms to their sovereign
+      let cur = rid, g = 0;
+      while (cur && realmById[cur] && realmById[cur].liege && g++ < 10) cur = realmById[cur].liege;
+      return cur || rid;
+    }
+    FB.map.setOwnerFns(
+      function (pid) { const pr = FB.world.byId[pid]; return pr ? topOf(pr.realm0) : null; },
+      function (rid) { return realmById[rid] ? realmById[rid].color : '#777777'; },
+      FBDATA.realms.filter(function (r) { return !r.liege; }).map(function (r) { return r.capital; })
+    );
+    FB.map.resize();
+    FB.map.buildBase();
+    FB.map.fitView();
+    FB.map.playerProv = null;
+    FB.map.select(null);
+    updatePickInfo();
+  }
+
+  G.pickProvince = function (pr) {
+    if (!pr) return;
+    if (pr.wasteland) { FB.ui.toast('No one is born in the ' + pr.name + '. Pick a settled land.'); return; }
+    G.pending.provinceId = pr.id;
+    G.pending.culture = pr.culture;
+    G.pending.religion = pr.religion;
+    FB.map.select(pr.id);
+    updatePickInfo();
+  };
+
+  function updatePickInfo() {
+    const el = $('pickinfo');
+    if (!G.pending || !G.pending.provinceId) {
+      el.innerHTML = 'No province chosen — a random home will be found.';
+      return;
+    }
+    const pr = FB.world.byId[G.pending.provinceId];
+    const realm = FBDATA.realms.filter(function (r) { return r.id === pr.realm0; })[0];
+    el.innerHTML = '<b>' + FB.esc(pr.name) + '</b> — ' + FB.esc(realm ? realm.name : 'independent') +
+      ' · ' + FB.esc(FB.cultureOf(pr.culture).name) + ' · ' +
+      FB.esc(FB.religionOf(pr.religion).name) + ' · ' + FB.esc(pr.terrain);
+  }
+
+  function showChargen() {
+    const sex = document.querySelector('input[name=cg-sex]:checked').value;
+    $('cg-name').value = FB.randomName(G.pending.culture, sex);
+    const pr = FB.world.byId[G.pending.provinceId];
+    $('cg-summary').innerHTML = '<b>' + FB.esc(G.pending.scenario.name) + '</b> in <b>' + FB.esc(pr.name) + '</b><br>' +
+      FB.esc(FB.cultureOf(pr.culture).name) + ' · ' + FB.esc(FB.religionOf(pr.religion).name) +
+      ' · beginning in ' + FBDATA.balance.startYear + ' AD, aged ' + FBDATA.balance.startAge + '.';
+    FB.ui.showScreen('chargen');
+  }
+
+  /* ================= new game ================= */
+  G.start = function () {
+    const sc = G.pending.scenario;
+    const provId = G.pending.provinceId;
+    const pr = FB.world.byId[provId];
+    const sex = document.querySelector('input[name=cg-sex]:checked').value;
+    const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
+
+    FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
+
+    const state = {
+      v: 2,
+      date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
+      turn: 0, generation: 1, slotDays: [],
+      chars: {}, roles: {}, eventQueue: [], log: [], flags: {}, buildings: {}, tech: [],
+      player: {
+        charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
+        gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
+        provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
+      },
+      pregnant: null, peakTier: sc.tier, peakTitle: '',
+      seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
+    };
+    FB.state = state;
+    FB.initPolitics(state);
+    scheduleSlots(state);
+
+    const me = FB.makeCharacter(state, {
+      name: name, sex: sex, culture: pr.culture, religion: pr.religion,
+      born: FBDATA.balance.startYear - FBDATA.balance.startAge,
+      quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
+    });
+    me.health = 8;
+    me.dyn = FB.dynastyName(pr.culture, me.name, pr.name);
+    if (sc.mar) me.skills.mar = FB.clamp(me.skills.mar + sc.mar, 0, FBDATA.balance.skillHardCap || 40);
+    state.player.charId = me.id;
+
+    // parents — the first rung of the kin tree
+    const dad = FB.makeCharacter(state, {
+      sex: 'm', culture: pr.culture, religion: pr.religion,
+      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1
+    });
+    const mom = FB.makeCharacter(state, {
+      sex: 'f', culture: pr.culture, religion: pr.religion,
+      born: me.born - FB.ri(20, 34), role: 'parent'
+    });
+    dad.dyn = me.dyn;
+    dad.health = 8; mom.health = 8;
+    dad.spouseId = mom.id; mom.spouseId = dad.id;
+    dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
+    me.fatherId = dad.id; me.motherId = mom.id;
+
+    // siblings — a safety net of heirs
+    const nSib = FB.ri(1, 2);
+    for (let i = 0; i < nSib; i++) {
+      const sib = FB.makeCharacter(state, {
+        culture: pr.culture, religion: pr.religion,
+        born: me.born + FB.ri(-6, 6) || me.born + 2,
+        role: 'sibling'
+      });
+      sib.dyn = me.dyn;
+      sib.health = 8;
+      sib.fatherId = dad.id; sib.motherId = mom.id;
+      dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
+    }
+
+    if (sc.tier >= 3) {
+      state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
+      state.player.liegeOp = 10;
+    }
+    state.player.focus = sc.focus || FB.defaultFocus(state);
+    state.peakTitle = FB.titleFor(state);
+    G.paused = true;
+
+    FB.ui.mapDirty();
+    FB.map.playerProv = provId;
+    FB.ui.showGame();
+    FB.map.centerOn(provId, 2.0);
+    FB.ui.refresh();
+    FB.news(state, '📖 The chronicle of ' + me.dyn + ' begins in ' + pr.name + ', ' + state.date.year + ' AD.');
+    const introText = (FB.religionOf(pr.religion).group === 'muslim' && sc.intro_muslim) ? sc.intro_muslim : sc.intro;
+    FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
+      FB.esc(FB.fmt(state, introText, {})) + '</p><p class="hint">Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.</p></div>' +
+      '<button class="btn primary" id="gm-go">Begin</button>');
+    $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
+    FB.save.autosave();
+  };
+
+  /* ================= daily loop ================= */
+  function scheduleSlots(s) {
+    // 1-2 random event days this season, mirroring the old per-season pacing;
+    // war is busier — a personal war guarantees an extra happening
+    s.slotDays = [FB.ri(3, 88)];
+    if (FB.chance(0.3)) s.slotDays.push(FB.ri(3, 88));
+    if (FB.atWarPersonally(s)) s.slotDays.push(FB.ri(3, 88));
+  }
+  G.scheduleSlots = scheduleSlots;
+
+  /* Advance one day. opts.skipFocus: an instant deed filled this day instead.
+     Returns 'event' | 'dead' | 'season' | 'day' (or undefined if blocked). */
+  G.passDay = function (opts) {
+    const s = FB.state;
+    if (!s || s.player.dead) return undefined;
+    if (FB.ui.eventsBusy()) return undefined;
+    const p = s.player;
+
+    if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+    else FB.validateFocus(s);
+
+    // advance date: 90-day seasons, 360-day years
+    s.turn++;
+    s.date.day++;
+    let seasonBoundary = false, newYear = false;
+    if (s.date.day > 90) {
+      s.date.day = 1;
+      s.date.season++;
+      seasonBoundary = true;
+      if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
+    }
+
+    if (seasonBoundary) {
+      const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
+      const income = p.tier >= 3 ? FB.playerTax(s) : 0;
+      p.gold = Math.max(0, p.gold + income - upkeep + FB.holdingBonus(s, 'gold'));
+      p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
+      p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
+      if (p.tier >= 3) {
+        p.piety += FB.buildingBonus(s, 'piety');
+        p.research = (p.research || 0) + FB.buildingBonus(s, 'research') + FB.techBonus(s, 'research');
+        if (G.auto.build) FB.autoBuild(s);
+        if (G.auto.research) FB.autoResearch(s);
+      }
+      FB.playerWarTick(s);
+      // the season's ledger: what each stat truly did since the last
+      // boundary (focus trickle, upkeep, taxes, events and all) — shown
+      // beside the topbar stats. Old saves lack the mark; start one.
+      if (s.seasonMark) {
+        s.seasonNet = {
+          gold: p.gold - s.seasonMark.gold,
+          prestige: p.prestige - s.seasonMark.prestige,
+          piety: p.piety - s.seasonMark.piety
+        };
+      }
+      s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
+      scheduleSlots(s);
+      if (newYear) FB.worldTick(s);
+      FB.save.autosave(); // snapshot before any mortality roll, never a dead state
+      if (newYear) {
+        yearlyLife(s);
+        if (p.dead) return 'dead';
+      }
+    }
+
+    birthTick(s);
+    if (s.peakTier === undefined || p.tier > s.peakTier) {
+      s.peakTier = p.tier; s.peakTitle = FB.titleFor(s);
+    }
+
+    const events = FB.pickDailyEvents(s);
+    FB.ui.refresh();
+    if (events.length) {
+      // runEvents reports whether a modal actually opened; autoresolved
+      // events pass silently and the day keeps flowing
+      if (FB.ui.runEvents(events)) return 'event';
+      return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
+    }
+    G.afterEvents();
+    return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
+  };
+
+  /* Fast-forward until something happens: an event, a new season, or death. */
+  G.skipAhead = function () {
+    for (let i = 0; i < 92; i++) {
+      const r = G.passDay();
+      if (r !== 'day') break;
+    }
+  };
+
+  /* ---------- the flow of days: auto-tick with pause/unpause ----------
+     Speed is adjustable (+/- keys); the default middle step is the old
+     350 ms ≈ 3 days per second. */
+  G.SPEEDS = [700, 500, 350, 230, 140]; // ms per day, slowest → fastest
+  G.speedIdx = 2;
+  G.paused = true;
+  G.setPaused = function (v) {
+    G.paused = !!v;
+    if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
+  };
+  G.togglePause = function () { G.setPaused(!G.paused); };
+
+  let tickTimer = null;
+  function startTicker() {
+    if (tickTimer) clearInterval(tickTimer);
+    tickTimer = setInterval(function () {
+      if (G.paused || !FB.state || FB.state.player.dead || G.pickMode) return;
+      if (FB.ui.eventsBusy()) return; // an event awaits your choice
+      if (!$('genmodal').classList.contains('hidden')) return; // a dialog is open
+      if (document.hidden) return;
+      G.passDay();
+    }, G.SPEEDS[G.speedIdx]);
+  }
+  G.setSpeed = function (d) {
+    G.speedIdx = FB.clamp(G.speedIdx + d, 0, G.SPEEDS.length - 1);
+    startTicker();
+    if (FB.ui && FB.ui.toast) FB.ui.toast('⏱ Speed ' + (G.speedIdx + 1) + '/' + G.SPEEDS.length);
+  };
+  startTicker();
+
+  /* ---------- autoresolve (the Z button) ----------
+     While days flow or fast-forward, selected event categories resolve
+     themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
+  G.auto = { on: false, major: false, war: false, style: 'safe', build: false, research: false };
+  /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
+     and each overwrote the other; they now live under their own key. */
+  try {
+    const storedAuto = JSON.parse(localStorage.getItem('fb_automation') || 'null');
+    if (storedAuto && typeof storedAuto === 'object') {
+      for (const ak in G.auto) if (storedAuto[ak] !== undefined) G.auto[ak] = storedAuto[ak];
+    }
+  } catch (e) { /* keep defaults */ }
+  G.saveAuto = function () {
+    try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
+  };
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) G.paused = true;
+  });
+
+  G.afterEvents = function () {
+    const s = FB.state;
+    if (!s || s.player.dead) return;
+    const me = s.chars[s.player.charId];
+    if (me.health <= 0) {
+      G.die('Wounds and sickness prove too much. ' + me.name + ' does not see another season.');
+      return;
+    }
+    FB.checkTierPromotions(s);
+    FB.ui.refresh();
+  };
+
+  /* ---------- yearly aging, mortality, coming of age ---------- */
+  function yearlyLife(s) {
+    const p = s.player;
+    const me = s.chars[p.charId];
+    const year = s.date.year;
+
+    // children: schooling, then coming of age
+    educationTick(s);
+    for (const cid of me.childrenIds) {
+      const c = s.chars[cid];
+      if (c && !c.dead && FB.ageOf(c, year) === 16) {
+        if (c.edu && c.edu.focus) {
+          FB.gainSkill(c, c.edu.focus, 2);
+          if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
+          s.eventQueue.push({ id: 'child_educated', ctx: { childId: cid } });
+        } else {
+          s.eventQueue.push({ id: 'child_comes_of_age', ctx: { childId: cid } });
+        }
+      }
+    }
+
+    // the player, when still a child, comes of age the same way
+    if (FB.ageOf(me, year) === 16) {
+      if (me.edu && me.edu.focus) {
+        FB.gainSkill(me, me.edu.focus, 2);
+        if (me.edu.focus === 'lea') FB.addTrait(me, 'literate');
+        s.eventQueue.push({ id: 'player_educated', ctx: {} });
+      } else {
+        s.eventQueue.push({ id: 'player_comes_of_age', ctx: {} });
+      }
+    }
+
+    // an heir who succeeded while pledged honors the match their parent made:
+    // once both are of age the wedding follows through the ordinary door
+    if (me.betrothedId && !FB.spouseOf(s, me)) {
+      const b = s.chars[me.betrothedId];
+      if (!b || b.dead) { me.betrothedId = null; }
+      else if (FB.ageOf(me, year) >= 16 && FB.ageOf(b, year) >= 16) {
+        me.betrothedId = null; b.betrothedId = null;
+        delete b.dowryAsk; delete b.dowryDue; // settled between the houses long ago
+        p.courtingId = b.id;
+        FB.doMarry(s);
+        FB.news(s, '💒 You wed ' + b.name + ', as your late parent pledged.');
+      }
+    }
+
+    // the wider family weds, bears children, and is mourned
+    kinLifeTick(s);
+    const kinRel = FB.kinOf(s).byId;
+
+    // player mortality
+    const age = FB.ageOf(me, year);
+    let q = age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28;
+    if (me.health <= 2) q += 0.12; else if (me.health <= 5) q += 0.03;
+    if (p.flags.ill) q += 0.05;
+    if (p.flags.plague_here) q += 0.06;
+    q -= FB.traitAgg(me).health;
+    q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
+    q = FB.clamp(q, 0.002, 0.6);
+    if (age > 90 || FB.chance(q)) {
+      G.die(me.name + ' dies in ' + year + ' AD, aged ' + age + ' — ' +
+        (age > 60 ? 'full of years.' : p.flags.ill || p.flags.plague_here ? 'taken by sickness.' : 'before their time.'));
+      return;
+    }
+    if (FB.chance(0.35) && me.health < 8 && !p.flags.ill) me.health++;
+
+    // everyone else ages & sometimes dies
+    for (const id in s.chars) {
+      const c = s.chars[id];
+      if (c.dead || id === p.charId) continue;
+      const a = FB.ageOf(c, year);
+      let cq = a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25;
+      if (p.flags.plague_here) cq += 0.05;
+      cq -= FB.traitAgg(c).health;
+      if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
+        const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;
+        const wasChild = me.childrenIds.indexOf(c.id) >= 0;
+        const wasLord = s.roles.lord === c.id;
+        const wasCourted = s.player.courtingId === c.id;
+        const pledgedChild = c.betrothedId && me.childrenIds.indexOf(c.betrothedId) >= 0 ?
+          s.chars[c.betrothedId] : null;
+        const refund = pledgedChild && c.dowryAsk ? c.dowryAsk : 0;
+        FB.killChar(s, c);
+        if (wasSpouse) {
+          FB.news(s, '🕯 Your spouse ' + c.name + ' has died. The house is quieter, and colder.');
+          FB.spouseDied(s, c); // a grand house owes its widow(er) a reckoning
+          FB.promoteSpouse(s); // under polygamy, the next wife steps up
+        }
+        else if (wasChild) FB.news(s, '🕯 Your child ' + c.name + ' has died, aged ' + a + '.');
+        else if (wasCourted) FB.news(s, '🕯 ' + c.name + ', whom you courted, has died before any wedding.');
+        else if (pledgedChild) {
+          FB.news(s, '🕯 ' + c.name + ', betrothed to your ' +
+            (pledgedChild.sex === 'f' ? 'daughter' : 'son') + ' ' + pledgedChild.name +
+            ', has died before the wedding.' + (refund ? ' The dowry returns to your coffers.' : ''));
+        }
+        else if (wasLord) FB.news(s, '🕯 The lord ' + c.name + ' is dead. Another will take his seat.');
+        else if (kinRel[c.id]) FB.news(s, '🕯 Your ' + kinRel[c.id].toLowerCase() + ' ' + c.name + ' has died, aged ' + a + '.');
+      }
+    }
+
+    // popular opinion drifts toward 0
+    p.pop = Math.round(p.pop * 0.85);
+    p.liegeOp = Math.round((p.liegeOp || 0) * 0.9);
+    if (p.liegeOps) for (const rid in p.liegeOps) p.liegeOps[rid] = Math.round(p.liegeOps[rid] * 0.9);
+  }
+
+  /* ---------- education (yearly) ----------
+     A child aged 6-15 with an education focus gains that skill at a rate set
+     by the tutor's own ability in it; a tutor's habits can also rub off.
+     Covers the player's children and the player themselves when still a child. */
+  function educationTick(s) {
+    const me = s.chars[s.player.charId];
+    for (const cid of me.childrenIds) educateChar(s, s.chars[cid]);
+    educateChar(s, me);
+  }
+  function educateChar(s, c) {
+    const me = s.chars[s.player.charId];
+    if (!c || c.dead || !c.edu || !c.edu.focus) return;
+    const age = FB.ageOf(c, s.date.year);
+    if (age < 6 || age >= 16) return;
+    let tutor = null;
+    // 'self' means the player tutoring their own child — a child player can't self-tutor
+    if (c.edu.tutorId === 'self') tutor = (c.id === me.id) ? null : me;
+    else if (c.edu.tutorId) {
+      tutor = s.chars[c.edu.tutorId];
+      if (!tutor || tutor.dead) {
+        c.edu.tutorId = null;
+        tutor = null;
+        FB.news(s, '🕯 ' + (c.id === me.id ? 'Your' : c.name + '’s') + ' tutor has died; the lessons pause.');
+      }
+    }
+    const tSkill = tutor ? FB.skillOf(tutor, c.edu.focus) : 0;
+    const p = (tutor ? 0.3 + tSkill * 0.04 : 0.18) + FB.holdingBonus(s, 'edu');
+    if (FB.chance(Math.min(0.9, p))) {
+      FB.gainSkill(c, c.edu.focus, 1);
+    }
+    if (FB.chance(0.15)) {
+      FB.gainSkill(c, FB.pick(FB.SKILLS), 1);
+    }
+    if (tutor && tutor !== me && FB.chance(0.08)) {
+      const cand = tutor.traits.filter(function (t) {
+        const td = FBDATA.traits[t];
+        return td && td.inherit && c.traits.indexOf(t) < 0;
+      });
+      if (cand.length) {
+        const t = FB.pick(cand);
+        if (FB.addTrait(c, t)) {
+          FB.news(s, '🎓 ' + (c.id === me.id ? 'You grow' : c.name + ' grows') +
+            ' ' + FBDATA.traits[t].name.toLowerCase() + ', like ' +
+            (c.id === me.id ? 'your' : 'their') + ' tutor.');
+        }
+      }
+    }
+  }
+
+  /* ---------- the wider family (yearly) ----------
+     Adult blood kin wed and bear children of their own, so grandparents,
+     grandchildren, uncles, aunts, and cousins exist beyond the player's own
+     nursery. House membership passes through sons (baby.dyn), which is what
+     makes kin eligible to inherit. */
+  function kinLifeTick(s) {
+    const me = s.chars[s.player.charId];
+    const year = s.date.year;
+    const kin = FB.kinOf(s);
+    const all = [];
+    for (const g of ['parents', 'grandparents', 'siblings', 'children', 'grandchildren',
+      'niecesNephews', 'unclesAunts', 'cousins']) {
+      for (const e of kin[g]) all.push(e);
+    }
+    for (const e of all) {
+      const k = e.c;
+      if (k.dead || k.id === s.player.charId) continue;
+      const age = FB.ageOf(k, year);
+      if (age < 16 || age > 55) continue;
+      const close = ['Son', 'Daughter', 'Brother', 'Sister'].indexOf(e.rel) >= 0;
+      let sp = FB.spouseOf(s, k);
+      // a sealed betrothal weds as soon as both are of age — before chance
+      // gets a say
+      if (!sp && k.betrothedId) {
+        const b = s.chars[k.betrothedId];
+        if (b && !b.dead && FB.ageOf(b, year) >= 16) {
+          FB.doKinWedding(s, k, b);
+          sp = b;
+        }
+      } else if (!sp && age <= 40 && FB.chance(FBDATA.balance.kinMarryChance)) {
+        FB.discardMatches(s, k, null); // the sounded-out families are passed over
+        sp = FB.makeCharacter(s, {
+          sex: k.sex === 'm' ? 'f' : 'm',
+          culture: k.culture, religion: k.religion,
+          born: year - FB.clamp(age + FB.ri(-6, 4), 16, 45),
+          role: 'kinspouse'
+        });
+        sp.health = 8;
+        k.spouseId = sp.id; sp.spouseId = k.id;
+        if (close) FB.news(s, '💍 Your ' + e.rel.toLowerCase() + ' ' + k.name + ' weds ' + sp.name + '.');
+      }
+      if (!sp) continue;
+      const mother = k.sex === 'f' ? k : sp;
+      const father = k.sex === 'f' ? sp : k;
+      const mAge = FB.ageOf(mother, year);
+      if (mAge < 16 || mAge > 45) continue;
+      const fert = FBDATA.balance.kinChildChance * FB.traitAgg(mother).fert *
+        FB.traitAgg(father).fert * mother.fertility * (father.fertility || 1) *
+        FB.ageFert('f', mAge) * FB.ageFert('m', FB.ageOf(father, year));
+      if (FB.chance(fert)) {
+        const baby = FB.makeCharacter(s, {
+          culture: k.culture, religion: k.religion, born: year,
+          traits: FB.inheritTraits(father, mother), traitsN: 0,
+          fatherId: father.id, motherId: mother.id
+        });
+        baby.health = 7;
+        baby.dyn = k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null;
+        k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
+        if (close) {
+          FB.news(s, '👶 Your ' + e.rel.toLowerCase() + ' ' + k.name + ' has a ' +
+            (baby.sex === 'f' ? 'daughter' : 'son') + ', ' + baby.name + '.');
+        }
+      }
+    }
+  }
+
+  /* ---------- pregnancy & birth (daily; conception chance is per-season in
+     the balance data, so divide by the 90-day season) ---------- */
+  function birthTick(s) {
+    const p = s.player;
+    const me = s.chars[p.charId];
+    const sp = FB.spouseOf(s, me);
+    if (s.pregnant) {
+      if (s.turn >= s.pregnant.due) {
+        const mother = s.chars[s.pregnant.motherId];
+        const father = s.chars[s.pregnant.fatherId];
+        s.pregnant = null;
+        if (mother && !mother.dead) {
+          const baby = FB.makeCharacter(s, {
+            culture: me.culture, religion: me.religion, born: s.date.year,
+            traits: FB.inheritTraits(father, mother), traitsN: 0,
+            fatherId: father ? father.id : null, motherId: mother.id
+          });
+          baby.dyn = me.dyn;
+          baby.health = 7;
+          me.childrenIds.push(baby.id);
+          s.eventQueue.push({ id: 'child_born_flavor', ctx: { childId: baby.id } });
+        }
+      }
+      return;
+    }
+    // every wife of the household may conceive (one pregnancy at a time)
+    const mates = me.sex === 'f' ? (sp ? [sp] : []) : FB.spousesOf(s, me);
+    for (const mate of mates) {
+      const mother = me.sex === 'f' ? me : mate;
+      const father = me.sex === 'f' ? mate : me;
+      const mAge = FB.ageOf(mother, s.date.year);
+      if (mAge < 16 || mAge > 45) continue;
+      let fert = FBDATA.balance.childChance / 90 * FB.traitAgg(mother).fert * FB.traitAgg(father).fert *
+        mother.fertility * (father.fertility || 1) *
+        FB.ageFert('f', mAge) * FB.ageFert('m', FB.ageOf(father, s.date.year));
+      if (s.player.flags.blessed_union) fert *= 1.6;
+      if (FB.chance(fert)) {
+        delete s.player.flags.blessed_union; // the prayer is answered
+        s.pregnant = { due: s.turn + 270, motherId: mother.id, fatherId: father.id };
+        if (mother.id === me.id) FB.news(s, '🤰 You are with child.');
+        else FB.news(s, '🤰 ' + mother.name + ' is with child.');
+        return;
+      }
+    }
+  }
+
+  /* ---------- death & succession ---------- */
+  /* Eligible heirs in order: named heir first, then sons, daughters, siblings. */
+  FB.heirsOf = function (s) {
+    const me = s.chars[s.player.charId];
+    const kids = me.childrenIds.map(function (id) { return s.chars[id]; })
+      .filter(function (c) { return c && !c.dead; });
+    const sons = kids.filter(function (c) { return c.sex === 'm'; }).sort(function (a, b) { return a.born - b.born; });
+    const daughters = kids.filter(function (c) { return c.sex === 'f'; }).sort(function (a, b) { return a.born - b.born; });
+    let heirs = sons.concat(daughters);
+    if (!heirs.length) {
+      // no children of the body — grandchildren first, then the wider house:
+      // siblings, their children, uncles/aunts, cousins
+      const kin = FB.kinOf(s);
+      const groups = [kin.grandchildren, kin.siblings, kin.niecesNephews, kin.unclesAunts, kin.cousins];
+      for (const g of groups) {
+        const live = [];
+        for (const e of g) {
+          if (!e.c.dead && e.c.dyn === me.dyn) live.push(e.c);
+        }
+        heirs = heirs.concat(
+          live.filter(function (c) { return c.sex === 'm'; }).sort(function (a, b) { return a.born - b.born; }),
+          live.filter(function (c) { return c.sex === 'f'; }).sort(function (a, b) { return a.born - b.born; })
+        );
+      }
+    }
+    const nid = s.player.namedHeirId;
+    if (nid) {
+      for (let i = 0; i < heirs.length; i++) {
+        if (heirs[i].id === nid) {
+          const named = heirs.splice(i, 1)[0];
+          heirs.unshift(named);
+          break;
+        }
+      }
+    }
+    return heirs;
+  };
+
+  G.die = function (causeText) {
+    G.paused = true;
+    const s = FB.state;
+    const p = s.player;
+    const me = s.chars[p.charId];
+    me.dead = true;
+    p.dead = true;
+    FB.news(s, '☠ ' + causeText);
+    FB.ui.showDeath(FB.heirsOf(s).slice(0, 4), causeText);
+  };
+
+  G.succeedTo = function (heirId) {
+    const s = FB.state;
+    const p = s.player;
+    const old = s.chars[p.charId];
+    const heir = s.chars[heirId];
+    if (!heir) { FB.ui.gameOver(); return; }
+
+    s.generation++;
+    heir.dyn = old.dyn;
+    heir.role = null;
+    if (heir.health === undefined) heir.health = 8;
+    // a tutor of 'self' was the dead parent; the new life names its own teachers
+    if (heir.edu && heir.edu.tutorId === 'self') heir.edu.tutorId = null;
+    // coming-of-age events queued for a player who died a teen must not fire for the heir
+    s.eventQueue = s.eventQueue.filter(function (ev) {
+      return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated';
+    });
+    p.charId = heir.id;
+    p.dead = false;
+    p.gold = Math.round(p.gold * 0.9); // death dues
+    p.courtingId = null;
+    p.plot = null; // plots die with their plotter
+    p.itemOffer = null; // the peddler moves on; carried items pass to the heir
+    s.pregnant = null;
+    // treasures gifted to the heir in life rejoin the family hoard
+    if (heir.items && heir.items.length) {
+      const hoard = FB.itemList(s);
+      for (const iid of heir.items) if (hoard.indexOf(iid) < 0) hoard.push(iid);
+      heir.items = null;
+    }
+
+    // only property passes; personal standing must be rebuilt somewhat
+    const keep = {};
+    for (const fl of ['has_farm', 'own_ox']) if (p.flags[fl]) keep[fl] = 1; // buildings pass with the land itself
+    p.flags = keep;
+    p.fired = {}; p.cooldowns = {};
+    p.prestige = Math.round(p.prestige * 0.6);
+    p.piety = Math.round(p.piety * 0.5);
+    p.liegeOp = 0; p.liegeOps = {};
+    p.pop = Math.round(p.pop * 0.5);
+    // death dues and standing cuts must not read as a season's losses
+    s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
+    s.seasonNet = null;
+    if (p.profession === 'monk' || p.profession === 'priest') p.profession = 'farmer';
+    if (p.tier >= 2) p.profession = 'noble';
+    delete s.roles.spouse; delete s.roles.suitor;
+    p.namedHeirId = null; // the new life names its own successor
+    p.focus = FB.defaultFocus(s);
+
+    // heirs of ruling houses keep the liege bond
+    if (p.tier >= 3 && !p.liege && !(s.realms.player && s.realms.player.alive)) {
+      const rid = (s.holder && s.holder[p.provinceId]) || s.owner[p.provinceId];
+      if (rid && rid !== 'player') p.liege = rid;
+    }
+    if (s.realms.player && s.realms.player.alive) {
+      s.realms.player.ruler = {
+        name: heir.name, culture: heir.culture,
+        age: FB.ageOf(heir, s.date.year), mar: FB.skillOf(heir, 'mar')
+      };
+    }
+
+    FB.news(s, '👤 ' + FB.fullName(heir) + ' takes up the family’s story. Generation ' + s.generation + '.');
+    G.paused = true; // a new life begins at rest
+    FB.ui.refresh();
+    FB.save.autosave();
+  };
+
+  /* ================= save/load/title ================= */
+  G.loadSlot = function (slot) {
+    const data = FB.save.read(slot);
+    if (!data) { FB.ui.toast('No save found.'); return; }
+    // a life cannot wake up in the wrong world: the map ids would not fit
+    if (FB.save.otherWorld(data)) {
+      FB.ui.toast(data.mods ?
+        '🧩 That life was lived in a modded world. Enable the same mod(s) (Mods menu) to continue it.' :
+        '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.');
+      return;
+    }
+    FB.save.restore(data);
+    G.pickMode = false;
+    G.paused = true;
+    FB.ui.mapDirty();
+    FB.map.playerProv = FB.state.player.provinceId;
+    FB.ui.showGame();
+    FB.map.centerOn(FB.state.player.provinceId, 2.0);
+    FB.map.select(null);
+    FB.ui.refresh();
+    FB.ui.toast('The chronicle resumes — ' + FB.SEASONS[FB.state.date.season] + ' ' + FB.state.date.year + ' AD.');
+  };
+
+  G.toTitle = function () {
+    if (FB.state && !FB.state.player.dead) FB.save.autosave();
+    FB.state = null;
+    G.pickMode = false;
+    G.paused = true;
+    refreshTitle();
+    FB.ui.showScreen('title');
+  };
+})();

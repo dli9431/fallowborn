@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Fallowborn</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ======== LOADING ======== -->
+  <div id="loading" class="screen">
+    <h1 class="gametitle">Fallowborn</h1>
+    <p id="loadmsg">Drawing the known world&hellip;</p>
+    <div class="loadbarwrap"><div id="loadbar"></div></div>
+  </div>
+
+  <!-- ======== TITLE ======== -->
+  <div id="title" class="screen hidden">
+    <canvas id="titlecrest" width="120" height="140"></canvas>
+    <h1 class="gametitle">Fallowborn</h1>
+    <p class="subtitle">From serf to sovereign &mdash; a dynasty saga of the early Middle Ages</p>
+    <p id="title-mods" class="modnote hidden"></p>
+    <div class="menubtns">
+      <button id="btn-continue" class="bigbtn hidden">Continue</button>
+      <button id="btn-newgame" class="bigbtn">New Game</button>
+      <button id="btn-load" class="bigbtn">Load Game</button>
+      <button id="btn-mods" class="bigbtn">Mods</button>
+      <button id="btn-help" class="bigbtn">How to Play</button>
+    </div>
+    <p class="credits">A one-file-folder game for the browser &middot; all art procedural &middot; moddable &middot; v1.0</p>
+  </div>
+
+  <!-- ======== NEW GAME: SCENARIO ======== -->
+  <div id="newgame" class="screen hidden">
+    <h2>Choose Your Beginning &mdash; Anno Domini 867</h2>
+    <div id="scenariolist"></div>
+    <div class="row gap">
+      <button id="btn-ng-back" class="btn">Back</button>
+    </div>
+  </div>
+
+  <!-- ======== NEW GAME: PROVINCE PICK ======== -->
+  <div id="pickprov" class="screen hidden">
+    <h2>Where were you born?</h2>
+    <p class="hint">Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.</p>
+    <div id="pickinfo" class="pickinfo">No province chosen &mdash; a random home will be found.</div>
+    <div class="row gap wrap">
+      <button id="btn-pick-back" class="btn">Back</button>
+      <button id="btn-pick-random" class="btn">Random Province</button>
+      <button id="btn-pick-next" class="btn primary">Next</button>
+    </div>
+  </div>
+
+  <!-- ======== NEW GAME: CHARACTER ======== -->
+  <div id="chargen" class="screen hidden">
+    <h2>Who are you?</h2>
+    <div class="cgform">
+      <label>Name <input id="cg-name" type="text" maxlength="20"></label>
+      <button id="cg-reroll" class="btn small">&#127922; Random name</button>
+      <div class="row gap">
+        <label class="radio"><input type="radio" name="cg-sex" value="m" checked> Man</label>
+        <label class="radio"><input type="radio" name="cg-sex" value="f"> Woman</label>
+      </div>
+      <p class="hint">Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.</p>
+      <div id="cg-summary" class="pickinfo"></div>
+    </div>
+    <div class="row gap">
+      <button id="btn-cg-back" class="btn">Back</button>
+      <button id="btn-cg-start" class="btn primary">Begin Your Story</button>
+    </div>
+  </div>
+
+  <!-- ======== GAME ======== -->
+  <div id="game" class="hidden">
+    <div id="topbar">
+      <canvas id="tb-portrait" width="30" height="34"></canvas>
+      <canvas id="crest" width="26" height="30"></canvas>
+      <div id="tb-id">
+        <div id="tb-name">&mdash;</div>
+        <div id="tb-title">&mdash;</div>
+      </div>
+      <div id="tb-stats">
+        <span class="stat" id="tb-gold" title="Gold (&plusmn; net over the last season)">&#128176; 0</span>
+        <span class="stat" id="tb-prestige" title="Prestige (&plusmn; net over the last season)">&#11088; 0</span>
+        <span class="stat" id="tb-piety" title="Piety (&plusmn; net over the last season)">&#128591; 0</span>
+        <span class="stat" id="tb-health" title="Health">&#10084;&#65039; 10</span>
+      </div>
+      <div id="tb-date">Spring 867</div>
+      <button id="btn-menu" class="btn small">&#9776;</button>
+    </div>
+
+    <div id="main">
+      <div id="mapwrap">
+        <canvas id="map"></canvas>
+        <div id="maphud">
+          <button id="btn-zoomin" class="btn hudbtn">+</button>
+          <button id="btn-zoomout" class="btn hudbtn">&minus;</button>
+          <button id="btn-home" class="btn hudbtn" title="Center on home">&#8962;</button>
+        </div>
+        <div id="toasts"></div>
+      </div>
+      <!-- #panels is invisible on desktop (display:contents) and becomes a
+           swipeable page carousel on phones -->
+      <div id="panels">
+        <div id="left">
+          <div id="lefttabs">
+            <button class="tab active" data-tab="char">Self</button>
+            <button class="tab" data-tab="family">Kin</button>
+            <button id="btn-closeself" class="tab" aria-label="Close">&#10005;</button>
+          </div>
+          <div id="leftbody">
+            <div id="tab-char" class="tabpane active"></div>
+            <div id="tab-family" class="tabpane"></div>
+          </div>
+        </div>
+        <div id="side">
+          <div id="sidetabs">
+            <button class="tab active" data-tab="actions">Deeds</button>
+            <button class="tab" data-tab="prov">Land</button>
+            <button class="tab" data-tab="log">Chronicle</button>
+          </div>
+          <div id="sidebody">
+            <div id="tab-actions" class="tabpane active"></div>
+            <div id="tab-prov" class="tabpane"></div>
+            <div id="tab-log" class="tabpane"></div>
+          </div>
+          <div id="timebtns">
+            <button id="btn-endturn" class="bigbtn">&#9654; Play</button>
+            <button id="btn-skip" class="bigbtn" title="Skip ahead to the next happening (F)">&#9654;&#9654;</button>
+            <button id="btn-auto" class="bigbtn" title="Automation (Z)">&#9881;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== EVENT MODAL ======== -->
+  <div id="eventmodal" class="modal hidden">
+    <div class="modalcard">
+      <h3 id="ev-title">Event</h3>
+      <div id="ev-text" class="evtext"></div>
+      <div id="ev-options"></div>
+    </div>
+  </div>
+
+  <!-- ======== GENERIC MODAL (menu, help, mods, load, death...) ======== -->
+  <div id="genmodal" class="modal hidden">
+    <div class="modalcard">
+      <h3 id="gm-title"></h3>
+      <div id="gm-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- data (moddable) -->
+<script src="data/map_data.js"></script>
+<script src="data/counties.js"></script>
+<script src="data/cultures.js"></script>
+<script src="data/traits.js"></script>
+<script src="data/events_common.js"></script>
+<script src="data/events_peasant.js"></script>
+<script src="data/events_paths.js"></script>
+<script src="data/events_noble.js"></script>
+<script src="data/events_world.js"></script>
+<script src="data/events_war.js"></script>
+<!-- bundled mods (register into window.FBMODS): add <script> tags here -->
+<!-- engine -->
+<script src="js/util.js"></script>
+<script src="js/model.js"></script>
+<script src="js/portrait.js"></script>
+<script src="js/world.js"></script>
+<script src="js/mapview.js"></script>
+<script src="js/events.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/keys.js"></script>
+<script src="js/save.js"></script>
+<script src="js/mods.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
