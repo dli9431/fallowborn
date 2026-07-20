@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.3.0';
+  FB.VERSION = '1.4.0';
   FB.CHANGELOG = [
+    { v: '1.4.0', date: '2026-07-20', changes: [
+      'Clicking the dead in the family tree opens their sheet: birth and death years, skills, and traits.'
+    ] },
     { v: '1.3.0', date: '2026-07-20', changes: [
       'Clicking your own province highlights your own realm, not your liege’s.',
       'New map filter (🗺 button or R key) cycles the highlight: Realm → Mine → Liege.'
@@ -770,6 +773,7 @@ window.FB = window.FB || {};
     const p = s.player;
     const me = s.chars[p.charId];
     me.dead = true;
+    me.died = s.date.year; // killChar is bypassed for the player's own death
     p.dead = true;
     FB.news(s, '☠ ' + causeText);
     FB.ui.showDeath(FB.heirsOf(s).slice(0, 4), causeText);

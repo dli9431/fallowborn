@@ -442,6 +442,21 @@ window.FB = window.FB || {};
         if (idf) itc += '<span class="traitchip" data-itemview="' + esc(iid) + '">' + idf.icon + ' ' + esc(FB.fmt(s, idf.name, {})) + '</span>';
       }
     }
+    // the dead are remembered, not met: dates and deeds, no dealings
+    if (c.dead) {
+      const life = c.died !== undefined ?
+        '† ' + c.born + '–' + c.died + ' (aged ' + (c.died - c.born) + ')' : '† born ' + c.born;
+      return '<div class="charcard">' + FB.faceTag(c, 56, 64) +
+        '<div><div class="ccname">' + esc(FB.fullName(c)) + '</div>' +
+        '<div class="ccmeta">' + (c.epithet ? esc(c.epithet) + ' · ' : '') +
+        (c.sex === 'f' ? 'Woman' : 'Man') +
+        (c.station !== undefined && c.station !== null ? ' · ' + FB.STATION_NAMES[FB.stationOf(c)] : '') +
+        ' · ' + esc(cul.name) + ' · ' + rel.icon + ' ' + esc(rel.name) + '</div>' +
+        '<div class="ccmeta">' + (relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + life + '</div>' +
+        '<div class="ccskills">' + esc(sk) + '</div>' +
+        '<div>' + (tr || '<span class="cmeta">No notable traits.</span>') + '</div>' +
+        (itc ? '<div>' + itc + '</div>' : '') + '</div></div>';
+    }
     const op = Math.round(c.opinion);
     // fertility as the conception roll sees it: the character's own hidden
     // roll times trait leanings (lustful, comely, strong up; chaste, sickly
@@ -1416,9 +1431,17 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s) return;
     const c = s.chars[cid];
-    if (!c || c.dead) return;
+    if (!c) return;
     const me = s.chars[s.player.charId];
     let h = UI.charCardHtml(s, c);
+    // the dead get a sheet for remembrance — their dates, skills, traits — but no dealings
+    if (c.dead) {
+      h += '<button class="btn" id="cm-close" style="margin-top:10px">Close</button>';
+      openModal(FB.fullName(c), h);
+      FB.paintFaces($('gm-body'), s);
+      $('cm-close').addEventListener('click', UI.closeModal);
+      return;
+    }
     h += '<div class="gm-list" style="margin-top:10px">';
     const isFamily = c.id === me.spouseId || me.childrenIds.indexOf(c.id) >= 0 ||
       (c.role === 'sibling' && c.dyn === me.dyn);
