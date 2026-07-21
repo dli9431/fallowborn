@@ -27,7 +27,21 @@ There is no build. **Testing is manual, by the human, in a browser.**
 > and test manually, telling them what to look at.
 
 Deployment: zip the folder contents with `index.html` at the zip root, upload to itch.io as an
-HTML5 project ("played in the browser"), enable *Mobile friendly*.
+HTML5 project ("played in the browser"), enable *Mobile friendly*. In practice the owner
+deploys with `notes/deploy.cmd` (butler push), which does the packaging automatically.
+
+**Cache-busting (why FB.VERSION matters twice):** `notes/deploy.cmd` runs `notes/stamp.ps1`,
+which appends `?v=<FB.VERSION>` to every `css/`, `js/`, `data/`, and `mods/` URL in the
+*staged* `index.html` before the itch push. That makes the version the cache key for the itch
+build, so browsers and the itch CDN fetch fresh files on each release — another reason every
+player-facing change **must** bump `FB.VERSION` (see `docs/VERSIONS.md`). A release that ships
+changed code without bumping the version will be served stale. Never add `?v=` to the
+committed `index.html`: query strings break `file://` loads, so the stamp is applied only to
+the deploy stage, never the repo.
+
+Note: `play.fallowborn.com` is served from a **separate** origin (nginx behind Cloudflare),
+not from itch — `deploy.cmd` does not update it. Cache freshness there is controlled by the
+origin/Cloudflare `Cache-Control` headers, independent of this stamp.
 
 ## Git workflow
 
