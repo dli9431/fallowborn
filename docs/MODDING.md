@@ -277,8 +277,11 @@ Muslim player. Three tools, from lightest to heaviest:
    `provinceCultures` triggers work the same way for culture- or region-specific events.
 
 An event may also set `"charCard": "suitor"` (or any role name) to display that character's
-portrait, age, faith, skills, and traits inside the event popup — used by the matchmaking
-events.
+card inside the event popup — portrait, house arms, home county and allegiance, age, faith,
+skills, and traits — used by the matchmaking events. A card also appears automatically for
+every `{lord}` / `{priest}` / `{friend}` / `{rival}` / `{spouse}` / `{suitor}` token used in
+the event's title, text, option labels, or branch texts, so a named character never arrives
+as a bare name.
 
 ## Buildings
 

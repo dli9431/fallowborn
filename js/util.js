@@ -123,4 +123,14 @@ window.FB = window.FB || {};
     ctx.closePath();
     ctx.strokeStyle = '#d8b24a'; ctx.lineWidth = Math.max(1.5, w * 0.05); ctx.stroke();
   };
+
+  /* crest markup for cards: painted by FB.paintCrests once the html lands */
+  FB.crestTag = function (seed, w, h) {
+    return '<canvas class="crest" data-seed="' + FB.esc(seed) + '" width="' + w + '" height="' + h + '"></canvas>';
+  };
+  FB.paintCrests = function (root) {
+    if (!root) return;
+    const list = root.querySelectorAll('canvas.crest[data-seed]');
+    for (let i = 0; i < list.length; i++) FB.drawCrest(list[i], list[i].getAttribute('data-seed'));
+  };
 })();

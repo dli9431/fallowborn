@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.7.0';
+  FB.VERSION = '1.8.0';
   FB.CHANGELOG = [
+    { v: '1.8.0', date: '2026-07-21', changes: [
+      'Events show a card for every character they name — face, house arms, home, allegiance, skills, and traits — so a rival never arrives as a bare name.',
+      'Character cards and sheets show the character’s house arms and the coat of arms of the realm that holds their home.'
+    ] },
     { v: '1.7.0', date: '2026-07-21', changes: [
       'Great houses can fall: neglect a rising of the commons, a rival’s claim, or a murder plot through three warnings, and you lose every acre.',
       'Deposed sovereigns are replaced by a usurper realm that keeps the realm’s name, color, and vassals; a deposed vassal’s fiefs escheat to the liege.',

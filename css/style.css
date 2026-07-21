@@ -289,6 +289,10 @@ textarea.modjson {
 .charcard .ccname { color: #ecd9a0; font-size: 14px; }
 .charcard .ccmeta { color: #a89878; font-size: 12px; margin: 2px 0 4px; }
 .charcard .ccskills { color: #c4b494; font-size: 12px; margin-bottom: 3px; }
+/* coats of arms ride inline on cards: house shield by the name, realm shield
+   by the home line; drawCrest strokes its own border, no css frame needed */
+.ccname .crest { vertical-align: -4px; margin-left: 6px; }
+.ccmeta .crest { vertical-align: -3px; margin-right: 4px; }
 #selfportrait { display: block; margin: 0 auto 8px; }
 
 /* ---------- family tree modal ----------

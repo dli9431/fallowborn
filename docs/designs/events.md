@@ -8,5 +8,9 @@ docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queue
 Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 [time.md](time.md)).
 
+The event modal shows a character card for the event's `charCard` role and for every
+`{role}` token the event's strings mention (js/ui.js `showEvent`); cards carry the
+character's house arms, home county, and the arms of the realm holding it.
+
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for
 the childhood event filter, [time.md](time.md) for slot days and autoresolve.
