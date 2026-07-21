@@ -424,8 +424,33 @@ window.FB = window.FB || {};
     return null;
   }
 
+  /* whose banner a character marches under: home county, the realm holding
+     it, and that realm's coat of arms (the same seed the liege sheet uses) */
+  function homeLineHtml(s, c) {
+    const pid = FB.homeOf(s, c);
+    const pr = pid && FB.world.byId[pid];
+    if (!pr) return '';
+    const hid = (s.holder && s.holder[pid]) || s.owner[pid];
+    let crest = '', txt = 'of ' + pr.name;
+    if (hid === 'player') {
+      const me = s.chars[s.player.charId];
+      crest = FB.crestTag(me.dyn || me.name, 14, 16);
+      txt += (s.realms.player && s.realms.player.alive) ? ' · ' + s.realms.player.name : ' · your lands';
+      const lr = s.player.liege && s.realms[s.player.liege];
+      if (lr) txt += ' · sworn to ' + lr.name;
+    } else if (hid && s.realms[hid] && s.realms[hid].alive) {
+      const r = s.realms[hid];
+      crest = FB.crestTag(hid, 14, 16);
+      txt += ' · ' + r.name;
+      if (r.liege === 'player') txt += ' · sworn to you';
+      else if (r.liege && s.realms[r.liege]) txt += ' · sworn to ' + s.realms[r.liege].name;
+    }
+    return '<div class="ccmeta">' + crest + esc(txt) + '</div>';
+  }
+
   UI.charCardHtml = function (s, c, clickable) {
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
+    const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
     for (const k of FB.SKILLS) sk += FB.SKILL_NAMES[k] + ' ' + FB.skillOf(c, k) + ' · ';
     sk = sk.slice(0, -3);
@@ -447,11 +472,12 @@ window.FB = window.FB || {};
       const life = c.died !== undefined ?
         '† ' + c.born + '–' + c.died + ' (aged ' + (c.died - c.born) + ')' : '† born ' + c.born;
       return '<div class="charcard">' + FB.faceTag(c, 56, 64) +
-        '<div><div class="ccname">' + esc(FB.fullName(c)) + '</div>' +
+        '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
         '<div class="ccmeta">' + (c.epithet ? esc(c.epithet) + ' · ' : '') +
         (c.sex === 'f' ? 'Woman' : 'Man') +
         (c.station !== undefined && c.station !== null ? ' · ' + FB.STATION_NAMES[FB.stationOf(c)] : '') +
         ' · ' + esc(cul.name) + ' · ' + rel.icon + ' ' + esc(rel.name) + '</div>' +
+        homeLineHtml(s, c) +
         '<div class="ccmeta">' + (relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + life + '</div>' +
         '<div class="ccskills">' + esc(sk) + '</div>' +
         '<div>' + (tr || '<span class="cmeta">No notable traits.</span>') + '</div>' +
@@ -469,11 +495,12 @@ window.FB = window.FB || {};
         : ' · 🌱 fertility ' + Math.round((c.fertility || 1) * FB.traitAgg(c).fert * FB.ageFert(c.sex, cage) * 100) + '%';
     }
     return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="Open their sheet and your dealings with them"' : '') + '>' + FB.faceTag(c, 56, 64) +
-      '<div><div class="ccname">' + esc(FB.fullName(c)) + '</div>' +
+      '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
       '<div class="ccmeta">' + (c.epithet ? esc(c.epithet) + ' · ' : '') +
       (c.sex === 'f' ? 'Woman' : 'Man') + ' of ' + FB.ageOf(c, s.date.year) +
       (c.station !== undefined && c.station !== null ? ' · ' + FB.STATION_NAMES[FB.stationOf(c)] : '') +
       ' · ' + esc(cul.name) + ' · ' + rel.icon + ' ' + esc(rel.name) + '</div>' +
+      homeLineHtml(s, c) +
       '<div class="ccmeta">' + (c.id === s.player.charId ? 'This is you' :
         ((relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + maritalText(s, c) +
         ' · regard <span class="' + FB.opClass(op) + '">' + (op > 0 ? '+' : '') + op + '</span>')) + fert + '</div>' +
@@ -981,6 +1008,32 @@ window.FB = window.FB || {};
     return false;
   }
 
+  /* every soul an event names gets a card — face, house arms, home, and
+     allegiance — so "Reginbald insulted me" never arrives as a bare name.
+     Scans the raw strings (title, text variants, option labels, branch
+     texts) for {role} tokens; fmt creates those roles as it renders. */
+  function eventCharCards(s, ev, carded) {
+    let raw = ' ';
+    function add(x) {
+      if (!x) return;
+      if (typeof x === 'string') raw += x + ' ';
+      else if (typeof x === 'object') { for (const k in x) add(x[k]); }
+    }
+    add(ev.title); add(ev.text);
+    for (const o of (ev.options || [])) {
+      add(o.label); add(o.desc);
+      if (o.success) add(o.success.text);
+      if (o.failure) add(o.failure.text);
+    }
+    let h = '';
+    for (const role of ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor']) {
+      if (raw.indexOf('{' + role + '}') < 0) continue;
+      const c = FB.getRole(s, role, true);
+      if (c && !carded[c.id]) { carded[c.id] = 1; h += UI.charCardHtml(s, c); }
+    }
+    return h;
+  }
+
   function showEvent(ev, ctx) {
     const s = FB.state;
     eventOpen = true;
@@ -988,10 +1041,12 @@ window.FB = window.FB || {};
     $('eventmodal').classList.remove('hidden');
     $('ev-title').textContent = FB.fmt(s, ev.title, ctx);
     let bodyHtml = esc(FB.fmt(s, ev.text, ctx));
+    const carded = {};
     if (ev.charCard) {
       const cc = FB.getRole(s, ev.charCard, true);
-      if (cc) bodyHtml += UI.charCardHtml(s, cc);
+      if (cc) { bodyHtml += UI.charCardHtml(s, cc); carded[cc.id] = 1; }
     }
+    bodyHtml += eventCharCards(s, ev, carded);
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
     const box = $('ev-options');

@@ -16,3 +16,10 @@ safe-area insets. Hover-only affordances need a tap path (item chips toast their
 description).
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
+
+**Heraldry is procedural** (`FB.drawCrest` in js/util.js, seeded by house name or realm id —
+the same seed gives the same shield everywhere, from the topbar to the liege sheet).
+Character cards carry the character's house arms and the arms of the realm holding their
+home county (`FB.homeOf` resolves the county). `FB.paintFaces` also paints every
+`canvas.crest[data-seed]` under its root, so any panel that renders faces gets crests for
+free.
