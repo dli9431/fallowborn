@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.3.0';
+  FB.VERSION = '1.3.1';
   FB.CHANGELOG = [
+    { v: '1.3.1', date: '2026-07-20', changes: [
+      'A child’s Study focus trains half as fast (it was twice the best adult focus).',
+      'Childhood lesson events recur half as often (cooldowns doubled to 6–8 seasons).'
+    ] },
     { v: '1.3.0', date: '2026-07-20', changes: [
       'Clicking your own province highlights your own realm, not your liege’s.',
       'New map filter (🗺 button or R key) cycles the highlight: Realm → Mine → Liege.'

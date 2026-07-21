@@ -419,14 +419,14 @@ FBDATA.events.push(
    While the player is under 16 the engine fires ONLY childhood:true events,
    so every event here gates maxAge:15 and carries the tag. */
 { id:'child_lessons', title:'Letters in the Dust',
-  trigger:{ maxAge:15, minAge:6, chance:0.3 }, childhood:true, weight:8, cooldown:4,
+  trigger:{ maxAge:15, minAge:6, chance:0.3 }, childhood:true, weight:8, cooldown:8,
   text:'The {holy} traces letters in the dust with a stick and looks at you expectantly. Few children are offered even this much.',
   options:[
     { label:'Trace them until they stay.', effects:{ skills:{lea:1}, piety:2, opinion:{role:'priest', amt:5} } },
     { label:'Slip away to the fields.', effects:{ health:1, opinion:{role:'priest', amt:-3} } }
   ]},
 { id:'child_dare', title:'The Dare',
-  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:3,
+  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:6,
   text:'The old willow leans far over the millpond, and every child knows the dare: climb to the high branch and jump.',
   options:[
     { label:'Climb. Jump.', chance:0.6,
@@ -435,7 +435,7 @@ FBDATA.events.push(
     { label:'Walk away from it.', effects:{ } }
   ]},
 { id:'child_snares', title:'The Small Hunter',
-  trigger:{ maxAge:15, minAge:6, tierMax:1, chance:0.25 }, childhood:true, weight:7, cooldown:3,
+  trigger:{ maxAge:15, minAge:6, tierMax:1, chance:0.25 }, childhood:true, weight:7, cooldown:6,
   text:'You have watched the older boys set snares along the hedgerow. Your fingers know the knots now, and supper is thin.',
   options:[
     { label:'Set your snares.', chance:0.6,
@@ -444,7 +444,7 @@ FBDATA.events.push(
     { label:'The hedgerow can wait.', effects:{ } }
   ]},
 { id:'child_bully', title:'The Big One',
-  trigger:{ maxAge:15, minAge:6, chance:0.2 }, childhood:true, weight:7, cooldown:4,
+  trigger:{ maxAge:15, minAge:6, chance:0.2 }, childhood:true, weight:7, cooldown:8,
   text:'The miller’s son is a head taller than anyone his age and has decided you are today’s sport. The lane is blocked, and the other children are watching.',
   options:[
     { label:'Fight him.', chance:0.45,
@@ -456,7 +456,7 @@ FBDATA.events.push(
     { label:'Go the long way round.', effects:{ } }
   ]},
 { id:'child_page', title:'A Page in the Hall',
-  trigger:{ maxAge:15, minAge:6, tierMin:2, chance:0.3 }, childhood:true, weight:8, cooldown:4,
+  trigger:{ maxAge:15, minAge:6, tierMin:2, chance:0.3 }, childhood:true, weight:8, cooldown:8,
   text:'A child of your standing serves at the high table before ruling from behind it: pouring, carrying, and above all listening.',
   options:[
     { label:'Serve flawlessly.', effects:{ skills:{dip:1}, opinion:{role:'lord', amt:5} } },
@@ -465,7 +465,7 @@ FBDATA.events.push(
       failure:{ text:'Caught lingering behind the arras. The steward’s cuff rings your ear.', effects:{ health:-1, opinion:{role:'lord', amt:-3} } } }
   ]},
 { id:'child_festival', title:'Festival, Waist-High',
-  trigger:{ maxAge:15, minAge:6, seasons:[1], chance:0.3 }, childhood:true, weight:7, cooldown:4,
+  trigger:{ maxAge:15, minAge:6, seasons:[1], chance:0.3 }, childhood:true, weight:7, cooldown:8,
   text:'Festival day, seen from below: a forest of legs, the smell of honey-cakes, and the children’s footrace at noon.',
   options:[
     { label:'Run the race.', chance:0.5,
@@ -476,7 +476,7 @@ FBDATA.events.push(
       failure:{ text:'The baker has met children before.', effects:{ } } }
   ]},
 { id:'child_wooden_swords', title:'Wooden Swords',
-  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:3,
+  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:6,
   text:'The village children divide into two armies with stick-swords and hurdle-shields. Someone must lead the charge.',
   options:[
     { label:'Lead it.', effects:{ skills:{mar:1}, prestige:1 } },
@@ -484,7 +484,7 @@ FBDATA.events.push(
     { label:'Guard the baggage (a basket).', effects:{ } }
   ]},
 { id:'child_winter_tales', title:'Tales by the Fire',
-  trigger:{ maxAge:15, minAge:6, seasons:[3], chance:0.3 }, childhood:true, weight:7, cooldown:3,
+  trigger:{ maxAge:15, minAge:6, seasons:[3], chance:0.3 }, childhood:true, weight:7, cooldown:6,
   text:'Snow seals the doors, and the old ones talk: wars and wonders, debts and dooms, and who really owns the far field.',
   options:[
     { label:'Remember every word.', effects:{ skills:{lea:1} } },
