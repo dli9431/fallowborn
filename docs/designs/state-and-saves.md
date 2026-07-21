@@ -6,4 +6,9 @@ world data. `js/save.js` snapshots `FB.state` + RNG state + uid counter to local
 the raster is rebuilt deterministically at boot, so saves only reference ids. Saves are
 version 3; older saves are rejected.
 
+`state.legends` records each player character at death (`js/main.js` `recordLegend`):
+id, name, born/died years, styled title, and a quip rolled once from traits, stats, and
+cause of death. The end screen (`UI.gameOver`) reads it; saves from before the field
+existed grow it at the first death after loading.
+
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set.

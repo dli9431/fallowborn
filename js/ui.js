@@ -2001,13 +2001,25 @@ window.FB = window.FB || {};
       '<div class="kv"><span>Highest rank attained</span><b>' + esc(s.peakTitle || 'Serf') + '</b></div>' +
       '<div class="kv"><span>Final wealth</span><b>' + Math.floor(s.player.gold) + ' gold</b></div>' +
       '<div class="kv"><span>Prestige</span><b>' + Math.floor(s.player.prestige) + '</b></div>' +
-      '<div class="kv"><span>Piety</span><b>' + Math.floor(s.player.piety) + '</b></div>' +
-      '<h4>Last lines of the chronicle</h4>';
+      '<div class="kv"><span>Piety</span><b>' + Math.floor(s.player.piety) + '</b></div>';
+    if (s.legends && s.legends.length) {
+      h += '<h4>Those who carried the name</h4>';
+      for (const lg of s.legends) {
+        const lc = s.chars[lg.id];
+        h += '<div class="row gap" style="align-items:center;margin:6px 0">' +
+          (lc ? FB.faceTag(lc, 32, 38) : '') +
+          '<div style="flex:1"><b>' + esc(lg.name) + '</b> <span class="hint">' + esc(lg.title) +
+          ' · ' + lg.born + '–' + lg.died + '</span><br>' +
+          '<span class="hint"><i>' + esc(lg.quip) + '</i></span></div></div>';
+      }
+    }
+    h += '<h4>Last lines of the chronicle</h4>';
     for (let i = Math.max(0, s.log.length - 6); i < s.log.length; i++) {
       h += '<p>· ' + esc(s.log[i].t) + '</p>';
     }
     h += '</div><button class="btn primary" id="gm-title-btn">Return to title</button>';
     openModal('The Chronicle Closes', h, { dismissable: false });
+    FB.paintFaces($('gm-body'), s);
     $('gm-title-btn').addEventListener('click', function () {
       UI.closeModal();
       FB.game.toTitle();
