@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.6.1';
+  FB.VERSION = '1.7.0';
   FB.CHANGELOG = [
+    { v: '1.7.0', date: '2026-07-21', changes: [
+      'Great houses can fall: neglect a rising of the commons, a rival’s claim, or a murder plot through three warnings, and you lose every acre.',
+      'Deposed sovereigns are replaced by a usurper realm that keeps the realm’s name, color, and vassals; a deposed vassal’s fiefs escheat to the liege.',
+      'The fallen drop to landless gentry, keeping gold, treasures, and family property.'
+    ] },
     { v: '1.6.1', date: '2026-07-20', changes: [
       'A child’s Study focus trains half as fast (it was twice the best adult focus).',
       'Childhood lesson events recur half as often (cooldowns doubled to 6–8 seasons).'

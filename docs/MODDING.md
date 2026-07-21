@@ -235,7 +235,8 @@ handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_s
 war_thin war_terms` (and the `war_can_siege` trigger) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist` live in `js/events.js`;
-mods may register their own before use).
+the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
+gentry — the second flees abroad) live in `js/world.js`; mods may register their own before use).
 
 ### Text tokens
 
