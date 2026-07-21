@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.6.0';
+  FB.VERSION = '1.6.1';
   FB.CHANGELOG = [
+    { v: '1.6.1', date: '2026-07-20', changes: [
+      'A child’s Study focus trains half as fast (it was twice the best adult focus).',
+      'Childhood lesson events recur half as often (cooldowns doubled to 6–8 seasons).'
+    ] },
     { v: '1.6.0', date: '2026-07-20', changes: [
       'The ladder is steeper: freedom costs 100 gold, a manor 600 gold and 150 prestige, a barony 250 prestige, a liege’s grant 400 prestige and favor 65.',
       'Petitions to lord and liege can be brought less often, and lieges grant land more grudgingly.',

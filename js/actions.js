@@ -28,7 +28,7 @@ window.FB = window.FB || {};
 
   { id: 'study', label: '📖 Study', desc: function () { return 'Learn from whoever will teach you.'; },
     show: function (s) { return !adult(s); },
-    tick: function (s) { if (dch(1.0)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
+    tick: function (s) { if (dch(0.5)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
   { id: 'play', label: '🪁 Play', desc: function () { return 'Childhood is short. Spend it well.'; },
     show: function (s) { return !adult(s); },
     tick: function (s) {
