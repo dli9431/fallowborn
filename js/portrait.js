@@ -221,6 +221,7 @@ window.FB = window.FB || {};
         { profession: state.player.profession, tier: state.player.tier } : null;
       FB.paintPortrait(list[i], c, state.date.year, opts);
     }
+    FB.paintCrests(root); // util.js loads first; crests ride along with faces
   };
 
   FB.faceTag = function (c, w, h) {
