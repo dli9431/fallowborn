@@ -186,7 +186,7 @@ window.FB = window.FB || {};
       }).join('') + (hg ? ' · +' + (Math.round(hg * 10) / 10) + ' gold/season' : '') + '</div>';
     }
     if (s.player.tier >= 3) {
-      const lg = s.player.liege && s.realms[s.player.liege];
+      const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
       h += '<div class="progressnote">💰 Seasonal revenue ~' + FB.playerTax(s) + ' gold · 🛡 levy ~' + FB.playerLevy(s) + ' men' +
         (lg ? ' · vassal of <span class="linklike" data-liege="' + esc(s.player.liege) +
           '" title="See your liege’s sheet">' + esc(lg.name) + '</span>' : ' · independent') + '</div>';
@@ -254,7 +254,7 @@ window.FB = window.FB || {};
     const tips = {
       0: 'Path: save ' + FBDATA.balance.freedomCost + ' gold (or win your lord’s favor) to buy freedom.',
       1: 'Path: prosper, buy land, and a manor (' + FBDATA.balance.manorCost + ' gold + ' + FBDATA.balance.manorPrestige + ' prestige) to join the gentry. Soldiering and the church offer other roads.',
-      2: 'Path: serve your lord, win renown (120+ prestige, lord’s favor 40+), and petition for a barony.',
+      2: 'Path: serve your lord, win renown (250+ prestige, lord’s favor 40+), and petition for a barony.',
       3: 'Path: petition your liege for a county — or declare independence and take one.',
       4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer) to be styled duke.',
       5: 'Path: hold the majority of a de jure kingdom and win independence to be crowned king.',
