@@ -30,5 +30,17 @@ share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserve
 monk/priest) but manages the manor and may petition for a barony like any gentry. Promotions above count happen in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
 
+**Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
+give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a
+rival's claim, and a murder conspiracy (tier 3+, a rival with deep hatred) — each three
+flag-marked stages with a paid or skill escape at every step. Only repeated neglect or
+bad luck reaches the final stage, whose failure calls `FB.loseAllLand` (js/world.js):
+a sovereign's realm passes whole to a generated usurper realm (same name and color; the
+fallen house's vassals reattach to it), a vassal's fiefs escheat to his liege, and the
+family drops to landless gentry (tier 2) keeping gold, items, and holdings. Succession
+wipes the slide flags with the rest of `player.flags`, so a stalled plot never outlives
+its generation. Province-by-province loss in a lost defensive war (`FB.warLoseProvince`)
+remains the other way down, landing at the same tier 2.
+
 Related: [provinces.md](provinces.md) for the land itself; [state-and-saves.md](state-and-saves.md)
 for where ownership is stored.

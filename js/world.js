@@ -748,6 +748,56 @@ window.FB = window.FB || {};
     FB.endPlayerWar(state);
   };
 
+  /* The house falls: every acre lost, the family back to landless gentry.
+     A sovereign's realm passes whole to a generated usurper (the realm
+     stands — the house falls; its vassals kneel to the new master); a
+     vassal's fiefs escheat to his liege; a baron simply loses his place.
+     Reached only at the end of the downfall event chains (df_* in
+     data/events_noble.js), each several unlucky or neglected stages deep. */
+  FB.loseAllLand = function (state, opts) {
+    opts = opts || {};
+    const p = state.player;
+    if (p.war) FB.endPlayerWar(state);
+    // the slide is over, one way or another — none of it follows the heir
+    for (const df of ['df_unrest', 'df_league', 'df_claim', 'df_claim2', 'df_marked', 'df_doom']) delete p.flags[df];
+    if (p.provs && p.provs.length) {
+      if ((state.realms.player && state.realms.player.alive) || !p.liege) {
+        const old = (state.realms.player && state.realms.player.alive) ? state.realms.player : null;
+        const cap = (old && old.capital) || p.provs[0];
+        const pr = FB.world.byId[cap];
+        const uid = 'usurper_' + state.turn;
+        const u = FB.makeVassalRealm(state, {
+          id: uid, name: old ? old.name : 'Realm of ' + (pr ? pr.name : 'the Usurper'),
+          capital: cap, rank: old ? old.rank : Math.max(1, p.tier - 3), liege: null,
+          culture: pr ? pr.culture : 'frankish'
+        });
+        u.color = old ? old.color : '#f0c840'; // the map barely ripples
+        if (old) { old.alive = false; old.war = null; }
+        for (const pid of p.provs) { state.owner[pid] = uid; state.holder[pid] = uid; }
+        for (const vid in state.realms) {
+          if (state.realms[vid].liege === 'player') state.realms[vid].liege = uid;
+        }
+        FB.news(state, '🏴 ' + u.ruler.name + ' seizes the seat — the realm endures; your house does not.');
+      } else {
+        // a vassal's fiefs escheat to his liege
+        for (const pid of p.provs) {
+          state.owner[pid] = FB.topRealm(state, p.liege);
+          state.holder[pid] = p.liege;
+        }
+        FB.news(state, '📜 Your fiefs escheat to ' + (state.realms[p.liege] ? state.realms[p.liege].name : 'your liege') + '.');
+      }
+      p.provs = [];
+    }
+    p.tier = 2;
+    p.liege = null; p.liegeOp = 0; p.liegeOps = {};
+    p.pop = 0;
+    p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
+    FB.invalidateRealmCache();
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    if (opts.flee) FB.movePlayerRandom(state);
+    FB.news(state, '⬇ Cast down. The family keeps its coffers and its name — but not an acre.');
+  };
+
   /* Check whether accumulated victories or defeats settle the war.
      Attackers take the target only by SIEGE (war_siege below); enough field
      wins force tribute, enough defeats break the campaign. */
@@ -870,6 +920,10 @@ window.FB = window.FB || {};
     }
     FB.endPlayerWar(state);
   };
+
+  /* downfall resolutions: the df_* event chains end here */
+  FB.fns.df_fall = function (state) { FB.loseAllLand(state, {}); };
+  FB.fns.df_fall_flee = function (state) { FB.loseAllLand(state, { flee: true }); };
 
   FB.foundPlayerRealm = function (state) {
     const me = state.chars[state.player.charId];

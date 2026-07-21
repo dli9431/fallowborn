@@ -205,5 +205,106 @@ FBDATA.events.push(
   options:[
     { label:'Let him go in peace.', effects:{ custom:'vassal_release', prestige:-10 } },
     { label:'Answer rebellion with iron.', effects:{ custom:'vassal_crush' } }
+  ]},
+/* ---- the downfall chains: how great houses fall -------------------------
+   Three slow cascades (the commons rise, a rival’s claim, the knife), each
+   three flag-marked stages deep. Every stage offers a paid or skill escape;
+   only sustained neglect or repeated bad luck reaches the final stage, whose
+   failure calls FB.loseAllLand (df_fall / df_fall_flee) — the family keeps
+   its gold, treasures, holdings and name, but not an acre. */
+{ id:'df_murmurs', title:'Murmurs in the Villages',
+  trigger:{ tierMin:4, popularOpinionBelow:-15, notFlags:['df_unrest'], chance:0.12 }, weight:6, cooldown:10,
+  text:'The reeves report it carefully, eyes down: the villages are sullen, the tax carts need armed escorts, and an old song about kinder lords is sung again in the taverns of {province}.',
+  options:[
+    { label:'Feast and gift the worst parishes. (15 gold)', require:{ goldMin:15 }, effects:{ gold:-15, popularOpinion:15 } },
+    { label:'A show of force on the roads.', chance:0.6,
+      success:{ text:'Patrols at every ford and fair. The songs quiet — for now.', effects:{ prestige:4 } },
+      failure:{ text:'A patrol is stoned, an armsman killed. Now there is a martyr, and the murmurs have a name to gather around.', effects:{ setFlag:'df_unrest', popularOpinion:-5 } } },
+    { label:'They will tire of it.', effects:{ setFlag:'df_unrest' } }
+  ]},
+{ id:'df_league', title:'The League of the Discontent',
+  trigger:{ tierMin:4, flags:['df_unrest'], popularOpinionBelow:-10, chance:0.25 }, weight:8, cooldown:4, wartime:true,
+  text:'It is no longer songs. Headmen from a dozen villages meet in barns, and a disgraced captain drills them at night. Your bailiff names it plainly: a league, sworn against your house.',
+  options:[
+    { label:'Buy the ringleaders, one by one. (25 gold)', require:{ goldMin:25 },
+      effects:{ gold:-25, clearFlag:'df_unrest', popularOpinion:10, log:'Bought off a rising against the house.' } },
+    { label:'Cow them before they march.', chance:'battle',
+      success:{ text:'Your men descend on the night-drill. The league scatters into the dark, leaderless and done.', effects:{ clearFlag:'df_unrest', prestige:6 } },
+      failure:{ text:'They were ready, and your men come home bloody. Now every fence-sitter knows you can be stood against.', effects:{ setFlag:'df_league', prestige:-8 } } },
+    { label:'Barns and talk. Let them meet.', effects:{ setFlag:'df_league' } }
+  ]},
+{ id:'df_revolt', title:'The Realm Rises',
+  trigger:{ tierMin:4, flags:['df_league'], chance:0.3 }, weight:10, cooldown:2, wartime:true,
+  text:'Fire in the night, from one end of your lands to the other. The league marches under a harvest-king of its own making, and your garrisons yield their towers rather than fight their neighbors. This is no riot — it is a war for your seat.',
+  options:[
+    { label:'Fight for your seat.', chance:'battle',
+      success:{ text:'Their harvest-king falls in the first press and the host melts back to its plows. You are merciless in victory, and no one sings that song again.', effects:{ clearFlag:'df_unrest', clearFlag2:'df_league', prestige:15, popularOpinion:-10, log:'Crushed the great rising of the commons.' } },
+      failure:{ text:'Your line breaks — and when it breaks, everything breaks. You ride from the field with a dozen men and the clothes you stand in.', effects:{ custom:'df_fall', log:'Cast down by a rising of the commons.' } } },
+    { label:'Abdicate and slip away.', desc:'Yield the lands and flee abroad with what you can carry.',
+      effects:{ custom:'df_fall_flee', log:'Fled a rising of the commons.' } },
+    { label:'Beg your liege’s aid. (20 gold)', require:{ isVassal:true, goldMin:20 },
+      effects:{ gold:-20, opinionLiege:-10, clearFlag:'df_unrest', clearFlag2:'df_league', log:'The liege’s host put down the rising — at a price.' } }
+  ]},
+{ id:'df_claim_whispers', title:'A Rival’s Quiet Work',
+  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-40 }, notFlags:['df_claim'], chance:0.12 }, weight:5, cooldown:12,
+  text:'{rival} dines your neighbors, remembers their sons’ names, and asks — always lightly — whether the land might not be better served. A spy in their household brings worse: parchments are being drawn up.',
+  options:[
+    { label:'Buy off the waverers. (20 gold)', require:{ goldMin:20 }, effects:{ gold:-20, log:'Spent freely to keep the fence-sitters loyal.' } },
+    { label:'Unmask the scheme at court.', chance:'plot',
+      success:{ text:'You name names before the assembled court, and watch {rival}’s friends find urgent business elsewhere.', effects:{ prestige:6, opinion:{ role:'rival', amt:-10 } } },
+      failure:{ text:'Your accusation rings hollow — half the court had already dined at {rival}’s table. They smile, and work faster.', effects:{ setFlag:'df_claim', prestige:-4 } } },
+    { label:'Pay it no mind.', effects:{ setFlag:'df_claim' } }
+  ]},
+{ id:'df_claim_declared', title:'The Claim Declared',
+  trigger:{ flags:['df_claim'], hasRole:'rival', chance:0.25 }, weight:7, cooldown:4, wartime:true,
+  text:'It is done openly now: {rival} publishes a claim to everything you hold — a worm-eaten genealogy, a bought witness, and promises to every malcontent in the county, with foreign gold behind all of it. Men begin choosing which side to kneel to.',
+  options:[
+    { label:'Settle: gold for a renunciation. (30 gold)', require:{ goldMin:30 },
+      effects:{ gold:-30, prestige:-5, clearFlag:'df_claim', log:'Bought off a rival’s claim.' } },
+    { label:'Answer with a counter-plot.', chance:'plot',
+      success:{ text:'Their bought witness recants, loudly, in the wrong company. The claim collapses into laughter.', effects:{ clearFlag:'df_claim', prestige:8, log:'Unraveled a rival’s claim.' } },
+      failure:{ text:'Your agent is caught, and talks. Now the claim has a martyr’s righteousness about it — and backers with spears.', effects:{ setFlag:'df_claim2', prestige:-5 } } },
+    { label:'Let them shout.', effects:{ setFlag:'df_claim2' } }
+  ]},
+{ id:'df_usurp', title:'The Usurper’s Banners',
+  trigger:{ flags:['df_claim2'], chance:0.3 }, weight:10, cooldown:2, wartime:true,
+  text:'{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender.',
+  options:[
+    { label:'Meet them in the field.', chance:'battle',
+      success:{ text:'The pretender’s host breaks like rotten wood, and the pretender hangs from the gate they would have entered in triumph.', effects:{ clearFlag:'df_claim', clearFlag2:'df_claim2', killRole:'rival', prestige:20, log:'Destroyed a pretender in open war.' } },
+      failure:{ text:'Your men would not stand — some would not even draw. You watch your own banner come down from the gate tower.', effects:{ custom:'df_fall', log:'Overthrown by a rival claimant.' } } },
+    { label:'Yield and beg terms.', desc:'Surrender the lands for your lives and your strongboxes.',
+      effects:{ custom:'df_fall_flee', log:'Yielded everything to a rival claimant.' } }
+  ]},
+{ id:'df_omen', title:'An Omen of Knives',
+  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-50 }, notFlags:['df_marked'], chance:0.1 }, weight:5, cooldown:16,
+  text:'A dead dog at your threshold, its throat cut. A serving girl who knew your habits, gone in the night. Your spymaster — you pay him well — says the pattern points one way: {rival} is done waiting for you to die naturally.',
+  options:[
+    { label:'Double the guard, reward the loyal. (15 gold)', require:{ goldMin:15 }, effects:{ gold:-15 } },
+    { label:'Set a trap for their agent.', chance:'plot',
+      success:{ text:'The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know.', effects:{ prestige:6, skills:{int:1} } },
+      failure:{ text:'Your trap catches a scullion — innocent, probably. The real agent reports your defenses in detail.', effects:{ setFlag:'df_marked' } } },
+    { label:'Omens are for old women.', effects:{ setFlag:'df_marked' } }
+  ]},
+{ id:'df_conspiracy', title:'The Conspiracy Ripens',
+  trigger:{ flags:['df_marked'], hasRole:'rival', chance:0.25 }, weight:7, cooldown:4, wartime:true,
+  text:'Your oldest armsman is found in the millrace, drowned in a foot of water — and he could swim. Someone inside your walls is paid. The household eats in silence and watches itself; the net is closing, and you cannot see its ropes.',
+  options:[
+    { label:'Purge the household.', chance:'plot',
+      success:{ text:'Three servants taken in the night; one talks. The paid knife flees your hall ahead of the rope, and the silence lifts.', effects:{ clearFlag:'df_marked', prestige:-5, piety:-3, log:'Purged a murderous conspiracy.' } },
+      failure:{ text:'You seize the wrong people, and the true conspirators use the fear — half your servants flee, and the rest dare not warn you now.', effects:{ setFlag:'df_doom', prestige:-8 } } },
+    { label:'Lie low at a kinsman’s hall. (10 gold)', require:{ goldMin:10 }, desc:'A season away cools even hot blood.',
+      effects:{ gold:-10, prestige:-5, clearFlag:'df_marked' } },
+    { label:'Trust your stars.', effects:{ setFlag:'df_doom' } }
+  ]},
+{ id:'df_knife', title:'The Knife',
+  trigger:{ flags:['df_doom'], chance:0.35 }, weight:10, cooldown:2, wartime:true,
+  text:'You wake with a hand over your mouth and steel already moving. There are three of them, and they know the room — someone drew them a map. {god} help you, the guards are not coming.',
+  options:[
+    { label:'Fight for your life.', chance:'battle',
+      success:{ text:'You take a blade through the arm and give better than you get — two flee, one dies on the floorboards, and the conspiracy dies with him. You rule from a sickbed for a season, but you rule.', effects:{ clearFlag:'df_doom', health:-2, addTrait:'scarred', prestige:10, log:'Survived the great conspiracy.' } },
+      failure:{ text:'Steel finds you again and again, and the world goes white, then strange. You wake to a physician’s face and impossible news: in the confusion your enemies have taken the seat, the keys, everything but your life.', effects:{ health:-5, addTrait:'scarred', custom:'df_fall', log:'Left for dead; the house was cast down in the night.' } } },
+    { label:'Beg sanctuary of the {temple}.', desc:'Throw yourself on the mercy of {god} — and flee.',
+      effects:{ piety:-10, custom:'df_fall_flee', log:'Fled into sanctuary; the lands were seized behind you.' } }
   ]}
 );
