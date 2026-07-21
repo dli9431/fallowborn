@@ -15,8 +15,8 @@ and what you were doing when it happened. Use reactions (👍) on existing issue
 This is a policy, not a judgment of your code. Fallowborn's source is public under the
 [PolyForm Noncommercial License](LICENSE), while the game is also distributed
 commercially by its author — a model that only works while the codebase has a single
-copyright holder. Merging outside code would break that, so pull requests are closed
-without review. If this ever changes, it will involve a contributor license agreement
+copyright holder. Merging outside code would break that, so pull requests are disabled
+on this repository. If this ever changes, it will involve a contributor license agreement
 and this file will say so.
 
 The fastest way to get a change made is a well-argued issue: describe the problem, and
