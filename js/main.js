@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.8.0';
+  FB.VERSION = '1.9.0';
   FB.CHANGELOG = [
+    { v: '1.9.0', date: '2026-07-21', changes: [
+      'Events show a card for every character they name — face, house arms, home, allegiance, skills, and traits — so a rival never arrives as a bare name.',
+      'Character cards and sheets show the character’s house arms and the coat of arms of the realm that holds their home.'
+    ] },
     { v: '1.8.0', date: '2026-07-21', changes: [
       'The end screen rolls the dynasty’s dead: every life you played, with years, title, and one line the chronicler should have kept to themselves.'
     ] },
