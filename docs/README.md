@@ -72,7 +72,7 @@ Every county on the map belongs to someone: a count, who answers to a duke, who 
 a king, who may answer to an emperor (the Land tab shows the whole chain, and the de jure
 duchy/kingdom/empire each county belongs to). Once you hold land of your own you play that
 game in both directions. As a **vassal** you can petition your liege for land (you will need
-his favor — 50 or more — and real standing of your own, 200+ prestige, and each grant costs
+his favor — 65 or more — and real standing of your own, 400+ prestige, and each grant costs
 both), pay homage at
 any court along your chain, appeal over a harsh liege's head to a higher lord, swear fealty
 to a different sovereign — or raise your own banner and fight for independence. As a **liege**

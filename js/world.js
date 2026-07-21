@@ -953,6 +953,9 @@ window.FB = window.FB || {};
 
   FB.checkTierPromotions = function (state) {
     const p = state.player;
+    // no one is his own vassal — repair saves where a flight into the
+    // player's own demesne left p.liege pointing at the player's realm
+    if (p.liege === 'player') p.liege = null;
     const n = p.provs ? p.provs.length : 0;
     const indep = state.realms.player && state.realms.player.alive;
     // a liege must outrank his man (a count answers to a duke, a duke to a

@@ -340,18 +340,18 @@ window.FB = window.FB || {};
     run: function (s) {
       FB.applyEffects(s, { gold: -FBDATA.balance.manorCost, tierSet: 2, prestige: 30, log: 'Bought a manor — gentry now!' });
     } },
-  { id: 'petition_barony', label: '📜 Petition for a barony', cd: 180,
+  { id: 'petition_barony', label: '📜 Petition for a barony', cd: 360,
     desc: function (s) { return 'Ask ' + (FB.getRole(s, 'lord', true) || {}).name + ' for lands and a banner.'; },
     show: function (s) { return s.player.tier === 2; },
     can: function (s) {
       const lord = FB.getRole(s, 'lord', true);
-      if (s.player.prestige < 120) return 'You need at least 120 prestige.';
+      if (s.player.prestige < 250) return 'You need at least 250 prestige.';
       if (!lord || lord.opinion < 40) return 'The lord’s favor is not yet sufficient.';
       return true;
     },
     run: function (s) {
       const lord = FB.getRole(s, 'lord', true);
-      if (FB.chance(0.25 + lord.opinion / 250 + s.player.prestige / 800)) {
+      if (FB.chance(0.15 + lord.opinion / 400 + s.player.prestige / 1200)) {
         s.eventQueue.push({ id: 'grant_of_barony', ctx: {} });
       } else {
         FB.news(s, 'The lord smiles, promises nothing, and speaks of the weather.');
@@ -398,12 +398,12 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
     run: function (s) { s.eventQueue.push({ id: 'court_feast', ctx: {} }); } },
-  { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1080,
+  { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1440,
     desc: function () { return 'Ask for greater lands and higher style.'; },
     show: function (s) { return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege; },
     can: function (s) {
-      if ((s.player.liegeOp || 0) < 50) return 'Your liege’s favor must be 50 or more (now ' + Math.round(s.player.liegeOp || 0) + ').';
-      if (s.player.prestige < 200) return 'You need at least 200 prestige (now ' + Math.round(s.player.prestige) + ').';
+      if ((s.player.liegeOp || 0) < 65) return 'Your liege’s favor must be 65 or more (now ' + Math.round(s.player.liegeOp || 0) + ').';
+      if (s.player.prestige < 400) return 'You need at least 400 prestige (now ' + Math.round(s.player.prestige) + ').';
       return true;
     },
     run: function (s) { s.eventQueue.push({ id: 'title_request', ctx: {} }); } },

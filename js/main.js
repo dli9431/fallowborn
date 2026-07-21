@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.5.0';
+  FB.VERSION = '1.6.0';
   FB.CHANGELOG = [
+    { v: '1.6.0', date: '2026-07-20', changes: [
+      'The ladder is steeper: freedom costs 100 gold, a manor 600 gold and 150 prestige, a barony 250 prestige, a liege’s grant 400 prestige and favor 65.',
+      'Petitions to lord and liege can be brought less often, and lieges grant land more grudgingly.',
+      'Name pools for every culture roughly tripled — fewer repeating faces across the generations.',
+      'Fixed a fleeing lord being named vassal of himself when he landed in his own demesne.'
+    ] },
     { v: '1.5.0', date: '2026-07-20', changes: [
       'Only gentle households (gentry and above) may send a child to be educated by the lord.',
       'A baron raised to a county answers to the granting lord’s own liege — counts no longer answer to counts.',

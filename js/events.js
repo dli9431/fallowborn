@@ -483,7 +483,7 @@ window.FB = window.FB || {};
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
-        return FB.clamp(0.05 + (p.liegeOp || 0) / 300 + p.prestige / 1200, 0.02, 0.45);
+        return FB.clamp(0.05 + (p.liegeOp || 0) / 450 + p.prestige / 1800, 0.02, 0.35);
       }
       case 'appeal_outcome': {
         // a suit carried over the liege's head: charm, cunning, and how the
@@ -930,14 +930,23 @@ window.FB = window.FB || {};
 
   FB.movePlayerRandom = function (state) {
     const p = state.player;
+    // flight must go somewhere foreign: never the player's own demesne
+    // (holder 'player' would make him his own vassal) nor a vassal's fief
     const adj = Object.keys(FB.world.adj[p.provinceId] || {})
-      .filter(function (id) { return !FB.world.byId[id].wasteland; });
+      .filter(function (id) {
+        if (FB.world.byId[id].wasteland) return false;
+        const h = (state.holder && state.holder[id]) || state.owner[id];
+        if (h === 'player') return false;
+        if (state.realms[h] && state.realms[h].liege === 'player') return false;
+        return true;
+      });
     const dest = adj.length ? FB.pick(adj) : null;
     if (dest) {
       p.provinceId = dest;
       // local cast stays behind
       for (const r of ['lord', 'priest', 'friend', 'rival']) delete state.roles[r];
-      p.liege = p.tier >= 3 ? ((state.holder && state.holder[dest]) || state.owner[dest]) : null;
+      const rid = (state.holder && state.holder[dest]) || state.owner[dest];
+      p.liege = p.tier >= 3 && rid && rid !== 'player' ? rid : null;
       FB.news(state, '🧭 You now dwell in ' + FB.world.byId[dest].name + '.');
       if (FB.map) { FB.map.playerProv = dest; FB.map.request(); }
     }
