@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.7.0';
+  FB.VERSION = '1.8.0';
   FB.CHANGELOG = [
+    { v: '1.8.0', date: '2026-07-21', changes: [
+      'The end screen rolls the dynasty’s dead: every life you played, with years, title, and one line the chronicler should have kept to themselves.'
+    ] },
     { v: '1.7.0', date: '2026-07-21', changes: [
       'Great houses can fall: neglect a rising of the commons, a rival’s claim, or a murder plot through three warnings, and you lose every acre.',
       'Deposed sovereigns are replaced by a usurper realm that keeps the realm’s name, color, and vassals; a deposed vassal’s fiefs escheat to the liege.',
@@ -254,7 +257,7 @@ window.FB = window.FB || {};
       v: 2,
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
-      chars: {}, roles: {}, eventQueue: [], log: [], flags: {}, buildings: {}, tech: [],
+      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -795,9 +798,101 @@ window.FB = window.FB || {};
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
     p.dead = true;
+    recordLegend(s, me, causeText);
     FB.news(s, '☠ ' + causeText);
     FB.ui.showDeath(FB.heirsOf(s).slice(0, 4), causeText);
   };
+
+  /* the chronicle keeps one entry per life the player lived; the end screen
+     reads this roll. Saves from before the roll existed grow it at the
+     first death after they load. */
+  function recordLegend(s, me, causeText) {
+    if (!s.legends) s.legends = [];
+    s.legends.push({
+      id: me.id,
+      name: FB.fullName(me),
+      born: me.born,
+      died: s.date.year,
+      title: FB.styledTitle(s),
+      quip: legendQuip(s, me, causeText)
+    });
+  }
+
+  /* a parting sentence for the dead — rolled at death and saved with the
+     legend, so the end screen shows the same line every time */
+  function legendQuip(s, me, causeText) {
+    const TRAIT_QUIPS = {
+      brave: 'Never once ran. Running would have helped, but still.',
+      craven: 'Attended every battle from the safety of the rear.',
+      ambitious: 'Wanted more. Got a grave, which is technically more.',
+      content: 'Wanted nothing, received exactly that, and was pleased.',
+      greedy: 'Left instructions about the gold. Nobody can find them.',
+      generous: 'Gave away everything except the debts.',
+      cruel: 'Feared in life; the mourning is largely procedural.',
+      kind: 'Genuinely mourned, which surprised no one more than them.',
+      deceitful: 'Died insisting they felt perfectly fine.',
+      honest: 'Never told a lie. The family found this exhausting.',
+      lustful: 'Mourned by more households than the family admits.',
+      chaste: 'Pure to the end, and faintly smug about it.',
+      gluttonous: 'Out-ate every harvest set before them, and several that were not.',
+      temperate: 'Moderate in all things, including, at the last, breathing.',
+      wrathful: 'Died angry. The wake was quieter than the life.',
+      patient: 'Waited for everything. Waited for this, too.',
+      proud: 'Bowed to no one. The grave accepts all bows as given.',
+      humble: 'Asked for a plain funeral and was, for once, obeyed.',
+      zealous: 'Corrected priests on doctrine; has presumably gone to check.',
+      cynical: 'Expected nothing of the afterlife and declines to be surprised.',
+      genius: 'Knew everything except how to stay.',
+      quick: 'Quick of wit, and quicker to mention it.',
+      dull: 'Untroubled by thought; slipped away in the absence of one.',
+      strong: 'Could lift an ox. The ox sends no condolences.',
+      frail: 'Fragile in body, punctual in the end.',
+      comely: 'The fairest burial the parish has managed in years.',
+      homely: 'A face only a mother could love, and she kept her counsel.',
+      sickly: 'So often ill that the end registered as a scheduling change.',
+      robust: 'Never ill a day. The last day declined to comment.',
+      drunkard: 'The cup won in the end, exactly as the cup predicted.',
+      scarred: 'Wore their scars like debts others owed. All settled now.',
+      one_eyed: 'Lost an eye, gained a story, told it ten thousand times.',
+      maimed: 'Broken in body, never once in complaint.',
+      literate: 'Read everything in reach, including, twice, a menu.',
+      veteran: 'Survived the shield-wall. The years fought sneakier.',
+      pilgrim: 'Walked the holy roads; took the last one without luggage.',
+      kinslayer: 'The family attended the grave at a careful distance.',
+      excommunicated: 'Buried at a crossroads by popular ecclesiastical demand.'
+    };
+    const SKILL_QUIPS = {
+      dip: 'Could talk a beggar into lending money, and did.',
+      mar: 'Settled most disputes by winning them.',
+      ste: 'Counted everything. The graveyard steward sends regards.',
+      int: 'Knew everyone’s secrets and took the best ones along.',
+      lea: 'Read more books than the parish owned.'
+    };
+    const pool = [];
+    const age = FB.ageOf(me, s.date.year);
+    const kids = me.childrenIds.length;
+    for (const tid of me.traits) if (TRAIT_QUIPS[tid]) pool.push(TRAIT_QUIPS[tid]);
+    if (/sickness/i.test(causeText)) pool.push('Complained about the leech bill until the very end.');
+    if (/full of years/.test(causeText)) pool.push('Died full of years and of opinions about the young.');
+    if (/before their time/.test(causeText)) pool.push('Gone before their time; the time was never consulted.');
+    if (age >= 75) pool.push('Reached ' + age + ', an age the neighbors called showing off.');
+    if (age <= 20) pool.push('Gone at ' + age + '; the chronicle leaves most of the page blank.');
+    if (kids >= 8) pool.push('Leaves ' + kids + ' children and not one quiet meal behind.');
+    if (kids === 0) pool.push('Leaves no children; the gossips needed no invitation.');
+    if (s.player.gold >= 1000) pool.push('Died rich. The coffers were pried from still-warm fingers.');
+    if (s.player.gold < 10) pool.push('Died owing a goat. The goat has not forgotten.');
+    if (s.player.prestige >= 400) pool.push('So famous that strangers are mourning professionally.');
+    if (s.player.tier === 0) pool.push('Born a serf, died a serf, and outstubborned everyone in between.');
+    if (s.player.tier >= 6) pool.push('Ruled an empire; the empire has been formally notified.');
+    let best = null, bestV = 0;
+    for (const k of FB.SKILLS) {
+      const v = FB.skillOf(me, k);
+      if (v > bestV) { bestV = v; best = k; }
+    }
+    if (bestV >= 16) pool.push(SKILL_QUIPS[best]);
+    if (!pool.length) pool.push('Lived. Died. The chronicle splits the difference.');
+    return FB.pick(pool);
+  }
 
   G.succeedTo = function (heirId) {
     const s = FB.state;
