@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.17.1';
+  FB.VERSION = '1.17.2';
   FB.CHANGELOG = [
+    { v: '1.17.2', date: '2026-07-22', changes: [
+      'Hold F to fast-forward again — keeping it pressed skips ahead repeatedly, instead of one skip per press.'
+    ] },
     { v: '1.17.1', date: '2026-07-22', changes: [
       'On phones the Changelog now sits as an evenly framed panel with a Close button pinned to the bottom middle — no more scrolling to the end of a long list to shut it.'
     ] },

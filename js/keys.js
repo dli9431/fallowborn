@@ -179,7 +179,8 @@ window.FB = window.FB || {};
         return;
       case 'f': case 'F':
         e.preventDefault();
-        if (e.repeat) return; // one skip per press, not per key-repeat
+        // hold-to-fast-forward: key auto-repeat keeps skipping ahead (unlike the
+        // Space/E pause toggles, a repeated one-way skip is harmless and useful).
         if (FB.state && !FB.ui.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
         return;
       case '[': if (FB.state) FB.ui.cycleTab(-1); return;
