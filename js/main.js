@@ -9,8 +9,16 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.10.0';
+  FB.VERSION = '1.14.0';
   FB.CHANGELOG = [
+    { v: '1.14.0', date: '2026-07-22', changes: [
+      'New Game offers an 👁 Observe mode: no character, no events — the centuries flow and the realms war, fall, and redraw the map while you watch.',
+      'While observing, the chronicle reports every war, battle, succession, and conquest in the world, not only those near home.'
+    ] },
+    { v: '1.13.0', date: '2026-07-22', changes: [
+      'The menu gains a Settings dialog with a tap-friendly chooser for the speed of days — the five speeds used to be reachable only by the −/+ keys.',
+      'The in-game help no longer mislabels −/+ as zoom keys.'
+    ] },
     { v: '1.10.0', date: '2026-07-22', changes: [
       'Wars take the field: realms at war raise hosts of spearmen on the map that march province to province and fight where they meet.',
       'Muster your own host (🚩 deed or the muster event), hire companies to swell it, then tap the host and tap a province to march it.',
@@ -190,6 +198,14 @@ window.FB = window.FB || {};
       })(sc);
       box.appendChild(el);
     }
+    // observe mode: no province, no character — just a world to watch
+    const obs = document.createElement('button');
+    obs.className = 'scencard';
+    obs.innerHTML = '<h3>👁 Observe</h3><div class="diff">no one, watching</div>' +
+      '<p>Be born as no one. The centuries flow and the realms war, rise, and ruin while you ' +
+      'simply watch the map. No character, no events, no interruptions.</p>';
+    obs.addEventListener('click', function () { G.startObserve(); });
+    box.appendChild(obs);
     FB.ui.showScreen('newgame');
   }
 
@@ -255,6 +271,8 @@ window.FB = window.FB || {};
 
   /* ================= new game ================= */
   G.start = function () {
+    G.observe = false;
+    document.body.classList.remove('observing');
     const sc = G.pending.scenario;
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
@@ -344,6 +362,56 @@ window.FB = window.FB || {};
     FB.save.autosave();
   };
 
+  /* ================= observe mode =================
+     New Game → 👁 Observe: a world without a protagonist. The player object
+     exists so every system that reads it keeps working, but nothing personal
+     ever ticks — passDay only turns the calendar and runs the world. Nothing
+     is autosaved: an afternoon of watching must not bury a real life. */
+  G.startObserve = function () {
+    G.observe = false; // startObserve sets it below; clear any stale state first
+    document.body.classList.remove('observing');
+    FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
+    const home = FB.pick(FB.world.provs.filter(function (p) { return !p.wasteland; }));
+    const state = {
+      v: 2,
+      date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
+      turn: 0, generation: 1, slotDays: [],
+      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      armies: [], armyDown: {},
+      player: {
+        charId: null, tier: 0, profession: 'farmer', professionBack: null,
+        gold: 0, prestige: 0, piety: 0,
+        provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
+      },
+      pregnant: null, peakTier: 0, peakTitle: '',
+      seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
+    };
+    FB.state = state;
+    FB.initPolitics(state);
+    // a placeholder soul, never shown — some panels dereference it blindly
+    const me = FB.makeCharacter(state, {
+      name: FB.randomName(home.culture, 'm'), sex: 'm',
+      culture: home.culture, religion: home.religion,
+      born: FBDATA.balance.startYear - 30, quality: 0, traitsN: 0
+    });
+    state.player.charId = me.id;
+
+    G.observe = true;
+    G.paused = false;
+    document.body.classList.add('observing');
+    FB.ui.mapDirty();
+    FB.map.playerProv = null;
+    FB.ui.showGame();
+    FB.map.fitView();
+    FB.map.select(null);
+    FB.ui.showTab('log');
+    FB.ui.refresh();
+    FB.news(state, '👁 You settle in to watch the realms go about their centuries.');
+    FB.ui.toast('☰ → Settings sets the speed of days.');
+  };
+
   /* ================= daily loop ================= */
   function scheduleSlots(s) {
     // 1-2 random event days this season, mirroring the old per-season pacing;
@@ -362,8 +430,10 @@ window.FB = window.FB || {};
     if (FB.ui.eventsBusy()) return undefined;
     const p = s.player;
 
-    if (!(opts && opts.skipFocus)) FB.tickFocus(s);
-    else FB.validateFocus(s);
+    if (!G.observe) {
+      if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+      else FB.validateFocus(s);
+    }
 
     // advance date: 90-day seasons, 360-day years
     s.turn++;
@@ -374,6 +444,17 @@ window.FB = window.FB || {};
       s.date.season++;
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
+    }
+
+    /* observe mode: the calendar turns, the realms tick once a year, hosts
+       march daily — and that is all. No focus, upkeep, mortality, births,
+       events, or autosaves; nothing personal ever reaches the watcher. */
+    if (G.observe) {
+      if (seasonBoundary && newYear) FB.worldTick(s);
+      FB.armyTick(s);
+      s.eventQueue.length = 0;
+      FB.ui.refresh();
+      return seasonBoundary ? 'season' : 'day';
     }
 
     if (seasonBoundary) {
@@ -436,11 +517,12 @@ window.FB = window.FB || {};
   };
 
   /* ---------- the flow of days: auto-tick with pause/unpause ----------
-     Speed is adjustable (+/- keys); the default middle step is the old
-     350 ms ≈ 3 days per second. */
+     Speed is adjustable (+/- keys or menu → Settings); the default middle
+     step is the old 350 ms ≈ 3 days per second. */
   G.SPEEDS = [700, 500, 350, 230, 140]; // ms per day, slowest → fastest
   G.speedIdx = 2;
   G.paused = true;
+  G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.setPaused = function (v) {
     G.paused = !!v;
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
@@ -985,6 +1067,8 @@ window.FB = window.FB || {};
       return;
     }
     FB.save.restore(data);
+    G.observe = false;
+    document.body.classList.remove('observing');
     G.pickMode = false;
     G.paused = true;
     FB.ui.mapDirty();
@@ -997,8 +1081,11 @@ window.FB = window.FB || {};
   };
 
   G.toTitle = function () {
-    if (FB.state && !FB.state.player.dead) FB.save.autosave();
+    // an observe session is never saved — it must not bury a real life
+    if (FB.state && !FB.state.player.dead && !G.observe) FB.save.autosave();
     FB.state = null;
+    G.observe = false;
+    document.body.classList.remove('observing');
     G.pickMode = false;
     G.paused = true;
     refreshTitle();
