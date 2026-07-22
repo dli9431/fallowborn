@@ -104,7 +104,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- children ---------- */
-{ id:'child_born_flavor', title:'New Life', trigger:{ never:true },
+{ id:'child_born_flavor', title:'New Life', trigger:{ never:true }, nameChild:true,
   text:'The midwife emerges, weary and smiling. {childname} is born — small, loud, and alive. Your line continues.',
   options:[
     { label:'{god} be praised.', effects:{ piety:5, prestige:5 } },

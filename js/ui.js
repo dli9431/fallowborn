@@ -1090,6 +1090,25 @@ window.FB = window.FB || {};
     FB.paintFaces($('ev-text'), s);
     const box = $('ev-options');
     box.innerHTML = '';
+    /* a nameChild event (births) opens with a name field: the generated name,
+       editable, with a dice to reroll from the child's culture */
+    if (ev.nameChild && ctx.childId) {
+      const nc = s.chars[ctx.childId];
+      if (nc && !nc.dead) {
+        const row = document.createElement('div');
+        row.className = 'evname';
+        row.innerHTML = '<label>Name the child <input id="ev-name" type="text" maxlength="20"></label>' +
+          '<button id="ev-name-dice" class="btn small" title="Random name">&#127922;</button>';
+        box.appendChild(row);
+        const inp = $('ev-name');
+        inp.value = nc.name;
+        $('ev-name-dice').addEventListener('click', function () {
+          inp.value = FB.randomName(nc.culture, nc.sex);
+          inp.focus();
+          inp.select();
+        });
+      }
+    }
     let opts = (ev.options || []).filter(function (o) {
       return !o.require || FB.checkTrigger(s, o.require);
     });
@@ -1107,6 +1126,8 @@ window.FB = window.FB || {};
       box.appendChild(btn);
     }
     setTimeout(function () {
+      const inp = $('ev-name');
+      if (inp && !FB.isTouch) { inp.focus(); inp.select(); return; }
       const b = box.querySelector('.evopt');
       if (b) b.focus();
     }, 0);
@@ -1114,6 +1135,14 @@ window.FB = window.FB || {};
 
   function chooseOption(ev, opt, ctx) {
     const s = FB.state;
+    if (ev.nameChild && ctx.childId) {
+      const nc = s.chars[ctx.childId];
+      const inp = $('ev-name');
+      if (nc && inp) {
+        const nm = (inp.value || '').trim();
+        if (nm) nc.name = nm;
+      }
+    }
     if (opt.chance !== undefined) {
       const p = typeof opt.chance === 'string' ? FB.namedChance(s, opt.chance) : opt.chance;
       const ok = FB.chance(p);
