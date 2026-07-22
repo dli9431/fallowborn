@@ -672,7 +672,8 @@ window.FB = window.FB || {};
     const root = topOf(me, 2);
     h += '<div class="ftwrap"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
-      // old saves: gen-1 siblings recorded by role, parents never named
+      // safety net: save.js backfills parents on load; a tree can still lack
+      // them if a mod stripped the chars — show the brood under a ghost
       let brood = unit(me, 1);
       for (const sb of FB.siblingsOf(s, me)) brood += unit(sb, 1);
       h += '<div class="ftnode"><div class="ftcouple"><div class="ftchip ghost">' +
