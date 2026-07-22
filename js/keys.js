@@ -68,6 +68,7 @@ window.FB = window.FB || {};
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
       if (e.key === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
+      if (e.key === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); }
       return;
     }
     const onButton = t && t.tagName === 'BUTTON';

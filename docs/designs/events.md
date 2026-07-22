@@ -12,5 +12,9 @@ The event modal shows a character card for the event's `charCard` role and for e
 `{role}` token the event's strings mention (js/ui.js `showEvent`); cards carry the
 character's house arms, home county, and the arms of the realm holding it.
 
+A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename field to the
+modal — prefilled with the generated name, applied when any option is chosen; autoresolve
+keeps the generated name.
+
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for
 the childhood event filter, [time.md](time.md) for slot days and autoresolve.

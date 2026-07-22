@@ -288,6 +288,11 @@ every `{lord}` / `{priest}` / `{friend}` / `{rival}` / `{spouse}` / `{suitor}` t
 the event's title, text, option labels, or branch texts, so a named character never arrives
 as a bare name.
 
+An event with `"nameChild": true` (used by `child_born_flavor`, queued with `ctx.childId`)
+shows a name field above its options, prefilled with the child's generated name and a dice
+button that rerolls from the child's culture. Whichever option is chosen applies the edited
+name (an empty field keeps the old one); an autoresolved event keeps the generated name.
+
 ## Buildings
 
 `FBDATA.buildings` (in `data/map_data.js`) defines what tier-3+ rulers can raise in any
