@@ -31,8 +31,10 @@ full chars — the Deeds banner's "vassal of X" links to their sheet via
 **Tiers** 0–7 (serf…emperor) + `profession` gate actions (`js/actions.js`) and events. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a
 county — and bound to it: a baron's liege is always the county's direct holder, so if his
-lord's house dies the baron reattaches to whoever holds his home (`FB.transferProvince`,
-with a catch-all repair in `FB.checkTierPromotions`), never standing "independent". Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
+lord's house dies — or the county changes hands under a living lord — the baron reattaches
+to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
+`FB.checkTierPromotions`), never standing "independent" nor kneeling to a lord who no
+longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
 monk/priest) but manages the manor and may petition for a barony like any gentry. Promotions above count happen in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
