@@ -470,7 +470,17 @@ window.FB = window.FB || {};
       if (!terr.length) {
         fr.alive = false; fr.war = null;
         for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = fr.liege || null;
-        if (state.player && state.player.liege === rid) state.player.liege = fr.liege || null;
+        if (state.player && state.player.liege === rid) {
+          // a baron is bound to his county, not to the dead lord's house:
+          // he answers to whoever holds his home now; landed vassals
+          // reattach upward to the dead liege's own liege
+          let nl = fr.liege || null;
+          if (state.player.tier === 3) {
+            const h = (state.holder && state.holder[state.player.provinceId]) || state.owner[state.player.provinceId];
+            if (h && h !== 'player' && state.realms[h] && state.realms[h].alive) nl = h;
+          }
+          state.player.liege = nl;
+        }
       } else if (fr.capital === pid) {
         fr.capital = terr[0];
       }
@@ -916,7 +926,10 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.mercCos = (w.mercCos || 0) + 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
-    if (host) { host.men += 150; host.mercs = (host.mercs || 0) + 150; }
+    if (host) {
+      host.men += 150; host.mercs = (host.mercs || 0) + 150;
+      host.size = (host.size === undefined ? host.men : host.size + 150); // the company swells the muster
+    }
     FB.news(state, '⚔ A mercenary company takes your coin — ~150 spears join the host.');
   };
   /* mustering: the host takes the field at your seat (js/armies.js) */
@@ -927,8 +940,10 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.mass = 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
-    if (host) host.men = Math.round(host.men * 1.35); // already mustered: swell it now
-    else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
+    if (host) { // already mustered: swell it now
+      host.men = Math.round(host.men * 1.35);
+      host.size = host.size === undefined ? host.men : Math.round(host.size * 1.35);
+    } else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
   };
   /* the council's abstract pitched battle exists only while the enemy has
      no host in the field — a fielded enemy is fought on the map instead */
@@ -945,9 +960,13 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     const host = FB.playerHost && FB.playerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
-    if (host && prey) {
-      FB.orderArmy(state, host, prey.at);
-      FB.news(state, '🚩 The host marches to bring ' + (state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy') + ' to battle.');
+    if (!host || !prey) return;
+    const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy';
+    if (FB.orderArmy(state, host, prey.at)) {
+      host.huntPrey = w.enemy; // track the prey: re-path onto it each day
+      FB.news(state, '🚩 The host marches to bring ' + ename + ' to battle.');
+    } else {
+      FB.news(state, '🚩 There is no road from here to the host of ' + ename + '.');
     }
   };
   /* small condition shifts for wartime flavor events */
@@ -1064,6 +1083,13 @@ window.FB = window.FB || {};
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') p.liege = null;
+    // a baron is a status inside a county: if the liege bond was lost (his
+    // lord's house died, or an older save), he answers to whoever holds his
+    // home county now — a baron is never "independent"
+    if (p.tier === 3 && !(p.liege && state.realms[p.liege] && state.realms[p.liege].alive)) {
+      const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
+      if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive) p.liege = bh;
+    }
     const n = p.provs ? p.provs.length : 0;
     const indep = state.realms.player && state.realms.player.alive;
     // a liege must outrank his man (a count answers to a duke, a duke to a

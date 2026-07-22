@@ -1198,6 +1198,31 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* renounce the liege and fight for it — confirmed here, done in
+     FB.doIndependence (a baron seizes his home county in the bargain) */
+  UI.showIndependence = function () {
+    const s = FB.state;
+    const lg = s.realms[s.player.liege];
+    const top = FB.topRealm(s, s.player.liege);
+    const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * 0.3);
+    const h = '<div class="gm-body-text"><p>You renounce ' + esc(lg ? lg.name : 'your liege') +
+      ' and raise your own banner' +
+      (s.player.tier === 3 && FB.world.byId[s.player.provinceId]
+        ? ' over ' + esc(FB.world.byId[s.player.provinceId].name) + ', seized as your own county'
+        : ' over your lands') +
+      '. ' + esc(s.realms[top] ? s.realms[top].name : 'Your sovereign') +
+      ' will march to bring you to heel — they can field ~' + enMen +
+      ' against your ~' + FB.playerLevy(s) + ' men.</p></div>' +
+      '<button class="btn primary" id="gm-indep">Raise my banner</button> ' +
+      '<button class="btn" id="gm-cancel">Stay sworn</button>';
+    openModal('Declare Independence', h);
+    $('gm-indep').addEventListener('click', function () {
+      FB.doIndependence(FB.state);
+      UI.closeModal(); UI.refresh();
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= building picker =================
      With one province it opens directly; with more, a province list comes
      first and the building list's cancel button goes back to it. */
@@ -2130,8 +2155,10 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-settings">⚙ Settings</button>' +
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
       (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
+      '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
       '<button class="actionbtn" id="m-quit">🏳 ' + (obs ? 'Stop observing' : 'Abandon to title') + '</button>' +
-      '</div>';
+      '</div>' +
+      '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>';
     openModal('Menu', h);
     $('m-resume').addEventListener('click', UI.closeModal);
     if (!obs) {
@@ -2141,6 +2168,7 @@ window.FB = window.FB || {};
     }
     $('m-settings').addEventListener('click', function () { UI.showSettings(); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
+    $('m-changes').addEventListener('click', function () { UI.showChangelog(); });
     $('m-quit').addEventListener('click', function () {
       UI.closeModal(); FB.game.toTitle();
     });

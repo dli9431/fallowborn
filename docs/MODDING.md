@@ -188,7 +188,9 @@ optional `chance` (0–1, or a named formula: `harvest battle proposal house_cla
 skill_ste liege_grant war_battle plot appeal_outcome vassal_comply`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
 `war_battle` counts real men: the fielded host's men if one is raised (the levy plus 150
 per mercenary company otherwise), worn by the host's condition (`war.strength`), against
-the enemy realm's fielded host (its per-development muster otherwise) — with the bonuses
+the enemy realm's fielded host (its per-development muster otherwise) — a side still
+re-forming a shattered host counts only a fraction of that muster (`FB.rearmScale`: the
+share of `armyRearmDays` elapsed, floored at 0.15) — with the bonuses
 banked by war-council effects, walls, tech, items, and blessings on top.
 `appeal_outcome` weighs an appeal above the player's liege (diplomacy, intrigue, and the
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
@@ -441,6 +443,7 @@ skill (traits and carried items included), on top of the per-development base, b
 `levy` bonuses, and the `levy` tech multiplier.
 The field-army knobs drive the hosts on the map (`js/armies.js`): `armyMarchDays` (days to
 cross one province), `armyRearmDays` (how long a shattered host must wait to muster
-again), `aiHostPerDev` (AI host size = realm development × `levyPerDev` × this), and
-`battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's scales with
-how close the fight was).
+again), `armyReinforceRate` (the fraction of its mustered size a host resting on home
+land refills per day), `aiHostPerDev` (AI host size = realm development × `levyPerDev` ×
+this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
+scales with how close the fight was).

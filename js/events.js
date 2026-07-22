@@ -474,14 +474,17 @@ window.FB = window.FB || {};
         if (!w) return 0.5;
         const enemy = state.realms[w.enemy];
         // real men: the fielded host if there is one, else the levy the
-        // muster would raise (worn by the host's condition either way)
+        // muster would raise (worn by the host's condition either way); a
+        // side still re-forming a shattered host fields only a remnant
         const host = FB.playerHost ? FB.playerHost(state) : null;
-        const myMen = (host ? host.men : Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
-          (w.strength || 1);
+        const myMen = (host ? host.men
+          : (Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
+            (FB.rearmScale ? FB.rearmScale(state, 'player') : 1)) * (w.strength || 1);
         const myStr = myMen * (1 + FB.skillOf(me, 'mar') / 14);
         const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
         const enMen = ehost ? ehost.men
-          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3);
+          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+            (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
         const enStr = enMen * (1 + (enemy ? enemy.ruler.mar : 5) / 22);
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
@@ -968,13 +971,18 @@ window.FB = window.FB || {};
     const p = state.player;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
     if (!p.provs || !p.provs.length) {
+      // a baron who renounces his lord seizes the home county he was
+      // enfeoffed in — transferProvince buries the old holder if landless
       p.provs = [p.provinceId];
       if (p.tier < 4) p.tier = 4;
+      FB.transferProvince(state, p.provinceId, 'player');
     }
     FB.foundPlayerRealm(state);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
       FB.news(state, '⚔ ' + state.realms[oldLiege].name + ' will not let you go without a fight!');
+      FB.warFooting(state);
+      state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
     }
     FB.checkTierPromotions(state);
   };
