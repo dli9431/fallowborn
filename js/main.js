@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.14.0';
+  FB.VERSION = '1.14.1';
   FB.CHANGELOG = [
+    { v: '1.14.1', date: '2026-07-22', changes: [
+      'Hosts on the map are drawn on the province they stand in, not mid-road toward the next — a host crossing the Channel no longer floats in the sea.'
+    ] },
     { v: '1.14.0', date: '2026-07-22', changes: [
       'New Game offers an 👁 Observe mode: no character, no events — the centuries flow and the realms war, fall, and redraw the map while you watch.',
       'While observing, the chronicle reports every war, battle, succession, and conquest in the world, not only those near home.'
