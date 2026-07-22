@@ -60,10 +60,47 @@ window.FB = window.FB || {};
     return !!d && d.mods !== undefined && d.mods !== FB.mods.sig();
   };
 
+  /* Saves from before parents were recorded know the first generation's
+     brothers and sisters only by role and house; mother and father were never
+     named, and the family tree showed "Unrecorded" in their place. Give such a
+     line its parents back — long dead, as the years demand — linked like any
+     newborn's, so the tree and the kin lists read whole again. */
+  function backfillParents(s) {
+    const me = s.chars && s.player ? s.chars[s.player.charId] : null;
+    if (!me || FB.parentsOf(s, me).length) return;
+    const kids = [me];
+    for (const id in s.chars) {
+      const k = s.chars[id];
+      if (k.id !== me.id && k.role === 'sibling' && k.dyn && k.dyn === me.dyn) kids.push(k);
+    }
+    let first = me.born, last = me.born;
+    for (const k of kids) { if (k.born < first) first = k.born; if (k.born > last) last = k.born; }
+    const dad = FB.makeCharacter(s, {
+      sex: 'm', culture: me.culture, religion: me.religion,
+      born: first - FB.ri(20, 40), role: 'parent', quality: 1
+    });
+    const mom = FB.makeCharacter(s, {
+      sex: 'f', culture: me.culture, religion: me.religion,
+      born: first - FB.ri(18, 34), role: 'parent'
+    });
+    dad.dyn = me.dyn;
+    dad.health = 8; mom.health = 8;
+    dad.spouseId = mom.id; mom.spouseId = dad.id;
+    // gone before the story resumes, but not before the last child was born
+    dad.dead = mom.dead = true;
+    dad.died = Math.max(last, s.date.year - FB.ri(0, 15));
+    mom.died = Math.max(last, s.date.year - FB.ri(0, 15));
+    for (const k of kids) {
+      k.fatherId = dad.id; k.motherId = mom.id;
+      dad.childrenIds.push(k.id); mom.childrenIds.push(k.id);
+    }
+  }
+
   S.restore = function (data) {
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
     FB.state = data.state;
+    backfillParents(FB.state);
     return FB.state;
   };
 })();

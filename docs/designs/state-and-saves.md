@@ -12,3 +12,8 @@ cause of death. The end screen (`UI.gameOver`) reads it; saves from before the f
 existed grow it at the first death after loading.
 
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set.
+
+Saves from before parents were recorded (first-generation siblings known only
+by role) have a father and mother synthesized on load — long dead, ages
+fitted to the oldest child — so the family tree shows them instead of an
+"Unrecorded" ghost (`backfillParents` in `js/save.js`).
