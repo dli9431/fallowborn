@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.2';
+  FB.VERSION = '1.16.3';
   FB.CHANGELOG = [
+    { v: '1.16.3', date: '2026-07-22', changes: [
+      'Death no longer flashes by at high speed: automation never resolves an event whose outcome could kill you — the blow is always shown — and the succession screen waits for a deliberate choice instead of taking a stray Space/Enter on the first heir.',
+      'The death screen now speaks the chronicler’s parting line for the life just ended.'
+    ] },
     { v: '1.16.2', date: '2026-07-22', changes: [
       'Fixed a baron left sworn to a lord who lost his home county: when the county changes hands the baron answers to its new holder, and stale liege bonds in old saves are re-homed to the county’s holder.'
     ] },
