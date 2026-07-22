@@ -20,6 +20,14 @@ window.FB = window.FB || {};
   FB.pick = function (arr) { return arr[Math.floor(FB.rng() * arr.length)]; };
   FB.chance = function (p) { return FB.rng() < p; };
 
+  /* turn a player-facing seed string into a uint32 for FB.seedRng — the same
+     imul-31 hash FB.drawCrest uses, so any text is a valid seed */
+  FB.hashSeed = function (str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
+    return h >>> 0;
+  };
+
   FB.clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
 
   /* deterministic 2D hash noise in [0,1), independent of the RNG stream */

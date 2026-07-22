@@ -116,6 +116,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 .radio { font-size: 15px; }
 
+/* shareable start seeds: the New Game paste box and the menu's tap-to-copy row */
+#ng-seed {
+  background: #241d15; border: 1px solid #66522f; color: #f0e0b8; border-radius: 6px;
+  padding: 8px 10px; font-size: 15px; font-family: inherit; width: min(100%, 340px);
+  display: block; margin: 0 auto 6px; text-align: center;
+}
+.seedrow { margin-top: 12px; text-align: center; }
+.seedrow label { display: block; color: #a89878; font-size: 12px; margin-bottom: 4px; }
+.seedrow input {
+  background: #241d15; border: 1px solid #66522f; color: #f0e0b8; border-radius: 6px;
+  padding: 7px 10px; font-size: 14px; font-family: inherit; width: 100%;
+  text-align: center; cursor: copy;
+}
+
 /* pick-province mode borrows the game screen as its map backdrop — a prior
    life's topbar/panels must not show through, and the map takes the room */
 body.picking #topbar, body.picking #panels { display: none; }

@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.17.1';
+  FB.VERSION = '1.19.0';
   FB.CHANGELOG = [
+    { v: '1.19.0', date: '2026-07-22', changes: [
+      'New Game now asks Fresh start or I have a seed — paste a friend’s start code for their exact world and character, or a bare world seed for the same 867 with your own picks.',
+      'Your start’s seed shows in the ☰ menu — tap it to copy and share.'
+    ] },
     { v: '1.17.1', date: '2026-07-22', changes: [
       'On phones the Changelog now sits as an evenly framed panel with a Close button pinned to the bottom middle — no more scrolling to the end of a long list to shut it.'
     ] },
@@ -181,6 +185,48 @@ window.FB = window.FB || {};
       intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
   ];
 
+  /* ================= seeds =================
+     A start is reproducible because G.start re-seeds the RNG from the seed
+     string before initPolitics and character generation draw on it — see
+     docs/designs/seeds.md. Two shareable forms:
+     - world seed: any text normalized to A-Z0-9 (fresh ones are base36)
+     - start code: SEED-SCENARIO-PROVINCE-SEX-NAME (the menu shows this one) */
+
+  // a fresh seed is one-time seed initialization — the legitimate Math.random use
+  function freshSeed() {
+    return ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0).toString(36).toUpperCase();
+  }
+
+  function seedCode(seed, scenId, provId, sex, name) {
+    const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
+    return seed + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
+  }
+
+  /* parse what a player pasted: a full start code, a bare world seed, or an
+     error to show inline. A 5-part shape must validate as a code — silently
+     falling back to a bare seed would hand them a different world than the
+     one their friend shared. */
+  function parseSeedInput(raw) {
+    const txt = (raw || '').trim();
+    if (!txt) return { error: 'Paste a start code or world seed first.' };
+    const parts = txt.split('-');
+    if (parts.length >= 5) {
+      const bad = 'That start code doesn’t parse — check it was copied whole.';
+      if (parts.length !== 5) return { error: bad };
+      const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const scen = G.SCENARIOS.filter(function (s) { return s.id === parts[1].toLowerCase(); })[0];
+      const prov = FB.world.byId[parts[2].toLowerCase()];
+      const sex = parts[3].toLowerCase();
+      const name = parts[4].replace(/_/g, ' ').trim();
+      if (!seed || !scen || !prov || prov.wasteland || (sex !== 'm' && sex !== 'f') ||
+        !name || name.length > 20) return { error: bad };
+      return { seed: seed, scenario: scen, provinceId: prov.id, sex: sex, name: name };
+    }
+    const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!bare) return { error: 'That seed has no usable letters or digits.' };
+    return { seed: bare };
+  }
+
   /* ================= boot ================= */
   document.addEventListener('DOMContentLoaded', function () {
     // the one legitimate Math.random(): seed the game RNG once at boot, so
@@ -224,7 +270,7 @@ window.FB = window.FB || {};
   }
 
   function wireMenus() {
-    $('btn-newgame').addEventListener('click', function () { showScenarios(); });
+    $('btn-newgame').addEventListener('click', function () { showNewGame(); });
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
@@ -262,6 +308,47 @@ window.FB = window.FB || {};
     $('btn-cg-start').addEventListener('click', function () { G.start(); });
   }
 
+  /* New Game opens here: roll a fresh seed, or play one someone shared.
+     Errors show inline — toasts live on the game screen, hidden at title. */
+  function showNewGame() {
+    let h = '<div class="gm-list">' +
+      '<button class="actionbtn" id="ng-fresh">🌱 Fresh start' +
+      '<span class="adesc">A new seed is rolled — your own 867 to shape.</span></button>' +
+      '</div>' +
+      '<div class="gm-body-text" style="margin-top:10px"><p>…or play a start someone shared:</p></div>' +
+      '<input id="ng-seed" type="text" maxlength="60" placeholder="Paste a start code or world seed">' +
+      '<div id="ng-seed-err" class="hint"></div>' +
+      '<div class="gm-list">' +
+      '<button class="actionbtn" id="ng-seed-go">🔑 Use this seed</button>' +
+      '</div>' +
+      '<button class="btn" id="ng-cancel">Cancel</button>';
+    FB.ui.openModal('New Game', h);
+    $('ng-fresh').addEventListener('click', function () {
+      FB.ui.closeModal();
+      G.pending = { seed: freshSeed() };
+      showScenarios();
+    });
+    $('ng-cancel').addEventListener('click', FB.ui.closeModal);
+    function useSeed() {
+      const r = parseSeedInput($('ng-seed').value);
+      if (r.error) { $('ng-seed-err').textContent = r.error; return; }
+      FB.ui.closeModal();
+      if (r.scenario) { // a full start code: straight to the pre-filled details
+        const pr = FB.world.byId[r.provinceId];
+        G.pending = { seed: r.seed, scenario: r.scenario, provinceId: r.provinceId,
+          culture: pr.culture, religion: pr.religion, sex: r.sex, name: r.name };
+        showChargen();
+      } else {
+        G.pending = { seed: r.seed };
+        showScenarios();
+      }
+    }
+    $('ng-seed-go').addEventListener('click', useSeed);
+    $('ng-seed').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.stopPropagation(); useSeed(); }
+    });
+  }
+
   function showScenarios() {
     const box = $('scenariolist');
     box.innerHTML = '';
@@ -271,7 +358,7 @@ window.FB = window.FB || {};
       el.innerHTML = '<h3>' + FB.esc(sc.name) + '</h3><div class="diff">' + FB.esc(sc.diff) + '</div><p>' + FB.esc(sc.desc) + '</p>';
       (function (scenario) {
         el.addEventListener('click', function () {
-          G.pending = { scenario: scenario, provinceId: null };
+          G.pending = { seed: G.pending && G.pending.seed, scenario: scenario, provinceId: null };
           showPickProv();
         });
       })(sc);
@@ -339,12 +426,17 @@ window.FB = window.FB || {};
   }
 
   function showChargen() {
+    // a shared start code arrives with its hero chosen — pre-fill instead of suggesting
+    if (G.pending.sex) {
+      document.querySelector('input[name=cg-sex][value="' + G.pending.sex + '"]').checked = true;
+    }
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
-    $('cg-name').value = FB.randomName(G.pending.culture, sex);
+    $('cg-name').value = G.pending.name || FB.randomName(G.pending.culture, sex);
     const pr = FB.world.byId[G.pending.provinceId];
     $('cg-summary').innerHTML = '<b>' + FB.esc(G.pending.scenario.name) + '</b> in <b>' + FB.esc(pr.name) + '</b><br>' +
       FB.esc(FB.cultureOf(pr.culture).name) + ' · ' + FB.esc(FB.religionOf(pr.religion).name) +
-      ' · beginning in ' + FBDATA.balance.startYear + ' AD, aged ' + FBDATA.balance.startAge + '.';
+      ' · beginning in ' + FBDATA.balance.startYear + ' AD, aged ' + FBDATA.balance.startAge + '.' +
+      '<br>🔑 World seed: <b>' + FB.esc(G.pending.seed || '') + '</b> — once your story begins, the ☰ menu holds the full start code to share.';
     FB.ui.showScreen('chargen');
   }
 
@@ -352,14 +444,20 @@ window.FB = window.FB || {};
   G.start = function () {
     G.observe = false;
     document.body.classList.remove('observing');
+    // re-seed before politics and characters draw on the RNG, so anyone holding
+    // the same seed and making the same picks gets this exact start
+    const seedStr = (G.pending && G.pending.seed) || freshSeed();
+    FB.seedRng(FB.hashSeed(seedStr));
     const sc = G.pending.scenario;
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
+    G.pending.name = null; G.pending.sex = null; // a shared code's pre-fill is spent
 
     const state = {
       v: 2,
+      seed: seedCode(seedStr, sc.id, provId, sex, name), // the start actually taken, edits included
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
@@ -447,9 +545,13 @@ window.FB = window.FB || {};
   G.startObserve = function () {
     G.observe = false; // startObserve sets it below; clear any stale state first
     document.body.classList.remove('observing');
+    // watchers share worlds too: a bare seed re-seeds the home pick and politics
+    const seedStr = (G.pending && G.pending.seed) || freshSeed();
+    FB.seedRng(FB.hashSeed(seedStr));
     const home = FB.pick(FB.world.provs.filter(function (p) { return !p.wasteland; }));
     const state = {
       v: 2,
+      seed: seedStr,
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
