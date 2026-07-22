@@ -14,9 +14,9 @@ loops stay O(realms + armies) even with dozens of hosts on the map.
 
 **Movement is daily and adjacency-based.** Orders set a BFS path (`FB.findPath` over
 `FB.world.adj`); every leg, the first included, costs `balance.armyMarchDays`, and the
-host steps into the next province only when the leg completes (rendered mid-road by
-interpolating centroids) — so battle contact and sieges begin on arrival, not on
-departure. Ordering a host's own province halts it, mid-road included; an unreachable
+host steps into the next province only when the leg completes (its marker stays
+on the province it stands in) — so battle contact and sieges begin on arrival,
+not on departure. Ordering a host's own province halts it, mid-road included; an unreachable
 order fails and clears the old route. AI hosts hunt the nearest enemy host, else march on
 the enemy's seat (a broken host routs home for 40 days). The player taps their host to
 select it, taps a province to march — which lets go of the host again so further taps
@@ -24,7 +24,9 @@ browse the map — and taps the selected host again to halt; Enter/Shift+arrows 
 same by keyboard. `FB.armyTap` (called from `FB.map.onTap` in ui.js) owns that
 interaction; the Land tab shows the selected host and any hosts standing in the viewed
 province. A host resting on its sovereign's own land refills toward its mustered `size`
-at `balance.armyReinforceRate` per day.
+at `balance.armyReinforceRate` per day. On the map a host stands on a disc of its realm's
+color — green for yours, red for your war enemy's — so its side reads at a glance, and
+hosts locked with an enemy in one province bear a ⚔ for the day they clash.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).

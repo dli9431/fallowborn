@@ -14,10 +14,10 @@ window.FB = window.FB || {};
      state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
        mercs, at, from, moveLeft, path[], goal, broken, huntPrey }]
        `at` is the province the host stands in; `from` the one it left. While
-       moveLeft > 0 the host is on the road toward path[0] (rendered mid-way)
-       and `at` advances only when the leg completes. size is the mustered
-       strength a resting host refills toward. huntPrey (player host only) is
-       a realm id whose host is tracked and re-pathed onto each day.
+       moveLeft > 0 the host is on the road toward path[0] and `at` advances
+       only when the leg completes; the map marker stays on `at`. size is the
+       mustered strength a resting host refills toward. huntPrey (player host
+       only) is a realm id whose host is tracked and re-pathed onto each day.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays. */
   FB.armiesEnsure = function (state) {
@@ -266,7 +266,7 @@ window.FB = window.FB || {};
       const p = state.player;
       const wname = state.realms[winner.realm] ? state.realms[winner.realm].name : winner.realm;
       const lname = state.realms[loser.realm] ? state.realms[loser.realm].name : loser.realm;
-      if (pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
+      if (FB.game.observe || pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
         FB.news(state, '⚔ Battle at ' + provName(pid) + ' — ' + wname + ' breaks the host of ' + lname + '.');
       }
     }
@@ -359,17 +359,12 @@ window.FB = window.FB || {};
   };
   FB.selectArmy = function (id) { selId = id || null; };
 
-  /* world-space position: mid-road toward the next province while marching */
+  /* world-space position: the province the host stands in. Not mid-road —
+     an interpolated marker floated across straits and off the land the Land
+     tab (and battle logic) says the host is in. */
   function worldPos(army) {
     const pa = FB.world.byId[army.at];
     if (!pa) return [0, 0];
-    if (army.moveLeft > 0 && army.path && army.path.length) {
-      const pd = FB.world.byId[army.path[0]];
-      if (pd) {
-        const f = 1 - army.moveLeft / B().armyMarchDays;
-        return [pa.cx + (pd.cx - pa.cx) * f, pa.cy + (pd.cy - pa.cy) * f];
-      }
-    }
     return [pa.cx, pa.cy];
   }
 
@@ -451,6 +446,20 @@ window.FB = window.FB || {};
       ctx.setLineDash([]);
     }
 
+    /* provinces where hostile hosts stand together: a battle is joined there
+       today (they clash in the daily tick) — marked below so the fray reads */
+    const byProv = {};
+    for (const a of s.armies) (byProv[a.at] = byProv[a.at] || []).push(a);
+    const battles = {};
+    for (const pid in byProv) {
+      const here = byProv[pid];
+      for (let i = 0; i < here.length && !battles[pid]; i++) {
+        for (let j = i + 1; j < here.length; j++) {
+          if (FB.armiesHostile(s, here[i], here[j])) { battles[pid] = true; break; }
+        }
+      }
+    }
+
     const counts = {}; // hosts sharing a province fan out around the centroid
     for (const a of s.armies) {
       const idx = counts[a.at] || 0; counts[a.at] = idx + 1;
@@ -462,12 +471,18 @@ window.FB = window.FB || {};
       if (x < -40 || y < -40 || x > ctx.canvas.width + 40 || y > ctx.canvas.height + 40) continue;
       const mine = a.realm === 'player';
       const realm = mine ? null : s.realms[a.realm];
-      const col = mine ? '#f0c840' : (realm ? realm.color : '#888888');
       const hostileToMe = !mine && s.player.war && s.player.war.enemy === a.realm;
+      // your side always marches in green, your war enemy in red; everyone
+      // else keeps their realm's color
+      const col = mine ? '#3fae4a' : (hostileToMe ? '#c8352b' : (realm ? realm.color : '#888888'));
 
-      // ground shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath(); ctx.ellipse(x, y + u * 0.32, u * 0.62, u * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      // base disc in the host's color over a soft shadow: the side a host
+      // fights for reads at a glance — two pennants alone did not
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(x, y + u * 0.34, u * 0.74, u * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(x, y + u * 0.3, u * 0.68, u * 0.24, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = Math.max(1, u * 0.05); ctx.stroke();
       // three spearmen: dark bodies, round heads, sloped spears
       ctx.strokeStyle = '#221d16'; ctx.lineWidth = Math.max(1, u * 0.09);
       ctx.fillStyle = '#2c2620';
@@ -487,14 +502,19 @@ window.FB = window.FB || {};
       ctx.lineTo(x + u * 0.52, y - u * 0.58);
       ctx.closePath(); ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
-      // rings: red for your enemy, gold for your selected host
-      if (hostileToMe) {
-        ctx.strokeStyle = 'rgba(200,40,30,0.9)'; ctx.lineWidth = 1.5 * dpr;
-        ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 0.95, 0, Math.PI * 2); ctx.stroke();
-      }
+      // gold ring for your selected host
       if (sel && sel.id === a.id) {
         ctx.strokeStyle = '#ffe28a'; ctx.lineWidth = 2 * dpr;
         ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 1.05, 0, Math.PI * 2); ctx.stroke();
+      }
+      // crossed swords over a host locked with an enemy in this province today
+      if (battles[a.at]) {
+        ctx.font = Math.round(u * 0.85) + 'px Georgia';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(20,16,10,0.85)';
+        ctx.strokeText('⚔', x, y - u * 1.0);
+        ctx.fillStyle = '#ffd75e';
+        ctx.fillText('⚔', x, y - u * 1.0);
       }
       // strength label
       if (z >= 1.3) {
