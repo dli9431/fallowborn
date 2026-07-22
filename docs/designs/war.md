@@ -24,7 +24,9 @@ browse the map — and taps the selected host again to halt; Enter/Shift+arrows 
 same by keyboard. `FB.armyTap` (called from `FB.map.onTap` in ui.js) owns that
 interaction; the Land tab shows the selected host and any hosts standing in the viewed
 province. A host resting on its sovereign's own land refills toward its mustered `size`
-at `balance.armyReinforceRate` per day.
+at `balance.armyReinforceRate` per day. On the map a host stands on a disc of its realm's
+color so its side reads at a glance, and hosts locked with an enemy in one province bear
+a ⚔ for the day they clash.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).
