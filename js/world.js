@@ -470,7 +470,17 @@ window.FB = window.FB || {};
       if (!terr.length) {
         fr.alive = false; fr.war = null;
         for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = fr.liege || null;
-        if (state.player && state.player.liege === rid) state.player.liege = fr.liege || null;
+        if (state.player && state.player.liege === rid) {
+          // a baron is bound to his county, not to the dead lord's house:
+          // he answers to whoever holds his home now; landed vassals
+          // reattach upward to the dead liege's own liege
+          let nl = fr.liege || null;
+          if (state.player.tier === 3) {
+            const h = (state.holder && state.holder[state.player.provinceId]) || state.owner[state.player.provinceId];
+            if (h && h !== 'player' && state.realms[h] && state.realms[h].alive) nl = h;
+          }
+          state.player.liege = nl;
+        }
       } else if (fr.capital === pid) {
         fr.capital = terr[0];
       }
@@ -1062,6 +1072,13 @@ window.FB = window.FB || {};
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') p.liege = null;
+    // a baron is a status inside a county: if the liege bond was lost (his
+    // lord's house died, or an older save), he answers to whoever holds his
+    // home county now — a baron is never "independent"
+    if (p.tier === 3 && !(p.liege && state.realms[p.liege] && state.realms[p.liege].alive)) {
+      const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
+      if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive) p.liege = bh;
+    }
     const n = p.provs ? p.provs.length : 0;
     const indep = state.realms.player && state.realms.player.alive;
     // a liege must outrank his man (a count answers to a duke, a duke to a

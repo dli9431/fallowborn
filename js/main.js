@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.10.0';
+  FB.VERSION = '1.11.0';
   FB.CHANGELOG = [
+    { v: '1.11.0', date: '2026-07-22', changes: [
+      'New deed: ⚑ Declare independence — any sworn lord or baron with 200+ prestige can renounce his liege and fight for his own banner.',
+      'Declaring independence now puts you on a war footing and calls the muster, like any other defensive war.',
+      'Fixed barons left "independent" with no path upward when their lord’s house died: a baron now answers to whoever holds his home county.',
+      'A baron who declares independence properly seizes his home county — a lord left landless by the seizure no longer lingers as a realm.'
+    ] },
     { v: '1.10.0', date: '2026-07-22', changes: [
       'Wars take the field: realms at war raise hosts of spearmen on the map that march province to province and fight where they meet.',
       'Muster your own host (🚩 deed or the muster event), hire companies to swell it, then tap the host and tap a province to march it.',

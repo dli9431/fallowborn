@@ -1181,6 +1181,31 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* renounce the liege and fight for it — confirmed here, done in
+     FB.doIndependence (a baron seizes his home county in the bargain) */
+  UI.showIndependence = function () {
+    const s = FB.state;
+    const lg = s.realms[s.player.liege];
+    const top = FB.topRealm(s, s.player.liege);
+    const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * 0.3);
+    const h = '<div class="gm-body-text"><p>You renounce ' + esc(lg ? lg.name : 'your liege') +
+      ' and raise your own banner' +
+      (s.player.tier === 3 && FB.world.byId[s.player.provinceId]
+        ? ' over ' + esc(FB.world.byId[s.player.provinceId].name) + ', seized as your own county'
+        : ' over your lands') +
+      '. ' + esc(s.realms[top] ? s.realms[top].name : 'Your sovereign') +
+      ' will march to bring you to heel — they can field ~' + enMen +
+      ' against your ~' + FB.playerLevy(s) + ' men.</p></div>' +
+      '<button class="btn primary" id="gm-indep">Raise my banner</button> ' +
+      '<button class="btn" id="gm-cancel">Stay sworn</button>';
+    openModal('Declare Independence', h);
+    $('gm-indep').addEventListener('click', function () {
+      FB.doIndependence(FB.state);
+      UI.closeModal(); UI.refresh();
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= building picker =================
      With one province it opens directly; with more, a province list comes
      first and the building list's cancel button goes back to it. */
