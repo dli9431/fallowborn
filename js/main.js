@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.11.0';
+  FB.VERSION = '1.12.0';
   FB.CHANGELOG = [
+    { v: '1.12.0', date: '2026-07-22', changes: [
+      'The menu gains a Changelog button above Abandon to title and shows the game version at its foot.'
+    ] },
     { v: '1.11.0', date: '2026-07-22', changes: [
       'New deed: ⚑ Declare independence — any sworn lord or baron with 200+ prestige can renounce his liege and fight for his own banner.',
       'Declaring independence now puts you on a war footing and calls the muster, like any other defensive war.',

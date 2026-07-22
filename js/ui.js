@@ -2136,14 +2136,17 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-load">📂 Load game</button>' +
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
       '<button class="actionbtn" id="m-mods">🧩 Mods</button>' +
+      '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
       '<button class="actionbtn" id="m-quit">🏳 Abandon to title</button>' +
-      '</div>';
+      '</div>' +
+      '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>';
     openModal('Menu', h);
     $('m-resume').addEventListener('click', UI.closeModal);
     $('m-save').addEventListener('click', function () { UI.showSaveLoad(true); });
     $('m-load').addEventListener('click', function () { UI.showSaveLoad(false); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
     $('m-mods').addEventListener('click', function () { UI.showMods(); });
+    $('m-changes').addEventListener('click', function () { UI.showChangelog(); });
     $('m-quit').addEventListener('click', function () {
       UI.closeModal(); FB.game.toTitle();
     });
