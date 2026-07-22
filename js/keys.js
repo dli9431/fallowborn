@@ -180,6 +180,11 @@ window.FB = window.FB || {};
       case '[': if (FB.state) FB.ui.cycleTab(-1); return;
       case ']': if (FB.state) FB.ui.cycleTab(1); return;
       case 'Escape': case 'm': case 'M':
+        if (FB.state && k === 'Escape' && FB.selectedArmy && FB.selectedArmy(FB.state)) {
+          FB.selectArmy(null); // let go of the host before the menu
+          if (FB.map) FB.map.request();
+          return;
+        }
         if (FB.state) FB.ui.showMenu();
         return;
       default:

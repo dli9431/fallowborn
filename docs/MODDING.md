@@ -164,7 +164,7 @@ Provide any of these to reshape or replace the whole map — e.g. a fantasy cont
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
 | `popularOpinionBelow` | the commons' view of you |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `can_afford_item`, and the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, and the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`) |
 | `never` | only fired by other events' `queue` |
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
@@ -186,8 +186,9 @@ alongside their normal triggers and serve both pools.
 `label`, optional `desc`, optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
 skill_ste liege_grant war_battle plot appeal_outcome vassal_comply`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
-`war_battle` counts real men: the levy worn by the host's condition (`war.strength`) plus
-150 per mercenary company (`war.mercCos`), against the enemy realm — with the bonuses
+`war_battle` counts real men: the fielded host's men if one is raised (the levy plus 150
+per mercenary company otherwise), worn by the host's condition (`war.strength`), against
+the enemy realm's fielded host (its per-development muster otherwise) — with the bonuses
 banked by war-council effects, walls, tech, items, and blessings on top.
 `appeal_outcome` weighs an appeal above the player's liege (diplomacy, intrigue, and the
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
@@ -231,8 +232,9 @@ go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
-handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_supply
-war_thin war_terms` (and the `war_can_siege` trigger) live in `js/world.js`; the
+handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
+war_hunt war_supply war_thin war_terms` (and the `war_can_siege` / `war_no_enemy_host` /
+`war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist` live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
@@ -244,7 +246,8 @@ gentry — the second flees abroad) live in `js/world.js`; mods may register the
 {province} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
 enemy"); `{target}` is the province an attacking war aims at; `{warstate}` summarizes the
-host (men, condition, mercenaries, siege and enemy-advance clocks); `{settlement}` reads
+host (men, condition, mercenaries, where the fielded hosts stand, siege and
+enemy-advance clocks); `{settlement}` reads
 `ctx.settlement` (set by the go-into-town deed's queue); `{item}` and `{itemprice}`
 describe the currently offered item (`player.itemOffer`); `{liege}` is the player's direct
 liege realm; `{rname}` / `{rulername}` are the realm and ruler named by `ctx.rid` (set by
@@ -436,3 +439,8 @@ and traits/items can push a read skill (`FB.skillOf`) no higher than that.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
 skill (traits and carried items included), on top of the per-development base, building
 `levy` bonuses, and the `levy` tech multiplier.
+The field-army knobs drive the hosts on the map (`js/armies.js`): `armyMarchDays` (days to
+cross one province), `armyRearmDays` (how long a shattered host must wait to muster
+again), `aiHostPerDev` (AI host size = realm development × `levyPerDev` × this), and
+`battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's scales with
+how close the fight was).
