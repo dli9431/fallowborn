@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.14.3';
+  FB.VERSION = '1.14.4';
   FB.CHANGELOG = [
+    { v: '1.14.4', date: '2026-07-22', changes: [
+      'Long dialogs — the Changelog and How to Play — open at the top instead of jumping down to the Close button.'
+    ] },
     { v: '1.14.3', date: '2026-07-22', changes: [
       'Your host always marches under a green banner; your war enemy’s host always marches under a red one.'
     ] },
