@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.9.0';
+  FB.VERSION = '1.10.0';
   FB.CHANGELOG = [
+    { v: '1.10.0', date: '2026-07-22', changes: [
+      'Wars take the field: realms at war raise hosts of spearmen on the map that march province to province and fight where they meet.',
+      'Muster your own host (🚩 deed or the muster event), hire companies to swell it, then tap the host and tap a province to march it.',
+      'A siege now needs your host standing in the target province; an invader kept out of your lands can no longer take a county.',
+      'The war council’s pitched battle is for an enemy without a host in the field — to beat their army, hunt it on the map.'
+    ] },
     { v: '1.9.0', date: '2026-07-21', changes: [
       'Events show a card for every character they name — face, house arms, home, allegiance, skills, and traits — so a rival never arrives as a bare name.',
       'Character cards and sheets show the character’s house arms and the coat of arms of the realm that holds their home.'
@@ -262,6 +268,7 @@ window.FB = window.FB || {};
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      armies: [], armyDown: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -403,6 +410,7 @@ window.FB = window.FB || {};
     }
 
     birthTick(s);
+    FB.armyTick(s); // hosts march and fight on the map every day
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitle = FB.titleFor(s);
     }

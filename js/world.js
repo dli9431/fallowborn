@@ -548,8 +548,10 @@ window.FB = window.FB || {};
       if (r.war) {
         const enemy = state.realms[r.war.enemy];
         if (!enemy || !enemy.alive) { r.war = null; continue; }
-        const sa = FB.realmStrength(state, id) * (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3);
-        const sd = FB.realmStrength(state, r.war.enemy) * (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3);
+        const sa = FB.realmStrength(state, id) * (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
+          (1 + 0.12 * ((r.war.fw || 0) - (r.war.fl || 0))); // field wins tilt the war
+        const sd = FB.realmStrength(state, r.war.enemy) * (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
+          (1 + 0.12 * ((r.war.fl || 0) - (r.war.fw || 0)));
         const winner = sa > sd ? id : r.war.enemy;
         const loser = winner === id ? r.war.enemy : id;
         const taken = FB.borderProvince(state, loser, winner);
@@ -693,13 +695,31 @@ window.FB = window.FB || {};
       FB.endPlayerWar(state); return;
     }
     if (w.defending) {
-      w.enemySiege = (w.enemySiege || 0) + 1;
-      if (w.enemySiege >= 3) { FB.warLoseProvince(state); return; }
-      if (w.enemySiege === 2) {
-        FB.news(state, '⚠ ' + enemy.name + ' presses deep into your lands — another season unchecked, and something falls.');
+      // the enemy's advance is now literal: their host must stand in your
+      // lands to tighten the noose — keep it out and nothing falls
+      if (FB.enemyHostInPlayerLands(state)) {
+        w.enemySiege = (w.enemySiege || 0) + 1;
+        if (w.enemySiege >= 3) { FB.warLoseProvince(state); return; }
+        if (w.enemySiege === 2) {
+          FB.news(state, '⚠ ' + enemy.name + ' presses deep into your lands — another season unchecked, and something falls.');
+        }
       }
     }
     state.eventQueue.push({ id: 'war_council', ctx: {} });
+  };
+
+  /* Is a hostile field host standing in the player's own lands? Drives the
+     defensive siege clock: an invader kept out of the demesne takes nothing. */
+  FB.enemyHostInPlayerLands = function (state) {
+    const p = state.player, w = p.war;
+    if (!w) return false;
+    if (!state.armies) return true; // no field data (old save): the old behavior
+    for (const a of state.armies) {
+      if (a.realm !== w.enemy) continue;
+      if (a.at === p.provinceId || (p.provs && p.provs.indexOf(a.at) >= 0)) return true;
+      if (state.holder && state.holder[a.at] === 'player') return true;
+    }
+    return false;
   };
 
   /* Attacking victory: the besieged target falls to you. */
@@ -860,10 +880,13 @@ window.FB = window.FB || {};
     w.strength = Math.min(1.1, (w.strength || 1) + 0.15); // the host mends
     if (w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1); // borders relieved
   };
-  /* press the siege of the war's target (attacking wars only) */
+  /* press the siege of the war's target (attacking wars only): your host
+     must stand in the target province to keep the works going */
   FB.fns.war_can_siege = function (state) {
     const w = state.player.war;
-    return !!(w && !w.defending && w.target && state.owner[w.target] === w.enemy);
+    if (!(w && !w.defending && w.target && state.owner[w.target] === w.enemy)) return false;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    return !!host && host.at === w.target;
   };
   FB.fns.war_siege = function (state) {
     const w = state.player.war; if (!w || !FB.fns.war_can_siege(state)) return;
@@ -890,7 +913,40 @@ window.FB = window.FB || {};
   FB.fns.war_mercs = function (state) {
     const w = state.player.war; if (!w) return;
     w.mercCos = (w.mercCos || 0) + 1;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    if (host) { host.men += 150; host.mercs = (host.mercs || 0) + 150; }
     FB.news(state, '⚔ A mercenary company takes your coin — ~150 spears join the host.');
+  };
+  /* mustering: the host takes the field at your seat (js/armies.js) */
+  FB.fns.war_raise = function (state) {
+    if (FB.raisePlayerHost) FB.raisePlayerHost(state);
+  };
+  FB.fns.war_mass = function (state) {
+    const w = state.player.war; if (!w) return;
+    w.mass = 1;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    if (host) host.men = Math.round(host.men * 1.35); // already mustered: swell it now
+    else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
+  };
+  /* the council's abstract pitched battle exists only while the enemy has
+     no host in the field — a fielded enemy is fought on the map instead */
+  FB.fns.war_no_enemy_host = function (state) {
+    const w = state.player.war;
+    if (!w) return false;
+    return !(FB.hostOf && FB.hostOf(state, w.enemy));
+  };
+  FB.fns.war_can_hunt = function (state) {
+    const w = state.player.war;
+    return !!(w && FB.playerHost && FB.playerHost(state) && FB.hostOf && FB.hostOf(state, w.enemy));
+  };
+  FB.fns.war_hunt = function (state) {
+    const w = state.player.war; if (!w) return;
+    const host = FB.playerHost && FB.playerHost(state);
+    const prey = FB.hostOf && FB.hostOf(state, w.enemy);
+    if (host && prey) {
+      FB.orderArmy(state, host, prey.at);
+      FB.news(state, '🚩 The host marches to bring ' + (state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy') + ' to battle.');
+    }
   };
   /* small condition shifts for wartime flavor events */
   FB.fns.war_supply = function (state) {
@@ -900,10 +956,6 @@ window.FB = window.FB || {};
   FB.fns.war_thin = function (state) {
     const w = state.player.war; if (!w) return;
     w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
-  };
-  FB.fns.war_mass = function (state) {
-    const w = state.player.war; if (!w) return;
-    w.mass = 1;
   };
   FB.fns.war_terms = function (state) {
     const p = state.player;

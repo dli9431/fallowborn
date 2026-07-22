@@ -795,6 +795,11 @@ FBDATA.balance = {
   itemSellRatio: 0.5, // what a buyer gives against an item's value
   wivesByGroup: { muslim: 4, pagan: 3 },
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
+  /* field armies (js/armies.js): hosts on the map */
+  armyMarchDays: 6, // days for a host to cross one province
+  armyRearmDays: 60, // a shattered host may muster again after this long
+  aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
+  battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
   skillHardCap: 40  // the true ceiling no stat can pass

@@ -167,11 +167,18 @@ window.FB = window.FB || {};
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
-      const men = Math.round(Math.max(40, FB.playerLevy(s)) * (w.strength || 1) + (w.mercCos || 0) * 150);
+      const host = FB.playerHost ? FB.playerHost(s) : null;
+      const men = host ? host.men
+        : Math.round(Math.max(40, FB.playerLevy(s)) * (w.strength || 1) + (w.mercCos || 0) * 150);
+      const ehost = FB.hostOf ? FB.hostOf(s, w.enemy) : null;
       h += '<div class="progressnote warnote">⚔ <b>At war</b> with ' + esc(en ? en.name : '?') +
         ' — victories ' + w.wins + ', defeats ' + w.losses +
-        ' · host ~' + men + ' men (' + Math.round((w.strength || 1) * 100) + '%)' +
+        ' · host ~' + men + ' men' +
+        (host ? ' in the field at ' + esc(FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?')
+          : ' (not yet mustered — 🚩 below)') +
+        ' (' + Math.round((w.strength || 1) * 100) + '%)' +
         ((w.mercCos || 0) ? ' · ' + w.mercCos + ' merc. co.' : '') +
+        (ehost ? ' · their host ~' + ehost.men + ' at ' + esc(FB.world.byId[ehost.at] ? FB.world.byId[ehost.at].name : '?') : '') +
         (!w.defending && w.target && FB.world.byId[w.target]
           ? ' · siege of ' + esc(FB.world.byId[w.target].name) + ' ' + (w.siege || 0) + '/3' : '') +
         (w.defending ? ' · enemy advance ' + (w.enemySiege || 0) + '/3' : '') +
@@ -739,6 +746,14 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[pid];
     if (!pr) { $('tab-prov').innerHTML = ''; return; }
     let h = '<div class="panelh">' + esc(pr.name) + (pid === s.player.provinceId ? ' ⚑ (home)' : '') + '</div>';
+    const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
+    if (selA) {
+      const selPr = FB.world.byId[selA.at];
+      h += '<div class="progressnote">🚩 <b>Your host</b> — ' + selA.men + ' men at ' + esc(selPr ? selPr.name : '?') +
+        (selA.goal && selA.goal !== selA.at && FB.world.byId[selA.goal]
+          ? ', marching on ' + esc(FB.world.byId[selA.goal].name) : '') +
+        '. Tap a province on the map to march; tap the host again to halt.</div>';
+    }
     if (pr.wasteland) {
       h += '<div class="cmeta">Trackless ' + esc(pr.terrain) + '. No lord rules here.</div>';
     } else {
@@ -796,6 +811,13 @@ window.FB = window.FB || {};
         h += '<div class="progressnote">🛡 They can field ~' + realmMen + ' men — you can field ~' + FB.playerLevy(s) + '.</div>';
       }
       if (realm && FB.isRealmAtWar(s, rid)) h += '<div class="progressnote warnote">⚔ This realm is at war.</div>';
+      const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
+      if (hostsHere.length) {
+        h += '<div class="progressnote warnote">⚔ Hosts in the field here: ' + hostsHere.map(function (a) {
+          return (a.realm === 'player' ? '<b>Your host</b>' : esc(s.realms[a.realm] ? s.realms[a.realm].name : '?')) +
+            ' (~' + a.men + ' men)';
+        }).join(' · ') + '</div>';
+      }
       if (realm && s.pacts && s.pacts[rid] > s.turn) {
         h += '<div class="progressnote">🕊 A pact of peace holds until ' +
           (FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360)) + ' AD.</div>';
@@ -2255,8 +2277,11 @@ window.FB = window.FB || {};
       if (FB.state) FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
-    FB.map.onTap = function (pr) {
+    FB.map.onTap = function (pr, wx, wy) {
       if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }
+      const s = FB.state;
+      // armies first: select your host, or march the selected host somewhere
+      if (s && FB.armyTap && FB.armyTap(s, pr, wx, wy)) return;
       if (pr) UI.selectProvince(pr.id);
     };
     // click any character row → their sheet; any trait chip → its meaning;

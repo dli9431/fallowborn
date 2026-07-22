@@ -17,7 +17,7 @@ FBDATA.events.push(
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to war.' } },
-    { label:'March with what you have.', effects:{ prestige:3 } }
+    { label:'March with what you have.', effects:{ prestige:3, custom:'war_raise' } }
   ]},
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
   text:'{enemy} marches on your lands. Roads fill with carts and rumor; your captains stand in the yard, waiting for orders.',
@@ -26,18 +26,22 @@ FBDATA.events.push(
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the defense.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to the defense.' } },
-    { label:'Stand ready at the border.', effects:{ prestige:2 } }
+    { label:'Stand ready at the border.', effects:{ prestige:2, custom:'war_raise' } }
   ]},
 { id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true,
   text:'Maps, candle-stubs, and hard-eyed captains. {warstate}. The war against {enemy} must be given its next move — and the men must see you certain of it.',
   options:[
-    { label:'Offer pitched battle.', chance:'war_battle', desc:'Force a decision in the field.',
+    { label:'Offer pitched battle.', chance:'war_battle', require:{ custom:'war_no_enemy_host' },
+      desc:'Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map.',
       success:{ text:'The lines meet with a sound like a falling forest — and it is theirs that breaks. The field is yours.',
         effects:{ custom:'war_win', prestige:8, skills:{mar:1} } },
       failure:{ text:'The day goes against you. You are carried back with the remnant of your host — alive, and little else.',
         effects:{ custom:'war_loss', gold:-4, health:-1, prestige:-4 } } },
+    { label:'Hunt down their field host.', require:{ custom:'war_can_hunt' },
+      desc:'March on their army in the field — battle joins when you catch it.',
+      effects:{ custom:'war_hunt' } },
     { label:'Press the siege of {target}.', require:{ custom:'war_can_siege' },
-      desc:'Ladders, mines, and patience — three seasons of siege take the prize. Beware sorties.',
+      desc:'Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties.',
       effects:{ custom:'war_siege', prestige:2, skills:{mar:1} } },
     { label:'Harry their lands.', chance:0.7, desc:'Burn and take — weaken them before the next battle.',
       success:{ text:'Granaries burn and herds change owners. Their war grows dearer by the day — and yours a little richer.',
@@ -137,5 +141,17 @@ FBDATA.events.push(
       success:{ text:'The host eats; the merchant curses your name in three ports.', effects:{ custom:'war_supply', prestige:-2, piety:-3 } },
       failure:{ text:'His guards were better than his prices. Men are hurt for nothing.', effects:{ custom:'war_thin', prestige:-3 } } },
     { label:'The men can tighten their belts.', effects:{ custom:'war_thin' } }
+  ]},
+
+/* ---------- battles on the map (hosts meeting in a province, js/armies.js) ---------- */
+{ id:'field_battle_won', title:'Battle — the Field Is Yours', trigger:{ never:true }, wartime:true,
+  text:'Steel and shouting at {cname} — and when the lines part it is their banner that falls back, their dead that thicken the ground. Your host holds the field.',
+  options:[
+    { label:'Tend the wounded, and count the spoils.', effects:{ prestige:8, skills:{mar:1} } }
+  ]},
+{ id:'field_battle_lost', title:'Battle — the Day Is Lost', trigger:{ never:true }, wartime:true,
+  text:'The line bent, then broke at {cname}. You are borne away with the remnant of your host — bloodied, beaten, but breathing.',
+  options:[
+    { label:'Rally who you can in the dark.', effects:{ gold:-4, health:-1, prestige:-4 } }
   ]}
 );

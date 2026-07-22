@@ -260,6 +260,9 @@ window.FB = window.FB || {};
         ctx.fillText('★', s[0], s[1]);
       }
     }
+    // field armies (hosts on the march, battle markers)
+    if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
+
     // player home marker
     if (M.playerProv) {
       const pr = FB.world.byId[M.playerProv];
@@ -324,7 +327,7 @@ window.FB = window.FB || {};
       const p = ptr(e);
       const wx = M.viewX + p[0] / M.zoom, wy = M.viewY + p[1] / M.zoom;
       const pr = FB.provinceAtGrid(wx, wy);
-      if (M.onTap) M.onTap(pr);
+      if (M.onTap) M.onTap(pr, wx, wy);
     }
   }
   function onWheel(e) {

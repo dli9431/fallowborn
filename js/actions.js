@@ -407,6 +407,20 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { s.eventQueue.push({ id: 'title_request', ctx: {} }); } },
+  { id: 'muster_host', label: '🚩 Muster the host',
+    desc: function (s) {
+      const w = s.player.war;
+      return 'Raise your levies and hired companies as a field host — ~' +
+        (FB.playerLevy(s) + ((w && w.mercCos) || 0) * 150) +
+        ' men at your seat. Then tap the host on the map and tap a province to march it.';
+    },
+    show: function (s) {
+      if (!s.player.war) return false;
+      if (FB.playerHost && FB.playerHost(s)) return false; // already in the field
+      const down = (s.armyDown || {})['player'];
+      return down === undefined || s.turn - down >= FBDATA.balance.armyRearmDays;
+    },
+    run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
   { id: 'hire_mercs', label: '⚔ Hire a mercenary company', cd: 45,
     desc: function (s) {
       const w = s.player.war;
