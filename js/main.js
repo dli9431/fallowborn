@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.19.3';
+  FB.VERSION = '1.20.0';
   FB.CHANGELOG = [
+    { v: '1.20.0', date: '2026-07-22', changes: [
+      'Lower-status lives gain a five-part struggle over common rights, three two-part stories, and five everyday incidents shaped by skills, profession, property, relationships, and faith.',
+      'Winning the Old Custom can secure heritable Rights of Common, personal freedom for a serf, or favor toward the next rung.'
+    ] },
     { v: '1.19.3', date: '2026-07-22', changes: [
       'The ☰ menu button stays pinned to the top right on portrait phones — the new resources row no longer drags it toward the middle.'
     ] },

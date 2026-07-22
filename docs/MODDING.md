@@ -189,7 +189,15 @@ alongside their normal triggers and serve both pools.
 
 `label`, optional `desc`, optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
-skill_ste liege_grant war_battle plot appeal_outcome vassal_comply county_petition`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
+skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
+liege_grant war_battle plot appeal_outcome vassal_comply county_petition`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
+The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
+and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
+`skill_lea` benefits from Letters in the Family and the monk/priest professions. The
+four `rights_*` formulas are the matching checks for the Old Custom chain: evidence
+adds a large bonus, with lord opinion helping Diplomacy, working professions helping
+Stewardship, and letters or a religious profession helping Learning. `swarm` is a
+Stewardship check helped by a Hearth Garden or Orchard.
 `war_battle` counts real men: the fielded host's men if one is raised (the levy plus 150
 per mercenary company otherwise), worn by the host's condition (`war.strength`), against
 the enemy realm's fielded host (its per-development muster otherwise) — a side still
@@ -347,6 +355,8 @@ in `player.holdings` and **persist across generations** — property passes to h
 ```
 
 - `cost` gold · gates: `tierMin`/`tierMax`, `professions`, `req` (prerequisite holding id).
+- `eventOnly: true` hides a holding from the Better the household picker; it can still
+  be granted by an event's `holding` effect (the inherited Rights of Common use this).
 - `fx` keys, summed by `FB.holdingBonus`: `gold`/`prestige`/`piety` per season, `battle`
   (added to the `battle` and `war_battle` chances), `edu` (children learn faster),
   `health` (lower yearly mortality).

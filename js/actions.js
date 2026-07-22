@@ -937,6 +937,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in FBDATA.holdings) {
       const def = FBDATA.holdings[id];
+      if (def.eventOnly) continue;
       if (done.indexOf(id) >= 0) continue;
       if (def.tierMin !== undefined && p.tier < def.tierMin) continue;
       if (def.tierMax !== undefined && p.tier > def.tierMax) continue;
@@ -950,7 +951,7 @@ window.FB = window.FB || {};
   FB.buyHolding = function (state, id) {
     const def = FBDATA.holdings[id];
     const done = FB.holdingList(state);
-    if (!def || done.indexOf(id) >= 0) return;
+    if (!def || def.eventOnly || done.indexOf(id) >= 0) return;
     if (def.req && done.indexOf(def.req) < 0) return;
     if (state.player.gold < def.cost) return;
     state.player.gold -= def.cost;

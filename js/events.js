@@ -472,7 +472,54 @@ window.FB = window.FB || {};
         if (f.bishop) c += 0.2;
         return FB.clamp(c, 0.1, 0.9);
       }
-      case 'skill_ste': return FB.clamp(0.30 + FB.skillOf(me, 'ste') * 0.04, 0.1, 0.9);
+      case 'skill_dip': return FB.clamp(0.30 + FB.skillOf(me, 'dip') * 0.04, 0.1, 0.9);
+      case 'skill_ste': {
+        let c = 0.30 + FB.skillOf(me, 'ste') * 0.04;
+        const hs = FB.holdingList(state);
+        if (hs.indexOf('fine_tools') >= 0 || hs.indexOf('workshop') >= 0) c += 0.06;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'skill_int': return FB.clamp(0.30 + FB.skillOf(me, 'int') * 0.04, 0.1, 0.9);
+      case 'skill_lea': {
+        let c = 0.30 + FB.skillOf(me, 'lea') * 0.04;
+        if (FB.holdingList(state).indexOf('letters') >= 0) c += 0.08;
+        if (p.profession === 'monk' || p.profession === 'priest') c += 0.05;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'rights_dip': {
+        const lord = FB.getRole(state, 'lord', false);
+        let c = 0.22 + FB.skillOf(me, 'dip') * 0.04 + p.prestige / 900;
+        if (f.rights_evidence) c += 0.18;
+        if (lord) c += lord.opinion / 500;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'rights_ste': {
+        let c = 0.25 + FB.skillOf(me, 'ste') * 0.04;
+        if (f.rights_evidence) c += 0.18;
+        if (p.profession === 'farmer' || p.profession === 'craftsman' || p.profession === 'merchant') c += 0.05;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'rights_int': {
+        let c = 0.24 + FB.skillOf(me, 'int') * 0.04;
+        if (f.rights_evidence) c += 0.18;
+        if (f.rights_collaborator) c += 0.05;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'rights_lea': {
+        let c = 0.24 + FB.skillOf(me, 'lea') * 0.04;
+        const hs = FB.holdingList(state);
+        if (f.rights_evidence) c += 0.18;
+        if (hs.indexOf('letters') >= 0) c += 0.08;
+        if (p.profession === 'monk' || p.profession === 'priest') c += 0.05;
+        return FB.clamp(c, 0.1, 0.9);
+      }
+      case 'swarm': {
+        let c = 0.35 + FB.skillOf(me, 'ste') * 0.035;
+        const hs = FB.holdingList(state);
+        if (hs.indexOf('hearth_garden') >= 0) c += 0.1;
+        if (hs.indexOf('orchard') >= 0) c += 0.12;
+        return FB.clamp(c, 0.15, 0.9);
+      }
       case 'war_battle': {
         const w = p.war;
         if (!w) return 0.5;

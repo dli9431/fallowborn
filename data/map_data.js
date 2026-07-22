@@ -643,11 +643,15 @@ FBDATA.buildings = {
 /* Household holdings (tiers 0-2; bought with gold via the "Better the
    household…" deed) — the commoner's way of playing tall. Holdings live in
    player.holdings and PERSIST across generations: property passes to heirs.
-   cost: gold · gates: tierMin/tierMax, professions, req (holding id) ·
+   cost: gold · gates: tierMin/tierMax, professions, req (holding id),
+   eventOnly (not shown in the purchase picker) ·
    fx keys (summed by FB.holdingBonus): gold/prestige/piety (per season),
    battle (added to 'battle' odds), edu (children learn faster),
    health (lower yearly mortality). */
 FBDATA.holdings = {
+  /* earned through the Old Custom landmark chain, never bought */
+  common_rights: { name:'Rights of Common', icon:'🌲', eventOnly:true, tierMax:2,
+    desc:'Heritable pasture, fuel, and water rights recorded for the household.', fx:{ gold:0.75, health:0.002 } },
   /* any household */
   hearth_garden: { name:'Hearth Garden', icon:'🌿', cost:10, tierMax:2,
     desc:'Herbs and onions by the door — fewer coins to the market, fewer fevers in the house.', fx:{ gold:0.5, health:0.004 } },
