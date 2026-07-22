@@ -1234,7 +1234,13 @@ window.FB = window.FB || {};
   /* ================= generic modal ================= */
   function openModal(title, bodyHtml, opts) {
     UI._gmDismiss = !(opts && opts.dismissable === false);
-    $('genmodal').classList.remove('hidden');
+    const gm = $('genmodal');
+    gm.classList.remove('hidden');
+    /* per-dialog modifier class (e.g. the changelog's even-margin sheet) —
+       drop the previous one before applying this dialog's */
+    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
+    UI._gmModalClass = (opts && opts.modalClass) || '';
+    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
     $('gm-title').textContent = title;
     $('gm-body').innerHTML = bodyHtml;
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
@@ -2382,8 +2388,8 @@ window.FB = window.FB || {};
       for (const c of rel.changes) h += '<li>' + esc(c) + '</li>';
       h += '</ul>';
     }
-    h += '</div><button class="btn primary" id="gm-ok">Close</button>';
-    openModal('Changelog', h);
+    h += '</div><div class="gm-footer"><button class="btn primary" id="gm-ok">Close</button></div>';
+    openModal('Changelog', h, { modalClass: 'changelog-modal' });
     $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };
 

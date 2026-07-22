@@ -401,6 +401,30 @@ textarea.modjson {
     border-radius: 14px 14px 0 0; border-bottom: none;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
   }
+  /* Changelog: an evenly framed panel (not a bottom sheet) with the Close
+     button pinned to the bottom middle, so a long list needs no scroll to shut */
+  .modal.changelog-modal {
+    align-items: center; justify-content: center;
+    padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  }
+  .changelog-modal .modalcard {
+    display: flex; flex-direction: column;
+    width: 100%; max-height: 100%; padding: 16px 16px 0;
+    border: 2px solid #7a6234; border-radius: 14px;
+    overflow: hidden;
+  }
+  .changelog-modal .modalcard h3 { flex: 0 0 auto; margin-bottom: 8px; }
+  .changelog-modal #gm-body {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  }
+  .changelog-modal .gm-footer {
+    position: sticky; bottom: 0; margin-top: 6px;
+    display: flex; justify-content: center;
+    padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(34,27,19,0), #221b13 45%);
+  }
+  .changelog-modal .gm-footer .btn { min-width: 180px; text-align: center; }
 }
 
 /* portrait: map on top, the Deeds/Land/Chronicle panel full-width beneath */

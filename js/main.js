@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.17.0';
+  FB.VERSION = '1.17.1';
   FB.CHANGELOG = [
+    { v: '1.17.1', date: '2026-07-22', changes: [
+      'On phones the Changelog now sits as an evenly framed panel with a Close button pinned to the bottom middle — no more scrolling to the end of a long list to shut it.'
+    ] },
     { v: '1.17.0', date: '2026-07-22', changes: [
       'Wounds and sicknesses now have names: hard blows leave a named wound and falling ill names the sickness — listed on your character sheet with a detail note, and visible on your portrait as bandages, cuts, bruises, and a pale, haggard face.',
       'Scarred and one-eyed characters now bear their marks on every portrait, yours and others’.'
