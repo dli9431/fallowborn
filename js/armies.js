@@ -471,8 +471,10 @@ window.FB = window.FB || {};
       if (x < -40 || y < -40 || x > ctx.canvas.width + 40 || y > ctx.canvas.height + 40) continue;
       const mine = a.realm === 'player';
       const realm = mine ? null : s.realms[a.realm];
-      const col = mine ? '#f0c840' : (realm ? realm.color : '#888888');
       const hostileToMe = !mine && s.player.war && s.player.war.enemy === a.realm;
+      // your side always marches in green, your war enemy in red; everyone
+      // else keeps their realm's color
+      const col = mine ? '#3fae4a' : (hostileToMe ? '#c8352b' : (realm ? realm.color : '#888888'));
 
       // base disc in the host's color over a soft shadow: the side a host
       // fights for reads at a glance — two pennants alone did not
@@ -500,11 +502,7 @@ window.FB = window.FB || {};
       ctx.lineTo(x + u * 0.52, y - u * 0.58);
       ctx.closePath(); ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
-      // rings: red for your enemy, gold for your selected host
-      if (hostileToMe) {
-        ctx.strokeStyle = 'rgba(200,40,30,0.9)'; ctx.lineWidth = 1.5 * dpr;
-        ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 0.95, 0, Math.PI * 2); ctx.stroke();
-      }
+      // gold ring for your selected host
       if (sel && sel.id === a.id) {
         ctx.strokeStyle = '#ffe28a'; ctx.lineWidth = 2 * dpr;
         ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 1.05, 0, Math.PI * 2); ctx.stroke();
