@@ -474,14 +474,17 @@ window.FB = window.FB || {};
         if (!w) return 0.5;
         const enemy = state.realms[w.enemy];
         // real men: the fielded host if there is one, else the levy the
-        // muster would raise (worn by the host's condition either way)
+        // muster would raise (worn by the host's condition either way); a
+        // side still re-forming a shattered host fields only a remnant
         const host = FB.playerHost ? FB.playerHost(state) : null;
-        const myMen = (host ? host.men : Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
-          (w.strength || 1);
+        const myMen = (host ? host.men
+          : (Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
+            (FB.rearmScale ? FB.rearmScale(state, 'player') : 1)) * (w.strength || 1);
         const myStr = myMen * (1 + FB.skillOf(me, 'mar') / 14);
         const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
         const enMen = ehost ? ehost.men
-          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3);
+          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+            (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
         const enStr = enMen * (1 + (enemy ? enemy.ruler.mar : 5) / 22);
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host

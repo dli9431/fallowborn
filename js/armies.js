@@ -2,18 +2,22 @@
    when they meet. One host per sovereign realm (levies with hired companies
    folded in), raised while a war lasts and disbanded at peace. The player
    musters by deed or muster event and orders marches by tapping the map;
-   AI hosts hunt enemy hosts and otherwise march on the enemy's seat.
-   See docs/designs/war.md. */
+   AI hosts hunt enemy hosts and otherwise march on the enemy's seat. Hosts
+   resting on their sovereign's own land slowly refill toward their mustered
+   strength. See docs/designs/war.md. */
 window.FB = window.FB || {};
 
 (function () {
   'use strict';
 
   /* ---------- state ----------
-     state.armies: [{ id, realm ('player' or a sovereign realm id), men,
-       mercs, at, from, moveLeft, path[], goal, broken }]
-       at/from are province ids; while moveLeft > 0 the host is on the road
-       between them (rendered mid-way). path[0] is the next province.
+     state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
+       mercs, at, from, moveLeft, path[], goal, broken, huntPrey }]
+       `at` is the province the host stands in; `from` the one it left. While
+       moveLeft > 0 the host is on the road toward path[0] (rendered mid-way)
+       and `at` advances only when the leg completes. size is the mustered
+       strength a resting host refills toward. huntPrey (player host only) is
+       a realm id whose host is tracked and re-pathed onto each day.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays. */
   FB.armiesEnsure = function (state) {
@@ -41,7 +45,9 @@ window.FB = window.FB || {};
   };
 
   /* are two armies from warring camps? (armies belong to sovereigns, so a
-     plain realm-id comparison against the war objects is enough) */
+     plain realm-id comparison against the war objects is enough). Reads the
+     live war objects, so it stays correct even mid-tick when a battle ends
+     a war — the per-tick `warring` map below is only for the hot loops. */
   FB.armiesHostile = function (state, a, b) {
     if (a.realm === b.realm) return false;
     const w = state.player.war;
@@ -53,22 +59,33 @@ window.FB = window.FB || {};
     return false;
   };
 
-  /* the sovereign rid is currently fighting — its own war, a war declared
-     on it, or the player's war against it (dead enemies don't count) */
-  function warEnemyOf(state, rid) {
-    const r = state.realms[rid];
-    if (r && r.war) {
-      const e = state.realms[r.war.enemy];
-      if (e && e.alive) return r.war.enemy;
-    }
+  /* who fights whom, built once per tick: realmId → enemyId, both directions,
+     plus the player's personal war ('player' ↔ its enemy). Keeps the daily
+     raise/order loops O(realms + armies) instead of O(realms²). */
+  function warringMap(state) {
+    const m = {};
     const pw = state.player.war;
-    if (pw && pw.enemy === rid) return 'player';
+    if (pw && pw.enemy) { m['player'] = pw.enemy; m[pw.enemy] = 'player'; }
     for (const id in state.realms) {
-      const o = state.realms[id];
-      if (o.alive && o.war && o.war.enemy === rid) return id;
+      const r = state.realms[id];
+      if (!r.alive || !r.war) continue;
+      const e = state.realms[r.war.enemy];
+      if (!e || !e.alive) continue;
+      m[id] = r.war.enemy; // a realm's own declaration wins
+      if (!m[r.war.enemy]) m[r.war.enemy] = id;
     }
-    return null;
+    return m;
   }
+
+  /* how far a shattered side has re-formed: 1 while unbloodied, ramping from
+     a floor back to 1 across the rearm window. The war council's abstract
+     battle reads this so a just-broken army fields only a remnant. */
+  FB.rearmScale = function (state, rid) {
+    FB.armiesEnsure(state);
+    const down = state.armyDown[rid];
+    if (down === undefined) return 1;
+    return FB.clamp((state.turn - down) / B().armyRearmDays, 0.15, 1);
+  };
 
   function playerHome(state) {
     const p = state.player;
@@ -90,7 +107,7 @@ window.FB = window.FB || {};
     if (w.mass) men = Math.round(men * 1.35); // the great levy
     men = Math.max(40, Math.round(men));
     const home = playerHome(state);
-    const host = { id: FB.uid(), realm: 'player', men: men, mercs: (w.mercCos || 0) * 150,
+    const host = { id: FB.uid(), realm: 'player', men: men, size: men, mercs: (w.mercCos || 0) * 150,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
     FB.news(state, '🚩 The host musters at ' + provName(home) + ' — ' + men + ' men take the field.');
@@ -102,7 +119,7 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
     const men = Math.max(60, Math.round(FB.realmStrength(state, rid) * B().levyPerDev * (B().aiHostPerDev || 0.3)));
-    const host = { id: FB.uid(), realm: rid, men: men, mercs: 0,
+    const host = { id: FB.uid(), realm: rid, men: men, size: men, mercs: 0,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
     if (state.player.war && state.player.war.enemy === rid) {
@@ -142,31 +159,44 @@ window.FB = window.FB || {};
     return null;
   };
 
-  /* order a host toward a province; ordering its own province halts it */
+  /* order a host toward a province; ordering its own province halts it
+     (mid-road included). A failed order leaves no stale route behind, and a
+     standing host starts its first leg at once — every leg, first included,
+     costs balance.armyMarchDays. */
   FB.orderArmy = function (state, army, destPid) {
     if (!destPid) return false;
-    if (destPid === army.at && army.moveLeft <= 0) { army.path = []; army.goal = null; return true; }
+    if (destPid === army.at) { army.path = []; army.goal = null; army.moveLeft = 0; return true; }
     const path = FB.findPath(army.at, destPid);
-    if (!path) return false;
+    if (!path) { army.path = []; army.goal = null; return false; }
     army.path = path;
     army.goal = destPid;
+    if (army.moveLeft <= 0) { army.from = army.at; army.moveLeft = B().armyMarchDays; }
     return true;
   };
 
   /* ---------- the daily tick (called from G.passDay) ---------- */
 
   function march(state, army) {
-    if (army.moveLeft > 0) army.moveLeft--;
-    if (army.moveLeft > 0) return;
-    if (!army.path || !army.path.length) return;
-    army.from = army.at;
-    army.at = army.path.shift();
-    army.moveLeft = B().armyMarchDays; // every hop costs the march, last included
+    if (army.moveLeft > 0) {
+      army.moveLeft--;
+      if (army.moveLeft <= 0 && army.path && army.path.length) {
+        // the leg completes: the host steps into the next province
+        army.from = army.at;
+        army.at = army.path.shift();
+        if (army.path.length) army.moveLeft = B().armyMarchDays;
+      }
+      return;
+    }
+    // standing with a route but no clock (old save): begin the next leg
+    if (army.path && army.path.length) {
+      army.from = army.at;
+      army.moveLeft = B().armyMarchDays;
+    }
   }
 
   /* what an AI host wants: run home when broken, hunt the nearest enemy
      host, else march on the enemy's seat */
-  function aiGoal(state, army) {
+  function aiGoal(state, army, warring) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
     if (army.broken !== undefined && state.turn - army.broken < 40) return r.capital;
@@ -180,7 +210,7 @@ window.FB = window.FB || {};
       if (d < bd) { bd = d; best = o; }
     }
     if (best) return best.at;
-    const en = warEnemyOf(state, army.realm);
+    const en = warring[army.realm];
     if (en === 'player') return playerHome(state);
     const er = en && state.realms[en];
     return er ? er.capital : army.at;
@@ -246,13 +276,15 @@ window.FB = window.FB || {};
   FB.armyTick = function (state) {
     FB.armiesEnsure(state);
     const p = state.player;
+    const warring = warringMap(state);
+    const hostByRealm = {};
+    for (const a of state.armies) hostByRealm[a.realm] = a;
 
     // sovereigns at war raise their host (the player musters by deed/event)
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || r.liege || id === 'player') continue;
-      if (!warEnemyOf(state, id)) continue;
-      if (FB.hostOf(state, id)) continue;
+      if (!warring[id] || hostByRealm[id]) continue;
       const down = state.armyDown[id];
       if (down !== undefined && state.turn - down < B().armyRearmDays) continue;
       raiseAIHost(state, id);
@@ -269,20 +301,35 @@ window.FB = window.FB || {};
         continue;
       }
       const r = state.realms[a.realm];
-      if (!r || !r.alive || !warEnemyOf(state, a.realm)) disband(state, a);
+      if (!r || !r.alive || !warring[a.realm]) disband(state, a);
     }
 
     // orders & marches
     for (const a of state.armies) {
       if (a.realm !== 'player') {
-        const goal = aiGoal(state, a);
+        const goal = aiGoal(state, a, warring);
         if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
           FB.orderArmy(state, a, goal);
         }
+      } else if (a.huntPrey) {
+        // a hunting host tracks its prey day by day, not where it was
+        const prey = hostByRealm[a.huntPrey];
+        if (!prey || warring['player'] !== a.huntPrey) a.huntPrey = null;
+        else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
       }
       march(state, a);
     }
     if (state.armies.length && FB.map) FB.map.request(); // hosts on the road redraw daily
+
+    // levies trickle back while a host rests on its sovereign's own land
+    for (const a of state.armies) {
+      if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
+      if (a.men >= a.size || a.moveLeft > 0) continue;
+      const own = a.realm === 'player'
+        ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
+        : state.owner[a.at] === a.realm;
+      if (own) a.men = Math.min(a.size, a.men + Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
+    }
 
     // battles: hostile hosts sharing a province (one clash per province per day)
     const byProv = {};
@@ -312,15 +359,15 @@ window.FB = window.FB || {};
   };
   FB.selectArmy = function (id) { selId = id || null; };
 
-  /* world-space position: mid-road while between provinces */
+  /* world-space position: mid-road toward the next province while marching */
   function worldPos(army) {
     const pa = FB.world.byId[army.at];
     if (!pa) return [0, 0];
-    if (army.moveLeft > 0 && army.from && army.from !== army.at) {
-      const pf = FB.world.byId[army.from];
-      if (pf) {
+    if (army.moveLeft > 0 && army.path && army.path.length) {
+      const pd = FB.world.byId[army.path[0]];
+      if (pd) {
         const f = 1 - army.moveLeft / B().armyMarchDays;
-        return [pf.cx + (pa.cx - pf.cx) * f, pf.cy + (pa.cy - pf.cy) * f];
+        return [pa.cx + (pd.cx - pa.cx) * f, pa.cy + (pd.cy - pa.cy) * f];
       }
     }
     return [pa.cx, pa.cy];
@@ -339,12 +386,12 @@ window.FB = window.FB || {};
 
   /* A map tap arrives here first (from FB.map.onTap in ui.js). Returns true
      when the tap was army business: select your host, tap a province to
-     march it, tap the selected host to halt, tap elsewhere to let go. */
+     march it (which lets go again), tap the selected host to halt. */
   FB.armyTap = function (state, pr, wx, wy) {
     const sel = FB.selectedArmy(state);
     let hit = null;
     if (wx !== undefined && FB.map && FB.map.zoom) {
-      hit = FB.armyAtWorld(state, wx, wy, 16 / FB.map.zoom);
+      hit = FB.armyAtWorld(state, wx, wy, 20 * (FB.map.dpr || 1) / FB.map.zoom);
     } else if (pr) {
       // keyboard taps carry no pointer position: your host standing in the
       // tapped province is the target (Enter/Shift+arrows work the map too)
@@ -353,7 +400,7 @@ window.FB = window.FB || {};
     }
     if (hit && hit.realm === 'player') {
       if (sel && sel.id === hit.id) {
-        hit.path = []; hit.goal = null;
+        hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
         FB.selectArmy(null);
         if (FB.ui) FB.ui.toast('🚩 The host holds at ' + provName(hit.at) + '.');
         return true;
@@ -366,6 +413,8 @@ window.FB = window.FB || {};
     if (sel) {
       if (pr && !pr.wasteland) {
         if (FB.orderArmy(state, sel, pr.id)) {
+          sel.huntPrey = null; // a hand-given order ends any hunt
+          FB.selectArmy(null); // and lets go, so further taps browse the map
           if (FB.ui) FB.ui.toast('🚩 The host marches on ' + pr.name + '.');
           if (FB.map) FB.map.request();
         }
@@ -407,7 +456,7 @@ window.FB = window.FB || {};
       const idx = counts[a.at] || 0; counts[a.at] = idx + 1;
       const pos = worldPos(a);
       const sc = toScreen(pos[0], pos[1]);
-      const u = Math.max(8, 9 + Math.min(5, z)) * dpr;
+      const u = Math.max(15, 14 + Math.min(8, z * 1.25)) * dpr;
       let x = sc[0], y = sc[1];
       if (idx) { const ang = idx * 2.4; x += Math.cos(ang) * u * 0.95; y += Math.sin(ang) * u * 0.95; }
       if (x < -40 || y < -40 || x > ctx.canvas.width + 40 || y > ctx.canvas.height + 40) continue;
@@ -449,7 +498,7 @@ window.FB = window.FB || {};
       }
       // strength label
       if (z >= 1.3) {
-        ctx.font = Math.round(9 * dpr) + 'px Georgia';
+        ctx.font = Math.round(10 * dpr) + 'px Georgia';
         ctx.textAlign = 'center';
         ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(20,16,10,0.8)';
         const lbl = a.men >= 1000 ? (Math.round(a.men / 100) / 10) + 'k' : String(a.men);
