@@ -78,6 +78,63 @@ window.FB = window.FB || {};
     if (i >= 0) c.traits.splice(i, 1);
   };
 
+  /* ---------- ailments: named wounds & sicknesses (data table in traits.js) ----------
+     Kept on c.ails as a short list of ids; old saves simply lack the field. */
+  FB.ailmentsOf = function (c) {
+    const out = [];
+    if (!c.ails) return out;
+    for (const id of c.ails) {
+      const a = FBDATA.ailments[id];
+      if (a) out.push({ id: id, def: a });
+    }
+    return out;
+  };
+
+  FB.hasAilmentKind = function (c, kind) {
+    const list = FB.ailmentsOf(c);
+    for (const a of list) if (a.def.kind === kind) return true;
+    return false;
+  };
+
+  FB.addAilment = function (c, id) {
+    const a = FBDATA.ailments[id];
+    if (!a) return false;
+    if (!c.ails) c.ails = [];
+    if (c.ails.indexOf(id) >= 0) return false;
+    c.ails.push(id);
+    while (c.ails.length > 3) c.ails.shift(); // only so many afflictions worth naming
+    return true;
+  };
+
+  /* remove ailments of a kind — the n oldest (default: all of that kind) */
+  FB.cureAilments = function (c, kind, n) {
+    if (!c.ails) return;
+    let left = n === undefined ? Infinity : n;
+    for (let i = 0; i < c.ails.length && left > 0;) {
+      const a = FBDATA.ailments[c.ails[i]];
+      if (a && a.kind === kind) { c.ails.splice(i, 1); left--; }
+      else i++;
+    }
+    if (!c.ails.length) delete c.ails;
+  };
+
+  FB.randomWound = function (sev) {
+    const pool = [];
+    for (const id in FBDATA.ailments) {
+      const a = FBDATA.ailments[id];
+      if (a.kind === 'wound' && (a.sev || 1) === sev) pool.push(id);
+    }
+    return pool.length ? FB.pick(pool) : null;
+  };
+
+  FB.randomSickness = function () {
+    const pool = [];
+    for (const id in FBDATA.ailments) {
+      if (FBDATA.ailments[id].kind === 'sickness') pool.push(id);
+    }
+    return pool.length ? FB.pick(pool) : null;
+  };
+
   FB.traitAgg = function (c) {
     const agg = { dip: 0, mar: 0, ste: 0, int: 0, lea: 0, health: 0, fert: 1, opinion: 0 };
     for (const id of c.traits) {

@@ -29,7 +29,14 @@ window.FB = window.FB || {};
     return (x ^ (x >>> 16)) & 255;
   }
 
-  /* opts: { profession, tier } — only meaningful for the player character */
+  function hexLerp(a, b, t) { // blend two #rrggbb colors, t = 0..1
+    const ar = parseInt(a.substr(1, 2), 16), ag = parseInt(a.substr(3, 2), 16), ab = parseInt(a.substr(5, 2), 16);
+    const br = parseInt(b.substr(1, 2), 16), bg = parseInt(b.substr(3, 2), 16), bb = parseInt(b.substr(5, 2), 16);
+    return 'rgb(' + Math.round(ar + (br - ar) * t) + ',' + Math.round(ag + (bg - ag) * t) + ',' +
+      Math.round(ab + (bb - ab) * t) + ')';
+  }
+
+  /* opts: { profession, tier, ill } — only meaningful for the player character */
   FB.paintPortrait = function (canvas, c, year, opts) {
     if (!canvas || !c) return;
     const ctx = canvas.getContext('2d');
@@ -43,12 +50,23 @@ window.FB = window.FB || {};
     const prof = opts && opts.profession;
     const tier = opts ? (opts.tier || 0) : 0;
 
+    // condition: health and named ailments shape the face (NPCs default to hale)
+    const hp = c.health === undefined ? 8 : c.health;
+    const ails = FB.ailmentsOf ? FB.ailmentsOf(c) : [];
+    let sick = !!(opts && opts.ill);
+    for (let ai = 0; ai < ails.length; ai++) if (ails[ai].def.kind === 'sickness') sick = true;
+
     let toneIdx = 1;
     if (PALE.indexOf(c.culture) >= 0) toneIdx = 0;
     else if (TAN.indexOf(c.culture) >= 0) toneIdx = 1;
     else if (BROWN.indexOf(c.culture) >= 0) toneIdx = 2;
     else if (c.culture === 'nubian') toneIdx = 3;
-    const skin = SKIN[toneIdx][0], skinShade = SKIN[toneIdx][1];
+    let skin = SKIN[toneIdx][0], skinShade = SKIN[toneIdx][1];
+    if (sick || hp <= 4) { // waxen and grey with sickness or pain
+      const t = sick ? 0.5 : 0.3;
+      skin = hexLerp(skin, '#c9cdb4', t);
+      skinShade = hexLerp(skinShade, '#a9ad96', t);
+    }
 
     let hair = HAIR[byte(h, 1) % (toneIdx === 0 ? 5 : 3)]; // reds/blonds mostly northern
     if (age >= 72) hair = '#d9d6cf';
@@ -146,9 +164,31 @@ window.FB = window.FB || {};
 
     // eyes & brows (men get heavier brows)
     const eyeY = cy - 2, eyeDx = 6.5;
+    const woundSide = byte(h, 10) > 127 ? 1 : -1; // which side bears the marks
+    const oneEye = c.traits && c.traits.indexOf('one_eyed') >= 0;
+    const faint = hp <= 2; // at death’s door the eyes sink to slits
     ctx.fillStyle = '#241a10';
-    ctx.beginPath(); ctx.ellipse((32 - eyeDx) * u, eyeY * v, 1.8 * u, 2.2 * v, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse((32 + eyeDx) * u, eyeY * v, 1.8 * u, 2.2 * v, 0, 0, Math.PI * 2); ctx.fill();
+    for (const side of [-1, 1]) {
+      const ex = (32 + side * eyeDx) * u;
+      if (oneEye && side === woundSide) { // a closed, sunken socket
+        ctx.strokeStyle = skinShade; ctx.lineWidth = 1.6 * v;
+        ctx.beginPath(); ctx.moveTo(ex - 2.5 * u, eyeY * v); ctx.lineTo(ex + 2.5 * u, eyeY * v); ctx.stroke();
+      } else if (faint) {
+        ctx.strokeStyle = '#241a10'; ctx.lineWidth = 1.4 * v;
+        ctx.beginPath(); ctx.moveTo(ex - 2 * u, eyeY * v); ctx.lineTo(ex + 2 * u, eyeY * v); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY * v, 1.8 * u, 2.2 * v, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (hp <= 4) { // hollow with pain: shadows beneath the eyes
+      ctx.strokeStyle = 'rgba(90,60,60,0.55)'; ctx.lineWidth = 1 * v;
+      ctx.beginPath();
+      ctx.moveTo((32 - eyeDx - 2.5) * u, (eyeY + 3.5) * v);
+      ctx.quadraticCurveTo((32 - eyeDx) * u, (eyeY + 5) * v, (32 - eyeDx + 2.5) * u, (eyeY + 3.5) * v);
+      ctx.moveTo((32 + eyeDx - 2.5) * u, (eyeY + 3.5) * v);
+      ctx.quadraticCurveTo((32 + eyeDx) * u, (eyeY + 5) * v, (32 + eyeDx + 2.5) * u, (eyeY + 3.5) * v);
+      ctx.stroke();
+    }
     ctx.strokeStyle = hair; ctx.lineWidth = (female ? 1.1 : 2) * v;
     const tilt = ((byte(h, 7) % 3) - 1) * 1.2;
     ctx.beginPath();
@@ -182,6 +222,56 @@ window.FB = window.FB || {};
       ctx.fillStyle = '#e8c455';
       ctx.beginPath(); ctx.ellipse((32 - headR + 1) * u, (cy + 5) * v, 1.6 * u, 1.6 * v, 0, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.ellipse((32 + headR - 1) * u, (cy + 5) * v, 1.6 * u, 1.6 * v, 0, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // wounds & old scars ride on top of everything but the crown
+    let markCut = false, markBruise = false, markBandage = false;
+    for (let mi = 0; mi < ails.length; mi++) {
+      const mk = ails[mi].def.mark;
+      if (mk === 'cut') markCut = true;
+      else if (mk === 'bruise') markBruise = true;
+      else if (mk === 'bandage') markBandage = true;
+    }
+    if (markBandage) { // a linen strip around the brow, knotted at the side
+      ctx.save();
+      ctx.translate(32 * u, (eyeY - 6.5) * v);
+      ctx.rotate(woundSide * 0.06);
+      ctx.fillStyle = '#e8e0cc';
+      ctx.fillRect(-(headR - 1) * u, -2 * v, 2 * (headR - 1) * u, 4 * v);
+      ctx.fillStyle = '#cfc5ab';
+      ctx.fillRect((woundSide * (headR - 5) - 1.5) * u, -1 * v, 3 * u, 2 * v);
+      ctx.restore();
+    }
+    if (markBruise) { // a shiner, dark around one eye
+      ctx.fillStyle = 'rgba(74,42,58,0.4)';
+      ctx.beginPath();
+      ctx.ellipse((32 + woundSide * eyeDx) * u, (eyeY + 0.5) * v, 4 * u, 4.5 * v, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (markCut) { // a stitched cut across the cheek
+      const cx0 = (32 - woundSide * 11) * u;
+      ctx.strokeStyle = '#8a3030'; ctx.lineWidth = 1.6 * v; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx0, (eyeY + 6) * v);
+      ctx.lineTo(cx0 + woundSide * 3 * u, (eyeY + 11) * v);
+      ctx.stroke();
+      ctx.strokeStyle = '#d8cfc0'; ctx.lineWidth = 0.9 * v;
+      ctx.beginPath();
+      ctx.moveTo(cx0 - 0.9 * u, (eyeY + 8) * v); ctx.lineTo(cx0 + 0.9 * u, (eyeY + 8) * v);
+      ctx.moveTo(cx0 + woundSide * 2 * u - 0.9 * u, (eyeY + 9.5) * v);
+      ctx.lineTo(cx0 + woundSide * 2 * u + 0.9 * u, (eyeY + 9.5) * v);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+    }
+    if (c.traits && c.traits.indexOf('scarred') >= 0) { // the pale seam of an old wound
+      const sSide = markCut ? woundSide : -woundSide;
+      const sx = (32 + sSide * 11) * u;
+      ctx.strokeStyle = 'rgba(224,200,180,0.85)'; ctx.lineWidth = 1.2 * v; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx - 1.5 * u, (eyeY + 4) * v);
+      ctx.lineTo(sx + 1.5 * u, (eyeY + 10) * v);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
     }
 
     // crown / circlet
@@ -218,7 +308,7 @@ window.FB = window.FB || {};
       const c = state.chars[list[i].getAttribute('data-cid')];
       if (!c) continue;
       const opts = c.id === state.player.charId ?
-        { profession: state.player.profession, tier: state.player.tier } : null;
+        { profession: state.player.profession, tier: state.player.tier, ill: !!state.player.flags.ill } : null;
       FB.paintPortrait(list[i], c, state.date.year, opts);
     }
     FB.paintCrests(root); // util.js loads first; crests ride along with faces

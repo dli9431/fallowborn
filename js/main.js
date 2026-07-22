@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.3';
+  FB.VERSION = '1.17.0';
   FB.CHANGELOG = [
+    { v: '1.17.0', date: '2026-07-22', changes: [
+      'Wounds and sicknesses now have names: hard blows leave a named wound and falling ill names the sickness — listed on your character sheet with a detail note, and visible on your portrait as bandages, cuts, bruises, and a pale, haggard face.',
+      'Scarred and one-eyed characters now bear their marks on every portrait, yours and others’.'
+    ] },
     { v: '1.16.3', date: '2026-07-22', changes: [
       'Death no longer flashes by at high speed: automation never resolves an event whose outcome could kill you — the blow is always shown — and the succession screen waits for a deliberate choice instead of taking a stray Space/Enter on the first heir.',
       'The death screen now speaks the chronicler’s parting line for the life just ended.'
@@ -694,6 +698,7 @@ window.FB = window.FB || {};
       return;
     }
     if (FB.chance(0.35) && me.health < 8 && !p.flags.ill) me.health++;
+    if (!p.flags.ill && me.health >= 7) FB.cureAilments(me, 'wound', 1); // one old wound knits each year
 
     // everyone else ages & sometimes dies
     for (const id in s.chars) {

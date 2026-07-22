@@ -308,6 +308,26 @@ window.FB = window.FB || {};
     return h || '<span class="cmeta">No notable traits.</span>';
   }
 
+  function healthWord(hp) {
+    return hp >= 9 ? 'Hale' : hp >= 7 ? 'Worn' : hp >= 5 ? 'Wounded' :
+      hp >= 3 ? 'Grievously wounded' : 'At death’s door';
+  }
+
+  /* the named wounds & sicknesses the player carries (see FBDATA.ailments) */
+  function ailmentChips(s, me) {
+    const ails = FB.ailmentsOf(me);
+    if (!ails.length && !s.player.flags.ill) return '';
+    let h = '';
+    for (const a of ails) {
+      h += '<span class="traitchip" data-ailment="' + a.id + '">' + a.def.icon + ' ' + esc(a.def.name) + '</span>';
+    }
+    // saves from before named ailments know only the bare flag
+    if (s.player.flags.ill && !FB.hasAilmentKind(me, 'sickness')) {
+      h += '<span class="traitchip" data-ailment="ill">🤒 Ill</span>';
+    }
+    return '<div class="kv"><span>Ailments</span></div>' + h;
+  }
+
   /* the 🎓 upbringing summary line, shared by the Self tab and character sheets */
   function upbringingNote(s, c) {
     const focusName = (c.edu && c.edu.focus) ? FB.SKILL_NAMES[c.edu.focus] : 'none chosen';
@@ -361,7 +381,8 @@ window.FB = window.FB || {};
       '<div class="kv"><span>Age</span><b>' + FB.ageOf(me, s.date.year) + '</b></div>' +
       '<div class="kv"><span>Culture</span><b>' + esc(cul.name) + '</b></div>' +
       '<div class="kv"><span>Faith</span><b>' + rel.icon + ' ' + esc(rel.name) + '</b></div>' +
-      '<div class="kv"><span>Health</span><b>' + Math.round(me.health) + ' / 10</b></div>' +
+      '<div class="kv"><span>Health</span><b>' + Math.round(me.health) + ' / 10 · ' + healthWord(me.health) + '</b></div>' +
+      ailmentChips(s, me) +
       '<div class="kv"><span>Reputation among the folk</span><b>' + Math.round(s.player.pop) + '</b></div>' +
       (s.player.liege ? '<div class="kv"><span>Liege’s favor</span><b>' + Math.round(s.player.liegeOp || 0) + '</b></div>' : '') +
       titleRows(s) +
@@ -2141,6 +2162,18 @@ window.FB = window.FB || {};
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
+  UI.showAilmentModal = function (aid) {
+    const a = FBDATA.ailments[aid];
+    const icon = a ? a.icon : '🤒', name = a ? a.name : 'Ill';
+    openModal(icon + ' ' + name,
+      '<div class="gm-body-text"><p><i>' + esc(a ? a.desc : 'Sickness has taken hold.') + '</i></p>' +
+      '<p class="hint">' + (!a || a.kind === 'sickness' ?
+        'A sickness — it must run its course; rest and time are the only physic.' :
+        'A wound — it knits as your strength returns, a year or so at most.') +
+      '</p></div><button class="btn" id="tm-close">Close</button>');
+    $('tm-close').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= death & succession ================= */
   UI.showDeath = function (heirs, causeText) {
     const s = FB.state;
@@ -2447,8 +2480,12 @@ window.FB = window.FB || {};
       if (!e.target || !e.target.closest) return;
       const lnk = e.target.closest('[data-liege]');
       if (lnk && FB.state && !UI.eventsBusy()) { UI.showLiegeModal(lnk.getAttribute('data-liege')); return; }
-      const chip = e.target.closest('.traitchip[data-trait]');
-      if (chip) { UI.showTraitModal(chip.getAttribute('data-trait')); return; }
+      const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
+      if (chip) {
+        if (chip.hasAttribute('data-ailment')) UI.showAilmentModal(chip.getAttribute('data-ailment'));
+        else UI.showTraitModal(chip.getAttribute('data-trait'));
+        return;
+      }
       const ichip = e.target.closest('.traitchip[data-item], .traitchip[data-itemview]');
       if (ichip && FB.state) {
         const iid = ichip.getAttribute('data-item') || ichip.getAttribute('data-itemview');
@@ -2475,9 +2512,13 @@ window.FB = window.FB || {};
       document.body.appendChild(tip);
       document.addEventListener('mouseover', function (e) {
         const chip = e.target && e.target.closest ?
-          e.target.closest('.traitchip[data-trait], .traitchip[data-item], .traitchip[data-itemview]') : null;
+          e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview]') : null;
         if (!chip) { tip.classList.add('hidden'); return; }
-        if (chip.hasAttribute('data-trait')) {
+        if (chip.hasAttribute('data-ailment')) {
+          const a = FBDATA.ailments[chip.getAttribute('data-ailment')];
+          tip.innerHTML = a ? '<b>' + a.icon + ' ' + esc(a.name) + '</b><br>' + esc(a.desc) :
+            '<b>🤒 Ill</b><br>Sickness has taken hold.';
+        } else if (chip.hasAttribute('data-trait')) {
           const t = FBDATA.traits[chip.getAttribute('data-trait')];
           if (!t) return;
           const fx = traitFxText(t);

@@ -226,7 +226,8 @@ rid of a spouse the darker way — its resolution is `plot_spouse_end`.
 
 `gold prestige piety health` (numbers) · `skills: {dip|mar|ste|int|lea: n}` (positive gains
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
-`addTrait / removeTrait` · `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
+`addTrait / removeTrait` · `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
+`setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` · `tierSet` (raise rank), `tierUp`
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
@@ -241,6 +242,16 @@ liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist` live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; mods may register their own before use).
+
+Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
+loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;
+severity 2 at −4 or worse), `setFlag:'ill'` adds a random sickness, and
+`clearFlag:'ill'` casts all sicknesses off. Wounds heal as strength returns — one per
+year once the character is hale again (health 7+). An ailment entry carries
+`name icon kind desc`, where `kind` is `'wound'` or `'sickness'`; wounds also carry
+`sev` (1 minor / 2 severe) and may carry `mark` (`'cut'`, `'bruise'`, or `'bandage'` —
+the cue the portrait draws; sicknesses show as a pale, haggard face instead). The mod
+key is `ailments`.
 
 ### Text tokens
 

@@ -22,5 +22,17 @@ Study runs at `dch(0.5)` — below the best adult focus's `dch(0.7)` — and chi
 lesson events carry 6–8-season cooldowns so the same lesson can't recur constantly.
 Keep new childhood content inside that envelope.
 
+**Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
+`c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).
+Hard blows (`fx.health` ≤ −2) add a random wound, severity 2 at −4 or worse;
+`setFlag:'ill'` adds a random sickness; an explicit `fx.ailment` names one precisely.
+Ailments are flavor, portrait marks, and a chip list on the character sheet — the
+mechanics stay with health and the `ill` flag exactly as before (low health and
+illness still drive mortality in `yearlyLife`). Wounds heal one per year once health
+is back at 7+ and the character is not ill; sicknesses clear only with
+`clearFlag:'ill'` (the recovery event). Portraits read `c.ails`/`c.health` directly
+(`opts.ill` covers pre-ailment saves), so marks come and go with the condition;
+`scarred` and `one_eyed` trait marks are drawn for every character, NPCs included.
+
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.
