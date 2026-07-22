@@ -447,6 +447,14 @@ textarea.modjson {
 
 /* portrait: map on top, the Deeds/Land/Chronicle panel full-width beneath */
 @media (max-width: 820px) and (orientation: portrait) {
+  /* two-row topbar: identity and menu up top, the four resources get their
+     own full-width row below — nothing clips on narrow screens */
+  #topbar { flex-wrap: wrap; }
+  #tb-stats {
+    order: 5; flex: 1 1 100%; margin-left: 0; overflow: visible;
+    justify-content: space-between;
+    border-top: 1px solid #40331f; padding-top: 4px;
+  }
   #main { display: flex; flex-direction: column; }
   #mapwrap { order: 0; flex: 0 0 42%; min-height: 180px; }
   #panels {
