@@ -373,9 +373,16 @@ window.FB = window.FB || {};
         case 'warstate': {
           const w3 = state.player.war;
           if (!w3) return '';
-          const men = Math.round(Math.max(40, FB.playerLevy(state)) * (w3.strength || 1) + (w3.mercCos || 0) * 150);
+          const host = FB.playerHost ? FB.playerHost(state) : null;
+          const men = host ? host.men
+            : Math.round(Math.max(40, FB.playerLevy(state)) * (w3.strength || 1) + (w3.mercCos || 0) * 150);
           let t = 'Your host: ~' + men + ' men at ' + Math.round((w3.strength || 1) * 100) + '% condition' +
-            ((w3.mercCos || 0) ? ', ' + w3.mercCos + ' mercenary compan' + (w3.mercCos > 1 ? 'ies' : 'y') : '');
+            ((w3.mercCos || 0) ? ', ' + w3.mercCos + ' mercenary compan' + (w3.mercCos > 1 ? 'ies' : 'y') : '') +
+            (host ? ' — in the field at ' + (FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?')
+              : ' — not yet mustered');
+          const ehost = FB.hostOf ? FB.hostOf(state, w3.enemy) : null;
+          if (ehost) t += ' · their host ~' + ehost.men + ' men at ' +
+            (FB.world.byId[ehost.at] ? FB.world.byId[ehost.at].name : '?');
           if (!w3.defending && w3.target && FB.world.byId[w3.target]) {
             t += ' · siege of ' + FB.world.byId[w3.target].name + ' at ' + (w3.siege || 0) + '/3';
           }
@@ -466,11 +473,16 @@ window.FB = window.FB || {};
         const w = p.war;
         if (!w) return 0.5;
         const enemy = state.realms[w.enemy];
-        // real men: levy worn by the host's condition, plus mercenary companies
-        const myMen = Math.max(40, FB.playerLevy(state)) * (w.strength || 1) + (w.mercCos || 0) * 150;
+        // real men: the fielded host if there is one, else the levy the
+        // muster would raise (worn by the host's condition either way)
+        const host = FB.playerHost ? FB.playerHost(state) : null;
+        const myMen = (host ? host.men : Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
+          (w.strength || 1);
         const myStr = myMen * (1 + FB.skillOf(me, 'mar') / 14);
-        const enStr = FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * 0.3 *
-          (1 + (enemy ? enemy.ruler.mar : 5) / 22);
+        const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
+        const enMen = ehost ? ehost.men
+          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3);
+        const enStr = enMen * (1 + (enemy ? enemy.ruler.mar : 5) / 22);
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
         c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations

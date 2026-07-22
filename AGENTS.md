@@ -61,8 +61,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`,
   `data/traits.js`, then six event packs (`events_common/peasant/paths/noble/world/war.js`).
-- Engine second, all writing to `window.FB`: `util → model → portrait → world → mapview →
-  events → actions → ui → keys → save → mods → main`.
+- Engine second, all writing to `window.FB`: `util → model → portrait → world → armies →
+  mapview → events → actions → ui → keys → save → mods → main`.
 
 ## Design decisions
 
@@ -74,7 +74,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
-- `docs/designs/war.md` — event-driven wars, sieges, mercs, wartime event flow.
+- `docs/designs/war.md` — field armies on the map, battles, sieges, mercs, wartime event flow.
 - `docs/designs/development.md` — buildings as development.
 - `docs/designs/items.md` — heirloom items: bonuses, acquiring, gifting/selling.
 - `docs/designs/characters.md` — skill soft cap; childhood play for minor heirs.
@@ -101,6 +101,8 @@ about to touch, and update it when you change that system.**
 
 - `js/main.js` — boot, game-state creation, day ticker, pause/skip, tier-promotion checks.
 - `js/world.js` — map rasterization, province generation, world tick (wars, scripted history).
+- `js/armies.js` — field armies: hosts raised in wartime, daily marches along province
+  adjacency, battles when hostile hosts meet, army map markers and tap orders.
 - `js/mapview.js` — canvas map rendering, pan/zoom, input.
 - `js/events.js` — event trigger/effect interpreter.
 - `js/actions.js` — focuses and one-shot deeds (the Deeds tab).
