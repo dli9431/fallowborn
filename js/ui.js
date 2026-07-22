@@ -125,7 +125,7 @@ window.FB = window.FB || {};
     }
     const pr = FB.world.byId[s.player.provinceId];
     $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? pr.name : '?');
-    const dd = (s.date.day < 10 ? ' ' : '') + s.date.day; // fixed 2-char day
+    const dd = (s.date.day < 10 ? '\u00A0' : '') + s.date.day; // fixed 2-char day (nbsp — a plain space collapses in HTML)
     const dateStr = FB.SEASONS[s.date.season] + ' ' + dd + ' · ' + s.date.year + ' AD';
     const net = s.seasonNet || {};
     $('tb-gold').innerHTML = '💰 <span class="mono">' + Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
