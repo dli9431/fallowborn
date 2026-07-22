@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.19.2';
+  FB.VERSION = '1.19.3';
   FB.CHANGELOG = [
+    { v: '1.19.3', date: '2026-07-22', changes: [
+      'The ☰ menu button stays pinned to the top right on portrait phones — the new resources row no longer drags it toward the middle.'
+    ] },
     { v: '1.19.2', date: '2026-07-22', changes: [
       'On portrait phones the four resources move to their own full-width row under the topbar — gold no longer clips off the edge on narrow screens.'
     ] },
