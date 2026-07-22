@@ -924,7 +924,10 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.mercCos = (w.mercCos || 0) + 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
-    if (host) { host.men += 150; host.mercs = (host.mercs || 0) + 150; }
+    if (host) {
+      host.men += 150; host.mercs = (host.mercs || 0) + 150;
+      host.size = (host.size === undefined ? host.men : host.size + 150); // the company swells the muster
+    }
     FB.news(state, '⚔ A mercenary company takes your coin — ~150 spears join the host.');
   };
   /* mustering: the host takes the field at your seat (js/armies.js) */
@@ -935,8 +938,10 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.mass = 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
-    if (host) host.men = Math.round(host.men * 1.35); // already mustered: swell it now
-    else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
+    if (host) { // already mustered: swell it now
+      host.men = Math.round(host.men * 1.35);
+      host.size = host.size === undefined ? host.men : Math.round(host.size * 1.35);
+    } else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
   };
   /* the council's abstract pitched battle exists only while the enemy has
      no host in the field — a fielded enemy is fought on the map instead */
@@ -953,9 +958,13 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     const host = FB.playerHost && FB.playerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
-    if (host && prey) {
-      FB.orderArmy(state, host, prey.at);
-      FB.news(state, '🚩 The host marches to bring ' + (state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy') + ' to battle.');
+    if (!host || !prey) return;
+    const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy';
+    if (FB.orderArmy(state, host, prey.at)) {
+      host.huntPrey = w.enemy; // track the prey: re-path onto it each day
+      FB.news(state, '🚩 The host marches to bring ' + ename + ' to battle.');
+    } else {
+      FB.news(state, '🚩 There is no road from here to the host of ' + ename + '.');
     }
   };
   /* small condition shifts for wartime flavor events */

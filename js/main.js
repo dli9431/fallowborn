@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.11.0';
+  FB.VERSION = '1.11.1';
   FB.CHANGELOG = [
+    { v: '1.11.1', date: '2026-07-22', changes: [
+      'Hosts on the map are drawn larger and easier to tap; ordering a march now lets go of the host, so further taps browse the map instead of re-tasking it.',
+      'A side whose host was shattered fields only a remnant in the war council’s pitched battle while it re-forms — no more phantom full-strength armies.',
+      'Hunting an enemy host now tracks it day by day instead of marching to where it stood; every march leg costs the full march time; hosts resting on home ground slowly refill their ranks.',
+      'Faster fast-forward: the daily army tick no longer grinds through every pair of realms.'
+    ] },
     { v: '1.11.0', date: '2026-07-22', changes: [
       'New deed: ⚑ Declare independence — any sworn lord or baron with 200+ prestige can renounce his liege and fight for his own banner.',
       'Declaring independence now puts you on a war footing and calls the muster, like any other defensive war.',

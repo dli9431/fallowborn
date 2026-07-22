@@ -798,6 +798,7 @@ FBDATA.balance = {
   /* field armies (js/armies.js): hosts on the map */
   armyMarchDays: 6, // days for a host to cross one province
   armyRearmDays: 60, // a shattered host may muster again after this long
+  armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
