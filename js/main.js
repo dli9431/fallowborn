@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.0';
+  FB.VERSION = '1.16.2';
   FB.CHANGELOG = [
+    { v: '1.16.2', date: '2026-07-22', changes: [
+      'Fixed a baron left sworn to a lord who lost his home county: when the county changes hands the baron answers to its new holder, and stale liege bonds in old saves are re-homed to the county’s holder.'
+    ] },
     { v: '1.16.0', date: '2026-07-22', changes: [
       'Name your newborn children: the birth event shows a name field with the generated name — edit it or roll the dice for another.'
     ] },
