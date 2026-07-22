@@ -485,6 +485,14 @@ window.FB = window.FB || {};
         fr.capital = terr[0];
       }
     }
+    // a baron is bound to his county: if his home itself changed hands he
+    // answers to its new holder — even when his old lord's house survives
+    // elsewhere, he kneels to the land's master, not to a memory
+    if (state.player && state.player.tier === 3 && state.player.provinceId === pid &&
+        state.player.liege !== toRealm && toRealm !== 'player' &&
+        state.realms[toRealm] && state.realms[toRealm].alive) {
+      state.player.liege = toRealm;
+    }
     // player consequences
     if (state.player && state.player.provs && state.player.provs.indexOf(pid) >= 0 && toRealm !== 'player') {
       state.player.provs.splice(state.player.provs.indexOf(pid), 1);
@@ -1083,12 +1091,14 @@ window.FB = window.FB || {};
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') p.liege = null;
-    // a baron is a status inside a county: if the liege bond was lost (his
-    // lord's house died, or an older save), he answers to whoever holds his
-    // home county now — a baron is never "independent"
-    if (p.tier === 3 && !(p.liege && state.realms[p.liege] && state.realms[p.liege].alive)) {
+    // a baron is a status inside a county: he answers to whoever holds his
+    // home county. Reattach if the bond was lost (his lord's house died, or
+    // an older save) or went stale — the county changed hands under a living
+    // lord, leaving him sworn to a lord who no longer holds his home. A
+    // baron is never "independent", nor a foreign lord's man
+    if (p.tier === 3) {
       const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
-      if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive) p.liege = bh;
+      if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive && p.liege !== bh) p.liege = bh;
     }
     const n = p.provs ? p.provs.length : 0;
     const indep = state.realms.player && state.realms.player.alive;
