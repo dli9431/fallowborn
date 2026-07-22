@@ -24,6 +24,23 @@ the random `independence_offer` event or the explicit `declare_independence` dee
 player realm and starts a defensive war against the old sovereign; a baron doing
 either seizes his home county via `FB.transferProvince` (burying the old holder if
 left landless).
+
+**Inside a realm, counties also change hands without war.** A vassal house carries a
+`favor` standing at its liege's court (−100…100, drifting yearly in `FB.worldTick`).
+The Deeds tab offers three intra-realm paths to a neighbor's county, all following the
+grant pattern (`state.holder[pid]` flips to `'player'`, `owner` and the player's liege
+untouched, landless holders buried by `FB.realmBuryIfEmpty`): *Petition for a
+neighbor's fief* (`petition_county` → `UI.showPetitionCounty` → the `county_petition`
+event — gated on liege opinion, prestige, and the lifetime `player.warService` tally
+built by riding with the liege's host, against the victim's `favor`); *Buy out a weak
+neighbor* (`buy_county`, a vassal-only gold sink for adjacent rank-1 counts with no
+vassals of their own); and *Settle the wasteland* (`settle_waste` → `FB.settleWaste`,
+which turns a bordering wasteland province into a true county of the player's demesne —
+settler culture and faith, belonging to no de jure duchy). Separately, a dying petty
+count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearly
+tick): the fief escheats to the liege unless a bordering player of the same sovereign
+wins the scramble (liege opinion, prestige, service) — and heirless fiefs of the
+player's own vassals simply return to the player's hand.
 AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial), not
 full chars — the Deeds banner's "vassal of X" links to their sheet via
 `UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`.

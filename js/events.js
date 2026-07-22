@@ -504,6 +504,17 @@ window.FB = window.FB || {};
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
         return FB.clamp(0.05 + (p.liegeOp || 0) / 450 + p.prestige / 1800, 0.02, 0.35);
       }
+      case 'county_petition': {
+        // stripping a disgraced vassal for the player's sake: the liege's love
+        // for the player, his name, and his war service against the victim's
+        // own (poor) standing (p.petitionPid set by the picker)
+        const hp = p.petitionPid ? state.holder[p.petitionPid] : null;
+        const hr = hp ? state.realms[hp] : null;
+        if (!hr || !hr.alive) return 0;
+        const fav = hr.favor || 0;
+        return FB.clamp(0.35 + FB.liegeOpOf(state, p.liege) / 300 + p.prestige / 1500 +
+          (p.warService || 0) / 80 - fav / 150, 0.1, 0.85);
+      }
       case 'appeal_outcome': {
         // a suit carried over the liege's head: charm, cunning, and how the
         // high lord already feels about you (p.appealRid set by the picker)
@@ -706,6 +717,7 @@ window.FB = window.FB || {};
     }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
+    if (fx.warService) p.warService = Math.max(0, (p.warService || 0) + fx.warService);
     if (fx.health) me.health = FB.clamp((me.health === undefined ? 8 : me.health) + fx.health, 0, 10);
     // a hard blow leaves a named wound; an explicit ailment names it precisely
     // (an illness effect speaks for itself — no gash for a fever)
@@ -1078,6 +1090,27 @@ window.FB = window.FB || {};
       }
       FB.checkTierPromotions(state);
     }
+  };
+
+  /* the liege strips a disgraced vassal and hands the county to the player
+     (fired from the county_petition event; p.petitionPid set by the picker) */
+  FB.fns.county_petition_grant = function (state) {
+    const p = state.player;
+    const pid = p.petitionPid;
+    delete p.petitionPid;
+    const pr = pid ? FB.world.byId[pid] : null;
+    if (!pr) return;
+    const old = state.holder[pid];
+    if (!old || old === 'player') return;
+    p.provs = p.provs || [];
+    if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
+    state.holder[pid] = 'player';
+    FB.invalidateRealmCache();
+    FB.realmBuryIfEmpty(state, old);
+    FB.news(state, '🤝 Your liege strips ' + (state.realms[old] ? state.realms[old].name : 'the old lord') +
+      ' of ' + pr.name + ' and invests you with it.');
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
 
   /* ---- liege-chain & vassalage handlers (fired from events_noble.js) ---- */

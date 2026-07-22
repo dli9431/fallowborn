@@ -136,6 +136,14 @@ FBDATA.events.push(
       success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the investiture.', effects:{ tierUp:1, prestige:25, opinionLiege:-15, gold:-50, log:'Granted a higher title by the liege!' } },
       failure:{ text:'“In time,” says the liege, meaning never. Courtiers hide their smiles.', effects:{ prestige:-5, opinionLiege:-8 } } }
   ]},
+{ id:'county_petition', title:'A Suit Against a Neighbor',
+  trigger:{ never:true }, /* fired from action */
+  text:'You kneel before your liege with a recital of the lord of {cname}’s failures — some real, some invented — and humbly suggest the fief would serve the realm better in your hand.',
+  options:[
+    { label:'Press the suit.', chance:'county_petition',
+      success:{ text:'The liege’s jaw tightens at the name. “That fief was wasted on him.” The patent is drawn — {cname} is yours, and the court sees exactly whose star is rising.', effects:{ custom:'county_petition_grant', opinionLiege:-20, prestige:10, log:'Won a neighbor’s fief by petition.' } },
+      failure:{ text:'“You ask much,” the liege says coldly, and turns to other petitioners. The courtiers’ smiles follow you out.', effects:{ prestige:-5, opinionLiege:-8 } } }
+  ]},
 { id:'spouse_council', title:'A Voice Behind the Throne',
   trigger:{ tierMin:3, married:true, chance:0.15 }, weight:5, cooldown:10,
   text:'{spouse} speaks quietly after the hall empties: a shrewd reading of your rivals, your coffers, and your next move.',

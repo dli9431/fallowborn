@@ -336,7 +336,7 @@ window.FB = window.FB || {};
       color: shade(state.realms[top] ? state.realms[top].color : '#888888', opts.id),
       capital: opts.capital, aggression: 0, rank: opts.rank || 1, liege: opts.liege,
       alive: true, ruler: makeRuler(opts.culture || 'frankish'), war: null,
-      op: 0, generated: true
+      op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
     return r;
@@ -437,6 +437,17 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* a realm left holding nothing at all dies; its orphaned vassals pass to
+     its liege (mirrors the dissolution block of FB.transferProvince). Call
+     AFTER invalidateRealmCache so realmTerritory reads fresh holdings */
+  FB.realmBuryIfEmpty = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive) return;
+    if (FB.realmTerritory(state, rid).length) return;
+    r.alive = false; r.war = null;
+    for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
+  };
+
   FB.realmsAdjacent = function (state, r1, r2) {
     rcEnsure(state);
     for (const pid of (rc.provs[r1] || [])) {
@@ -504,11 +515,88 @@ window.FB = window.FB || {};
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
 
+  /* a petty count dies without an heir: the fief escheats to his liege —
+     unless the player borders it, shares its sovereign, and has the standing
+     to win the scramble at court. Returns true when the house was buried */
+  FB.escheatRealm = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive) return false;
+    const held = FB.realmHeldCounties(state, rid);
+    if (!held.length) return false;
+    const p = state.player;
+    const liege = (r.liege && state.realms[r.liege] && state.realms[r.liege].alive) ? r.liege : FB.topRealm(state, rid);
+    // orphaned vassals pass to the dead house's liege
+    for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = liege || null;
+    for (const pid of held) {
+      const pr = FB.world.byId[pid];
+      let toPlayer = false;
+      if (liege === 'player') {
+        // your own man dies heirless: the fief returns to your hand
+        toPlayer = true;
+        FB.news(state, '🕯 The lord of ' + pr.name + ' dies without an heir — the fief returns to your hand.');
+      } else if (p.tier >= 4 && p.provs && liege && state.realms[liege] &&
+                 FB.topRealm(state, rid) === FB.playerRealmId(state)) {
+        // the scramble: you must border the empty fief and share its sovereign
+        let borders = false;
+        for (const my of p.provs) { if (FB.world.adj[my] && FB.world.adj[my][pid]) { borders = true; break; } }
+        if (borders) {
+          const c = FB.clamp(0.10 + FB.liegeOpOf(state, liege) / 250 + p.prestige / 2000 + (p.warService || 0) / 100, 0.05, 0.6);
+          if (FB.chance(c)) {
+            toPlayer = true;
+            FB.news(state, '🕯 The lord of ' + pr.name + ' dies without an heir — ' + state.realms[liege].name +
+              ' passes over every other suit and invests you with ' + pr.name + '.');
+          }
+        }
+      }
+      if (toPlayer) {
+        p.provs = p.provs || [];
+        if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
+        state.holder[pid] = 'player';
+      } else {
+        state.holder[pid] = liege;
+        if (FB.game.observe || (FB.world.adj[p.provinceId] && FB.world.adj[p.provinceId][pid])) {
+          FB.news(state, '🕯 ' + pr.name + ' escheats to ' + (state.realms[liege] ? state.realms[liege].name : 'the crown') +
+            ' — its lord died without an heir.');
+        }
+      }
+    }
+    r.alive = false; r.war = null;
+    FB.invalidateRealmCache();
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return true;
+  };
+
   FB.playerRealmId = function (state) {
     // the SOVEREIGN realm the player answers to (liege's top, own realm, or home)
     if (state.player.liege) return FB.topRealm(state, state.player.liege);
     if (state.realms.player && state.realms.player.alive) return 'player';
     return state.owner[state.player.provinceId] || null;
+  };
+
+  /* found a new holding on empty land: a bordering wasteland becomes a true
+     county of the player's demesne — the settlers' own culture and faith,
+     outside every de jure duchy (a colony, not a duchy-maker) */
+  FB.settleWaste = function (state, pid) {
+    const p = state.player, pr = FB.world.byId[pid];
+    if (!pr || !pr.wasteland) return;
+    const me = state.chars[p.charId];
+    pr.wasteland = false;
+    pr.culture = me.culture;
+    pr.religion = me.religion;
+    state.dev[pid] = 1;
+    state.holder[pid] = 'player';
+    state.owner[pid] = FB.playerRealmId(state) || 'player';
+    p.provs = p.provs || [];
+    if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
+    FB.applyEffects(state, {
+      gold: -FBDATA.balance.settleGold, prestige: -FBDATA.balance.settlePrestige,
+      log: 'Settled the empty land of ' + pr.name + '.'
+    });
+    FB.invalidateRealmCache();
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.news(state, '🌱 You settle the empty land of ' + pr.name + ' — smoke rises where only the wind went before.');
   };
 
   FB.isRealmAtWar = function (state, realmId) {
@@ -555,10 +643,15 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || id === 'player') continue;
+      // a vassal house's standing at its liege's court drifts with the years
+      if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
       // ruler ages & dies
       r.ruler.age++;
       const q = r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02;
       if (FB.chance(q)) {
+        // a petty count may die without an heir: the fief escheats upward —
+        // unless a bordering vassal of standing (maybe you) wins the scramble
+        if (r.liege && r.rank === 1 && FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
         const cap = FB.world.byId[r.capital];
         r.ruler = makeRuler(cap ? cap.culture : r.ruler.culture);
         if (FB.game.observe || id === FB.playerRealmId(state) || id === state.player.liege) {

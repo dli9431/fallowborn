@@ -802,6 +802,10 @@ FBDATA.balance = {
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
+  /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
+  escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
+  petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,
+  buyCountyBase: 400, buyCountyPerDev: 120, settleGold: 250, settlePrestige: 50,
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
   skillHardCap: 40  // the true ceiling no stat can pass
 };

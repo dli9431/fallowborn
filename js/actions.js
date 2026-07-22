@@ -407,6 +407,50 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { s.eventQueue.push({ id: 'title_request', ctx: {} }); } },
+  { id: 'petition_county', label: '🤝 Petition for a neighbor’s fief…', cd: 720, noConsume: true,
+    desc: function (s) {
+      return 'Ask the liege to strip a disgraced neighbor and invest you with his county. ' +
+        'Service in the liege’s wars: ' + (s.player.warService || 0) + '.';
+    },
+    show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
+    can: function (s) {
+      const B = FBDATA.balance;
+      if (FB.liegeOpOf(s, s.player.liege) < B.petitionLiegeOp) {
+        return 'Your liege’s favor must be ' + B.petitionLiegeOp + ' or more (now ' + Math.round(FB.liegeOpOf(s, s.player.liege)) + ').';
+      }
+      if (s.player.prestige < B.petitionPrestige) {
+        return 'You need at least ' + B.petitionPrestige + ' prestige (now ' + Math.round(s.player.prestige) + ').';
+      }
+      if ((s.player.warService || 0) < B.petitionService) {
+        return 'You must first bleed in your liege’s wars (service ' + B.petitionService + '+, now ' + (s.player.warService || 0) + ').';
+      }
+      return true;
+    },
+    run: function (s) { if (FB.ui && FB.ui.showPetitionCounty) FB.ui.showPetitionCounty(); } },
+  { id: 'buy_county', label: '💰 Buy out a weak neighbor…', cd: 720, noConsume: true,
+    desc: function () { return 'Gold talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
+    show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
+    can: function (s) {
+      if (FB.liegeOpOf(s, s.player.liege) < 20) {
+        return 'Your liege must at least tolerate you (favor 20+, now ' + Math.round(FB.liegeOpOf(s, s.player.liege)) + ').';
+      }
+      const c = FB.buyCountyCandidates(s);
+      if (!c.length) return 'No weak neighbor holds land beside yours.';
+      if (s.player.gold < c[0].price) return 'You need at least ' + c[0].price + ' gold (now ' + Math.floor(s.player.gold) + ').';
+      return true;
+    },
+    run: function (s) { if (FB.ui && FB.ui.showBuyCounty) FB.ui.showBuyCounty(); } },
+  { id: 'settle_waste', label: '🌱 Settle the wasteland…', cd: 360, noConsume: true,
+    desc: function () { return 'Found a new holding on empty land bordering your demesne.'; },
+    show: function (s) { return s.player.tier >= 4; },
+    can: function (s) {
+      const B = FBDATA.balance;
+      if (!FB.wastelandCandidates(s).length) return 'No empty land borders your demesne.';
+      if (s.player.gold < B.settleGold) return 'You need at least ' + B.settleGold + ' gold (now ' + Math.floor(s.player.gold) + ').';
+      if (s.player.prestige < B.settlePrestige) return 'You need at least ' + B.settlePrestige + ' prestige (now ' + Math.round(s.player.prestige) + ').';
+      return true;
+    },
+    run: function (s) { if (FB.ui && FB.ui.showSettleWaste) FB.ui.showSettleWaste(); } },
   { id: 'muster_host', label: '🚩 Muster the host',
     desc: function (s) {
       const w = s.player.war;
@@ -739,6 +783,91 @@ window.FB = window.FB || {};
     FB.adjustLiegeOp(state, vid, 40);
     FB.invalidateRealmCache();
     FB.news(state, '🎁 ' + pr.name + ' is granted to a loyal man — ' + state.realms[vid].ruler.name + ' holds it in your name.');
+  };
+
+  /* counties adjacent to the player's demesne held by another vassal of the
+     same sovereign — the raw material of every intra-realm land deal. Skips
+     the liege's own demesne and the player's own vassals (revoke_county is
+     the tool for those) */
+  FB.sameRealmNeighbors = function (state) {
+    const p = state.player, seen = {}, out = [];
+    if (!p.provs) return out;
+    const myTop = FB.playerRealmId(state);
+    for (const pid of p.provs) {
+      for (const nb in (FB.world.adj[pid] || {})) {
+        if (seen[nb] || p.provs.indexOf(nb) >= 0) continue;
+        const pr = FB.world.byId[nb];
+        const h = state.holder[nb];
+        if (!pr || pr.wasteland || !h || h === 'player' || h === p.liege) continue;
+        const hr = state.realms[h];
+        if (!hr || !hr.alive || hr.liege === 'player') continue;
+        if (FB.topRealm(state, h) !== myTop) continue;
+        seen[nb] = 1;
+        out.push({ pid: nb, holder: h });
+      }
+    }
+    return out;
+  };
+
+  /* petitionable neighbors: the liege must already despise the sitting lord */
+  FB.petitionCandidates = function (state) {
+    const out = [];
+    for (const c of FB.sameRealmNeighbors(state)) {
+      const fav = state.realms[c.holder].favor || 0;
+      if (fav > FBDATA.balance.petitionFavorMax) continue;
+      out.push({ pid: c.pid, holder: c.holder, favor: fav });
+    }
+    return out;
+  };
+
+  /* buyable neighbors: a mere count, no vassals of his own — cheapest first */
+  FB.buyCountyCandidates = function (state) {
+    const B = FBDATA.balance, out = [];
+    for (const c of FB.sameRealmNeighbors(state)) {
+      const hr = state.realms[c.holder];
+      if (hr.rank !== 1) continue;
+      let hasVassals = false;
+      for (const vid in state.realms) if (state.realms[vid].liege === c.holder) { hasVassals = true; break; }
+      if (hasVassals) continue;
+      const dev = state.dev[c.pid] || 1;
+      out.push({ pid: c.pid, holder: c.holder, price: B.buyCountyBase + B.buyCountyPerDev * dev });
+    }
+    out.sort(function (a, b) { return a.price - b.price; });
+    return out;
+  };
+
+  /* wasteland provinces bordering the player's demesne */
+  FB.wastelandCandidates = function (state) {
+    const p = state.player, seen = {}, out = [];
+    if (!p.provs) return out;
+    for (const pid of p.provs) {
+      for (const nb in (FB.world.adj[pid] || {})) {
+        if (seen[nb]) continue;
+        const pr = FB.world.byId[nb];
+        if (pr && pr.wasteland) { seen[nb] = 1; out.push(nb); }
+      }
+    }
+    return out;
+  };
+
+  /* a weak neighbor sells out: gold changes hands, the county changes hands */
+  FB.buyCounty = function (state, pid) {
+    const p = state.player;
+    let pick = null;
+    for (const c of FB.buyCountyCandidates(state)) if (c.pid === pid) pick = c;
+    if (!pick || p.gold < pick.price) return false;
+    p.gold -= pick.price;
+    const pr = FB.world.byId[pid];
+    const old = pick.holder;
+    p.provs.push(pid);
+    state.holder[pid] = 'player';
+    FB.invalidateRealmCache();
+    FB.realmBuryIfEmpty(state, old);
+    FB.applyEffects(state, { opinionLiege: -8, log: 'Bought ' + pr.name + ' from its struggling lord.' });
+    FB.news(state, '💰 ' + pr.name + ' is yours for ' + pick.price + ' gold — its old lord retires fat and forgotten. The court frowns on bought land.');
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return true;
   };
 
   /* three seasons' taxes squeezed out of every vassal at once */

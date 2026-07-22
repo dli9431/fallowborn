@@ -1494,6 +1494,92 @@ window.FB = window.FB || {};
     });
   };
 
+  /* sue the liege for a disgraced neighbor's fief */
+  UI.showPetitionCounty = function () {
+    const s = FB.state;
+    const cands = FB.petitionCandidates(s);
+    let h = '<p class="hint">The liege strips only a man he already despises — and only for a vassal he loves. ' +
+      'Your service in his wars: ' + (s.player.warService || 0) + '.</p><div class="gm-list">';
+    for (const c of cands) {
+      const pr = FB.world.byId[c.pid];
+      const hr = s.realms[c.holder];
+      s.player.petitionPid = c.pid; // lets the named formula price this exact suit
+      const odds = Math.round(FB.namedChance(s, 'county_petition') * 100);
+      h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">🏰 ' + esc(pr.name) +
+        '<span class="adesc">' + esc(hr.name) + ' · ' + esc(hr.ruler.name) + ' · the liege’s favor ' + Math.round(c.favor) +
+        ' · dev ' + (s.dev[c.pid] || 1) + ' · your suit ~' + odds + '%</span></button>';
+    }
+    delete s.player.petitionPid;
+    if (!cands.length) {
+      h += '<p class="hint">No neighboring lord stands low enough in your liege’s favor (' +
+        FBDATA.balance.petitionFavorMax + ' or less). Time brings disgrace — wait for it.</p>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
+    openModal('Petition for a Fief', h);
+    document.querySelectorAll('[data-pid]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        s.player.petitionPid = btn.dataset.pid;
+        s.eventQueue.push({ id: 'county_petition', ctx: { pid: btn.dataset.pid } });
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      delete FB.state.player.cooldowns.petition_county; // no suit pressed, no cooldown
+      UI.closeModal(); UI.refresh();
+    });
+  };
+
+  /* a struggling neighbor sells his birthright */
+  UI.showBuyCounty = function () {
+    const s = FB.state;
+    const cands = FB.buyCountyCandidates(s);
+    let h = '<p class="hint">A small lord with empty coffers will sell his birthright. The liege tolerates it — barely.</p><div class="gm-list">';
+    for (const c of cands) {
+      const pr = FB.world.byId[c.pid];
+      const hr = s.realms[c.holder];
+      h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">💰 ' + esc(pr.name) +
+        '<span class="adesc">' + esc(hr.ruler.name) + ' · dev ' + (s.dev[c.pid] || 1) + ' · ' + c.price + ' gold</span></button>';
+    }
+    if (!cands.length) h += '<p class="hint">No weak neighbor holds land beside yours.</p>';
+    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
+    openModal('Buy Out a Neighbor', h);
+    document.querySelectorAll('[data-pid]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!FB.buyCounty(FB.state, btn.dataset.pid)) { UI.toast('Not enough gold.'); return; }
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      delete FB.state.player.cooldowns.buy_county; // no bargain, no cooldown
+      UI.closeModal(); UI.refresh();
+    });
+  };
+
+  /* found a holding on empty land */
+  UI.showSettleWaste = function () {
+    const s = FB.state;
+    const B = FBDATA.balance;
+    let h = '<p class="hint">' + B.settleGold + ' gold and ' + B.settlePrestige + ' prestige to plant a settlement on empty land. ' +
+      'The new county answers to you — and belongs to no de jure duchy.</p><div class="gm-list">';
+    for (const pid of FB.wastelandCandidates(s)) {
+      const pr = FB.world.byId[pid];
+      h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🌱 ' + esc(pr.name) +
+        '<span class="adesc">empty ' + esc(pr.terrain) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
+    openModal('Settle the Wasteland', h);
+    document.querySelectorAll('[data-pid]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        FB.settleWaste(FB.state, btn.dataset.pid);
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      delete FB.state.player.cooldowns.settle_waste; // no ground broken, no cooldown
+      UI.closeModal(); UI.refresh();
+    });
+  };
+
   /* offer your lands to a neighboring sovereign */
   UI.showFealty = function () {
     const s = FB.state;
