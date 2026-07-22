@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.14.1';
+  FB.VERSION = '1.14.2';
   FB.CHANGELOG = [
+    { v: '1.14.2', date: '2026-07-22', changes: [
+      'Hosts stand on a disc of their realm’s color, and hosts clashing in a province bear a ⚔ for the day — battles on the map read at a glance.'
+    ] },
     { v: '1.14.1', date: '2026-07-22', changes: [
       'Hosts on the map are drawn on the province they stand in, not mid-road toward the next — a host crossing the Channel no longer floats in the sea.'
     ] },
