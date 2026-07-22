@@ -13,7 +13,9 @@ modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 An observe mode (`G.observe`, New Game → 👁 Observe) strips `passDay` to the
 calendar, the yearly world tick, and daily army marches — no focus, upkeep,
 mortality, births, events, or autosaves — while the UI hides the player chrome
-(`body.observing`) and every world-news gate opens to the chronicle.
+(`body.observing`) and every world-news gate opens to the chronicle. Settings
+while observing (`G.obsQuiet` / `G.obsBare`) silence the news toasts or hide
+the Land & Chronicle panel entirely (`body.observing.obshidepanel`).
 
 An optional Automation mode (`G.auto`, Z key / ⚙ button, persisted to localStorage)
 silently resolves selected event categories (everyday / important / war councils) via
