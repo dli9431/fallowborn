@@ -312,8 +312,9 @@ window.FB = window.FB || {};
           FB.orderArmy(state, a, goal);
         }
       } else if (a.huntPrey) {
-        // a hunting host tracks its prey day by day, not where it was
-        const prey = hostByRealm[a.huntPrey];
+        // a hunting host tracks its prey day by day, not where it was —
+        // looked up live, since the disband loop above may have removed it
+        const prey = FB.hostOf(state, a.huntPrey);
         if (!prey || warring['player'] !== a.huntPrey) a.huntPrey = null;
         else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
       }
@@ -374,7 +375,9 @@ window.FB = window.FB || {};
     for (const a of state.armies) {
       const pos = worldPos(a);
       const d = (pos[0] - wx) * (pos[0] - wx) + (pos[1] - wy) * (pos[1] - wy);
-      if (d <= bd) { bd = d; best = a; }
+      if (d > bd) continue;
+      // stacked hosts share a centroid: on a tie your own host wins the tap
+      if (d < bd || !best || (a.realm === 'player' && best.realm !== 'player')) { bd = d; best = a; }
     }
     return best;
   };
@@ -398,6 +401,7 @@ window.FB = window.FB || {};
         hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
         FB.selectArmy(null);
         if (FB.ui) FB.ui.toast('🚩 The host holds at ' + provName(hit.at) + '.');
+        if (FB.map) FB.map.request(); // drop the ring and route while paused
         return true;
       }
       FB.selectArmy(hit.id);
@@ -412,10 +416,13 @@ window.FB = window.FB || {};
           FB.selectArmy(null); // and lets go, so further taps browse the map
           if (FB.ui) FB.ui.toast('🚩 The host marches on ' + pr.name + '.');
           if (FB.map) FB.map.request();
+        } else if (FB.ui) {
+          FB.ui.toast('🚫 No road nor crossing leads the host to ' + pr.name + '.');
         }
         return true;
       }
       FB.selectArmy(null);
+      if (FB.map) FB.map.request(); // drop the ring while paused
       return true;
     }
     return false;
@@ -520,7 +527,7 @@ window.FB = window.FB || {};
       if (z >= 1.3) {
         ctx.font = Math.round(10 * dpr) + 'px Georgia';
         ctx.textAlign = 'center';
-        ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(20,16,10,0.8)';
+        ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(20,16,10,0.8)';
         const lbl = a.men >= 1000 ? (Math.round(a.men / 100) / 10) + 'k' : String(a.men);
         ctx.strokeText(lbl, x, y + u * 0.75);
         ctx.fillStyle = mine ? '#ffe9a8' : 'rgba(255,250,235,0.9)';

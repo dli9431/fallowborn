@@ -118,6 +118,10 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
 `newRealm` (same shape as a realm, or `null`) spawns a realm at that date before it conquers
 `targets` (a list of **county** ids).
 
+A mod's scripted entry **replaces** a base (or earlier-mod) entry only when both its `year`
+and its `realm` match; otherwise it is added alongside — several realms may act in the
+same year.
+
 ### Coastlines (advanced)
 
 `land` is a list of polygons (`[lon,lat, lon,lat, ...]` flattened); `seas` are polygons carved
@@ -425,6 +429,8 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 
 See `data/cultures.js` and `data/traits.js` for the exact shapes — they are self-describing.
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+`mortalityBase` scales the whole yearly mortality curve for player and kin alike
+(0.012 is the as-authored baseline; halve it for longer lives, raise it for a crueler age).
 That includes the wider-family simulation: `kinMarryChance` and `kinChildChance` are the
 per-year chances that an adult kinsman weds, and that a wed kinswoman bears a child.
 `fertilityByAge` shapes how age wears on conception: per sex (`f`/`m`), a list of

@@ -238,21 +238,25 @@ window.FB = window.FB || {};
      sealed (returned by killChar if death unmakes it), a son's bride brings
      hers to the wedding. */
   FB.spawnMatchCandidates = function (state, child) {
+    const out = [];
     if (child.matchIds) {
-      const kept = [];
       for (const id of child.matchIds) {
         const m = state.chars[id];
-        if (m && !m.dead && !m.spouseId && !m.betrothedId) kept.push(m);
+        if (m && !m.dead && !m.spouseId && !m.betrothedId) out.push(m);
+        // a candidate death thins the list: forget the departed like any
+        // passed-over family, and sound out a replacement below
+        else if (m && m.role === 'match' && state.player.courtingId !== id) delete state.chars[id];
       }
-      if (kept.length) return kept;
+      if (out.length >= 3) return out;
     }
     const ps = FB.playerStation(state);
     const y = state.date.year;
     const cAge = FB.ageOf(child, y);
-    const out = [];
+    const steps = [-1, 0, 1];
     child.matchIds = [];
-    for (const step of [-1, 0, 1]) {
-      const st = FB.clamp(ps + step, 0, 3);
+    for (const m of out) child.matchIds.push(m.id);
+    for (let i = out.length; i < 3; i++) {
+      const st = FB.clamp(ps + steps[i], 0, 3);
       const m = FB.makeCharacter(state, {
         sex: child.sex === 'm' ? 'f' : 'm',
         culture: child.culture, religion: child.religion,
@@ -617,9 +621,11 @@ window.FB = window.FB || {};
     while (state.eventQueue.length && out.length < 3) out.push(state.eventQueue.shift());
 
     const slots = state.slotDays || [];
-    const isSlot = slots.indexOf(state.date.day) >= 0;
+    const slotAt = slots.indexOf(state.date.day);
+    const isSlot = slotAt >= 0;
     if (isSlot) {
-      state.slotDays = slots.filter(function (d) { return d !== state.date.day; });
+      // consume ONE slot: two rolls landing on the same day stay two happenings
+      slots.splice(slotAt, 1);
     }
     if (!isSlot || out.length >= 2) return out;
 
@@ -648,7 +654,19 @@ window.FB = window.FB || {};
         roll -= (eligible[i].weight || 5);
         if (roll <= 0) { chosen = eligible[i]; break; }
       }
-      out.push({ id: chosen.id, ctx: {}, rnd: true }); // rnd marks an everyday (slot-day) event for autoresolve
+      const ctx = {};
+      // events about "a young child" name (and afflict) one actual child, so
+      // the text and any killChild effect speak of the same person
+      if (chosen.trigger.hasYoungChild) {
+        const me = state.chars[state.player.charId];
+        const young = [];
+        for (const cid of me.childrenIds) {
+          const c = state.chars[cid];
+          if (c && !c.dead && FB.ageOf(c, state.date.year) < 13) young.push(c);
+        }
+        if (young.length) ctx.childId = FB.pick(young).id;
+      }
+      out.push({ id: chosen.id, ctx: ctx, rnd: true }); // rnd marks an everyday (slot-day) event for autoresolve
     }
     return out;
   };

@@ -56,8 +56,15 @@ window.FBMODS = window.FBMODS || [];
 
   /* a fingerprint of the active mod set — stored JSON mods plus the enabled
      bundled ids — stamped into saves so a life can refuse to wake up in the
-     wrong world ('' = the unmodded base game) */
+     wrong world ('' = the unmodded base game). Every mutation of the mod
+     store reloads the page, so the signature is constant per page load and
+     computed once (serialize calls this on every autosave). */
+  let _sig = null;
   M.sig = function () {
+    if (_sig === null) _sig = computeSig();
+    return _sig;
+  };
+  function computeSig() {
     const all = readAll();
     const on = readEnabled().slice().sort();
     if (!all.length && !on.length) return '';
@@ -67,7 +74,7 @@ window.FBMODS = window.FBMODS || [];
       hsh = ((hsh * 33) ^ joined.charCodeAt(i)) >>> 0;
     }
     return (all.length + on.length) + '-' + hsh.toString(36);
-  };
+  }
 
   M.store = function (jsonText) {
     let mod;
@@ -127,7 +134,19 @@ window.FBMODS = window.FBMODS || [];
     if (mod.kingdoms) for (const k in mod.kingdoms) FBDATA.kingdoms[k] = mod.kingdoms[k];
     if (mod.duchies) for (const k in mod.duchies) FBDATA.duchies[k] = mod.duchies[k];
     if (mod.straits) FBDATA.straits = FBDATA.straits.concat(mod.straits);
-    if (mod.scripted) mergeById(FBDATA.scripted, mod.scripted, 'year');
+    // scripted entries are replaced only on a (year, realm) match — several
+    // realms may act in the same year without clobbering one another
+    if (mod.scripted) {
+      for (const item of mod.scripted) {
+        let replaced = false;
+        for (let i = 0; i < FBDATA.scripted.length; i++) {
+          if (FBDATA.scripted[i].year === item.year && FBDATA.scripted[i].realm === item.realm) {
+            FBDATA.scripted[i] = item; replaced = true; break;
+          }
+        }
+        if (!replaced) FBDATA.scripted.push(item);
+      }
+    }
     if (mod.cultures) for (const k in mod.cultures) FBDATA.cultures[k] = mod.cultures[k];
     if (mod.settlementNames) for (const k in mod.settlementNames) FBDATA.settlementNames[k] = mod.settlementNames[k];
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];

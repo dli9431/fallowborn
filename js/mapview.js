@@ -230,7 +230,9 @@ window.FB = window.FB || {};
     ctx.scale(M.zoom, M.zoom);
     ctx.translate(-sx, -sy);
     ctx.drawImage(M.base, 0, 0);
-    ctx.drawImage(M.hilite, 0, 0);
+    // the hilite canvas is fully transparent with nothing selected — skip
+    // the world-sized blit on the common (pan/march) frames
+    if (M.selected) ctx.drawImage(M.hilite, 0, 0);
     ctx.restore();
 
     // labels & markers in screen space
@@ -245,7 +247,7 @@ window.FB = window.FB || {};
         if (s[0] < -80 || s[1] < -20 || s[0] > el.width + 80 || s[1] > el.height + 20) continue;
         const fs = Math.round(10 * M.dpr + Math.min(4, z));
         ctx.font = (pr.wasteland ? 'italic ' : '') + fs + 'px Georgia';
-        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,16,10,0.7)';
+        ctx.lineWidth = 3 * M.dpr; ctx.strokeStyle = 'rgba(20,16,10,0.7)';
         ctx.fillStyle = pr.wasteland ? 'rgba(230,225,210,0.55)' : 'rgba(255,250,235,0.92)';
         ctx.strokeText(pr.name, s[0], s[1]);
         ctx.fillText(pr.name, s[0], s[1]);
@@ -270,7 +272,7 @@ window.FB = window.FB || {};
         const s = toScreen(pr.cx, pr.cy);
         ctx.font = Math.round(13 * M.dpr) + 'px Georgia';
         ctx.textAlign = 'center';
-        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = 3 * M.dpr; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
         ctx.strokeText('⚑', s[0], s[1] + 14 * M.dpr);
         ctx.fillStyle = '#ffd24a';
         ctx.fillText('⚑', s[0], s[1] + 14 * M.dpr);
@@ -323,6 +325,8 @@ window.FB = window.FB || {};
     const wasSingle = Object.keys(M.pointers).length === 1;
     delete M.pointers[e.pointerId];
     M.pinchD = 0;
+    // an aborted gesture (notification shade, incoming call) is not a tap
+    if (e.type === 'pointercancel') return;
     if (wasSingle && !M.moved) {
       const p = ptr(e);
       const wx = M.viewX + p[0] / M.zoom, wy = M.viewY + p[1] / M.zoom;

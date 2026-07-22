@@ -246,12 +246,16 @@ window.FB = window.FB || {};
     }
     return dejureCounties[did] || [];
   };
+  let kingdomCountyLists = {}; // static like dejureCounties; rebuilt per kid on demand
   FB.kingdomCounties = function (kid) {
-    const out = [];
-    for (const did in FBDATA.duchies) {
-      if (FBDATA.duchies[did].kingdom === kid) out.push.apply(out, FB.duchyCounties(did));
+    if (!kingdomCountyLists[kid]) {
+      const out = [];
+      for (const did in FBDATA.duchies) {
+        if (FBDATA.duchies[did].kingdom === kid) out.push.apply(out, FB.duchyCounties(did));
+      }
+      kingdomCountyLists[kid] = out;
     }
-    return out;
+    return kingdomCountyLists[kid];
   };
   FB.empireKingdoms = function (eid) {
     const out = [];
@@ -627,16 +631,29 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || !r.liege || id === 'player') continue;
+      // the 1.5% gate first: realmTerritory walks the whole realm table, and
+      // ~98.5% of that work was thrown away when the roll failed
+      if (!FB.chance(B.breakawayChance)) continue;
       const terr = FB.realmTerritory(state, id);
       if (terr.length < 3) continue;
       const top = FB.topRealm(state, id);
       if (top === id || FB.realmStrength(state, top) < 8) continue;
-      if (!FB.chance(B.breakawayChance)) continue;
       r.liege = null;
       for (const pid of terr) state.owner[pid] = id;
       FB.invalidateRealmCache();
       const tr = state.realms[top];
-      if (tr && tr.alive && !tr.war) tr.war = { enemy: id, years: 0, captures: 0 };
+      if (top === 'player') {
+        // the player's own vassal rises: fought as a defensive war of the
+        // player's, never as realms.player.war — the AI loop skips the
+        // player, so a war parked there could neither resolve nor be fought
+        if (tr && tr.alive && !state.player.war) {
+          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
+          FB.warFooting(state);
+          state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
+        }
+      } else if (tr && tr.alive && !tr.war) {
+        tr.war = { enemy: id, years: 0, captures: 0 };
+      }
       if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
         FB.news(state, '🔥 ' + r.name + ' renounces the suzerainty of ' + (tr ? tr.name : 'the crown') + '!');
       }
@@ -753,6 +770,7 @@ window.FB = window.FB || {};
       if (myRealm === 'player' && !(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
       FB.transferProvince(state, pid, myRealm);
       if (state.holder) state.holder[pid] = 'player'; // the player's own demesne
+      FB.invalidateRealmCache(); // transferProvince rebuilt before the holder rewrite
       p.provs = p.provs || [];
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
       FB.news(state, '🏰 ' + FB.world.byId[pid].name + ' is yours by conquest!');
@@ -767,11 +785,25 @@ window.FB = window.FB || {};
     }
   };
 
-  /* Defensive defeat: the enemy advance takes a border province. */
+  /* Defensive defeat: the enemy advance takes a border province — one of the
+     player's OWN counties bordering the invader, as the siege warning
+     promises. (Picking across the whole sovereign bloc made the loss land on
+     a vassal's county and quietly degrade to the reparations branch.) */
   FB.warLoseProvince = function (state) {
     const p = state.player;
     const w = p.war;
-    const lost = FB.borderProvince(state, state.realms.player && state.realms.player.alive ? 'player' : FB.playerRealmId(state), w.enemy);
+    let lost = null;
+    if (p.provs && p.provs.length) {
+      const opts = [];
+      for (const pid of p.provs) {
+        const adj = FB.world.adj[pid] || {};
+        for (const nb in adj) {
+          if (state.owner[nb] === w.enemy) { opts.push(pid); break; }
+        }
+      }
+      if (opts.length) lost = FB.pick(opts);
+    }
+    if (!lost) lost = FB.borderProvince(state, state.realms.player && state.realms.player.alive ? 'player' : FB.playerRealmId(state), w.enemy);
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, '🏚 ' + FB.world.byId[lost].name + ' is torn from your grasp.');
@@ -1113,8 +1145,9 @@ window.FB = window.FB || {};
         p.liege = state.realms[p.liege].liege;
       }
     }
+    if (!n) return; // landless: playerShare is 0 everywhere, nothing can promote
     let newTier = p.tier;
-    if (n >= 1 && p.tier < 4) newTier = 4;
+    if (p.tier < 4) newTier = 4;
     if (FB.playerDuchy(state) && p.tier < 5) newTier = 5;
     if (indep && FB.playerKingdom(state) && p.tier < 6) newTier = 6;
     if (indep && FB.playerEmpire(state) && p.tier < 7) newTier = 7;

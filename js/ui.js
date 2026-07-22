@@ -33,6 +33,8 @@ window.FB = window.FB || {};
 
   UI.showGame = function () {
     UI.showScreen(null);
+    portraitKey = ''; // a new life or loaded save must never keep the old face
+    logRenderedTail = null; logRenderedLen = -1;
     FB.map.resize();
     FB.map.request();
   };
@@ -170,7 +172,12 @@ window.FB = window.FB || {};
       if (activeTab === 'prov') renderProv(); else renderLog();
       return;
     }
-    if (activeLeftTab === 'char') renderChar(); else renderFamily();
+    // on phones Self/Kin is a closed drawer most of the time (display:none →
+    // offsetParent null): skip its rebuild and portrait repaints while it
+    // cannot be seen — setTab renders it the moment it opens
+    if ($('leftbody').offsetParent !== null) {
+      if (activeLeftTab === 'char') renderChar(); else renderFamily();
+    }
     if (activeTab === 'actions') renderActions();
     else if (activeTab === 'prov') renderProv();
     else renderLog();
@@ -778,7 +785,7 @@ window.FB = window.FB || {};
       const rel = FB.religionOf(pr.religion), cul = FB.cultureOf(pr.culture);
       const B = FBDATA.balance;
       const myRealm = rid === 'player';
-      const realmMen = realm ? (myRealm ? FB.playerLevy(s) : Math.round(FB.realmStrength(s, rid) * B.levyPerDev * 0.3)) : 0;
+      const realmMen = realm ? (myRealm ? FB.playerLevy(s) : Math.round(FB.realmStrength(s, rid) * B.levyPerDev * (B.aiHostPerDev || 0.3))) : 0;
       // the feudal ladder: who holds this county directly, and above them whom
       const holdId = (s.holder && s.holder[pid]) || rid;
       let chain;
@@ -858,11 +865,15 @@ window.FB = window.FB || {};
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
   }
 
+  let logRenderedTail = null, logRenderedLen = -1; // skip identical rebuilds on quiet ticks
   function renderLog() {
     const s = FB.state;
+    const tail = s.log.length ? s.log[s.log.length - 1] : null;
+    if (tail === logRenderedTail && s.log.length === logRenderedLen) return;
+    logRenderedTail = tail; logRenderedLen = s.log.length;
     let h = '<div class="panelh">' + (FB.game && FB.game.observe ? 'Chronicle of the realms' :
       'Chronicle of ' + esc(s.chars[s.player.charId].dyn || 'your line')) + '</div>';
-    for (let i = s.log.length - 1; i >= 0 && i > s.log.length - 80; i--) {
+    for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
       const e = s.log[i];
       h += '<div class="logentry"><span class="ldate">' + FB.SEASONS[e.s] +
         (e.d ? ' ' + e.d : '') + ', ' + e.y + '</span><br>' + esc(e.t) + '</div>';
@@ -1241,7 +1252,7 @@ window.FB = window.FB || {};
       const pr = FB.world.byId[pid];
       const rid = s.owner[pid];
       const realm = s.realms[rid];
-      const enMen = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * 0.3);
+      const enMen = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-war="' + esc(pid) + '">⚔ ' + esc(pr.name) +
         '<span class="adesc">Held by ' + esc(realm ? realm.name : '?') + ' (' +
         FB.realmProvinces(s, rid).length + ' provinces) · they can field ~' + enMen +
@@ -1264,7 +1275,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const lg = s.realms[s.player.liege];
     const top = FB.topRealm(s, s.player.liege);
-    const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * 0.3);
+    const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
     const h = '<div class="gm-body-text"><p>You renounce ' + esc(lg ? lg.name : 'your liege') +
       ' and raise your own banner' +
       (s.player.tier === 3 && FB.world.byId[s.player.provinceId]
@@ -1389,7 +1400,7 @@ window.FB = window.FB || {};
       'diplomacy carries the rest.</p><div class="gm-list">';
     for (const rid of FB.envoyTargets(s)) {
       const r = s.realms[rid];
-      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * 0.3);
+      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-envoy="' + esc(rid) + '">🕊 ' + esc(r.name) +
         '<span class="adesc">' + FB.realmProvinces(s, rid).length + ' provinces · fields ~' + men + ' men</span></button>';
     }
@@ -1424,7 +1435,10 @@ window.FB = window.FB || {};
         UI.closeModal(); UI.refresh();
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      delete FB.state.player.cooldowns.pay_homage; // no journey, no cooldown
+      UI.closeModal(); UI.refresh();
+    });
   };
 
   /* appeal to a lord ABOVE your direct liege */
@@ -1447,7 +1461,10 @@ window.FB = window.FB || {};
         UI.closeModal(); UI.refresh();
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      delete FB.state.player.cooldowns.appeal_lord; // no suit carried, no cooldown
+      UI.closeModal(); UI.refresh();
+    });
   };
 
   /* offer your lands to a neighboring sovereign */
@@ -1456,7 +1473,7 @@ window.FB = window.FB || {};
     let h = '<p class="hint">Kneel to a neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
     for (const rid of FB.fealtyTargets(s)) {
       const r = s.realms[rid];
-      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * 0.3);
+      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🤝 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) + ' · fields ~' + men + ' men</span></button>';
     }
@@ -1480,7 +1497,7 @@ window.FB = window.FB || {};
     const cap = FB.world.byId[r.capital];
     const cul = FB.cultureOf(r.ruler.culture);
     const rel = cap ? FB.religionOf(cap.religion) : null;
-    const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * 0.3);
+    const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
     let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
@@ -2281,8 +2298,9 @@ window.FB = window.FB || {};
   UI.showSaveLoad = function (saving) {
     let h = '<div class="gm-list">';
     for (let i = 1; i <= 3; i++) {
-      const meta = FB.save.slotMeta(i);
-      const other = !saving && meta && FB.save.otherWorld(FB.save.read(i));
+      const d = FB.save.read(i); // one parse per slot: late saves are large
+      const meta = FB.save.metaOf(d);
+      const other = !saving && meta && FB.save.otherWorld(d);
       h += '<button class="actionbtn" data-slot="' + i + '">' +
         (saving ? '💾 Save to slot ' : '📂 Load slot ') + i +
         '<span class="adesc">' + esc(meta || 'Empty') +

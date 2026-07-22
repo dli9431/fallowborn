@@ -61,7 +61,7 @@ window.FB = window.FB || {};
     window.matchMedia('(pointer: coarse)').matches;
 
   FB.esc = function (s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
   /* color helpers for map tinting */

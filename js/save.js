@@ -35,7 +35,10 @@ window.FB = window.FB || {};
     }
   };
 
-  S.autosave = function () { if (FB.state && !FB.state.player.dead) S.toSlot('auto'); };
+  /* an observe session is never saved — it must not bury a real life */
+  S.autosave = function () {
+    if (FB.state && !FB.state.player.dead && !(FB.game && FB.game.observe)) S.toSlot('auto');
+  };
 
   S.read = function (slot) {
     try {
@@ -46,11 +49,12 @@ window.FB = window.FB || {};
     } catch (e) { return null; }
   };
 
-  S.slotMeta = function (slot) {
-    const d = S.read(slot);
+  /* label for an already-read save object — lets callers parse a slot once */
+  S.metaOf = function (d) {
     if (!d || !d.meta) return null;
     return d.meta.name + ' — ' + d.meta.title + ', ' + FB.SEASONS[d.meta.season] + ' ' + d.meta.year;
   };
+  S.slotMeta = function (slot) { return S.metaOf(S.read(slot)); };
 
   S.hasAuto = function () { return !!S.read('auto'); };
 
@@ -100,6 +104,8 @@ window.FB = window.FB || {};
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
     FB.state = data.state;
+    // the realm cache is keyed by state.turn, which two lives can share
+    FB.invalidateRealmCache();
     backfillParents(FB.state);
     return FB.state;
   };

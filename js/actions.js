@@ -571,7 +571,7 @@ window.FB = window.FB || {};
     if (c.items.indexOf(id) < 0) c.items.push(id);
     const boost = FB.giftOpinion(def);
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
-    if (state.roles.lord === cid) state.player.liegeOp = (state.player.liegeOp || 0) + boost;
+    if (state.roles.lord === cid) state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) + boost, -100, 100);
     FB.news(state, '🎁 You give ' + def.icon + ' ' + FB.fmt(state, def.name, {}) + ' to ' +
       c.name + '. (regard ' + Math.round(c.opinion) + ')');
   };
@@ -1056,6 +1056,13 @@ window.FB = window.FB || {};
 
   FB.validateFocus = function (state) {
     const cur = state.player.focus;
+    // daily hot path: if the current focus is still offered, skip the full
+    // listFocuses sweep (all ~27 show() callbacks) entirely
+    if (cur) {
+      for (const f of FB.focuses) {
+        if (f.id === cur) { if (f.show(state)) return; break; }
+      }
+    }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === cur) return;
     // a war footing ends: return to the focus held before the war, if it still fits

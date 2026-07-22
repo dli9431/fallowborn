@@ -169,14 +169,17 @@ window.FB = window.FB || {};
       case ' ':
         if (onButton) return; // native button activation
         e.preventDefault();
+        if (e.repeat) return; // a held key must not flicker pause
         if (FB.state && !FB.ui.eventsBusy()) FB.game.togglePause();
         return;
       case 'e': case 'E':
         e.preventDefault();
+        if (e.repeat) return;
         if (FB.state && !FB.ui.eventsBusy()) FB.game.togglePause();
         return;
       case 'f': case 'F':
         e.preventDefault();
+        if (e.repeat) return; // one skip per press, not per key-repeat
         if (FB.state && !FB.ui.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
         return;
       case '[': if (FB.state) FB.ui.cycleTab(-1); return;

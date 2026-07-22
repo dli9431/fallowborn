@@ -9,8 +9,29 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.3';
+  FB.VERSION = '1.16.4';
   FB.CHANGELOG = [
+    { v: '1.16.4', date: '2026-07-22', changes: [
+      'A vassal breaking away from YOUR realm now starts a real defensive war — no more eternal war flag and an enemy host squatting unfightable in your capital.',
+      'Losing a defensive war now takes one of your own border counties, as the siege warning promises — it used to fizzle into reparations whenever the roll landed on a vassal’s land.',
+      'The game autosaves when the tab is hidden or closed — a backgrounded phone no longer loses everything since the last season.',
+      'The 🎲 random province and name suggestions differ per visit — the pre-game dice were stuck on the same roll for everyone.',
+      'Cancelling the Pay Homage or Appeal pickers no longer burns their long cooldowns.',
+      'Holding Space/E no longer flickers pause, and holding F fires one skip per press, not a stream.',
+      'Sickness events about a young child now name the child — and the one named is the one at risk.',
+      'A kinsman betrothed to you when you die can wed again; the stale pledge used to bar marriage forever.',
+      'An arranged-match shortlist thinned by a death is topped back up to three families.',
+      'Gifting items to your lord now caps his opinion at 100 like every other favor.',
+      'Starting siblings are never same-year twins (the intended guard was inert).',
+      'The Chronicle shows the full last 80 entries, not 79.',
+      'Loading a save right after another life no longer briefly reads the old realm’s lands (taxes, borders) until the next day.',
+      'Enemy strength readouts (“fields ~N men”) follow the aiHostPerDev balance knob instead of a hardcoded 0.3.',
+      'balance.mortalityBase now truly scales the yearly mortality curve.',
+      'A cancelled touch gesture (notification shade, incoming call) no longer counts as a map tap or march order.',
+      'Tapping stacked hosts prefers your own; halting or releasing a host repaints at once; an impossible march order says so.',
+      'Map label and marker outlines scale with screen density — readable halos on high-DPI phones.',
+      'Faster: hidden Self/Kin drawer skips its rebuild each tick, the map skips the highlight layer when nothing is selected, the Chronicle skips identical rebuilds, save dialogs parse each slot once, and the daily focus check, tier check, and yearly breakaway sweep drop most of their work.'
+    ] },
     { v: '1.16.3', date: '2026-07-22', changes: [
       'Death no longer flashes by at high speed: automation never resolves an event whose outcome could kill you — the blow is always shown — and the succession screen waits for a deliberate choice instead of taking a stray Space/Enter on the first heir.',
       'The death screen now speaks the chronicler’s parting line for the life just ended.'
@@ -155,6 +176,10 @@ window.FB = window.FB || {};
 
   /* ================= boot ================= */
   document.addEventListener('DOMContentLoaded', function () {
+    // the one legitimate Math.random(): seed the game RNG once at boot, so
+    // pre-game draws (random province, name suggestions) differ per visit;
+    // loading a save overwrites the state from the file
+    FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
     FB.mods.applyStored();
     FB.generateWorld(
       function (frac, msg) {
@@ -326,8 +351,6 @@ window.FB = window.FB || {};
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
 
-    FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
-
     const state = {
       v: 2,
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
@@ -378,7 +401,7 @@ window.FB = window.FB || {};
     for (let i = 0; i < nSib; i++) {
       const sib = FB.makeCharacter(state, {
         culture: pr.culture, religion: pr.religion,
-        born: me.born + FB.ri(-6, 6) || me.born + 2,
+        born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
         role: 'sibling'
       });
       sib.dyn = me.dyn;
@@ -417,7 +440,6 @@ window.FB = window.FB || {};
   G.startObserve = function () {
     G.observe = false; // startObserve sets it below; clear any stale state first
     document.body.classList.remove('observing');
-    FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
     const home = FB.pick(FB.world.provs.filter(function (p) { return !p.wasteland; }));
     const state = {
       v: 2,
@@ -614,7 +636,11 @@ window.FB = window.FB || {};
   };
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) G.paused = true;
+    if (document.hidden) {
+      G.paused = true;
+      // a backgrounded mobile tab may never come back — keep what was played
+      FB.save.autosave();
+    }
   });
 
   G.afterEvents = function () {
@@ -679,9 +705,10 @@ window.FB = window.FB || {};
     kinLifeTick(s);
     const kinRel = FB.kinOf(s).byId;
 
-    // player mortality
+    // player mortality (curve scaled by the balance knob, 0.012 = as-authored)
+    const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
     const age = FB.ageOf(me, year);
-    let q = age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28;
+    let q = (age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28) * mortScale;
     if (me.health <= 2) q += 0.12; else if (me.health <= 5) q += 0.03;
     if (p.flags.ill) q += 0.05;
     if (p.flags.plague_here) q += 0.06;
@@ -700,7 +727,7 @@ window.FB = window.FB || {};
       const c = s.chars[id];
       if (c.dead || id === p.charId) continue;
       const a = FB.ageOf(c, year);
-      let cq = a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25;
+      let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
       if (p.flags.plague_here) cq += 0.05;
       cq -= FB.traitAgg(c).health;
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
@@ -812,6 +839,10 @@ window.FB = window.FB || {};
         if (b && !b.dead && FB.ageOf(b, year) >= 16) {
           FB.doKinWedding(s, k, b);
           sp = b;
+        } else if (!b || b.dead) {
+          // the player's own death bypasses killChar, which would have cut
+          // this bond — a stale pledge must not bar remarriage forever
+          k.betrothedId = null;
         }
       } else if (!sp && age <= 40 && FB.chance(FBDATA.balance.kinMarryChance)) {
         FB.discardMatches(s, k, null); // the sounded-out families are passed over
@@ -875,8 +906,10 @@ window.FB = window.FB || {};
       }
       return;
     }
-    // every wife of the household may conceive (one pregnancy at a time)
-    const mates = me.sex === 'f' ? (sp ? [sp] : []) : FB.spousesOf(s, me);
+    // every wife of the household may conceive (one pregnancy at a time) —
+    // the all-characters spousesOf scan runs only under polygynous doctrine
+    const mates = me.sex === 'f' || FB.marriageDoctrine(me.religion).wives <= 1
+      ? (sp ? [sp] : []) : FB.spousesOf(s, me);
     for (const mate of mates) {
       const mother = me.sex === 'f' ? me : mate;
       const father = me.sex === 'f' ? mate : me;
