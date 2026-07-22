@@ -446,6 +446,20 @@ window.FB = window.FB || {};
       ctx.setLineDash([]);
     }
 
+    /* provinces where hostile hosts stand together: a battle is joined there
+       today (they clash in the daily tick) — marked below so the fray reads */
+    const byProv = {};
+    for (const a of s.armies) (byProv[a.at] = byProv[a.at] || []).push(a);
+    const battles = {};
+    for (const pid in byProv) {
+      const here = byProv[pid];
+      for (let i = 0; i < here.length && !battles[pid]; i++) {
+        for (let j = i + 1; j < here.length; j++) {
+          if (FB.armiesHostile(s, here[i], here[j])) { battles[pid] = true; break; }
+        }
+      }
+    }
+
     const counts = {}; // hosts sharing a province fan out around the centroid
     for (const a of s.armies) {
       const idx = counts[a.at] || 0; counts[a.at] = idx + 1;
@@ -460,9 +474,13 @@ window.FB = window.FB || {};
       const col = mine ? '#f0c840' : (realm ? realm.color : '#888888');
       const hostileToMe = !mine && s.player.war && s.player.war.enemy === a.realm;
 
-      // ground shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath(); ctx.ellipse(x, y + u * 0.32, u * 0.62, u * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      // base disc in the host's color over a soft shadow: the side a host
+      // fights for reads at a glance — two pennants alone did not
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(x, y + u * 0.34, u * 0.74, u * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(x, y + u * 0.3, u * 0.68, u * 0.24, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = Math.max(1, u * 0.05); ctx.stroke();
       // three spearmen: dark bodies, round heads, sloped spears
       ctx.strokeStyle = '#221d16'; ctx.lineWidth = Math.max(1, u * 0.09);
       ctx.fillStyle = '#2c2620';
@@ -490,6 +508,15 @@ window.FB = window.FB || {};
       if (sel && sel.id === a.id) {
         ctx.strokeStyle = '#ffe28a'; ctx.lineWidth = 2 * dpr;
         ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 1.05, 0, Math.PI * 2); ctx.stroke();
+      }
+      // crossed swords over a host locked with an enemy in this province today
+      if (battles[a.at]) {
+        ctx.font = Math.round(u * 0.85) + 'px Georgia';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(20,16,10,0.85)';
+        ctx.strokeText('⚔', x, y - u * 1.0);
+        ctx.fillStyle = '#ffd75e';
+        ctx.fillText('⚔', x, y - u * 1.0);
       }
       // strength label
       if (z >= 1.3) {
