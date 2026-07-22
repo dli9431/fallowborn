@@ -14,10 +14,10 @@ window.FB = window.FB || {};
      state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
        mercs, at, from, moveLeft, path[], goal, broken, huntPrey }]
        `at` is the province the host stands in; `from` the one it left. While
-       moveLeft > 0 the host is on the road toward path[0] (rendered mid-way)
-       and `at` advances only when the leg completes. size is the mustered
-       strength a resting host refills toward. huntPrey (player host only) is
-       a realm id whose host is tracked and re-pathed onto each day.
+       moveLeft > 0 the host is on the road toward path[0] and `at` advances
+       only when the leg completes; the map marker stays on `at`. size is the
+       mustered strength a resting host refills toward. huntPrey (player host
+       only) is a realm id whose host is tracked and re-pathed onto each day.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays. */
   FB.armiesEnsure = function (state) {
@@ -359,17 +359,12 @@ window.FB = window.FB || {};
   };
   FB.selectArmy = function (id) { selId = id || null; };
 
-  /* world-space position: mid-road toward the next province while marching */
+  /* world-space position: the province the host stands in. Not mid-road —
+     an interpolated marker floated across straits and off the land the Land
+     tab (and battle logic) says the host is in. */
   function worldPos(army) {
     const pa = FB.world.byId[army.at];
     if (!pa) return [0, 0];
-    if (army.moveLeft > 0 && army.path && army.path.length) {
-      const pd = FB.world.byId[army.path[0]];
-      if (pd) {
-        const f = 1 - army.moveLeft / B().armyMarchDays;
-        return [pa.cx + (pd.cx - pa.cx) * f, pa.cy + (pd.cy - pa.cy) * f];
-      }
-    }
     return [pa.cx, pa.cy];
   }
 
