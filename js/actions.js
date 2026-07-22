@@ -443,6 +443,17 @@ window.FB = window.FB || {};
       return FB.warTargets(s).length ? true : 'No reachable enemy lands border yours.';
     },
     run: function (s) { if (FB.ui && FB.ui.showWarTargets) FB.ui.showWarTargets(); } },
+  { id: 'declare_independence', label: '⚑ Declare independence…', noConsume: true,
+    desc: function (s) {
+      const lg = s.realms[s.player.liege];
+      return 'Renounce ' + (lg ? lg.name : 'your liege') + ' and raise your own banner — it means war.';
+    },
+    show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
+    can: function (s) {
+      return s.player.prestige >= 200 ? true
+        : 'You need at least 200 prestige to rally men to your banner (now ' + Math.round(s.player.prestige) + ').';
+    },
+    run: function (s) { if (FB.ui && FB.ui.showIndependence) FB.ui.showIndependence(); } },
   { id: 'pay_homage', label: '🙇 Pay homage…', noConsume: true, cd: 180,
     desc: function () { return 'Bend the knee at your liege’s court — or a court above his. (+opinion)'; },
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },

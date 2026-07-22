@@ -968,13 +968,18 @@ window.FB = window.FB || {};
     const p = state.player;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
     if (!p.provs || !p.provs.length) {
+      // a baron who renounces his lord seizes the home county he was
+      // enfeoffed in — transferProvince buries the old holder if landless
       p.provs = [p.provinceId];
       if (p.tier < 4) p.tier = 4;
+      FB.transferProvince(state, p.provinceId, 'player');
     }
     FB.foundPlayerRealm(state);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
       FB.news(state, '⚔ ' + state.realms[oldLiege].name + ' will not let you go without a fight!');
+      FB.warFooting(state);
+      state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
     }
     FB.checkTierPromotions(state);
   };

@@ -18,14 +18,21 @@ interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
 with his home county: the granting count yields it (dissolving if left landless) and
 the player answers to the granter's own liege — a liege must outrank his man, and
-`FB.checkTierPromotions` walks broken chains back up.
+`FB.checkTierPromotions` walks broken chains back up. Independence comes two ways:
+the random `independence_offer` event or the explicit `declare_independence` deed
+(200+ prestige, any sworn tier) — both run `FB.doIndependence`, which founds the
+player realm and starts a defensive war against the old sovereign; a baron doing
+either seizes his home county via `FB.transferProvince` (burying the old holder if
+left landless).
 AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial), not
 full chars — the Deeds banner's "vassal of X" links to their sheet via
 `UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`.
 
 **Tiers** 0–7 (serf…emperor) + `profession` gate actions (`js/actions.js`) and events. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a
-county. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
+county — and bound to it: a baron's liege is always the county's direct holder, so if his
+lord's house dies the baron reattaches to whoever holds his home (`FB.transferProvince`,
+with a catch-all repair in `FB.checkTierPromotions`), never standing "independent". Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
 monk/priest) but manages the manor and may petition for a barony like any gentry. Promotions above count happen in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
