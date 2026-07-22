@@ -549,7 +549,7 @@ window.FB = window.FB || {};
       if (FB.chance(q)) {
         const cap = FB.world.byId[r.capital];
         r.ruler = makeRuler(cap ? cap.culture : r.ruler.culture);
-        if (id === FB.playerRealmId(state) || id === state.player.liege) {
+        if (FB.game.observe || id === FB.playerRealmId(state) || id === state.player.liege) {
           FB.news(state, '👑 The ruler of ' + r.name + ' is dead. ' + r.ruler.name + ' rises in their place.');
         }
       }
@@ -569,7 +569,9 @@ window.FB = window.FB || {};
           FB.transferProvince(state, taken, winner);
           r.war.captures = (r.war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
-          if (taken === state.player.provinceId) {
+          if (FB.game.observe) { // the watcher hears of every fall, far or near
+            FB.news(state, '⚔ ' + pv.name + ' has fallen to ' + (state.realms[winner] ? state.realms[winner].name : winner) + '.');
+          } else if (taken === state.player.provinceId) {
             FB.news(state, '⚔ ' + (state.realms[winner] ? state.realms[winner].name : winner) + ' has conquered ' + pv.name + ' — your home! New masters rule here now.');
           } else if (FB.world.adj[state.player.provinceId] && FB.world.adj[state.player.provinceId][taken]) {
             FB.news(state, '⚔ ' + pv.name + ' has fallen to ' + (state.realms[winner] ? state.realms[winner].name : winner) + '.');
@@ -596,7 +598,7 @@ window.FB = window.FB || {};
           const t = targets[FB.chance(0.6) ? 0 : Math.floor(FB.rng() * targets.length)];
           r.war = { enemy: t, years: 0, captures: 0 };
           const homeRealm = state.owner[state.player.provinceId];
-          if (id === homeRealm || t === homeRealm) {
+          if (FB.game.observe || id === homeRealm || t === homeRealm) {
             FB.news(state, '🔥 War! ' + r.name + ' marches against ' + state.realms[t].name + '.');
           }
         }
@@ -627,7 +629,7 @@ window.FB = window.FB || {};
       FB.invalidateRealmCache();
       const tr = state.realms[top];
       if (tr && tr.alive && !tr.war) tr.war = { enemy: id, years: 0, captures: 0 };
-      if (top === FB.playerRealmId(state) || id === state.player.liege) {
+      if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
         FB.news(state, '🔥 ' + r.name + ' renounces the suzerainty of ' + (tr ? tr.name : 'the crown') + '!');
       }
     }

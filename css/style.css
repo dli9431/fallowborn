@@ -425,3 +425,8 @@ textarea.modjson {
   #tb-name { font-size: 13px; }
   #tb-title { font-size: 11px; }
 }
+
+/* observe mode (New Game → 👁 Observe): a watcher has no face, purse, or deeds */
+body.observing #tb-portrait, body.observing #crest, body.observing #tb-stats,
+body.observing #left, body.observing #btn-auto,
+body.observing #sidetabs .tab[data-tab="actions"] { display: none; }

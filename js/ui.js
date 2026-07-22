@@ -112,6 +112,18 @@ window.FB = window.FB || {};
   function refreshNow() {
     const s = FB.state;
     if (!s || s.player.dead) return;
+    const dd = (s.date.day < 10 ? ' ' : '') + s.date.day; // fixed 2-char day
+    /* observe mode: no face, no purse — a nameless watcher and the date */
+    if (FB.game.observe) {
+      $('tb-name').textContent = '👁 Observing';
+      $('tb-title').textContent = 'the realms play out on their own';
+      $('tb-date').innerHTML = '<span class="mono">' + FB.SEASONS[s.date.season] + ' ' + dd + ' · ' + s.date.year + ' AD</span>';
+      $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
+        '<span class="pp">' + (FB.game.paused ? '▶ Play' : '❚❚ Pause') +
+        '</span><span class="mono">' + FB.SEASONS[s.date.season] + ' ' + dd + '</span>';
+      renderActiveTab();
+      return;
+    }
     const me = s.chars[s.player.charId];
     $('tb-name').textContent = FB.fullName(me);
     // the topbar portrait and crest change rarely; repaint only when
@@ -125,7 +137,6 @@ window.FB = window.FB || {};
     }
     const pr = FB.world.byId[s.player.provinceId];
     $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? pr.name : '?');
-    const dd = (s.date.day < 10 ? ' ' : '') + s.date.day; // fixed 2-char day
     const dateStr = FB.SEASONS[s.date.season] + ' ' + dd + ' · ' + s.date.year + ' AD';
     const net = s.seasonNet || {};
     $('tb-gold').innerHTML = '💰 <span class="mono">' + Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
@@ -155,6 +166,10 @@ window.FB = window.FB || {};
   const LEFT_TABS = ['char', 'family'];
 
   function renderActiveTab() {
+    if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
+      if (activeTab === 'prov') renderProv(); else renderLog();
+      return;
+    }
     if (activeLeftTab === 'char') renderChar(); else renderFamily();
     if (activeTab === 'actions') renderActions();
     else if (activeTab === 'prov') renderProv();
@@ -844,7 +859,8 @@ window.FB = window.FB || {};
 
   function renderLog() {
     const s = FB.state;
-    let h = '<div class="panelh">Chronicle of ' + esc(s.chars[s.player.charId].dyn || 'your line') + '</div>';
+    let h = '<div class="panelh">' + (FB.game && FB.game.observe ? 'Chronicle of the realms' :
+      'Chronicle of ' + esc(s.chars[s.player.charId].dyn || 'your line')) + '</div>';
     for (let i = s.log.length - 1; i >= 0 && i > s.log.length - 80; i--) {
       const e = s.log[i];
       h += '<div class="logentry"><span class="ldate">' + FB.SEASONS[e.s] +
@@ -854,6 +870,7 @@ window.FB = window.FB || {};
   }
 
   function setTab(name) {
+    if (FB.game && FB.game.observe && name === 'actions') return; // a watcher has no deeds
     const isLeft = LEFT_TABS.indexOf(name) >= 0;
     if (isLeft) activeLeftTab = name; else activeTab = name;
     const bar = isLeft ? '#lefttabs .tab' : '#sidetabs .tab';
@@ -867,7 +884,7 @@ window.FB = window.FB || {};
   }
 
   UI.cycleTab = function (dir) {
-    const order = ['actions', 'prov', 'log'];
+    const order = (FB.game && FB.game.observe) ? ['prov', 'log'] : ['actions', 'prov', 'log'];
     let i = order.indexOf(activeTab) + dir;
     if (i < 0) i = order.length - 1;
     if (i >= order.length) i = 0;
@@ -2130,26 +2147,54 @@ window.FB = window.FB || {};
 
   /* ================= menu ================= */
   UI.showMenu = function () {
+    const obs = FB.game.observe; // a watcher has no life to save, load, or mod
     let h = '<div class="gm-list">' +
       '<button class="actionbtn" id="m-resume">▶ Resume</button>' +
-      '<button class="actionbtn" id="m-save">💾 Save game</button>' +
-      '<button class="actionbtn" id="m-load">📂 Load game</button>' +
+      (obs ? '' : '<button class="actionbtn" id="m-save">💾 Save game</button>') +
+      (obs ? '' : '<button class="actionbtn" id="m-load">📂 Load game</button>') +
+      '<button class="actionbtn" id="m-settings">⚙ Settings</button>' +
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
-      '<button class="actionbtn" id="m-mods">🧩 Mods</button>' +
+      (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
-      '<button class="actionbtn" id="m-quit">🏳 Abandon to title</button>' +
+      '<button class="actionbtn" id="m-quit">🏳 ' + (obs ? 'Stop observing' : 'Abandon to title') + '</button>' +
       '</div>' +
       '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>';
     openModal('Menu', h);
     $('m-resume').addEventListener('click', UI.closeModal);
-    $('m-save').addEventListener('click', function () { UI.showSaveLoad(true); });
-    $('m-load').addEventListener('click', function () { UI.showSaveLoad(false); });
+    if (!obs) {
+      $('m-save').addEventListener('click', function () { UI.showSaveLoad(true); });
+      $('m-load').addEventListener('click', function () { UI.showSaveLoad(false); });
+      $('m-mods').addEventListener('click', function () { UI.showMods(); });
+    }
+    $('m-settings').addEventListener('click', function () { UI.showSettings(); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
-    $('m-mods').addEventListener('click', function () { UI.showMods(); });
     $('m-changes').addEventListener('click', function () { UI.showChangelog(); });
     $('m-quit').addEventListener('click', function () {
       UI.closeModal(); FB.game.toTitle();
     });
+  };
+
+  /* ================= settings ================= */
+  UI.showSettings = function () {
+    const G = FB.game;
+    const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
+    let h = '<div class="gm-body-text"><p>How quickly the days flow while time runs' +
+      (FB.isTouch ? '' : ' — on a keyboard, <b>−</b>/<b>+</b> change it at any time') +
+      '.</p></div><div class="gm-list">';
+    for (let i = 0; i < G.SPEEDS.length; i++) {
+      h += '<button class="actionbtn" data-speed="' + i + '">' +
+        (i === G.speedIdx ? '✓ ' : '') + 'Speed ' + (i + 1) + ' / ' + G.SPEEDS.length +
+        (WORDS[i] ? '<span class="adesc">' + WORDS[i] + '</span>' : '') + '</button>';
+    }
+    h += '</div><button class="btn" id="gm-back">Back</button>';
+    openModal('Settings', h);
+    document.querySelectorAll('[data-speed]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        G.setSpeed(parseInt(b.dataset.speed, 10) - G.speedIdx);
+        UI.showSettings(); // re-open so the ✓ follows the choice
+      });
+    });
+    $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };
 
   UI.showSaveLoad = function (saving) {
@@ -2191,8 +2236,8 @@ window.FB = window.FB || {};
       '<h4>The map</h4>' +
       '<p>Drag to pan, pinch or scroll to zoom, tap a province for details. Realms wage their own wars; borders shift with the decades.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
-      '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>+/−</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
-      '<p><b>Space</b> plays / pauses the flow of days · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
+      '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
+      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots are in the menu.</p>' +
       '</div><button class="btn primary" id="gm-ok">Close</button>');
     $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
@@ -2302,7 +2347,9 @@ window.FB = window.FB || {};
     $('btn-zoomin').addEventListener('click', function () { FB.map.zoomIn(); });
     $('btn-zoomout').addEventListener('click', function () { FB.map.zoomOut(); });
     $('btn-home').addEventListener('click', function () {
-      if (FB.state) FB.map.centerOn(FB.state.player.provinceId, 2.2);
+      if (!FB.state) return;
+      if (FB.game.observe) FB.map.fitView(); // no home — show the whole board
+      else FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
     FB.map.onTap = function (pr, wx, wy) {
