@@ -21,7 +21,10 @@ An optional Automation mode (`G.auto`, Z key / ⚙ button, persisted to localSto
 silently resolves selected event categories (everyday / important / war councils) via
 `autoResolve` in ui.js, logging outcomes to the chronicle — fast-forward rolls through
 them — and can also auto-raise the cheapest building and auto-adopt the cheapest
-innovation each season (`FB.autoBuild`/`FB.autoResearch`). Event-data `cooldown` stays in
+innovation each season (`FB.autoBuild`/`FB.autoResearch`). Death is never delegated:
+an event whose worst outcome could drop the player to 0 health is always shown
+(`worstWound` in ui.js), and the succession screen takes no auto-focus, so a stray
+Space/Enter cannot sign the succession for the first heir. Event-data `cooldown` stays in
 seasons — the engine multiplies by 90.
 
 Related: [events.md](events.md) for the event interpreter, [war.md](war.md) for the

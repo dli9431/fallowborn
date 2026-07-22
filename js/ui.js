@@ -902,9 +902,32 @@ window.FB = window.FB || {};
     return item.rnd ? 'everyday' : 'major';
   }
 
+  /* The worst wound an event could deal across every option and chance
+     branch — death is never delegated to the autoresolver. */
+  function worstWound(ev) {
+    let worst = 0;
+    function scan(fx) {
+      if (fx && typeof fx.health === 'number' && fx.health < worst) worst = fx.health;
+    }
+    for (const o of (ev.options || [])) {
+      scan(o.effects);
+      if (o.success) scan(o.success.effects);
+      if (o.failure) scan(o.failure.effects);
+    }
+    return worst;
+  }
+
   function autoWants(ev, item) {
     const a = FB.game.auto;
     if (!a || !a.on) return false;
+    /* an event that could drop the player to 0 health is always shown,
+       however the automation is set — the killing blow is never silent */
+    const s = FB.state;
+    if (s && s.player && !s.player.dead) {
+      const me = s.chars[s.player.charId];
+      const hp = me && me.health !== undefined ? me.health : 8;
+      if (hp + worstWound(ev) <= 0) return false;
+    }
     const cat = autoCategory(ev, item);
     if (cat === 'everyday') return true;
     if (cat === 'war') return !!a.war;
@@ -1189,12 +1212,16 @@ window.FB = window.FB || {};
         btns[i].insertAdjacentHTML('afterbegin', hintFor(i));
       }
     }
-    setTimeout(function () {
-      const b = $('gm-body').querySelector('button, input, textarea');
-      // preventScroll: focusing a long dialog's lone Close button must not
-      // drag the view to the bottom (Changelog, How to Play)
-      if (b) b.focus({ preventScroll: true });
-    }, 0);
+    /* opts.noFocus: leave nothing focused, so a stray Space/Enter cannot
+       activate the first button (used where the choice must be deliberate) */
+    if (!(opts && opts.noFocus)) {
+      setTimeout(function () {
+        const b = $('gm-body').querySelector('button, input, textarea');
+        // preventScroll: focusing a long dialog's lone Close button must not
+        // drag the view to the bottom (Changelog, How to Play)
+        if (b) b.focus({ preventScroll: true });
+      }, 0);
+    }
   }
   UI.openModal = openModal;
   UI._gmDismiss = true;
@@ -2118,7 +2145,12 @@ window.FB = window.FB || {};
   UI.showDeath = function (heirs, causeText) {
     const s = FB.state;
     const me = s.chars[s.player.charId];
+    // G.die records the legend (and its parting quip) before opening this
     let h = '<div class="gm-body-text"><p>' + esc(causeText) + '</p>';
+    const lg = s.legends && s.legends[s.legends.length - 1];
+    if (lg && lg.id === me.id && lg.quip) h += '<p><i>' + esc(lg.quip) + '</i></p>';
+    /* noFocus: the choice of an heir must be deliberate — a Space/Enter meant
+       for the pause key must not sign the succession for the first heir */
     if (heirs.length) {
       h += '<p>But a house is more than one life. Who carries the name onward?</p></div><div class="gm-list">';
       for (const c of heirs) {
@@ -2127,7 +2159,7 @@ window.FB = window.FB || {};
           ' · Mar ' + FB.skillOf(c, 'mar') + ' · Ste ' + FB.skillOf(c, 'ste') + ' · Dip ' + FB.skillOf(c, 'dip') + '</span></button>';
       }
       h += '</div>';
-      openModal('☠ ' + esc(me.name) + ' is Dead', h, { dismissable: false });
+      openModal('☠ ' + esc(me.name) + ' is Dead', h, { dismissable: false, noFocus: true });
       FB.paintFaces($('gm-body'), s);
       document.querySelectorAll('[data-heir]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -2138,7 +2170,7 @@ window.FB = window.FB || {};
     } else {
       h += '<p><b>There is no heir.</b> The house of ' + esc(me.dyn || me.name) +
         ' passes out of memory, as all things must.</p></div>';
-      openModal('☠ The Line is Ended', h + '<button class="btn primary" id="gm-gameover">See the chronicle</button>', { dismissable: false });
+      openModal('☠ The Line is Ended', h + '<button class="btn primary" id="gm-gameover">See the chronicle</button>', { dismissable: false, noFocus: true });
       $('gm-gameover').addEventListener('click', function () {
         UI.closeModal(); UI.gameOver();
       });
