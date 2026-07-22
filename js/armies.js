@@ -236,7 +236,7 @@ window.FB = window.FB || {};
       const p = state.player;
       const wname = state.realms[winner.realm] ? state.realms[winner.realm].name : winner.realm;
       const lname = state.realms[loser.realm] ? state.realms[loser.realm].name : loser.realm;
-      if (pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
+      if (FB.game.observe || pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
         FB.news(state, '⚔ Battle at ' + provName(pid) + ' — ' + wname + ' breaks the host of ' + lname + '.');
       }
     }
