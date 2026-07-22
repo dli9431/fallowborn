@@ -430,3 +430,8 @@ textarea.modjson {
 body.observing #tb-portrait, body.observing #crest, body.observing #tb-stats,
 body.observing #left, body.observing #btn-auto,
 body.observing #sidetabs .tab[data-tab="actions"] { display: none; }
+
+/* observe mode, panel hidden (☰ → Settings): the map takes the whole stage;
+   scoped to .observing so leaving the mode neutralizes it on its own */
+body.observing.obshidepanel #side { flex: 0 0 auto; background: none; border: none; }
+body.observing.obshidepanel #sidetabs, body.observing.obshidepanel #sidebody { display: none; }

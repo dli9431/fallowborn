@@ -2189,7 +2189,15 @@ window.FB = window.FB || {};
         (i === G.speedIdx ? '✓ ' : '') + 'Speed ' + (i + 1) + ' / ' + G.SPEEDS.length +
         (WORDS[i] ? '<span class="adesc">' + WORDS[i] + '</span>' : '') + '</button>';
     }
-    h += '</div><button class="btn" id="gm-back">Back</button>';
+    h += '</div>';
+    if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
+      h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
+        '<label class="autorow"><input type="checkbox" id="set-obsquiet"' + (G.obsQuiet ? ' checked' : '') + '> ' +
+        '<b>Silence the news toasts</b><span class="adesc">Happenings still fill the chronicle; the popups stay off the map.</span></label>' +
+        '<label class="autorow"><input type="checkbox" id="set-obsbare"' + (G.obsBare ? ' checked' : '') + '> ' +
+        '<b>Hide the Land & Chronicle panel</b><span class="adesc">Only the map and the flow of days remain.</span></label>';
+    }
+    h += '<button class="btn" id="gm-back">Back</button>';
     openModal('Settings', h);
     document.querySelectorAll('[data-speed]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -2197,6 +2205,14 @@ window.FB = window.FB || {};
         UI.showSettings(); // re-open so the ✓ follows the choice
       });
     });
+    if (G.observe) {
+      $('set-obsquiet').addEventListener('change', function () { G.obsQuiet = $('set-obsquiet').checked; });
+      $('set-obsbare').addEventListener('change', function () {
+        G.obsBare = $('set-obsbare').checked;
+        document.body.classList.toggle('obshidepanel', G.obsBare);
+        FB.map.resize(); // the freed space belongs to the map
+      });
+    }
     $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };
 

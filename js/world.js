@@ -1121,6 +1121,7 @@ window.FB = window.FB || {};
     // the chronicle shows the last 80 entries; unbounded growth would make
     // every seasonal autosave serialize an ever-longer history
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
-    if (FB.ui && FB.ui.toast) FB.ui.toast(text);
+    // an observer who asked for quiet still gets the chronicle, not the popups
+    if (FB.ui && FB.ui.toast && !(FB.game.observe && FB.game.obsQuiet)) FB.ui.toast(text);
   };
 })();
