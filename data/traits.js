@@ -47,3 +47,24 @@ pilgrim:    { name:'Pilgrim', icon:'🐚', desc:'Walked the holy roads.', lea:1,
 kinslayer:  { name:'Kinslayer', icon:'🩸', desc:'Blood of their own blood.', opinion:-20 },
 excommunicated: { name:'Excommunicated', icon:'⛓', desc:'Cast out by the church.', opinion:-15 }
 };
+
+/* =========================================================================
+   AILMENTS — named wounds & sicknesses a character carries for a while
+   (c.ails; gained from event health loss / setFlag:'ill', cured by time).
+   kind: 'wound' heals as health returns; 'sickness' clears with the ill flag.
+   mark: portrait cue — 'cut' | 'bruise' | 'bandage' (absent: no face mark;
+   sicknesses show as a pale, haggard face instead).
+   sev: 1 = minor (dealt by small blows), 2 = severe (health -4 or worse).
+   ========================================================================= */
+FBDATA.ailments = {
+gash:            { name:'A deep gash', icon:'🩸', kind:'wound', mark:'cut', sev:1, desc:'Bled fierce and long before it closed.' },
+bruises:         { name:'Bruised flesh', icon:'🟣', kind:'wound', mark:'bruise', sev:1, desc:'Black and blue from hip to brow.' },
+cracked_ribs:    { name:'Cracked ribs', icon:'🦴', kind:'wound', sev:1, desc:'Every breath and laugh comes at a price.' },
+head_wound:      { name:'A cracked pate', icon:'🤕', kind:'wound', mark:'bandage', sev:2, desc:'The world still rings and tilts.' },
+broken_bone:     { name:'A broken bone', icon:'🦴', kind:'wound', mark:'bandage', sev:2, desc:'Set straight, splinted, and slow to knit.' },
+festering_wound: { name:'A festering wound', icon:'🤢', kind:'wound', mark:'cut', sev:2, desc:'It weeps and stinks. The leech shakes his head.' },
+fever:           { name:'A burning fever', icon:'🤒', kind:'sickness', desc:'Hot as a forge one hour, ice the next.' },
+flux:            { name:'The flux', icon:'🤮', kind:'sickness', desc:'The belly rebels and will not be reasoned with.' },
+winter_chill:    { name:'A chilling cough', icon:'🥶', kind:'sickness', desc:'A wet cough that settles deep in the chest.' },
+pestilence:      { name:'Pestilence', icon:'☠', kind:'sickness', desc:'The great mortality walks, and it stopped here.' }
+};

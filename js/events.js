@@ -707,6 +707,13 @@ window.FB = window.FB || {};
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
     if (fx.health) me.health = FB.clamp((me.health === undefined ? 8 : me.health) + fx.health, 0, 10);
+    // a hard blow leaves a named wound; an explicit ailment names it precisely
+    // (an illness effect speaks for itself — no gash for a fever)
+    if (fx.ailment) FB.addAilment(me, fx.ailment);
+    else if (fx.health <= -2 && fx.setFlag !== 'ill' && fx.setFlag2 !== 'ill') {
+      const w = FB.randomWound(-fx.health >= 4 ? 2 : 1);
+      if (w) FB.addAilment(me, w);
+    }
     if (fx.skills) {
       for (const k in fx.skills) {
         if (fx.skills[k] > 0) FB.gainSkill(me, k, fx.skills[k]);
@@ -720,6 +727,12 @@ window.FB = window.FB || {};
     if (fx.setFlag2) p.flags[fx.setFlag2] = 1;
     if (fx.clearFlag) delete p.flags[fx.clearFlag];
     if (fx.clearFlag2) delete p.flags[fx.clearFlag2];
+    // falling ill names the sickness; recovering casts it off
+    if (fx.setFlag === 'ill' || fx.setFlag2 === 'ill') {
+      const sick = FB.randomSickness();
+      if (sick) FB.addAilment(me, sick);
+    }
+    if (fx.clearFlag === 'ill' || fx.clearFlag2 === 'ill') FB.cureAilments(me, 'sickness');
     if (fx.clearHarvestFlags) {
       delete p.flags.crop_safe; delete p.flags.crop_risky; delete p.flags.crop_ruined;
       delete p.flags.blessed_crops; // the blessing is spent with the harvest

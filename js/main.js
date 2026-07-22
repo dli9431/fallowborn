@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.4';
+  FB.VERSION = '1.17.0';
   FB.CHANGELOG = [
+    { v: '1.17.0', date: '2026-07-22', changes: [
+      'Wounds and sicknesses now have names: hard blows leave a named wound and falling ill names the sickness — listed on your character sheet with a detail note, and visible on your portrait as bandages, cuts, bruises, and a pale, haggard face.',
+      'Scarred and one-eyed characters now bear their marks on every portrait, yours and others’.'
+    ] },
     { v: '1.16.4', date: '2026-07-22', changes: [
       'A vassal breaking away from YOUR realm now starts a real defensive war — no more eternal war flag and an enemy host squatting unfightable in your capital.',
       'Losing a defensive war now takes one of your own border counties, as the siege warning promises — it used to fizzle into reparations whenever the roll landed on a vassal’s land.',
@@ -721,6 +725,7 @@ window.FB = window.FB || {};
       return;
     }
     if (FB.chance(0.35) && me.health < 8 && !p.flags.ill) me.health++;
+    if (!p.flags.ill && me.health >= 7) FB.cureAilments(me, 'wound', 1); // one old wound knits each year
 
     // everyone else ages & sometimes dies
     for (const id in s.chars) {
