@@ -2403,13 +2403,10 @@ window.FB = window.FB || {};
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
     let h = '<div class="gm-body-text"><p>How quickly the days flow while time runs' +
       (FB.isTouch ? '' : ' — on a keyboard, <b>−</b>/<b>+</b> change it at any time') +
-      '.</p></div><div class="gm-list">';
-    for (let i = 0; i < G.SPEEDS.length; i++) {
-      h += '<button class="actionbtn" data-speed="' + i + '">' +
-        (i === G.speedIdx ? '✓ ' : '') + 'Speed ' + (i + 1) + ' / ' + G.SPEEDS.length +
-        (WORDS[i] ? '<span class="adesc">' + WORDS[i] + '</span>' : '') + '</button>';
-    }
-    h += '</div>';
+      '.</p></div>';
+    h += '<div class="speedrow"><input type="range" id="set-speed" min="0" max="' +
+      (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="Speed of days">' +
+      '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
         '<label class="autorow"><input type="checkbox" id="set-obsquiet"' + (G.obsQuiet ? ' checked' : '') + '> ' +
@@ -2419,11 +2416,15 @@ window.FB = window.FB || {};
     }
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal('Settings', h);
-    document.querySelectorAll('[data-speed]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        G.setSpeed(parseInt(b.dataset.speed, 10) - G.speedIdx);
-        UI.showSettings(); // re-open so the ✓ follows the choice
-      });
+    function speedLabel(i) {
+      return 'Speed ' + (i + 1) + ' / ' + G.SPEEDS.length + (WORDS[i] ? ' — ' + WORDS[i] : '');
+    }
+    const slider = $('set-speed');
+    slider.addEventListener('input', function () { // live label while dragging
+      $('set-speed-label').textContent = speedLabel(parseInt(slider.value, 10));
+    });
+    slider.addEventListener('change', function () { // commit once, on release
+      G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
     });
     if (G.observe) {
       $('set-obsquiet').addEventListener('change', function () { G.obsQuiet = $('set-obsquiet').checked; });

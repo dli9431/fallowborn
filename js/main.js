@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.19.0';
+  FB.VERSION = '1.19.1';
   FB.CHANGELOG = [
+    { v: '1.19.1', date: '2026-07-22', changes: [
+      'The Settings dialog picks the speed of days with a single slider instead of five buttons.'
+    ] },
     { v: '1.19.0', date: '2026-07-22', changes: [
       'New Game now asks Fresh start or I have a seed — paste a friend’s start code for their exact world and character, or a bare world seed for the same 867 with your own picks.',
       'Your start’s seed shows in the ☰ menu — tap it to copy and share.'

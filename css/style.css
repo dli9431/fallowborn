@@ -365,6 +365,10 @@ textarea.modjson {
 .autorow input { margin-right: 7px; }
 .autorow .adesc { display: block; font-size: 12px; opacity: 0.7; margin: 2px 0 0 26px; }
 
+/* ---------- settings: speed-of-days slider ---------- */
+.speedrow { margin: 10px 0; }
+.speedrow input[type="range"] { width: 100%; margin: 0; }
+
 /* ---------- mobile ----------
    Touch sizing & thumb-zone chrome for any narrow or short screen; then a
    portrait layout (map atop a swipeable Deeds ⇄ Self/Kin page carousel) and
