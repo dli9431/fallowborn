@@ -257,6 +257,12 @@ body.picking #mapwrap { flex: 1 1 auto; }
 }
 .modalcard h3 { color: #e0c060; margin-bottom: 10px; font-size: 19px; }
 .evtext { color: #ddcfae; margin-bottom: 14px; font-size: 15px; }
+.evname { display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 12px; }
+.evname label { display: flex; gap: 8px; align-items: center; color: #ddcfae; font-size: 14px; }
+.evname input[type=text] {
+  background: #241d15; border: 1px solid #66522f; color: #f0e0b8; border-radius: 6px;
+  padding: 8px 10px; font-size: 16px; font-family: inherit; width: 180px;
+}
 .evopt {
   display: block; width: 100%; text-align: left; margin-bottom: 8px;
   background: #33281a; border: 1px solid #66522f; color: #ecd9a0; border-radius: 8px;
