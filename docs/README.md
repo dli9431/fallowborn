@@ -23,7 +23,11 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   above a full-width Deeds/Land/Chronicle panel with the time controls fixed at the bottom
   in thumb reach; **tap your portrait in the top bar** to open the Self/Kin sheet. Dialogs
   open as bottom sheets, and tapping an item chip opens its card — story, powers, worth,
-  and the choice to sell it or give it away for regard.
+  and the choice to sell it or give it away for regard. The speed of days lives in
+  **☰ → Settings**.
+- **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
+  on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
+  Settings can also silence the news toasts or hide the panel for a pure-map view.
 - The game autosaves every spring; three manual save slots live in the ☰ menu.
 
 ### The loop
