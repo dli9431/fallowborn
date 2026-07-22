@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.14.2';
+  FB.VERSION = '1.14.3';
   FB.CHANGELOG = [
+    { v: '1.14.3', date: '2026-07-22', changes: [
+      'Your host always marches under a green banner; your war enemy’s host always marches under a red one.'
+    ] },
     { v: '1.14.2', date: '2026-07-22', changes: [
       'Hosts stand on a disc of their realm’s color, and hosts clashing in a province bear a ⚔ for the day — battles on the map read at a glance.'
     ] },
