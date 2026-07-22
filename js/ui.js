@@ -1152,6 +1152,7 @@ window.FB = window.FB || {};
     $('genmodal').classList.remove('hidden');
     $('gm-title').textContent = title;
     $('gm-body').innerHTML = bodyHtml;
+    $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch) {
       const btns = $('gm-body').querySelectorAll('.actionbtn');
       for (let i = 0; i < btns.length && i < 18; i++) {
@@ -1160,7 +1161,9 @@ window.FB = window.FB || {};
     }
     setTimeout(function () {
       const b = $('gm-body').querySelector('button, input, textarea');
-      if (b) b.focus();
+      // preventScroll: focusing a long dialog's lone Close button must not
+      // drag the view to the bottom (Changelog, How to Play)
+      if (b) b.focus({ preventScroll: true });
     }, 0);
   }
   UI.openModal = openModal;
