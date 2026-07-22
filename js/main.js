@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.16.0';
+  FB.VERSION = '1.16.1';
   FB.CHANGELOG = [
+    { v: '1.16.1', date: '2026-07-22', changes: [
+      'Older saves that knew only your brothers and sisters now name your late parents too — the family tree no longer shows "Unrecorded" above your brood.'
+    ] },
     { v: '1.16.0', date: '2026-07-22', changes: [
       'Name your newborn children: the birth event shows a name field with the generated name — edit it or roll the dice for another.'
     ] },
