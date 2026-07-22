@@ -112,7 +112,7 @@ window.FB = window.FB || {};
   function refreshNow() {
     const s = FB.state;
     if (!s || s.player.dead) return;
-    const dd = (s.date.day < 10 ? ' ' : '') + s.date.day; // fixed 2-char day
+    const dd = (s.date.day < 10 ? '\u00A0' : '') + s.date.day; // fixed 2-char day (nbsp — a plain space collapses in HTML)
     /* observe mode: no face, no purse — a nameless watcher and the date */
     if (FB.game.observe) {
       $('tb-name').textContent = '👁 Observing';
