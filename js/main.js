@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.11.1';
+  FB.VERSION = '1.12.0';
   FB.CHANGELOG = [
+    { v: '1.12.0', date: '2026-07-22', changes: [
+      'The menu gains a Changelog button above Abandon to title and shows the game version at its foot.'
+    ] },
     { v: '1.11.1', date: '2026-07-22', changes: [
       'Hosts on the map are drawn larger and easier to tap; ordering a march now lets go of the host, so further taps browse the map instead of re-tasking it.',
       'A side whose host was shattered fields only a remnant in the war council’s pitched battle while it re-forms — no more phantom full-strength armies.',
