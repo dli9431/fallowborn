@@ -78,7 +78,8 @@ game in both directions. As a **vassal** you can petition your liege for land (y
 his favor — 65 or more — and real standing of your own, 400+ prestige, and each grant costs
 both), pay homage at
 any court along your chain, appeal over a harsh liege's head to a higher lord, swear fealty
-to a different sovereign — or raise your own banner and fight for independence. As a **liege**
+to a different sovereign — or raise your own banner and fight for independence (the
+⚑ Declare independence deed, once you have 200+ prestige). As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
 of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land:
 hold the majority of a duchy to be its duke, of a kingdom to be its king, of two kingdoms

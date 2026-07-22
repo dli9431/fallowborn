@@ -19,6 +19,21 @@ window.FB = window.FB || {};
       'The menu gains a Settings dialog with a tap-friendly chooser for the speed of days — the five speeds used to be reachable only by the −/+ keys.',
       'The in-game help no longer mislabels −/+ as zoom keys.'
     ] },
+    { v: '1.12.0', date: '2026-07-22', changes: [
+      'The menu gains a Changelog button above Abandon to title and shows the game version at its foot.'
+    ] },
+    { v: '1.11.1', date: '2026-07-22', changes: [
+      'Hosts on the map are drawn larger and easier to tap; ordering a march now lets go of the host, so further taps browse the map instead of re-tasking it.',
+      'A side whose host was shattered fields only a remnant in the war council’s pitched battle while it re-forms — no more phantom full-strength armies.',
+      'Hunting an enemy host now tracks it day by day instead of marching to where it stood; every march leg costs the full march time; hosts resting on home ground slowly refill their ranks.',
+      'Faster fast-forward: the daily army tick no longer grinds through every pair of realms.'
+    ] },
+    { v: '1.11.0', date: '2026-07-22', changes: [
+      'New deed: ⚑ Declare independence — any sworn lord or baron with 200+ prestige can renounce his liege and fight for his own banner.',
+      'Declaring independence now puts you on a war footing and calls the muster, like any other defensive war.',
+      'Fixed barons left "independent" with no path upward when their lord’s house died: a baron now answers to whoever holds his home county.',
+      'A baron who declares independence properly seizes his home county — a lord left landless by the seizure no longer lingers as a realm.'
+    ] },
     { v: '1.10.0', date: '2026-07-22', changes: [
       'Wars take the field: realms at war raise hosts of spearmen on the map that march province to province and fight where they meet.',
       'Muster your own host (🚩 deed or the muster event), hire companies to swell it, then tap the host and tap a province to march it.',
