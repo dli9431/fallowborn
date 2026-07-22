@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.12.0';
+  FB.VERSION = '1.12.1';
   FB.CHANGELOG = [
+    { v: '1.12.1', date: '2026-07-22', changes: [
+      'Fixed the panels and map bouncing while time runs: the topbar stats stay on one line and clip instead of wrapping when space is tight.',
+      'Single-digit days keep the date a fixed width (a collapsing space used to shrink it).'
+    ] },
     { v: '1.12.0', date: '2026-07-22', changes: [
       'The menu gains a Changelog button above Abandon to title and shows the game version at its foot.'
     ] },
