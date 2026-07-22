@@ -9,8 +9,15 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.17.1';
+  FB.VERSION = '1.18.0';
   FB.CHANGELOG = [
+    { v: '1.18.0', date: '2026-07-22', changes: [
+      'New deed: Petition for a neighbor’s fief — a liege who loves you and despises the sitting lord may strip him and invest you with his county. Riding to the liege’s wars now builds a service tally that convinces him.',
+      'New deed: Buy out a weak neighbor — a struggling count beside you sells his county for gold.',
+      'New deed: Settle the wasteland — found a new county on empty land bordering your demesne.',
+      'Petty counts can now die without an heir: the fief escheats to the liege — unless you border it and your standing wins the scramble. Heirless fiefs of your own vassals return to your hand.',
+      'AI vassal houses now carry a standing at their liege’s court that drifts over the years.'
+    ] },
     { v: '1.17.1', date: '2026-07-22', changes: [
       'On phones the Changelog now sits as an evenly framed panel with a Close button pinned to the bottom middle — no more scrolling to the end of a long list to shut it.'
     ] },

@@ -50,6 +50,11 @@ share of `armyRearmDays` elapsed, floored at 0.15); a fielded enemy is hunted on
 instead (`war_can_hunt`/`war_hunt`, which sets `huntPrey` so the host re-paths onto its
 prey each day rather than marching to where it stood).
 
+**Riding with the liege's host builds a service record.** Vassal players who answer
+the banner call (`with_liege_host`) fight through the `host_*` events; those and the
+war's end pay into the lifetime `player.warService` tally, which gates the
+intra-realm petition deed and the escheat scramble (see [realms.md](realms.md)).
+
 Related: [events.md](events.md) for the interpreter, [time.md](time.md) for the seasonal
 tick, [realms.md](realms.md) for who can target whom, [provinces.md](provinces.md) for
 the map the hosts march on.

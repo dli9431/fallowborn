@@ -60,10 +60,10 @@ FBDATA.events.push(
   options:[
     { label:'Fight where the press is thickest.', chance:'battle',
       success:{ text:'Your part of the line holds, then breaks them. The liege marks it — and so does everyone else.',
-        effects:{ prestige:10, opinionLiege:15, gold:4, skills:{mar:1} } },
+        effects:{ prestige:10, opinionLiege:15, gold:4, skills:{mar:1}, warService:2 } },
       failure:{ text:'A mace finds your helm; your men drag you clear. You bled in the liege’s cause, and that too is remembered.',
-        effects:{ health:-2, opinionLiege:8, prestige:2, addTrait:'scarred' } } },
-    { label:'Hold your ground and spend your men carefully.', effects:{ opinionLiege:5, prestige:2, skills:{mar:1} } }
+        effects:{ health:-2, opinionLiege:8, prestige:2, addTrait:'scarred', warService:1 } } },
+    { label:'Hold your ground and spend your men carefully.', effects:{ opinionLiege:5, prestige:2, skills:{mar:1}, warService:1 } }
   ]},
 { id:'host_camp', title:'Fires of the Great Camp',
   trigger:{ flags:['with_liege_host'], liegeAtWar:true, chance:0.5 }, wartime:true, weight:8, cooldown:2,
@@ -79,7 +79,7 @@ FBDATA.events.push(
   trigger:{ flags:['with_liege_host'], liegeAtWar:false }, wartime:true, weight:50,
   text:'The liege’s war is done. The great camp folds tent by tent, and the banners turn for home — yours among them, with honor.',
   options:[
-    { label:'Home, to what waited.', effects:{ clearFlag:'with_liege_host', opinionLiege:10, prestige:8, gold:5, log:'Came home from the liege’s war.' } }
+    { label:'Home, to what waited.', effects:{ clearFlag:'with_liege_host', opinionLiege:10, prestige:8, gold:5, warService:2, log:'Came home from the liege’s war.' } }
   ]},
 
 /* ---------- life on campaign (soldiers and levied men) ---------- */

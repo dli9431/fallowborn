@@ -189,7 +189,7 @@ alongside their normal triggers and serve both pools.
 
 `label`, optional `desc`, optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
-skill_ste liege_grant war_battle plot appeal_outcome vassal_comply`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
+skill_ste liege_grant war_battle plot appeal_outcome vassal_comply county_petition`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
 `war_battle` counts real men: the fielded host's men if one is raised (the levy plus 150
 per mercenary company otherwise), worn by the host's condition (`war.strength`), against
 the enemy realm's fielded host (its per-development muster otherwise) — a side still
@@ -198,6 +198,8 @@ share of `armyRearmDays` elapsed, floored at 0.15) — with the bonuses
 banked by war-council effects, walls, tech, items, and blessings on top.
 `appeal_outcome` weighs an appeal above the player's liege (diplomacy, intrigue, and the
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
+`county_petition` weighs the liege's favor toward the player, prestige, and war service
+against the target holder's own standing at court (`player.petitionPid` set by the picker).
 
 `proposal` weighs the suitor's regard, the player's prestige and tier — and **station**:
 every character carries a social rank 0–4 (lowborn · freeholder · gentry · noble · royalty,
@@ -228,7 +230,8 @@ rid of a spouse the darker way — its resolution is `plot_spouse_end`.
 
 ### Effects
 
-`gold prestige piety health` (numbers) · `skills: {dip|mar|ste|int|lea: n}` (positive gains
+`gold prestige piety health warService` (numbers — warService is the lifetime tally of
+service in the liege's wars) · `skills: {dip|mar|ste|int|lea: n}` (positive gains
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `addTrait / removeTrait` · `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
@@ -243,7 +246,7 @@ handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_r
 war_hunt war_supply war_thin war_terms` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
-vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist` live in `js/events.js`;
+vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant` live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; mods may register their own before use).
 
