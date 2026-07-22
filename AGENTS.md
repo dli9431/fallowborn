@@ -72,6 +72,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/provinces.md` — borderless rasterized map, one county per province, derived settlements.
 - `docs/designs/realms.md` — liege hierarchy, owner vs holder, de jure promotions, vassals, tiers 0–7.
 - `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
+- `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
 - `docs/designs/war.md` — field armies on the map, battles, sieges, mercs, wartime event flow.
@@ -93,8 +94,9 @@ about to touch, and update it when you change that system.**
   `window.FB` global.
 - Apostrophes inside single-quoted event strings use the typographic `’` character, not `\'`.
 - **All randomness must go through `FB.rng`/`FB.ri`/`FB.pick`** (seeded, saved with the game) —
-  never `Math.random()` in game logic. The only legitimate `Math.random()` call is the one-time
-  seed initialization in `main.js`. Visual-only noise uses `FB.noise2`.
+  never `Math.random()` in game logic. The only legitimate `Math.random()` calls are the
+  one-time seed initializations in `main.js` (the boot world RNG and fresh new-game
+  seeds). Visual-only noise uses `FB.noise2`.
 - Comments and docs are in English.
 
 ## Where things live

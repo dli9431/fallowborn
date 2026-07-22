@@ -2365,9 +2365,25 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
       '<button class="actionbtn" id="m-quit">🏳 ' + (obs ? 'Stop observing' : 'Abandon to title') + '</button>' +
       '</div>' +
+      (FB.state && FB.state.seed ?
+        '<div class="seedrow"><label for="m-seed">🔑 Start seed — tap to copy &amp; share</label>' +
+        '<input id="m-seed" type="text" readonly value="' + esc(FB.state.seed) + '"></div>' : '') +
       '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>';
     openModal('Menu', h);
     $('m-resume').addEventListener('click', UI.closeModal);
+    if (FB.state && FB.state.seed) {
+      const inp = $('m-seed');
+      inp.addEventListener('click', function () {
+        inp.select();
+        inp.setSelectionRange(0, 99999); // iOS ignores select() without this
+        const done = function () { UI.toast('🔑 Seed copied — share it with a friend.'); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(inp.value).then(done, function () {
+            document.execCommand('copy'); done(); // file:// and older browsers
+          });
+        } else { document.execCommand('copy'); done(); }
+      });
+    }
     if (!obs) {
       $('m-save').addEventListener('click', function () { UI.showSaveLoad(true); });
       $('m-load').addEventListener('click', function () { UI.showSaveLoad(false); });

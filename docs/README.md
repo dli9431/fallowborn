@@ -92,6 +92,14 @@ Seven scenarios: Serf, Free Farmer, Craftsman's Apprentice, Novice Monk, Man-at-
 Hedge Knight, and Petty Baron — anywhere on a map spanning Europe, the Middle East, and
 North Africa.
 
+**Sharing a start (seeds):** New Game offers a **Fresh start** or **🔑 Use this seed**.
+Paste a friend's full start code to begin with their exact world, scenario, province, and
+character — the character screen comes pre-filled, so you can check the details before
+committing. A bare word or code works too: same 867 world (same rulers, same generated
+lords), your own picks. Your own start code waits in the ☰ menu once your story begins —
+tap it to copy and share. Codes reproduce exactly only on the same game version and mod
+set.
+
 ## Modding
 
 The entire world — map, provinces, realms, events, cultures, traits, balance — is plain data in
