@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.14.4';
+  FB.VERSION = '1.15.0';
   FB.CHANGELOG = [
+    { v: '1.15.0', date: '2026-07-22', changes: [
+      'While observing, ☰ → Settings can silence the world-news toasts and hide the Land & Chronicle panel — the map alone on stage.'
+    ] },
     { v: '1.14.4', date: '2026-07-22', changes: [
       'Long dialogs — the Changelog and How to Play — open at the top instead of jumping down to the Close button.'
     ] },
@@ -428,6 +431,7 @@ window.FB = window.FB || {};
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');
+    document.body.classList.toggle('obshidepanel', G.obsBare); // a returning watcher's preference
     FB.ui.mapDirty();
     FB.map.playerProv = null;
     FB.ui.showGame();
@@ -550,6 +554,8 @@ window.FB = window.FB || {};
   G.speedIdx = 2;
   G.paused = true;
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
+  G.obsQuiet = false; //   …silence the world-news toasts while watching
+  G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
   G.setPaused = function (v) {
     G.paused = !!v;
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
