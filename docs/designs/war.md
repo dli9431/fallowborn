@@ -3,10 +3,12 @@
 **Wars put hosts on the map.** `js/armies.js` keeps `state.armies`: one field host per
 sovereign at war (levies, with hired mercenary companies folded into the player's), each
 standing in or marching between provinces. AI sovereigns raise automatically when a war
-starts (size = realm dev × `levyPerDev` × `balance.aiHostPerDev`); the player musters via
-the 🚩 deed or the muster events (`war_raise`, `war_mass` for the great levy, `war_mercs`
-adding 150 men per company to the fielded host). A shattered host may muster again only
-after `balance.armyRearmDays` (`state.armyDown`). Hosts exist only while their sovereign
+starts (size = realm dev × `levyPerDev` × `balance.aiHostPerDev`); the player's host
+musters the moment war begins — `FB.warFooting`, which every war-start path calls,
+raises it — and the muster events that follow only decide whether it takes the field
+with hired companies (`war_mercs`, 150 men each) or a great levy (`war_mass`) behind
+it. A shattered host may muster again only after `balance.armyRearmDays`
+(`state.armyDown`). Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
 single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so the daily
@@ -27,6 +29,18 @@ province. A host resting on its sovereign's own land refills toward its mustered
 at `balance.armyReinforceRate` per day. On the map a host stands on a disc of its realm's
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.
+
+**The host can fight the war for you.** The ⚙ automation's host-command stances
+(`G.auto.hosts`) re-raise a destroyed host once the rearm window passes and steer an
+*idle* host each day (`playerGoal` in armies.js): defensive throws back any invader
+standing in the player's lands and otherwise refits at home; offensive hunts the
+enemy host when `battlePower` favors the player (the Prudent/Bold option style sets
+how much of an edge it demands) and marches on the war target when no host opposes
+it — and once standing on the target it stays put, so the council's siege can
+proceed (a council resolved by automation presses the siege: the `war_*` customs
+carry explicit auto-picker scores in ui.js's `CUSTOM_FX_SCORE`). A hand-tapped route (`manual`) always plays out first and a hand-given halt
+(`holdManual`) parks the host until the next manual march — automation never
+overrides either, and while active it supersedes the council's `huntPrey`.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).

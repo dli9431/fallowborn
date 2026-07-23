@@ -264,7 +264,8 @@ window.FB = window.FB || {};
         season: FB.seasonName(s.date.season), day: dd
       })) + '</span>';
     $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Z</span> ') + '⚙' +
-      (FB.game.auto && FB.game.auto.on ? '✓' : '');
+      (FB.game.auto && (FB.game.auto.minor || FB.game.auto.major || FB.game.auto.war || FB.game.auto.all ||
+        (FB.game.auto.hosts && FB.game.auto.hosts !== 'manual')) ? '✓' : '');
     renderActiveTab();
   }
 
@@ -1287,9 +1288,24 @@ window.FB = window.FB || {};
     return worst;
   }
 
+  /* Does any branch of this event ask for the naming of an heir? */
+  function hasHeirPick(ev) {
+    function has(fx) { return !!(fx && fx.pickHeir); }
+    for (const o of (ev.options || [])) {
+      if (has(o.effects) || has(o.success && o.success.effects) ||
+        has(o.failure && o.failure.effects)) return true;
+    }
+    return false;
+  }
+
   function autoWants(ev, item) {
     const a = FB.game.auto;
-    if (!a || !a.on) return false;
+    if (!a) return false;
+    /* resolve everything: no event interrupts the days — only death itself
+       (never an event) and the succession screen stop the flow */
+    if (a.all) return true;
+    /* the naming of an heir is a human choice, however automation is set */
+    if (hasHeirPick(ev)) return false;
     /* an event that could drop the player to 0 health is always shown,
        however the automation is set — the killing blow is never silent */
     const s = FB.state;
@@ -1299,16 +1315,21 @@ window.FB = window.FB || {};
       if (hp + worstWound(ev) <= 0) return false;
     }
     const cat = autoCategory(ev, item);
-    if (cat === 'everyday') return true;
+    if (cat === 'everyday') return !!a.minor;
     if (cat === 'war') return !!a.war;
     return !!a.major;
   }
 
   /* Rough worth of an option for the auto-picker. Options needing a human
      (naming an heir) score far below anything else. */
+  /* the war-council customs carry no numbers for fxScore to read — without
+     these, "Fall back and refit" (health +1) outscored "Press the siege"
+     every season and an automated war could never take land */
+  const CUSTOM_FX_SCORE = { war_siege: 12, war_win: 8, war_hunt: 6, war_loss: -8 };
   function fxScore(fx) {
     if (!fx) return 0;
     let v = 0;
+    if (fx.custom && CUSTOM_FX_SCORE[fx.custom]) v += CUSTOM_FX_SCORE[fx.custom];
     if (typeof fx.gold === 'number') v += fx.gold * 0.5;
     if (fx.prestige) v += fx.prestige * 0.4;
     if (fx.piety) v += fx.piety * 0.3;
@@ -1341,6 +1362,9 @@ window.FB = window.FB || {};
   function autoResolve(ev, item) {
     const s = FB.state;
     const ctx = item.ctx || {};
+    /* while the machine resolves, a pickHeir effect names the first in line
+       silently (see applyEffects) instead of opening the heir modal */
+    UI.autoResolving = true;
     FB.markFired(s, ev);
     let opts = (ev.options || []).filter(function (o) {
       return !o.require || FB.checkTrigger(s, o.require);
@@ -1407,6 +1431,7 @@ window.FB = window.FB || {};
       choice: FB.messageParam(choiceMsg),
       outcome: outcomeMsg ? FB.messageParam(outcomeMsg) : ''
     }));
+    UI.autoResolving = false;
   }
 
   UI.showAutoResolve = function () {
@@ -1419,34 +1444,48 @@ window.FB = window.FB || {};
       return '<label class="autorow"><input type="radio" name="ar-style" value="' + val + '"' +
         (a.style === val ? ' checked' : '') + '> ' + label + '</label>';
     }
+    function hr(val, label) {
+      return '<label class="autorow"><input type="radio" name="ar-hosts" value="' + val + '"' +
+        ((a.hosts || 'manual') === val ? ' checked' : '') + '> ' + label + '</label>';
+    }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.')) +
       '</p></div>';
-    h += cb('ar-on', a.on, '<b>Autoresolve events</b>', 'Master switch — everyday happenings resolve on their own.');
-    h += cb('ar-major', a.major, 'Also resolve important events', 'Once-in-a-life moments and story events.');
-    h += cb('ar-war', a.war, 'Also resolve war councils', 'Musters and seasonal war decisions.');
+    h += cb('ar-minor', a.minor, '<b>Autoresolve minor events</b>', 'Everyday happenings — the small incidents of daily life.');
+    h += cb('ar-major', a.major, '<b>Autoresolve major events</b>', 'Once-in-a-life moments and story events — but never one that could cost you your life, and never the naming of an heir. Those are always shown.');
+    h += cb('ar-war', a.war, '<b>Autoresolve war events</b>', 'Musters, war councils, tribute envoys, and battle reports. Your hosts still raise, march, and fight on the map by their own rules — this chooses your orders each season.');
+    h += cb('ar-all', a.all, '<b>Autoresolve everything</b>', 'No event ever interrupts the days — even mortal danger and the naming of an heir resolve on their own. Only your death and the choice of a successor stop the flow.');
     h += '<div class="gm-body-text" style="margin-top:8px"><p>How to choose between options:</p></div>';
     h += rb('safe', 'Prudent — avoid risk, prefer sure gains');
     h += rb('bold', 'Bold — chase the bigger prize');
     h += rb('first', 'First option — take the default');
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T(
+      'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</p></div>';
+    h += hr('manual', 'Manually — you march the host yourself');
+    h += hr('def', 'Defensive — throw back invaders, then refit at home');
+    h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
     h += '<div class="gm-body-text" style="margin-top:8px"><p>Stewardship (tier 3+, once a season):</p></div>';
     h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
     h += cb('ar-research', a.research, 'Adopt innovations automatically', 'The cheapest innovation within reach of your scholarship.');
     h += '<button class="btn primary" id="ar-done" style="margin-top:10px">Done</button>';
     openModal('⚙ Automation', h);
     function sync() {
-      a.on = $('ar-on').checked;
+      a.minor = $('ar-minor').checked;
       a.major = $('ar-major').checked;
       a.war = $('ar-war').checked;
+      a.all = $('ar-all').checked;
       a.build = $('ar-build').checked;
       a.research = $('ar-research').checked;
       const r = document.querySelector('input[name=ar-style]:checked');
       if (r) a.style = r.value;
+      const hsel = document.querySelector('input[name=ar-hosts]:checked');
+      if (hsel) a.hosts = hsel.value;
       FB.game.saveAuto();
       if (FB.state) UI.refresh();
     }
-    ['ar-on', 'ar-major', 'ar-war', 'ar-build', 'ar-research'].forEach(function (id) { $(id).addEventListener('change', sync); });
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build', 'ar-research'].forEach(function (id) { $(id).addEventListener('change', sync); });
     document.querySelectorAll('input[name=ar-style]').forEach(function (r) { r.addEventListener('change', sync); });
+    document.querySelectorAll('input[name=ar-hosts]').forEach(function (r) { r.addEventListener('change', sync); });
     $('ar-done').addEventListener('click', function () { sync(); UI.closeModal(); });
   };
 
@@ -1670,7 +1709,9 @@ window.FB = window.FB || {};
   UI.showWarTargets = function () {
     const s = FB.state;
     const targets = FB.warTargets(s);
-    let h = '<div class="gm-list">';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Land is taken only by siege: march your host onto the prize and keep it standing there — press the siege at each season’s war council, and after three the county is yours. Field victories bring the enemy to the table, nothing more.')) +
+      '</p></div><div class="gm-list">';
     for (const pid of targets) {
       const pr = FB.world.byId[pid];
       const rid = s.owner[pid];
@@ -3306,6 +3347,8 @@ window.FB = window.FB || {};
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b> and appoint a <b>tutor</b> — the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16.</p>' +
       '<h4>The map</h4>' +
       '<p>Drag to pan, pinch or scroll to zoom, tap a province for details. Realms wage their own wars; borders shift with the decades.</p>' +
+      '<h4>War</h4>' +
+      '<p>From count upward the Deeds tab offers <b>⚔ Declare war</b>. Your host musters the moment war begins — tap it on the map, then tap a province to march it (or let the ⚙ automation command it). <b>Land is taken only by siege:</b> keep the host standing on the prize and press the siege at each season’s war council — after three, the county is yours. Field victories only make the enemy sue for peace: take the tribute, or press on for the walls. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. And wars bleed gold and men: past eight seasons, exhaustion ends them with nothing gained.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

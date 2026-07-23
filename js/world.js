@@ -837,10 +837,16 @@ window.FB = window.FB || {};
   };
 
   /* Move the player onto a war footing: remember the peacetime focus and
-     take command of the host. validateFocus restores the old focus at peace. */
+     take command of the host. validateFocus restores the old focus at peace.
+     The host musters the moment war begins (every war-start path comes
+     through here) — the muster events that follow only decide whether it
+     takes the field with hired companies or a great levy behind it. A host
+     still inside its rearm window (armyDown) cannot rise yet; the muster
+     event's war_raise retries once the window has passed. */
   FB.warFooting = function (state) {
     const p = state.player;
     if (p.focus !== 'lead_host') { p.focusBack = p.focus; p.focus = 'lead_host'; }
+    if (FB.raisePlayerHost) FB.raisePlayerHost(state);
   };
 
   FB.endPlayerWar = function (state) {

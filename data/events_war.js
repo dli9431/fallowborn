@@ -11,7 +11,7 @@ FBDATA.events.push(
 
 /* ---------- the ruler’s war (tier 4+, own banner) ---------- */
 { id:'war_muster', title:'The Banners Rise', trigger:{ never:true }, wartime:true,
-  text:'War with {enemy}. A host must be made of farmers, spears, and pride — and made now, before the season turns. How will you raise it?',
+  text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls while the council presses the works.',
   options:[
     { label:'Hire mercenaries. (20 gold)', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid (4 gold a season).',
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
@@ -57,7 +57,7 @@ FBDATA.events.push(
   options:[
     { label:'Take the tribute.', desc:'Their gold, your glory — the war ends here.',
       effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
-    { label:'Press on for {target}.', desc:'The war goes on — until the prize is taken, or the host breaks.',
+    { label:'Press on for {target}.', desc:'Keep your host standing on {target} and press the siege at each war council — three seasons of works take it.',
       effects:{ prestige:2, log:'Refused tribute; the war goes on.' } }
   ]},
 

@@ -107,6 +107,19 @@ nothing, and a duchy of a single county carries no duke's title. The de jure map
 claim; a tapped county's panel lists exactly how many of its counties you hold and how many
 the title still demands.
 
+### War
+
+From **count** upward the *Deeds* tab offers **⚔ Declare war** against a neighboring
+realm. Your host musters the moment war begins — tap it on the map, then tap a
+province to march it (the ⚙ automation can also command it, defensively or
+offensively). **Land is taken only by siege:** keep your host standing on the prize
+and press the siege at each season's war council — after three seasons of works the
+county falls to you. Field victories never hand over land by themselves; enough of
+them make the enemy sue for peace, and then the choice is yours — take the tribute,
+or press on for the walls. Defense cuts the same way against you: keep the enemy's
+host out of your lands, for three seasons unchecked costs you a border county. Wars
+bleed gold and men — and past eight seasons, exhaustion ends them with nothing gained.
+
 ### Starts
 
 Seven scenarios: Serf, Free Farmer, Craftsman's Apprentice, Novice Monk, Man-at-Arms,

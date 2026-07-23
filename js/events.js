@@ -1267,7 +1267,20 @@ window.FB = window.FB || {};
       if (pr) me.religion = pr.religion;
     }
     if (fx.declareIndependence) FB.doIndependence(state);
-    if (fx.pickHeir && FB.ui && FB.ui.showHeirPick) FB.ui.showHeirPick();
+    if (fx.pickHeir) {
+      if (FB.ui && FB.ui.autoResolving) {
+        /* automation settles the succession on the first in line — the same
+           outcome as opening the heir modal and naming the eldest, without
+           interrupting the days */
+        const namedHeirs = FB.heirsOf ? FB.heirsOf(state) : [];
+        if (namedHeirs.length) {
+          p.namedHeirId = namedHeirs[0].id;
+          p.prestige += 8;
+          FB.news(state, FB.msg('news.life.heir_named',
+            '📜 {name} is named heir before witnesses.', { name: FB.fullName(namedHeirs[0]) }));
+        }
+      } else if (FB.ui && FB.ui.showHeirPick) FB.ui.showHeirPick();
+    }
     if (fx.queue) state.eventQueue.push({ id: fx.queue, ctx: ctx });
     if (fx.worldNews) FB.randomWorldNews(state);
     if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));

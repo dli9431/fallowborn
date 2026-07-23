@@ -9,8 +9,15 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.25.3';
+FB.VERSION = '1.26.0';
   FB.CHANGELOG = [
+    { v: '1.26.0', date: '2026-07-23', changes: [
+      '⚙ Automation is now four clear choices: minor events, major events (never life-threatening ones or the naming of an heir — those are always shown), war events, or everything (only death and the succession screen stop the days).',
+      'Your host now musters by itself the moment war is declared — the muster events only decide whether mercenaries or a great levy join it.',
+      'New automation: command your host in war — Defensive (throw back invaders, refit at home) or Offensive (hunt their host when stronger, then besiege the prize). A route you tap by hand always plays out first.',
+      'War councils resolved automatically now press the siege when your host stands on the prize — before, the auto-picker preferred "Fall back and refit" every season, so an automated war could never take land.',
+      'War now teaches itself: the conquest picker, the muster, the tribute offer, and How to Play all say plainly that land is taken only by siege — your host standing on the prize through three war councils.'
+    ] },
     { v: '1.25.3', date: '2026-07-23', changes: [
       'On mobile, the top bar now shows the full date — including the year — beside your name, in the space freed by moving your gold, prestige, piety, and health to their own row.'
     ] },
@@ -783,6 +790,7 @@ window.FB = window.FB || {};
       // runEvents reports whether a modal actually opened; autoresolved
       // events pass silently and the day keeps flowing
       if (FB.ui.runEvents(events)) return 'event';
+      G.afterEvents(); // a silently resolved blow can still prove mortal
       return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
     }
     G.afterEvents();
@@ -836,13 +844,15 @@ window.FB = window.FB || {};
   /* ---------- autoresolve (the Z button) ----------
      While days flow or fast-forward, selected event categories resolve
      themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
-  G.auto = { on: false, major: false, war: false, style: 'safe', build: false, research: false };
+  G.auto = { minor: false, major: false, war: false, all: false, style: 'safe', hosts: 'manual', build: false, research: false };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
   try {
     const storedAuto = JSON.parse(localStorage.getItem('fb_automation') || 'null');
     if (storedAuto && typeof storedAuto === 'object') {
       for (const ak in G.auto) if (storedAuto[ak] !== undefined) G.auto[ak] = storedAuto[ak];
+      // pre-1.25 the master switch `on` governed everyday events — now `minor`
+      if (storedAuto.on !== undefined && storedAuto.minor === undefined) G.auto.minor = !!storedAuto.on;
     }
   } catch (e) { /* keep defaults */ }
   G.saveAuto = function () {

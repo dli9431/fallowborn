@@ -1,10 +1,12 @@
 /* Fallowborn — field armies: mustered hosts that march the map and fight
    when they meet. One host per sovereign realm (levies with hired companies
-   folded in), raised while a war lasts and disbanded at peace. The player
-   musters by deed or muster event and orders marches by tapping the map;
-   AI hosts hunt enemy hosts and otherwise march on the enemy's seat. Hosts
-   resting on their sovereign's own land slowly refill toward their mustered
-   strength. See docs/designs/war.md. */
+   folded in), raised while a war lasts and disbanded at peace. The player's
+   host musters the moment war begins (FB.warFooting) and is ordered by
+   tapping the map — or by the automated stances (G.auto.hosts: defensive /
+   offensive), which steer only an idle host and always yield to a
+   hand-tapped route. AI hosts hunt enemy hosts and otherwise march on the
+   enemy's seat. Hosts resting on their sovereign's own land slowly refill
+   toward their mustered strength. See docs/designs/war.md. */
 window.FB = window.FB || {};
 
 (function () {
@@ -12,12 +14,16 @@ window.FB = window.FB || {};
 
   /* ---------- state ----------
      state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
-       mercs, at, from, moveLeft, path[], goal, broken, huntPrey }]
+       mercs, at, from, moveLeft, path[], goal, broken, huntPrey, manual,
+       holdManual }]
        `at` is the province the host stands in; `from` the one it left. While
        moveLeft > 0 the host is on the road toward path[0] and `at` advances
        only when the leg completes; the map marker stays on `at`. size is the
        mustered strength a resting host refills toward. huntPrey (player host
        only) is a realm id whose host is tracked and re-pathed onto each day.
+       manual / holdManual (player host only) mark a hand-tapped route still
+       playing out and a hand-given halt — the automated stances never touch
+       either.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays. */
   FB.armiesEnsure = function (state) {
@@ -220,6 +226,39 @@ window.FB = window.FB || {};
     return er ? er.capital : army.at;
   }
 
+  /* what an automated player host wants (G.auto.hosts, the ⚙ stances):
+     limp home when broken; a defensive host stands at home unless an
+     invader stands in the player's lands (the same ground the enemy-advance
+     clock reads); an offensive host hunts the enemy host when it fancies
+     the odds (the Prudent/Bold style sets how much of an edge it demands),
+     marches on the war target when no host is fielded against it, and
+     otherwise refits at home */
+  function playerGoal(state, host, mode) {
+    const p = state.player, w = p.war;
+    if (!w) return host.at;
+    const home = playerHome(state);
+    if (host.broken !== undefined && state.turn - host.broken < 40) return home;
+    const prey = FB.hostOf(state, w.enemy);
+    if (mode === 'def') {
+      if (prey && (prey.at === p.provinceId || (p.provs && p.provs.indexOf(prey.at) >= 0) ||
+        (state.holder && state.holder[prey.at] === 'player'))) return prey.at;
+      return home;
+    }
+    /* standing on the prize? Stay — the enemy comes to the siege, and
+       leaving to chase him would stall the works (war_can_siege reads the
+       ground the host stands on when the council meets) */
+    if (!w.defending && w.target && state.owner[w.target] === w.enemy && host.at === w.target) {
+      return w.target;
+    }
+    if (prey) {
+      const style = FB.game.auto && FB.game.auto.style;
+      const edge = style === 'bold' ? 0.85 : (style === 'safe' ? 1.3 : 1.1);
+      return battlePower(state, host) >= battlePower(state, prey) * edge ? prey.at : home;
+    }
+    if (!w.defending && w.target && state.owner[w.target] === w.enemy) return w.target;
+    return home;
+  }
+
   function battlePower(state, army) {
     let pw;
     if (army.realm === 'player') {
@@ -312,11 +351,28 @@ window.FB = window.FB || {};
     }
 
     // orders & marches
+    const autoHosts = FB.game.auto && FB.game.auto.hosts;
+    // automated command re-raises a destroyed host once the rearm window passes
+    if (autoHosts && autoHosts !== 'manual' && p.war && !hostByRealm['player']) {
+      FB.raisePlayerHost(state);
+    }
     for (const a of state.armies) {
       if (a.realm !== 'player') {
         const goal = aiGoal(state, a, warring);
         if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
           FB.orderArmy(state, a, goal);
+        }
+      } else if (autoHosts && autoHosts !== 'manual') {
+        /* automated command: the stance steers only an idle host — a route
+           tapped by hand (a.manual) plays out untouched, a hand-halted host
+           (a.holdManual) holds, and the council's hunt is superseded */
+        a.huntPrey = null;
+        if (a.manual && !(a.path && a.path.length) && a.moveLeft <= 0) a.manual = 0;
+        if (!a.holdManual && !a.manual) {
+          const pgoal = playerGoal(state, a, autoHosts);
+          if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
+            FB.orderArmy(state, a, pgoal);
+          }
         }
       } else if (a.huntPrey) {
         // a hunting host tracks its prey day by day, not where it was —
@@ -406,6 +462,7 @@ window.FB = window.FB || {};
     if (hit && hit.realm === 'player') {
       if (sel && sel.id === hit.id) {
         hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
+        hit.manual = 0; hit.holdManual = 1; // a hand-halted host holds, automation or no
         FB.selectArmy(null);
         if (FB.ui) FB.ui.toast('🚩 The host holds at {province}.',
           { province: provName(hit.at) });
@@ -421,6 +478,7 @@ window.FB = window.FB || {};
       if (pr && !pr.wasteland) {
         if (FB.orderArmy(state, sel, pr.id)) {
           sel.huntPrey = null; // a hand-given order ends any hunt
+          sel.manual = 1; sel.holdManual = 0; // and plays out before automation resumes
           FB.selectArmy(null); // and lets go, so further taps browse the map
           if (FB.ui) FB.ui.toast('🚩 The host marches on {province}.',
             { province: pr.name });
