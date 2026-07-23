@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.20.1';
+  FB.VERSION = '1.20.2';
   FB.CHANGELOG = [
+    { v: '1.20.2', date: '2026-07-23', changes: [
+      'The Play/Pause button now flips to ▶ Play when the game pauses itself — on losing focus, or at your death — instead of keeping the stale ❚❚ Pause.'
+    ] },
     { v: '1.20.1', date: '2026-07-23', changes: [
       'On phone-sized screens the game pauses and autosaves the moment the page loses focus — switching apps or answering a call no longer lets days run on unseen.'
     ] },
@@ -771,7 +774,7 @@ window.FB = window.FB || {};
   };
 
   function pauseForBackground() {
-    G.paused = true;
+    G.setPaused(true); // setPaused, not a bare flag: the button must flip to ▶ Play
     // a backgrounded mobile tab may never come back — keep what was played
     FB.save.autosave();
   }
@@ -1110,7 +1113,7 @@ window.FB = window.FB || {};
   };
 
   G.die = function (causeText) {
-    G.paused = true;
+    G.setPaused(true); // refresh now, while the topbar still repaints behind the death modal
     const s = FB.state;
     const p = s.player;
     const me = s.chars[p.charId];
