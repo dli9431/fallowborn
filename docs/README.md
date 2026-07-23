@@ -16,7 +16,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   deeds, event options, and dialog items, and `Shift+1–9` reaches items 10–18 (badges show
   the numbers; the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
-  `Z` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege) ·
+  `Z` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
+  De jure duchies / De jure kingdoms) ·
   `[` `]` cycle panels · `Esc` menu/back/close ·
   `Tab` moves between buttons.
 - **Mobile / touch:** drag to pan, pinch to zoom, tap provinces. In portrait the map sits
@@ -95,9 +96,16 @@ any court along your chain, appeal over a harsh liege's head to a higher lord, s
 to a different sovereign — or raise your own banner and fight for independence (the
 ⚑ Declare independence deed, once you have 200+ prestige). As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
-of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land:
-hold the majority of a duchy to be its duke, of a kingdom to be its king, of two kingdoms
-of one empire to wear its crown.
+of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land —
+and the promotion is automatic the day you hold it: the majority of a duchy's counties makes
+you its duke (a duchy must span at least two counties and always demands at least two), the
+majority of a kingdom's counties makes you its king, and the majority in two kingdoms of one
+empire makes you its emperor. A king or emperor must also stand **independent**. Empty
+wastelands — and any colony you settle on them — belong to no de jure title and count toward
+nothing, and a duchy of a single county carries no duke's title. The de jure map filters
+(`R`, or the 🗺 button) paint every duchy and kingdom on the map and name your strongest
+claim; a tapped county's panel lists exactly how many of its counties you hold and how many
+the title still demands.
 
 ### Starts
 
