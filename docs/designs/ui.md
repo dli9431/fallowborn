@@ -20,6 +20,12 @@ on narrow screens). The Changelog is the one exception (`.changelog-modal`): an 
 margined centered panel whose body scrolls under a Close button pinned to the bottom middle. Hover-only affordances need a tap path (item chips toast their
 description).
 
+Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
+input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
+`armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
+must not pick an outcome by accident. The guard rearms for each queued event and each outcome
+screen, and — since the keyboard digit path fires the same click — it covers both input routes.
+
 Related: [items.md](items.md) for the item card's hover/tap duality.
 
 ## Localization

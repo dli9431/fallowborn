@@ -88,6 +88,19 @@ window.FB = window.FB || {};
   let eventOpen = false;
   let pendingEvents = [];
 
+  /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
+     appear just as the player's thumb is already coming down toward the time
+     bar, so an in-flight tap lands on a freshly drawn option and chooses an
+     outcome by accident. For a short window after the modal's action buttons
+     render, drop taps on them. This also throttles blowing through a queue of
+     events. It covers touch taps and the keyboard digit path (which fires the
+     same click); desktop mouse users act on a centered modal with no button
+     under the pointer, so the guard is limited to touch. Tunable below. */
+  const EVENT_INPUT_GUARD_MS = 700;
+  let eventGuardUntil = 0;
+  function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
+  function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }
+
   /* ================= screens ================= */
   UI.showScreen = function (id) {
     for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
@@ -1547,11 +1560,12 @@ window.FB = window.FB || {};
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
         (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
       (function (opt) {
-        btn.addEventListener('click', function () { chooseOption(ev, opt, ctx); });
+        btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
       })(o);
       box.appendChild(btn);
     }
     FB.localizeTree(box);
+    armEventGuard();
     setTimeout(function () {
       const inp = $('ev-name');
       if (inp && !FB.isTouch) { inp.focus(); inp.select(); return; }
@@ -1603,8 +1617,9 @@ window.FB = window.FB || {};
     const btn = document.createElement('button');
     btn.className = 'evopt';
     btn.textContent = FB.T('Continue');
-    btn.addEventListener('click', nextEvent);
+    btn.addEventListener('click', function () { if (eventInputGuarded()) return; nextEvent(); });
     box.appendChild(btn);
+    armEventGuard();
     btn.focus();
   }
 
