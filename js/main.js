@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.20.0';
+  FB.VERSION = '1.20.1';
   FB.CHANGELOG = [
+    { v: '1.20.1', date: '2026-07-23', changes: [
+      'On phone-sized screens the game pauses and autosaves the moment the page loses focus — switching apps or answering a call no longer lets days run on unseen.'
+    ] },
     { v: '1.20.0', date: '2026-07-22', changes: [
       'Lower-status lives gain a five-part struggle over common rights, three two-part stories, and five everyday incidents shaped by skills, profession, property, relationships, and faith.',
       'Winning the Old Custom can secure heritable Rights of Common, personal freedom for a serf, or favor toward the next rung.'
@@ -767,12 +770,18 @@ window.FB = window.FB || {};
     try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };
 
+  function pauseForBackground() {
+    G.paused = true;
+    // a backgrounded mobile tab may never come back — keep what was played
+    FB.save.autosave();
+  }
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      G.paused = true;
-      // a backgrounded mobile tab may never come back — keep what was played
-      FB.save.autosave();
-    }
+    if (document.hidden) pauseForBackground();
+  });
+  /* phones: switching apps, the app drawer, or a call overlay can blur the
+     page without firing visibilitychange — pause so days don't run unseen */
+  window.addEventListener('blur', function () {
+    if (FB.isSmallScreen()) pauseForBackground();
   });
 
   G.afterEvents = function () {

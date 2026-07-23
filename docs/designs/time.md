@@ -7,7 +7,7 @@ the day and use day-based cooldowns (`cd`). Season boundaries apply upkeep/taxes
 player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`); new years run
 `FB.worldTick` + mortality. Days auto-advance on an adjustable interval (`G.SPEEDS` /
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
-load, skip, and a hidden tab all re-pause. The ticker is gated by open event
+load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
 An observe mode (`G.observe`, New Game → 👁 Observe) strips `passDay` to the
