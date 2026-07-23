@@ -33,6 +33,12 @@ edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, 
 `.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
 footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
 Hover-only affordances need a tap path (item chips toast their description).
+The topbar resources (gold/prestige/piety) are real buttons: hover shows the
+instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
+in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
+treasures, upkeep), tap or click opens the same rows as a small modal
+(`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
+activation.
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via

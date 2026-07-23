@@ -215,6 +215,36 @@ window.FB = window.FB || {};
     return ' <span class="net ' + (r > 0 ? 'op-good' : 'op-bad') + '">' + (r > 0 ? '+' : '') + r + '</span>';
   }
 
+  /* a source amount in the breakdown: same rounding as the net badge */
+  function fmtAmt(v) {
+    const r = Math.abs(v) < 10 ? Math.round(v * 10) / 10 : Math.round(v);
+    return (r > 0 ? '+' : '') + r;
+  }
+
+  /* the topbar stat breakdown (hover on desktop, tap for the modal): what
+     gold/prestige/piety the player's station brings in each season, source
+     by source — focus, rents, dues, buildings, household, treasures, upkeep */
+  function statBreakdownHtml(stat) {
+    const bd = FB.incomeBreakdown(FB.state)[stat];
+    let h = '';
+    for (const ln of bd.lines) {
+      h += '<div class="bd-row"><span>' + esc(ln.label) + '</span>' +
+        '<span class="bd-amt ' + (ln.amount > 0 ? 'op-good' : 'op-bad') + '">' +
+        fmtAmt(ln.amount) + '</span></div>';
+    }
+    if (!bd.lines.length) {
+      h += '<div class="bd-note">' +
+        esc(FB.T('No steady sources yet — deeds and events still move it.')) + '</div>';
+    } else {
+      h += '<div class="bd-row bd-total"><span>' + esc(FB.T('Each season')) + '</span>' +
+        '<span class="bd-amt ' + (bd.total > 0 ? 'op-good' : bd.total < 0 ? 'op-bad' : '') + '">' +
+        fmtAmt(bd.total) + '</span></div>';
+    }
+    h += '<div class="bd-note">' + esc(FB.T(
+      'The ± beside the stat is last season’s real change — events and deeds included.')) + '</div>';
+    return h;
+  }
+
   let portraitKey = '';
   function refreshNow() {
     const s = FB.state;
@@ -2955,6 +2985,20 @@ window.FB = window.FB || {};
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
+  /* tapped a topbar resource (the mobile path — desktop hovers): the same
+     per-season source breakdown, as a small dismissable sheet */
+  UI.showStatModal = function (stat) {
+    const s = FB.state;
+    if (!s || !s.player || s.player.dead) return;
+    const me = s.chars[s.player.charId];
+    const title = stat === 'gold' ? FB.T('💰 Gold each season') :
+      stat === 'prestige' ? FB.T('⭐ Prestige each season') :
+      FB.religionOf(me.religion).icon + ' ' + FB.T('Piety each season');
+    openModal(title, statBreakdownHtml(stat) +
+      '<button class="btn" id="stat-close">Close</button>');
+    $('stat-close').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= death & succession ================= */
   function legendQuipText(legend, state) {
     if (!legend) return '';
@@ -3490,6 +3534,13 @@ window.FB = window.FB || {};
     // a liege link opens the liege's sheet
     document.addEventListener('click', function (e) {
       if (!e.target || !e.target.closest) return;
+      // a topbar resource opens its per-season source breakdown (tap path;
+      // desktop also gets it on click, and keyboard Enter/Space clicks natively)
+      const statBtn = e.target.closest('#tb-stats .stat[data-stat]');
+      if (statBtn && FB.state && !FB.game.observe && !UI.eventsBusy()) {
+        UI.showStatModal(statBtn.getAttribute('data-stat'));
+        return;
+      }
       const lnk = e.target.closest('[data-liege]');
       if (lnk && FB.state && !UI.eventsBusy()) { UI.showLiegeModal(lnk.getAttribute('data-liege')); return; }
       const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
@@ -3517,15 +3568,25 @@ window.FB = window.FB || {};
     $('genmodal').addEventListener('click', function (e) {
       if (e.target === this && UI._gmDismiss) UI.closeModal();
     });
-    // instant hover tooltip for trait and item chips (desktop)
+    // instant hover tooltip for the topbar resources and trait/item chips (desktop)
     if (!FB.isTouch) {
       const tip = document.createElement('div');
       tip.id = 'tooltip';
       tip.className = 'hidden';
       document.body.appendChild(tip);
       document.addEventListener('mouseover', function (e) {
-        const chip = e.target && e.target.closest ?
-          e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview]') : null;
+        if (!e.target || !e.target.closest) { tip.classList.add('hidden'); return; }
+        // hovering a topbar resource shows what feeds it, season by season
+        const statEl = e.target.closest('#tb-stats .stat[data-stat]');
+        if (statEl && FB.state && !FB.game.observe) {
+          tip.innerHTML = statBreakdownHtml(statEl.getAttribute('data-stat'));
+          tip.classList.remove('hidden');
+          const sr = statEl.getBoundingClientRect();
+          tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, sr.left)) + 'px';
+          tip.style.top = Math.min(window.innerHeight - 110, sr.bottom + 6) + 'px';
+          return;
+        }
+        const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview]');
         if (!chip) { tip.classList.add('hidden'); return; }
         if (chip.hasAttribute('data-ailment')) {
           const a = FBDATA.ailments[chip.getAttribute('data-ailment')];

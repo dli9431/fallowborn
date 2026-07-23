@@ -26,6 +26,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   open as bottom sheets, and tapping an item chip opens its card — story, powers, worth,
   and the choice to sell it or give it away for regard. The speed of days lives in
   **☰ → Settings**.
+- **Hover or tap your gold, prestige, or piety** in the top bar for a source-by-source
+  breakdown of what each brings in every season — focus, rents, dues, buildings,
+  household improvements, treasures, and upkeep.
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
   on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.

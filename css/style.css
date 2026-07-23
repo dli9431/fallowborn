@@ -172,6 +172,21 @@ body.picking #mapwrap { flex: 1 1 auto; }
    reserve space instead of relying on tabular figures */
 .stat { font-size: 13px; white-space: nowrap; min-width: 58px; flex: 0 0 auto; }
 .stat .net { font-size: 11px; } /* last season's net gain, beside the stat */
+/* gold/prestige/piety are buttons (hover or tap opens the per-season source
+   breakdown); the reset keeps them looking like the plain figures they were,
+   and the padding/negative-margin pair gives hit room without moving them */
+button.stat {
+  background: none; border: 0; border-radius: 5px; cursor: pointer;
+  color: inherit; text-align: left;
+  padding: 1px 3px; margin: -1px -3px;
+}
+button.stat:hover { background: #3a2f1e; }
+button.stat:active { filter: brightness(1.35); } /* press feedback on touch */
+/* the breakdown itself, shared by the hover tooltip and the tap modal */
+.bd-row { display: flex; justify-content: space-between; gap: 14px; padding: 1px 0; }
+.bd-amt { font-family: Consolas, Menlo, 'Courier New', monospace; white-space: nowrap; }
+.bd-total { border-top: 1px solid #55452a; margin-top: 4px; padding-top: 4px; font-weight: bold; }
+.bd-note { color: #a89878; font-size: 11px; line-height: 1.35; margin-top: 6px; }
 #tb-date { color: #d8b24a; font-size: 13px; white-space: nowrap; width: 156px; min-width: 156px; text-align: right; overflow: hidden; }
 #tb-portrait { border: 1px solid #66522f; border-radius: 5px; background: #241d15; cursor: pointer; }
 #btn-closeself { display: none; } /* the Self/Kin drawer's close button — mobile only */
@@ -398,6 +413,8 @@ textarea.modjson, textarea.savetext {
 @media (max-width: 820px), (max-height: 520px) {
   #tb-date { display: none; }
   .stat { font-size: 13px; min-width: 52px; }
+  /* a taller tap target for the resource breakdown, layout left as it was */
+  button.stat { padding: 8px 3px; margin: -8px -3px; }
   .tab { font-size: 14px; min-height: 48px; }
   .actionbtn { min-height: 48px; font-size: 15px; padding: 10px 12px; }
   .actionbtn .adesc { font-size: 13px; }

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.26.2';
+FB.VERSION = '1.27.0';
   FB.CHANGELOG = [
+    { v: '1.27.0', date: '2026-07-23', changes: [
+      'Hover (or tap) your gold, prestige, or piety in the top bar to see what each one brings in every season, source by source — focus, rents, vassal dues, buildings, household improvements, treasures, and upkeep.'
+    ] },
     { v: '1.26.2', date: '2026-07-23', changes: [
       'A very long name (long first name plus a long seat) no longer breaks the top bar on mobile — it now trims with an ellipsis and keeps your name and the ☰ menu together on one line.'
     ] },
