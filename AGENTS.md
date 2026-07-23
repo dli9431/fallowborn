@@ -39,9 +39,19 @@ changed code without bumping the version will be served stale. Never add `?v=` t
 committed `index.html`: query strings break `file://` loads, so the stamp is applied only to
 the deploy stage, never the repo.
 
-Note: `play.fallowborn.com` is served from a **separate** origin (nginx behind Cloudflare),
-not from itch — `deploy.cmd` does not update it. Cache freshness there is controlled by the
-origin/Cloudflare `Cache-Control` headers, independent of this stamp.
+Note: `play.fallowborn.com` is served from a **separate** origin — a Coolify app (nginx behind
+Cloudflare) that auto-deploys on every push to `main`, not from itch (`deploy.cmd` does not
+touch it). Its Dockerfile build stamps `?v=<FB.VERSION>` onto the served `index.html` and serves
+the versioned `css/js/data/mods` assets **immutable**, so the same `FB.VERSION` bump busts its
+cache too. The committed `index.html` stays query-free (the `file://` rule) — the stamp is
+applied only in the build. Details in the private ops notes.
+
+**Hard rule — bump `FB.VERSION` (top of `js/main.js`) on every update, no exceptions.** It is
+the cache-bust key for *both* distribution targets: the itch `?v=` stamp and play.fallowborn.com's
+immutable asset caching both key on it. Ship changed files without bumping it and returning
+players are served **stale** `js`/`css`/`data` — and on play.fallowborn.com the `immutable`
+cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG` together (see
+`docs/VERSIONS.md`).
 
 ## Git workflow
 
@@ -125,4 +135,5 @@ about to touch, and update it when you change that system.**
 - `docs/designs/` — per-system design decisions (index above).
 - `docs/VERSIONS.md` — version numbering (semver) and changelog rules. Current
   version and entries live in `FB.VERSION` / `FB.CHANGELOG` at the top of
-  `js/main.js`; bump them with every player-facing change.
+  `js/main.js`; **bump them on every update** — `FB.VERSION` is the cache-bust key for
+  both itch and play.fallowborn.com (see Build/run/test), so skipping it serves stale assets.
