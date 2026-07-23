@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.23.1';
+  FB.VERSION = '1.23.2';
   FB.CHANGELOG = [
+    { v: '1.23.2', date: '2026-07-23', changes: [
+      'Fixed garbled characters (— and ⚙ showing as â€" / âš™) on the title-screen menu when the game is served with a non-UTF-8 charset, as on itch.io.'
+    ] },
     { v: '1.23.1', date: '2026-07-23', changes: [
       'Report a bug dialog reordered: describe the bug or idea first, then 📋 Copy report, with the Discord / email / GitHub links below.'
     ] },
