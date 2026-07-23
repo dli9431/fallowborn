@@ -14,11 +14,17 @@ width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` —
 `setTab`, opened by tapping the topbar portrait, closed by `#btn-closeself`). The time
 controls become a fixed thumb-zone bar above the drawer (hidden by `body.picking` during
 the birthplace pick), modals render as bottom sheets, and touch targets stay ≥44 px with
-safe-area insets. In portrait the topbar wraps to two rows: identity and ☰ up top, the
-four resources on their own full-width row below (a single row clips its leftmost stats
-on narrow screens). The Changelog is the one exception (`.changelog-modal`): an evenly
+safe-area insets. In portrait the topbar wraps to two rows: identity, the full date (with
+year), and ☰ up top, the four resources on their own full-width row below (a single row
+clips its leftmost stats on narrow screens; the date is hidden in the tighter landscape bar). The Changelog is the one exception (`.changelog-modal`): an evenly
 margined centered panel whose body scrolls under a Close button pinned to the bottom middle. Hover-only affordances need a tap path (item chips toast their
 description).
+
+Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
+input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
+`armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
+must not pick an outcome by accident. The guard rearms for each queued event and each outcome
+screen, and — since the keyboard digit path fires the same click — it covers both input routes.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 

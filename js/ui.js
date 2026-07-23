@@ -88,6 +88,19 @@ window.FB = window.FB || {};
   let eventOpen = false;
   let pendingEvents = [];
 
+  /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
+     appear just as the player's thumb is already coming down toward the time
+     bar, so an in-flight tap lands on a freshly drawn option and chooses an
+     outcome by accident. For a short window after the modal's action buttons
+     render, drop taps on them. This also throttles blowing through a queue of
+     events. It covers touch taps and the keyboard digit path (which fires the
+     same click); desktop mouse users act on a centered modal with no button
+     under the pointer, so the guard is limited to touch. Tunable below. */
+  const EVENT_INPUT_GUARD_MS = 700;
+  let eventGuardUntil = 0;
+  function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
+  function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }
+
   /* ================= screens ================= */
   UI.showScreen = function (id) {
     for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
@@ -905,7 +918,7 @@ window.FB = window.FB || {};
   };
 
   /* ---------- map filters: what a selection highlights ---------- */
-  let mapMode = 'realm'; // 'realm' | 'mine' | 'liege'
+  let mapMode = 'realm'; // 'realm' | 'mine' | 'liege' | 'duchy' | 'kingdom'
 
   /* is pid held by the player or by one of the player's vassals? */
   function inPlayerRealm(s, pid) {
@@ -930,19 +943,50 @@ window.FB = window.FB || {};
     if (!s) return null;
     if (mapMode === 'mine') return inPlayerRealm(s, pid) ? 'player' : null;
     if (mapMode === 'liege') return inLiegeRealm(s, pid) ? 'liege' : null;
+    // de jure modes: the whole duchy/kingdom lights up, wherever it lies;
+    // wastelands and settled colonies have no duchy, so they stay dark
+    if (mapMode === 'duchy') {
+      const pr = FB.world.byId[pid];
+      return pr && pr.duchy ? 'duchy:' + pr.duchy : null;
+    }
+    if (mapMode === 'kingdom') {
+      const k = FB.dejureOf(pid).kingdom;
+      return k ? 'kingdom:' + k : null;
+    }
     // realm: your own province lights YOUR realm, a foreign one its sovereign's
     return inPlayerRealm(s, pid) ? 'player' : (s.owner[pid] || null);
   }
 
-  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege' };
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms' };
+
+  /* the player's strongest claim among the de jure titles of one level
+     (most counties held, ties to the smallest title) — for the filter toast */
+  function bestDejureClaim(s, mode) {
+    let best = null;
+    function offer(name, pr) {
+      if (!pr.have) return;
+      if (!best || pr.have > best.pr.have ||
+          (pr.have === best.pr.have && pr.total < best.pr.total)) best = { name: name, pr: pr };
+    }
+    if (mode === 'duchy') {
+      for (const did in FBDATA.duchies) {
+        const pr = FB.duchyProgress(s, did);
+        if (pr.titled) offer(FBDATA.duchies[did].name, pr);
+      }
+    } else {
+      for (const kid in FBDATA.kingdoms) offer(FBDATA.kingdoms[kid].name, FB.kingdomProgress(s, kid));
+    }
+    return best;
+  }
+
   UI.cycleMapMode = function () {
     const s = FB.state;
     if (!s) return;
-    const order = ['realm', 'mine', 'liege'];
+    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom'];
     let next = order[(order.indexOf(mapMode) + 1) % order.length];
     if (next === 'liege' && !s.player.liege) {
       UI.toast('🗺 You answer to no one — no liege to show.');
-      next = 'realm';
+      next = order[(order.indexOf(next) + 1) % order.length];
     }
     mapMode = next;
     const btn = $('btn-mapmode');
@@ -951,7 +995,17 @@ window.FB = window.FB || {};
       btn.title = FB.T('Map filter: {mode} (R)', { mode: FB.T(MAPMODES[mapMode]) });
       btn.setAttribute('aria-label', btn.title);
     }
-    UI.toast('🗺 Map filter: {mode}', { mode: FB.T(MAPMODES[mapMode]) });
+    let toastText = '🗺 Map filter: {mode}';
+    let toastParams = { mode: FB.T(MAPMODES[mapMode]) };
+    if ((mapMode === 'duchy' || mapMode === 'kingdom') && s.player.provs && s.player.provs.length) {
+      const claim = bestDejureClaim(s, mapMode);
+      if (claim) {
+        toastText = '🗺 {mode} — your best claim: {name}, {held} (need {need})';
+        toastParams = { mode: toastParams.mode, name: claim.name,
+          held: ofCountiesText(s, claim.pr.have, claim.pr.total), need: claim.pr.need };
+      }
+    }
+    UI.toast(toastText, toastParams);
     FB.map.select(FB.map.selected || s.player.provinceId, mapGroupOf);
   };
 
@@ -962,6 +1016,77 @@ window.FB = window.FB || {};
     activeTab = 'prov';
     setTab('prov');
   };
+
+  /* "{have} of {total} counties/kingdoms" fragments — the noun agrees with the
+     whole through a complete-phrase plural selector, never a spliced suffix
+     (docs/designs/i18n.md); modelled on countyCountText above */
+  function ofCountiesText(s, have, total) {
+    return FB.renderMessage(FB.msg('fx.ui.of_total_counties', {
+      forms: {
+        select: 'plural', param: 'total', cases: {
+          one: '{have} of {total} county',
+          other: '{have} of {total} counties'
+        }
+      }
+    }, { have: have, total: total }), { state: s, viewer: s.player.charId });
+  }
+  function ofKingdomsText(s, have, total) {
+    return FB.renderMessage(FB.msg('fx.ui.of_total_kingdoms', {
+      forms: {
+        select: 'plural', param: 'total', cases: {
+          one: '{have} of {total} kingdom',
+          other: '{have} of {total} kingdoms'
+        }
+      }
+    }, { have: have, total: total }), { state: s, viewer: s.player.charId });
+  }
+
+  /* what the tapped county feeds: have/need toward its duke, king, emperor —
+     the same rules checkTierPromotions promotes by. Shown only to landed
+     players; a landless dreamer has no claim to weigh */
+  function dejureNotes(s, dj) {
+    const indep = s.realms.player && s.realms.player.alive;
+    let out = '';
+    function note(text) { return '<div class="progressnote">' + esc(text) + '</div>'; }
+    const dp = FB.duchyProgress(s, dj.duchy), dname = FBDATA.duchies[dj.duchy].name;
+    if (!dp.titled) {
+      out += note(FB.T('⚜ {name} is one county alone — no duke’s title to claim.',
+        { name: dname }));
+    } else if (dp.have >= dp.need) {
+      out += note(FB.T('⚜ {name}: you hold the majority, {held}.',
+        { name: dname, held: ofCountiesText(s, dp.have, dp.total) }));
+    } else {
+      out += note(FB.T('⚜ {name}: you hold {held} — {need} make the duke.',
+        { name: dname, held: ofCountiesText(s, dp.have, dp.total), need: dp.need }));
+    }
+    if (dj.kingdom) {
+      const kp = FB.kingdomProgress(s, dj.kingdom), kname = FBDATA.kingdoms[dj.kingdom].name;
+      if (kp.have >= kp.need) {
+        out += note(indep
+          ? FB.T('👑 {name}: you hold the majority, {held}.',
+            { name: kname, held: ofCountiesText(s, kp.have, kp.total) })
+          : FB.T('👑 {name}: you hold the majority, {held} — independence would make you its king.',
+            { name: kname, held: ofCountiesText(s, kp.have, kp.total) }));
+      } else {
+        out += note(FB.T('👑 {name}: you hold {held} — {need} and independence make the king.',
+          { name: kname, held: ofCountiesText(s, kp.have, kp.total), need: kp.need }));
+      }
+    }
+    if (dj.empire) {
+      const ep = FB.empireProgress(s, dj.empire), ename = FBDATA.empires[dj.empire].name;
+      if (ep.have >= ep.need) {
+        out += note(indep
+          ? FB.T('🦅 {name}: you rule {share} — the imperial majority.',
+            { name: ename, share: ofKingdomsText(s, ep.have, ep.total) })
+          : FB.T('🦅 {name}: you rule {share} — independence would make you its emperor.',
+            { name: ename, share: ofKingdomsText(s, ep.have, ep.total) }));
+      } else {
+        out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence make the emperor.',
+          { name: ename, share: ofKingdomsText(s, ep.have, ep.total), need: ep.need }));
+      }
+    }
+    return out;
+  }
 
   function renderProv() {
     const s = FB.state;
@@ -985,7 +1110,7 @@ window.FB = window.FB || {};
       h += '<div class="progressnote">' + esc(hostText) + '</div>';
     }
     if (pr.wasteland) {
-      h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here.',
+      h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here — it feeds no duchy or crown.',
         { terrain: terrainName(pr.terrain) })) + '</div>';
     } else {
       const rid = s.owner[pid];
@@ -1022,6 +1147,10 @@ window.FB = window.FB || {};
         if (dj.kingdom) parts.push(FBDATA.kingdoms[dj.kingdom].name);
         if (dj.empire) parts.push(FBDATA.empires[dj.empire].name);
         h += kv('De jure', esc(parts.join(' › ')));
+        if (s.player.provs && s.player.provs.length) h += dejureNotes(s, dj);
+      } else {
+        // a colony settled on empty land: owned, but tied to no title
+        h += kv('De jure', esc(FB.T('None — this land feeds no duchy or crown.')));
       }
       h +=
         (realm ? kv('Sovereign', esc(realm.name)) : '') +
@@ -1470,11 +1599,12 @@ window.FB = window.FB || {};
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
         (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
       (function (opt) {
-        btn.addEventListener('click', function () { chooseOption(ev, opt, ctx); });
+        btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
       })(o);
       box.appendChild(btn);
     }
     FB.localizeTree(box);
+    armEventGuard();
     setTimeout(function () {
       const inp = $('ev-name');
       if (inp && !FB.isTouch) { inp.focus(); inp.select(); return; }
@@ -1526,8 +1656,9 @@ window.FB = window.FB || {};
     const btn = document.createElement('button');
     btn.className = 'evopt';
     btn.textContent = FB.T('Continue');
-    btn.addEventListener('click', nextEvent);
+    btn.addEventListener('click', function () { if (eventInputGuarded()) return; nextEvent(); });
     box.appendChild(btn);
+    armEventGuard();
     btn.focus();
   }
 

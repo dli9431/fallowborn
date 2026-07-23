@@ -9,14 +9,27 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.25.0';
+FB.VERSION = '1.26.0';
   FB.CHANGELOG = [
-    { v: '1.25.0', date: '2026-07-23', changes: [
+    { v: '1.26.0', date: '2026-07-23', changes: [
       '⚙ Automation is now four clear choices: minor events, major events (never life-threatening ones or the naming of an heir — those are always shown), war events, or everything (only death and the succession screen stop the days).',
       'Your host now musters by itself the moment war is declared — the muster events only decide whether mercenaries or a great levy join it.',
       'New automation: command your host in war — Defensive (throw back invaders, refit at home) or Offensive (hunt their host when stronger, then besiege the prize). A route you tap by hand always plays out first.',
       'War councils resolved automatically now press the siege when your host stands on the prize — before, the auto-picker preferred "Fall back and refit" every season, so an automated war could never take land.',
       'War now teaches itself: the conquest picker, the muster, the tribute offer, and How to Play all say plainly that land is taken only by siege — your host standing on the prize through three war councils.'
+    ] },
+    { v: '1.25.3', date: '2026-07-23', changes: [
+      'On mobile, the top bar now shows the full date — including the year — beside your name, in the space freed by moving your gold, prestige, piety, and health to their own row.'
+    ] },
+    { v: '1.25.2', date: '2026-07-23', changes: [
+      'On touch, event choices ignore taps for a heartbeat after the dialog appears — so a tap already on its way down toward the time bar can no longer pick an outcome by accident.'
+    ] },
+    { v: '1.25.1', date: '2026-07-23', changes: [
+      'Fixed the skip (▶▶) and automation (⚙) time buttons stacking their icons onto two lines in the mobile bar.'
+    ] },
+    { v: '1.25.0', date: '2026-07-23', changes: [
+      'New de jure map filters: the 🗺 button / R key now also paints duchies and kingdoms, and names your strongest claim with the counties you hold and still need.',
+      'A county’s panel now shows your progress toward its duke, king, and emperor — and warns when a land feeds no title at all (wastelands, settled colonies, lone-county duchies).'
     ] },
     { v: '1.24.0', date: '2026-07-23', changes: [
       'Three field victories no longer force an attacking war to end in tribute — the beaten enemy now sends envoys, and you choose: take the silver, or press on to besiege the prize you declared for.'
