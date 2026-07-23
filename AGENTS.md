@@ -110,6 +110,58 @@ about to touch, and update it when you change that system.**
   seeds). Visual-only noise uses `FB.noise2`.
 - Comments and docs are in English.
 
+## Internationalization (i18n)
+
+The game ships English plus AI **Preview** catalogs (`fr`, `de`, `it`, `es`). **Author every
+user-facing string so the localization layer can reach it — get this right as you write the
+code, not as a later cleanup pass.** Full design: `docs/designs/i18n.md`; schema in
+`docs/MODDING.md`. The simulation stays locale-neutral; **only pure-display fields (`title`,
+`text`, `label`, `desc`, `log`, `worldNews`, `name`) are ever localized** — ids, effects,
+triggers, numbers, and generated proper names never are. Nothing here breaks `file://`: catalogs
+are `.js` globals, and any new English self-heals (a lookup miss or stale source hash falls back
+to English), so an unrouted string is a bug even though the game still *runs*.
+
+**Route new text by where it lives:**
+
+- **UI chrome (built as HTML/DOM in `js/*.js`):** wrap with `FB.T('English text', params?)`
+  (i18n.js), or `FB.TC('context', 'English text', params?)` when identical English needs
+  different meanings. Prefer the builder chokepoints that already wrap `FB.T` — `kv(label,
+  value)`, `panelh(title)`, `toast`, modal/button/tab helpers. Splice values with `{token}`
+  placeholders, never concatenation: `FB.T('You have {n} children', { n: n })`, **not**
+  `'You have ' + n + ' children'`.
+- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, items, …):**
+  keep the English in the source data — it is id-keyed and auto-extracted, including the `log:`
+  effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
+  Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}`
+  objects in the source (the renderer selects the branch, then localizes it).
+- **Durable / shared messages (chronicle, `FB.news`, `FB.fx`, anything stored in state):** emit
+  an opaque descriptor, never rendered prose. From shared sim code:
+  `FB.news(state, FB.msg('news.war.tribute', '🕊 English fallback.', params))`. The opaque key
+  (`news.*`, `fx.*`) plus semantic params re-render in the player's current language and keep
+  old saves working with no migration.
+
+**Never:** bake a localized/rendered string into `state.log`, `state.legends`, or any saved
+field; mutate a `FBDATA` display field in place (localization is shadow-lookup only); put
+grammar in JS (gender/plural ternaries, suffix splicing like `(sex==='f'?'daughter':'son')`) —
+use complete-phrase selector records (`{forms:{select:'value', param:'sex', cases:{…}}}` or a
+numeric plural selector) so the translator owns word order; or call the browser locale renderer
+from shared simulation code.
+
+**Regenerate catalogs whenever you touch user-facing text.** The tool is static-only — it never
+executes the game, so it is *outside* the "don't run the game" rule:
+
+```
+python tools/i18n_catalog.py extract               # rebuild data/lang_en.js + tools/i18n_manifest.json
+python tools/i18n_catalog.py translate fr de it es  # AI-translate new/changed records (needs API access)
+python tools/i18n_catalog.py validate               # coverage, source hashes, tokens, structure
+```
+
+`extract` and `validate` are always safe to run locally; `translate` calls a translation API.
+If you cannot run `translate`, **say so** — English fallback keeps the game correct, but the
+owner must regenerate before the Preview locales are current for release. A commit that adds or
+changes player-facing text without updating the catalogs (the `data/lang_*.js` files and
+`tools/i18n_manifest.json`) leaves the other languages stale.
+
 ## Where things live
 
 - `js/main.js` — boot, game-state creation, day ticker, pause/skip, tier-promotion checks.
