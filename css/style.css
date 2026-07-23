@@ -216,6 +216,12 @@ body.picking #mapwrap { flex: 1 1 auto; }
 #timebtns { display: flex; gap: 6px; margin: 8px; flex: 0 0 auto; }
 /* flex-basis 0: button widths come only from the container, never from label text */
 #btn-endturn { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* icon-only time buttons hold two Emoji-property glyphs (skip = two triangles,
+   auto = gear + tick). The browser allows a line break between two such glyphs
+   even when they render monochrome, so in a fixed-width box without nowrap they
+   wrap and stack. Keep them on one line and trim the wide .bigbtn text padding
+   so both glyphs sit centered. */
+#btn-skip, #btn-auto { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
 #btn-skip { flex: 0 0 64px; }
 /* play/pause segment renders in a fixed box so toggling never moves the date */
 .pp { display: inline-block; width: 78px; }

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.25.0';
+  FB.VERSION = '1.25.1';
   FB.CHANGELOG = [
+    { v: '1.25.1', date: '2026-07-23', changes: [
+      'Fixed the skip (▶▶) and automation (⚙) time buttons stacking their icons onto two lines in the mobile bar.'
+    ] },
     { v: '1.25.0', date: '2026-07-23', changes: [
       'New de jure map filters: the 🗺 button / R key now also paints duchies and kingdoms, and names your strongest claim with the counties you hold and still need.',
       'A county’s panel now shows your progress toward its duke, king, and emperor — and warns when a land feeds no title at all (wastelands, settled colonies, lone-county duchies).'
