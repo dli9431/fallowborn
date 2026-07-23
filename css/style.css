@@ -294,7 +294,7 @@ body.picking #mapwrap { flex: 1 1 auto; }
 .gm-body-text h4 { color: #d8b24a; margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }
 .gm-body-text ul { padding-left: 18px; }
-textarea.modjson {
+textarea.modjson, textarea.savetext {
   width: 100%; height: 120px; background: #191410; color: #d0c0a0; border: 1px solid #55452a;
   border-radius: 6px; font-family: monospace; font-size: 12px; padding: 8px;
 }

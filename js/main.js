@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.21.1';
+  FB.VERSION = '1.22.0';
   FB.CHANGELOG = [
+    { v: '1.22.0', date: '2026-07-23', changes: [
+      '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',
+      'The game now warns when the browser is blocking save storage, instead of letting a dynasty vanish silently.'
+    ] },
     { v: '1.21.1', date: '2026-07-23', changes: [
       'Browser tabs and iOS home-screen shortcuts now show a Fallowborn icon.'
     ] },
@@ -606,6 +610,7 @@ window.FB = window.FB || {};
       '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
     FB.save.autosave();
+    FB.save.warnIfBlocked();
   };
 
   /* ================= observe mode =================
@@ -1458,12 +1463,18 @@ window.FB = window.FB || {};
   G.loadSlot = function (slot) {
     const data = FB.save.read(slot);
     if (!data) { FB.ui.toast('No save found.'); return; }
+    G.loadData(data);
+  };
+
+  /* shared wake-up for a save read from a slot or pasted as export text;
+     false when the life belongs to another mod world */
+  G.loadData = function (data) {
     // a life cannot wake up in the wrong world: the map ids would not fit
     if (FB.save.otherWorld(data)) {
       FB.ui.toast(data.mods ?
         '🧩 That life was lived in a modded world. Enable the same mod(s) (Mods menu) to continue it.' :
         '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.');
-      return;
+      return false;
     }
     FB.save.restore(data);
     G.observe = false;
@@ -1480,6 +1491,8 @@ window.FB = window.FB || {};
       season: FB.seasonName(FB.state.date.season),
       year: FB.state.date.year
     });
+    FB.save.warnIfBlocked();
+    return true;
   };
 
   G.toTitle = function () {

@@ -28,7 +28,7 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
   on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.
-- The game autosaves every spring; three manual save slots live in the ☰ menu.
+- The game autosaves every spring; three manual save slots live in the ☰ menu, beside 📤 Export / 📥 Import for keeping a life as text — the fallback for browsers that wipe local storage (some iPhones), and a way to move a life between devices.
 
 ### Languages
 
