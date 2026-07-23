@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.26.0';
+FB.VERSION = '1.26.1';
   FB.CHANGELOG = [
+    { v: '1.26.1', date: '2026-07-23', changes: [
+      'On mobile, the in-game Menu, ⚙ Automation, and end-of-life screens now fill the whole screen instead of a cut-off sheet, with a large button pinned to the bottom middle — no more reaching for the top edge to dismiss them.',
+      'On mobile, the date moves to its own line directly above your resources, so it no longer crowds your name and the ☰ menu at the top of the screen.',
+      'The play/pause button no longer repeats the date, so it stops nudging the time bar’s width as the days pass; the fast-forward (▶▶) button keeps its F key hint on desktop.'
+    ] },
     { v: '1.26.0', date: '2026-07-23', changes: [
       '⚙ Automation is now four clear choices: minor events, major events (never life-threatening ones or the naming of an heir — those are always shown), war events, or everything (only death and the succession screen stop the days).',
       'Your host now musters by itself the moment war is declared — the muster events only decide whether mercenaries or a great levy join it.',

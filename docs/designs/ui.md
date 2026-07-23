@@ -6,19 +6,33 @@ modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyh
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
 code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
 `UI.openModal` also takes `{modalClass}` to tag `#genmodal` with a per-dialog CSS modifier
-(cleared on the next open) — the Changelog uses it for its own mobile layout.
+(cleared on the next open): the Changelog uses `changelog-modal`, and the Menu, Automation,
+and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below). A dialog
+that dismisses from a footer button rather than the (mobile-invisible) backdrop puts that
+button in a `.gm-footer` — centered on desktop, and on mobile a large tap target pinned to
+the bottom middle of the sheet.
 
 **Mobile layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). On phones the Deeds/Land/Chronicle panel takes the full
 width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` — toggled in
 `setTab`, opened by tapping the topbar portrait, closed by `#btn-closeself`). The time
 controls become a fixed thumb-zone bar above the drawer (hidden by `body.picking` during
-the birthplace pick), modals render as bottom sheets, and touch targets stay ≥44 px with
-safe-area insets. In portrait the topbar wraps to two rows: identity, the full date (with
-year), and ☰ up top, the four resources on their own full-width row below (a single row
-clips its leftmost stats on narrow screens; the date is hidden in the tighter landscape bar). The Changelog is the one exception (`.changelog-modal`): an evenly
-margined centered panel whose body scrolls under a Close button pinned to the bottom middle. Hover-only affordances need a tap path (item chips toast their
-description).
+the birthplace pick), most modals render as bottom sheets, and touch targets stay ≥44 px
+with safe-area insets. In portrait the topbar wraps to three rows: identity and ☰ up top,
+then the full date (with year) on its own line, then the four resources on their own
+full-width row (`#tb-date` order 4, `#tb-stats` order 5; a single stats row clips its
+leftmost figures on narrow screens, and the date is hidden in the tighter landscape bar).
+The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
+repeated there, so the button never changes width as the days flow.
+
+Two families of dialog break the bottom-sheet default, both with the footer button pinned to
+the bottom middle so a long body needs no scroll to shut and nothing reaches for the top edge
+to dismiss: the Changelog (`.changelog-modal`) stays an evenly margined centered panel, while
+the Menu, Automation, and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to
+edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, centered
+`.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
+footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
+Hover-only affordances need a tap path (item chips toast their description).
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
@@ -41,7 +55,10 @@ Authored static controls use `data-i18n`, `data-i18n-title`, and `data-i18n-aria
 Completed modal and panel trees may receive an exact-source localization pass for legacy
 markup, but localization must never replace substrings or fragments inside mixed text.
 Dynamic UI uses message keys or localized parts plus proper names. Rendered messages are
-plain text and substitutions are escaped before insertion into HTML.
+plain text and substitutions are escaped before insertion into HTML. Keyboard hint badges
+(`.keyhint`) label physical keys, so they are authored as literals and never localized; the
+time-bar badges (`Space`/`F`/`Z`) are re-emitted on every `refreshNow`, so a locale reload or
+any DOM re-render cannot leave them stripped.
 
 New UI must tolerate longer translations, keep translated labels out of fixed-width
 assumptions, preserve keyboard focus and accessible names, and remain usable in the mobile

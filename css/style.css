@@ -297,6 +297,9 @@ a.actionbtn { text-decoration: none; }
 .evopt:hover { border-color: #d8b24a; background: #3d3020; }
 .evopt .odesc { display: block; color: #a08d68; font-size: 12px; margin-top: 2px; }
 .gm-list button { margin-bottom: 8px; }
+/* a modal's footer holds a single centered Close/Done; on mobile the
+   full-screen sheets below make it sticky at the bottom of the viewport */
+.gm-footer { display: flex; justify-content: center; margin-top: 12px; }
 .gm-body-text { font-size: 14px; color: #d4c6a4; }
 .gm-body-text h4 { color: #d8b24a; margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }
@@ -434,54 +437,71 @@ textarea.modjson, textarea.savetext {
     border-radius: 14px 14px 0 0; border-bottom: none;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
   }
-  /* Changelog: an evenly framed panel (not a bottom sheet) with the Close
-     button pinned to the bottom middle, so a long list needs no scroll to shut */
+  /* Tall dialogs with a Close pinned to the bottom middle, so a long list
+     needs no scroll to shut and no reach for the top edge to dismiss. Two
+     flavours share the column layout + sticky footer below:
+       • changelog — an evenly framed panel (keeps its border and margins)
+       • fullsheet (Menu, Automation) — edge-to-edge, fills the whole screen */
   .modal.changelog-modal {
     align-items: center; justify-content: center;
     padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
   }
-  .changelog-modal .modalcard {
+  .modal.fullsheet-modal { align-items: stretch; padding: 0; }
+  .changelog-modal .modalcard, .fullsheet-modal .modalcard {
     display: flex; flex-direction: column;
-    width: 100%; max-height: 100%; padding: 16px 16px 0;
-    border: 2px solid #7a6234; border-radius: 14px;
-    overflow: hidden;
+    width: 100%; max-height: 100%; overflow: hidden;
   }
-  .changelog-modal .modalcard h3 { flex: 0 0 auto; margin-bottom: 8px; }
-  .changelog-modal #gm-body {
+  .changelog-modal .modalcard {
+    padding: 16px 16px 0;
+    border: 2px solid #7a6234; border-radius: 14px;
+  }
+  .fullsheet-modal .modalcard {
+    height: 100%; max-width: none;
+    padding: max(14px, env(safe-area-inset-top)) 16px 0;
+    border: none; border-radius: 0;
+  }
+  .changelog-modal .modalcard h3, .fullsheet-modal .modalcard h3 { flex: 0 0 auto; margin-bottom: 8px; }
+  .changelog-modal #gm-body, .fullsheet-modal #gm-body {
     flex: 1 1 auto; min-height: 0; overflow-y: auto;
     -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   }
-  .changelog-modal .gm-footer {
+  .changelog-modal .gm-footer, .fullsheet-modal .gm-footer {
     position: sticky; bottom: 0; margin-top: 6px;
     display: flex; justify-content: center;
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
     background: linear-gradient(180deg, rgba(34,27,19,0), #221b13 45%);
   }
+  /* full-screen sheets: a column body whose footer margin soaks up the slack
+     keeps the Close at the very bottom even when the content is short (the
+     sticky rule above still handles the long, scrolling case) */
+  .fullsheet-modal #gm-body { display: flex; flex-direction: column; }
+  .fullsheet-modal .gm-footer { margin-top: auto; }
   .changelog-modal .gm-footer .btn { min-width: 180px; text-align: center; }
+  /* the full-screen sheets get a chunkier, thumb-friendly Close */
+  .fullsheet-modal .gm-footer .btn { min-width: 200px; min-height: 52px; font-size: 16px; text-align: center; }
 }
 
 /* portrait: map on top, the Deeds/Land/Chronicle panel full-width beneath */
 @media (max-width: 820px) and (orientation: portrait) {
-  /* two-row topbar: identity and menu up top, the four resources get their
-     own full-width row below — nothing clips on narrow screens */
-  #topbar { flex-wrap: wrap; }
-  #tb-stats {
-    order: 5; flex: 1 1 100%; margin-left: 0; overflow: visible;
-    justify-content: space-between;
-    border-top: 1px solid #40331f; padding-top: 4px;
-  }
+  /* three-row topbar: identity + ☰ menu up top, then the full date on its
+     own line, then the four resources — nothing clips on a narrow screen.
+     A tight row-gap keeps three rows cheap in height. */
+  #topbar { flex-wrap: wrap; row-gap: 2px; }
   /* the stats row used to push the ☰ right; with it wrapped away the
      button pins itself */
   #btn-menu { margin-left: auto; }
-  /* with the resources on their own row, the full date (with year) now fits
-     beside the identity, so show it here instead of hiding it. Cap its width
-     so it wraps to two lines (season+day over the year) instead of eating the
-     row and shoving the menu off; the name yields space first, and the menu's
-     margin-auto keeps it pinned right. */
+  /* the date drops to its own full-width line directly above the resources
+     (order 4 < the stats' 5), so it never squeezes the identity row; a single
+     divider opens the date + resources band. */
   #tb-date {
-    display: block; flex: 0 0 auto; overflow: visible;
-    width: auto; max-width: 92px; min-width: 0;
-    white-space: normal; text-align: left; line-height: 1.15;
+    order: 4; flex: 1 1 100%; display: block;
+    width: auto; max-width: none; min-width: 0; overflow: visible;
+    white-space: nowrap; text-align: left;
+    border-top: 1px solid #40331f; margin-top: 4px; padding-top: 5px;
+  }
+  #tb-stats {
+    order: 5; flex: 1 1 100%; margin-left: 0; overflow: visible;
+    justify-content: space-between; padding-top: 4px;
   }
   #main { display: flex; flex-direction: column; }
   #mapwrap { order: 0; flex: 0 0 42%; min-height: 180px; }

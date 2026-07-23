@@ -219,6 +219,9 @@ window.FB = window.FB || {};
   function refreshNow() {
     const s = FB.state;
     if (!s || s.player.dead) return;
+    // the fast-forward button's F hotkey badge (desktop only) — rendered every
+    // refresh so it holds in both observe and normal modes and in every locale
+    $('btn-skip').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">F</span> ') + '▶▶';
     const dd = (s.date.day < 10 ? '\u00A0' : '') + s.date.day; // fixed 2-char day (nbsp — a plain space collapses in HTML)
     /* observe mode: no face, no purse — a nameless watcher and the date */
     if (FB.game.observe) {
@@ -228,10 +231,7 @@ window.FB = window.FB || {};
         season: FB.seasonName(s.date.season), day: dd, year: s.date.year
       })) + '</span>';
       $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
-        '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) +
-        '</span><span class="mono">' + esc(FB.T('{season} {day}', {
-          season: FB.seasonName(s.date.season), day: dd
-        })) + '</span>';
+        '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
       renderActiveTab();
       return;
     }
@@ -259,10 +259,7 @@ window.FB = window.FB || {};
     $('tb-date').innerHTML = '<span class="mono">' + dateStr + '</span>';
     const kh = FB.isTouch ? '' : '<span class="keyhint">Space</span> ';
     $('btn-endturn').innerHTML = kh + '<span class="pp">' +
-      esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) +
-      '</span><span class="mono">' + esc(FB.T('{season} {day}', {
-        season: FB.seasonName(s.date.season), day: dd
-      })) + '</span>';
+      esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
     $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Z</span> ') + '⚙' +
       (FB.game.auto && (FB.game.auto.minor || FB.game.auto.major || FB.game.auto.war || FB.game.auto.all ||
         (FB.game.auto.hosts && FB.game.auto.hosts !== 'manual')) ? '✓' : '');
@@ -1467,8 +1464,8 @@ window.FB = window.FB || {};
     h += '<div class="gm-body-text" style="margin-top:8px"><p>Stewardship (tier 3+, once a season):</p></div>';
     h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
     h += cb('ar-research', a.research, 'Adopt innovations automatically', 'The cheapest innovation within reach of your scholarship.');
-    h += '<button class="btn primary" id="ar-done" style="margin-top:10px">Done</button>';
-    openModal('⚙ Automation', h);
+    h += '<div class="gm-footer"><button class="btn primary" id="ar-done">Done</button></div>';
+    openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal' });
     function sync() {
       a.minor = $('ar-minor').checked;
       a.major = $('ar-major').checked;
@@ -3058,9 +3055,9 @@ window.FB = window.FB || {};
     for (let i = Math.max(0, s.log.length - 6); i < s.log.length; i++) {
       h += '<p>· ' + esc(FB.newsText(s.log[i], s, s.player.charId)) + '</p>';
     }
-    h += '</div><button class="btn primary" id="gm-title-btn">' +
-      esc(FB.T('Return to title')) + '</button>';
-    openModal('The Chronicle Closes', h, { dismissable: false });
+    h += '</div><div class="gm-footer"><button class="btn primary" id="gm-title-btn">' +
+      esc(FB.T('Return to title')) + '</button></div>';
+    openModal('The Chronicle Closes', h, { dismissable: false, modalClass: 'fullsheet-modal' });
     FB.paintFaces($('gm-body'), s);
     $('gm-title-btn').addEventListener('click', function () {
       UI.closeModal();
@@ -3086,9 +3083,11 @@ window.FB = window.FB || {};
       (FB.state && FB.state.seed ?
         '<div class="seedrow"><label for="m-seed">🔑 Start seed — tap to copy &amp; share</label>' +
         '<input id="m-seed" type="text" readonly value="' + esc(FB.state.seed) + '"></div>' : '') +
-      '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>';
-    openModal('Menu', h);
+      '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>' +
+      '<div class="gm-footer"><button class="btn primary" id="m-close">✕ Close</button></div>';
+    openModal('Menu', h, { modalClass: 'fullsheet-modal' });
     $('m-resume').addEventListener('click', UI.closeModal);
+    $('m-close').addEventListener('click', UI.closeModal);
     if (FB.state && FB.state.seed) {
       const inp = $('m-seed');
       inp.addEventListener('click', function () {
@@ -3467,7 +3466,6 @@ window.FB = window.FB || {};
     $('btn-skip').addEventListener('click', function () {
       if (!UI.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
     });
-    if (!FB.isTouch) $('btn-skip').innerHTML = '<span class="keyhint">F</span> ▶▶';
     $('btn-auto').addEventListener('click', function () {
       if (!UI.eventsBusy()) UI.showAutoResolve();
     });
