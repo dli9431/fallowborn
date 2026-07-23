@@ -1134,8 +1134,8 @@ window.FB = window.FB || {};
     eventOpen = true;
     FB.markFired(s, ev);
     $('eventmodal').classList.remove('hidden');
-    $('ev-title').textContent = FB.fmt(s, ev.title, ctx);
-    let bodyHtml = esc(FB.fmt(s, ev.text, ctx));
+    $('ev-title').textContent = FB.eventText(s, ev, 'title', ctx);
+    let bodyHtml = esc(FB.eventText(s, ev, 'text', ctx));
     const carded = {};
     if (ev.charCard) {
       const cc = FB.getRole(s, ev.charCard, true);
@@ -1171,11 +1171,13 @@ window.FB = window.FB || {};
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     for (let i = 0; i < opts.length; i++) {
       const o = opts[i];
+      /* original index (not the filtered position) keys the overlay stably */
+      const oi = ev.options ? ev.options.indexOf(o) : -1;
       const btn = document.createElement('button');
       btn.className = 'evopt';
       btn.innerHTML = hintFor(i) +
-        esc(FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(FB.fmt(s, o.desc, ctx)) + '</span>' : '');
+        esc(oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
+        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
       (function (opt) {
         btn.addEventListener('click', function () { chooseOption(ev, opt, ctx); });
       })(o);
@@ -1208,7 +1210,11 @@ window.FB = window.FB || {};
       if (opt.effects) FB.applyEffects(s, opt.effects, ctx);
       if (branch) {
         if (branch.effects) FB.applyEffects(s, branch.effects, ctx);
-        showOutcome(branch.text ? FB.fmt(s, branch.text, ctx) : (ok ? 'It goes well.' : 'It goes poorly.'));
+        const oi = ev.options ? ev.options.indexOf(opt) : -1;
+        const btext = branch.text
+          ? (oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.' + (ok ? 'success' : 'failure') + '.text', ctx) : FB.fmt(s, branch.text, ctx))
+          : (ok ? FB.T('It goes well.') : FB.T('It goes poorly.'));
+        showOutcome(btext);
         return;
       }
     } else if (opt.effects) {
