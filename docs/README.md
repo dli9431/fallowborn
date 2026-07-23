@@ -29,6 +29,10 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.
 - The game autosaves every spring; three manual save slots live in the ☰ menu, beside 📤 Export / 📥 Import for keeping a life as text — the fallback for browsers that wipe local storage (some iPhones), and a way to move a life between devices.
+- **☰ → 🐞 Report a bug** builds a ready-made report: your description (bug or suggestion)
+  bundled with the game version, start seed, and your current life as save text — copy it and
+  paste on [Discord](https://discord.gg/G8E67hY2pj), by email to hello@fallowborn.com, or as a
+  [GitHub issue](https://github.com/dli9431/fallowborn/issues).
 
 ### Languages
 
