@@ -473,6 +473,16 @@ textarea.modjson, textarea.savetext {
   /* the stats row used to push the ☰ right; with it wrapped away the
      button pins itself */
   #btn-menu { margin-left: auto; }
+  /* with the resources on their own row, the full date (with year) now fits
+     beside the identity, so show it here instead of hiding it. Cap its width
+     so it wraps to two lines (season+day over the year) instead of eating the
+     row and shoving the menu off; the name yields space first, and the menu's
+     margin-auto keeps it pinned right. */
+  #tb-date {
+    display: block; flex: 0 0 auto; overflow: visible;
+    width: auto; max-width: 92px; min-width: 0;
+    white-space: normal; text-align: left; line-height: 1.15;
+  }
   #main { display: flex; flex-direction: column; }
   #mapwrap { order: 0; flex: 0 0 42%; min-height: 180px; }
   #panels {

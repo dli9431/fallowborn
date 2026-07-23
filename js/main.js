@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.25.2';
+  FB.VERSION = '1.25.3';
   FB.CHANGELOG = [
+    { v: '1.25.3', date: '2026-07-23', changes: [
+      'On mobile, the top bar now shows the full date — including the year — beside your name, in the space freed by moving your gold, prestige, piety, and health to their own row.'
+    ] },
     { v: '1.25.2', date: '2026-07-23', changes: [
       'On touch, event choices ignore taps for a heartbeat after the dialog appears — so a tap already on its way down toward the time bar can no longer pick an outcome by accident.'
     ] },

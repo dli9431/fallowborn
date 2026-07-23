@@ -14,9 +14,9 @@ width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` —
 `setTab`, opened by tapping the topbar portrait, closed by `#btn-closeself`). The time
 controls become a fixed thumb-zone bar above the drawer (hidden by `body.picking` during
 the birthplace pick), modals render as bottom sheets, and touch targets stay ≥44 px with
-safe-area insets. In portrait the topbar wraps to two rows: identity and ☰ up top, the
-four resources on their own full-width row below (a single row clips its leftmost stats
-on narrow screens). The Changelog is the one exception (`.changelog-modal`): an evenly
+safe-area insets. In portrait the topbar wraps to two rows: identity, the full date (with
+year), and ☰ up top, the four resources on their own full-width row below (a single row
+clips its leftmost stats on narrow screens; the date is hidden in the tighter landscape bar). The Changelog is the one exception (`.changelog-modal`): an evenly
 margined centered panel whose body scrolls under a Close button pinned to the bottom middle. Hover-only affordances need a tap path (item chips toast their
 description).
 
