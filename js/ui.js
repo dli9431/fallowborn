@@ -3024,22 +3024,73 @@ window.FB = window.FB || {};
         esc(FB.T(saving ? '💾 Save to slot {slot}' : '📂 Load slot {slot}', { slot: i })) +
         '<span class="adesc">' + esc(description) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-back">Back</button>';
+    // a life as text outlives a browser that forgets its storage
+    h += saving ?
+      '<button class="actionbtn" id="sl-export">📤 Export this life' +
+      '<span class="adesc">copy it as text — safe if this browser wipes its saves, or to move devices</span></button>' :
+      '<button class="actionbtn" id="sl-import">📥 Import a life' +
+      '<span class="adesc">paste back an exported save text</span></button>';
+    h += '</div>';
+    if (!FB.save.available) {
+      h += '<div class="hint" style="text-align:center;margin:8px auto 0">⚠ This browser is blocking save storage — slots may vanish. Export keeps a life as text.</div>';
+    }
+    h += '<button class="btn" id="gm-back">Back</button>';
     openModal(saving ? 'Save Game' : 'Load Game', h);
     document.querySelectorAll('[data-slot]').forEach(function (b) {
       b.addEventListener('click', function () {
         const n = parseInt(b.dataset.slot, 10);
         if (saving) {
-          FB.save.toSlot(n);
-          UI.toast('Saved to slot {slot}.', { slot: n });
-          UI.closeModal();
+          if (FB.save.toSlot(n)) { UI.toast('Saved to slot {slot}.', { slot: n }); UI.closeModal(); }
         }
         else {
           if (FB.save.slotMeta(n)) { UI.closeModal(); FB.game.loadSlot(n); }
         }
       });
     });
+    if (saving) $('sl-export').addEventListener('click', UI.showExport);
+    else $('sl-import').addEventListener('click', UI.showImport);
     $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+  };
+
+  /* a life as copyable text — the escape hatch for browsers that wipe
+     localStorage (iPhone in-app webviews, iframe-blocked storage) and the
+     way to move a life between devices */
+  UI.showExport = function () {
+    openModal('Export Save',
+      '<div class="gm-body-text"><p>This text <b>is</b> your current life. Copy it somewhere safe — a note, an email to yourself — then paste it back with 📥 Import on any device or browser. It is long; that is normal.</p></div>' +
+      '<textarea id="sl-xtext" class="savetext" readonly rows="6"></textarea>' +
+      '<div class="gm-list"><button class="actionbtn" id="sl-xcopy">📋 Copy to clipboard</button></div>' +
+      '<button class="btn" id="gm-back">Back</button>');
+    const ta = $('sl-xtext');
+    ta.value = FB.save.exportState();
+    $('sl-xcopy').addEventListener('click', function () {
+      ta.select();
+      ta.setSelectionRange(0, 9999999); // iOS ignores select() without this
+      const done = function () { UI.toast('📋 Save text copied — keep it somewhere safe.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(done, function () {
+          document.execCommand('copy'); done(); // file:// and older browsers
+        });
+      } else { document.execCommand('copy'); done(); }
+    });
+    $('gm-back').addEventListener('click', function () { UI.showSaveLoad(true); });
+  };
+
+  UI.showImport = function () {
+    openModal('Import Save',
+      '<div class="gm-body-text"><p>Paste an exported save text below, then load it. The life wakes where it left off — and lands in the autosave slot too.</p></div>' +
+      '<textarea id="sl-itext" class="savetext" rows="6" placeholder="FBS1.…"></textarea>' +
+      '<div class="gm-list"><button class="actionbtn" id="sl-iload">📥 Load this life</button></div>' +
+      '<button class="btn" id="gm-back">Back</button>');
+    $('sl-iload').addEventListener('click', function () {
+      const data = FB.save.parseExport($('sl-itext').value);
+      if (!data) { UI.toast('That text is not a Fallowborn save.'); return; }
+      if (FB.game.loadData(data)) {
+        UI.closeModal();
+        FB.save.autosave(); // plant the imported life in local storage too
+      }
+    });
+    $('gm-back').addEventListener('click', function () { UI.showSaveLoad(false); });
   };
 
   UI.showHelp = function () {
@@ -3059,7 +3110,7 @@ window.FB = window.FB || {};
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
-      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots are in the menu.</p>' +
+      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu, beside 📤 Export / 📥 Import — a life kept as text survives browsers that wipe their storage, and travels to other devices.</p>' +
       '</div><button class="btn primary" id="gm-ok">Close</button>');
     $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };

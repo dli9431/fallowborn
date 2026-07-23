@@ -10,6 +10,26 @@ window.FB = window.FB || {};
 
   function key(slot) { return PREFIX + (slot === 'auto' ? 'auto' : 'slot' + slot); }
 
+  /* storage probe — some browsers refuse localStorage outright (iOS in-app
+     webviews, "block all cookies", old private modes); better to know at boot
+     than to lose a dynasty silently. Ephemeral storage (private mode, iframe
+     eviction) passes this probe — the export path below is the answer there. */
+  S.available = (function () {
+    try {
+      const k = PREFIX + 'probe';
+      localStorage.setItem(k, '1');
+      localStorage.removeItem(k);
+      return true;
+    } catch (e) { return false; }
+  })();
+
+  /* told once per page load, the first time a life reaches the screen */
+  S.warnIfBlocked = function () {
+    if (S.available || S._warned || !FB.ui) return;
+    S._warned = true;
+    FB.ui.toast('⚠ This browser is blocking save storage — lives won’t persist here. Menu → 💾 Save game → 📤 Export keeps a life as text.');
+  };
+
   S.serialize = function () {
     const s = FB.state;
     return JSON.stringify({
@@ -30,14 +50,37 @@ window.FB = window.FB || {};
   S.toSlot = function (slot) {
     try {
       localStorage.setItem(key(slot), S.serialize());
+      return true;
     } catch (e) {
-      if (FB.ui) FB.ui.toast('Save failed: {message}', { message: e.message });
+      if (FB.ui) {
+        if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
+        else FB.ui.toast('⚠ This browser is blocking save storage — use 📤 Export (Menu → 💾 Save game) to keep your life as text.');
+      }
+      return false;
     }
   };
 
   /* an observe session is never saved — it must not bury a real life */
   S.autosave = function () {
     if (FB.state && !FB.state.player.dead && !(FB.game && FB.game.observe)) S.toSlot('auto');
+  };
+
+  /* export/import — a life as portable text. localStorage is a hostage on
+     some mobile browsers (evicted in third-party iframes and in-app webviews,
+     dropped in private mode); a copied string outlives all of that and moves
+     a life between devices. btoa/atob take binary strings, so the JSON is
+     UTF-8 wrapped; the FBS1. tag marks the format and catches stray pastes. */
+  const XPRE = 'FBS1.';
+  S.exportState = function () {
+    return XPRE + btoa(unescape(encodeURIComponent(S.serialize())));
+  };
+  S.parseExport = function (text) {
+    try {
+      const t = String(text || '').replace(/\s+/g, '');
+      if (t.indexOf(XPRE) !== 0) return null;
+      const d = JSON.parse(decodeURIComponent(escape(atob(t.slice(XPRE.length)))));
+      return d && d.v === 3 ? d : null;
+    } catch (e) { return null; }
   };
 
   S.read = function (slot) {
