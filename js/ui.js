@@ -2907,6 +2907,7 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
       (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
+      '<button class="actionbtn" id="m-report">🐞 Report a bug</button>' +
       '<button class="actionbtn" id="m-quit">' +
       esc(FB.T(obs ? '🏳 Stop observing' : '🏳 Abandon to title')) + '</button>' +
       '</div>' +
@@ -2937,6 +2938,7 @@ window.FB = window.FB || {};
     $('m-settings').addEventListener('click', function () { UI.showSettings(); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
     $('m-changes').addEventListener('click', function () { UI.showChangelog(); });
+    $('m-report').addEventListener('click', function () { UI.showReport(); });
     $('m-quit').addEventListener('click', function () {
       UI.closeModal(); FB.game.toTitle();
     });
@@ -3091,6 +3093,72 @@ window.FB = window.FB || {};
       }
     });
     $('gm-back').addEventListener('click', function () { UI.showSaveLoad(false); });
+  };
+
+  /* a bug or idea as copyable text — the player’s words bundled with everything
+     needed to reproduce it: game version, start seed, mod set, and the current
+     life as save text (the same FBS1. blob Import wakes). There is no server to
+     send it to; the player pastes it on Discord, in an email, or as a GitHub
+     issue. A watcher has no life to attach, so observe mode skips the save. */
+  UI.showReport = function () {
+    const withLife = FB.state && !FB.game.observe;
+    const h = '<div class="gm-body-text"><p>' +
+      'Describe the bug or your idea, then <b>📋 Copy report</b> — it bundles your words with the game version' +
+      (withLife ? ', your start seed, and your current life as save text, so the exact moment can be reopened' : '') +
+      '.</p></div>' +
+      '<select id="rp-type" class="setlang">' +
+      '<option value="Bug">🐞 Bug — something went wrong</option>' +
+      '<option value="Suggestion">💡 Suggestion — an idea for the game</option>' +
+      '</select>' +
+      '<textarea id="rp-text" class="savetext" rows="5" placeholder="What happened? What did you expect to happen?"></textarea>' +
+      '<div class="gm-list" style="margin-top:8px">' +
+      '<button class="actionbtn" id="rp-copy">📋 Copy report' +
+      '<span class="adesc">' +
+      (withLife ? 'your message + game version, start seed &amp; your current life as save text' :
+        'your message + game version') +
+      '</span></button>' +
+      '</div>' +
+      '<div class="gm-body-text"><p>Then paste it in any of these places:</p></div>' +
+      '<div class="gm-list">' +
+      '<a class="actionbtn" href="https://discord.gg/G8E67hY2pj" target="_blank" rel="noopener">💬 Discord' +
+      '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>' +
+      '<a class="actionbtn" href="mailto:hello@fallowborn.com">✉ Email' +
+      '<span class="adesc">hello@fallowborn.com</span></a>' +
+      '<a class="actionbtn" href="https://github.com/dli9431/fallowborn/issues" target="_blank" rel="noopener">🐙 GitHub Issues' +
+      '<span class="adesc">watch it get fixed</span></a>' +
+      '</div>' +
+      '<button class="btn" id="gm-back">Back</button>';
+    openModal('Report a Bug', h);
+    $('rp-copy').addEventListener('click', function () {
+      const msg = $('rp-text').value.trim();
+      if (!msg) { UI.toast('Write a line about the bug or idea first.'); $('rp-text').focus(); return; }
+      let report = $('rp-type').value + ' — Fallowborn v' + FB.VERSION + '\n\n' + msg + '\n\n---\n';
+      if (FB.state && FB.state.seed) report += 'Start seed: ' + FB.state.seed + '\n';
+      report += 'Mods: ' + (FB.mods.sig() || 'none (vanilla)') + '\n';
+      if (withLife) {
+        report += 'Save (Menu → Load game → 📥 Import wakes this exact moment):\n' +
+          FB.save.exportState() + '\n';
+      }
+      const done = function () { UI.toast('📋 Report copied — paste it on Discord, in an email, or a GitHub issue.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(report).then(done, function () {
+          legacyCopy(report); done(); // file:// and older browsers
+        });
+      } else { legacyCopy(report); done(); }
+    });
+    /* execCommand fallback needs a selectable element — the report lives in no
+       visible textarea, so lend it a temporary one */
+    function legacyCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, 99999999); // iOS ignores select() without this
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
   };
 
   UI.showHelp = function () {

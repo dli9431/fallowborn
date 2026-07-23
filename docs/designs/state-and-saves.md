@@ -9,7 +9,10 @@ that refuse localStorage outright (iOS in-app webviews, blocked cookies) so the 
 warn instead of failing silently; ephemeral storage (private mode, third-party-iframe
 eviction) passes the probe — for those, `S.exportState` / `S.parseExport` carry a life
 as base64 text (`FBS1.` prefix, same v3 payload) that wakes through the same
-`G.loadData` path as a slot load and is planted back into the autosave slot.
+`G.loadData` path as a slot load and is planted back into the autosave slot. The ☰ menu's
+🐞 Report-a-bug dialog (`UI.showReport`) reuses that export: the copied report bundles the
+player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
+and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
 `state.legends` records each player character at death (`js/main.js` `recordLegend`):
 id, name, born/died years, a semantic `titleData` snapshot, and locale-neutral `causeMsg`

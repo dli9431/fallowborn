@@ -9,10 +9,19 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.23.0';
+  FB.VERSION = '1.24.0';
   FB.CHANGELOG = [
-    { v: '1.23.0', date: '2026-07-23', changes: [
+    { v: '1.24.0', date: '2026-07-23', changes: [
       'Three field victories no longer force an attacking war to end in tribute — the beaten enemy now sends envoys, and you choose: take the silver, or press on to besiege the prize you declared for.'
+    ] },
+    { v: '1.23.2', date: '2026-07-23', changes: [
+      'Fixed garbled characters (— and ⚙ showing as â€" / âš™) on the title-screen menu when the game is served with a non-UTF-8 charset, as on itch.io.'
+    ] },
+    { v: '1.23.1', date: '2026-07-23', changes: [
+      'Report a bug dialog reordered: describe the bug or idea first, then 📋 Copy report, with the Discord / email / GitHub links below.'
+    ] },
+    { v: '1.23.0', date: '2026-07-23', changes: [
+      'New ☰ menu button: 🐞 Report a bug — describe the problem or idea, copy a ready-made report (your words plus game version, start seed, and your current life as save text), and paste it on Discord, in an email, or as a GitHub issue.'
     ] },
     { v: '1.22.0', date: '2026-07-23', changes: [
       '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',
