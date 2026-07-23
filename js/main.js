@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.22.0';
+  FB.VERSION = '1.23.0';
   FB.CHANGELOG = [
+    { v: '1.23.0', date: '2026-07-23', changes: [
+      'New ☰ menu button: 🐞 Report a bug — describe the problem or idea, copy a ready-made report (your words plus game version, start seed, and your current life as save text), and paste it on Discord, in an email, or as a GitHub issue.'
+    ] },
     { v: '1.22.0', date: '2026-07-23', changes: [
       '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',
       'The game now warns when the browser is blocking save storage, instead of letting a dynasty vanish silently.'
