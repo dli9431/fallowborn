@@ -34,9 +34,13 @@ Power is men × martial factor (player mar/14 with tech/item/blessing edges, AI 
 mar/22) × `FB.rf(0.75, 1.25)`; the loser takes `balance.battleLoseLoss` casualties and
 routs (dispersing under 40 men), the winner loses `battleWinLoss` scaled by closeness.
 Player battles queue a `field_battle_won/lost` event and score through the existing
-`war_win`/`war_loss` handlers (so 3 wins still force tribute, 3 losses break the
-campaign); AI-vs-AI results accumulate as `war.fw`/`war.fl` and tilt that war's yearly
-resolution in `FB.worldTick`.
+`war_win`/`war_loss` handlers (3 losses still break the campaign); AI-vs-AI results
+accumulate as `war.fw`/`war.fl` and tilt that war's yearly resolution in
+`FB.worldTick`. Three field wins no longer end an attacking war by fiat: the beaten
+defender sues for peace and the `war_tribute_offer` event lets the player choose —
+take the tribute (`war_accept_tribute`, the old forced payout) or press on for the
+siege of the target. The offer re-queues on each further win, one waiting at a time,
+and a stale offer is dropped when the queue is drawn if the war has already ended.
 
 **The seasonal layer remains, now grounded in the field.** `FB.playerWarTick` still
 charges upkeep and queues the `war_council`, whose options act through the `war_*` fns —

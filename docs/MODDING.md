@@ -262,7 +262,7 @@ go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
-war_hunt war_supply war_thin war_terms` (and the `war_can_siege` / `war_no_enemy_host` /
+war_hunt war_supply war_thin war_terms war_accept_tribute` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant` live in `js/events.js`;

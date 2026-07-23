@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.23.2';
+  FB.VERSION = '1.24.0';
   FB.CHANGELOG = [
+    { v: '1.24.0', date: '2026-07-23', changes: [
+      'Three field victories no longer force an attacking war to end in tribute — the beaten enemy now sends envoys, and you choose: take the silver, or press on to besiege the prize you declared for.'
+    ] },
     { v: '1.23.2', date: '2026-07-23', changes: [
       'Fixed garbled characters (— and ⚙ showing as â€" / âš™) on the title-screen menu when the game is served with a non-UTF-8 charset, as on itch.io.'
     ] },

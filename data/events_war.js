@@ -52,6 +52,14 @@ FBDATA.events.push(
       effects:{ custom:'war_hold', health:1 } },
     { label:'Seek terms.', desc:'End the war now, at a price.', effects:{ custom:'war_terms' } }
   ]},
+{ id:'war_tribute_offer', title:'Envoys Under a White Flag', trigger:{ never:true }, wartime:true, warStatus:true,
+  text:'Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse.',
+  options:[
+    { label:'Take the tribute.', desc:'Their gold, your glory — the war ends here.',
+      effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
+    { label:'Press on for {target}.', desc:'The war goes on — until the prize is taken, or the host breaks.',
+      effects:{ prestige:2, log:'Refused tribute; the war goes on.' } }
+  ]},
 
 /* ---------- riding with the liege’s host (vassals) ---------- */
 { id:'host_battle', title:'The Banners Meet',
