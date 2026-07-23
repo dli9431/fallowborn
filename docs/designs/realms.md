@@ -13,8 +13,10 @@ are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no fo
 policy; strong vassals occasionally break away (`balance.breakawayChance`). The player
 interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 `swear_fealty` / independence) and, once sovereign, runs vassals of their own
-(`grant_county`, `demand_taxes`, `revoke_county`; vassal opinion lives in
-`player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate`).
+(`grant_land` — a single county via `FB.grantCounty` or a whole de jure duchy via
+`FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal opinion lives in
+`player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate` and a
+share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
 Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
 with his home county: the granting count yields it (dissolving if left landless) and
 the player answers to the granter's own liege — a liege must outrank his man, and
@@ -62,6 +64,21 @@ majorities. Wastelands and colonies settled on them have no de jure duchy, so th
 toward no title. The province panel spells out have/need for the tapped county (and flags
 lands that feed no title), and the 🗺/R map filter has de jure duchy and kingdom modes
 that name the player's strongest claim.
+
+**A lord holds only so much in his own hand.** Tier dignity counts every county the
+player's *realm* controls — held directly or by a vassal beneath him in the chain
+(`playerShare` in `js/world.js` walks each county's holder up the liege chain to
+`'player'`), so granting land to vassals never costs progress toward a duchy, kingdom,
+or empire. That frees a **domain limit**: the player may hold at most
+`balance.domainBase + ⌊stewardship / balance.domainStewPer⌋` counties directly
+(`FB.domainCap`); each county over the cap multiplies his *own* demesne income and levy
+by `1 − balance.overDomainPenalty` (`FB.domainPenalty`, applied inside `FB.playerTax`
+and `FB.playerLevy` — vassal dues and vassal levies are never penalized). The remedy is
+the `grant_land` deed: enfeoff the surplus to a new count (`FB.grantCounty`, realm
+`pv_<pid>`) or — only when every de jure county of a duchy sits in the player's own
+hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuchy`, realm
+`pd_<did>`, holding all its counties directly), who then renders `vassalTaxRate` of its
+counties' tax and `vassalLevyRate` of their levy back to you.
 
 **Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
 give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a

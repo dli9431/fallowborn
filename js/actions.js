@@ -601,12 +601,12 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 4 && s.player.provs && s.player.provs.length && !s.player.war; },
     can: function (s) { return FB.fealtyTargets(s).length ? true : 'No neighboring sovereign would take your oath.'; },
     run: function (s) { if (FB.ui && FB.ui.showFealty) FB.ui.showFealty(); } },
-  { id: 'grant_county', label: '🎁 Grant a county…', noConsume: true,
-    desc: function () { return 'Raise a loyal man to a county of yours. Vassals pay taxes — and remember.'; },
+  { id: 'grant_land', label: '🎁 Grant land…', noConsume: true,
+    desc: function () { return 'Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.'; },
     show: function (s) { return s.realms.player && s.realms.player.alive && s.player.provs && s.player.provs.length >= 2; },
-    run: function (s) { if (FB.ui && FB.ui.showGrantCounty) FB.ui.showGrantCounty(); } },
+    run: function (s) { if (FB.ui && FB.ui.showGrantLand) FB.ui.showGrantLand(); } },
   { id: 'demand_taxes', label: '💰 Demand extraordinary taxes', cd: 90,
-    desc: function () { return 'Squeeze your vassals for three seasons’ taxes at once. They will not love it.'; },
+    desc: function () { return 'Squeeze your vassals for four seasons’ taxes at once. They will not love it.'; },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     run: function (s) { FB.demandTaxes(s); } },
   { id: 'revoke_county', label: '📜 Revoke a county…', noConsume: true,
@@ -619,17 +619,44 @@ window.FB = window.FB || {};
 
   FB.playerTax = function (state) {
     const B = FBDATA.balance;
-    let t = 0;
-    for (const pid of (state.player.provs || [])) t += (state.dev[pid] || 1) * B.taxPerDev;
-    if (state.player.tier === 3) t = Math.max(t, 6); // barony rents
-    // vassals render their seasonal due
+    const p = state.player;
+    // the player's own demesne — overload past the domain limit lets tax leak away
+    let demesne = 0;
+    for (const pid of (p.provs || [])) demesne += (state.dev[pid] || 1) * B.taxPerDev;
+    if (p.tier === 3) demesne = Math.max(demesne, 6); // barony rents
+    demesne *= FB.domainPenalty(state);
+    // vassals render their seasonal due (never touched by the overload penalty)
+    let vassal = 0;
     for (const vid of FB.playerVassals(state)) {
-      for (const pid of FB.realmHeldCounties(state, vid)) t += (state.dev[pid] || 1) * B.vassalTaxRate;
+      for (const pid of FB.realmHeldCounties(state, vid)) vassal += (state.dev[pid] || 1) * B.vassalTaxRate;
     }
+    let t = demesne + vassal;
     t += FB.buildingBonus(state, 'tax');
     t *= 1 + FB.techBonus(state, 'tax');
-    if (state.player.liege) t *= 0.75; // liege's cut
+    if (p.liege) t *= 0.75; // liege's cut
     return Math.round(t);
+  };
+
+  /* ===== domain limit: how much land the player may hold in his own hand =====
+     A lord can only govern so many counties directly; past the cap, income and
+     levy bleed. The remedy is to grant the surplus to vassals (grant_land). */
+  FB.domainCap = function (state) {
+    const B = FBDATA.balance;
+    const me = state.chars[state.player.charId];
+    const ste = me ? FB.skillOf(me, 'ste') : 0;
+    return (B.domainBase || 4) + Math.floor(ste / (B.domainStewPer || 5));
+  };
+  /* counties held directly over the cap (0 if within it) */
+  FB.domainOver = function (state) {
+    const p = state.player;
+    const held = (p.provs && p.provs.length) || 0;
+    return Math.max(0, held - FB.domainCap(state));
+  };
+  /* multiplier applied to the player's OWN income and levy for overload */
+  FB.domainPenalty = function (state) {
+    const over = FB.domainOver(state);
+    if (!over) return 1;
+    return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15), over);
   };
 
   /* ================= items (personal treasures) =================
@@ -901,6 +928,58 @@ window.FB = window.FB || {};
       { province: pr.name, name: state.realms[vid].ruler.name }));
   };
 
+  /* every de jure duchy the player holds IN FULL (every de jure county in his
+     own hand) — the raw material for granting a whole duchy to a duke at once */
+  FB.grantableDuchies = function (state) {
+    const p = state.player, by = {}, out = [];
+    if (!p.provs) return out;
+    for (const pid of p.provs) {
+      const did = (FB.world.byId[pid] || {}).duchy;
+      if (did) (by[did] = by[did] || []).push(pid);
+    }
+    for (const did in by) {
+      const total = FB.duchyCounties(did).length; // every de jure county of the duchy
+      // only grantable whole: hold the entire duchy in hand, and keep a seat of your own
+      if (total >= 2 && by[did].length === total && p.provs.length - by[did].length >= 1) {
+        out.push({ did: did, name: (FBDATA.duchies[did] || {}).name || did, counties: by[did] });
+      }
+    }
+    return out;
+  };
+
+  /* raise a duke over a de jure duchy the player holds in full — hand him every
+     county in it at once. Keeps at least one county in the player's own hand. */
+  FB.grantDuchy = function (state, did) {
+    const p = state.player;
+    if (!p.provs) return;
+    const cs = [];
+    for (const pid of p.provs) if ((FB.world.byId[pid] || {}).duchy === did) cs.push(pid);
+    const dej = FB.duchyCounties(did);
+    // only a duchy held whole may be granted as a duchy — and always keep a seat
+    if (dej.length < 2 || cs.length !== dej.length || p.provs.length - cs.length < 1) return;
+    let seat = cs[0];
+    for (const pid of cs) if ((state.dev[pid] || 1) > (state.dev[seat] || 1)) seat = pid; // richest = ducal seat
+    const dname = (FBDATA.duchies[did] || {}).name || did;
+    const vid = 'pd_' + did;
+    if (state.realms[vid]) {
+      state.realms[vid].alive = true;
+      state.realms[vid].liege = 'player';
+      state.realms[vid].capital = seat;
+    } else {
+      FB.makeVassalRealm(state, { id: vid, name: 'Duchy of ' + dname, capital: seat, rank: 2, liege: 'player', culture: (FB.world.byId[seat] || {}).culture });
+    }
+    for (const pid of cs) {
+      p.provs.splice(p.provs.indexOf(pid), 1);
+      state.holder[pid] = vid;
+      state.owner[pid] = 'player';
+    }
+    FB.adjustLiegeOp(state, vid, 40);
+    FB.invalidateRealmCache();
+    FB.news(state, FB.msg('news.action.duchy_granted',
+      '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
+      { duchy: dname, name: state.realms[vid].ruler.name, count: cs.length }));
+  };
+
   /* counties adjacent to the player's demesne held by another vassal of the
      same sovereign — the raw material of every intra-realm land deal. Skips
      the liege's own demesne and the player's own vassals (revoke_county is
@@ -990,15 +1069,21 @@ window.FB = window.FB || {};
     return true;
   };
 
-  /* three seasons' taxes squeezed out of every vassal at once */
+  /* several seasons' taxes squeezed out of every vassal at once — a skilled
+     steward (demandTaxPerSte) wrings out meaningfully more */
   FB.demandTaxes = function (state) {
+    const B = FBDATA.balance;
     const p = state.player;
+    const me = state.chars[p.charId];
+    const steMul = 1 + (me ? FB.skillOf(me, 'ste') : 0) * (B.demandTaxPerSte || 0);
+    const seasons = B.demandTaxSeasons || 3;
     let gold = 0;
     for (const vid of FB.playerVassals(state)) {
-      for (const pid of FB.realmHeldCounties(state, vid)) gold += Math.ceil((state.dev[pid] || 1) * FBDATA.balance.vassalTaxRate * 3);
+      for (const pid of FB.realmHeldCounties(state, vid)) gold += (state.dev[pid] || 1) * B.vassalTaxRate * seasons;
       FB.adjustLiegeOp(state, vid, -15);
       if (FB.liegeOpOf(state, vid) <= -50) state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: vid } });
     }
+    gold = Math.ceil(gold * steMul);
     if (gold > 0) {
       p.gold += gold;
       FB.news(state, FB.msg('news.action.extraordinary_taxes',

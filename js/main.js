@@ -9,8 +9,15 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.26.2';
+FB.VERSION = '1.27.0';
   FB.CHANGELOG = [
+    { v: '1.27.0', date: '2026-07-23', changes: [
+      'Vassals now ride to war for you: every county a vassal holds sends a share of its levy to your host, on top of the taxes it already renders — granting land no longer means giving away your army.',
+      'New domain limit — you may hold only so many counties in your own hand (four, plus one for every five points of Stewardship). Each county over the limit drains your own income and levy; grant the surplus to vassals to lift it. The realm panel shows your domain against its limit.',
+      'Your dignity now counts every county your realm holds, through vassals as well as in hand — so you can rise to Duke, King, and Emperor by delegating land, not only by hoarding it yourself.',
+      '🎁 Grant a county… becomes 🎁 Grant land… — hand a loyal man a single county, or (when you hold every county of a de jure duchy in your own hand) raise a duke over the whole duchy at once.',
+      '💰 Demand extraordinary taxes now wrings out four seasons’ dues (up from three) and scales with your Stewardship.'
+    ] },
     { v: '1.26.2', date: '2026-07-23', changes: [
       'A very long name (long first name plus a long seat) no longer breaks the top bar on mobile — it now trims with an ellipsis and keeps your name and the ☰ menu together on one line.'
     ] },

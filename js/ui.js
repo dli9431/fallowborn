@@ -327,6 +327,14 @@ window.FB = window.FB || {};
         ' <span class="linklike" data-liege="' + esc(s.player.liege) +
         '" title="' + esc(FB.T('See your liege’s sheet')) + '">' + esc(lg.name) + '</span>' :
         ' · ' + esc(FB.T('independent'))) + '</div>';
+      if (s.player.provs && s.player.provs.length) {
+        const dcap = FB.domainCap(s), dheld = s.player.provs.length, dover = dheld > dcap;
+        h += '<div class="progressnote' + (dover ? ' warnote' : '') + '">' +
+          esc(FB.T('🏰 Domain {held}/{cap} held directly', { held: dheld, cap: dcap })) +
+          (dover ? ' · ' + esc(FB.T('overextended — your income & levy cut {pct}%', {
+            pct: Math.round((1 - FB.domainPenalty(s)) * 100)
+          })) : '') + '</div>';
+      }
       const parts = [];
       for (const bp of FB.demesne(s)) {
         const blt = FB.builtIn(s, bp);
@@ -2119,10 +2127,23 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
-  /* give a demesne county to a sworn man */
-  UI.showGrantCounty = function () {
+  /* give a demesne county — or a whole duchy — to a sworn man */
+  UI.showGrantLand = function () {
     const s = FB.state;
-    let h = '<p class="hint">A vassal holds the county in your name, pays taxes each season, and remembers the favor. You keep everything else.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the favor. Your dignity still counts land held through vassals.')) + '</p>';
+    const cap = FB.domainCap(s), held = (s.player.provs || []).length;
+    h += '<p class="hint">' + esc(FB.T('Held directly: {held} of {cap}.', { held: held, cap: cap })) +
+      (held > cap ? ' ⚠ ' + esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) : '') + '</p>';
+    const duchies = FB.grantableDuchies(s);
+    if (duchies.length) {
+      h += '<div class="panelh">' + esc(FB.T('Raise a duke over a duchy you hold in full')) + '</div><div class="gm-list">';
+      for (const d of duchies) {
+        h += '<button class="actionbtn" data-did="' + esc(d.did) + '">👑 ' + esc(d.name) +
+          '<span class="adesc">' + esc(FB.T('{count} counties', { count: d.counties.length })) + '</span></button>';
+      }
+      h += '</div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Grant a single county')) + '</div><div class="gm-list">';
     for (const pid of s.player.provs) {
       const pr = FB.world.byId[pid];
       h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🏰 ' + esc(pr.name) +
@@ -2130,8 +2151,14 @@ window.FB = window.FB || {};
           development: s.dev[pid] || 1, terrain: terrainName(pr.terrain)
         })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Grant a County', h);
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
+    openModal(FB.T('Grant Land'), h);
+    document.querySelectorAll('[data-did]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        FB.grantDuchy(FB.state, btn.dataset.did);
+        UI.closeModal(); UI.refresh();
+      });
+    });
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.grantCounty(FB.state, btn.dataset.pid);

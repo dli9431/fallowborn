@@ -820,6 +820,14 @@ window.FB = window.FB || {};
       const me = state.chars[p.charId];
       men *= (1 + FB.techBonus(state, 'levy')) *
         (1 + (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0));
+      men *= FB.domainPenalty(state); // too much land in hand — the muster falters
+      // vassals answer the summons with a fraction of their own levies
+      const vr = B.vassalLevyRate || 0;
+      if (vr) {
+        for (const vid of FB.playerVassals(state)) {
+          for (const pid of FB.realmHeldCounties(state, vid)) men += (state.dev[pid] || 1) * B.levyPerDev * vr;
+        }
+      }
       men = Math.round(men);
     }
     return men;
@@ -1290,11 +1298,27 @@ window.FB = window.FB || {};
   };
 
   /* how many of the given counties the player personally holds */
+  /* is a realm the player, or a vassal (at any depth) beneath the player? */
+  function underPlayer(state, rid) {
+    let cur = rid, guard = 0;
+    while (cur && guard++ < 20) {
+      if (cur === 'player') return true;
+      const r = state.realms[cur];
+      cur = r ? r.liege : null;
+    }
+    return false;
+  }
+  /* counties of a de jure title the player's REALM controls — held in his own
+     hand OR by a vassal beneath him. Tier dignity reflects the whole bloc, so
+     delegating land to vassals never costs progress toward a duchy/kingdom. */
   function playerShare(state, countyIds) {
-    const p = state.player;
-    if (!p.provs || !p.provs.length) return 0;
+    const prov = state.player.provs || [];
     let n = 0;
-    for (const pid of countyIds) if (p.provs.indexOf(pid) >= 0) n++;
+    for (const pid of countyIds) {
+      if (prov.indexOf(pid) >= 0) { n++; continue; } // held directly
+      const h = state.holder && state.holder[pid];
+      if (h && h !== 'player' && underPlayer(state, h)) n++; // held by a vassal of the player
+    }
     return n;
   }
   /* progress toward a de jure dignity: how many of its counties the player

@@ -806,6 +806,13 @@ FBDATA.balance = {
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
+  vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
+  /* domain limit: counties the player may hold DIRECTLY before overload.
+     cap = domainBase + floor(stewardship / domainStewPer); every county past
+     the cap multiplies the player's OWN income and levy by (1 - overDomainPenalty).
+     Grant the surplus to vassals to lift it. */
+  domainBase: 4, domainStewPer: 5, overDomainPenalty: 0.15,
+  demandTaxSeasons: 4, demandTaxPerSte: 0.015, // extraordinary taxes: seasons squeezed + per-stewardship bonus
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,
