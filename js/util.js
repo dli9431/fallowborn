@@ -68,6 +68,12 @@ window.FB = window.FB || {};
   FB.isTouch = typeof window.matchMedia === 'function' &&
     window.matchMedia('(pointer: coarse)').matches;
 
+  /* phone-sized screens (matches the css mobile breakpoint) */
+  FB.isSmallScreen = function () {
+    return typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 820px), (max-height: 520px)').matches;
+  };
+
   FB.esc = function (s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
