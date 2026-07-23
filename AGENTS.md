@@ -81,6 +81,7 @@ about to touch, and update it when you change that system.**
 
 - `docs/designs/provinces.md` — borderless rasterized map, one county per province, derived settlements.
 - `docs/designs/realms.md` — liege hierarchy, owner vs holder, de jure promotions, vassals, tiers 0–7.
+- `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
 - `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
@@ -94,6 +95,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/piety-intrigue-diplomacy.md` — blessings, plots, pacts.
 - `docs/designs/mods.md` — runtime + bundled mods, save stamping.
 - `docs/designs/ui.md` — keyboard support requirements, mobile layout.
+- `docs/designs/i18n.md` — localization catalogs, message descriptors, locale lifecycle.
 
 ## Code style conventions
 
