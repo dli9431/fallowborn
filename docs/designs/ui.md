@@ -22,6 +22,26 @@ description).
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 
+## Localization
+
+Settings exposes English plus French, German, Italian, and Spanish as AI-translated Preview
+locales. The preference is browser-local and takes effect after a reload. The selected
+query-free locale script is loaded before final catalog validation; a missing, stale, or
+invalid catalog falls back to English and records a diagnostic instead of blocking boot.
+Settings is reachable from both the title screen and the in-game menu. Changing language
+during a life autosaves before reloading; observe mode remains intentionally unsaved.
+
+Authored static controls use `data-i18n`, `data-i18n-title`, and `data-i18n-aria-label`.
+Completed modal and panel trees may receive an exact-source localization pass for legacy
+markup, but localization must never replace substrings or fragments inside mixed text.
+Dynamic UI uses message keys or localized parts plus proper names. Rendered messages are
+plain text and substitutions are escaped before insertion into HTML.
+
+New UI must tolerate longer translations, keep translated labels out of fixed-width
+assumptions, preserve keyboard focus and accessible names, and remain usable in the mobile
+bottom-sheet layouts. The pseudo-locale is the development check for expansion and missed
+routing.
+
 **Heraldry is procedural** (`FB.drawCrest` in js/util.js, seeded by house name or realm id —
 the same seed gives the same shield everywhere, from the topbar to the liege sheet).
 Character cards carry the character's house arms and the arms of the realm holding their

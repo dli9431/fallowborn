@@ -144,6 +144,13 @@ Provide any of these to reshape or replace the whole map — e.g. a fantasy cont
   ] } ] }
 ```
 
+Event strings stay authored in English. The core localization layer looks them up through a
+shadow catalog keyed by event id, field path, and authored option index; it never rewrites
+your JSON. Filtering an option does not renumber that key. New or replacement mod prose with
+no matching catalog entry displays in its authored English, while exact matches to known core
+sources may reuse a core translation. Core v1 does not define separately installed mod
+translation packs. Keep every documented `{token}` intact inside translatable strings.
+
 ### Trigger conditions (all optional, all must pass)
 
 | key | meaning |
@@ -179,6 +186,10 @@ random days per season (one extra in wartime); queued events (`queue`) fire the 
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,
 or riding with the liege's host — random picks draw *only* from wartime events; ordinary
 life waits for peace. Queued events always fire regardless.
+
+`warStatus: true` adds the current localized host, enemy, siege, and advance summary as a
+separate paragraph below the event text. Use this instead of embedding a `{warstate}` token:
+the summary has its own grammar and may contain several clauses.
 
 `childhood: true` works the same way for minor heirs: while the player is **under 16**,
 random picks draw only from childhood events. Give child-only events a `maxAge: 15` trigger
@@ -273,9 +284,7 @@ key is `ailments`.
 `{name} {dyn} {title} {spouse} {suitor} {late} {lord} {priest} {friend} {rival} {childname}
 {province} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
-enemy"); `{target}` is the province an attacking war aims at; `{warstate}` summarizes the
-host (men, condition, mercenaries, where the fielded hosts stand, siege and
-enemy-advance clocks); `{settlement}` reads
+enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
 `ctx.settlement` (set by the go-into-town deed's queue); `{item}` and `{itemprice}`
 describe the currently offered item (`player.itemOffer`); `{liege}` is the player's direct
 liege realm; `{rname}` / `{rulername}` are the realm and ruler named by `ctx.rid` (set by

@@ -20,7 +20,18 @@ window.FB = window.FB || {};
   function skillUp(state, key) {
     const m = me(state);
     if (!FB.gainSkill(m, key, 1)) return; // soft-capped: the point didn't land
-    FB.news(state, '📈 Your ' + FB.SKILL_NAMES[key].toLowerCase() + ' improves (' + FB.skillOf(m, key) + ').');
+    FB.news(state, FB.msg('news.action.skill_improves', {
+      forms: {
+        select: 'value', param: 'skill', cases: {
+          dip: '📈 Your diplomacy improves ({value}).',
+          mar: '📈 Your martial improves ({value}).',
+          ste: '📈 Your stewardship improves ({value}).',
+          int: '📈 Your intrigue improves ({value}).',
+          lea: '📈 Your learning improves ({value}).',
+          other: '📈 Your skill improves ({value}).'
+        }
+      }
+    }, { skill: key, value: FB.skillOf(m, key) }));
   }
 
   /* ================= FOCUSES (daily) ================= */
@@ -50,7 +61,9 @@ window.FB = window.FB || {};
   { id: 'court_suitor', label: '🌷 Court {suitor}',
     desc: function (s) {
       const su = FB.getRole(s, 'suitor');
-      return 'Win the favor of ' + (su ? su.name : 'your intended') + ', day by day.';
+      return su
+        ? FB.T('Win the favor of {name}, day by day.', { name: su.name })
+        : FB.T('Win the favor of your intended, day by day.');
     },
     show: suitorReady,
     tick: function (s) {
@@ -63,7 +76,10 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier === 0 && adult(s); },
     tick: function (s) {
       s.player.gold += FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]) / D;
-      if (dch(0.1)) { me(s).health = Math.max(0, me(s).health - 1); FB.news(s, 'The labor grinds you down.'); }
+      if (dch(0.1)) {
+        me(s).health = Math.max(0, me(s).health - 1);
+        FB.news(s, FB.msg('news.action.labor_hurts', 'The labor grinds you down.', {}));
+      }
     } },
   { id: 'militia', label: '🛡 Drill with the levy',
     desc: function () { return 'Spear practice on the green. (+martial over time)'; },
@@ -177,7 +193,9 @@ window.FB = window.FB || {};
       const pl = s.player.plot;
       if (!pl) return 'No plot in motion.';
       const def = FBDATA.plots[pl.id];
-      return 'Weaving: ' + Math.floor(pl.power) + '/' + (def ? def.need : '?') + ' — patience, whispers, ink.';
+      return FB.T('Weaving: {power}/{needed} — patience, whispers, ink.', {
+        power: Math.floor(pl.power), needed: def ? def.need : '?'
+      });
     },
     show: function (s) { return !!s.player.plot && adult(s); },
     tick: function (s) {
@@ -202,8 +220,8 @@ window.FB = window.FB || {};
     } },
   { id: 'patronize', label: '📜 Patronize scholars',
     desc: function (s) {
-      return 'Fund learned men; scholarship accrues toward innovations. (Scholarship: ' +
-        Math.floor(s.player.research || 0) + ')';
+      return FB.T('Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})',
+        { amount: Math.floor(s.player.research || 0) });
     },
     show: function (s) { return s.player.tier >= 3 && adult(s); },
     tick: function (s) {
@@ -226,7 +244,9 @@ window.FB = window.FB || {};
   { id: 'scheme_rival', label: '🗡 Scheme against {rival}', cd: 60,
     desc: function (s) {
       const r = FB.getRole(s, 'rival');
-      return 'Undermine ' + (r ? r.name : 'your rival') + ' by fair means or foul.';
+      return r
+        ? FB.T('Undermine {name} by fair means or foul.', { name: r.name })
+        : FB.T('Undermine your rival by fair means or foul.');
     },
     show: function (s) { return !!FB.getRole(s, 'rival') && adult(s); },
     run: function (s) {
@@ -235,10 +255,12 @@ window.FB = window.FB || {};
       if (FB.chance(0.35 + inn * 0.03)) {
         FB.applyEffects(s, { prestige: 4, skills: { int: FB.chance(0.5) ? 1 : 0 } });
         r.opinion = FB.clamp(r.opinion - 10, -100, 100);
-        FB.news(s, 'Your quiet work costs ' + r.name + ' dearly.');
+        FB.news(s, FB.msg('news.action.scheme_rival_success',
+          'Your quiet work costs {name} dearly.', { name: r.name }));
       } else {
         FB.applyEffects(s, { prestige: -4 });
-        FB.news(s, 'The scheme unravels, and fingers point at you.');
+        FB.news(s, FB.msg('news.action.scheme_rival_failure',
+          'The scheme unravels, and fingers point at you.', {}));
       }
     } },
   { id: 'seek_match', label: '💍 Seek a match', cd: 30,
@@ -267,7 +289,10 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
 
   { id: 'seek_blessing', label: '🕊 Seek a blessing', cd: 90,
-    desc: function (s) { return 'Bring your piety to the ' + FB.templeWord(me(s).religion) + ' and ask for grace.'; },
+    desc: function (s) {
+      return FB.T('Bring your piety to the {temple} and ask for grace.',
+        { temple: FB.templeWord(me(s).religion) });
+    },
     show: function (s) { return adult(s); },
     run: function (s) { s.eventQueue.push({ id: 'seek_blessing', ctx: {} }); } },
   { id: 'begin_plot', label: '🕸 Begin a plot…', noConsume: true,
@@ -282,23 +307,32 @@ window.FB = window.FB || {};
       const dip = FB.skillOf(me(s), 'dip');
       if (FB.chance(0.4 + dip * 0.03)) {
         FB.applyEffects(s, { prestige: 3, popularOpinion: 3, skills: { dip: FB.chance(0.6) ? 1 : 0 } });
-        FB.news(s, '🤝 Your judgment mends a feud; both houses owe you thanks.');
+        FB.news(s, FB.msg('news.action.mediate_success',
+          '🤝 Your judgment mends a feud; both houses owe you thanks.', {}));
       } else {
         FB.applyEffects(s, { prestige: -2 });
-        FB.news(s, '🤝 Both sides leave angrier — at each other, and at you.');
+        FB.news(s, FB.msg('news.action.mediate_failure',
+          '🤝 Both sides leave angrier — at each other, and at you.', {}));
       }
     } },
   { id: 'swear_friend', label: '🔗 Swear brotherhood with {friend}',
     desc: function (s) {
       const f = FB.getRole(s, 'friend', false);
-      return 'Bind ' + (f ? f.name : 'your friend') + ' to your house by oath — for life.';
+      return f
+        ? FB.T('Bind {name} to your house by oath — for life.', { name: f.name })
+        : FB.T('Bind your friend to your house by oath — for life.');
     },
     show: function (s) {
       const f = FB.getRole(s, 'friend', false);
       return adult(s) && !!f && f.opinion >= 40 && !s.player.flags.sworn_friend;
     },
     run: function (s) {
-      FB.applyEffects(s, { setFlag: 'sworn_friend', prestige: 4, opinion: { role: 'friend', amt: 20 }, log: 'Swore an oath of brotherhood.' });
+      FB.applyEffects(s, {
+        setFlag: 'sworn_friend', prestige: 4,
+        opinion: { role: 'friend', amt: 20 }
+      });
+      FB.news(s, FB.msg('news.action.brotherhood',
+        'Swore an oath of brotherhood.', {}));
     } },
   { id: 'send_envoy', label: '🕊 Send an envoy…', noConsume: true,
     desc: function () { return 'Gifts and good words buy years of quiet borders. (10 gold)'; },
@@ -318,7 +352,10 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings(); } },
 
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
-    desc: function () { return 'Pay ' + FBDATA.balance.freedomCost + ' gold to be struck from the serf-roll.'; },
+    desc: function () {
+      return FB.T('Pay {gold} gold to be struck from the serf-roll.',
+        { gold: FBDATA.balance.freedomCost });
+    },
     show: function (s) { return s.player.tier === 0 && adult(s); },
     can: function (s) {
       if (s.player.gold < FBDATA.balance.freedomCost) return 'Not enough gold.';
@@ -327,10 +364,18 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) {
-      FB.applyEffects(s, { gold: -FBDATA.balance.freedomCost, tierSet: 1, prestige: 15, piety: 5, log: 'Bought freedom from serfdom!' });
+      FB.applyEffects(s, {
+        gold: -FBDATA.balance.freedomCost, tierSet: 1,
+        prestige: 15, piety: 5
+      });
+      FB.news(s, FB.msg('news.action.freedom_bought',
+        'Bought freedom from serfdom!', {}));
     } },
   { id: 'buy_manor', label: '🏡 Buy a manor',
-    desc: function () { return FBDATA.balance.manorCost + ' gold and ' + FBDATA.balance.manorPrestige + ' prestige — join the gentry.'; },
+    desc: function () {
+      return FB.T('{gold} gold and {prestige} prestige — join the gentry.',
+        { gold: FBDATA.balance.manorCost, prestige: FBDATA.balance.manorPrestige });
+    },
     show: function (s) { return s.player.tier === 1; },
     can: function (s) {
       if (s.player.gold < FBDATA.balance.manorCost) return 'Not enough gold.';
@@ -338,10 +383,17 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) {
-      FB.applyEffects(s, { gold: -FBDATA.balance.manorCost, tierSet: 2, prestige: 30, log: 'Bought a manor — gentry now!' });
+      FB.applyEffects(s, {
+        gold: -FBDATA.balance.manorCost, tierSet: 2, prestige: 30
+      });
+      FB.news(s, FB.msg('news.action.manor_bought',
+        'Bought a manor — gentry now!', {}));
     } },
   { id: 'petition_barony', label: '📜 Petition for a barony', cd: 360,
-    desc: function (s) { return 'Ask ' + (FB.getRole(s, 'lord', true) || {}).name + ' for lands and a banner.'; },
+    desc: function (s) {
+      return FB.T('Ask {lord} for lands and a banner.',
+        { lord: (FB.getRole(s, 'lord', true) || {}).name || FB.T('your lord') });
+    },
     show: function (s) { return s.player.tier === 2; },
     can: function (s) {
       const lord = FB.getRole(s, 'lord', true);
@@ -354,7 +406,8 @@ window.FB = window.FB || {};
       if (FB.chance(0.15 + lord.opinion / 400 + s.player.prestige / 1200)) {
         s.eventQueue.push({ id: 'grant_of_barony', ctx: {} });
       } else {
-        FB.news(s, 'The lord smiles, promises nothing, and speaks of the weather.');
+        FB.news(s, FB.msg('news.action.barony_refused',
+          'The lord smiles, promises nothing, and speaks of the weather.', {}));
         lord.opinion = FB.clamp(lord.opinion - 5, -100, 100);
       }
     } },
@@ -383,7 +436,8 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
   { id: 'adopt_tech', label: '💡 Adopt an innovation…', noConsume: true,
     desc: function (s) {
-      return 'Scholarship: ' + Math.floor(s.player.research || 0) + ' — spend it on advances that outlive you.';
+      return FB.T('Scholarship: {amount} — spend it on advances that outlive you.',
+        { amount: Math.floor(s.player.research || 0) });
     },
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) {
@@ -402,27 +456,38 @@ window.FB = window.FB || {};
     desc: function () { return 'Ask for greater lands and higher style.'; },
     show: function (s) { return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege; },
     can: function (s) {
-      if ((s.player.liegeOp || 0) < 65) return 'Your liege’s favor must be 65 or more (now ' + Math.round(s.player.liegeOp || 0) + ').';
-      if (s.player.prestige < 400) return 'You need at least 400 prestige (now ' + Math.round(s.player.prestige) + ').';
+      if ((s.player.liegeOp || 0) < 65) return FB.T(
+        'Your liege’s favor must be 65 or more (now {current}).',
+        { current: Math.round(s.player.liegeOp || 0) });
+      if (s.player.prestige < 400) return FB.T(
+        'You need at least 400 prestige (now {current}).',
+        { current: Math.round(s.player.prestige) });
       return true;
     },
     run: function (s) { s.eventQueue.push({ id: 'title_request', ctx: {} }); } },
   { id: 'petition_county', label: '🤝 Petition for a neighbor’s fief…', cd: 720, noConsume: true,
     desc: function (s) {
-      return 'Ask the liege to strip a disgraced neighbor and invest you with his county. ' +
-        'Service in the liege’s wars: ' + (s.player.warService || 0) + '.';
+      return FB.T('Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.',
+        { service: s.player.warService || 0 });
     },
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
       const B = FBDATA.balance;
       if (FB.liegeOpOf(s, s.player.liege) < B.petitionLiegeOp) {
-        return 'Your liege’s favor must be ' + B.petitionLiegeOp + ' or more (now ' + Math.round(FB.liegeOpOf(s, s.player.liege)) + ').';
+        return FB.T('Your liege’s favor must be {needed} or more (now {current}).', {
+          needed: B.petitionLiegeOp,
+          current: Math.round(FB.liegeOpOf(s, s.player.liege))
+        });
       }
       if (s.player.prestige < B.petitionPrestige) {
-        return 'You need at least ' + B.petitionPrestige + ' prestige (now ' + Math.round(s.player.prestige) + ').';
+        return FB.T('You need at least {needed} prestige (now {current}).', {
+          needed: B.petitionPrestige, current: Math.round(s.player.prestige)
+        });
       }
       if ((s.player.warService || 0) < B.petitionService) {
-        return 'You must first bleed in your liege’s wars (service ' + B.petitionService + '+, now ' + (s.player.warService || 0) + ').';
+        return FB.T('You must first bleed in your liege’s wars (service {needed}+, now {current}).', {
+          needed: B.petitionService, current: s.player.warService || 0
+        });
       }
       return true;
     },
@@ -432,11 +497,14 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
       if (FB.liegeOpOf(s, s.player.liege) < 20) {
-        return 'Your liege must at least tolerate you (favor 20+, now ' + Math.round(FB.liegeOpOf(s, s.player.liege)) + ').';
+        return FB.T('Your liege must at least tolerate you (favor 20+, now {current}).',
+          { current: Math.round(FB.liegeOpOf(s, s.player.liege)) });
       }
       const c = FB.buyCountyCandidates(s);
       if (!c.length) return 'No weak neighbor holds land beside yours.';
-      if (s.player.gold < c[0].price) return 'You need at least ' + c[0].price + ' gold (now ' + Math.floor(s.player.gold) + ').';
+      if (s.player.gold < c[0].price) return FB.T(
+        'You need at least {needed} gold (now {current}).',
+        { needed: c[0].price, current: Math.floor(s.player.gold) });
       return true;
     },
     run: function (s) { if (FB.ui && FB.ui.showBuyCounty) FB.ui.showBuyCounty(); } },
@@ -446,17 +514,20 @@ window.FB = window.FB || {};
     can: function (s) {
       const B = FBDATA.balance;
       if (!FB.wastelandCandidates(s).length) return 'No empty land borders your demesne.';
-      if (s.player.gold < B.settleGold) return 'You need at least ' + B.settleGold + ' gold (now ' + Math.floor(s.player.gold) + ').';
-      if (s.player.prestige < B.settlePrestige) return 'You need at least ' + B.settlePrestige + ' prestige (now ' + Math.round(s.player.prestige) + ').';
+      if (s.player.gold < B.settleGold) return FB.T(
+        'You need at least {needed} gold (now {current}).',
+        { needed: B.settleGold, current: Math.floor(s.player.gold) });
+      if (s.player.prestige < B.settlePrestige) return FB.T(
+        'You need at least {needed} prestige (now {current}).',
+        { needed: B.settlePrestige, current: Math.round(s.player.prestige) });
       return true;
     },
     run: function (s) { if (FB.ui && FB.ui.showSettleWaste) FB.ui.showSettleWaste(); } },
   { id: 'muster_host', label: '🚩 Muster the host',
     desc: function (s) {
       const w = s.player.war;
-      return 'Raise your levies and hired companies as a field host — ~' +
-        (FB.playerLevy(s) + ((w && w.mercCos) || 0) * 150) +
-        ' men at your seat. Then tap the host on the map and tap a province to march it.';
+      return FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
+        { men: FB.playerLevy(s) + ((w && w.mercCos) || 0) * 150 });
     },
     show: function (s) {
       if (!s.player.war) return false;
@@ -469,8 +540,21 @@ window.FB = window.FB || {};
     desc: function (s) {
       const w = s.player.war;
       const n = (w && w.mercCos) || 0;
-      return '~150 spears: 15 gold now, 4 a season while the war lasts.' +
-        (n ? ' (' + n + ' compan' + (n > 1 ? 'ies' : 'y') + ' under your banner)' : '');
+      return FB.renderMessage(FB.msg('fx.action.mercenary_desc', {
+        forms: {
+          select: 'value', param: 'hasCompanies', cases: {
+            none: '~150 spears: 15 gold now, 4 a season while the war lasts.',
+            some: {
+              select: 'plural', param: 'count', cases: {
+                one: '~150 spears: 15 gold now, 4 a season while the war lasts. ({count} company under your banner)',
+                other: '~150 spears: 15 gold now, 4 a season while the war lasts. ({count} companies under your banner)'
+              }
+            },
+            other: '~150 spears: 15 gold now, 4 a season while the war lasts.'
+          }
+        }
+      }, { hasCompanies: n ? 'some' : 'none', count: n }),
+      { state: s, viewer: s.player.charId });
     },
     show: function (s) { return !!s.player.war; },
     can: function (s) { return s.player.gold >= 15 ? true : 'Costs 15 gold.'; },
@@ -490,12 +574,15 @@ window.FB = window.FB || {};
   { id: 'declare_independence', label: '⚑ Declare independence…', noConsume: true,
     desc: function (s) {
       const lg = s.realms[s.player.liege];
-      return 'Renounce ' + (lg ? lg.name : 'your liege') + ' and raise your own banner — it means war.';
+      return lg
+        ? FB.T('Renounce {liege} and raise your own banner — it means war.', { liege: lg.name })
+        : FB.T('Renounce your liege and raise your own banner — it means war.');
     },
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
     can: function (s) {
       return s.player.prestige >= 200 ? true
-        : 'You need at least 200 prestige to rally men to your banner (now ' + Math.round(s.player.prestige) + ').';
+        : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
+          { current: Math.round(s.player.prestige) });
     },
     run: function (s) { if (FB.ui && FB.ui.showIndependence) FB.ui.showIndependence(); } },
   { id: 'pay_homage', label: '🙇 Pay homage…', noConsume: true, cd: 180,
@@ -576,13 +663,24 @@ window.FB = window.FB || {};
     return pool;
   }
 
-  FB.lootItem = function (state, rarity, prefix) {
+  FB.lootItem = function (state, rarity, source) {
     const pool = itemPool(state, rarity);
     if (!pool.length) return null;
     const id = FB.pick(pool);
     FB.itemList(state).push(id);
     const def = FBDATA.items[id];
-    FB.news(state, (prefix || '🎒 Yours now') + ': ' + def.icon + ' ' + FB.fmt(state, def.name, {}) + '.');
+    FB.news(state, FB.msg('news.item.acquired', {
+      forms: {
+        select: 'value', param: 'source', cases: {
+          plunder: '🎒 Plunder: {icon} {item}.',
+          spoils: '⚔ Among the spoils: {icon} {item}.',
+          raid: '⚔ Taken in the raid: {icon} {item}.',
+          earth: '✨ Out of the earth: {icon} {item}.',
+          chest: '🎒 From the chest: {icon} {item}.',
+          other: '🎒 Yours now: {icon} {item}.'
+        }
+      }
+    }, { source: source || 'other', icon: def.icon, item: FB.dataParam('item', id) }));
     return id;
   };
 
@@ -598,7 +696,9 @@ window.FB = window.FB || {};
     list.splice(i, 1);
     const gold = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
     state.player.gold += gold;
-    FB.news(state, '💰 Sold: ' + def.icon + ' ' + FB.fmt(state, def.name, {}) + ' for ' + gold + ' gold.');
+    FB.news(state, FB.msg('news.item.sold',
+      '💰 Sold: {icon} {item} for {gold} gold.',
+      { icon: def.icon, item: FB.dataParam('item', id), gold: gold }));
   };
 
   FB.giftOpinion = function (def) {
@@ -616,13 +716,20 @@ window.FB = window.FB || {};
     const boost = FB.giftOpinion(def);
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
     if (state.roles.lord === cid) state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) + boost, -100, 100);
-    FB.news(state, '🎁 You give ' + def.icon + ' ' + FB.fmt(state, def.name, {}) + ' to ' +
-      c.name + '. (regard ' + Math.round(c.opinion) + ')');
+    FB.news(state, FB.msg('news.item.given',
+      '🎁 You give {icon} {item} to {name}. (regard {regard})', {
+        icon: def.icon, item: FB.dataParam('item', id), name: c.name,
+        regard: Math.round(c.opinion)
+      }));
   };
 
   FB.offerItem = function (state) {
     const pool = itemPool(state, null);
-    if (!pool.length) { FB.news(state, '🎒 Nothing is offered that you do not already own.'); return; }
+    if (!pool.length) {
+      FB.news(state, FB.msg('news.item.nothing_new',
+        '🎒 Nothing is offered that you do not already own.', {}));
+      return;
+    }
     const id = FB.pick(pool);
     state.player.itemOffer = { id: id, price: FBDATA.items[id].value };
     state.eventQueue.push({ id: 'item_offer', ctx: {} });
@@ -640,13 +747,14 @@ window.FB = window.FB || {};
     state.player.itemOffer = null;
     const def = FBDATA.items[o.id];
     FB.itemList(state).push(o.id);
-    FB.news(state, '🎒 Bought: ' + def.icon + ' ' + FB.fmt(state, def.name, {}) + '.');
+    FB.news(state, FB.msg('news.item.bought', '🎒 Bought: {icon} {item}.',
+      { icon: def.icon, item: FB.dataParam('item', o.id) }));
   };
   FB.fns.clear_item_offer = function (state) { state.player.itemOffer = null; };
-  FB.fns.loot_item = function (state) { FB.lootItem(state, null, '🎒 Plunder'); };
-  FB.fns.find_artifact = function (state) { FB.lootItem(state, 'famed', '✨ Out of the earth'); };
+  FB.fns.loot_item = function (state) { FB.lootItem(state, null, 'plunder'); };
+  FB.fns.find_artifact = function (state) { FB.lootItem(state, 'famed', 'earth'); };
   FB.fns.plot_loot = function (state) {
-    FB.lootItem(state, null, '🎒 From the chest');
+    FB.lootItem(state, null, 'chest');
     FB.fns.plot_end(state);
   };
 
@@ -671,7 +779,8 @@ window.FB = window.FB || {};
       state.player.focusBack = state.player.focus;
       state.player.focus = 'scheming';
     }
-    FB.news(state, '🕸 A plot is set in motion: ' + FB.fmt(state, def.name, {}) + '.');
+    FB.news(state, FB.msg('news.action.plot_begins',
+      '🕸 A plot is set in motion: {plot}.', { plot: FB.dataParam('plot', id) }));
   };
 
   /* resolution events end their plot with the effect {custom:'plot_end'} */
@@ -706,7 +815,8 @@ window.FB = window.FB || {};
     const m = state.chars[p.charId];
     FB.adjustLiegeOp(state, rid, FBDATA.balance.homageOpinion + Math.floor(FB.skillOf(m, 'dip') / 2));
     p.prestige += 2;
-    FB.news(state, '🙇 You bend the knee at the court of ' + r.name + '.');
+    FB.news(state, FB.msg('news.action.homage',
+      '🙇 You bend the knee at the court of {realm}.', { realm: r.name }));
   };
 
   /* sovereign realms bordering the player's lands (fealty candidates) */
@@ -746,11 +856,15 @@ window.FB = window.FB || {};
     p.liege = rid;
     FB.adjustLiegeOp(state, rid, 20);
     FB.invalidateRealmCache();
-    FB.news(state, '🤝 You swear fealty to ' + r.name + '. Your banners now fly under ' + state.realms[newTop].name + '.');
+    FB.news(state, FB.msg('news.action.fealty',
+      '🤝 You swear fealty to {liege}. Your banners now fly under {realm}.',
+      { liege: r.name, realm: state.realms[newTop].name }));
     if (oldTop && oldTop !== newTop && state.realms[oldTop] && state.realms[oldTop].alive && FB.chance(0.5)) {
       p.war = { enemy: oldTop, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
       FB.warFooting(state);
-      FB.news(state, '🔥 ' + state.realms[oldTop].name + ' names you traitor — war for your defection!');
+      FB.news(state, FB.msg('news.action.fealty_war',
+        '🔥 {realm} names you traitor — war for your defection!',
+        { realm: state.realms[oldTop].name }));
     }
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
@@ -782,7 +896,9 @@ window.FB = window.FB || {};
     state.owner[pid] = 'player';
     FB.adjustLiegeOp(state, vid, 40);
     FB.invalidateRealmCache();
-    FB.news(state, '🎁 ' + pr.name + ' is granted to a loyal man — ' + state.realms[vid].ruler.name + ' holds it in your name.');
+    FB.news(state, FB.msg('news.action.county_granted',
+      '🎁 {province} is granted to a loyal man — {name} holds it in your name.',
+      { province: pr.name, name: state.realms[vid].ruler.name }));
   };
 
   /* counties adjacent to the player's demesne held by another vassal of the
@@ -863,8 +979,12 @@ window.FB = window.FB || {};
     state.holder[pid] = 'player';
     FB.invalidateRealmCache();
     FB.realmBuryIfEmpty(state, old);
-    FB.applyEffects(state, { opinionLiege: -8, log: 'Bought ' + pr.name + ' from its struggling lord.' });
-    FB.news(state, '💰 ' + pr.name + ' is yours for ' + pick.price + ' gold — its old lord retires fat and forgotten. The court frowns on bought land.');
+    FB.applyEffects(state, { opinionLiege: -8 });
+    FB.news(state, FB.msg('news.action.county_purchase_record',
+      'Bought {province} from its struggling lord.', { province: pr.name }));
+    FB.news(state, FB.msg('news.action.county_bought',
+      '💰 {province} is yours for {gold} gold — its old lord retires fat and forgotten. The court frowns on bought land.',
+      { province: pr.name, gold: pick.price }));
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return true;
@@ -881,7 +1001,9 @@ window.FB = window.FB || {};
     }
     if (gold > 0) {
       p.gold += gold;
-      FB.news(state, '💰 Your vassals render ' + gold + ' gold in extraordinary taxes — grumbling all the while.');
+      FB.news(state, FB.msg('news.action.extraordinary_taxes',
+        '💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while.',
+        { gold: gold }));
     }
   };
 
@@ -909,9 +1031,11 @@ window.FB = window.FB || {};
       state.pacts = state.pacts || {};
       state.pacts[rid] = state.turn + 8 * 90; // two years of peace
       FB.applyEffects(state, { prestige: 3, skills: { dip: FB.chance(0.5) ? 1 : 0 } });
-      FB.news(state, '🕊 ' + r.name + ' swears a pact of peace — two years of quiet borders.');
+      FB.news(state, FB.msg('news.action.envoy_success',
+        '🕊 {realm} swears a pact of peace — two years of quiet borders.', { realm: r.name }));
     } else {
-      FB.news(state, '🕊 The envoy returns, gifts refused. ' + r.name + ' is unmoved.');
+      FB.news(state, FB.msg('news.action.envoy_failure',
+        '🕊 The envoy returns, gifts refused. {realm} is unmoved.', { realm: r.name }));
     }
   };
 
@@ -956,7 +1080,8 @@ window.FB = window.FB || {};
     if (state.player.gold < def.cost) return;
     state.player.gold -= def.cost;
     done.push(id);
-    FB.news(state, '🏠 ' + FB.fmt(state, def.name, {}) + ' now belongs to the household.');
+    FB.news(state, FB.msg('news.action.holding_bought',
+      '🏠 {holding} now belongs to the household.', { holding: FB.dataParam('holding', id) }));
   };
 
   /* ================= technology (playing tall) =================
@@ -1024,7 +1149,8 @@ window.FB = window.FB || {};
     if ((state.player.research || 0) < def.cost) return;
     state.player.research -= def.cost;
     done.push(id);
-    FB.news(state, '💡 ' + FB.fmt(state, def.name, {}) + ' takes root in your lands.');
+    FB.news(state, FB.msg('news.action.tech_adopted',
+      '💡 {innovation} takes root in your lands.', { innovation: FB.dataParam('tech', id) }));
   };
 
   /* ================= demesne buildings =================
@@ -1100,7 +1226,9 @@ window.FB = window.FB || {};
     if (def.pop) fx.popularOpinion = def.pop;
     if (def.prestige) fx.prestige = def.prestige;
     FB.applyEffects(state, fx, {});
-    FB.news(state, '🏗 ' + FB.fmt(state, def.name, {}) + ' rises in ' + FB.world.byId[pid].name + '.');
+    FB.news(state, FB.msg('news.action.building_raised',
+      '🏗 {building} rises in {province}.',
+      { building: FB.dataParam('building', id), province: FB.world.byId[pid].name }));
   };
 
   FB.warTargets = function (state) {
@@ -1125,8 +1253,11 @@ window.FB = window.FB || {};
     const enemy = state.owner[targetProv];
     if (!enemy) return;
     state.player.war = { enemy: enemy, target: targetProv, wins: 0, losses: 0, seasons: 0, defending: false };
-    FB.news(state, '⚔ You declare war upon ' + (state.realms[enemy] ? state.realms[enemy].name : enemy) +
-      ' for ' + FB.world.byId[targetProv].name + '!');
+    FB.news(state, FB.msg('news.action.war_declared',
+      '⚔ You declare war upon {enemy} for {province}!', {
+        enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
+        province: FB.world.byId[targetProv].name
+      }));
     state.player.prestige += 5;
     FB.warFooting(state);
     state.eventQueue.push({ id: 'war_muster', ctx: {} });
@@ -1145,7 +1276,7 @@ window.FB = window.FB || {};
         const last = state.player.cooldowns[a.id];
         if (last !== undefined && state.turn - last < a.cd) {
           can = false;
-          reason = 'Ready in ' + (a.cd - (state.turn - last)) + ' days.';
+          reason = FB.T('Ready in {days} days.', { days: a.cd - (state.turn - last) });
         }
       }
       if (can && a.can) {

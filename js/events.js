@@ -170,26 +170,62 @@ window.FB = window.FB || {};
     if (!alive.length) {
       const y = state.date.year;
       const ids = [];
-      function mk(opts, epithet) {
+      function mk(opts, epithetMsg) {
         const c = FB.makeCharacter(state, opts);
-        c.epithet = epithet;
+        c.epithetMsg = epithetMsg;
         ids.push(c.id);
         return c;
       }
       const lw = lordWord(pr);
       const lord = mk({ culture: pr.culture, religion: pr.religion, sex: 'm', born: y - FB.ri(28, 55), quality: 4, role: 'notable', station: 3 },
-        lw + ' of ' + pr.name);
+        FB.msg('fx.epithet.province_lord', {
+          forms: {
+            select: 'value', param: 'kind', cases: {
+              emir: 'Emir of {province}',
+              chief: 'Chief of {province}',
+              other: 'Lord of {province}'
+            }
+          }
+        }, {
+          kind: lw === 'Emir' ? 'emir' : (lw === 'Chief' ? 'chief' : 'other'),
+          province: pr.name
+        }));
       lord.dyn = 'of ' + pr.name;
-      const hw = FB.holyWord(pr.religion);
       mk({ culture: pr.culture, religion: pr.religion, sex: 'm', born: y - FB.ri(30, 60), quality: 2, role: 'notable', station: 1 },
-        hw.charAt(0).toUpperCase() + hw.slice(1));
+        FB.msg('fx.epithet.cleric', {
+          forms: {
+            select: 'value', param: 'faith', cases: {
+              muslim: 'Imam',
+              pagan: 'Godi',
+              jewish: 'Rabbi',
+              other: 'Priest'
+            }
+          }
+        }, { faith: FB.religionOf(pr.religion).group }));
       const mkt = (state.dev[pid] || 1) >= 5;
       mk({ culture: pr.culture, religion: pr.religion, born: y - FB.ri(38, 62), quality: 2, role: 'notable', station: mkt ? 2 : 1 },
-        mkt ? 'Master of the market' : 'Village elder');
+        mkt
+          ? FB.msg('fx.epithet.market_master', 'Master of the market', {})
+          : FB.msg('fx.epithet.village_elder', 'Village elder', {}));
       for (let i = 0; i < 2; i++) {
         const kin = mk({ culture: pr.culture, religion: pr.religion, born: y - FB.ri(16, 26), quality: FB.ri(0, 2), role: 'notable', station: 3 }, null);
         kin.dyn = lord.dyn;
-        kin.epithet = (kin.sex === 'f' ? 'Daughter' : 'Son') + ' of the ' + lw.toLowerCase() + '’s house';
+        kin.epithetMsg = FB.msg('fx.epithet.lord_child', {
+          forms: {
+            select: 'value', param: 'case', cases: {
+              daughter_emir: 'Daughter of the emir’s house',
+              son_emir: 'Son of the emir’s house',
+              daughter_chief: 'Daughter of the chief’s house',
+              son_chief: 'Son of the chief’s house',
+              daughter_lord: 'Daughter of the lord’s house',
+              son_lord: 'Son of the lord’s house',
+              other: 'Child of the lord’s house'
+            }
+          }
+        }, {
+          case: (kin.sex === 'f' ? 'daughter_' : 'son_') +
+            (lw === 'Emir' ? 'emir' : (lw === 'Chief' ? 'chief' : 'lord'))
+        });
       }
       state.provChars[pid] = ids;
       alive = ids.map(function (id) { return state.chars[id]; });
@@ -201,14 +237,48 @@ window.FB = window.FB || {};
      sometimes a step down, rarely a step up. Whom the player pursues on their
      own (character sheets) is gated separately in FB.canCourt. */
   const SUITOR_EPITHETS = [
-    { m: ['Plowman’s son', 'Shepherd', 'Woodcutter’s son', 'Hired hand at the manor'],
-      f: ['Plowman’s daughter', 'Goose girl', 'Woodcutter’s daughter', 'Dairymaid'] },
-    { m: ['Free farmer’s son', 'Miller’s son', 'Smith’s son', 'Fisherman with his own boat'],
-      f: ['Free farmer’s daughter', 'Miller’s daughter', 'Weaver', 'Alewife’s daughter'] },
-    { m: ['Merchant’s son', 'Guildmaster’s son', 'Steward of a manor', 'Rich yeoman’s son'],
-      f: ['Merchant’s daughter', 'Guildmaster’s daughter', 'Goldsmith’s daughter', 'Rich yeoman’s daughter'] },
-    { m: ['Knight’s son', 'Castellan’s son', 'Of an old noble house'],
-      f: ['Knight’s daughter', 'Castellan’s daughter', 'Of an old noble house'] }
+    { m: [
+      FB.msg('fx.epithet.suitor.0.m.0', 'Plowman’s son', {}),
+      FB.msg('fx.epithet.suitor.0.m.1', 'Shepherd', {}),
+      FB.msg('fx.epithet.suitor.0.m.2', 'Woodcutter’s son', {}),
+      FB.msg('fx.epithet.suitor.0.m.3', 'Hired hand at the manor', {})
+    ], f: [
+      FB.msg('fx.epithet.suitor.0.f.0', 'Plowman’s daughter', {}),
+      FB.msg('fx.epithet.suitor.0.f.1', 'Goose girl', {}),
+      FB.msg('fx.epithet.suitor.0.f.2', 'Woodcutter’s daughter', {}),
+      FB.msg('fx.epithet.suitor.0.f.3', 'Dairymaid', {})
+    ] },
+    { m: [
+      FB.msg('fx.epithet.suitor.1.m.0', 'Free farmer’s son', {}),
+      FB.msg('fx.epithet.suitor.1.m.1', 'Miller’s son', {}),
+      FB.msg('fx.epithet.suitor.1.m.2', 'Smith’s son', {}),
+      FB.msg('fx.epithet.suitor.1.m.3', 'Fisherman with his own boat', {})
+    ], f: [
+      FB.msg('fx.epithet.suitor.1.f.0', 'Free farmer’s daughter', {}),
+      FB.msg('fx.epithet.suitor.1.f.1', 'Miller’s daughter', {}),
+      FB.msg('fx.epithet.suitor.1.f.2', 'Weaver', {}),
+      FB.msg('fx.epithet.suitor.1.f.3', 'Alewife’s daughter', {})
+    ] },
+    { m: [
+      FB.msg('fx.epithet.suitor.2.m.0', 'Merchant’s son', {}),
+      FB.msg('fx.epithet.suitor.2.m.1', 'Guildmaster’s son', {}),
+      FB.msg('fx.epithet.suitor.2.m.2', 'Steward of a manor', {}),
+      FB.msg('fx.epithet.suitor.2.m.3', 'Rich yeoman’s son', {})
+    ], f: [
+      FB.msg('fx.epithet.suitor.2.f.0', 'Merchant’s daughter', {}),
+      FB.msg('fx.epithet.suitor.2.f.1', 'Guildmaster’s daughter', {}),
+      FB.msg('fx.epithet.suitor.2.f.2', 'Goldsmith’s daughter', {}),
+      FB.msg('fx.epithet.suitor.2.f.3', 'Rich yeoman’s daughter', {})
+    ] },
+    { m: [
+      FB.msg('fx.epithet.suitor.3.m.0', 'Knight’s son', {}),
+      FB.msg('fx.epithet.suitor.3.m.1', 'Castellan’s son', {}),
+      FB.msg('fx.epithet.suitor.3.m.2', 'Of an old noble house', {})
+    ], f: [
+      FB.msg('fx.epithet.suitor.3.f.0', 'Knight’s daughter', {}),
+      FB.msg('fx.epithet.suitor.3.f.1', 'Castellan’s daughter', {}),
+      FB.msg('fx.epithet.suitor.3.f.2', 'Of an old noble house', {})
+    ] }
   ];
   FB.spawnSuitor = function (state) {
     const me = state.chars[state.player.charId];
@@ -224,7 +294,7 @@ window.FB = window.FB || {};
       role: 'suitor', opinion: FB.ri(-10, 25),
       station: st, quality: st + FB.ri(0, 1)
     });
-    c.epithet = FB.pick(SUITOR_EPITHETS[st][c.sex]);
+    c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
     state.player.courtingId = c.id;
     return c;
   };
@@ -263,7 +333,7 @@ window.FB = window.FB || {};
         born: y - FB.clamp(cAge + FB.ri(-2, 5), 12, 40),
         role: 'match', station: st, quality: st + FB.ri(0, 1)
       });
-      m.epithet = FB.pick(SUITOR_EPITHETS[st][m.sex]);
+      m.epithetMsg = FB.pick(SUITOR_EPITHETS[st][m.sex]);
       const sum = Math.round((FBDATA.balance.dowryByStation[st] || 0) * FB.rf(0.7, 1.3));
       if (child.sex === 'f') m.dowryAsk = sum; else m.dowryDue = sum;
       out.push(m);
@@ -292,9 +362,11 @@ window.FB = window.FB || {};
     cand.role = 'kinspouse';
     if (cand.dowryAsk) {
       p.gold = Math.max(0, p.gold - cand.dowryAsk);
-      FB.news(state, '💰 You settle a dowry of ' + cand.dowryAsk + ' gold on the match.');
+      FB.news(state, FB.msg('news.event.match_dowry_paid',
+        '💰 You settle a dowry of {gold} gold on the match.', { gold: cand.dowryAsk }));
     }
-    FB.news(state, '🤝 ' + child.name + ' is betrothed to ' + cand.name + '.');
+    FB.news(state, FB.msg('news.event.child_betrothed',
+      '🤝 {child} is betrothed to {match}.', { child: child.name, match: cand.name }));
     const y = state.date.year;
     if (FB.ageOf(child, y) >= 16 && FB.ageOf(cand, y) >= 16) {
       FB.doKinWedding(state, child, cand);
@@ -308,11 +380,19 @@ window.FB = window.FB || {};
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';
-    FB.news(state, '💒 Your ' + (k.sex === 'f' ? 'daughter' : 'son') + ' ' + k.name +
-      ' weds ' + sp.name + ', as was pledged.');
+    FB.news(state, FB.msg('news.event.kin_wedding', {
+      forms: {
+        select: 'value', param: 'sex', cases: {
+          f: '💒 Your daughter {child} weds {spouse}, as was pledged.',
+          m: '💒 Your son {child} weds {spouse}, as was pledged.',
+          other: '💒 Your child {child} weds {spouse}, as was pledged.'
+        }
+      }
+    }, { sex: k.sex, child: k.name, spouse: sp.name }));
     if (sp.dowryDue) {
       p.gold += sp.dowryDue;
-      FB.news(state, '💰 The bride brings a dowry of ' + sp.dowryDue + ' gold to the house.');
+      FB.news(state, FB.msg('news.event.bride_dowry',
+        '💰 The bride brings a dowry of {gold} gold to the house.', { gold: sp.dowryDue }));
       delete sp.dowryDue;
     }
     delete sp.dowryAsk; // settled at the pledge; nothing owed back once wed
@@ -320,109 +400,316 @@ window.FB = window.FB || {};
       const gap = sp.station - FB.playerStation(state);
       if (gap > 0) {
         p.prestige += Math.round(gap * B.marryUpPrestige / 2);
-        FB.news(state, '👑 The match ties your house to a greater one — your name rises.');
+        FB.news(state, FB.msg('news.event.match_above',
+          '👑 The match ties your house to a greater one — your name rises.', {}));
       } else if (gap < 0) {
         p.prestige = Math.max(0, p.prestige + Math.round(gap * B.marryDownPrestigeLoss / 2));
-        FB.news(state, '🗣 The child of your house weds beneath it, and folk mark it.');
+        FB.news(state, FB.msg('news.event.match_below',
+          '🗣 The child of your house weds beneath it, and folk mark it.', {}));
       }
     }
   };
 
-  /* ---------- text templating ----------
-     A text field may be a plain string or an object keyed by religion group
-     ({default:'…', muslim:'…'}) — resolved against the player's faith, for
-     flavor the {god}/{holy}/{temple} tokens cannot carry (drink, pork, bells). */
-  FB.fmt = function (state, str, ctx) {
-    if (!str) return '';
+  /* ---------- pure text parameter materialization ----------
+     Display-time calls only read state. Role creation happens in prepareEvent,
+     before rendering, and is independent of the selected locale. */
+  function viewCharacter(state, viewer) {
+    if (viewer && typeof viewer === 'object') return viewer;
+    return state.chars[viewer] || null;
+  }
+  function pureRole(state, role) {
     const me = state.chars[state.player.charId];
-    if (typeof str === 'object') {
-      str = str[FB.religionOf(me.religion).group] || str.default;
-      if (!str) return '';
+    let id;
+    if (role === 'spouse') id = me && me.spouseId;
+    else if (role === 'suitor') id = state.player.courtingId;
+    else id = state.roles[role];
+    const c = id ? state.chars[id] : null;
+    return c && !c.dead ? c : null;
+  }
+  function neutralParam(key) {
+    return FB.messageParam(FB.message(key, {}));
+  }
+  function faithParam(kind, religionId) {
+    const group = FB.religionOf(religionId).group;
+    if (kind === 'holy') {
+      return neutralParam('fx.param.holy.' +
+        (group === 'muslim' ? 'imam' : group === 'pagan' ? 'godi' :
+          group === 'jewish' ? 'rabbi' : 'priest'));
     }
+    if (kind === 'god') {
+      return neutralParam('fx.param.god.' +
+        (group === 'muslim' ? 'allah' : group === 'pagan' ? 'gods' :
+          group === 'jewish' ? 'lord' : 'god'));
+    }
+    return neutralParam('fx.param.temple.' +
+      (group === 'muslim' ? 'mosque' : group === 'pagan' ? 'grove' :
+        group === 'jewish' ? 'synagogue' : 'church'));
+  }
+  FB.textParams = function (state, viewer, source, ctx, semantic) {
+    const me = viewCharacter(state, viewer) || state.chars[state.player.charId];
     const pr = FB.world.byId[state.player.provinceId];
     const realmId = state.owner[state.player.provinceId];
     const realm = state.realms[realmId];
-    function roleName(r) {
-      const c = FB.getRole(state, r, true);
-      return c ? c.name : 'someone';
+    const out = {};
+    const textParts = [];
+    const selectorParams = {};
+    function scan(value, key) {
+      if (typeof value === 'string') {
+        if (key !== 'select' && key !== 'param' && key !== 'hash') textParts.push(value);
+        return;
+      }
+      if (!value || typeof value !== 'object') return;
+      if ((value.select === 'plural' || value.select === 'value') &&
+        typeof value.param === 'string') selectorParams[value.param] = 1;
+      for (const child in value) {
+        if (Object.prototype.hasOwnProperty.call(value, child)) scan(value[child], child);
+      }
     }
-    return str.replace(/\{(\w+)\}/g, function (m, k) {
+    scan(source, '');
+    for (const selectorParam in selectorParams) {
+      if (ctx && ctx[selectorParam] !== undefined) out[selectorParam] = ctx[selectorParam];
+    }
+    const text = textParts.join(' ');
+    let match;
+    const rx = /\{(\w+)\}/g;
+    while ((match = rx.exec(text))) {
+      const k = match[1];
       switch (k) {
-        case 'name': return me.name;
-        case 'dyn': return me.dyn || '';
-        case 'title': return FB.titleFor(state);
-        case 'province': return pr ? pr.name : 'this land';
-        case 'realm': return realm ? realm.name : 'the realm';
-        case 'year': return String(state.date.year);
-        case 'settlement': return (ctx && ctx.settlement) || 'the town';
+        case 'name': out[k] = me.name; break;
+        case 'dyn': out[k] = me.dyn || ''; break;
+        case 'title':
+          out[k] = semantic ? { $title: FB.titleSnapshot(state) } : FB.titleFor(state);
+          break;
+        case 'province':
+          out[k] = pr ? pr.name :
+            (semantic ? neutralParam('fx.param.this_land') : FB.T('this land'));
+          break;
+        case 'realm':
+          out[k] = realm ? realm.name :
+            (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
+          break;
+        case 'year': out[k] = String(state.date.year); break;
+        case 'settlement': {
+          const settlement = ctx && ctx.settlement ? ctx.settlement : null;
+          out[k] = settlement
+            ? settlement
+            : (semantic ? neutralParam('fx.param.the_town') : FB.T('the town'));
+          break;
+        }
         case 'item': {
-          const io = state.player.itemOffer;
-          const idef = io && FBDATA.items[io.id];
-          return idef ? idef.icon + ' ' + FB.fmt(state, idef.name, {}) : 'a curiosity';
+          const offer = state.player.itemOffer;
+          const def = offer && FBDATA.items[offer.id];
+          out[k] = def
+            ? (semantic ? { $data: 'item', id: offer.id, path: 'name', icon: true } :
+              def.icon + ' ' + FB.dataText(state, viewer, 'item', offer.id, def, 'name', {}))
+            : (semantic ? neutralParam('fx.param.a_curiosity') : FB.T('a curiosity'));
+          break;
         }
         case 'itemprice': {
-          const io2 = state.player.itemOffer;
-          return io2 ? String(io2.price) : '?';
+          const offer2 = state.player.itemOffer;
+          out[k] = offer2 ? String(offer2.price) : '?';
+          break;
         }
         case 'enemy': {
-          const w = state.player.war;
-          const en = w ? state.realms[w.enemy] : null;
-          return en ? en.name : 'the enemy';
+          const war = state.player.war;
+          const enemy = war ? state.realms[war.enemy] : null;
+          out[k] = enemy ? enemy.name :
+            (semantic ? neutralParam('fx.param.the_enemy') : FB.T('the enemy'));
+          break;
         }
         case 'target': {
-          const w2 = state.player.war;
-          const tp = w2 && w2.target ? FB.world.byId[w2.target] : null;
-          return tp ? tp.name : 'their lands';
-        }
-        case 'warstate': {
-          const w3 = state.player.war;
-          if (!w3) return '';
-          const host = FB.playerHost ? FB.playerHost(state) : null;
-          const men = host ? host.men
-            : Math.round(Math.max(40, FB.playerLevy(state)) * (w3.strength || 1) + (w3.mercCos || 0) * 150);
-          let t = 'Your host: ~' + men + ' men at ' + Math.round((w3.strength || 1) * 100) + '% condition' +
-            ((w3.mercCos || 0) ? ', ' + w3.mercCos + ' mercenary compan' + (w3.mercCos > 1 ? 'ies' : 'y') : '') +
-            (host ? ' — in the field at ' + (FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?')
-              : ' — not yet mustered');
-          const ehost = FB.hostOf ? FB.hostOf(state, w3.enemy) : null;
-          if (ehost) t += ' · their host ~' + ehost.men + ' men at ' +
-            (FB.world.byId[ehost.at] ? FB.world.byId[ehost.at].name : '?');
-          if (!w3.defending && w3.target && FB.world.byId[w3.target]) {
-            t += ' · siege of ' + FB.world.byId[w3.target].name + ' at ' + (w3.siege || 0) + '/3';
-          }
-          if (w3.defending) t += ' · the enemy advance stands at ' + (w3.enemySiege || 0) + '/3';
-          return t;
+          const war2 = state.player.war;
+          const target = war2 && war2.target ? FB.world.byId[war2.target] : null;
+          out[k] = target ? target.name :
+            (semantic ? neutralParam('fx.param.their_lands') : FB.T('their lands'));
+          break;
         }
         case 'liege': {
-          const lr = state.player.liege ? state.realms[state.player.liege] : null;
-          return lr ? lr.name : 'your liege';
+          const liege = state.player.liege ? state.realms[state.player.liege] : null;
+          out[k] = liege ? liege.name :
+            (semantic ? neutralParam('fx.param.your_liege') : FB.T('your liege'));
+          break;
         }
         case 'rname': {
-          const rr = ctx && ctx.rid ? state.realms[ctx.rid] : null;
-          return rr ? rr.name : 'the realm';
+          const namedRealm = ctx && ctx.rid ? state.realms[ctx.rid] : null;
+          out[k] = namedRealm ? namedRealm.name :
+            (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
+          break;
         }
         case 'rulername': {
-          const rr2 = ctx && ctx.rid ? state.realms[ctx.rid] : null;
-          return rr2 ? rr2.ruler.name : 'the lord';
+          const ruled = ctx && ctx.rid ? state.realms[ctx.rid] : null;
+          out[k] = ruled && ruled.ruler ? ruled.ruler.name :
+            (semantic ? neutralParam('fx.param.the_lord') : FB.T('the lord'));
+          break;
         }
         case 'cname': {
-          const cp = ctx && ctx.pid ? FB.world.byId[ctx.pid] : null;
-          return cp ? cp.name : 'the county';
+          const county = ctx && ctx.pid ? FB.world.byId[ctx.pid] : null;
+          out[k] = county ? county.name :
+            (semantic ? neutralParam('fx.param.the_county') : FB.T('the county'));
+          break;
         }
-        case 'god': return FB.godWord(me.religion);
-        case 'holy': return FB.holyWord(me.religion);
-        case 'temple': return FB.templeWord(me.religion);
-        case 'spouse': { const s = FB.getRole(state, 'spouse'); return s ? s.name : 'your spouse'; }
-        case 'suitor': { const s = FB.getRole(state, 'suitor'); return s ? s.name + (s.dyn ? ' ' + s.dyn : '') : 'a stranger'; }
+        case 'god': out[k] = semantic ? faithParam('god', me.religion) : FB.godWord(me.religion); break;
+        case 'holy': out[k] = semantic ? faithParam('holy', me.religion) : FB.holyWord(me.religion); break;
+        case 'temple': out[k] = semantic ? faithParam('temple', me.religion) : FB.templeWord(me.religion); break;
+        case 'spouse': {
+          const spouse = pureRole(state, 'spouse');
+          out[k] = spouse ? spouse.name :
+            (semantic ? neutralParam('fx.param.your_spouse') : FB.T('your spouse'));
+          break;
+        }
+        case 'suitor': {
+          const suitor = pureRole(state, 'suitor');
+          out[k] = suitor ? suitor.name + (suitor.dyn ? ' ' + suitor.dyn : '') :
+            (semantic ? neutralParam('fx.param.a_stranger') : FB.T('a stranger'));
+          break;
+        }
         case 'childname': {
-          const c = ctx && ctx.childId ? state.chars[ctx.childId] : null;
-          return c ? c.name : 'your child';
+          const child = ctx && ctx.childId ? state.chars[ctx.childId] : null;
+          out[k] = child ? child.name :
+            (semantic ? neutralParam('fx.param.your_child') : FB.T('your child'));
+          break;
         }
-        case 'late': return (ctx && ctx.lateName) || 'your late spouse';
-        case 'lord': case 'priest': case 'friend': case 'rival': return roleName(k);
-        default: return m;
+        case 'late':
+          out[k] = (ctx && ctx.lateName) ||
+            (semantic ? neutralParam('fx.param.your_late_spouse') : FB.T('your late spouse'));
+          break;
+        case 'lord': case 'priest': case 'friend': case 'rival': {
+          const role = pureRole(state, k);
+          out[k] = role ? role.name :
+            (semantic ? neutralParam('fx.param.someone') : FB.T('someone'));
+          break;
+        }
+        default:
+          if (ctx && ctx[k] !== undefined) out[k] = ctx[k];
       }
-    });
+    }
+    return out;
+  };
+
+  function selectedEventSource(state, value) {
+    if (!value || typeof value !== 'object' || value.text !== undefined || value.forms) {
+      return value;
+    }
+    const me = state.chars[state.player.charId];
+    const group = FB.religionOf(me.religion).group;
+    return value[group] !== undefined ? value[group] : value.default;
+  }
+  function selectedEventText(state, value, ctx, depth) {
+    depth = depth || 0;
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object' || depth > 3) return '';
+    if (typeof value.text === 'string') return value.text;
+    if (value.forms) return selectedEventText(state, value.forms, ctx, depth + 1);
+    if ((value.select === 'plural' || value.select === 'value') &&
+      value.cases && typeof value.param === 'string') {
+      const raw = ctx && ctx[value.param] !== undefined ? ctx[value.param] : 'other';
+      const choice = value.select === 'plural'
+        ? (Math.abs(Number(raw)) === 1 ? 'one' : 'other')
+        : String(raw);
+      const next = Object.prototype.hasOwnProperty.call(value.cases, choice)
+        ? value.cases[choice]
+        : value.cases.other;
+      return selectedEventText(state, next, ctx, depth + 1);
+    }
+    return selectedEventText(state, selectedEventSource(state, value), ctx, depth + 1);
+  }
+  function materializeTextRoles(state, value, ctx) {
+    const source = selectedEventText(state, value, ctx, 0);
+    if (typeof source !== 'string') return;
+    source.replace(/\{(lord|priest|friend|rival|spouse|suitor)\}/g,
+      function (whole, role) {
+        FB.getRole(state, role, true);
+        return whole;
+      });
+  }
+  function eventPathValue(ev, path) {
+    const parts = String(path || '').split('.');
+    let value = ev;
+    for (let i = 0; i < parts.length && value != null; i++) value = value[parts[i]];
+    return value;
+  }
+  FB.prepareEventPath = function (state, ev, path, ctx) {
+    materializeTextRoles(state, eventPathValue(ev, path), ctx);
+  };
+  FB.prepareEvent = function (state, ev, ctx) {
+    /* Preserve the pre-i18n RNG/materialization order: title, body, explicit
+       card, then every role mentioned anywhere in visible event prose. */
+    materializeTextRoles(state, ev.title, ctx);
+    materializeTextRoles(state, ev.text, ctx);
+    if (ev.charCard) FB.getRole(state, ev.charCard, true);
+    let raw = ' ';
+    function add(value) {
+      if (!value) return;
+      if (typeof value === 'string') {
+        raw += value + ' ';
+      } else if (typeof value === 'object') {
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) add(value[key]);
+        }
+      }
+    }
+    add(ev.title);
+    add(ev.text);
+    for (let i = 0; i < (ev.options || []).length; i++) {
+      const option = ev.options[i];
+      add(option.label);
+      add(option.desc);
+      if (option.success) add(option.success.text);
+      if (option.failure) add(option.failure.text);
+    }
+    const order = ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor'];
+    for (let i = 0; i < order.length; i++) {
+      if (raw.indexOf('{' + order[i] + '}') >= 0) FB.getRole(state, order[i], true);
+    }
+  };
+
+  FB.warStateText = function (state) {
+    const war = state.player.war;
+    if (!war) return '';
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const men = host ? host.men :
+      Math.round(Math.max(40, FB.playerLevy(state)) * (war.strength || 1) + (war.mercCos || 0) * 150);
+    const clauses = [
+      FB.renderKey('fx.warstate.host',
+        { text: 'Your host: ~{men} men at {condition}% condition' },
+        { men: men, condition: Math.round((war.strength || 1) * 100) })
+    ];
+    if (war.mercCos) {
+      clauses.push(FB.renderKey('fx.warstate.mercenaries', {
+        forms: {
+          select: 'plural', param: 'count', cases: {
+            one: '{count} mercenary company',
+            other: '{count} mercenary companies'
+          }
+        }
+      }, { count: war.mercCos }));
+    }
+    clauses.push(host
+      ? FB.renderKey('fx.warstate.in_field', { text: 'In the field at {place}' },
+        { place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
+      : FB.renderKey('fx.warstate.not_mustered', { text: 'Not yet mustered' }, {}));
+    const enemyHost = FB.hostOf ? FB.hostOf(state, war.enemy) : null;
+    if (enemyHost) {
+      clauses.push(FB.renderKey('fx.warstate.enemy_host',
+        { text: 'Their host: ~{men} men at {place}' }, {
+          men: enemyHost.men,
+          place: FB.world.byId[enemyHost.at] ? FB.world.byId[enemyHost.at].name : '?'
+        }));
+    }
+    if (!war.defending && war.target && FB.world.byId[war.target]) {
+      clauses.push(FB.renderKey('fx.warstate.siege',
+        { text: 'Siege of {place}: {progress}/3' },
+        { place: FB.world.byId[war.target].name, progress: war.siege || 0 }));
+    }
+    if (war.defending) {
+      clauses.push(FB.renderKey('fx.warstate.advance',
+        { text: 'Enemy advance: {progress}/3' }, { progress: war.enemySiege || 0 }));
+    }
+    return clauses.join(' · ');
+  };
+
+  FB.fmt = function (state, source, ctx) {
+    return FB.formatSource(state, state.player.charId, source, ctx);
   };
 
   /* ---------- named chance formulas ---------- */
@@ -740,6 +1027,91 @@ window.FB = window.FB || {};
     return eventIndex[id] || null;
   };
 
+  /* Shadow index from an effects object to its durable event-log key. It is
+     rebuilt after mods apply, without writing metadata into moddable data.
+     Register every effective event/scripted-history source at the same time:
+     a descriptor restored from a save must retain its mod-authored English
+     fallback even when that event does not fire again in this browser run. */
+  let eventLogIndex = [];
+  function scriptedPart(value) {
+    return String(value === undefined || value === null ? 'world' : value)
+      .replace(/[^A-Za-z0-9_-]/g, '_');
+  }
+  FB.scriptedMessageKey = function (item) {
+    const subject = item && item.newRealm && item.newRealm.id
+      ? item.newRealm.id
+      : (item && item.realm);
+    return 'news.world.scripted.' + scriptedPart(item && item.year) + '.' +
+      scriptedPart(subject);
+  };
+  FB.indexEventMessages = function () {
+    eventLogIndex = [];
+    function registerSource(key, source) {
+      if (typeof source === 'string') {
+        FB.registerMessage(key + '.default', { text: source });
+      } else if (source && (typeof source.text === 'string' || source.forms)) {
+        FB.registerMessage(key + '.default', source);
+      } else if (source && typeof source === 'object') {
+        for (const branch in source) {
+          if (typeof source[branch] === 'string') {
+            FB.registerMessage(key + '.' + branch, { text: source[branch] });
+          }
+        }
+      }
+    }
+    function add(fx, key) {
+      if (!fx || fx.log === undefined) return;
+      eventLogIndex.push({ fx: fx, key: key, source: fx.log });
+      registerSource(key, fx.log);
+    }
+    for (const ev of FBDATA.events) {
+      const eventBase = 'event.' + ev.id;
+      registerSource(eventBase + '.title', ev.title);
+      registerSource(eventBase + '.text', ev.text);
+      for (let i = 0; i < (ev.options || []).length; i++) {
+        const option = ev.options[i];
+        const base = eventBase + '.options.' + i;
+        registerSource(base + '.label', option.label);
+        registerSource(base + '.desc', option.desc);
+        registerSource(base + '.success.text', option.success && option.success.text);
+        registerSource(base + '.failure.text', option.failure && option.failure.text);
+        add(option.effects, base + '.effects.log');
+        add(option.success && option.success.effects, base + '.success.effects.log');
+        add(option.failure && option.failure.effects, base + '.failure.effects.log');
+      }
+    }
+    for (let i = 0; i < (FBDATA.scripted || []).length; i++) {
+      const scripted = FBDATA.scripted[i];
+      if (scripted && typeof scripted.news === 'string') {
+        FB.registerMessage(FB.scriptedMessageKey(scripted), {
+          text: '📜 ' + scripted.news
+        });
+      }
+    }
+  };
+  FB.eventLogMessage = function (state, fx, ctx) {
+    let info = null;
+    for (let i = 0; i < eventLogIndex.length; i++) {
+      if (eventLogIndex[i].fx === fx) { info = eventLogIndex[i]; break; }
+    }
+    if (!info) {
+      const raw = typeof fx.log === 'string' ? fx.log : (fx.log.default || '');
+      const key = 'event.log.' + FB.i18nSourceKey(raw).slice(4);
+      materializeTextRoles(state, raw, ctx);
+      FB.registerMessage(key, { text: raw });
+      return FB.message(key, FB.textParams(state, state.player.charId, raw, ctx, true));
+    }
+    const me = state.chars[state.player.charId];
+    const group = FB.religionOf(me.religion).group;
+    const source = typeof info.source === 'string' ? info.source :
+      (info.source[group] !== undefined ? info.source[group] : info.source.default);
+    const branch = typeof info.source === 'string' ? 'default' :
+      (info.source[group] !== undefined ? group : 'default');
+    materializeTextRoles(state, source, ctx);
+    return FB.message(info.key + '.' + branch,
+      FB.textParams(state, state.player.charId, source, ctx, true));
+  };
+
   FB.markFired = function (state, ev) {
     if (ev.once) state.player.fired[ev.id] = 1;
     if (ev.cooldown) state.player.cooldowns[ev.id] = state.turn;
@@ -858,7 +1230,9 @@ window.FB = window.FB || {};
       }
       if (victim) {
         FB.killChar(state, victim);
-        FB.news(state, '🕯 ' + victim.name + ' has died, aged ' + FB.ageOf(victim, state.date.year) + '.');
+        FB.news(state, FB.msg('news.event.child_killed',
+          '🕯 {name} has died, aged {age}.',
+          { name: victim.name, age: FB.ageOf(victim, state.date.year) }));
       }
     }
     if (fx.killRole) {
@@ -884,7 +1258,7 @@ window.FB = window.FB || {};
     if (fx.pickHeir && FB.ui && FB.ui.showHeirPick) FB.ui.showHeirPick();
     if (fx.queue) state.eventQueue.push({ id: fx.queue, ctx: ctx });
     if (fx.worldNews) FB.randomWorldNews(state);
-    if (fx.log) FB.news(state, FB.fmt(state, fx.log, ctx));
+    if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));
     if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
 
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
@@ -902,16 +1276,26 @@ window.FB = window.FB || {};
       if (jb && jb.id !== s.id) {
         jb.betrothedId = null;
         delete jb.dowryAsk; delete jb.dowryDue;
-        FB.news(state, '💔 The old pledge to ' + jb.name + ' is quietly set aside.');
+        FB.news(state, FB.msg('news.event.pledge_set_aside',
+          '💔 The old pledge to {name} is quietly set aside.', { name: jb.name }));
       } else if (jb) jb.betrothedId = null;
       me.betrothedId = null;
     }
     s.spouseId = me.id;
     if (!others.length) { me.spouseId = s.id; state.roles.spouse = s.id; }
     else {
-      const words = ['second', 'third', 'fourth', 'fifth'];
-      FB.news(state, '💍 ' + s.name + ' enters your household as your ' +
-        (words[others.length - 1] || 'newest') + ' wife.');
+      const order = ['second', 'third', 'fourth', 'fifth'][others.length - 1] || 'newest';
+      FB.news(state, FB.msg('news.event.additional_wife', {
+        forms: {
+          select: 'value', param: 'order', cases: {
+            second: '💍 {name} enters your household as your second wife.',
+            third: '💍 {name} enters your household as your third wife.',
+            fourth: '💍 {name} enters your household as your fourth wife.',
+            fifth: '💍 {name} enters your household as your fifth wife.',
+            other: '💍 {name} enters your household as your newest wife.'
+          }
+        }
+      }, { order: order, name: s.name }));
     }
     s.role = 'spouse';
     // a spouse cannot stay your lord, priest, friend, or rival — those seats
@@ -929,14 +1313,18 @@ window.FB = window.FB || {};
     const dowry = Math.round((B.dowryByStation[FB.stationOf(s)] || 0) * FB.rf(0.7, 1.3));
     if (dowry > 0) {
       p.gold += dowry;
-      FB.news(state, '💰 The kin of ' + s.name + ' settle a dowry of ' + dowry + ' gold on the match.');
+      FB.news(state, FB.msg('news.event.marriage_dowry',
+        '💰 The kin of {name} settle a dowry of {gold} gold on the match.',
+        { name: s.name, gold: dowry }));
     }
     if (gap > 0) {
       p.prestige += gap * B.marryUpPrestige;
-      FB.news(state, '👑 You have wed above your station — your name rises with the match.');
+      FB.news(state, FB.msg('news.event.married_above',
+        '👑 You have wed above your station — your name rises with the match.', {}));
     } else if (gap < 0) {
       p.prestige = Math.max(0, p.prestige + gap * B.marryDownPrestigeLoss);
-      FB.news(state, '🗣 You have wed beneath your station, and folk mark it.');
+      FB.news(state, FB.msg('news.event.married_below',
+        '🗣 You have wed beneath your station, and folk mark it.', {}));
     }
     // a spouse leaves their province's roster of notables
     if (state.provChars) {
@@ -969,8 +1357,16 @@ window.FB = window.FB || {};
     const sp = FB.spouseOf(state, me);
     if (!sp) return;
     FB.doDivorce(state, sp.id);
-    FB.news(state, '⛪ The marriage to ' + sp.name + ' is declared void — before ' +
-      FB.godWord(me.religion) + ', it never was.');
+    FB.news(state, FB.msg('news.event.annulment', {
+      forms: {
+        select: 'value', param: 'faith', cases: {
+          muslim: '⛪ The marriage to {name} is declared void — before Allah, it never was.',
+          pagan: '⛪ The marriage to {name} is declared void — before the gods, it never was.',
+          jewish: '⛪ The marriage to {name} is declared void — before the Lord, it never was.',
+          other: '⛪ The marriage to {name} is declared void — before God, it never was.'
+        }
+      }
+    }, { faith: FB.religionOf(me.religion).group, name: sp.name }));
   };
 
   /* ---------- widowhood & the house claim ----------
@@ -1003,34 +1399,43 @@ window.FB = window.FB || {};
   FB.fns.dower_take = function (state, ctx) {
     const g = lateDowry(ctx, 0.6);
     state.player.gold += g;
-    FB.news(state, '💰 The house of ' + lateName(ctx) + ' settles ' + g + ' gold on you.');
+    FB.news(state, FB.msg('news.event.widow_settlement',
+      '💰 The house of {house} settles {gold} gold on you.',
+      { house: lateName(ctx), gold: g }));
   };
   FB.fns.dower_take_full = function (state, ctx) {
     const g = lateDowry(ctx, 1.1);
     state.player.gold += g;
-    FB.news(state, '💰 The house of ' + lateName(ctx) + ' pays the full portion: ' + g + ' gold.');
+    FB.news(state, FB.msg('news.event.widow_full_settlement',
+      '💰 The house of {house} pays the full portion: {gold} gold.',
+      { house: lateName(ctx), gold: g }));
   };
   FB.fns.claim_won = function (state, ctx) {
     const p = state.player;
     const g = lateDowry(ctx, 1.5);
     p.gold += g;
-    FB.news(state, '💰 The inheritance settles ' + g + ' gold under your stewardship.');
+    FB.news(state, FB.msg('news.event.inheritance_settled',
+      '💰 The inheritance settles {gold} gold under your stewardship.', { gold: g }));
     // a noble house's estate lifts a common steward into the gentry
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
       p.tier = 2;
       if (p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
-      FB.news(state, '🏛 Stewarding a noble inheritance raises you into the gentry.');
+      FB.news(state, FB.msg('news.event.inheritance_raises_station',
+        '🏛 Stewarding a noble inheritance raises you into the gentry.', {}));
     }
   };
   FB.fns.claim_lost = function (state, ctx) {
     const g = lateDowry(ctx, 0.3);
     state.player.gold += g;
-    FB.news(state, '💰 A grudging purse of ' + g + ' gold — and nothing more.');
+    FB.news(state, FB.msg('news.event.grudging_inheritance',
+      '💰 A grudging purse of {gold} gold — and nothing more.', { gold: g }));
   };
   FB.fns.claim_sold = function (state, ctx) {
     const g = lateDowry(ctx, 1.0);
     state.player.gold += g;
-    FB.news(state, '💰 The house of ' + lateName(ctx) + ' buys back the claim for ' + g + ' gold.');
+    FB.news(state, FB.msg('news.event.claim_sold',
+      '💰 The house of {house} buys back the claim for {gold} gold.',
+      { house: lateName(ctx), gold: g }));
   };
 
   FB.movePlayerRandom = function (state) {
@@ -1052,7 +1457,8 @@ window.FB = window.FB || {};
       for (const r of ['lord', 'priest', 'friend', 'rival']) delete state.roles[r];
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
       p.liege = p.tier >= 3 && rid && rid !== 'player' ? rid : null;
-      FB.news(state, '🧭 You now dwell in ' + FB.world.byId[dest].name + '.');
+      FB.news(state, FB.msg('news.event.moved',
+        '🧭 You now dwell in {province}.', { province: FB.world.byId[dest].name }));
       if (FB.map) { FB.map.playerProv = dest; FB.map.request(); }
     }
   };
@@ -1070,7 +1476,9 @@ window.FB = window.FB || {};
     FB.foundPlayerRealm(state);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
-      FB.news(state, '⚔ ' + state.realms[oldLiege].name + ' will not let you go without a fight!');
+      FB.news(state, FB.msg('news.event.independence_war',
+        '⚔ {realm} will not let you go without a fight!',
+        { realm: state.realms[oldLiege].name }));
       FB.warFooting(state);
       state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
     }
@@ -1122,7 +1530,8 @@ window.FB = window.FB || {};
           old.capital = terr[0];
         }
         if (p.liege && state.realms[p.liege]) {
-          FB.news(state, '👑 Invested, you answer now to ' + state.realms[p.liege].name + '.');
+          FB.news(state, FB.msg('news.event.invested_under_liege',
+            '👑 Invested, you answer now to {realm}.', { realm: state.realms[p.liege].name }));
         }
         if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
       }
@@ -1133,7 +1542,8 @@ window.FB = window.FB || {};
         p.provs.push(got);
         state.holder[got] = 'player';
         FB.invalidateRealmCache();
-        FB.news(state, '🏰 The liege grants you ' + FB.world.byId[got].name + '.');
+        FB.news(state, FB.msg('news.event.liege_grants_county',
+          '🏰 The liege grants you {province}.', { province: FB.world.byId[got].name }));
       }
       FB.checkTierPromotions(state);
     }
@@ -1154,8 +1564,18 @@ window.FB = window.FB || {};
     state.holder[pid] = 'player';
     FB.invalidateRealmCache();
     FB.realmBuryIfEmpty(state, old);
-    FB.news(state, '🤝 Your liege strips ' + (state.realms[old] ? state.realms[old].name : 'the old lord') +
-      ' of ' + pr.name + ' and invests you with it.');
+    FB.news(state, FB.msg('news.event.petition_granted', {
+      forms: {
+        select: 'value', param: 'named', cases: {
+          yes: '🤝 Your liege strips {lord} of {province} and invests you with it.',
+          other: '🤝 Your liege strips the old lord of {province} and invests you with it.'
+        }
+      }
+    }, {
+      named: state.realms[old] ? 'yes' : 'other',
+      lord: state.realms[old] ? state.realms[old].name : '',
+      province: pr.name
+    }));
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
@@ -1175,8 +1595,18 @@ window.FB = window.FB || {};
     FB.adjustLiegeOp(state, rid, 15);
     FB.adjustLiegeOp(state, old, -25);
     p.prestige += 8;
-    FB.news(state, '⚖ ' + r.name + ' takes you as his direct man — ' +
-      (state.realms[old] ? state.realms[old].name : 'your old lord') + ' is passed over.');
+    FB.news(state, FB.msg('news.event.appeal_won', {
+      forms: {
+        select: 'value', param: 'named', cases: {
+          yes: '⚖ {new_liege} takes you as his direct man — {old_liege} is passed over.',
+          other: '⚖ {new_liege} takes you as his direct man — your old lord is passed over.'
+        }
+      }
+    }, {
+      named: state.realms[old] ? 'yes' : 'other',
+      new_liege: r.name,
+      old_liege: state.realms[old] ? state.realms[old].name : ''
+    }));
   };
   FB.fns.appeal_lose = function (state, ctx) {
     const p = state.player;
@@ -1194,7 +1624,8 @@ window.FB = window.FB || {};
     r.liege = null;
     for (const pid of FB.realmTerritory(state, rid)) state.owner[pid] = rid;
     FB.invalidateRealmCache();
-    FB.news(state, '🕊 ' + r.name + ' goes its own way, released from your fealty.');
+    FB.news(state, FB.msg('news.event.vassal_released',
+      '🕊 {realm} goes its own way, released from your fealty.', { realm: r.name }));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
   /* answer a revolt (or a refused revocation) with war — the rebel stands
@@ -1226,7 +1657,8 @@ window.FB = window.FB || {};
     }
     r.alive = false;
     FB.invalidateRealmCache();
-    FB.news(state, '📜 The fief returns to your demesne. ' + r.name + ' is no more.');
+    FB.news(state, FB.msg('news.event.fief_reclaimed',
+      '📜 The fief returns to your demesne. {realm} is no more.', { realm: r.name }));
     FB.checkTierPromotions(state);
   };
   FB.fns.vassal_refuse = function (state, ctx) {
@@ -1255,7 +1687,9 @@ window.FB = window.FB || {};
     for (const pid of FB.realmHeldCounties(state, worst)) g += Math.ceil((state.dev[pid] || 1) * FBDATA.balance.vassalTaxRate * 2);
     state.player.gold += g;
     FB.adjustLiegeOp(state, worst, -20);
-    FB.news(state, '💰 ' + state.realms[worst].name + ' pays ' + g + ' gold under protest.');
+    FB.news(state, FB.msg('news.event.vassal_tax_paid',
+      '💰 {realm} pays {gold} gold under protest.',
+      { realm: state.realms[worst].name, gold: g }));
     if (FB.liegeOpOf(state, worst) <= -50) state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: worst } });
   };
 
@@ -1264,7 +1698,9 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (r.alive && r.war && state.realms[r.war.enemy] && state.realms[r.war.enemy].alive) {
-        wars.push('⚔ ' + r.name + ' wars against ' + state.realms[r.war.enemy].name + '.');
+        wars.push(FB.msg('news.world.random_war',
+          '⚔ {attacker} wars against {defender}.',
+          { attacker: r.name, defender: state.realms[r.war.enemy].name }));
       }
     }
     if (wars.length) FB.news(state, FB.pick(wars));
@@ -1275,7 +1711,8 @@ window.FB = window.FB || {};
         const s = FB.realmStrength(state, id);
         if (s > bs) { bs = s; big = state.realms[id]; }
       }
-      if (big) FB.news(state, '👑 They say ' + big.name + ' is the mightiest power of the age.');
+      if (big) FB.news(state, FB.msg('news.world.mightiest_realm',
+        '👑 They say {realm} is the mightiest power of the age.', { realm: big.name }));
     }
   };
 })();

@@ -8,6 +8,9 @@ window.FB = window.FB || {};
   FB.SKILLS = SKILLS;
   FB.SKILL_NAMES = { dip: 'Diplomacy', mar: 'Martial', ste: 'Stewardship', int: 'Intrigue', lea: 'Learning' };
   FB.SKILL_ICONS = { dip: '🤝', mar: '⚔', ste: '⚖', int: '🕸', lea: '📖' };
+  FB.skillName = function (id) {
+    return FB.T(FB.SKILL_NAMES[id] || id);
+  };
 
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
   FB.religionOf = function (id) { return FBDATA.religions[id] || FBDATA.religions.catholic; };
@@ -215,6 +218,9 @@ window.FB = window.FB || {};
   };
 
   FB.STATION_NAMES = ['Lowborn', 'Freeholder', 'Gentry', 'Noble', 'Royalty'];
+  FB.stationName = function (station) {
+    return FB.T(FB.STATION_NAMES[station] || '');
+  };
   FB.stationOf = function (c) {
     if (c.station !== undefined && c.station !== null) return c.station;
     if (c.role === 'lord') return 3;
@@ -362,7 +368,8 @@ window.FB = window.FB || {};
       rel.group === 'jewish' ? 'jewish' : 'christian';
     if (me.sex === 'f' && FBDATA.titles[key + '_f']) key = key + '_f';
     const arr = FBDATA.titles[key] || FBDATA.titles.christian;
-    return arr[FB.clamp(tier, 0, arr.length - 1)];
+    const index = FB.clamp(tier, 0, arr.length - 1);
+    return FB.dataText(state, state.player.charId, 'title', key + '.' + index, arr[index], '', {});
   };
   FB.titleFor = function (state) {
     const p = state.player;
@@ -375,34 +382,81 @@ window.FB = window.FB || {};
         monk: g === 'muslim' ? 'Scholar' : 'Monk',
         priest: g === 'muslim' ? 'Imam' : g === 'pagan' ? 'Godi' : 'Priest'
       };
-      if (profNames[p.profession]) t = profNames[p.profession];
+      if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
     }
-    if (state.player.flags.bishop) t = 'Bishop';
-    else if (state.player.flags.chief_qadi) t = 'Grand Qadi';
-    else if (state.player.flags.abbot && p.tier === 2) t = 'Abbot';
-    else if (state.player.flags.qadi && p.tier === 2) t = 'Qadi';
+    if (state.player.flags.bishop) t = FB.T('Bishop');
+    else if (state.player.flags.chief_qadi) t = FB.T('Grand Qadi');
+    else if (state.player.flags.abbot && p.tier === 2) t = FB.T('Abbot');
+    else if (state.player.flags.qadi && p.tier === 2) t = FB.T('Qadi');
     return t;
   };
 
   /* the player's landed style: "Count of Anjou", "Duke of Normandy",
      "King of England" — falls back to the bare rank when unlanded */
   FB.styledTitle = function (state) {
+    return FB.renderTitleSnapshot(FB.titleSnapshot(state));
+  };
+
+  FB.titleSnapshot = function (state) {
     const p = state.player;
-    const base = FB.titleFor(state);
+    const me = state.chars[p.charId];
+    const rel = FB.religionOf(me.religion);
+    let group = rel.group === 'muslim' ? 'muslim' : rel.group === 'pagan' ? 'pagan' :
+      rel.group === 'jewish' ? 'jewish' : 'christian';
+    if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
+    const arr = FBDATA.titles[group] || FBDATA.titles.christian;
+    const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) };
+    if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
+      if (p.profession === 'monk') {
+        snap.special = rel.group === 'muslim' ? 'scholar' : 'monk';
+      } else if (p.profession === 'priest') {
+        snap.special = rel.group === 'muslim' ? 'imam' :
+          (rel.group === 'pagan' ? 'godi' : 'priest');
+      } else if (p.profession === 'craftsman' || p.profession === 'merchant' ||
+        p.profession === 'soldier') {
+        snap.special = p.profession;
+      }
+    }
+    if (p.flags.bishop) snap.special = 'bishop';
+    else if (p.flags.chief_qadi) snap.special = 'grand_qadi';
+    else if (p.flags.abbot && p.tier === 2) snap.special = 'abbot';
+    else if (p.flags.qadi && p.tier === 2) snap.special = 'qadi';
     if (p.tier === 4 && p.provs && p.provs.length) {
       const pr = FB.world && FB.world.byId[p.provs[0]];
-      if (pr) return base + ' of ' + pr.name;
-    }
-    if (p.tier === 5 && FB.playerDuchy) {
+      if (pr) snap.place = pr.name;
+    } else if (p.tier === 5 && FB.playerDuchy) {
       const did = FB.playerDuchy(state);
-      if (did && FBDATA.duchies[did]) return base + ' of ' + FBDATA.duchies[did].name;
-    }
-    if (p.tier >= 6 && state.realms.player && state.realms.player.alive) {
+      if (did && FBDATA.duchies[did]) snap.place = FBDATA.duchies[did].name;
+    } else if (p.tier >= 6 && state.realms.player && state.realms.player.alive) {
       const rn = state.realms.player.name;
-      if (rn.indexOf('Kingdom of ') === 0) return base + ' of ' + rn.slice(11);
-      if (rn.indexOf('Empire of ') === 0) return base + ' of ' + rn.slice(10);
+      if (rn.indexOf('Kingdom of ') === 0) snap.place = rn.slice(11);
+      else if (rn.indexOf('Empire of ') === 0) snap.place = rn.slice(10);
     }
-    return base;
+    return snap;
+  };
+  FB.rankTitleSnapshot = function (state, tier, place) {
+    const current = FB.titleSnapshot(state);
+    const snap = { group: current.group, tier: tier };
+    if (place) snap.place = place;
+    return snap;
+  };
+  FB.renderTitleSnapshot = function (snapshot) {
+    if (!snapshot) return '';
+    const arr = FBDATA.titles[snapshot.group] || FBDATA.titles.christian;
+    const index = FB.clamp(snapshot.tier || 0, 0, arr.length - 1);
+    const specialWords = {
+      craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
+      scholar: 'Scholar', monk: 'Monk', imam: 'Imam', godi: 'Godi', priest: 'Priest',
+      bishop: 'Bishop', grand_qadi: 'Grand Qadi', abbot: 'Abbot', qadi: 'Qadi'
+    };
+    const title = snapshot.special && specialWords[snapshot.special]
+      ? FB.T(specialWords[snapshot.special])
+      : (snapshot.word ? FB.T(snapshot.word) :
+        FB.renderKey('title.' + snapshot.group + '.' + index + '.default',
+          { text: arr[index] }, {}));
+    return snapshot.place ? FB.T('{title} of {place}', {
+      title: title, place: snapshot.place
+    }) : title;
   };
 
   /* an AI realm ruler's style: "Emir Yusuf", "High King Ragnarr" — rank
@@ -412,30 +466,31 @@ window.FB = window.FB || {};
     const pr = FB.world && FB.world.byId[realm.capital];
     const group = pr ? FB.religionOf(pr.religion).group : 'christian';
     const arr = FBDATA.titles[group] || FBDATA.titles.christian;
-    return arr[FB.clamp((realm.rank || 3) + 3, 4, arr.length - 1)];
+    const index = FB.clamp((realm.rank || 3) + 3, 4, arr.length - 1);
+    return FB.dataText(state, state.player.charId, 'title', group + '.' + index, arr[index], '', {});
   };
 
   /* words for text templating */
   FB.holyWord = function (religionId) {
     const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return 'imam';
-    if (g === 'pagan') return 'godi';
-    if (g === 'jewish') return 'rabbi';
-    return 'priest';
+    if (g === 'muslim') return FB.T('imam');
+    if (g === 'pagan') return FB.T('godi');
+    if (g === 'jewish') return FB.T('rabbi');
+    return FB.T('priest');
   };
   FB.godWord = function (religionId) {
     const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return 'Allah';
-    if (g === 'pagan') return 'the gods';
-    if (g === 'jewish') return 'the Lord';
-    return 'God';
+    if (g === 'muslim') return FB.T('Allah');
+    if (g === 'pagan') return FB.T('the gods');
+    if (g === 'jewish') return FB.T('the Lord');
+    return FB.T('God');
   };
   FB.templeWord = function (religionId) {
     const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return 'mosque';
-    if (g === 'pagan') return 'shrine';
-    if (g === 'jewish') return 'synagogue';
-    return 'church';
+    if (g === 'muslim') return FB.T('mosque');
+    if (g === 'pagan') return FB.T('shrine');
+    if (g === 'jewish') return FB.T('synagogue');
+    return FB.T('church');
   };
 
   /* opinion label */

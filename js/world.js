@@ -533,7 +533,9 @@ window.FB = window.FB || {};
       if (liege === 'player') {
         // your own man dies heirless: the fief returns to your hand
         toPlayer = true;
-        FB.news(state, '🕯 The lord of ' + pr.name + ' dies without an heir — the fief returns to your hand.');
+        FB.news(state, FB.msg('news.world.escheat_to_player',
+          '🕯 The lord of {province} dies without an heir — the fief returns to your hand.',
+          { province: pr.name }));
       } else if (p.tier >= 4 && p.provs && liege && state.realms[liege] &&
                  FB.topRealm(state, rid) === FB.playerRealmId(state)) {
         // the scramble: you must border the empty fief and share its sovereign
@@ -543,8 +545,9 @@ window.FB = window.FB || {};
           const c = FB.clamp(0.10 + FB.liegeOpOf(state, liege) / 250 + p.prestige / 2000 + (p.warService || 0) / 100, 0.05, 0.6);
           if (FB.chance(c)) {
             toPlayer = true;
-            FB.news(state, '🕯 The lord of ' + pr.name + ' dies without an heir — ' + state.realms[liege].name +
-              ' passes over every other suit and invests you with ' + pr.name + '.');
+            FB.news(state, FB.msg('news.world.escheat_granted',
+              '🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}.',
+              { province: pr.name, liege: state.realms[liege].name }));
           }
         }
       }
@@ -555,8 +558,18 @@ window.FB = window.FB || {};
       } else {
         state.holder[pid] = liege;
         if (FB.game.observe || (FB.world.adj[p.provinceId] && FB.world.adj[p.provinceId][pid])) {
-          FB.news(state, '🕯 ' + pr.name + ' escheats to ' + (state.realms[liege] ? state.realms[liege].name : 'the crown') +
-            ' — its lord died without an heir.');
+          FB.news(state, FB.msg('news.world.escheat_observed', {
+            forms: {
+              select: 'value', param: 'holder', cases: {
+                realm: '🕯 {province} escheats to {liege} — its lord died without an heir.',
+                other: '🕯 {province} escheats to the crown — its lord died without an heir.'
+              }
+            }
+          }, {
+            holder: state.realms[liege] ? 'realm' : 'other',
+            province: pr.name,
+            liege: state.realms[liege] ? state.realms[liege].name : ''
+          }));
         }
       }
     }
@@ -590,13 +603,16 @@ window.FB = window.FB || {};
     p.provs = p.provs || [];
     if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     FB.applyEffects(state, {
-      gold: -FBDATA.balance.settleGold, prestige: -FBDATA.balance.settlePrestige,
-      log: 'Settled the empty land of ' + pr.name + '.'
+      gold: -FBDATA.balance.settleGold, prestige: -FBDATA.balance.settlePrestige
     });
+    FB.news(state, FB.msg('news.world.wasteland_settlement_record',
+      'Settled the empty land of {province}.', { province: pr.name }));
     FB.invalidateRealmCache();
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, '🌱 You settle the empty land of ' + pr.name + ' — smoke rises where only the wind went before.');
+    FB.news(state, FB.msg('news.world.wasteland_settled',
+      '🌱 You settle the empty land of {province} — smoke rises where only the wind went before.',
+      { province: pr.name }));
   };
 
   FB.isRealmAtWar = function (state, realmId) {
@@ -617,7 +633,9 @@ window.FB = window.FB || {};
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     // scripted history
-    for (const ev of (FBDATA.scripted || [])) {
+    const scripted = FBDATA.scripted || [];
+    for (let scriptedIndex = 0; scriptedIndex < scripted.length; scriptedIndex++) {
+      const ev = scripted[scriptedIndex];
       if (ev.year !== state.date.year || state.flags['scripted_' + ev.year + '_' + (ev.newRealm ? ev.newRealm.id : ev.realm)]) continue;
       state.flags['scripted_' + ev.year + '_' + (ev.newRealm ? ev.newRealm.id : ev.realm)] = 1;
       let rid = ev.realm;
@@ -636,7 +654,9 @@ window.FB = window.FB || {};
           if (state.owner[pid] !== undefined && state.owner[pid] !== 'player') FB.transferProvince(state, pid, rid);
         }
       }
-      FB.news(state, '📜 ' + ev.news);
+      const scriptedKey = FB.scriptedMessageKey(ev);
+      FB.registerMessage(scriptedKey, { text: '📜 ' + ev.news });
+      FB.news(state, FB.message(scriptedKey, {}));
     }
 
     // realm AI
@@ -655,7 +675,9 @@ window.FB = window.FB || {};
         const cap = FB.world.byId[r.capital];
         r.ruler = makeRuler(cap ? cap.culture : r.ruler.culture);
         if (FB.game.observe || id === FB.playerRealmId(state) || id === state.player.liege) {
-          FB.news(state, '👑 The ruler of ' + r.name + ' is dead. ' + r.ruler.name + ' rises in their place.');
+          FB.news(state, FB.msg('news.world.ruler_succeeds',
+            '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
+            { realm: r.name, ruler: r.ruler.name }));
         }
       }
       if (r.liege) continue; // vassals make no foreign policy of their own
@@ -675,11 +697,23 @@ window.FB = window.FB || {};
           r.war.captures = (r.war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
           if (FB.game.observe) { // the watcher hears of every fall, far or near
-            FB.news(state, '⚔ ' + pv.name + ' has fallen to ' + (state.realms[winner] ? state.realms[winner].name : winner) + '.');
+            FB.news(state, FB.msg('news.world.province_falls',
+              '⚔ {province} has fallen to {winner}.', {
+                province: pv.name,
+                winner: state.realms[winner] ? state.realms[winner].name : winner
+              }));
           } else if (taken === state.player.provinceId) {
-            FB.news(state, '⚔ ' + (state.realms[winner] ? state.realms[winner].name : winner) + ' has conquered ' + pv.name + ' — your home! New masters rule here now.');
+            FB.news(state, FB.msg('news.world.home_conquered',
+              '⚔ {winner} has conquered {province} — your home! New masters rule here now.', {
+                winner: state.realms[winner] ? state.realms[winner].name : winner,
+                province: pv.name
+              }));
           } else if (FB.world.adj[state.player.provinceId] && FB.world.adj[state.player.provinceId][taken]) {
-            FB.news(state, '⚔ ' + pv.name + ' has fallen to ' + (state.realms[winner] ? state.realms[winner].name : winner) + '.');
+            FB.news(state, FB.msg('news.world.province_falls',
+              '⚔ {province} has fallen to {winner}.', {
+                province: pv.name,
+                winner: state.realms[winner] ? state.realms[winner].name : winner
+              }));
           }
         }
         r.war.years++;
@@ -704,7 +738,9 @@ window.FB = window.FB || {};
           r.war = { enemy: t, years: 0, captures: 0 };
           const homeRealm = state.owner[state.player.provinceId];
           if (FB.game.observe || id === homeRealm || t === homeRealm) {
-            FB.news(state, '🔥 War! ' + r.name + ' marches against ' + state.realms[t].name + '.');
+            FB.news(state, FB.msg('news.world.ai_war',
+              '🔥 War! {attacker} marches against {defender}.',
+              { attacker: r.name, defender: state.realms[t].name }));
           }
         }
       }
@@ -713,7 +749,8 @@ window.FB = window.FB || {};
         !(state.pacts && state.pacts[id] > state.turn) &&
         FB.chance(0.04 * r.aggression) && FB.realmsAdjacent(state, id, 'player')) {
         state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
-        FB.news(state, '🔥 ' + r.name + ' declares war upon YOU!');
+        FB.news(state, FB.msg('news.world.war_declared_on_player',
+          '🔥 {realm} declares war upon YOU!', { realm: r.name }));
         FB.warFooting(state);
         state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
       }
@@ -748,7 +785,14 @@ window.FB = window.FB || {};
         tr.war = { enemy: id, years: 0, captures: 0 };
       }
       if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
-        FB.news(state, '🔥 ' + r.name + ' renounces the suzerainty of ' + (tr ? tr.name : 'the crown') + '!');
+        FB.news(state, FB.msg('news.world.breakaway', {
+          forms: {
+            select: 'value', param: 'overlord', cases: {
+              realm: '🔥 {realm} renounces the suzerainty of {liege}!',
+              other: '🔥 {realm} renounces the suzerainty of the crown!'
+            }
+          }
+        }, { overlord: tr ? 'realm' : 'other', realm: r.name, liege: tr ? tr.name : '' }));
       }
     }
 
@@ -815,13 +859,15 @@ window.FB = window.FB || {};
     if (!w) return;
     const enemy = state.realms[w.enemy];
     if (!enemy || !enemy.alive) {
-      FB.news(state, '🕊 The war ends — our enemy has ceased to exist.');
+      FB.news(state, FB.msg('news.war.enemy_gone',
+        '🕊 The war ends — our enemy has ceased to exist.', {}));
       FB.endPlayerWar(state); return;
     }
     w.seasons++;
     p.gold = Math.max(0, p.gold - (2 + (p.provs ? p.provs.length : 0) + (w.mercCos || 0) * 4));
     if (w.seasons > 8) {
-      FB.news(state, '🕊 Exhaustion ends the war with nothing gained.');
+      FB.news(state, FB.msg('news.war.exhausted',
+        '🕊 Exhaustion ends the war with nothing gained.', {}));
       FB.endPlayerWar(state); return;
     }
     if (w.defending) {
@@ -831,7 +877,9 @@ window.FB = window.FB || {};
         w.enemySiege = (w.enemySiege || 0) + 1;
         if (w.enemySiege >= 3) { FB.warLoseProvince(state); return; }
         if (w.enemySiege === 2) {
-          FB.news(state, '⚠ ' + enemy.name + ' presses deep into your lands — another season unchecked, and something falls.');
+          FB.news(state, FB.msg('news.war.enemy_advance',
+            '⚠ {enemy} presses deep into your lands — another season unchecked, and something falls.',
+            { enemy: enemy.name }));
         }
       }
     }
@@ -866,14 +914,16 @@ window.FB = window.FB || {};
       FB.invalidateRealmCache(); // transferProvince rebuilt before the holder rewrite
       p.provs = p.provs || [];
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
-      FB.news(state, '🏰 ' + FB.world.byId[pid].name + ' is yours by conquest!');
+      FB.news(state, FB.msg('news.war.conquest',
+        '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
       p.prestige += 50;
       FB.endPlayerWar(state);
       FB.checkTierPromotions(state);
     } else {
       p.prestige += 20;
       p.gold += 25;
-      FB.news(state, '🕊 The prize has slipped away, but tribute is paid. The war ends in your favor.');
+      FB.news(state, FB.msg('news.war.tribute_without_prize',
+        '🕊 The prize has slipped away, but tribute is paid. The war ends in your favor.', {}));
       FB.endPlayerWar(state);
     }
   };
@@ -899,15 +949,18 @@ window.FB = window.FB || {};
     if (!lost) lost = FB.borderProvince(state, state.realms.player && state.realms.player.alive ? 'player' : FB.playerRealmId(state), w.enemy);
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.transferProvince(state, lost, w.enemy);
-      FB.news(state, '🏚 ' + FB.world.byId[lost].name + ' is torn from your grasp.');
+      FB.news(state, FB.msg('news.war.province_lost',
+        '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
       if (!p.provs.length) {
         p.tier = 2; p.liege = null;
         if (state.realms.player) state.realms.player.alive = false;
-        FB.news(state, '⬇ Landless once more. The banners are folded away.');
+        FB.news(state, FB.msg('news.war.landless',
+          '⬇ Landless once more. The banners are folded away.', {}));
       }
     } else {
       p.gold = Math.max(0, p.gold - 30);
-      FB.news(state, '🕊 A humiliating peace. Reparations drain your coffers.');
+      FB.news(state, FB.msg('news.war.reparations',
+        '🕊 A humiliating peace. Reparations drain your coffers.', {}));
     }
     p.prestige = Math.max(0, p.prestige - 20);
     FB.endPlayerWar(state);
@@ -942,14 +995,26 @@ window.FB = window.FB || {};
         for (const vid in state.realms) {
           if (state.realms[vid].liege === 'player') state.realms[vid].liege = uid;
         }
-        FB.news(state, '🏴 ' + u.ruler.name + ' seizes the seat — the realm endures; your house does not.');
+        FB.news(state, FB.msg('news.world.usurped',
+          '🏴 {ruler} seizes the seat — the realm endures; your house does not.',
+          { ruler: u.ruler.name }));
       } else {
         // a vassal's fiefs escheat to his liege
         for (const pid of p.provs) {
           state.owner[pid] = FB.topRealm(state, p.liege);
           state.holder[pid] = p.liege;
         }
-        FB.news(state, '📜 Your fiefs escheat to ' + (state.realms[p.liege] ? state.realms[p.liege].name : 'your liege') + '.');
+        FB.news(state, FB.msg('news.world.player_fiefs_escheat', {
+          forms: {
+            select: 'value', param: 'holder', cases: {
+              realm: '📜 Your fiefs escheat to {liege}.',
+              other: '📜 Your fiefs escheat to your liege.'
+            }
+          }
+        }, {
+          holder: state.realms[p.liege] ? 'realm' : 'other',
+          liege: state.realms[p.liege] ? state.realms[p.liege].name : ''
+        }));
       }
       p.provs = [];
     }
@@ -960,7 +1025,8 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     if (opts.flee) FB.movePlayerRandom(state);
-    FB.news(state, '⬇ Cast down. The family keeps its coffers and its name — but not an acre.');
+    FB.news(state, FB.msg('news.world.cast_down',
+      '⬇ Cast down. The family keeps its coffers and its name — but not an acre.', {}));
   };
 
   /* Check whether accumulated victories or defeats settle the war.
@@ -974,12 +1040,20 @@ window.FB = window.FB || {};
     const NEED = FBDATA.balance.warWinsToTakeProvince;
     if (w.wins >= NEED) {
       if (w.defending) {
-        FB.news(state, '🕊 ' + (enemy ? enemy.name : 'The enemy') + ' sues for peace. Your lands are safe.');
+        FB.news(state, FB.msg('news.war.defensive_victory', {
+          forms: {
+            select: 'value', param: 'named', cases: {
+              yes: '🕊 {enemy} sues for peace. Your lands are safe.',
+              other: '🕊 The enemy sues for peace. Your lands are safe.'
+            }
+          }
+        }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '' }));
         p.prestige += 25;
       } else {
         p.prestige += 20;
         p.gold += 25;
-        FB.news(state, '🕊 Bled white in the field, the enemy buys peace with tribute.');
+        FB.news(state, FB.msg('news.war.tribute',
+          '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));
       }
       FB.endPlayerWar(state);
     } else if (w.losses >= NEED) {
@@ -987,7 +1061,8 @@ window.FB = window.FB || {};
         FB.warLoseProvince(state);
       } else {
         p.prestige = Math.max(0, p.prestige - 15);
-        FB.news(state, '🕊 The campaign has failed. The host limps home.');
+        FB.news(state, FB.msg('news.war.campaign_failed',
+          '🕊 The campaign has failed. The host limps home.', {}));
         FB.endPlayerWar(state);
       }
     }
@@ -1003,21 +1078,30 @@ window.FB = window.FB || {};
     w.wins++; afterBattle(w);
     w.strength = Math.max(0.5, (w.strength || 1) - 0.05); // victory also bleeds
     if (w.defending && w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1);
-    FB.news(state, '⚔ Victory in the field! (' + w.wins + '/' + FBDATA.balance.warWinsToTakeProvince + ')');
-    if (FB.chance(0.3)) FB.lootItem(state, null, '⚔ Among the spoils');
+    FB.news(state, FB.msg('news.war.field_victory',
+      '⚔ Victory in the field! ({wins}/{needed})',
+      { wins: w.wins, needed: FBDATA.balance.warWinsToTakeProvince }));
+    if (FB.chance(0.3)) FB.lootItem(state, null, 'spoils');
     FB.warOutcome(state);
   };
   FB.fns.war_loss = function (state) {
     const w = state.player.war; if (!w) return;
     w.losses++; afterBattle(w);
     w.strength = Math.max(0.5, (w.strength || 1) - 0.2);
-    FB.news(state, '⚔ The host is bested… (' + w.losses + ' defeats)');
+    FB.news(state, FB.msg('news.war.field_defeat', {
+      forms: {
+        select: 'plural', param: 'losses', cases: {
+          one: '⚔ The host is bested… ({losses} defeat)',
+          other: '⚔ The host is bested… ({losses} defeats)'
+        }
+      }
+    }, { losses: w.losses }));
     FB.warOutcome(state);
   };
   FB.fns.war_harry = function (state) {
     const w = state.player.war; if (!w) return;
     w.harried = Math.min(2, (w.harried || 0) + 1);
-    if (FB.chance(0.15)) FB.lootItem(state, null, '⚔ Taken in the raid');
+    if (FB.chance(0.15)) FB.lootItem(state, null, 'raid');
   };
   FB.fns.war_hold = function (state) {
     const w = state.player.war; if (!w) return;
@@ -1039,20 +1123,25 @@ window.FB = window.FB || {};
     w.siege = (w.siege || 0) + 1;
     if (FB.chance(0.4)) { // a sortie from the walls
       if (FB.chance(FB.namedChance(state, 'war_battle'))) {
-        FB.news(state, '⚔ A sortie from ' + tname + ' is thrown back. The siege holds.');
+        FB.news(state, FB.msg('news.war.sortie_repelled',
+          '⚔ A sortie from {target} is thrown back. The siege holds.', { target: tname }));
       } else {
         w.siege = Math.max(0, w.siege - 1);
         w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
         state.player.gold = Math.max(0, state.player.gold - 2);
-        FB.news(state, '⚔ A night sortie burns your siege-works — the ring is set back.');
+        FB.news(state, FB.msg('news.war.sortie_succeeds',
+          '⚔ A night sortie burns your siege-works — the ring is set back.', {}));
         return;
       }
     }
     if (w.siege >= 3) {
-      FB.news(state, '🏰 The walls of ' + tname + ' are breached!');
+      FB.news(state, FB.msg('news.war.walls_breached',
+        '🏰 The walls of {target} are breached!', { target: tname }));
       FB.warCapture(state);
     } else {
-      FB.news(state, '⚔ The siege of ' + tname + ' tightens. (' + w.siege + '/3)');
+      FB.news(state, FB.msg('news.war.siege_tightens',
+        '⚔ The siege of {target} tightens. ({progress}/3)',
+        { target: tname, progress: w.siege }));
     }
   };
   FB.fns.war_mercs = function (state) {
@@ -1063,7 +1152,8 @@ window.FB = window.FB || {};
       host.men += 150; host.mercs = (host.mercs || 0) + 150;
       host.size = (host.size === undefined ? host.men : host.size + 150); // the company swells the muster
     }
-    FB.news(state, '⚔ A mercenary company takes your coin — ~150 spears join the host.');
+    FB.news(state, FB.msg('news.war.mercenaries_join',
+      '⚔ A mercenary company takes your coin — ~150 spears join the host.', {}));
   };
   /* mustering: the host takes the field at your seat (js/armies.js) */
   FB.fns.war_raise = function (state) {
@@ -1094,12 +1184,26 @@ window.FB = window.FB || {};
     const host = FB.playerHost && FB.playerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
     if (!host || !prey) return;
-    const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : 'the enemy';
+    const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : '';
     if (FB.orderArmy(state, host, prey.at)) {
       host.huntPrey = w.enemy; // track the prey: re-path onto it each day
-      FB.news(state, '🚩 The host marches to bring ' + ename + ' to battle.');
+      FB.news(state, FB.msg('news.war.hunt_enemy', {
+        forms: {
+          select: 'value', param: 'named', cases: {
+            yes: '🚩 The host marches to bring {enemy} to battle.',
+            other: '🚩 The host marches to bring the enemy to battle.'
+          }
+        }
+      }, { named: ename ? 'yes' : 'other', enemy: ename }));
     } else {
-      FB.news(state, '🚩 There is no road from here to the host of ' + ename + '.');
+      FB.news(state, FB.msg('news.war.no_road_to_enemy', {
+        forms: {
+          select: 'value', param: 'named', cases: {
+            yes: '🚩 There is no road from here to the host of {enemy}.',
+            other: '🚩 There is no road from here to the enemy host.'
+          }
+        }
+      }, { named: ename ? 'yes' : 'other', enemy: ename }));
     }
   };
   /* small condition shifts for wartime flavor events */
@@ -1119,10 +1223,18 @@ window.FB = window.FB || {};
       const cost = 15 + 5 * (w.losses || 0);
       p.gold = Math.max(0, p.gold - cost);
       p.prestige = Math.max(0, p.prestige - 10);
-      FB.news(state, '🕊 Peace is bought from ' + (enemy ? enemy.name : 'the enemy') + ' for ' + cost + ' gold.');
+      FB.news(state, FB.msg('news.war.peace_bought', {
+        forms: {
+          select: 'value', param: 'named', cases: {
+            yes: '🕊 Peace is bought from {enemy} for {cost} gold.',
+            other: '🕊 Peace is bought from the enemy for {cost} gold.'
+          }
+        }
+      }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '', cost: cost }));
     } else {
       p.prestige = Math.max(0, p.prestige - 8);
-      FB.news(state, '🕊 The campaign is abandoned. The banners come home.');
+      FB.news(state, FB.msg('news.war.abandoned',
+        '🕊 The campaign is abandoned. The banners come home.', {}));
     }
     FB.endPlayerWar(state);
   };
@@ -1195,19 +1307,37 @@ window.FB = window.FB || {};
   FB.playerEmpire = function (state) { return FB.playerEmpires(state)[0] || null; };
 
   /* every title the player holds, highest dignity first — for the Self tab.
-     High titles come as {d:'Empire'|'Kingdom'|'Duchy'|'Barony', t:'Emir of X'};
-     counties are returned as bare ids so the caller can render them compactly. */
+     High titles carry a translatable dignity label plus locale-neutral title
+     data; counties remain bare ids so the caller can render them compactly. */
   FB.playerTitles = function (state) {
     const p = state.player, out = [];
     if (p.tier === 3) {
       const pr = FB.world && FB.world.byId[p.provinceId];
-      out.push({ d: 'Barony', t: FB.titleWordFor(state, 3) + ' of ' + (pr ? pr.name : '?') });
+      out.push({
+        d: 'Barony',
+        titleData: FB.rankTitleSnapshot(state, 3, pr ? pr.name : '?')
+      });
       return { high: out, counties: [] };
     }
     if (p.tier < 4) return { high: [], counties: [] };
-    for (const eid of FB.playerEmpires(state)) out.push({ d: 'Empire', t: FB.titleWordFor(state, 7) + ' of ' + FBDATA.empires[eid].name });
-    for (const kid of FB.playerKingdoms(state)) out.push({ d: 'Kingdom', t: FB.titleWordFor(state, 6) + ' of ' + FBDATA.kingdoms[kid].name });
-    for (const did of FB.playerDuchies(state)) out.push({ d: 'Duchy', t: FB.titleWordFor(state, 5) + ' of ' + FBDATA.duchies[did].name });
+    for (const eid of FB.playerEmpires(state)) {
+      out.push({
+        d: 'Empire',
+        titleData: FB.rankTitleSnapshot(state, 7, FBDATA.empires[eid].name)
+      });
+    }
+    for (const kid of FB.playerKingdoms(state)) {
+      out.push({
+        d: 'Kingdom',
+        titleData: FB.rankTitleSnapshot(state, 6, FBDATA.kingdoms[kid].name)
+      });
+    }
+    for (const did of FB.playerDuchies(state)) {
+      out.push({
+        d: 'Duchy',
+        titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name)
+      });
+    }
     return { high: out, counties: (p.provs || []).slice() };
   };
 
@@ -1246,31 +1376,16 @@ window.FB = window.FB || {};
     if (indep && FB.playerEmpire(state) && p.tier < 7) newTier = 7;
     if (newTier > p.tier) {
       p.tier = newTier;
-      FB.news(state, '👑 You are raised to ' + FB.titleFor(state) + '!');
+      const titleData = FB.titleSnapshot(state);
+      FB.news(state, FB.msg('news.world.promoted',
+        '👑 You are raised to {title}!', { title: { $title: titleData } }));
+      if (state.peakTier === undefined || newTier > state.peakTier) {
+        state.peakTier = newTier;
+        state.peakTitleData = titleData;
+      }
       p.prestige += 30 * newTier;
       if (indep) FB.foundPlayerRealm(state); // restyle the realm at its new dignity
     }
   };
 
-  /* A chronicle entry is either a legacy pre-rendered string —
-     FB.news(state, 'The harvest fails.') — or a structured message —
-     FB.news(state, { key, params }). Structured entries nest the durable message
-     descriptor under `msg` so the chronicle can re-render in the current locale
-     while legacy strings stay frozen in their generation language. Both forms
-     coexist without save migration. */
-  FB.news = function (state, msg) {
-    const entry = { y: state.date.year, s: state.date.season, d: state.date.day };
-    if (msg && typeof msg === 'object' && msg.key !== undefined) {
-      entry.msg = { key: msg.key };
-      if (msg.params !== undefined) entry.msg.params = msg.params;
-    } else {
-      entry.t = msg;
-    }
-    state.log.push(entry);
-    // the chronicle shows the last 80 entries; unbounded growth would make
-    // every seasonal autosave serialize an ever-longer history
-    if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
-    // an observer who asked for quiet still gets the chronicle, not the popups
-    if (FB.ui && FB.ui.toast && !(FB.game.observe && FB.game.obsQuiet)) FB.ui.toast(FB.newsText(entry));
-  };
 })();

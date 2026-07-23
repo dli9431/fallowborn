@@ -20,7 +20,7 @@ window.FB = window.FB || {};
       state: s,
       meta: {
         name: FB.fullName(s.chars[s.player.charId]),
-        title: FB.titleFor(s),
+        titleData: FB.titleSnapshot(s),
         year: s.date.year,
         season: s.date.season
       }
@@ -31,7 +31,7 @@ window.FB = window.FB || {};
     try {
       localStorage.setItem(key(slot), S.serialize());
     } catch (e) {
-      if (FB.ui) FB.ui.toast('Save failed: ' + e.message);
+      if (FB.ui) FB.ui.toast('Save failed: {message}', { message: e.message });
     }
   };
 
@@ -52,7 +52,14 @@ window.FB = window.FB || {};
   /* label for an already-read save object — lets callers parse a slot once */
   S.metaOf = function (d) {
     if (!d || !d.meta) return null;
-    return d.meta.name + ' — ' + d.meta.title + ', ' + FB.SEASONS[d.meta.season] + ' ' + d.meta.year;
+    const title = d.meta.titleData ? FB.renderTitleSnapshot(d.meta.titleData) :
+      FB.L(d.meta.title || '');
+    return FB.T('{name} — {title}, {season} {year}', {
+      name: d.meta.name,
+      title: title,
+      season: FB.seasonName(d.meta.season),
+      year: d.meta.year
+    });
   };
   S.slotMeta = function (slot) { return S.metaOf(S.read(slot)); };
 

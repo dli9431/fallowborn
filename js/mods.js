@@ -33,7 +33,10 @@ window.FBMODS = window.FBMODS || [];
     const i = on.indexOf(id);
     if (i === -1) on.push(id); else on.splice(i, 1);
     try { localStorage.setItem(BKEY, JSON.stringify(on)); }
-    catch (e) { if (FB.ui) FB.ui.toast('Could not store mod setting: ' + e.message); return; }
+    catch (e) {
+      if (FB.ui) FB.ui.toast('Could not store mod setting: {message}', { message: e.message });
+      return;
+    }
     location.reload();
   };
 
@@ -79,7 +82,10 @@ window.FBMODS = window.FBMODS || [];
   M.store = function (jsonText) {
     let mod;
     try { mod = JSON.parse(jsonText); }
-    catch (e) { if (FB.ui) FB.ui.toast('Invalid JSON: ' + e.message); return; }
+    catch (e) {
+      if (FB.ui) FB.ui.toast('Invalid JSON: {message}', { message: e.message });
+      return;
+    }
     if (typeof mod !== 'object' || mod === null) { if (FB.ui) FB.ui.toast('Mod must be a JSON object.'); return; }
     const all = readAll();
     // re-applying a mod (same text, or same "name") replaces the stored
@@ -96,7 +102,10 @@ window.FBMODS = window.FBMODS || [];
     }
     if (idx >= 0) all[idx] = jsonText; else all.push(jsonText);
     try { localStorage.setItem(KEY, JSON.stringify(all)); }
-    catch (e) { if (FB.ui) FB.ui.toast('Could not store mod: ' + e.message); return; }
+    catch (e) {
+      if (FB.ui) FB.ui.toast('Could not store mod: {message}', { message: e.message });
+      return;
+    }
     location.reload();
   };
 

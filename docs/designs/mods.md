@@ -17,4 +17,10 @@ differs from the active one.
 Mods dialog toggles them, and enabled ids persist in localStorage (`fb_mods_bundled`) and
 apply ahead of pasted mods.
 
+Localization catalogs describe the core English data, but are never allowed to mutate it.
+The source hash is calculated after mods are applied. Effective event sources are indexed
+before locale validation so newly added mod text always has an English fallback. A mod's
+authored name, description, and prose remain English unless they exactly match a known
+catalog source; translation packs for third-party mods are outside the core v1 contract.
+
 Related: `docs/MODDING.md` is the full mod authoring reference.

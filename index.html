@@ -6,6 +6,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Fallowborn</title>
+<link rel="icon" type="image/png" sizes="32x32" href="static/favicon-32.png">
+<link rel="apple-touch-icon" href="static/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -14,7 +16,7 @@
   <!-- ======== LOADING ======== -->
   <div id="loading" class="screen">
     <h1 class="gametitle">Fallowborn</h1>
-    <p id="loadmsg">Drawing the known world&hellip;</p>
+    <p id="loadmsg" data-i18n="Drawing the known world…">Drawing the known world&hellip;</p>
     <div class="loadbarwrap"><div id="loadbar"></div></div>
   </div>
 
@@ -22,56 +24,57 @@
   <div id="title" class="screen hidden">
     <canvas id="titlecrest" width="120" height="140"></canvas>
     <h1 class="gametitle">Fallowborn</h1>
-    <p class="subtitle">From serf to sovereign &mdash; a dynasty saga of the early Middle Ages</p>
+    <p class="subtitle" data-i18n="From serf to sovereign — a dynasty saga of the early Middle Ages">From serf to sovereign &mdash; a dynasty saga of the early Middle Ages</p>
     <p id="title-mods" class="modnote hidden"></p>
     <div class="menubtns">
-      <button id="btn-continue" class="bigbtn hidden">Continue</button>
-      <button id="btn-newgame" class="bigbtn">New Game</button>
-      <button id="btn-load" class="bigbtn">Load Game</button>
-      <button id="btn-mods" class="bigbtn">Mods</button>
-      <button id="btn-help" class="bigbtn">How to Play</button>
-      <button id="btn-changelog" class="bigbtn">Changelog</button>
+      <button id="btn-continue" class="bigbtn hidden" data-i18n="Continue">Continue</button>
+      <button id="btn-newgame" class="bigbtn" data-i18n="New Game">New Game</button>
+      <button id="btn-load" class="bigbtn" data-i18n="Load Game">Load Game</button>
+      <button id="btn-mods" class="bigbtn" data-i18n="Mods">Mods</button>
+      <button id="btn-settings" class="bigbtn" data-i18n="⚙ Settings">&#9881; Settings</button>
+      <button id="btn-help" class="bigbtn" data-i18n="How to Play">How to Play</button>
+      <button id="btn-changelog" class="bigbtn" data-i18n="Changelog">Changelog</button>
     </div>
-    <p class="credits">A one-file-folder game for the browser &middot; all art procedural &middot; moddable &middot; <span id="title-version"></span></p>
+    <p class="credits"><span data-i18n="A one-file-folder game for the browser">A one-file-folder game for the browser</span> &middot; <span data-i18n="all art procedural">all art procedural</span> &middot; <span data-i18n="moddable">moddable</span> &middot; <span id="title-version"></span></p>
   </div>
 
   <!-- ======== NEW GAME: SCENARIO ======== -->
   <div id="newgame" class="screen hidden">
-    <h2>Choose Your Beginning &mdash; Anno Domini 867</h2>
+    <h2 data-i18n="Choose Your Beginning — Anno Domini 867">Choose Your Beginning &mdash; Anno Domini 867</h2>
     <div id="scenariolist"></div>
     <div class="row gap">
-      <button id="btn-ng-back" class="btn">Back</button>
+      <button id="btn-ng-back" class="btn" data-i18n="Back">Back</button>
     </div>
   </div>
 
   <!-- ======== NEW GAME: PROVINCE PICK ======== -->
   <div id="pickprov" class="screen hidden">
-    <h2>Where were you born?</h2>
-    <p class="hint">Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.</p>
-    <div id="pickinfo" class="pickinfo">No province chosen &mdash; a random home will be found.</div>
+    <h2 data-i18n="Where were you born?">Where were you born?</h2>
+    <p class="hint" data-i18n="Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.">Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.</p>
+    <div id="pickinfo" class="pickinfo" data-i18n="No province chosen — a random home will be found.">No province chosen &mdash; a random home will be found.</div>
     <div class="row gap wrap">
-      <button id="btn-pick-back" class="btn">Back</button>
-      <button id="btn-pick-random" class="btn">Random Province</button>
-      <button id="btn-pick-next" class="btn primary">Next</button>
+      <button id="btn-pick-back" class="btn" data-i18n="Back">Back</button>
+      <button id="btn-pick-random" class="btn" data-i18n="Random Province">Random Province</button>
+      <button id="btn-pick-next" class="btn primary" data-i18n="Next">Next</button>
     </div>
   </div>
 
   <!-- ======== NEW GAME: CHARACTER ======== -->
   <div id="chargen" class="screen hidden">
-    <h2>Who are you?</h2>
+    <h2 data-i18n="Who are you?">Who are you?</h2>
     <div class="cgform">
-      <label>Name <input id="cg-name" type="text" maxlength="20"></label>
-      <button id="cg-reroll" class="btn small">&#127922; Random name</button>
+      <label><span data-i18n="Name">Name</span> <input id="cg-name" type="text" maxlength="20"></label>
+      <button id="cg-reroll" class="btn small"><span data-i18n="🎲 Random name">&#127922; Random name</span></button>
       <div class="row gap">
-        <label class="radio"><input type="radio" name="cg-sex" value="m" checked> Man</label>
-        <label class="radio"><input type="radio" name="cg-sex" value="f"> Woman</label>
+        <label class="radio"><input type="radio" name="cg-sex" value="m" checked> <span data-i18n="Man">Man</span></label>
+        <label class="radio"><input type="radio" name="cg-sex" value="f"> <span data-i18n="Woman">Woman</span></label>
       </div>
-      <p class="hint">Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.</p>
+      <p class="hint" data-i18n="Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.">Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.</p>
       <div id="cg-summary" class="pickinfo"></div>
     </div>
     <div class="row gap">
-      <button id="btn-cg-back" class="btn">Back</button>
-      <button id="btn-cg-start" class="btn primary">Begin Your Story</button>
+      <button id="btn-cg-back" class="btn" data-i18n="Back">Back</button>
+      <button id="btn-cg-start" class="btn primary" data-i18n="Begin Your Story">Begin Your Story</button>
     </div>
   </div>
 
@@ -85,23 +88,29 @@
         <div id="tb-title">&mdash;</div>
       </div>
       <div id="tb-stats">
-        <span class="stat" id="tb-gold" title="Gold (&plusmn; net over the last season)">&#128176; 0</span>
-        <span class="stat" id="tb-prestige" title="Prestige (&plusmn; net over the last season)">&#11088; 0</span>
-        <span class="stat" id="tb-piety" title="Piety (&plusmn; net over the last season)">&#128591; 0</span>
-        <span class="stat" id="tb-health" title="Health">&#10084;&#65039; 10</span>
+        <span class="stat" id="tb-gold" title="Gold (&plusmn; net over the last season)" data-i18n-title="Gold (± net over the last season)">&#128176; 0</span>
+        <span class="stat" id="tb-prestige" title="Prestige (&plusmn; net over the last season)" data-i18n-title="Prestige (± net over the last season)">&#11088; 0</span>
+        <span class="stat" id="tb-piety" title="Piety (&plusmn; net over the last season)" data-i18n-title="Piety (± net over the last season)">&#128591; 0</span>
+        <span class="stat" id="tb-health" title="Health" data-i18n-title="Health">&#10084;&#65039; 10</span>
       </div>
       <div id="tb-date">Spring 867</div>
-      <button id="btn-menu" class="btn small">&#9776;</button>
+      <button id="btn-menu" class="btn small" title="Menu" aria-label="Menu"
+        data-i18n-title="Menu" data-i18n-aria-label="Menu">&#9776;</button>
     </div>
 
     <div id="main">
       <div id="mapwrap">
         <canvas id="map"></canvas>
         <div id="maphud">
-          <button id="btn-zoomin" class="btn hudbtn">+</button>
-          <button id="btn-zoomout" class="btn hudbtn">&minus;</button>
-          <button id="btn-home" class="btn hudbtn" title="Center on home">&#8962;</button>
-          <button id="btn-mapmode" class="btn hudbtn" title="Map filter: Realm (R)">&#128506;</button>
+          <button id="btn-zoomin" class="btn hudbtn" title="Zoom in" aria-label="Zoom in"
+            data-i18n-title="Zoom in" data-i18n-aria-label="Zoom in">+</button>
+          <button id="btn-zoomout" class="btn hudbtn" title="Zoom out" aria-label="Zoom out"
+            data-i18n-title="Zoom out" data-i18n-aria-label="Zoom out">&minus;</button>
+          <button id="btn-home" class="btn hudbtn" title="Center on home" aria-label="Center on home"
+            data-i18n-title="Center on home" data-i18n-aria-label="Center on home">&#8962;</button>
+          <button id="btn-mapmode" class="btn hudbtn" title="Map filter: Realm (R)"
+            aria-label="Map filter: Realm (R)" data-i18n-title="Map filter: Realm (R)"
+            data-i18n-aria-label="Map filter: Realm (R)">&#128506;</button>
         </div>
         <div id="toasts"></div>
       </div>
@@ -110,9 +119,9 @@
       <div id="panels">
         <div id="left">
           <div id="lefttabs">
-            <button class="tab active" data-tab="char">Self</button>
-            <button class="tab" data-tab="family">Kin</button>
-            <button id="btn-closeself" class="tab" aria-label="Close">&#10005;</button>
+            <button class="tab active" data-tab="char" data-i18n="Self">Self</button>
+            <button class="tab" data-tab="family" data-i18n="Kin">Kin</button>
+            <button id="btn-closeself" class="tab" aria-label="Close" data-i18n-aria-label="Close">&#10005;</button>
           </div>
           <div id="leftbody">
             <div id="tab-char" class="tabpane active"></div>
@@ -121,9 +130,9 @@
         </div>
         <div id="side">
           <div id="sidetabs">
-            <button class="tab active" data-tab="actions">Deeds</button>
-            <button class="tab" data-tab="prov">Land</button>
-            <button class="tab" data-tab="log">Chronicle</button>
+            <button class="tab active" data-tab="actions" data-i18n="Deeds">Deeds</button>
+            <button class="tab" data-tab="prov" data-i18n="Land">Land</button>
+            <button class="tab" data-tab="log" data-i18n="Chronicle">Chronicle</button>
           </div>
           <div id="sidebody">
             <div id="tab-actions" class="tabpane active"></div>
@@ -131,9 +140,13 @@
             <div id="tab-log" class="tabpane"></div>
           </div>
           <div id="timebtns">
-            <button id="btn-endturn" class="bigbtn">&#9654; Play</button>
-            <button id="btn-skip" class="bigbtn" title="Skip ahead to the next happening (F)">&#9654;&#9654;</button>
-            <button id="btn-auto" class="bigbtn" title="Automation (Z)">&#9881;</button>
+            <button id="btn-endturn" class="bigbtn" data-i18n="▶ Play">&#9654; Play</button>
+            <button id="btn-skip" class="bigbtn" title="Skip ahead to the next happening (F)"
+              aria-label="Skip ahead to the next happening (F)"
+              data-i18n-title="Skip ahead to the next happening (F)"
+              data-i18n-aria-label="Skip ahead to the next happening (F)">&#9654;&#9654;</button>
+            <button id="btn-auto" class="bigbtn" title="Automation (Z)" aria-label="Automation (Z)"
+              data-i18n-title="Automation (Z)" data-i18n-aria-label="Automation (Z)">&#9881;</button>
           </div>
         </div>
       </div>
@@ -143,7 +156,7 @@
   <!-- ======== EVENT MODAL ======== -->
   <div id="eventmodal" class="modal hidden">
     <div class="modalcard">
-      <h3 id="ev-title">Event</h3>
+      <h3 id="ev-title" data-i18n="Event">Event</h3>
       <div id="ev-text" class="evtext"></div>
       <div id="ev-options"></div>
     </div>
@@ -173,7 +186,9 @@
 <!-- bundled mods (register into window.FBMODS): add <script> tags here -->
 <!-- engine -->
 <script src="js/util.js"></script>
+<script src="js/messages.js"></script>
 <script src="js/i18n.js"></script>
+<script src="data/lang_en.js"></script>
 <script src="js/model.js"></script>
 <script src="js/portrait.js"></script>
 <script src="js/world.js"></script>

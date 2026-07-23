@@ -28,8 +28,8 @@ FBDATA.events.push(
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to the defense.' } },
     { label:'Stand ready at the border.', effects:{ prestige:2, custom:'war_raise' } }
   ]},
-{ id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true,
-  text:'Maps, candle-stubs, and hard-eyed captains. {warstate}. The war against {enemy} must be given its next move — and the men must see you certain of it.',
+{ id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true, warStatus:true,
+  text:'Maps, candle-stubs, and hard-eyed captains. The war against {enemy} must be given its next move — and the men must see you certain of it.',
   options:[
     { label:'Offer pitched battle.', chance:'war_battle', require:{ custom:'war_no_enemy_host' },
       desc:'Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map.',

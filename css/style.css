@@ -11,14 +11,17 @@ body {
   line-height: 1.45;
   font-variant-numeric: tabular-nums; /* digits share a width: no layout wobble as counters run */
 }
-button { font-family: inherit; }
+button, select { font-family: inherit; }
 /* touch-action kills the double-tap-zoom delay; buttons are chrome, not text */
 button, .tab, .traitchip, .charrow, .toast {
   touch-action: manipulation;
   -webkit-user-select: none; user-select: none;
 }
-button:focus-visible, input:focus-visible, textarea:focus-visible {
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid #e0c060; outline-offset: 1px;
+}
+.btn, .bigbtn, .actionbtn, .evopt, .tab, .kv, .hint, .toast, .gm-body-text {
+  overflow-wrap: anywhere;
 }
 /* press feedback on touch (hover never fires there) */
 .btn:active, .bigbtn:active, .actionbtn:active:not(:disabled), .evopt:active, .tab:active {
@@ -368,6 +371,11 @@ textarea.modjson {
 /* ---------- settings: speed-of-days slider ---------- */
 .speedrow { margin: 10px 0; }
 .speedrow input[type="range"] { width: 100%; margin: 0; }
+.setlang {
+  width: 100%; min-height: 42px; margin: 2px 0 8px; padding: 8px 10px;
+  background: #241d15; color: #f0e0b8; border: 1px solid #66522f;
+  border-radius: 6px; font-size: 15px;
+}
 
 /* ---------- mobile ----------
    Touch sizing & thumb-zone chrome for any narrow or short screen; then a

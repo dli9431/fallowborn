@@ -30,6 +30,15 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   Settings can also silence the news toasts or hide the panel for a pure-map view.
 - The game autosaves every spring; three manual save slots live in the ☰ menu.
 
+### Languages
+
+English is the source language. Settings also offers AI-translated Preview catalogs for
+French, German, Italian, and Spanish. The selection is saved in this browser and applies
+after a reload; changing it during a life autosaves first. Interface text, core events, and
+new chronicle messages are localized; proper names, mod-authored text, old prose already
+frozen into a save, and the changelog may remain English. Invalid or outdated catalogs
+safely fall back to English.
+
 ### The loop
 
 Time passes **day by day** (90-day seasons, 360-day years).

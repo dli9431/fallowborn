@@ -9,6 +9,70 @@ window.FB = window.FB || {};
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return FB.esc(s); }
+  function dt(s, kind, id, def, path, ctx) {
+    return FB.dataText(s, s.player.charId, kind, id, def, path, ctx || {});
+  }
+  function cultureName(s, id) {
+    const def = FB.cultureOf(id);
+    return dt(s, 'culture', id, def, 'name');
+  }
+  function religionName(s, id) {
+    const def = FB.religionOf(id);
+    return dt(s, 'religion', id, def, 'name');
+  }
+  const TERRAIN_NAMES = {
+    farmland: 'farmland', forest: 'forest', hills: 'hills', mountains: 'mountains',
+    desert: 'desert', steppe: 'steppe', marsh: 'marsh', tundra: 'tundra'
+  };
+  function terrainName(id) {
+    const source = TERRAIN_NAMES[id] || id;
+    return FB.renderKey('terrain.' + id + '.default', { text: source }, {});
+  }
+  FB.terrainName = terrainName;
+  function settlementKindName(id) {
+    const source = id === 'city' ? 'city' : (id === 'town' ? 'town' : 'village');
+    return FB.renderKey('settlement.' + source + '.default', { text: source }, {});
+  }
+  function rarityName(id) {
+    const source = id === 'famed' ? 'famed' : (id === 'fine' ? 'fine' : 'common');
+    return FB.renderKey('rarity.' + source + '.default', { text: source }, {});
+  }
+  const ROLE_NAMES = {
+    lord: 'Lord', priest: 'Priest', friend: 'Friend', rival: 'Rival',
+    notable: 'Notable', suitor: 'Suitor', match: 'Match', kinspouse: 'Kin by marriage',
+    spouse: 'Spouse', tutor: 'Tutor', parent: 'Parent', sibling: 'Sibling'
+  };
+  function roleName(role) {
+    return FB.T(ROLE_NAMES[role] || role);
+  }
+  function epithetText(s, c) {
+    if (c.epithetMsg) {
+      return FB.renderMessage(c.epithetMsg, {
+        state: s, viewer: s.player.charId
+      });
+    }
+    return c.epithet ? FB.L(c.epithet) : '';
+  }
+  function countyCountText(s, count) {
+    return FB.renderMessage(FB.msg('fx.ui.counties', {
+      forms: {
+        select: 'plural', param: 'count', cases: {
+          one: '{count} county',
+          other: '{count} counties'
+        }
+      }
+    }, { count: count }), { state: s, viewer: s.player.charId });
+  }
+  function menText(s, count) {
+    return FB.renderMessage(FB.msg('fx.ui.men', {
+      forms: {
+        select: 'plural', param: 'count', cases: {
+          one: '{count} man',
+          other: '{count} men'
+        }
+      }
+    }, { count: count }), { state: s, viewer: s.player.charId });
+  }
 
   /* localization chokepoints: a labeled stat row and a panel header. Each wraps
      its (translatable) label through FB.T once, so every row/header is covered at
@@ -57,7 +121,24 @@ window.FB = window.FB || {};
     const el = document.createElement('div');
     el.className = 'toast';
     el.textContent = FB.T(text, params);
-    el.title = 'Dismiss';
+    el.title = FB.T('Dismiss');
+    el.addEventListener('click', function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    box.appendChild(el);
+    while (box.children.length > 5) box.removeChild(box.firstChild);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
+  };
+  UI.toastMessage = function (message, legacyText) {
+    const box = $('toasts');
+    if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = message ? FB.renderMessage(message, {
+      state: FB.state,
+      viewer: FB.state && FB.state.player ? FB.state.player.charId : null
+    }) : (legacyText || '');
+    el.title = FB.T('Dismiss');
     el.addEventListener('click', function () {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
@@ -128,12 +209,16 @@ window.FB = window.FB || {};
     const dd = (s.date.day < 10 ? '\u00A0' : '') + s.date.day; // fixed 2-char day (nbsp — a plain space collapses in HTML)
     /* observe mode: no face, no purse — a nameless watcher and the date */
     if (FB.game.observe) {
-      $('tb-name').textContent = '👁 Observing';
-      $('tb-title').textContent = 'the realms play out on their own';
-      $('tb-date').innerHTML = '<span class="mono">' + FB.SEASONS[s.date.season] + ' ' + dd + ' · ' + s.date.year + ' AD</span>';
+      $('tb-name').textContent = FB.T('👁 Observing');
+      $('tb-title').textContent = FB.T('the realms play out on their own');
+      $('tb-date').innerHTML = '<span class="mono">' + esc(FB.T('{season} {day} · {year} AD', {
+        season: FB.seasonName(s.date.season), day: dd, year: s.date.year
+      })) + '</span>';
       $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
-        '<span class="pp">' + (FB.game.paused ? '▶ Play' : '❚❚ Pause') +
-        '</span><span class="mono">' + FB.SEASONS[s.date.season] + ' ' + dd + '</span>';
+        '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) +
+        '</span><span class="mono">' + esc(FB.T('{season} {day}', {
+          season: FB.seasonName(s.date.season), day: dd
+        })) + '</span>';
       renderActiveTab();
       return;
     }
@@ -150,7 +235,9 @@ window.FB = window.FB || {};
     }
     const pr = FB.world.byId[s.player.provinceId];
     $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? pr.name : '?');
-    const dateStr = FB.SEASONS[s.date.season] + ' ' + dd + ' · ' + s.date.year + ' AD';
+    const dateStr = FB.T('{season} {day} · {year} AD', {
+      season: FB.seasonName(s.date.season), day: dd, year: s.date.year
+    });
     const net = s.seasonNet || {};
     $('tb-gold').innerHTML = '💰 <span class="mono">' + Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
     $('tb-prestige').innerHTML = '⭐ <span class="mono">' + Math.floor(s.player.prestige) + '</span>' + netBadge(net.prestige);
@@ -158,8 +245,11 @@ window.FB = window.FB || {};
     $('tb-health').innerHTML = '❤️ <span class="mono">' + Math.round(me.health) + '</span>';
     $('tb-date').innerHTML = '<span class="mono">' + dateStr + '</span>';
     const kh = FB.isTouch ? '' : '<span class="keyhint">Space</span> ';
-    $('btn-endturn').innerHTML = kh + '<span class="pp">' + (FB.game.paused ? '▶ Play' : '❚❚ Pause') +
-      '</span><span class="mono">' + FB.SEASONS[s.date.season] + ' ' + dd + '</span>';
+    $('btn-endturn').innerHTML = kh + '<span class="pp">' +
+      esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) +
+      '</span><span class="mono">' + esc(FB.T('{season} {day}', {
+        season: FB.seasonName(s.date.season), day: dd
+      })) + '</span>';
     $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Z</span> ') + '⚙' +
       (FB.game.auto && FB.game.auto.on ? '✓' : '');
     renderActiveTab();
@@ -200,22 +290,14 @@ window.FB = window.FB || {};
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
-      const host = FB.playerHost ? FB.playerHost(s) : null;
-      const men = host ? host.men
-        : Math.round(Math.max(40, FB.playerLevy(s)) * (w.strength || 1) + (w.mercCos || 0) * 150);
-      const ehost = FB.hostOf ? FB.hostOf(s, w.enemy) : null;
-      h += '<div class="progressnote warnote">⚔ <b>At war</b> with ' + esc(en ? en.name : '?') +
-        ' — victories ' + w.wins + ', defeats ' + w.losses +
-        ' · host ~' + men + ' men' +
-        (host ? ' in the field at ' + esc(FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?')
-          : ' (not yet mustered — 🚩 below)') +
-        ' (' + Math.round((w.strength || 1) * 100) + '%)' +
-        ((w.mercCos || 0) ? ' · ' + w.mercCos + ' merc. co.' : '') +
-        (ehost ? ' · their host ~' + ehost.men + ' at ' + esc(FB.world.byId[ehost.at] ? FB.world.byId[ehost.at].name : '?') : '') +
-        (!w.defending && w.target && FB.world.byId[w.target]
-          ? ' · siege of ' + esc(FB.world.byId[w.target].name) + ' ' + (w.siege || 0) + '/3' : '') +
-        (w.defending ? ' · enemy advance ' + (w.enemySiege || 0) + '/3' : '') +
-        ' · battle odds ~' + Math.round(FB.namedChance(s, 'war_battle') * 100) + '%</div>';
+      const warSummary = FB.T('⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%', {
+        enemy: en ? en.name : '?',
+        wins: w.wins,
+        losses: w.losses,
+        status: FB.warStateText(s, s.player.charId),
+        odds: Math.round(FB.namedChance(s, 'war_battle') * 100)
+      });
+      h += '<div class="progressnote warnote">' + esc(warSummary) + '</div>';
     }
     const hl = FB.holdingList(s);
     if (hl.length) {
@@ -223,13 +305,17 @@ window.FB = window.FB || {};
       h += '<div class="progressnote">🏠 ' + hl.map(function (id) {
         const d = FBDATA.holdings[id];
         return d ? d.icon : '?';
-      }).join('') + (hg ? ' · +' + (Math.round(hg * 10) / 10) + ' gold/season' : '') + '</div>';
+      }).join('') + (hg ? ' · ' + esc(FB.T('+{amount} gold/season',
+        { amount: Math.round(hg * 10) / 10 })) : '') + '</div>';
     }
     if (s.player.tier >= 3) {
       const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
-      h += '<div class="progressnote">💰 Seasonal revenue ~' + FB.playerTax(s) + ' gold · 🛡 levy ~' + FB.playerLevy(s) + ' men' +
-        (lg ? ' · vassal of <span class="linklike" data-liege="' + esc(s.player.liege) +
-          '" title="See your liege’s sheet">' + esc(lg.name) + '</span>' : ' · independent') + '</div>';
+      h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{gold} gold · 🛡 levy ~{men} men', {
+        gold: FB.playerTax(s), men: FB.playerLevy(s)
+      })) + (lg ? ' · ' + esc(FB.T('vassal of')) +
+        ' <span class="linklike" data-liege="' + esc(s.player.liege) +
+        '" title="' + esc(FB.T('See your liege’s sheet')) + '">' + esc(lg.name) + '</span>' :
+        ' · ' + esc(FB.T('independent'))) + '</div>';
       const parts = [];
       for (const bp of FB.demesne(s)) {
         const blt = FB.builtIn(s, bp);
@@ -242,7 +328,8 @@ window.FB = window.FB || {};
       }
       if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
       const tk = FB.techList(s);
-      h += '<div class="progressnote">📜 Scholarship ' + Math.floor(s.player.research || 0) +
+      h += '<div class="progressnote">' + esc(FB.T('📜 Scholarship {amount}',
+        { amount: Math.floor(s.player.research || 0) })) +
         (tk.length ? ' · ' + tk.map(function (id) {
           const d = FBDATA.tech[id];
           return d ? d.icon : '?';
@@ -254,15 +341,15 @@ window.FB = window.FB || {};
 
     const fh = document.createElement('div');
     fh.className = 'panelh';
-    fh.textContent = 'Focus — pursued every day until changed';
+    fh.textContent = FB.T('Focus — pursued every day until changed');
     box.appendChild(fh);
     for (const f of FB.listFocuses(s)) {
       const cur = s.player.focus === f.id;
       const btn = document.createElement('button');
       btn.className = 'actionbtn' + (cur ? ' focused' : '');
       btn.innerHTML = hintFor(n) +
-        (cur ? '◉ ' : '○ ') + esc(FB.fmt(s, f.label, {})) +
-        '<span class="adesc">' + esc(f.desc(s)) + '</span>';
+        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
+        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
       (function (id) {
         btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
       })(f.id);
@@ -272,28 +359,37 @@ window.FB = window.FB || {};
 
     const ih = document.createElement('div');
     ih.className = 'panelh';
-    ih.textContent = 'Deeds — done at once (each spends the day)';
+    ih.textContent = FB.T('Deeds — done at once (each spends the day)');
     box.appendChild(ih);
     for (const item of FB.listInstants(s)) {
       const btn = document.createElement('button');
       btn.className = 'actionbtn';
       btn.disabled = !item.can;
-      const label = FB.fmt(s, item.a.label, {});
+      const label = dt(s, 'action', item.a.id, item.a, 'label');
       btn.innerHTML = hintFor(n) +
         esc(label) + '<span class="adesc">' +
-        esc(item.can ? item.a.desc(s) : item.reason) + '</span>';
+        esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) + '</span>';
       (function (id) {
         btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
       })(item.a.id);
       box.appendChild(btn);
       n++;
     }
+    FB.localizeTree(box);
   }
 
   function nextStepHint(s) {
+    if (s.player.tier === 0) {
+      return '<div class="progressnote">🧭 ' + esc(FB.T(
+        'Path: save {gold} gold (or win your lord’s favor) to buy freedom.',
+        { gold: FBDATA.balance.freedomCost })) + '</div>';
+    }
+    if (s.player.tier === 1) {
+      return '<div class="progressnote">🧭 ' + esc(FB.T(
+        'Path: prosper, buy land, and a manor ({gold} gold + {prestige} prestige) to join the gentry. Soldiering and the church offer other roads.',
+        { gold: FBDATA.balance.manorCost, prestige: FBDATA.balance.manorPrestige })) + '</div>';
+    }
     const tips = {
-      0: 'Path: save ' + FBDATA.balance.freedomCost + ' gold (or win your lord’s favor) to buy freedom.',
-      1: 'Path: prosper, buy land, and a manor (' + FBDATA.balance.manorCost + ' gold + ' + FBDATA.balance.manorPrestige + ' prestige) to join the gentry. Soldiering and the church offer other roads.',
       2: 'Path: serve your lord, win renown (250+ prestige, lord’s favor 40+), and petition for a barony.',
       3: 'Path: petition your liege for a county — or declare independence and take one.',
       4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer) to be styled duke.',
@@ -301,7 +397,7 @@ window.FB = window.FB || {};
       6: 'Path: hold the majority of two kingdoms of one empire to be crowned emperor.',
       7: 'You stand at the summit of the world.'
     };
-    return '<div class="progressnote">🧭 ' + esc(tips[s.player.tier] || '') + '</div>';
+    return '<div class="progressnote">🧭 ' + esc(FB.T(tips[s.player.tier] || '')) + '</div>';
   }
 
   function skillBars(c) {
@@ -311,7 +407,7 @@ window.FB = window.FB || {};
       const v = FB.skillOf(c, k);
       // the bar fills to the soft cap; past it the number keeps climbing and
       // the bar turns bright to mark mastery beyond the old ceiling
-      h += '<div class="skillrow"><span style="width:86px">' + FB.SKILL_NAMES[k] + '</span>' +
+      h += '<div class="skillrow"><span style="width:86px">' + esc(FB.skillName(k)) + '</span>' +
         '<span class="bar"><i' + (v > soft ? ' class="over"' : '') + ' style="width:' +
         Math.min(100, v / soft * 100) + '%"></i></span><span class="num">' + v + '</span></div>';
     }
@@ -321,14 +417,15 @@ window.FB = window.FB || {};
     let h = '';
     for (const t of c.traits) {
       const tr = FBDATA.traits[t];
-      if (tr) h += '<span class="traitchip" data-trait="' + t + '">' + tr.icon + ' ' + esc(tr.name) + '</span>';
+      if (tr) h += '<span class="traitchip" data-trait="' + t + '">' + tr.icon + ' ' +
+        esc(dt(FB.state, 'trait', t, tr, 'name')) + '</span>';
     }
-    return h || '<span class="cmeta">No notable traits.</span>';
+    return h || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>';
   }
 
   function healthWord(hp) {
-    return hp >= 9 ? 'Hale' : hp >= 7 ? 'Worn' : hp >= 5 ? 'Wounded' :
-      hp >= 3 ? 'Grievously wounded' : 'At death’s door';
+    return FB.T(hp >= 9 ? 'Hale' : hp >= 7 ? 'Worn' : hp >= 5 ? 'Wounded' :
+      hp >= 3 ? 'Grievously wounded' : 'At death’s door');
   }
 
   /* the named wounds & sicknesses the player carries (see FBDATA.ailments) */
@@ -337,39 +434,43 @@ window.FB = window.FB || {};
     if (!ails.length && !s.player.flags.ill) return '';
     let h = '';
     for (const a of ails) {
-      h += '<span class="traitchip" data-ailment="' + a.id + '">' + a.def.icon + ' ' + esc(a.def.name) + '</span>';
+      h += '<span class="traitchip" data-ailment="' + a.id + '">' + a.def.icon + ' ' +
+        esc(dt(s, 'ailment', a.id, a.def, 'name')) + '</span>';
     }
     // saves from before named ailments know only the bare flag
     if (s.player.flags.ill && !FB.hasAilmentKind(me, 'sickness')) {
-      h += '<span class="traitchip" data-ailment="ill">🤒 Ill</span>';
+      h += '<span class="traitchip" data-ailment="ill">🤒 ' + esc(FB.T('Ill')) + '</span>';
     }
     return '<div class="kv"><span>' + esc(FB.T('Ailments')) + '</span></div>' + h;
   }
 
   /* the 🎓 upbringing summary line, shared by the Self tab and character sheets */
   function upbringingNote(s, c) {
-    const focusName = (c.edu && c.edu.focus) ? FB.SKILL_NAMES[c.edu.focus] : 'none chosen';
-    let tutorName = 'no tutor';
-    if (c.edu && c.edu.tutorId === 'self') tutorName = 'you yourself';
+    const focusName = (c.edu && c.edu.focus) ? FB.skillName(c.edu.focus) : FB.T('none chosen');
+    let tutorName = FB.T('no tutor');
+    if (c.edu && c.edu.tutorId === 'self') tutorName = FB.T('you yourself');
     else if (c.edu && c.edu.tutorId && s.chars[c.edu.tutorId] && !s.chars[c.edu.tutorId].dead) {
       tutorName = s.chars[c.edu.tutorId].name;
     }
-    return '<div class="progressnote">🎓 Upbringing — focus: <b>' + esc(focusName) + '</b> · tutor: <b>' + esc(tutorName) + '</b>' +
-      (FB.ageOf(c, s.date.year) < 6 ? ' <span class="cmeta">(lessons begin at age 6)</span>' : '') + '</div>';
+    return '<div class="progressnote">' + esc(FB.T('🎓 Upbringing — focus: {focus} · tutor: {tutor}', {
+      focus: focusName, tutor: tutorName
+    })) + (FB.ageOf(c, s.date.year) < 6 ? ' <span class="cmeta">' +
+      esc(FB.T('(lessons begin at age 6)')) + '</span>' : '') + '</div>';
   }
 
   function itemChips(s) {
     const ids = FB.itemList(s);
-    if (!ids.length) return '<span class="cmeta">Nothing of note.</span>';
+    if (!ids.length) return '<span class="cmeta">' + esc(FB.T('Nothing of note.')) + '</span>';
     let h = '';
     for (const id of ids) {
       const it = FBDATA.items[id];
       if (it) {
         h += '<span class="traitchip" data-item="' + esc(id) + '">' +
-          it.icon + ' ' + esc(FB.fmt(s, it.name, {})) + '</span>';
+          it.icon + ' ' + esc(dt(s, 'item', id, it, 'name')) + '</span>';
       }
     }
-    return h + '<div class="cmeta" style="font-size:12px;margin-top:2px">Tap a treasure to see its powers — or to sell or gift it.</div>';
+    return h + '<div class="cmeta" style="font-size:12px;margin-top:2px">' +
+      esc(FB.T('Tap a treasure to see its powers — or to sell or gift it.')) + '</div>';
   }
 
   /* the player's held titles (tier 3+): high dignities as rows, counties compact */
@@ -377,14 +478,19 @@ window.FB = window.FB || {};
     const t = FB.playerTitles(s);
     if (!t.high.length && !t.counties.length) return '';
     let h = panelh('Titles');
-    for (const e of t.high) h += '<div class="kv"><span>' + esc(e.d) + '</span><b>' + esc(e.t) + '</b></div>';
+    for (const e of t.high) {
+      h += '<div class="kv"><span>' + esc(FB.T(e.d)) + '</span><b>' +
+        esc(e.titleData ? FB.renderTitleSnapshot(e.titleData) : FB.L(e.t || '')) +
+        '</b></div>';
+    }
     if (t.counties.length) {
       const names = [];
       for (const pid of t.counties) {
         const pr = FB.world.byId[pid];
         if (pr) names.push(pr.name);
       }
-      h += '<div class="kv"><span>Counties (' + t.counties.length + ')</span><b>' + esc(names.join(' · ')) + '</b></div>';
+      h += '<div class="kv"><span>' + esc(FB.T('Counties ({count})',
+        { count: t.counties.length })) + '</span><b>' + esc(names.join(' · ')) + '</b></div>';
     }
     return h;
   }
@@ -397,8 +503,8 @@ window.FB = window.FB || {};
       '<div class="panelh">' + esc(FB.fullName(me)) + '</div>' +
       kv('Rank', esc(FB.styledTitle(s))) +
       kv('Age', FB.ageOf(me, s.date.year)) +
-      kv('Culture', esc(cul.name)) +
-      kv('Faith', rel.icon + ' ' + esc(rel.name)) +
+      kv('Culture', esc(cultureName(s, me.culture))) +
+      kv('Faith', rel.icon + ' ' + esc(religionName(s, me.religion))) +
       kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
       kv('Reputation among the folk', Math.round(s.player.pop)) +
@@ -418,6 +524,7 @@ window.FB = window.FB || {};
         '<span class="adesc">A skilled teacher shapes you faster — and leaves their mark.</span></button>';
     }
     $('tab-char').innerHTML = h;
+    FB.localizeTree($('tab-char'));
     FB.paintFaces($('tab-char'), s);
     const sef = $('self-edufocus');
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
@@ -431,57 +538,71 @@ window.FB = window.FB || {};
     if (stats) {
       let sk = '';
       for (const k of FB.SKILLS) {
-        sk += '<span title="' + FB.SKILL_NAMES[k] + '">' + FB.SKILL_ICONS[k] + FB.skillOf(c, k) + '</span> ';
+        sk += '<span title="' + esc(FB.skillName(k)) + '">' +
+          FB.SKILL_ICONS[k] + FB.skillOf(c, k) + '</span> ';
       }
       mid += '<br><span class="cmeta">' + sk.trim() + '</span>';
     }
-    return '<div class="charrow" data-cid="' + c.id + '" title="See their sheet and your dealings with them">' + FB.faceTag(c, 36, 42) +
+    return '<div class="charrow" data-cid="' + c.id + '" title="' +
+      esc(FB.T('See their sheet and your dealings with them')) + '">' +
+      FB.faceTag(c, 36, 42) +
       '<span>' + mid + '</span>' +
       '<span class="cop ' + FB.opClass(op) + '">' + (op > 0 ? '+' : '') + op + '</span></div>';
   }
 
   function relationText(s, c) {
     const me = s.chars[s.player.charId];
-    if (c.id === me.spouseId) return 'Your spouse';
-    if (me.fatherId === c.id) return 'Your father';
-    if (me.motherId === c.id) return 'Your mother';
-    if (me.childrenIds.indexOf(c.id) >= 0) return 'Your child';
+    if (c.id === me.spouseId) return FB.T('Your spouse');
+    if (me.fatherId === c.id) return FB.T('Your father');
+    if (me.motherId === c.id) return FB.T('Your mother');
+    if (me.childrenIds.indexOf(c.id) >= 0) return FB.T('Your child');
     if ((c.role === 'sibling' && c.dyn === me.dyn) ||
       (me.fatherId && me.fatherId === c.fatherId) ||
-      (me.motherId && me.motherId === c.motherId)) return 'Your sibling';
-    if (s.player.courtingId === c.id) return 'Courting';
-    if (s.roles.lord === c.id) return 'Your lord';
-    if (s.roles.priest === c.id) return 'Your ' + FB.holyWord(me.religion);
-    if (s.roles.friend === c.id) return 'Your friend';
-    if (s.roles.rival === c.id) return 'Your rival';
+      (me.motherId && me.motherId === c.motherId)) return FB.T('Your sibling');
+    if (s.player.courtingId === c.id) return FB.T('Courting');
+    if (s.roles.lord === c.id) return FB.T('Your lord');
+    if (s.roles.priest === c.id) {
+      return FB.T('Your {cleric}', { cleric: FB.holyWord(me.religion) });
+    }
+    if (s.roles.friend === c.id) return FB.T('Your friend');
+    if (s.roles.rival === c.id) return FB.T('Your rival');
     return null;
   }
   function maritalText(s, c) {
-    return FB.spouseOf(s, c) ? 'Married' : 'Unwed';
+    return FB.T(FB.spouseOf(s, c) ? 'Married' : 'Unwed');
   }
 
   /* why the marriage path is closed for this character (null = no note needed) */
   function courtBlockReason(s, c) {
     const me = s.chars[s.player.charId];
     const y = s.date.year;
-    if (c.id === me.spouseId || c.spouseId === me.id) return 'they are already your wedded ' + (c.sex === 'f' ? 'wife' : 'husband') + '.';
+    if (c.id === me.spouseId || c.spouseId === me.id) {
+      return FB.T(c.sex === 'f'
+        ? 'they are already your wedded wife.'
+        : 'they are already your wedded husband.');
+    }
     if (me.childrenIds.indexOf(c.id) >= 0 || (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
       (me.fatherId && me.fatherId === c.fatherId) || (me.motherId && me.motherId === c.motherId) ||
-      (c.role === 'sibling' && c.dyn === me.dyn)) return 'they are too close in blood.';
+      (c.role === 'sibling' && c.dyn === me.dyn)) return FB.T('they are too close in blood.');
     const krel = FB.kinOf(s).byId[c.id];
-    if (krel && krel !== 'Cousin') return 'they are too close in blood.';
+    if (krel && krel !== 'Cousin') return FB.T('they are too close in blood.');
     if (c.sex === me.sex) return null;
-    if (FB.ageOf(c, y) < 16) return 'they are not yet of age.';
-    if (FB.ageOf(me, y) < 16) return 'you are not yet of age.';
+    if (FB.ageOf(c, y) < 16) return FB.T('they are not yet of age.');
+    if (FB.ageOf(me, y) < 16) return FB.T('you are not yet of age.');
     const mySp = FB.spouseOf(s, me);
     if (mySp && !FB.canWed(s)) {
       return me.sex === 'm' && FB.marriageDoctrine(me.religion).wives > 1 ?
-        'your faith permits no more wives.' : 'you are already wed to ' + mySp.name + '.';
+        FB.T('your faith permits no more wives.') :
+        FB.T('you are already wed to {name}.', { name: mySp.name });
     }
-    if (FB.spouseOf(s, c)) return 'they are wed to another.';
-    if (c.betrothedId) return 'they are pledged to another.';
-    if (FB.stationOf(c) - FB.playerStation(s) >= 3) return 'they stand far above your station.';
-    if (s.player.profession === 'monk' && FB.religionOf(me.religion).group !== 'muslim') return 'your vows forbid it.';
+    if (FB.spouseOf(s, c)) return FB.T('they are wed to another.');
+    if (c.betrothedId) return FB.T('they are pledged to another.');
+    if (FB.stationOf(c) - FB.playerStation(s) >= 3) {
+      return FB.T('they stand far above your station.');
+    }
+    if (s.player.profession === 'monk' && FB.religionOf(me.religion).group !== 'muslim') {
+      return FB.T('your vows forbid it.');
+    }
     return null;
   }
 
@@ -492,56 +613,65 @@ window.FB = window.FB || {};
     const pr = pid && FB.world.byId[pid];
     if (!pr) return '';
     const hid = (s.holder && s.holder[pid]) || s.owner[pid];
-    let crest = '', txt = 'of ' + pr.name;
+    let crest = '';
+    const parts = [FB.T('of {province}', { province: pr.name })];
     if (hid === 'player') {
       const me = s.chars[s.player.charId];
       crest = FB.crestTag(me.dyn || me.name, 14, 16);
-      txt += (s.realms.player && s.realms.player.alive) ? ' · ' + s.realms.player.name : ' · your lands';
+      parts.push((s.realms.player && s.realms.player.alive)
+        ? s.realms.player.name : FB.T('your lands'));
       const lr = s.player.liege && s.realms[s.player.liege];
-      if (lr) txt += ' · sworn to ' + lr.name;
+      if (lr) parts.push(FB.T('sworn to {realm}', { realm: lr.name }));
     } else if (hid && s.realms[hid] && s.realms[hid].alive) {
       const r = s.realms[hid];
       crest = FB.crestTag(hid, 14, 16);
-      txt += ' · ' + r.name;
-      if (r.liege === 'player') txt += ' · sworn to you';
-      else if (r.liege && s.realms[r.liege]) txt += ' · sworn to ' + s.realms[r.liege].name;
+      parts.push(r.name);
+      if (r.liege === 'player') parts.push(FB.T('sworn to you'));
+      else if (r.liege && s.realms[r.liege]) {
+        parts.push(FB.T('sworn to {realm}', { realm: s.realms[r.liege].name }));
+      }
     }
-    return '<div class="ccmeta">' + crest + esc(txt) + '</div>';
+    return '<div class="ccmeta">' + crest + esc(parts.join(' · ')) + '</div>';
   }
 
   UI.charCardHtml = function (s, c, clickable) {
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
-    for (const k of FB.SKILLS) sk += FB.SKILL_NAMES[k] + ' ' + FB.skillOf(c, k) + ' · ';
+    for (const k of FB.SKILLS) sk += FB.skillName(k) + ' ' + FB.skillOf(c, k) + ' · ';
     sk = sk.slice(0, -3);
     let tr = '';
     for (const t of c.traits) {
       const td = FBDATA.traits[t];
-      if (td) tr += '<span class="traitchip" data-trait="' + t + '">' + td.icon + ' ' + esc(td.name) + '</span>';
+      if (td) tr += '<span class="traitchip" data-trait="' + t + '">' + td.icon + ' ' +
+        esc(dt(s, 'trait', t, td, 'name')) + '</span>';
     }
     // treasures the player has gifted them, worn where callers can see
     let itc = '';
     if (c.items && c.items.length && c.id !== s.player.charId) {
       for (const iid of c.items) {
         const idf = FBDATA.items[iid];
-        if (idf) itc += '<span class="traitchip" data-itemview="' + esc(iid) + '">' + idf.icon + ' ' + esc(FB.fmt(s, idf.name, {})) + '</span>';
+        if (idf) itc += '<span class="traitchip" data-itemview="' + esc(iid) + '">' + idf.icon + ' ' +
+          esc(dt(s, 'item', iid, idf, 'name')) + '</span>';
       }
     }
     // the dead are remembered, not met: dates and deeds, no dealings
     if (c.dead) {
       const life = c.died !== undefined ?
-        '† ' + c.born + '–' + c.died + ' (aged ' + (c.died - c.born) + ')' : '† born ' + c.born;
+        FB.T('† {born}–{died} (aged {age})',
+          { born: c.born, died: c.died, age: c.died - c.born }) :
+        FB.T('† born {year}', { year: c.born });
       return '<div class="charcard">' + FB.faceTag(c, 56, 64) +
         '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
-        '<div class="ccmeta">' + (c.epithet ? esc(c.epithet) + ' · ' : '') +
-        (c.sex === 'f' ? 'Woman' : 'Man') +
-        (c.station !== undefined && c.station !== null ? ' · ' + FB.STATION_NAMES[FB.stationOf(c)] : '') +
-        ' · ' + esc(cul.name) + ' · ' + rel.icon + ' ' + esc(rel.name) + '</div>' +
+        '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
+        esc(FB.T(c.sex === 'f' ? 'Woman' : 'Man')) +
+        (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.stationName(FB.stationOf(c))) : '') +
+        ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
+        esc(religionName(s, c.religion)) + '</div>' +
         homeLineHtml(s, c) +
         '<div class="ccmeta">' + (relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + life + '</div>' +
         '<div class="ccskills">' + esc(sk) + '</div>' +
-        '<div>' + (tr || '<span class="cmeta">No notable traits.</span>') + '</div>' +
+        '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
         (itc ? '<div>' + itc + '</div>' : '') + '</div></div>';
     }
     const op = Math.round(c.opinion);
@@ -552,21 +682,41 @@ window.FB = window.FB || {};
     let fert = '';
     const cage = FB.ageOf(c, s.date.year);
     if (cage >= 16) {
-      fert = (c.sex === 'f' && cage > 45) ? ' · 🌱 past childbearing'
-        : ' · 🌱 fertility ' + Math.round((c.fertility || 1) * FB.traitAgg(c).fert * FB.ageFert(c.sex, cage) * 100) + '%';
+      fert = ' · ' + ((c.sex === 'f' && cage > 45) ? FB.T('🌱 past childbearing')
+        : FB.T('🌱 fertility {percent}%', {
+          percent: Math.round((c.fertility || 1) * FB.traitAgg(c).fert *
+            FB.ageFert(c.sex, cage) * 100)
+        }));
     }
-    return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="Open their sheet and your dealings with them"' : '') + '>' + FB.faceTag(c, 56, 64) +
+    const relationship = relationText(s, c);
+    const regardText = relationship
+      ? FB.T('{relation} · {marital} · regard {regard}', {
+        relation: relationship,
+        marital: maritalText(s, c),
+        regard: (op > 0 ? '+' : '') + op
+      })
+      : FB.T('{marital} · regard {regard}', {
+        marital: maritalText(s, c),
+        regard: (op > 0 ? '+' : '') + op
+      });
+    return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="' +
+      esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
+      FB.faceTag(c, 56, 64) +
       '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
-      '<div class="ccmeta">' + (c.epithet ? esc(c.epithet) + ' · ' : '') +
-      (c.sex === 'f' ? 'Woman' : 'Man') + ' of ' + FB.ageOf(c, s.date.year) +
-      (c.station !== undefined && c.station !== null ? ' · ' + FB.STATION_NAMES[FB.stationOf(c)] : '') +
-      ' · ' + esc(cul.name) + ' · ' + rel.icon + ' ' + esc(rel.name) + '</div>' +
+      '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
+      esc(FB.T('{sex} of {age}', {
+        sex: FB.T(c.sex === 'f' ? 'Woman' : 'Man'),
+        age: FB.ageOf(c, s.date.year)
+      })) +
+      (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.stationName(FB.stationOf(c))) : '') +
+      ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
+      esc(religionName(s, c.religion)) + '</div>' +
       homeLineHtml(s, c) +
-      '<div class="ccmeta">' + (c.id === s.player.charId ? 'This is you' :
-        ((relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + maritalText(s, c) +
-        ' · regard <span class="' + FB.opClass(op) + '">' + (op > 0 ? '+' : '') + op + '</span>')) + fert + '</div>' +
+      '<div class="ccmeta">' + (c.id === s.player.charId ? esc(FB.T('This is you')) :
+        '<span class="' + FB.opClass(op) + '">' + esc(regardText) + '</span>') +
+        esc(fert) + '</div>' +
       '<div class="ccskills">' + esc(sk) + '</div>' +
-      '<div>' + (tr || '<span class="cmeta">No notable traits.</span>') + '</div>' +
+      '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
       (itc ? '<div>' + itc + '</div>' : '') + '</div></div>';
   };
 
@@ -574,11 +724,14 @@ window.FB = window.FB || {};
     const s = FB.state, me = s.chars[s.player.charId];
     const kin = FB.kinOf(s);
     let h = '<button class="btn small" id="btn-ftree" style="width:100%" ' +
-      'title="See the whole family drawn as a tree">🌳 See the family tree</button>';
+      'title="' + esc(FB.T('See the whole family drawn as a tree')) + '">' +
+      esc(FB.T('🌳 See the family tree')) + '</button>';
     const sps = FB.spousesOf(s, me);
     h += panelh(sps.length > 1 ? 'Wives' : 'Spouse');
     if (sps.length) {
-      for (const sp of sps) h += charRow(s, sp, 'Age ' + FB.ageOf(sp, s.date.year));
+      for (const sp of sps) {
+        h += charRow(s, sp, FB.T('Age {age}', { age: FB.ageOf(sp, s.date.year) }));
+      }
     } else h += '<div class="cmeta" style="font-size:13px">Unwed. A dynasty needs heirs — seek a match.</div>';
     const su = s.player.courtingId ? s.chars[s.player.courtingId] : null;
     if (su) {
@@ -591,19 +744,27 @@ window.FB = window.FB || {};
     if (kids.length) {
       for (const k of kids) {
         const a = FB.ageOf(k, s.date.year);
-        let meta = (k.sex === 'm' ? 'Son' : 'Daughter') + ' · age ' + a;
-        if (a < 16 && k.edu && k.edu.focus) meta += ' · 🎓 ' + FB.SKILL_NAMES[k.edu.focus];
-        if (k.betrothedId && s.chars[k.betrothedId] && !s.chars[k.betrothedId].dead) meta += ' · 🤝 betrothed';
-        h += charRow(s, k, meta);
+        const meta = [
+          FB.T(k.sex === 'm' ? 'Son' : 'Daughter'),
+          FB.T('age {age}', { age: a })
+        ];
+        if (a < 16 && k.edu && k.edu.focus) meta.push('🎓 ' + FB.skillName(k.edu.focus));
+        if (k.betrothedId && s.chars[k.betrothedId] && !s.chars[k.betrothedId].dead) {
+          meta.push(FB.T('🤝 betrothed'));
+        }
+        h += charRow(s, k, meta.join(' · '));
       }
       h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and tutor.</div>';
     } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';
     // the wider family tree — dead kin are shown with †
     function kinSection(title, entries) {
       if (!entries.length) return;
-      h += '<div class="panelh">' + title + '</div>';
+      h += '<div class="panelh">' + esc(FB.T(title)) + '</div>';
       for (const e of entries) {
-        h += charRow(s, e.c, e.rel + (e.c.dead ? ' · †' : ' · age ' + FB.ageOf(e.c, s.date.year)));
+        h += charRow(s, e.c, FB.T(e.rel) +
+          (e.c.dead ? ' · †' : ' · ' + FB.T('age {age}', {
+            age: FB.ageOf(e.c, s.date.year)
+          })));
       }
     }
     kinSection('Grandchildren', kin.grandchildren);
@@ -617,10 +778,12 @@ window.FB = window.FB || {};
     for (const role of ['lord', 'priest', 'friend', 'rival']) {
       const c = FB.getRole(s, role, false);
       if (c && !c.dead) {
-        h += charRow(s, c, role.charAt(0).toUpperCase() + role.slice(1) + ' · age ' + FB.ageOf(c, s.date.year), true);
+        h += charRow(s, c, roleName(role) +
+          ' · ' + FB.T('age {age}', { age: FB.ageOf(c, s.date.year) }), true);
       }
     }
     $('tab-family').innerHTML = h;
+    FB.localizeTree($('tab-family'));
     FB.paintFaces($('tab-family'), s);
     $('btn-ftree').addEventListener('click', UI.showFamilyTree);
   }
@@ -641,15 +804,16 @@ window.FB = window.FB || {};
     const MAXDEPTH = 4; // root couple → their great-great-grandchildren
 
     function chip(c, rel, cls) {
-      const label = rel || byId[c.id] || '';
-      const meta = c.dead ? '†' : 'age ' + FB.ageOf(c, s.date.year);
+      const sourceLabel = rel || byId[c.id] || '';
+      const label = sourceLabel ? FB.T(sourceLabel) : '';
+      const meta = c.dead ? '†' : FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
       const again = cls && cls.indexOf('dup') >= 0;
       return '<button class="ftchip' + (cls || '') + (c.dead ? ' dead' : '') +
         '" data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 40, 46) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
-        (again ? '<span class="frel">also above</span>' : '') + '</button>';
+        (again ? '<span class="frel">' + esc(FB.T('also above')) + '</span>' : '') + '</button>';
     }
 
     /* everyone who parented a child with c, current spouses first — dead
@@ -705,9 +869,10 @@ window.FB = window.FB || {};
       return cur;
     }
 
-    let h = '<div class="cmeta" style="font-size:13px">Blood lines run downward — each brood hangs ' +
-      'beneath its parents. † marks the dead. ' + (FB.isTouch ? 'Tap' : 'Click') +
-      ' a face to open their sheet.</div>';
+    let h = '<div class="cmeta" style="font-size:13px">' + esc(FB.isTouch
+      ? FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.')
+      : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet.')) +
+      '</div>';
     const root = topOf(me, 2);
     h += '<div class="ftwrap"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
@@ -716,7 +881,8 @@ window.FB = window.FB || {};
       let brood = unit(me, 1);
       for (const sb of FB.siblingsOf(s, me)) brood += unit(sb, 1);
       h += '<div class="ftnode"><div class="ftcouple"><div class="ftchip ghost">' +
-        '<span class="fname">Unrecorded</span><span class="frel">your parents</span></div></div>' +
+        '<span class="fname">' + esc(FB.T('Unrecorded')) + '</span><span class="frel">' +
+        esc(FB.T('your parents')) + '</span></div></div>' +
         '<div class="ftstem"></div><div class="ftkids">' + brood + '</div></div>';
     } else {
       h += unit(root, 0);
@@ -781,9 +947,10 @@ window.FB = window.FB || {};
     const btn = $('btn-mapmode');
     if (btn) {
       btn.classList.toggle('on', mapMode !== 'realm');
-      btn.title = 'Map filter: ' + MAPMODES[mapMode] + ' (R)';
+      btn.title = FB.T('Map filter: {mode} (R)', { mode: FB.T(MAPMODES[mapMode]) });
+      btn.setAttribute('aria-label', btn.title);
     }
-    UI.toast('🗺 Map filter: ' + MAPMODES[mapMode]);
+    UI.toast('🗺 Map filter: {mode}', { mode: FB.T(MAPMODES[mapMode]) });
     FB.map.select(FB.map.selected || s.player.provinceId, mapGroupOf);
   };
 
@@ -800,17 +967,25 @@ window.FB = window.FB || {};
     const pid = selectedProv || s.player.provinceId;
     const pr = FB.world.byId[pid];
     if (!pr) { $('tab-prov').innerHTML = ''; return; }
-    let h = '<div class="panelh">' + esc(pr.name) + (pid === s.player.provinceId ? ' ⚑ (home)' : '') + '</div>';
+    let h = '<div class="panelh">' + esc(pr.name) +
+      (pid === s.player.provinceId ? ' ' + esc(FB.T('⚑ (home)')) : '') + '</div>';
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
-      h += '<div class="progressnote">🚩 <b>Your host</b> — ' + selA.men + ' men at ' + esc(selPr ? selPr.name : '?') +
-        (selA.goal && selA.goal !== selA.at && FB.world.byId[selA.goal]
-          ? ', marching on ' + esc(FB.world.byId[selA.goal].name) : '') +
-        '. Tap a province on the map to march; tap the host again to halt.</div>';
+      const marching = selA.goal && selA.goal !== selA.at && FB.world.byId[selA.goal];
+      const hostText = marching
+        ? FB.T('🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt.', {
+          men: menText(s, selA.men), place: selPr ? selPr.name : '?',
+          goal: FB.world.byId[selA.goal].name
+        })
+        : FB.T('🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.', {
+          men: menText(s, selA.men), place: selPr ? selPr.name : '?'
+        });
+      h += '<div class="progressnote">' + esc(hostText) + '</div>';
     }
     if (pr.wasteland) {
-      h += '<div class="cmeta">Trackless ' + esc(pr.terrain) + '. No lord rules here.</div>';
+      h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here.',
+        { terrain: terrainName(pr.terrain) })) + '</div>';
     } else {
       const rid = s.owner[pid];
       const realm = s.realms[rid];
@@ -826,16 +1001,19 @@ window.FB = window.FB || {};
       h += kv('County', esc(pr.name));
       for (const cid of chain) {
         if (cid === 'player') {
-          h += '<div class="kv"><span>' + esc(FB.styledTitle(s)) + '</span><b>You — held in your own hand</b></div>';
+          h += '<div class="kv"><span>' + esc(FB.styledTitle(s)) + '</span><b>' +
+            esc(FB.T('You — held in your own hand')) + '</b></div>';
           continue;
         }
         const cr = s.realms[cid];
         if (!cr) continue;
         let mark = '';
-        if (cid === s.player.liege) mark = ' — your liege';
-        else if (cr.liege === 'player') mark = ' — your vassal';
-        h += '<div class="kv"><span>' + esc(FB.realmRankTitle(s, cr)) + ' ' + esc(cr.ruler.name) +
-          '</span><b>' + esc(cr.name) + mark + '</b></div>';
+        if (cid === s.player.liege) mark = FB.T(' — your liege');
+        else if (cr.liege === 'player') mark = FB.T(' — your vassal');
+        h += '<div class="kv"><span>' + esc(FB.T('{title} {name}', {
+          title: FB.realmRankTitle(s, cr), name: cr.ruler.name
+        })) +
+          '</span><b>' + esc(cr.name) + esc(mark) + '</b></div>';
       }
       const dj = FB.dejureOf(pid);
       if (dj.duchy) {
@@ -846,13 +1024,13 @@ window.FB = window.FB || {};
       }
       h +=
         (realm ? kv('Sovereign', esc(realm.name)) : '') +
-        (realm ? kv('Realm size', FB.realmProvinces(s, rid).length + ' counties') : '') +
-        (realm ? kv('Realm host', '~' + realmMen + ' men') : '') +
-        kv('Culture', esc(cul.name)) +
-        kv('Faith', rel.icon + ' ' + esc(rel.name)) +
-        kv('Terrain', esc(pr.terrain) + (pr.coastal ? ', coastal' : '')) +
+        (realm ? kv('Realm size', esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
+        (realm ? kv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
+        kv('Culture', esc(cultureName(s, pr.culture))) +
+        kv('Faith', rel.icon + ' ' + esc(religionName(s, pr.religion))) +
+        kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         kv('Development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
-        kv('Province levy', '~' + (s.dev[pid] || 1) * B.levyPerDev + ' men');
+        kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
         h += kv('Settlements', setts.map(function (st) {
@@ -860,29 +1038,40 @@ window.FB = window.FB || {};
         }).join(' · '));
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
-        h += '<div class="progressnote">🏰 You hold this province.</div>';
+        h += '<div class="progressnote">' + esc(FB.T('🏰 You hold this province.')) + '</div>';
       }
       if (realm && !myRealm && s.player.tier >= 3) {
-        h += '<div class="progressnote">🛡 They can field ~' + realmMen + ' men — you can field ~' + FB.playerLevy(s) + '.</div>';
+        h += '<div class="progressnote">' + esc(FB.T(
+          '🛡 They can field ~{theirs} — you can field ~{yours}.',
+          { theirs: menText(s, realmMen), yours: menText(s, FB.playerLevy(s)) })) + '</div>';
       }
-      if (realm && FB.isRealmAtWar(s, rid)) h += '<div class="progressnote warnote">⚔ This realm is at war.</div>';
+      if (realm && FB.isRealmAtWar(s, rid)) {
+        h += '<div class="progressnote warnote">' +
+          esc(FB.T('⚔ This realm is at war.')) + '</div>';
+      }
       const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
       if (hostsHere.length) {
-        h += '<div class="progressnote warnote">⚔ Hosts in the field here: ' + hostsHere.map(function (a) {
-          return (a.realm === 'player' ? '<b>Your host</b>' : esc(s.realms[a.realm] ? s.realms[a.realm].name : '?')) +
-            ' (~' + a.men + ' men)';
-        }).join(' · ') + '</div>';
+        h += '<div class="progressnote warnote">' + esc(FB.T('⚔ Hosts in the field here:')) +
+          ' ' + hostsHere.map(function (a) {
+            const owner = a.realm === 'player' ? FB.T('Your host') :
+              (s.realms[a.realm] ? s.realms[a.realm].name : '?');
+            return esc(FB.T('{owner} (~{men})',
+              { owner: owner, men: menText(s, a.men) }));
+          }).join(' · ') + '</div>';
       }
       if (realm && s.pacts && s.pacts[rid] > s.turn) {
-        h += '<div class="progressnote">🕊 A pact of peace holds until ' +
-          (FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360)) + ' AD.</div>';
+        h += '<div class="progressnote">' + esc(FB.T(
+          '🕊 A pact of peace holds until {year} AD.',
+          { year: FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360) })) + '</div>';
       }
       h += panelh('Notable folk');
       const nb = FB.provNotables(s, pid);
       if (nb.length) {
         for (const c of nb) {
-          let meta = c.epithet || (c.role ? c.role.charAt(0).toUpperCase() + c.role.slice(1) : '');
-          meta = (meta ? meta + ' · ' : '') + 'age ' + FB.ageOf(c, s.date.year);
+          let meta = epithetText(s, c) ||
+            (c.role ? roleName(c.role) : '');
+          meta = (meta ? meta + ' · ' : '') +
+            FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
           h += charRow(s, c, meta, true);
         }
         h += '<div class="hint" style="margin:4px 0 0">Tap a person for their sheet — and your dealings with them.</div>';
@@ -892,6 +1081,7 @@ window.FB = window.FB || {};
     }
     h += '<div style="margin-top:10px"><button class="btn small" id="btn-center-home">⌂ Center on home</button></div>';
     $('tab-prov').innerHTML = h;
+    FB.localizeTree($('tab-prov'));
     FB.paintFaces($('tab-prov'), s);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
@@ -903,14 +1093,22 @@ window.FB = window.FB || {};
     const tail = s.log.length ? s.log[s.log.length - 1] : null;
     if (tail === logRenderedTail && s.log.length === logRenderedLen) return;
     logRenderedTail = tail; logRenderedLen = s.log.length;
-    let h = '<div class="panelh">' + (FB.game && FB.game.observe ? 'Chronicle of the realms' :
-      'Chronicle of ' + esc(s.chars[s.player.charId].dyn || 'your line')) + '</div>';
+    let h = '<div class="panelh">' + esc(FB.game && FB.game.observe
+      ? FB.T('Chronicle of the realms')
+      : FB.T('Chronicle of {dynasty}', { dynasty: s.chars[s.player.charId].dyn || FB.T('your line') })) +
+      '</div>';
     for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
       const e = s.log[i];
-      h += '<div class="logentry"><span class="ldate">' + FB.SEASONS[e.s] +
-        (e.d ? ' ' + e.d : '') + ', ' + e.y + '</span><br>' + esc(FB.newsText(e)) + '</div>';
+      const logDate = e.d
+        ? FB.T('{season} {day}, {year}', {
+          season: FB.seasonName(e.s), day: e.d, year: e.y
+        })
+        : FB.T('{season}, {year}', { season: FB.seasonName(e.s), year: e.y });
+      h += '<div class="logentry"><span class="ldate">' + esc(logDate) + '</span><br>' +
+        esc(FB.newsText(e, s, s.player.charId)) + '</div>';
     }
     $('tab-log').innerHTML = h;
+    FB.localizeTree($('tab-log'));
   }
 
   function setTab(name) {
@@ -1028,7 +1226,9 @@ window.FB = window.FB || {};
         if (v > best) { best = v; pick = o; }
       }
     }
-    let outcome = '';
+    const authoredIndex = ev.options ? ev.options.indexOf(pick) : -1;
+    let outcomeMsg = null;
+    let outcomePath = null;
     if (pick.chance !== undefined) {
       const p = typeof pick.chance === 'string' ? FB.namedChance(s, pick.chance) : pick.chance;
       const ok = FB.chance(p);
@@ -1037,13 +1237,47 @@ window.FB = window.FB || {};
       const branch = ok ? pick.success : pick.failure;
       if (branch) {
         if (branch.effects) FB.applyEffects(s, branch.effects, ctx);
-        outcome = branch.text ? FB.fmt(s, branch.text, ctx) : (ok ? 'It goes well.' : 'It goes poorly.');
+        if (branch.text && authoredIndex >= 0) {
+          outcomePath = 'options.' + authoredIndex + '.' +
+            (ok ? 'success' : 'failure') + '.text';
+        } else {
+          outcomeMsg = ok
+            ? FB.msg('fx.event.autoresolve.success', 'It goes well.', {})
+            : FB.msg('fx.event.autoresolve.failure', 'It goes poorly.', {});
+        }
       }
     } else if (pick.effects) {
       FB.applyEffects(s, pick.effects, ctx);
     }
-    FB.news(s, '⚙ ' + FB.fmt(s, ev.title, ctx) + ': ' + FB.fmt(s, pick.label, ctx) +
-      (outcome ? ' — ' + outcome : ''));
+    /* Match the old simulation order while keeping rendering pure: effects
+       resolve first, then any outcome roles, title roles, and choice roles. */
+    if (outcomePath) {
+      FB.prepareEventPath(s, ev, outcomePath, ctx);
+      outcomeMsg = FB.eventMessage(s, s.player.charId, ev, outcomePath, ctx);
+    }
+    FB.prepareEventPath(s, ev, 'title', ctx);
+    const titleMsg = FB.eventMessage(s, s.player.charId, ev, 'title', ctx);
+    let choiceMsg;
+    if (authoredIndex >= 0) {
+      const choicePath = 'options.' + authoredIndex + '.label';
+      FB.prepareEventPath(s, ev, choicePath, ctx);
+      choiceMsg = FB.eventMessage(s, s.player.charId, ev, choicePath, ctx);
+    } else {
+      choiceMsg = FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
+    }
+    FB.news(s, FB.msg('news.event.autoresolved', {
+      forms: {
+        select: 'value', param: 'result', cases: {
+          outcome: '⚙ {title}: {choice} — {outcome}',
+          other: '⚙ {title}: {choice}'
+        }
+      }
+    }, {
+      result: outcomeMsg ? 'outcome' : 'other',
+      title: FB.messageParam(titleMsg),
+      choice: FB.messageParam(choiceMsg),
+      outcome: outcomeMsg ? FB.messageParam(outcomeMsg) : ''
+    }));
   }
 
   UI.showAutoResolve = function () {
@@ -1056,8 +1290,9 @@ window.FB = window.FB || {};
       return '<label class="autorow"><input type="radio" name="ar-style" value="' + val + '"' +
         (a.style === val ? ' checked' : '') + '> ' + label + '</label>';
     }
-    let h = '<div class="gm-body-text"><p>While the days flow (or fast-forward), the chosen kinds of ' +
-      'events resolve themselves. Every outcome is written to the Chronicle.</p></div>';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.')) +
+      '</p></div>';
     h += cb('ar-on', a.on, '<b>Autoresolve events</b>', 'Master switch — everyday happenings resolve on their own.');
     h += cb('ar-major', a.major, 'Also resolve important events', 'Once-in-a-life moments and story events.');
     h += cb('ar-war', a.war, 'Also resolve war councils', 'Musters and seasonal war decisions.');
@@ -1117,7 +1352,8 @@ window.FB = window.FB || {};
   /* every soul an event names gets a card — face, house arms, home, and
      allegiance — so "Reginbald insulted me" never arrives as a bare name.
      Scans the raw strings (title, text variants, option labels, branch
-     texts) for {role} tokens; fmt creates those roles as it renders. */
+     texts) for {role} tokens; prepareEvent creates those roles before any
+     localized rendering begins. */
   function eventCharCards(s, ev, carded) {
     let raw = ' ';
     function add(x) {
@@ -1134,7 +1370,7 @@ window.FB = window.FB || {};
     let h = '';
     for (const role of ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor']) {
       if (raw.indexOf('{' + role + '}') < 0) continue;
-      const c = FB.getRole(s, role, true);
+      const c = FB.getRole(s, role, false);
       if (c && !carded[c.id]) { carded[c.id] = 1; h += UI.charCardHtml(s, c); }
     }
     return h;
@@ -1145,11 +1381,15 @@ window.FB = window.FB || {};
     eventOpen = true;
     FB.markFired(s, ev);
     $('eventmodal').classList.remove('hidden');
-    $('ev-title').textContent = FB.eventText(s, ev, 'title', ctx);
-    let bodyHtml = esc(FB.eventText(s, ev, 'text', ctx));
+    if (FB.prepareEvent) FB.prepareEvent(s, ev, ctx);
+    $('ev-title').textContent = FB.eventText(s, s.player.charId, ev, 'title', ctx);
+    let bodyHtml = esc(FB.eventText(s, s.player.charId, ev, 'text', ctx));
+    if (ev.warStatus && FB.warStateText) {
+      bodyHtml += '<p class="adesc">' + esc(FB.warStateText(s, s.player.charId)) + '</p>';
+    }
     const carded = {};
     if (ev.charCard) {
-      const cc = FB.getRole(s, ev.charCard, true);
+      const cc = FB.getRole(s, ev.charCard, false);
       if (cc) { bodyHtml += UI.charCardHtml(s, cc); carded[cc.id] = 1; }
     }
     bodyHtml += eventCharCards(s, ev, carded);
@@ -1165,7 +1405,8 @@ window.FB = window.FB || {};
         const row = document.createElement('div');
         row.className = 'evname';
         row.innerHTML = '<label>Name the child <input id="ev-name" type="text" maxlength="20"></label>' +
-          '<button id="ev-name-dice" class="btn small" title="Random name">&#127922;</button>';
+          '<button id="ev-name-dice" class="btn small" title="' +
+          esc(FB.T('Random name')) + '">&#127922;</button>';
         box.appendChild(row);
         const inp = $('ev-name');
         inp.value = nc.name;
@@ -1187,13 +1428,14 @@ window.FB = window.FB || {};
       const btn = document.createElement('button');
       btn.className = 'evopt';
       btn.innerHTML = hintFor(i) +
-        esc(oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
+        esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
+        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
       (function (opt) {
         btn.addEventListener('click', function () { chooseOption(ev, opt, ctx); });
       })(o);
       box.appendChild(btn);
     }
+    FB.localizeTree(box);
     setTimeout(function () {
       const inp = $('ev-name');
       if (inp && !FB.isTouch) { inp.focus(); inp.select(); return; }
@@ -1222,8 +1464,12 @@ window.FB = window.FB || {};
       if (branch) {
         if (branch.effects) FB.applyEffects(s, branch.effects, ctx);
         const oi = ev.options ? ev.options.indexOf(opt) : -1;
+        const outcomePath = oi >= 0
+          ? 'options.' + oi + '.' + (ok ? 'success' : 'failure') + '.text'
+          : '';
+        if (branch.text && outcomePath) FB.prepareEventPath(s, ev, outcomePath, ctx);
         const btext = branch.text
-          ? (oi >= 0 ? FB.eventText(s, ev, 'options.' + oi + '.' + (ok ? 'success' : 'failure') + '.text', ctx) : FB.fmt(s, branch.text, ctx))
+          ? (oi >= 0 ? FB.eventText(s, s.player.charId, ev, outcomePath, ctx) : FB.fmt(s, branch.text, ctx))
           : (ok ? FB.T('It goes well.') : FB.T('It goes poorly.'));
         showOutcome(btext);
         return;
@@ -1240,7 +1486,7 @@ window.FB = window.FB || {};
     box.innerHTML = '';
     const btn = document.createElement('button');
     btn.className = 'evopt';
-    btn.textContent = 'Continue';
+    btn.textContent = FB.T('Continue');
     btn.addEventListener('click', nextEvent);
     box.appendChild(btn);
     btn.focus();
@@ -1258,8 +1504,10 @@ window.FB = window.FB || {};
     if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
     UI._gmModalClass = (opts && opts.modalClass) || '';
     if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
-    $('gm-title').textContent = title;
+    $('gm-title').textContent = FB.translateKnown(title);
+    FB.localizeTree($('gm-title'));
     $('gm-body').innerHTML = bodyHtml;
+    FB.localizeTree($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch) {
       const btns = $('gm-body').querySelectorAll('.actionbtn');
@@ -1298,9 +1546,13 @@ window.FB = window.FB || {};
       const realm = s.realms[rid];
       const enMen = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-war="' + esc(pid) + '">⚔ ' + esc(pr.name) +
-        '<span class="adesc">Held by ' + esc(realm ? realm.name : '?') + ' (' +
-        FB.realmProvinces(s, rid).length + ' provinces) · they can field ~' + enMen +
-        ' against your ~' + FB.playerLevy(s) + ' men</span></button>';
+        '<span class="adesc">' + esc(FB.T(
+          'Held by {realm} ({counties}) · they can field ~{theirs} against your ~{yours}', {
+            realm: realm ? realm.name : '?',
+            counties: countyCountText(s, FB.realmProvinces(s, rid).length),
+            theirs: menText(s, enMen),
+            yours: menText(s, FB.playerLevy(s))
+          })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Think better of it</button>';
     openModal('Choose Your Conquest', h);
@@ -1320,14 +1572,20 @@ window.FB = window.FB || {};
     const lg = s.realms[s.player.liege];
     const top = FB.topRealm(s, s.player.liege);
     const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
-    const h = '<div class="gm-body-text"><p>You renounce ' + esc(lg ? lg.name : 'your liege') +
-      ' and raise your own banner' +
-      (s.player.tier === 3 && FB.world.byId[s.player.provinceId]
-        ? ' over ' + esc(FB.world.byId[s.player.provinceId].name) + ', seized as your own county'
-        : ' over your lands') +
-      '. ' + esc(s.realms[top] ? s.realms[top].name : 'Your sovereign') +
-      ' will march to bring you to heel — they can field ~' + enMen +
-      ' against your ~' + FB.playerLevy(s) + ' men.</p></div>' +
+    const sovereign = s.realms[top] ? s.realms[top].name : FB.T('Your sovereign');
+    const independenceText = s.player.tier === 3 && FB.world.byId[s.player.provinceId]
+      ? FB.T('You renounce {liege} and raise your own banner over {province}, seized as your own county. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.', {
+        liege: lg ? lg.name : FB.T('your liege'),
+        province: FB.world.byId[s.player.provinceId].name,
+        sovereign: sovereign,
+        theirs: menText(s, enMen), yours: menText(s, FB.playerLevy(s))
+      })
+      : FB.T('You renounce {liege} and raise your own banner over your lands. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.', {
+        liege: lg ? lg.name : FB.T('your liege'),
+        sovereign: sovereign,
+        theirs: menText(s, enMen), yours: menText(s, FB.playerLevy(s))
+      });
+    const h = '<div class="gm-body-text"><p>' + esc(independenceText) + '</p></div>' +
       '<button class="btn primary" id="gm-indep">Raise my banner</button> ' +
       '<button class="btn" id="gm-cancel">Stay sworn</button>';
     openModal('Declare Independence', h);
@@ -1350,8 +1608,14 @@ window.FB = window.FB || {};
         const pr = FB.world.byId[id];
         const open = FB.buildable(s, id).length;
         h += '<button class="actionbtn" data-bprov="' + esc(id) + '"' + (open ? '' : ' disabled') + '>🏘 ' + esc(pr.name) +
-          '<span class="adesc">development ' + (s.dev[id] || 1) + ' · ' + FB.builtIn(s, id).length + ' built · ' +
-          (open ? open + ' possible' : 'nothing more to raise') + '</span></button>';
+          '<span class="adesc">' + esc(FB.T(
+            'development {development} · {built} built · {remaining}', {
+              development: s.dev[id] || 1,
+              built: FB.builtIn(s, id).length,
+              remaining: open
+                ? FB.T('{count} possible', { count: open })
+                : FB.T('nothing more to raise')
+            })) + '</span></button>';
       }
       h += '</div><button class="btn" id="gm-cancel">Not now</button>';
       openModal('Build Where?', h);
@@ -1368,18 +1632,22 @@ window.FB = window.FB || {};
     for (const b of FB.buildable(s, pid)) {
       const short = s.player.gold < b.cost;
       h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
-        b.def.icon + ' ' + esc(FB.fmt(s, b.def.name, {})) + ' — ' + b.cost + ' gold' +
-        '<span class="adesc">' + esc(FB.fmt(s, b.def.desc, {})) + (short ? ' (not enough gold)' : '') + '</span></button>';
+        esc(FB.T('{icon} {name} — {cost} gold', {
+          icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name'), cost: b.cost
+        })) + '<span class="adesc">' + esc(dt(s, 'building', b.id, b.def, 'desc')) +
+        (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
     }
     h += '</div>';
     if (done.length) {
-      h += '<p class="hint">Already standing in ' + esc(pr.name) + ': ' + done.map(function (id) {
+      h += '<p class="hint">' + esc(FB.T('Already standing in {province}:',
+        { province: pr.name })) + ' ' + done.map(function (id) {
         const d = FBDATA.buildings[id];
-        return d ? d.icon + ' ' + esc(FB.fmt(s, d.name, {})) : esc(id);
+        return d ? d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) : esc(id);
       }).join(' · ') + '</p>';
     }
-    h += '<button class="btn" id="gm-cancel">' + (provs.length > 1 ? 'Back' : 'Not now') + '</button>';
-    openModal('Raise a Building in ' + esc(pr.name), h);
+    h += '<button class="btn" id="gm-cancel">' +
+      esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
+    openModal(FB.T('Raise a Building in {province}', { province: pr.name }), h);
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.build(FB.state, pid, btn.dataset.build);
@@ -1399,7 +1667,8 @@ window.FB = window.FB || {};
     for (const st of list) {
       h += '<button class="actionbtn" data-visit="' + esc(st.name) + '" data-kind="' + st.kind + '">' +
         SETT_ICON[st.kind] + ' ' + esc(st.name) +
-        '<span class="adesc">' + st.kind + ' · a day’s outing</span></button>';
+        '<span class="adesc">' + esc(FB.T('{kind} · a day’s outing',
+          { kind: settlementKindName(st.kind) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Stay home</button>';
     openModal('Where To?', h);
@@ -1419,12 +1688,14 @@ window.FB = window.FB || {};
   /* ================= plot picker ================= */
   UI.showPlots = function () {
     const s = FB.state;
-    let h = '<p class="hint">A plot claims your daily focus until it is ready to spring — ' +
-      'and every day of weaving risks discovery.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      'A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.')) +
+      '</p><div class="gm-list">';
     for (const t of FB.plotAvailable(s)) {
       h += '<button class="actionbtn" data-plot="' + esc(t.id) + '">' +
-        t.def.icon + ' ' + esc(FB.fmt(s, t.def.name, {})) +
-        '<span class="adesc">' + esc(FB.fmt(s, t.def.desc, {})) + ' (' + t.def.need + ' days’ weaving, roughly)</span></button>';
+        t.def.icon + ' ' + esc(dt(s, 'plot', t.id, t.def, 'name')) +
+        '<span class="adesc">' + esc(dt(s, 'plot', t.id, t.def, 'desc')) + ' ' +
+        esc(FB.T('({days} days’ weaving, roughly)', { days: t.def.need })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Begin a Plot', h);
@@ -1440,13 +1711,17 @@ window.FB = window.FB || {};
   /* ================= envoy picker ================= */
   UI.showEnvoys = function () {
     const s = FB.state;
-    let h = '<p class="hint">10 gold in gifts; a pact of peace holds two years, and your ' +
-      'diplomacy carries the rest.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      '10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest.')) +
+      '</p><div class="gm-list">';
     for (const rid of FB.envoyTargets(s)) {
       const r = s.realms[rid];
       const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-envoy="' + esc(rid) + '">🕊 ' + esc(r.name) +
-        '<span class="adesc">' + FB.realmProvinces(s, rid).length + ' provinces · fields ~' + men + ' men</span></button>';
+        '<span class="adesc">' + esc(FB.T('{counties} · fields ~{men}', {
+          counties: countyCountText(s, FB.realmProvinces(s, rid).length),
+          men: menText(s, men)
+        })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Send an Envoy', h);
@@ -1468,8 +1743,12 @@ window.FB = window.FB || {};
     let h = '<p class="hint">A journey, a gift of words, a knee on the floor. Opinion grows — more for silver tongues.</p><div class="gm-list">';
     for (const rid of chain) {
       const r = s.realms[rid];
-      h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🙇 ' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) +
-        '<span class="adesc">' + esc(r.name) + ' · opinion ' + FB.liegeOpOf(s, rid) + '</span></button>';
+      h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🙇 ' +
+        esc(FB.T('{title} {name}', {
+          title: FB.realmRankTitle(s, r), name: r.ruler.name
+        })) +
+        '<span class="adesc">' + esc(FB.T('{realm} · opinion {opinion}',
+          { realm: r.name, opinion: FB.liegeOpOf(s, rid) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Pay Homage', h);
@@ -1492,8 +1771,12 @@ window.FB = window.FB || {};
     let h = '<p class="hint">Carry your suit past your own lord to a greater one. Success makes you HIS direct man — and an enemy of the man you passed over.</p><div class="gm-list">';
     for (const rid of chain) {
       const r = s.realms[rid];
-      h += '<button class="actionbtn" data-rid="' + esc(rid) + '">⚖ ' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) +
-        '<span class="adesc">' + esc(r.name) + ' · opinion ' + FB.liegeOpOf(s, rid) + '</span></button>';
+      h += '<button class="actionbtn" data-rid="' + esc(rid) + '">⚖ ' +
+        esc(FB.T('{title} {name}', {
+          title: FB.realmRankTitle(s, r), name: r.ruler.name
+        })) +
+        '<span class="adesc">' + esc(FB.T('{realm} · opinion {opinion}',
+          { realm: r.name, opinion: FB.liegeOpOf(s, rid) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Appeal to a Higher Lord', h);
@@ -1515,21 +1798,26 @@ window.FB = window.FB || {};
   UI.showPetitionCounty = function () {
     const s = FB.state;
     const cands = FB.petitionCandidates(s);
-    let h = '<p class="hint">The liege strips only a man he already despises — and only for a vassal he loves. ' +
-      'Your service in his wars: ' + (s.player.warService || 0) + '.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      'The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}.',
+      { service: s.player.warService || 0 })) + '</p><div class="gm-list">';
     for (const c of cands) {
       const pr = FB.world.byId[c.pid];
       const hr = s.realms[c.holder];
       s.player.petitionPid = c.pid; // lets the named formula price this exact suit
       const odds = Math.round(FB.namedChance(s, 'county_petition') * 100);
       h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">🏰 ' + esc(pr.name) +
-        '<span class="adesc">' + esc(hr.name) + ' · ' + esc(hr.ruler.name) + ' · the liege’s favor ' + Math.round(c.favor) +
-        ' · dev ' + (s.dev[c.pid] || 1) + ' · your suit ~' + odds + '%</span></button>';
+        '<span class="adesc">' + esc(FB.T(
+          '{realm} · {ruler} · the liege’s favor {favor} · dev {development} · your suit ~{odds}%', {
+            realm: hr.name, ruler: hr.ruler.name, favor: Math.round(c.favor),
+            development: s.dev[c.pid] || 1, odds: odds
+          })) + '</span></button>';
     }
     delete s.player.petitionPid;
     if (!cands.length) {
-      h += '<p class="hint">No neighboring lord stands low enough in your liege’s favor (' +
-        FBDATA.balance.petitionFavorMax + ' or less). Time brings disgrace — wait for it.</p>';
+      h += '<p class="hint">' + esc(FB.T(
+        'No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.',
+        { favor: FBDATA.balance.petitionFavorMax })) + '</p>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Petition for a Fief', h);
@@ -1555,7 +1843,10 @@ window.FB = window.FB || {};
       const pr = FB.world.byId[c.pid];
       const hr = s.realms[c.holder];
       h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">💰 ' + esc(pr.name) +
-        '<span class="adesc">' + esc(hr.ruler.name) + ' · dev ' + (s.dev[c.pid] || 1) + ' · ' + c.price + ' gold</span></button>';
+        '<span class="adesc">' + esc(FB.T(
+          '{ruler} · dev {development} · {price} gold', {
+            ruler: hr.ruler.name, development: s.dev[c.pid] || 1, price: c.price
+          })) + '</span></button>';
     }
     if (!cands.length) h += '<p class="hint">No weak neighbor holds land beside yours.</p>';
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
@@ -1576,12 +1867,14 @@ window.FB = window.FB || {};
   UI.showSettleWaste = function () {
     const s = FB.state;
     const B = FBDATA.balance;
-    let h = '<p class="hint">' + B.settleGold + ' gold and ' + B.settlePrestige + ' prestige to plant a settlement on empty land. ' +
-      'The new county answers to you — and belongs to no de jure duchy.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      '{gold} gold and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.',
+      { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
     for (const pid of FB.wastelandCandidates(s)) {
       const pr = FB.world.byId[pid];
       h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🌱 ' + esc(pr.name) +
-        '<span class="adesc">empty ' + esc(pr.terrain) + '</span></button>';
+        '<span class="adesc">' + esc(FB.T('empty {terrain}',
+          { terrain: terrainName(pr.terrain) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Settle the Wasteland', h);
@@ -1605,7 +1898,9 @@ window.FB = window.FB || {};
       const r = s.realms[rid];
       const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🤝 ' + esc(r.name) +
-        '<span class="adesc">' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) + ' · fields ~' + men + ' men</span></button>';
+        '<span class="adesc">' + esc(FB.T('{title} {ruler} · fields ~{men}', {
+          title: FB.realmRankTitle(s, r), ruler: r.ruler.name, men: menText(s, men)
+        })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Swear Fealty', h);
@@ -1625,22 +1920,28 @@ window.FB = window.FB || {};
     const r = rid && s.realms[rid];
     if (!r || !r.alive || !r.ruler) return;
     const cap = FB.world.byId[r.capital];
-    const cul = FB.cultureOf(r.ruler.culture);
     const rel = cap ? FB.religionOf(cap.religion) : null;
     const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
     let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
-      '<div><div class="ccname">' + esc(FB.realmRankTitle(s, r)) + ' ' + esc(r.ruler.name) + '</div>' +
-      '<div class="ccmeta">Man of ' + r.ruler.age + ' · ' + esc(cul.name) +
-      (rel ? ' · ' + rel.icon + ' ' + esc(rel.name) : '') + '</div>' +
-      '<div class="ccmeta">' + (liege ? 'Himself a vassal of ' + esc(liege.name) : 'Sovereign — kneels to no one') + '</div>' +
-      '<div class="ccmeta">⚔ martial ' + r.ruler.mar + ' · favor <span class="' + FB.opClass(op) + '">' +
-      (op > 0 ? '+' : '') + op + '</span></div></div></div>' +
+      '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
+        title: FB.realmRankTitle(s, r), name: r.ruler.name
+      })) + '</div>' +
+      '<div class="ccmeta">' + esc(FB.T('Man of {age}', { age: r.ruler.age })) +
+      ' · ' + esc(cultureName(s, r.ruler.culture)) +
+      (rel ? ' · ' + rel.icon + ' ' + esc(religionName(s, cap.religion)) : '') + '</div>' +
+      '<div class="ccmeta">' + esc(liege
+        ? FB.T('Himself a vassal of {liege}', { liege: liege.name })
+        : FB.T('Sovereign — kneels to no one')) + '</div>' +
+      '<div class="ccmeta ' + FB.opClass(op) + '">' +
+      esc(FB.T('⚔ martial {martial} · favor {favor}', {
+        martial: r.ruler.mar, favor: (op > 0 ? '+' : '') + op
+      })) + '</div></div></div>' +
       '<div style="margin-top:10px">' +
       kv('Realm', esc(r.name)) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
-      kv('Realm host', '~' + men + ' men') +
+      kv('Realm host', '~' + esc(menText(s, men))) +
       (cap ? kv('Capital', esc(cap.name)) : '') +
       '</div>';
     h += '<button class="btn" id="gm-cancel">Close</button>';
@@ -1656,7 +1957,9 @@ window.FB = window.FB || {};
     for (const pid of s.player.provs) {
       const pr = FB.world.byId[pid];
       h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🏰 ' + esc(pr.name) +
-        '<span class="adesc">dev ' + (s.dev[pid] || 1) + ' · ' + esc(pr.terrain) + '</span></button>';
+        '<span class="adesc">' + esc(FB.T('dev {development} · {terrain}', {
+          development: s.dev[pid] || 1, terrain: terrainName(pr.terrain)
+        })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Grant a County', h);
@@ -1676,7 +1979,9 @@ window.FB = window.FB || {};
     for (const vid of FB.playerVassals(s)) {
       const r = s.realms[vid];
       h += '<button class="actionbtn" data-rid="' + esc(vid) + '">📜 ' + esc(r.name) +
-        '<span class="adesc">' + esc(r.ruler.name) + ' · opinion ' + FB.liegeOpOf(s, vid) + '</span></button>';
+        '<span class="adesc">' + esc(FB.T('{ruler} · opinion {opinion}', {
+          ruler: r.ruler.name, opinion: FB.liegeOpOf(s, vid)
+        })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Revoke a County', h);
@@ -1694,20 +1999,23 @@ window.FB = window.FB || {};
   /* ================= household holdings picker ================= */
   UI.showHoldings = function () {
     const s = FB.state;
-    let h = '<p class="hint">Property passes to your heirs — a household built up over ' +
-      'generations is its own kind of greatness.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      'Property passes to your heirs — a household built up over generations is its own kind of greatness.')) +
+      '</p><div class="gm-list">';
     for (const t of FB.holdingAvailable(s)) {
       const short = s.player.gold < t.def.cost;
       h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
-        t.def.icon + ' ' + esc(FB.fmt(s, t.def.name, {})) + ' — ' + t.def.cost + ' gold' +
-        '<span class="adesc">' + esc(FB.fmt(s, t.def.desc, {})) + (short ? ' (not enough gold)' : '') + '</span></button>';
+        esc(FB.T('{icon} {name} — {cost} gold', {
+          icon: t.def.icon, name: dt(s, 'holding', t.id, t.def, 'name'), cost: t.def.cost
+        })) + '<span class="adesc">' + esc(dt(s, 'holding', t.id, t.def, 'desc')) +
+        (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
     }
     h += '</div>';
     const done = FB.holdingList(s);
     if (done.length) {
-      h += '<p class="hint">The household owns: ' + done.map(function (id) {
+      h += '<p class="hint">' + esc(FB.T('The household owns:')) + ' ' + done.map(function (id) {
         const d = FBDATA.holdings[id];
-        return d ? d.icon + ' ' + esc(FB.fmt(s, d.name, {})) : esc(id);
+        return d ? d.icon + ' ' + esc(dt(s, 'holding', id, d, 'name')) : esc(id);
       }).join(' · ') + '</p>';
     }
     h += '<button class="btn" id="gm-cancel">Not now</button>';
@@ -1725,20 +2033,23 @@ window.FB = window.FB || {};
   UI.showTech = function () {
     const s = FB.state;
     const pts = Math.floor(s.player.research || 0);
-    let h = '<p class="hint">Scholarship: <b>' + pts + '</b> — earned by patronizing scholars, libraries, ' +
-      'and learned guests. Innovations persist across the generations.</p><div class="gm-list">';
+    let h = '<p class="hint">' + esc(FB.T(
+      'Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations.',
+      { amount: pts })) + '</p><div class="gm-list">';
     for (const t of FB.techAvailable(s)) {
       const short = pts < t.def.cost;
       h += '<button class="actionbtn" data-tech="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
-        t.def.icon + ' ' + esc(FB.fmt(s, t.def.name, {})) + ' — ' + t.def.cost + ' scholarship' +
-        '<span class="adesc">' + esc(FB.fmt(s, t.def.desc, {})) + (short ? ' (not enough scholarship)' : '') + '</span></button>';
+        esc(FB.T('{icon} {name} — {cost} scholarship', {
+          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), cost: t.def.cost
+        })) + '<span class="adesc">' + esc(dt(s, 'tech', t.id, t.def, 'desc')) +
+        (short ? ' ' + esc(FB.T('(not enough scholarship)')) : '') + '</span></button>';
     }
     h += '</div>';
     const done = FB.techList(s);
     if (done.length) {
-      h += '<p class="hint">Already adopted: ' + done.map(function (id) {
+      h += '<p class="hint">' + esc(FB.T('Already adopted:')) + ' ' + done.map(function (id) {
         const d = FBDATA.tech[id];
-        return d ? d.icon + ' ' + esc(FB.fmt(s, d.name, {})) : esc(id);
+        return d ? d.icon + ' ' + esc(dt(s, 'tech', id, d, 'name')) : esc(id);
       }).join(' · ') + '</p>';
     }
     h += '<button class="btn" id="gm-cancel">Not now</button>';
@@ -1783,12 +2094,16 @@ window.FB = window.FB || {};
           const divCost = doc.divorce === 'sunder' ? 0 : (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0);
           if (doc.divorce === 'talaq') {
             h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>🕊 Pronounce the divorce (' + divCost + ' gold)' +
-              '<span class="adesc">Spoken before witnesses — and the mahr owed to ' + esc(c.name) + ' is paid out. (spends the day)</span></button>';
+              '>' + esc(FB.T('🕊 Pronounce the divorce ({gold} gold)', { gold: divCost })) +
+              '<span class="adesc">' + esc(FB.T(
+                'Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)',
+                { name: c.name })) + '</span></button>';
           } else if (doc.divorce === 'get') {
             h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>📜 Grant a get (' + divCost + ' gold)' +
-              '<span class="adesc">A writ written and witnessed; the ketubah owed to ' + esc(c.name) + ' is paid out. (spends the day)</span></button>';
+              '>' + esc(FB.T('📜 Grant a get ({gold} gold)', { gold: divCost })) +
+              '<span class="adesc">' + esc(FB.T(
+                'A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)',
+                { name: c.name })) + '</span></button>';
           } else {
             h += '<button class="actionbtn" id="cm-divorce">💔 Declare the marriage sundered' +
               '<span class="adesc">Witnesses at the door, their goods on the cart. Folk will talk. (−5 prestige, spends the day)</span></button>';
@@ -1804,24 +2119,33 @@ window.FB = window.FB || {};
       }
       if (FB.canCourt(s, c)) {
         const switching = s.player.courtingId && s.player.courtingId !== c.id;
-        h += '<button class="actionbtn" id="cm-court">🌷 Begin courtship' + (switching ? ' (abandon your current suit)' : '') +
-          '<span class="adesc">Pursue marriage with ' + esc(c.name) + ': court them daily, then propose.</span></button>';
+        h += '<button class="actionbtn" id="cm-court">' +
+          esc(FB.T(switching
+            ? '🌷 Begin courtship (abandon your current suit)'
+            : '🌷 Begin courtship')) +
+          '<span class="adesc">' + esc(FB.T(
+            'Pursue marriage with {name}: court them daily, then propose.',
+            { name: c.name })) + '</span></button>';
         if (FB.stationOf(c) - FB.playerStation(s) > 0) {
-          h += '<div class="progressnote">⚖ ' + esc(c.name) + ' stands above your station — the family will expect great regard and renown before they bless such a match.</div>';
+          h += '<div class="progressnote">' + esc(FB.T(
+            '⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match.',
+            { name: c.name })) + '</div>';
         }
       } else if (s.player.courtingId === c.id) {
         if (Math.round(c.opinion) >= 5) {
           h += '<button class="actionbtn" id="cm-propose">💒 Propose marriage' +
             '<span class="adesc">Ask for their hand. Standing, wealth, and their regard decide.</span></button>';
         } else {
-          h += '<div class="progressnote">🌷 You are courting ' + esc(c.name) +
-            '. Win more of their regard (5+) before proposing — the courtship focus works day by day.</div>';
+          h += '<div class="progressnote">' + esc(FB.T(
+            '🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day.',
+            { name: c.name })) + '</div>';
         }
         h += '<button class="actionbtn" id="cm-breakoff">💔 Break off the courtship' +
           '<span class="adesc">Part ways without a wedding.</span></button>';
       } else {
         const why = courtBlockReason(s, c);
-        if (why) h += '<div class="progressnote">💒 No marriage possible: ' + esc(why) + '</div>';
+        if (why) h += '<div class="progressnote">' +
+          esc(FB.T('💒 No marriage possible: {reason}', { reason: why })) + '</div>';
       }
       if (!isFamily) {
         h += '<button class="actionbtn" id="cm-insult">😤 Insult them publicly' +
@@ -1834,21 +2158,33 @@ window.FB = window.FB || {};
     if (isYoungChild) {
       const self = c.id === me.id;
       h += upbringingNote(s, c);
-      h += '<button class="actionbtn" id="cm-edufocus">🎓 Choose ' + (self ? 'your' : 'their') + ' education focus…' +
-        '<span class="adesc">Direct ' + (self ? 'your' : 'their') + ' formative years toward one art.</span></button>';
-      h += '<button class="actionbtn" id="cm-tutor">🧑‍🏫 ' + (self ? 'Choose a tutor…' : 'Appoint a tutor…') +
-        '<span class="adesc">A skilled teacher shapes ' + (self ? 'you' : 'them') + ' faster — and leaves their mark.</span></button>';
+      h += '<button class="actionbtn" id="cm-edufocus">' +
+        esc(FB.T(self ? '🎓 Choose your education focus…' : '🎓 Choose their education focus…')) +
+        '<span class="adesc">' +
+        esc(FB.T(self
+          ? 'Direct your formative years toward one art.'
+          : 'Direct their formative years toward one art.')) + '</span></button>';
+      h += '<button class="actionbtn" id="cm-tutor">' +
+        esc(FB.T(self ? '🧑‍🏫 Choose a tutor…' : '🧑‍🏫 Appoint a tutor…')) +
+        '<span class="adesc">' +
+        esc(FB.T(self
+          ? 'A skilled teacher shapes you faster — and leaves their mark.'
+          : 'A skilled teacher shapes them faster — and leaves their mark.')) +
+        '</span></button>';
     }
     // a parent may pledge an unwed child's hand from age twelve
     if (me.childrenIds.indexOf(c.id) >= 0 && !FB.spouseOf(s, c)) {
       const bt = c.betrothedId ? s.chars[c.betrothedId] : null;
       if (bt && !bt.dead) {
-        h += '<div class="progressnote">🤝 Betrothed to ' + esc(bt.name) +
-          ' — the wedding follows once both are of age.</div>';
+        h += '<div class="progressnote">' + esc(FB.T(
+          '🤝 Betrothed to {name} — the wedding follows once both are of age.',
+          { name: bt.name })) + '</div>';
       } else if (FB.ageOf(c, s.date.year) >= 12) {
         h += '<button class="actionbtn" id="cm-match">💍 Arrange a match…' +
-          '<span class="adesc">Sound out families for ' + (c.sex === 'f' ? 'her' : 'his') +
-          ' hand. A pledge binds; the wedding follows at sixteen. (sealing one spends the day)</span></button>';
+          '<span class="adesc">' + esc(FB.T(c.sex === 'f'
+            ? 'Sound out families for her hand. A pledge binds; the wedding follows at sixteen. (sealing one spends the day)'
+            : 'Sound out families for his hand. A pledge binds; the wedding follows at sixteen. (sealing one spends the day)')) +
+          '</span></button>';
       }
     }
     h += '</div><button class="btn" id="cm-close">Close</button>';
@@ -1864,7 +2200,8 @@ window.FB = window.FB || {};
         const existing = FB.getRole(s, 'rival', false);
         if (!existing || existing.dead) {
           s.roles.rival = c.id;
-          FB.news(s, '⚡ ' + c.name + ' now counts you an enemy.');
+          FB.news(s, FB.msg('news.social.rival',
+            '⚡ {name} now counts you an enemy.', { name: c.name }));
         }
       }
     }
@@ -1872,7 +2209,9 @@ window.FB = window.FB || {};
     if (bf) bf.addEventListener('click', function () {
       actThen(function () {
         c.opinion = FB.clamp(c.opinion + 4 + Math.floor(FB.skillOf(me, 'dip') / 3), -100, 100);
-        FB.news(s, c.name + ' warms to your company. (regard ' + Math.round(c.opinion) + ')');
+        FB.news(s, FB.msg('news.social.befriended',
+          '{name} warms to your company. (regard {regard})',
+          { name: c.name, regard: Math.round(c.opinion) }));
       });
     });
     const gf = $('cm-gift');
@@ -1880,7 +2219,9 @@ window.FB = window.FB || {};
       actThen(function () {
         s.player.gold = Math.max(0, s.player.gold - 5);
         c.opinion = FB.clamp(c.opinion + 12, -100, 100);
-        FB.news(s, 'Your gift pleases ' + c.name + '. (regard ' + Math.round(c.opinion) + ')');
+        FB.news(s, FB.msg('news.social.gift',
+          'Your gift pleases {name}. (regard {regard})',
+          { name: c.name, regard: Math.round(c.opinion) }));
       });
     });
     const ct = $('cm-court');
@@ -1889,7 +2230,8 @@ window.FB = window.FB || {};
         s.player.courtingId = c.id;
         s.player.flags.courting = 1;
         s.player.focus = 'court_suitor';
-        FB.news(s, '🌷 You begin courting ' + FB.fullName(c) + '.');
+        FB.news(s, FB.msg('news.social.courting_begins',
+          '🌷 You begin courting {name}.', { name: FB.fullName(c) }));
       });
     });
     const pp = $('cm-propose');
@@ -1908,12 +2250,17 @@ window.FB = window.FB || {};
         if (doc.divorce === 'sunder') s.player.prestige = Math.max(0, s.player.prestige - 5);
         if (gap > 0) s.player.prestige = Math.max(0, s.player.prestige - gap * 5);
         FB.doDivorce(s, c.id);
-        FB.news(s, doc.divorce === 'talaq' ?
-          '🕊 You pronounce the divorce from ' + c.name + '; the mahr of ' + cost + ' gold is paid.' :
-          doc.divorce === 'get' ?
-            '📜 A get is written and witnessed; ' + c.name + ' departs with the ketubah of ' + cost + ' gold.' :
-            '💔 Before witnesses, the marriage to ' + c.name + ' is declared sundered.');
-        if (gap > 0) FB.news(s, '🗣 The house of ' + c.name + ' does not forgive the slight.');
+        FB.news(s, FB.msg('news.social.divorce', {
+          forms: {
+            select: 'value', param: 'kind', cases: {
+              talaq: '🕊 You pronounce the divorce from {name}; the mahr of {cost} gold is paid.',
+              get: '📜 A get is written and witnessed; {name} departs with the ketubah of {cost} gold.',
+              other: '💔 Before witnesses, the marriage to {name} is declared sundered.'
+            }
+          }
+        }, { kind: doc.divorce, name: c.name, cost: cost }));
+        if (gap > 0) FB.news(s, FB.msg('news.social.divorce_house_offended',
+          '🗣 The house of {name} does not forgive the slight.', { name: c.name }));
         FB.validateFocus(s);
       });
     });
@@ -1930,7 +2277,8 @@ window.FB = window.FB || {};
       s.player.courtingId = null;
       delete s.player.flags.courting;
       c.opinion = FB.clamp(c.opinion - 20, -100, 100);
-      FB.news(s, '💔 The courtship of ' + c.name + ' is ended.');
+      FB.news(s, FB.msg('news.social.courtship_ended',
+        '💔 The courtship of {name} is ended.', { name: c.name }));
       FB.validateFocus(s);
       UI.refresh();
     });
@@ -1940,10 +2288,13 @@ window.FB = window.FB || {};
         c.opinion = FB.clamp(c.opinion - 12, -100, 100);
         if (FB.chance(0.5 + FB.skillOf(me, 'dip') * 0.015)) {
           s.player.prestige += 4;
-          FB.news(s, 'Your barb lands perfectly. ' + c.name + ' fumes; the crowd laughs.');
+          FB.news(s, FB.msg('news.social.insult_success',
+            'Your barb lands perfectly. {name} fumes; the crowd laughs.', { name: c.name }));
         } else {
           s.player.prestige = Math.max(0, s.player.prestige - 5);
-          FB.news(s, 'The insult falls flat. ' + c.name + ' answers better, and the laughter is theirs.');
+          FB.news(s, FB.msg('news.social.insult_failure',
+            'The insult falls flat. {name} answers better, and the laughter is theirs.',
+            { name: c.name }));
         }
         maybeRival();
       });
@@ -1955,11 +2306,15 @@ window.FB = window.FB || {};
           c.opinion = FB.clamp(c.opinion - 8, -100, 100);
           s.player.prestige += 3;
           if (FB.chance(0.5)) FB.gainSkill(me, 'int', 1);
-          FB.news(s, 'Your quiet work costs ' + c.name + ' dearly, and no one can prove a thing.');
+          FB.news(s, FB.msg('news.social.undermine_success',
+            'Your quiet work costs {name} dearly, and no one can prove a thing.',
+            { name: c.name }));
         } else {
           c.opinion = FB.clamp(c.opinion - 20, -100, 100);
           s.player.prestige = Math.max(0, s.player.prestige - 6);
-          FB.news(s, 'The scheme unravels — and ' + c.name + ' knows exactly whose hand was in it.');
+          FB.news(s, FB.msg('news.social.undermine_failure',
+            'The scheme unravels — and {name} knows exactly whose hand was in it.',
+            { name: c.name }));
         }
         maybeRival();
       });
@@ -1986,27 +2341,35 @@ window.FB = window.FB || {};
     if (!c || c.dead || FB.spouseOf(s, c) || c.betrothedId) return;
     const cands = FB.spawnMatchCandidates(s, c);
     const ps = FB.playerStation(s);
-    let h = '<div class="gm-body-text"><p>Families willing to hear an offer for ' +
-      esc(c.name) + '’s hand:</p></div><div class="gm-list">';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Families willing to hear an offer for {name}’s hand:', { name: c.name })) +
+      '</p></div><div class="gm-list">';
     for (const m of cands) {
       if (s.player.courtingId === m.id) continue; // no pledging your own paramour
       const gap = FB.stationOf(m) - ps;
       const need = gap > 0 ? gap * 20 : 0;
       const ask = m.dowryAsk || 0;
       const ok = s.player.gold >= ask && s.player.prestige >= need;
-      let d = FB.STATION_NAMES[FB.stationOf(m)] + ' · age ' + FB.ageOf(m, s.date.year);
-      if (ask) d += ' · their kin ask a dowry of ' + ask + ' gold';
-      if (m.dowryDue) d += ' · she would bring a dowry of ' + m.dowryDue + ' gold';
+      const details = [
+        FB.stationName(FB.stationOf(m)),
+        FB.T('age {age}', { age: FB.ageOf(m, s.date.year) })
+      ];
+      if (ask) details.push(FB.T('their kin ask a dowry of {gold} gold', { gold: ask }));
+      if (m.dowryDue) {
+        details.push(FB.T('she would bring a dowry of {gold} gold', { gold: m.dowryDue }));
+      }
       if (need) {
-        d += ' · needs ' + need + ' prestige' +
-          (s.player.prestige >= need ? '' : ' (you have ' + Math.floor(s.player.prestige) + ')');
-      } else if (gap < 0) d += ' · a step down — folk will mark it';
+        details.push(s.player.prestige >= need
+          ? FB.T('needs {prestige} prestige', { prestige: need })
+          : FB.T('needs {prestige} prestige (you have {current})',
+            { prestige: need, current: Math.floor(s.player.prestige) }));
+      } else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
       h += '<button class="actionbtn" data-match="' + m.id + '"' + (ok ? '' : ' disabled') +
-        '>💍 ' + esc((m.epithet ? m.epithet + ' — ' : '') + m.name) +
-        '<span class="adesc">' + esc(d) + '</span></button>';
+        '>💍 ' + esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
+        '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Decide nothing today</button>';
-    openModal('A Match for ' + c.name, h);
+    openModal(FB.T('A Match for {name}', { name: c.name }), h);
     document.querySelectorAll('[data-match]').forEach(function (b) {
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
@@ -2027,12 +2390,17 @@ window.FB = window.FB || {};
     const fx = d.fx || {};
     const parts = [];
     for (const k of FB.SKILLS) {
-      if (fx[k]) parts.push((fx[k] > 0 ? '+' : '') + fx[k] + ' ' + FB.SKILL_NAMES[k]);
+      if (fx[k]) parts.push(FB.T('{amount} {skill}', {
+        amount: (fx[k] > 0 ? '+' : '') + fx[k], skill: FB.skillName(k)
+      }));
     }
-    if (fx.battle) parts.push((fx.battle > 0 ? '+' : '') + Math.round(fx.battle * 100) + '% battle odds');
-    if (fx.prestige) parts.push((fx.prestige > 0 ? '+' : '') + fx.prestige + ' prestige a season');
-    if (fx.piety) parts.push((fx.piety > 0 ? '+' : '') + fx.piety + ' piety a season');
-    if (fx.health) parts.push('wards off sickness and death');
+    if (fx.battle) parts.push(FB.T('{amount}% battle odds',
+      { amount: (fx.battle > 0 ? '+' : '') + Math.round(fx.battle * 100) }));
+    if (fx.prestige) parts.push(FB.T('{amount} prestige a season',
+      { amount: (fx.prestige > 0 ? '+' : '') + fx.prestige }));
+    if (fx.piety) parts.push(FB.T('{amount} piety a season',
+      { amount: (fx.piety > 0 ? '+' : '') + fx.piety }));
+    if (fx.health) parts.push(FB.T('wards off sickness and death'));
     return parts.join(' · ');
   }
 
@@ -2040,21 +2408,24 @@ window.FB = window.FB || {};
     const s = FB.state;
     const def = FBDATA.items[id];
     if (!s || !def) return;
-    const name = FB.fmt(s, def.name, {});
+    const name = dt(s, 'item', id, def, 'name');
     const owned = !viewOnly && FB.itemList(s).indexOf(id) >= 0;
     const fx = itemFxText(def);
     const sell = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
     let h = '<div class="gm-body-text">' +
-      '<p style="font-size:16px"><b>' + def.icon + ' ' + esc(name) + '</b> · <span class="cmeta">' + esc(def.rarity) + '</span></p>' +
-      '<p><i>' + esc(FB.fmt(s, def.desc, {})) + '</i></p>' +
+      '<p style="font-size:16px"><b>' + def.icon + ' ' + esc(name) +
+      '</b> · <span class="cmeta">' + esc(rarityName(def.rarity)) + '</span></p>' +
+      '<p><i>' + esc(dt(s, 'item', id, def, 'desc')) + '</i></p>' +
       (fx ? '<p>⚜ ' + esc(fx) + '</p>' : '<p class="cmeta">No power but its worth.</p>') +
       (fx && !viewOnly ? '<p class="cmeta">Its powers serve whoever heads the family.</p>' : '') +
-      '<p class="cmeta">Worth about ' + def.value + ' gold.</p></div>';
+      '<p class="cmeta">' + esc(FB.T('Worth about {gold} gold.', { gold: def.value })) +
+      '</p></div>';
     if (owned) {
       h += '<div class="gm-list">' +
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">A treasure warms regard as mere silver never could. (spends the day)</span></button>' +
-        '<button class="actionbtn" id="im-sell">💰 Sell it (' + sell + ' gold)' +
+        '<button class="actionbtn" id="im-sell">' +
+        esc(FB.T('💰 Sell it ({gold} gold)', { gold: sell })) +
         '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button></div>';
     }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
@@ -2082,27 +2453,39 @@ window.FB = window.FB || {};
       seen[c.id] = 1;
       folk.push({ c: c, rel: rel });
     }
-    for (const sp of FB.spousesOf(s, me)) add(sp, 'your spouse');
-    if (s.player.courtingId) add(s.chars[s.player.courtingId], 'courting');
+    for (const sp of FB.spousesOf(s, me)) add(sp, FB.T('your spouse'));
+    if (s.player.courtingId) add(s.chars[s.player.courtingId], FB.T('courting'));
     const kin = FB.kinOf(s);
     for (const g of ['children', 'parents', 'siblings', 'grandchildren',
       'niecesNephews', 'unclesAunts', 'cousins', 'grandparents']) {
-      for (const e of kin[g]) add(e.c, e.rel.toLowerCase());
+      for (const e of kin[g]) add(e.c, FB.T(e.rel));
     }
-    for (const role of ['lord', 'priest', 'friend', 'rival']) add(FB.getRole(s, role, false), 'your ' + role);
+    for (const role of ['lord', 'priest', 'friend', 'rival']) {
+      const relation = role === 'lord' ? FB.T('your lord') :
+        (role === 'priest' ? FB.T('your priest') :
+          (role === 'friend' ? FB.T('your friend') : FB.T('your rival')));
+      add(FB.getRole(s, role, false), relation);
+    }
     if (!folk.length) {
       UI.toast('You know no one to honor with it.');
       return;
     }
     const boost = FB.giftOpinion(def);
-    let h = '<div class="gm-body-text"><p>Whom to honor with ' + def.icon + ' ' +
-      esc(FB.fmt(s, def.name, {})) + '? Such largesse is worth +' + boost + ' regard.</p></div><div class="gm-list">';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Whom to honor with {icon} {item}? Such largesse is worth +{regard} regard.', {
+        icon: def.icon, item: dt(s, 'item', id, def, 'name'), regard: boost
+      })) + '</p></div><div class="gm-list">';
     for (const e of folk) {
       const op = Math.round(e.c.opinion);
+      const details = s.roles.lord === e.c.id
+        ? FB.T('{relation} · regard {regard} · your lord’s favor rises with it', {
+          relation: e.rel, regard: (op > 0 ? '+' : '') + op
+        })
+        : FB.T('{relation} · regard {regard}', {
+          relation: e.rel, regard: (op > 0 ? '+' : '') + op
+        });
       h += '<button class="actionbtn" data-give="' + e.c.id + '">🎁 ' + esc(FB.fullName(e.c)) +
-        '<span class="adesc">' + esc(e.rel) + ' · regard <span class="' + FB.opClass(op) + '">' +
-        (op > 0 ? '+' : '') + op + '</span>' +
-        (s.roles.lord === e.c.id ? ' · your lord’s favor rises with it' : '') + '</span></button>';
+        '<span class="adesc ' + FB.opClass(op) + '">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Keep it</button>';
     openModal('A Gift Worth Giving', h);
@@ -2133,20 +2516,46 @@ window.FB = window.FB || {};
     for (const k of FB.SKILLS) {
       const cur = c.edu && c.edu.focus === k;
       h += '<button class="actionbtn" data-edufocus="' + k + '">' + (cur ? '◉ ' : '○ ') +
-        esc(FB.SKILL_NAMES[k]) + '<span class="adesc">' + esc(EDU_DESC[k]) + '</span></button>';
+        esc(FB.skillName(k)) + '<span class="adesc">' + esc(FB.L(EDU_DESC[k])) + '</span></button>';
     }
-    h += '<button class="actionbtn" data-edufocus="">○ No directed study' +
-      '<span class="adesc">' + (self ? 'Find your own way.' : 'Let the child find their own way.') + '</span></button>';
-    h += '</div><button class="btn" id="edu-back">Back</button>';
-    openModal(self ? '🎓 Your education' : '🎓 Education of ' + esc(c.name), h);
+    h += '<button class="actionbtn" data-edufocus="">' +
+      esc(FB.T('○ No directed study')) + '<span class="adesc">' +
+      esc(FB.T(self ? 'Find your own way.' : 'Let the child find their own way.')) +
+      '</span></button>';
+    h += '</div><button class="btn" id="edu-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(self ? FB.T('🎓 Your education') :
+      FB.T('🎓 Education of {name}', { name: c.name }), h);
     document.querySelectorAll('[data-edufocus]').forEach(function (b) {
       b.addEventListener('click', function () {
         const k = b.getAttribute('data-edufocus');
         c.edu = c.edu || {};
         c.edu.focus = k || null;
-        FB.news(s, self ?
-          ('🎓 You ' + (k ? 'will be schooled in ' + FB.SKILL_NAMES[k].toLowerCase() + '.' : 'are left to your own devices.')) :
-          ('🎓 ' + c.name + (k ? ' will be schooled in ' + FB.SKILL_NAMES[k].toLowerCase() + '.' : ' is left to their own devices.')));
+        FB.news(s, FB.msg('news.education.focus', {
+          forms: {
+            select: 'value', param: 'subject', cases: {
+              self: {
+                select: 'value', param: 'focus', cases: {
+                  dip: '🎓 You will be schooled in diplomacy.',
+                  mar: '🎓 You will be schooled in martial skill.',
+                  ste: '🎓 You will be schooled in stewardship.',
+                  int: '🎓 You will be schooled in intrigue.',
+                  lea: '🎓 You will be schooled in learning.',
+                  other: '🎓 You are left to your own devices.'
+                }
+              },
+              other: {
+                select: 'value', param: 'focus', cases: {
+                  dip: '🎓 {name} will be schooled in diplomacy.',
+                  mar: '🎓 {name} will be schooled in martial skill.',
+                  ste: '🎓 {name} will be schooled in stewardship.',
+                  int: '🎓 {name} will be schooled in intrigue.',
+                  lea: '🎓 {name} will be schooled in learning.',
+                  other: '🎓 {name} is left to their own devices.'
+                }
+              }
+            }
+          }
+        }, { subject: self ? 'self' : 'other', focus: k || 'other', name: c.name }));
         UI.showCharModal(cid);
       });
     });
@@ -2162,22 +2571,32 @@ window.FB = window.FB || {};
     const self = c.id === me.id;
     const focus = c.edu && c.edu.focus;
     function skillNote(t) {
-      if (focus) return FB.SKILL_NAMES[focus] + ' ' + FB.skillOf(t, focus);
+      if (focus) return FB.T('{skill} {value}',
+        { skill: FB.skillName(focus), value: FB.skillOf(t, focus) });
       let best = 'dip';
       for (const k of FB.SKILLS) if (FB.skillOf(t, k) > FB.skillOf(t, best)) best = k;
-      return 'best: ' + FB.SKILL_NAMES[best] + ' ' + FB.skillOf(t, best);
+      return FB.T('best: {skill} {value}',
+        { skill: FB.skillName(best), value: FB.skillOf(t, best) });
     }
     const cands = [];
     if (self) {
       // a child player is taught by their elders, not by themselves
       const f = me.fatherId ? s.chars[me.fatherId] : null;
       const m = me.motherId ? s.chars[me.motherId] : null;
-      if (f && !f.dead) cands.push({ id: f.id, c: f, name: f.name + ' (your father)' });
-      if (m && !m.dead) cands.push({ id: m.id, c: m, name: m.name + ' (your mother)' });
+      if (f && !f.dead) cands.push({
+        id: f.id, c: f, name: FB.T('{name} (your father)', { name: f.name })
+      });
+      if (m && !m.dead) cands.push({
+        id: m.id, c: m, name: FB.T('{name} (your mother)', { name: m.name })
+      });
     } else {
-      cands.push({ id: 'self', c: me, name: 'Teach them yourself' });
+      cands.push({ id: 'self', c: me, name: FB.T('Teach them yourself') });
       for (const sp of FB.spousesOf(s, me)) {
-        cands.push({ id: sp.id, c: sp, name: sp.name + ' (your ' + (sp.sex === 'f' ? 'wife' : 'husband') + ')' });
+        cands.push({
+          id: sp.id, c: sp,
+          name: FB.T(sp.sex === 'f' ? '{name} (your wife)' : '{name} (your husband)',
+            { name: sp.name })
+        });
       }
     }
     for (const r of ['priest', 'friend', 'lord']) {
@@ -2185,8 +2604,30 @@ window.FB = window.FB || {};
       if (r === 'lord' && FB.playerStation(s) < 2) continue;
       const rc = FB.getRole(s, r, false);
       if (rc && !rc.dead && (r !== 'lord' || rc.opinion >= 0)) {
-        cands.push({ id: rc.id, c: rc, name: rc.name + ' (' + (r === 'priest' ? FB.holyWord(me.religion) : r) + ')' });
+        cands.push({
+          id: rc.id, c: rc,
+          name: FB.T('{name} ({role})', {
+            name: rc.name,
+            role: r === 'priest' ? FB.holyWord(me.religion) :
+              (r === 'friend' ? FB.T('friend') : FB.T('lord'))
+          })
+        });
       }
+    }
+    function masterDescription() {
+      if (!focus) return FB.T('A stranger of real accomplishment.');
+      return FB.renderMessage(FB.msg('fx.ui.hired_master_focus', {
+        forms: {
+          select: 'value', param: 'focus', cases: {
+            dip: 'A stranger of real accomplishment in diplomacy.',
+            mar: 'A stranger of real accomplishment in martial matters.',
+            ste: 'A stranger of real accomplishment in stewardship.',
+            int: 'A stranger of real accomplishment in intrigue.',
+            lea: 'A stranger of real accomplishment in learning.',
+            other: 'A stranger of real accomplishment.'
+          }
+        }
+      }, { focus: focus }), { state: s, viewer: s.player.charId });
     }
     let h = '<div class="gm-list">';
     for (const cd of cands) {
@@ -2194,20 +2635,31 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-tutor="' + cd.id + '">' + (cur ? '◉ ' : '○ ') + esc(cd.name) +
         '<span class="adesc">' + esc(skillNote(cd.c)) + '</span></button>';
     }
-    h += '<button class="actionbtn" data-tutor="~hire"' + (s.player.gold < 25 ? ' disabled' : '') + '>🎓 Hire a learned master (25 gold)' +
-      '<span class="adesc">A stranger of real accomplishment' + (focus ? ' in ' + FB.SKILL_NAMES[focus].toLowerCase() : '') + '.</span></button>';
+    h += '<button class="actionbtn" data-tutor="~hire"' + (s.player.gold < 25 ? ' disabled' : '') +
+      '>' + esc(FB.T('🎓 Hire a learned master (25 gold)')) + '<span class="adesc">' +
+      esc(masterDescription()) + '</span></button>';
     if (c.edu && c.edu.tutorId) {
-      h += '<button class="actionbtn" data-tutor="~none">✖ Dismiss the tutor<span class="adesc">The lessons end.</span></button>';
+      h += '<button class="actionbtn" data-tutor="~none">' +
+        esc(FB.T('✖ Dismiss the tutor')) + '<span class="adesc">' +
+        esc(FB.T('The lessons end.')) + '</span></button>';
     }
-    h += '</div><button class="btn" id="tut-back">Back</button>';
-    openModal(self ? '🧑‍🏫 Your tutor' : '🧑‍🏫 A Tutor for ' + esc(c.name), h);
+    h += '</div><button class="btn" id="tut-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(self ? FB.T('🧑‍🏫 Your tutor') :
+      FB.T('🧑‍🏫 A Tutor for {name}', { name: c.name }), h);
     document.querySelectorAll('[data-tutor]').forEach(function (b) {
       b.addEventListener('click', function () {
         const v = b.getAttribute('data-tutor');
         c.edu = c.edu || {};
         if (v === '~none') {
           c.edu.tutorId = null;
-          FB.news(s, self ? 'Your tutor is dismissed.' : 'The tutor of ' + c.name + ' is dismissed.');
+          FB.news(s, FB.msg('news.education.tutor_dismissed', {
+            forms: {
+              select: 'value', param: 'subject', cases: {
+                self: 'Your tutor is dismissed.',
+                other: 'The tutor of {name} is dismissed.'
+              }
+            }
+          }, { subject: self ? 'self' : 'other', name: c.name }));
         } else if (v === '~hire') {
           if (s.player.gold < 25) return;
           s.player.gold -= 25;
@@ -2216,16 +2668,35 @@ window.FB = window.FB || {};
             culture: pr.culture, religion: pr.religion,
             born: s.date.year - FB.ri(35, 60), quality: 3, role: 'tutor'
           });
-          master.epithet = 'Hired master';
+          master.epithetMsg = FB.msg('fx.epithet.hired_master', 'Hired master', {});
           if (focus) master.skills[focus] = FB.clamp(FB.ri(11, 16), 0, FBDATA.balance.skillHardCap || 40);
           else master.skills.lea = FB.clamp(FB.ri(11, 16), 0, FBDATA.balance.skillHardCap || 40);
           c.edu.tutorId = master.id;
-          FB.news(s, '🎓 ' + master.name + ', a learned master, takes charge of ' +
-            (self ? 'your' : c.name + '’s') + ' education.');
+          FB.news(s, FB.msg('news.education.master_hired', {
+            forms: {
+              select: 'value', param: 'subject', cases: {
+                self: '🎓 {tutor}, a learned master, takes charge of your education.',
+                other: '🎓 {tutor}, a learned master, takes charge of {name}’s education.'
+              }
+            }
+          }, { subject: self ? 'self' : 'other', tutor: master.name, name: c.name }));
         } else {
           c.edu.tutorId = v;
-          FB.news(s, '🎓 ' + (v === 'self' ? 'You take' : (s.chars[v] ? s.chars[v].name : 'A tutor') + ' takes') +
-            ' charge of ' + (self ? 'your' : c.name + '’s') + ' lessons.');
+          FB.news(s, FB.msg('news.education.tutor_chosen', {
+            forms: {
+              select: 'value', param: 'case', cases: {
+                player_self: '🎓 You take charge of {name}’s lessons.',
+                named_self: '🎓 {tutor} takes charge of your lessons.',
+                named_other: '🎓 {tutor} takes charge of {name}’s lessons.',
+                other: '🎓 A tutor takes charge of {name}’s lessons.'
+              }
+            }
+          }, {
+            case: v === 'self' ? 'player_self' :
+              (s.chars[v] ? (self ? 'named_self' : 'named_other') : 'other'),
+            tutor: s.chars[v] ? s.chars[v].name : '',
+            name: c.name
+          }));
         }
         UI.showCharModal(cid);
       });
@@ -2247,10 +2718,15 @@ window.FB = window.FB || {};
     }
     let h = '<div class="gm-body-text"><p>Who shall carry the name when you are gone? The choice, once witnessed, steadies the realm — and the family.</p></div><div class="gm-list">';
     for (const c of heirs) {
+      const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
+        age: FB.ageOf(c, s.date.year),
+        mar: FB.skillName('mar'), marValue: FB.skillOf(c, 'mar'),
+        ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
+        dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
+      });
       h += '<button class="actionbtn" data-namedheir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
         (s.player.namedHeirId === c.id ? '★ ' : '') + esc(FB.fullName(c)) +
-        '<span class="adesc">Age ' + FB.ageOf(c, s.date.year) + ' · Mar ' + FB.skillOf(c, 'mar') +
-        ' · Ste ' + FB.skillOf(c, 'ste') + ' · Dip ' + FB.skillOf(c, 'dip') + '</span></button>';
+        '<span class="adesc">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="hp-close">Decide later</button>';
     openModal('📜 Name Your Heir', h);
@@ -2261,7 +2737,8 @@ window.FB = window.FB || {};
         if (!c) return;
         s.player.namedHeirId = c.id;
         FB.applyEffects(s, { prestige: 8 });
-        FB.news(s, '📜 ' + FB.fullName(c) + ' is named heir before witnesses.');
+        FB.news(s, FB.msg('news.life.heir_named',
+          '📜 {name} is named heir before witnesses.', { name: FB.fullName(c) }));
         UI.closeModal();
       });
     });
@@ -2271,18 +2748,24 @@ window.FB = window.FB || {};
   UI.showTraitModal = function (tid) {
     const t = FBDATA.traits[tid];
     if (!t) return;
+    const s = FB.state;
+    const traitName = dt(s, 'trait', tid, t, 'name');
+    const traitDesc = dt(s, 'trait', tid, t, 'desc');
     let fx = '';
     for (const k of FB.SKILLS) {
-      if (t[k]) fx += '<div class="kv"><span>' + FB.SKILL_NAMES[k] + '</span><b>' + (t[k] > 0 ? '+' : '') + t[k] + '</b></div>';
+      if (t[k]) fx += '<div class="kv"><span>' + esc(FB.skillName(k)) + '</span><b>' +
+        (t[k] > 0 ? '+' : '') + t[k] + '</b></div>';
     }
-    if (t.health) fx += kv('Constitution', (t.health > 0 ? 'hardier' : 'frailer'));
-    if (t.fert && t.fert !== 1) fx += kv('Fertility', (t.fert > 1 ? 'higher' : 'lower'));
+    if (t.health) fx += kv('Constitution', esc(FB.T(t.health > 0 ? 'hardier' : 'frailer')));
+    if (t.fert && t.fert !== 1) {
+      fx += kv('Fertility', esc(FB.T(t.fert > 1 ? 'higher' : 'lower')));
+    }
     if (t.opinion) fx += kv('Others’ regard', (t.opinion > 0 ? '+' : '') + t.opinion);
     if (t.opposite && FBDATA.traits[t.opposite]) {
-      fx += kv('Opposite of', esc(FBDATA.traits[t.opposite].name));
+      fx += kv('Opposite of', esc(dt(s, 'trait', t.opposite, FBDATA.traits[t.opposite], 'name')));
     }
-    openModal(t.icon + ' ' + t.name,
-      '<div class="gm-body-text"><p><i>' + esc(t.desc) + '</i></p>' +
+    openModal(t.icon + ' ' + traitName,
+      '<div class="gm-body-text"><p><i>' + esc(traitDesc) + '</i></p>' +
       (fx || '<p class="hint">No lasting effects — only a story people tell about you.</p>') +
       '</div><button class="btn" id="tm-close">Close</button>');
     $('tm-close').addEventListener('click', UI.closeModal);
@@ -2290,35 +2773,62 @@ window.FB = window.FB || {};
 
   UI.showAilmentModal = function (aid) {
     const a = FBDATA.ailments[aid];
-    const icon = a ? a.icon : '🤒', name = a ? a.name : 'Ill';
+    const s = FB.state;
+    const icon = a ? a.icon : '🤒';
+    const name = a ? dt(s, 'ailment', aid, a, 'name') : FB.T('Ill');
     openModal(icon + ' ' + name,
-      '<div class="gm-body-text"><p><i>' + esc(a ? a.desc : 'Sickness has taken hold.') + '</i></p>' +
-      '<p class="hint">' + (!a || a.kind === 'sickness' ?
+      '<div class="gm-body-text"><p><i>' +
+      esc(a ? dt(s, 'ailment', aid, a, 'desc') : FB.T('Sickness has taken hold.')) + '</i></p>' +
+      '<p class="hint">' + esc(FB.T(!a || a.kind === 'sickness' ?
         'A sickness — it must run its course; rest and time are the only physic.' :
-        'A wound — it knits as your strength returns, a year or so at most.') +
+        'A wound — it knits as your strength returns, a year or so at most.')) +
       '</p></div><button class="btn" id="tm-close">Close</button>');
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
   /* ================= death & succession ================= */
+  function legendQuipText(legend, state) {
+    if (!legend) return '';
+    if (legend.quipMsg) {
+      return FB.renderMessage(legend.quipMsg, {
+        state: state, viewer: state.player.charId
+      });
+    }
+    return legend.quip || '';
+  }
+
+  function legendTitleText(legend) {
+    if (!legend) return '';
+    if (legend.titleData) return FB.renderTitleSnapshot(legend.titleData);
+    return legend.title ? FB.L(legend.title) : '';
+  }
+
   UI.showDeath = function (heirs, causeText) {
     const s = FB.state;
     const me = s.chars[s.player.charId];
     // G.die records the legend (and its parting quip) before opening this
     let h = '<div class="gm-body-text"><p>' + esc(causeText) + '</p>';
     const lg = s.legends && s.legends[s.legends.length - 1];
-    if (lg && lg.id === me.id && lg.quip) h += '<p><i>' + esc(lg.quip) + '</i></p>';
+    const quip = lg && lg.id === me.id ? legendQuipText(lg, s) : '';
+    if (quip) h += '<p><i>' + esc(quip) + '</i></p>';
     /* noFocus: the choice of an heir must be deliberate — a Space/Enter meant
        for the pause key must not sign the succession for the first heir */
     if (heirs.length) {
-      h += '<p>But a house is more than one life. Who carries the name onward?</p></div><div class="gm-list">';
+      h += '<p>' + esc(FB.T('But a house is more than one life. Who carries the name onward?')) +
+        '</p></div><div class="gm-list">';
       for (const c of heirs) {
+        const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
+          age: FB.ageOf(c, s.date.year),
+          mar: FB.skillName('mar'), marValue: FB.skillOf(c, 'mar'),
+          ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
+          dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
+        });
         h += '<button class="actionbtn" data-heir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
-          esc(FB.fullName(c)) + '<span class="adesc">Age ' + FB.ageOf(c, s.date.year) +
-          ' · Mar ' + FB.skillOf(c, 'mar') + ' · Ste ' + FB.skillOf(c, 'ste') + ' · Dip ' + FB.skillOf(c, 'dip') + '</span></button>';
+          esc(FB.fullName(c)) + '<span class="adesc">' + esc(details) + '</span></button>';
       }
       h += '</div>';
-      openModal('☠ ' + esc(me.name) + ' is Dead', h, { dismissable: false, noFocus: true });
+      openModal(FB.T('☠ {name} is Dead', { name: me.name }), h,
+        { dismissable: false, noFocus: true });
       FB.paintFaces($('gm-body'), s);
       document.querySelectorAll('[data-heir]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -2327,9 +2837,11 @@ window.FB = window.FB || {};
         });
       });
     } else {
-      h += '<p><b>There is no heir.</b> The house of ' + esc(me.dyn || me.name) +
-        ' passes out of memory, as all things must.</p></div>';
-      openModal('☠ The Line is Ended', h + '<button class="btn primary" id="gm-gameover">See the chronicle</button>', { dismissable: false, noFocus: true });
+      h += '<p><b>' + esc(FB.T('There is no heir.')) + '</b> ' +
+        esc(FB.T('The house of {dynasty} passes out of memory, as all things must.',
+          { dynasty: me.dyn || me.name })) + '</p></div>';
+      openModal('☠ The Line is Ended', h + '<button class="btn primary" id="gm-gameover">' +
+        esc(FB.T('See the chronicle')) + '</button>', { dismissable: false, noFocus: true });
       $('gm-gameover').addEventListener('click', function () {
         UI.closeModal(); UI.gameOver();
       });
@@ -2339,28 +2851,43 @@ window.FB = window.FB || {};
   UI.gameOver = function () {
     const s = FB.state;
     const years = s.date.year - FBDATA.balance.startYear;
+    const summary = FB.renderMessage(FB.msg('fx.gameover.summary', {
+      forms: {
+        select: 'plural', param: 'generations', cases: {
+          one: 'Your saga spanned {years} years and {generations} generation.',
+          other: 'Your saga spanned {years} years and {generations} generations.'
+        }
+      }
+    }, { years: years, generations: s.generation || 1 }), {
+      state: s, viewer: s.player.charId
+    });
+    const peakTitle = s.peakTitleData ? FB.renderTitleSnapshot(s.peakTitleData) :
+      (s.peakTitle ? FB.L(s.peakTitle) : FB.stationName(s.peakTier || 0));
     let h = '<div class="gm-body-text">' +
-      '<p>Your saga spanned <b>' + years + ' years</b> and <b>' + (s.generation || 1) + ' generation(s)</b>.</p>' +
-      kv('Highest rank attained', esc(s.peakTitle || 'Serf')) +
-      kv('Final wealth', Math.floor(s.player.gold) + ' gold') +
+      '<p>' + esc(summary) + '</p>' +
+      kv('Highest rank attained', esc(peakTitle)) +
+      kv('Final wealth', esc(FB.T('{amount} gold', { amount: Math.floor(s.player.gold) }))) +
       kv('Prestige', Math.floor(s.player.prestige)) +
       kv('Piety', Math.floor(s.player.piety));
     if (s.legends && s.legends.length) {
-      h += '<h4>Those who carried the name</h4>';
+      h += '<h4>' + esc(FB.T('Those who carried the name')) + '</h4>';
       for (const lg of s.legends) {
         const lc = s.chars[lg.id];
+        const title = legendTitleText(lg);
+        const legendQuip = legendQuipText(lg, s);
         h += '<div class="row gap" style="align-items:center;margin:6px 0">' +
           (lc ? FB.faceTag(lc, 32, 38) : '') +
-          '<div style="flex:1"><b>' + esc(lg.name) + '</b> <span class="hint">' + esc(lg.title) +
+          '<div style="flex:1"><b>' + esc(lg.name) + '</b> <span class="hint">' + esc(title) +
           ' · ' + lg.born + '–' + lg.died + '</span><br>' +
-          '<span class="hint"><i>' + esc(lg.quip) + '</i></span></div></div>';
+          '<span class="hint"><i>' + esc(legendQuip) + '</i></span></div></div>';
       }
     }
-    h += '<h4>Last lines of the chronicle</h4>';
+    h += '<h4>' + esc(FB.T('Last lines of the chronicle')) + '</h4>';
     for (let i = Math.max(0, s.log.length - 6); i < s.log.length; i++) {
-      h += '<p>· ' + esc(FB.newsText(s.log[i])) + '</p>';
+      h += '<p>· ' + esc(FB.newsText(s.log[i], s, s.player.charId)) + '</p>';
     }
-    h += '</div><button class="btn primary" id="gm-title-btn">Return to title</button>';
+    h += '</div><button class="btn primary" id="gm-title-btn">' +
+      esc(FB.T('Return to title')) + '</button>';
     openModal('The Chronicle Closes', h, { dismissable: false });
     FB.paintFaces($('gm-body'), s);
     $('gm-title-btn').addEventListener('click', function () {
@@ -2380,7 +2907,8 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
       (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
-      '<button class="actionbtn" id="m-quit">🏳 ' + (obs ? 'Stop observing' : 'Abandon to title') + '</button>' +
+      '<button class="actionbtn" id="m-quit">' +
+      esc(FB.T(obs ? '🏳 Stop observing' : '🏳 Abandon to title')) + '</button>' +
       '</div>' +
       (FB.state && FB.state.seed ?
         '<div class="seedrow"><label for="m-seed">🔑 Start seed — tap to copy &amp; share</label>' +
@@ -2414,30 +2942,32 @@ window.FB = window.FB || {};
     });
   };
 
-  /* Phase 1 language chooser — hidden until a second table is already present, so
-     the English-only build shows no control. Replace loaded-table discovery and
-     live redraw with the fixed manifest + reload lifecycle before a locale ships. */
   function langSelector() {
     const locs = FB.availableLocales();
-    if (locs.length < 2) return '';
     let opts = '';
     for (const loc of locs) {
-      opts += '<option value="' + loc + '"' + (loc === FB.locale ? ' selected' : '') + '>' +
-        esc(FB.localeName(loc)) + '</option>';
+      const status = loc.status === 'preview' ? ' — ' + FB.T('Preview') : '';
+      opts += '<option value="' + esc(loc.code) + '"' + (loc.code === FB.locale ? ' selected' : '') + '>' +
+        esc(loc.name + status) + '</option>';
     }
     return '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T('Language')) + '</p></div>' +
-      '<select id="set-lang" class="setlang">' + opts + '</select>';
+      '<select id="set-lang" class="setlang">' + opts + '</select>' +
+      '<p class="hint">' +
+      esc(FB.T('French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors.')) +
+      '</p>';
   }
 
   /* ================= settings ================= */
   UI.showSettings = function () {
     const G = FB.game;
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
-    let h = '<div class="gm-body-text"><p>How quickly the days flow while time runs' +
-      (FB.isTouch ? '' : ' — on a keyboard, <b>−</b>/<b>+</b> change it at any time') +
-      '.</p></div>';
+    let h = '<div class="gm-body-text"><p>' + (FB.isTouch
+      ? esc(FB.T('How quickly the days flow while time runs.'))
+      : esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))) +
+      '</p></div>';
     h += '<div class="speedrow"><input type="range" id="set-speed" min="0" max="' +
-      (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="Speed of days">' +
+      (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
+      esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
@@ -2450,7 +2980,11 @@ window.FB = window.FB || {};
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal('Settings', h);
     function speedLabel(i) {
-      return 'Speed ' + (i + 1) + ' / ' + G.SPEEDS.length + (WORDS[i] ? ' — ' + WORDS[i] : '');
+      return FB.T('Speed {current} / {total} — {description}', {
+        current: i + 1,
+        total: G.SPEEDS.length,
+        description: WORDS[i] ? FB.T(WORDS[i]) : ''
+      });
     }
     const slider = $('set-speed');
     slider.addEventListener('input', function () { // live label while dragging
@@ -2470,10 +3004,7 @@ window.FB = window.FB || {};
     const langSel = $('set-lang');
     if (langSel) {
       langSel.addEventListener('change', function () {
-        FB.setLocale(langSel.value, function () {
-          UI.showSettings();           // redraw this modal in the new language
-          if (FB.state) UI.refresh();  // and the panels behind it
-        });
+        FB.setLocale(langSel.value);
       });
     }
     $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
@@ -2485,17 +3016,24 @@ window.FB = window.FB || {};
       const d = FB.save.read(i); // one parse per slot: late saves are large
       const meta = FB.save.metaOf(d);
       const other = !saving && meta && FB.save.otherWorld(d);
+      const description = other
+        ? FB.T('{save} · 🧩 another world — its mods are not the ones active now',
+          { save: meta })
+        : (meta || FB.T('Empty'));
       h += '<button class="actionbtn" data-slot="' + i + '">' +
-        (saving ? '💾 Save to slot ' : '📂 Load slot ') + i +
-        '<span class="adesc">' + esc(meta || 'Empty') +
-        (other ? ' · 🧩 another world — its mods are not the ones active now' : '') + '</span></button>';
+        esc(FB.T(saving ? '💾 Save to slot {slot}' : '📂 Load slot {slot}', { slot: i })) +
+        '<span class="adesc">' + esc(description) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-back">Back</button>';
     openModal(saving ? 'Save Game' : 'Load Game', h);
     document.querySelectorAll('[data-slot]').forEach(function (b) {
       b.addEventListener('click', function () {
         const n = parseInt(b.dataset.slot, 10);
-        if (saving) { FB.save.toSlot(n); UI.toast('Saved to slot ' + n + '.'); UI.closeModal(); }
+        if (saving) {
+          FB.save.toSlot(n);
+          UI.toast('Saved to slot {slot}.', { slot: n });
+          UI.closeModal();
+        }
         else {
           if (FB.save.slotMeta(n)) { UI.closeModal(); FB.game.loadSlot(n); }
         }
@@ -2527,7 +3065,7 @@ window.FB = window.FB || {};
   };
 
   UI.showChangelog = function () {
-    let h = '<div class="gm-body-text">';
+    let h = '<div class="gm-body-text" data-i18n-ignore>';
     for (const rel of FB.CHANGELOG) {
       h += '<h4>v' + esc(rel.v) + (rel.date ? ' &mdash; ' + esc(rel.date) : '') + '</h4><ul>';
       for (const c of rel.changes) h += '<li>' + esc(c) + '</li>';
@@ -2547,7 +3085,7 @@ window.FB = window.FB || {};
       bundled.forEach(function (mod, i) {
         const on = FB.mods.isEnabled(mod.id);
         h += '<div class="row gap" style="align-items:center;margin:6px 0">' +
-          '<div style="flex:1"><b>' + esc(mod.name) + '</b>' +
+          '<div style="flex:1" data-i18n-ignore><b>' + esc(mod.name) + '</b>' +
           (mod.desc ? '<br><span class="hint">' + esc(mod.desc) + '</span>' : '') +
           '</div>' +
           '<button class="btn ' + (on ? '' : 'primary') + '" id="mod-bundled-' + i + '">' + (on ? 'Disable' : 'Enable') + '</button></div>';
@@ -2559,7 +3097,7 @@ window.FB = window.FB || {};
       panelh('Active mods');
     if (mods.length) {
       for (let i = 0; i < mods.length; i++) {
-        h += '<div class="modrow">🧩 ' + esc(mods[i].name) +
+        h += '<div class="modrow"><span data-i18n-ignore>🧩 ' + esc(mods[i].name) + '</span>' +
           ' <span class="cmeta">(' + mods[i].kb + ' kB)</span>' +
           '<button class="btn small danger" data-unmod="' + i + '">Remove</button></div>';
       }
@@ -2568,7 +3106,9 @@ window.FB = window.FB || {};
     }
     h += panelh('Add a mod') +
       '<p style="margin:8px 0"><input type="file" id="modfile" accept=".json"></p>' +
-      '<textarea class="modjson" id="modpaste" placeholder=\'Or paste mod JSON here, e.g. {"events":[...]}\'></textarea>' +
+      '<textarea class="modjson" id="modpaste" placeholder="' +
+      esc(FB.T('Or paste mod JSON here, e.g. {example}',
+        { example: '{"events":[...]}' })) + '"></textarea>' +
       '<div class="row gap wrap" style="margin-top:8px">' +
       '<button class="btn primary" id="mod-apply">Apply &amp; reload</button>' +
       (mods.length || bundled.some(function (m) { return FB.mods.isEnabled(m.id); }) ? '<button class="btn danger" id="mod-clear">Remove all mods</button>' : '') +
@@ -2599,6 +3139,11 @@ window.FB = window.FB || {};
 
   /* ================= boot-time wiring ================= */
   UI.wire = function () {
+    FB.fx.on(function (intent) {
+      if (intent.kind !== 'toast') return;
+      if (FB.game.observe && FB.game.obsQuiet) return;
+      UI.toastMessage(intent.message, intent.legacyText);
+    });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {
       t.addEventListener('click', function () { setTab(t.dataset.tab); });
     });
@@ -2610,10 +3155,17 @@ window.FB = window.FB || {};
       document.body.classList.remove('showself');
     });
     if (!FB.isTouch) {
-      // underline each panel's hotkey letter
-      const hot = { actions: '<u>D</u>eeds', char: '<u>S</u>elf', family: '<u>K</u>in', prov: '<u>L</u>and', log: '<u>C</u>hronicle' };
+      const hot = {
+        actions: { key: 'D', label: 'Deeds' },
+        char: { key: 'S', label: 'Self' },
+        family: { key: 'K', label: 'Kin' },
+        prov: { key: 'L', label: 'Land' },
+        log: { key: 'C', label: 'Chronicle' }
+      };
       document.querySelectorAll('#sidetabs .tab, #lefttabs .tab').forEach(function (t) {
-        if (hot[t.dataset.tab]) t.innerHTML = hot[t.dataset.tab];
+        const item = hot[t.dataset.tab];
+        if (item) t.innerHTML = '<span class="keyhint">' + item.key + '</span> ' +
+          esc(FB.T(item.label));
       });
     }
     $('btn-endturn').addEventListener('click', function () {
@@ -2660,7 +3212,8 @@ window.FB = window.FB || {};
         const iid = ichip.getAttribute('data-item') || ichip.getAttribute('data-itemview');
         const d = FBDATA.items[iid];
         if (d && UI.eventsBusy()) {
-          UI.toast(d.icon + ' ' + FB.fmt(FB.state, d.name, {}) + ' — ' + FB.fmt(FB.state, d.desc, {}));
+          UI.toastMessage(null, d.icon + ' ' + dt(FB.state, 'item', iid, d, 'name') + ' — ' +
+            dt(FB.state, 'item', iid, d, 'desc'));
         } else if (d) {
           UI.showItemModal(iid, !ichip.hasAttribute('data-item'));
         }
@@ -2685,22 +3238,27 @@ window.FB = window.FB || {};
         if (!chip) { tip.classList.add('hidden'); return; }
         if (chip.hasAttribute('data-ailment')) {
           const a = FBDATA.ailments[chip.getAttribute('data-ailment')];
-          tip.innerHTML = a ? '<b>' + a.icon + ' ' + esc(a.name) + '</b><br>' + esc(a.desc) :
-            '<b>🤒 Ill</b><br>Sickness has taken hold.';
+          const aid = chip.getAttribute('data-ailment');
+          tip.innerHTML = a ? '<b>' + a.icon + ' ' + esc(dt(FB.state, 'ailment', aid, a, 'name')) +
+            '</b><br>' + esc(dt(FB.state, 'ailment', aid, a, 'desc')) :
+            '<b>🤒 ' + esc(FB.T('Ill')) + '</b><br>' + esc(FB.T('Sickness has taken hold.'));
         } else if (chip.hasAttribute('data-trait')) {
           const t = FBDATA.traits[chip.getAttribute('data-trait')];
           if (!t) return;
           const fx = traitFxText(t);
-          tip.innerHTML = '<b>' + t.icon + ' ' + esc(t.name) + '</b><br>' + esc(t.desc) +
+          const tid = chip.getAttribute('data-trait');
+          tip.innerHTML = '<b>' + t.icon + ' ' + esc(dt(FB.state, 'trait', tid, t, 'name')) +
+            '</b><br>' + esc(dt(FB.state, 'trait', tid, t, 'desc')) +
             (fx ? '<br><i>' + esc(fx) + '</i>' : '');
         } else {
           const d = FBDATA.items[chip.getAttribute('data-item') || chip.getAttribute('data-itemview')];
           if (!d || !FB.state) return;
           const ifx = itemFxText(d);
-          tip.innerHTML = '<b>' + d.icon + ' ' + esc(FB.fmt(FB.state, d.name, {})) + '</b> · ' + esc(d.rarity) +
-            '<br>' + esc(FB.fmt(FB.state, d.desc, {})) +
+          const iid = chip.getAttribute('data-item') || chip.getAttribute('data-itemview');
+          tip.innerHTML = '<b>' + d.icon + ' ' + esc(dt(FB.state, 'item', iid, d, 'name')) + '</b> · ' +
+            esc(rarityName(d.rarity)) + '<br>' + esc(dt(FB.state, 'item', iid, d, 'desc')) +
             (ifx ? '<br><i>' + esc(ifx) + '</i>' : '') +
-            '<br><i>worth ~' + d.value + ' gold</i>';
+            '<br><i>' + esc(FB.T('worth ~{gold} gold', { gold: d.value })) + '</i>';
         }
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();
@@ -2712,10 +3270,15 @@ window.FB = window.FB || {};
 
   function traitFxText(t) {
     const parts = [];
-    for (const k of FB.SKILLS) if (t[k]) parts.push((t[k] > 0 ? '+' : '') + t[k] + ' ' + FB.SKILL_NAMES[k]);
-    if (t.opinion) parts.push('regard ' + (t.opinion > 0 ? '+' : '') + t.opinion);
-    if (t.health) parts.push(t.health > 0 ? 'hardier' : 'frailer');
-    if (t.fert && t.fert !== 1) parts.push(t.fert > 1 ? 'more fertile' : 'less fertile');
+    for (const k of FB.SKILLS) if (t[k]) parts.push(FB.T('{amount} {skill}', {
+      amount: (t[k] > 0 ? '+' : '') + t[k], skill: FB.skillName(k)
+    }));
+    if (t.opinion) parts.push(FB.T('regard {amount}',
+      { amount: (t.opinion > 0 ? '+' : '') + t.opinion }));
+    if (t.health) parts.push(FB.T(t.health > 0 ? 'hardier' : 'frailer'));
+    if (t.fert && t.fert !== 1) {
+      parts.push(FB.T(t.fert > 1 ? 'more fertile' : 'less fertile'));
+    }
     return parts.join(' · ');
   }
 })();

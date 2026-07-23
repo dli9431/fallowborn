@@ -63,6 +63,10 @@ window.FB = window.FB || {};
   FB.getUidCounter = function () { return _uid; };
 
   FB.SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
+  FB.seasonName = function (season) {
+    const name = FB.SEASONS[season] || '';
+    return FB.T ? FB.T(name) : name;
+  };
 
   /* coarse-pointer (touch) devices hide keyboard hint badges */
   FB.isTouch = typeof window.matchMedia === 'function' &&

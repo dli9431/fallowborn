@@ -110,7 +110,9 @@ window.FB = window.FB || {};
     const host = { id: FB.uid(), realm: 'player', men: men, size: men, mercs: (w.mercCos || 0) * 150,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
-    FB.news(state, '🚩 The host musters at ' + provName(home) + ' — ' + men + ' men take the field.');
+    FB.news(state, FB.msg('news.army.player_musters',
+      '🚩 The host musters at {province} — {men} men take the field.',
+      { province: provName(home), men: men }));
     if (FB.map) FB.map.request();
     return host;
   };
@@ -123,7 +125,9 @@ window.FB = window.FB || {};
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
     if (state.player.war && state.player.war.enemy === rid) {
-      FB.news(state, '🚩 ' + r.name + ' takes the field — some ' + men + ' spears against you.');
+      FB.news(state, FB.msg('news.army.enemy_musters',
+        '🚩 {realm} takes the field — some {men} spears against you.',
+        { realm: r.name, men: men }));
     }
     return host;
   }
@@ -267,7 +271,9 @@ window.FB = window.FB || {};
       const wname = state.realms[winner.realm] ? state.realms[winner.realm].name : winner.realm;
       const lname = state.realms[loser.realm] ? state.realms[loser.realm].name : loser.realm;
       if (FB.game.observe || pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
-        FB.news(state, '⚔ Battle at ' + provName(pid) + ' — ' + wname + ' breaks the host of ' + lname + '.');
+        FB.news(state, FB.msg('news.army.ai_battle',
+          '⚔ Battle at {province} — {winner} breaks the host of {loser}.',
+          { province: provName(pid), winner: wname, loser: lname }));
       }
     }
     if (FB.map) FB.map.request();
@@ -296,7 +302,8 @@ window.FB = window.FB || {};
       if (a.realm === 'player') {
         if (!p.war) {
           disband(state, a);
-          FB.news(state, '🏳 The war is done — the host disbands to hearth and field.');
+          FB.news(state, FB.msg('news.army.disbands',
+            '🏳 The war is done — the host disbands to hearth and field.', {}));
         }
         continue;
       }
@@ -400,13 +407,14 @@ window.FB = window.FB || {};
       if (sel && sel.id === hit.id) {
         hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
         FB.selectArmy(null);
-        if (FB.ui) FB.ui.toast('🚩 The host holds at ' + provName(hit.at) + '.');
+        if (FB.ui) FB.ui.toast('🚩 The host holds at {province}.',
+          { province: provName(hit.at) });
         if (FB.map) FB.map.request(); // drop the ring and route while paused
         return true;
       }
       FB.selectArmy(hit.id);
-      if (FB.ui) FB.ui.toast('🚩 Your host — ' + hit.men + ' men at ' + provName(hit.at) +
-        '. Tap a province to march; tap the host again to halt.');
+      if (FB.ui) FB.ui.toast('🚩 Your host — {men} men at {province}. Tap a province to march; tap the host again to halt.',
+        { men: hit.men, province: provName(hit.at) });
       return false; // let the tap through so the Land tab shows where it stands
     }
     if (sel) {
@@ -414,10 +422,12 @@ window.FB = window.FB || {};
         if (FB.orderArmy(state, sel, pr.id)) {
           sel.huntPrey = null; // a hand-given order ends any hunt
           FB.selectArmy(null); // and lets go, so further taps browse the map
-          if (FB.ui) FB.ui.toast('🚩 The host marches on ' + pr.name + '.');
+          if (FB.ui) FB.ui.toast('🚩 The host marches on {province}.',
+            { province: pr.name });
           if (FB.map) FB.map.request();
         } else if (FB.ui) {
-          FB.ui.toast('🚫 No road nor crossing leads the host to ' + pr.name + '.');
+          FB.ui.toast('🚫 No road nor crossing leads the host to {province}.',
+            { province: pr.name });
         }
         return true;
       }

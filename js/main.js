@@ -9,8 +9,15 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.20.2';
+  FB.VERSION = '1.21.1';
   FB.CHANGELOG = [
+    { v: '1.21.1', date: '2026-07-23', changes: [
+      'Browser tabs and iOS home-screen shortcuts now show a Fallowborn icon.'
+    ] },
+    { v: '1.21.0', date: '2026-07-23', changes: [
+      'Settings can now switch the interface, core stories, and new Chronicle entries to French, German, Italian, or Spanish.',
+      'The four new languages are marked AI Preview; proper names, mod text, prose frozen in old saves, and the Changelog may remain English.'
+    ] },
     { v: '1.20.2', date: '2026-07-23', changes: [
       'The Play/Pause button now flips to ▶ Play when the game pauses itself — on losing focus, or at your death — instead of keeping the stale ❚❚ Pause.'
     ] },
@@ -262,21 +269,27 @@ window.FB = window.FB || {};
     // pre-game draws (random province, name suggestions) differ per visit;
     // loading a save overwrites the state from the file
     FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
-    FB.mods.applyStored();
-    FB.generateWorld(
-      function (frac, msg) {
-        $('loadbar').style.width = Math.round(frac * 100) + '%';
-        $('loadmsg').textContent = msg;
-      },
-      function () {
-        FB.map.init($('map'));
-        FB.ui.wire();
-        wireMenus();
-        FB.drawCrest($('titlecrest'), 'Fallowborn');
-        refreshTitle();
-        FB.ui.showScreen('title');
-      }
-    );
+    FB.loadSelectedLocale(function (loaded) {
+      /* Mods establish the effective English source before hashes are checked.
+         A changed mod string therefore falls back to that exact current English. */
+      FB.mods.applyStored();
+      if (FB.indexEventMessages) FB.indexEventMessages();
+      FB.finalizeLocale(loaded);
+      FB.generateWorld(
+        function (frac, msg) {
+          $('loadbar').style.width = Math.round(frac * 100) + '%';
+          $('loadmsg').textContent = FB.T(msg);
+        },
+        function () {
+          FB.map.init($('map'));
+          FB.ui.wire();
+          wireMenus();
+          FB.drawCrest($('titlecrest'), 'Fallowborn');
+          refreshTitle();
+          FB.ui.showScreen('title');
+        }
+      );
+    });
   });
 
   /* the title screen must say which world it will spawn: with mods active
@@ -291,7 +304,9 @@ window.FB = window.FB || {};
       .map(function (m) { return m.name; });
     FB.mods.list().forEach(function (m) { names.push(m.name); });
     if (names.length) {
-      note.textContent = '🧩 ' + (names.length > 1 ? 'Mods' : 'Mod') + ' active: ' + names.join(' · ');
+      note.textContent = FB.T(names.length > 1
+        ? '🧩 Mods active: {names}'
+        : '🧩 Mod active: {names}', { names: names.join(' · ') });
       note.classList.remove('hidden');
     } else {
       note.classList.add('hidden');
@@ -303,6 +318,7 @@ window.FB = window.FB || {};
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
+    $('btn-settings').addEventListener('click', function () { FB.ui.showSettings(); });
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
     $('btn-changelog').addEventListener('click', function () { FB.ui.showChangelog(); });
     $('btn-ng-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
@@ -345,7 +361,8 @@ window.FB = window.FB || {};
       '<span class="adesc">A new seed is rolled — your own 867 to shape.</span></button>' +
       '</div>' +
       '<div class="gm-body-text" style="margin-top:10px"><p>…or play a start someone shared:</p></div>' +
-      '<input id="ng-seed" type="text" maxlength="60" placeholder="Paste a start code or world seed">' +
+      '<input id="ng-seed" type="text" maxlength="60" placeholder="' +
+      FB.esc(FB.T('Paste a start code or world seed')) + '">' +
       '<div id="ng-seed-err" class="hint"></div>' +
       '<div class="gm-list">' +
       '<button class="actionbtn" id="ng-seed-go">🔑 Use this seed</button>' +
@@ -360,7 +377,7 @@ window.FB = window.FB || {};
     $('ng-cancel').addEventListener('click', FB.ui.closeModal);
     function useSeed() {
       const r = parseSeedInput($('ng-seed').value);
-      if (r.error) { $('ng-seed-err').textContent = r.error; return; }
+      if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); return; }
       FB.ui.closeModal();
       if (r.scenario) { // a full start code: straight to the pre-filled details
         const pr = FB.world.byId[r.provinceId];
@@ -384,7 +401,8 @@ window.FB = window.FB || {};
     for (const sc of G.SCENARIOS) {
       const el = document.createElement('button');
       el.className = 'scencard';
-      el.innerHTML = '<h3>' + FB.esc(sc.name) + '</h3><div class="diff">' + FB.esc(sc.diff) + '</div><p>' + FB.esc(sc.desc) + '</p>';
+      el.innerHTML = '<h3>' + FB.esc(FB.L(sc.name)) + '</h3><div class="diff">' +
+        FB.esc(FB.L(sc.diff)) + '</div><p>' + FB.esc(FB.L(sc.desc)) + '</p>';
       (function (scenario) {
         el.addEventListener('click', function () {
           G.pending = { seed: G.pending && G.pending.seed, scenario: scenario, provinceId: null };
@@ -396,9 +414,10 @@ window.FB = window.FB || {};
     // observe mode: no province, no character — just a world to watch
     const obs = document.createElement('button');
     obs.className = 'scencard';
-    obs.innerHTML = '<h3>👁 Observe</h3><div class="diff">no one, watching</div>' +
-      '<p>Be born as no one. The centuries flow and the realms war, rise, and ruin while you ' +
-      'simply watch the map. No character, no events, no interruptions.</p>';
+    obs.innerHTML = '<h3>' + FB.esc(FB.T('👁 Observe')) + '</h3><div class="diff">' +
+      FB.esc(FB.T('no one, watching')) + '</div><p>' +
+      FB.esc(FB.T('Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.')) +
+      '</p>';
     obs.addEventListener('click', function () { G.startObserve(); });
     box.appendChild(obs);
     FB.ui.showScreen('newgame');
@@ -433,7 +452,10 @@ window.FB = window.FB || {};
 
   G.pickProvince = function (pr) {
     if (!pr) return;
-    if (pr.wasteland) { FB.ui.toast('No one is born in the ' + pr.name + '. Pick a settled land.'); return; }
+    if (pr.wasteland) {
+      FB.ui.toast('No one is born in {province}. Pick a settled land.', { province: pr.name });
+      return;
+    }
     G.pending.provinceId = pr.id;
     G.pending.culture = pr.culture;
     G.pending.religion = pr.religion;
@@ -444,14 +466,19 @@ window.FB = window.FB || {};
   function updatePickInfo() {
     const el = $('pickinfo');
     if (!G.pending || !G.pending.provinceId) {
-      el.innerHTML = 'No province chosen — a random home will be found.';
+      el.textContent = FB.T('No province chosen — a random home will be found.');
       return;
     }
     const pr = FB.world.byId[G.pending.provinceId];
     const realm = FBDATA.realms.filter(function (r) { return r.id === pr.realm0; })[0];
-    el.innerHTML = '<b>' + FB.esc(pr.name) + '</b> — ' + FB.esc(realm ? realm.name : 'independent') +
-      ' · ' + FB.esc(FB.cultureOf(pr.culture).name) + ' · ' +
-      FB.esc(FB.religionOf(pr.religion).name) + ' · ' + FB.esc(pr.terrain);
+    const culture = FB.cultureOf(pr.culture);
+    const religion = FB.religionOf(pr.religion);
+    el.innerHTML = '<b>' + FB.esc(pr.name) + '</b> — ' +
+      FB.esc(realm ? realm.name : FB.T('independent')) + ' · ' +
+      FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
+        { text: culture.name }, {})) + ' · ' +
+      FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
+        { text: religion.name }, {})) + ' · ' + FB.esc(FB.terrainName(pr.terrain));
   }
 
   function showChargen() {
@@ -462,10 +489,20 @@ window.FB = window.FB || {};
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     $('cg-name').value = G.pending.name || FB.randomName(G.pending.culture, sex);
     const pr = FB.world.byId[G.pending.provinceId];
-    $('cg-summary').innerHTML = '<b>' + FB.esc(G.pending.scenario.name) + '</b> in <b>' + FB.esc(pr.name) + '</b><br>' +
-      FB.esc(FB.cultureOf(pr.culture).name) + ' · ' + FB.esc(FB.religionOf(pr.religion).name) +
-      ' · beginning in ' + FBDATA.balance.startYear + ' AD, aged ' + FBDATA.balance.startAge + '.' +
-      '<br>🔑 World seed: <b>' + FB.esc(G.pending.seed || '') + '</b> — once your story begins, the ☰ menu holds the full start code to share.';
+    const culture = FB.cultureOf(pr.culture);
+    const religion = FB.religionOf(pr.religion);
+    $('cg-summary').innerHTML = '<b>' + FB.esc(FB.T('{scenario} in {province}', {
+      scenario: FB.L(G.pending.scenario.name), province: pr.name
+    })) + '</b><br>' +
+      FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
+        { text: culture.name }, {})) + ' · ' +
+      FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
+        { text: religion.name }, {})) + ' · ' +
+      FB.esc(FB.T('beginning in {year} AD, aged {age}.', {
+        year: FBDATA.balance.startYear, age: FBDATA.balance.startAge
+      })) + '<br>' + FB.esc(FB.T('🔑 World seed:')) + ' <b>' +
+      FB.esc(G.pending.seed || '') + '</b> — ' +
+      FB.esc(FB.T('once your story begins, the ☰ menu holds the full start code to share.'));
     FB.ui.showScreen('chargen');
   }
 
@@ -498,7 +535,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
-      pregnant: null, peakTier: sc.tier, peakTitle: '',
+      pregnant: null, peakTier: sc.tier, peakTitleData: null,
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
     };
     FB.state = state;
@@ -549,7 +586,7 @@ window.FB = window.FB || {};
       state.player.liegeOp = 10;
     }
     state.player.focus = sc.focus || FB.defaultFocus(state);
-    state.peakTitle = FB.titleFor(state);
+    state.peakTitleData = FB.titleSnapshot(state);
     G.paused = true;
 
     FB.ui.mapDirty();
@@ -557,11 +594,16 @@ window.FB = window.FB || {};
     FB.ui.showGame();
     FB.map.centerOn(provId, 2.0);
     FB.ui.refresh();
-    FB.news(state, '📖 The chronicle of ' + me.dyn + ' begins in ' + pr.name + ', ' + state.date.year + ' AD.');
-    const introText = (FB.religionOf(pr.religion).group === 'muslim' && sc.intro_muslim) ? sc.intro_muslim : sc.intro;
+    FB.news(state, FB.msg('news.life.chronicle_begins',
+      '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
+      { dynasty: me.dyn, province: pr.name, year: state.date.year }));
+    const introPath = (FB.religionOf(pr.religion).group === 'muslim' && sc.intro_muslim)
+      ? 'intro_muslim' : 'intro';
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
-      FB.esc(FB.fmt(state, introText, {})) + '</p><p class="hint">Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.</p></div>' +
-      '<button class="btn primary" id="gm-go">Begin</button>');
+      FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
+      '</p><p class="hint">' +
+      FB.esc(FB.T('Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.')) +
+      '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
     FB.save.autosave();
   };
@@ -592,7 +634,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
-      pregnant: null, peakTier: 0, peakTitle: '',
+      pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
     };
     FB.state = state;
@@ -616,7 +658,8 @@ window.FB = window.FB || {};
     FB.map.select(null);
     FB.ui.showTab('log');
     FB.ui.refresh();
-    FB.news(state, '👁 You settle in to watch the realms go about their centuries.');
+    FB.news(state, FB.msg('news.life.observe_begins',
+      '👁 You settle in to watch the realms go about their centuries.', {}));
     FB.ui.toast('☰ → Settings sets the speed of days.');
   };
 
@@ -701,7 +744,7 @@ window.FB = window.FB || {};
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
     if (s.peakTier === undefined || p.tier > s.peakTier) {
-      s.peakTier = p.tier; s.peakTitle = FB.titleFor(s);
+      s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
 
     const events = FB.pickDailyEvents(s);
@@ -753,7 +796,10 @@ window.FB = window.FB || {};
   G.setSpeed = function (d) {
     G.speedIdx = FB.clamp(G.speedIdx + d, 0, G.SPEEDS.length - 1);
     startTicker();
-    if (FB.ui && FB.ui.toast) FB.ui.toast('⏱ Speed ' + (G.speedIdx + 1) + '/' + G.SPEEDS.length);
+    if (FB.ui && FB.ui.toast) {
+      FB.ui.toast('⏱ Speed {current}/{total}',
+        { current: G.speedIdx + 1, total: G.SPEEDS.length });
+    }
   };
   startTicker();
 
@@ -792,7 +838,9 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return;
     const me = s.chars[s.player.charId];
     if (me.health <= 0) {
-      G.die('Wounds and sickness prove too much. ' + me.name + ' does not see another season.');
+      G.die(FB.msg('legend.death.wounds',
+        'Wounds and sickness prove too much. {name} does not see another season.',
+        { name: me.name }));
       return;
     }
     FB.checkTierPromotions(s);
@@ -841,7 +889,8 @@ window.FB = window.FB || {};
         delete b.dowryAsk; delete b.dowryDue; // settled between the houses long ago
         p.courtingId = b.id;
         FB.doMarry(s);
-        FB.news(s, '💒 You wed ' + b.name + ', as your late parent pledged.');
+        FB.news(s, FB.msg('news.life.pledged_wedding',
+          '💒 You wed {name}, as your late parent pledged.', { name: b.name }));
       }
     }
 
@@ -860,8 +909,19 @@ window.FB = window.FB || {};
     q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
     q = FB.clamp(q, 0.002, 0.6);
     if (age > 90 || FB.chance(q)) {
-      G.die(me.name + ' dies in ' + year + ' AD, aged ' + age + ' — ' +
-        (age > 60 ? 'full of years.' : p.flags.ill || p.flags.plague_here ? 'taken by sickness.' : 'before their time.'));
+      G.die(FB.msg('legend.death.age', {
+        forms: {
+          select: 'value', param: 'cause', cases: {
+            old: '{name} dies in {year} AD, aged {age} — full of years.',
+            sickness: '{name} dies in {year} AD, aged {age} — taken by sickness.',
+            early: '{name} dies in {year} AD, aged {age} — before their time.',
+            other: '{name} dies in {year} AD, aged {age}.'
+          }
+        }
+      }, {
+        cause: age > 60 ? 'old' : (p.flags.ill || p.flags.plague_here ? 'sickness' : 'early'),
+        name: me.name, year: year, age: age
+      }));
       return;
     }
     if (FB.chance(0.35) && me.health < 8 && !p.flags.ill) me.health++;
@@ -885,19 +945,54 @@ window.FB = window.FB || {};
         const refund = pledgedChild && c.dowryAsk ? c.dowryAsk : 0;
         FB.killChar(s, c);
         if (wasSpouse) {
-          FB.news(s, '🕯 Your spouse ' + c.name + ' has died. The house is quieter, and colder.');
+          FB.news(s, FB.msg('news.life.spouse_died',
+            '🕯 Your spouse {name} has died. The house is quieter, and colder.', { name: c.name }));
           FB.spouseDied(s, c); // a grand house owes its widow(er) a reckoning
           FB.promoteSpouse(s); // under polygamy, the next wife steps up
         }
-        else if (wasChild) FB.news(s, '🕯 Your child ' + c.name + ' has died, aged ' + a + '.');
-        else if (wasCourted) FB.news(s, '🕯 ' + c.name + ', whom you courted, has died before any wedding.');
+        else if (wasChild) FB.news(s, FB.msg('news.life.child_died',
+          '🕯 Your child {name} has died, aged {age}.', { name: c.name, age: a }));
+        else if (wasCourted) FB.news(s, FB.msg('news.life.courted_died',
+          '🕯 {name}, whom you courted, has died before any wedding.', { name: c.name }));
         else if (pledgedChild) {
-          FB.news(s, '🕯 ' + c.name + ', betrothed to your ' +
-            (pledgedChild.sex === 'f' ? 'daughter' : 'son') + ' ' + pledgedChild.name +
-            ', has died before the wedding.' + (refund ? ' The dowry returns to your coffers.' : ''));
+          const pledgeCase = (pledgedChild.sex === 'f' ? 'daughter' : 'son') +
+            (refund ? '_refund' : '');
+          FB.news(s, FB.msg('news.life.betrothed_died', {
+            forms: {
+              select: 'value', param: 'case', cases: {
+                daughter: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding.',
+                daughter_refund: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding. The dowry returns to your coffers.',
+                son: '🕯 {name}, betrothed to your son {child}, has died before the wedding.',
+                son_refund: '🕯 {name}, betrothed to your son {child}, has died before the wedding. The dowry returns to your coffers.',
+                other: '🕯 {name}, betrothed to your child {child}, has died before the wedding.'
+              }
+            }
+          }, { case: pledgeCase, name: c.name, child: pledgedChild.name }));
         }
-        else if (wasLord) FB.news(s, '🕯 The lord ' + c.name + ' is dead. Another will take his seat.');
-        else if (kinRel[c.id]) FB.news(s, '🕯 Your ' + kinRel[c.id].toLowerCase() + ' ' + c.name + ' has died, aged ' + a + '.');
+        else if (wasLord) FB.news(s, FB.msg('news.life.lord_died',
+          '🕯 The lord {name} is dead. Another will take his seat.', { name: c.name }));
+        else if (kinRel[c.id]) FB.news(s, FB.msg('news.life.kin_died', {
+          forms: {
+            select: 'value', param: 'relation', cases: {
+              father: '🕯 Your father {name} has died, aged {age}.',
+              mother: '🕯 Your mother {name} has died, aged {age}.',
+              grandfather: '🕯 Your grandfather {name} has died, aged {age}.',
+              grandmother: '🕯 Your grandmother {name} has died, aged {age}.',
+              brother: '🕯 Your brother {name} has died, aged {age}.',
+              sister: '🕯 Your sister {name} has died, aged {age}.',
+              son: '🕯 Your son {name} has died, aged {age}.',
+              daughter: '🕯 Your daughter {name} has died, aged {age}.',
+              grandson: '🕯 Your grandson {name} has died, aged {age}.',
+              granddaughter: '🕯 Your granddaughter {name} has died, aged {age}.',
+              nephew: '🕯 Your nephew {name} has died, aged {age}.',
+              niece: '🕯 Your niece {name} has died, aged {age}.',
+              uncle: '🕯 Your uncle {name} has died, aged {age}.',
+              aunt: '🕯 Your aunt {name} has died, aged {age}.',
+              cousin: '🕯 Your cousin {name} has died, aged {age}.',
+              other: '🕯 Your kinsman {name} has died, aged {age}.'
+            }
+          }
+        }, { relation: kinRel[c.id].toLowerCase(), name: c.name, age: a }));
       }
     }
 
@@ -929,7 +1024,14 @@ window.FB = window.FB || {};
       if (!tutor || tutor.dead) {
         c.edu.tutorId = null;
         tutor = null;
-        FB.news(s, '🕯 ' + (c.id === me.id ? 'Your' : c.name + '’s') + ' tutor has died; the lessons pause.');
+        FB.news(s, FB.msg('news.life.tutor_died', {
+          forms: {
+            select: 'value', param: 'self', cases: {
+              yes: '🕯 Your tutor has died; the lessons pause.',
+              other: '🕯 {name}’s tutor has died; the lessons pause.'
+            }
+          }
+        }, { self: c.id === me.id ? 'yes' : 'other', name: c.name }));
       }
     }
     const tSkill = tutor ? FB.skillOf(tutor, c.edu.focus) : 0;
@@ -948,9 +1050,18 @@ window.FB = window.FB || {};
       if (cand.length) {
         const t = FB.pick(cand);
         if (FB.addTrait(c, t)) {
-          FB.news(s, '🎓 ' + (c.id === me.id ? 'You grow' : c.name + ' grows') +
-            ' ' + FBDATA.traits[t].name.toLowerCase() + ', like ' +
-            (c.id === me.id ? 'your' : 'their') + ' tutor.');
+          FB.news(s, FB.msg('news.life.tutor_trait', {
+            forms: {
+              select: 'value', param: 'self', cases: {
+                yes: '🎓 You grow {trait}, like your tutor.',
+                other: '🎓 {name} grows {trait}, like their tutor.'
+              }
+            }
+          }, {
+            self: c.id === me.id ? 'yes' : 'other',
+            name: c.name,
+            trait: FB.dataParam('trait', t, 'name', 'lower')
+          }));
         }
       }
     }
@@ -999,7 +1110,17 @@ window.FB = window.FB || {};
         });
         sp.health = 8;
         k.spouseId = sp.id; sp.spouseId = k.id;
-        if (close) FB.news(s, '💍 Your ' + e.rel.toLowerCase() + ' ' + k.name + ' weds ' + sp.name + '.');
+        if (close) FB.news(s, FB.msg('news.life.close_kin_wedding', {
+          forms: {
+            select: 'value', param: 'relation', cases: {
+              Son: '💍 Your son {name} weds {spouse}.',
+              Daughter: '💍 Your daughter {name} weds {spouse}.',
+              Brother: '💍 Your brother {name} weds {spouse}.',
+              Sister: '💍 Your sister {name} weds {spouse}.',
+              other: '💍 Your kinsman {name} weds {spouse}.'
+            }
+          }
+        }, { relation: e.rel, name: k.name, spouse: sp.name }));
       }
       if (!sp) continue;
       const mother = k.sex === 'f' ? k : sp;
@@ -1019,8 +1140,21 @@ window.FB = window.FB || {};
         baby.dyn = k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null;
         k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
         if (close) {
-          FB.news(s, '👶 Your ' + e.rel.toLowerCase() + ' ' + k.name + ' has a ' +
-            (baby.sex === 'f' ? 'daughter' : 'son') + ', ' + baby.name + '.');
+          FB.news(s, FB.msg('news.life.close_kin_birth', {
+            forms: {
+              select: 'value', param: 'case', cases: {
+                Son_f: '👶 Your son {parent} has a daughter, {baby}.',
+                Son_m: '👶 Your son {parent} has a son, {baby}.',
+                Daughter_f: '👶 Your daughter {parent} has a daughter, {baby}.',
+                Daughter_m: '👶 Your daughter {parent} has a son, {baby}.',
+                Brother_f: '👶 Your brother {parent} has a daughter, {baby}.',
+                Brother_m: '👶 Your brother {parent} has a son, {baby}.',
+                Sister_f: '👶 Your sister {parent} has a daughter, {baby}.',
+                Sister_m: '👶 Your sister {parent} has a son, {baby}.',
+                other: '👶 Your kinsman {parent} has a child, {baby}.'
+              }
+            }
+          }, { case: e.rel + '_' + baby.sex, parent: k.name, baby: baby.name }));
         }
       }
     }
@@ -1067,8 +1201,10 @@ window.FB = window.FB || {};
       if (FB.chance(fert)) {
         delete s.player.flags.blessed_union; // the prayer is answered
         s.pregnant = { due: s.turn + 270, motherId: mother.id, fatherId: father.id };
-        if (mother.id === me.id) FB.news(s, '🤰 You are with child.');
-        else FB.news(s, '🤰 ' + mother.name + ' is with child.');
+        if (mother.id === me.id) FB.news(s, FB.msg('news.life.player_pregnant',
+          '🤰 You are with child.', {}));
+        else FB.news(s, FB.msg('news.life.spouse_pregnant',
+          '🤰 {name} is with child.', { name: mother.name }));
         return;
       }
     }
@@ -1112,107 +1248,140 @@ window.FB = window.FB || {};
     return heirs;
   };
 
-  G.die = function (causeText) {
+  G.die = function (cause) {
     G.setPaused(true); // refresh now, while the topbar still repaints behind the death modal
     const s = FB.state;
     const p = s.player;
     const me = s.chars[p.charId];
+    const causeMsg = cause && typeof cause === 'object' && typeof cause.key === 'string'
+      ? FB.message(cause.key, cause.params) : null;
+    const causeText = causeMsg
+      ? FB.renderMessage(causeMsg, { state: s, viewer: p.charId })
+      : String(cause === undefined || cause === null ? '' : cause);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
     p.dead = true;
-    recordLegend(s, me, causeText);
-    FB.news(s, '☠ ' + causeText);
+    recordLegend(s, me, causeMsg, causeText);
+    if (causeMsg) {
+      FB.news(s, FB.msg('news.life.death', '☠ {cause}',
+        { cause: FB.messageParam(causeMsg) }));
+    } else {
+      /* Compatibility for mods that still pass rendered death prose. */
+      FB.news(s, '☠ ' + causeText);
+    }
     FB.ui.showDeath(FB.heirsOf(s).slice(0, 4), causeText);
   };
 
   /* the chronicle keeps one entry per life the player lived; the end screen
      reads this roll. Saves from before the roll existed grow it at the
      first death after they load. */
-  function recordLegend(s, me, causeText) {
+  function recordLegend(s, me, causeMsg, causeText) {
     if (!s.legends) s.legends = [];
-    s.legends.push({
+    const legend = {
       id: me.id,
       name: FB.fullName(me),
       born: me.born,
       died: s.date.year,
-      title: FB.styledTitle(s),
-      quip: legendQuip(s, me, causeText)
-    });
+      titleData: FB.titleSnapshot(s),
+      quipMsg: legendQuip(s, me, causeMsg, causeText)
+    };
+    if (causeMsg) legend.causeMsg = causeMsg;
+    else legend.cause = causeText;
+    s.legends.push(legend);
   }
 
   /* a parting sentence for the dead — rolled at death and saved with the
      legend, so the end screen shows the same line every time */
-  function legendQuip(s, me, causeText) {
+  function legendQuip(s, me, causeMsg, causeText) {
     const TRAIT_QUIPS = {
-      brave: 'Never once ran. Running would have helped, but still.',
-      craven: 'Attended every battle from the safety of the rear.',
-      ambitious: 'Wanted more. Got a grave, which is technically more.',
-      content: 'Wanted nothing, received exactly that, and was pleased.',
-      greedy: 'Left instructions about the gold. Nobody can find them.',
-      generous: 'Gave away everything except the debts.',
-      cruel: 'Feared in life; the mourning is largely procedural.',
-      kind: 'Genuinely mourned, which surprised no one more than them.',
-      deceitful: 'Died insisting they felt perfectly fine.',
-      honest: 'Never told a lie. The family found this exhausting.',
-      lustful: 'Mourned by more households than the family admits.',
-      chaste: 'Pure to the end, and faintly smug about it.',
-      gluttonous: 'Out-ate every harvest set before them, and several that were not.',
-      temperate: 'Moderate in all things, including, at the last, breathing.',
-      wrathful: 'Died angry. The wake was quieter than the life.',
-      patient: 'Waited for everything. Waited for this, too.',
-      proud: 'Bowed to no one. The grave accepts all bows as given.',
-      humble: 'Asked for a plain funeral and was, for once, obeyed.',
-      zealous: 'Corrected priests on doctrine; has presumably gone to check.',
-      cynical: 'Expected nothing of the afterlife and declines to be surprised.',
-      genius: 'Knew everything except how to stay.',
-      quick: 'Quick of wit, and quicker to mention it.',
-      dull: 'Untroubled by thought; slipped away in the absence of one.',
-      strong: 'Could lift an ox. The ox sends no condolences.',
-      frail: 'Fragile in body, punctual in the end.',
-      comely: 'The fairest burial the parish has managed in years.',
-      homely: 'A face only a mother could love, and she kept her counsel.',
-      sickly: 'So often ill that the end registered as a scheduling change.',
-      robust: 'Never ill a day. The last day declined to comment.',
-      drunkard: 'The cup won in the end, exactly as the cup predicted.',
-      scarred: 'Wore their scars like debts others owed. All settled now.',
-      one_eyed: 'Lost an eye, gained a story, told it ten thousand times.',
-      maimed: 'Broken in body, never once in complaint.',
-      literate: 'Read everything in reach, including, twice, a menu.',
-      veteran: 'Survived the shield-wall. The years fought sneakier.',
-      pilgrim: 'Walked the holy roads; took the last one without luggage.',
-      kinslayer: 'The family attended the grave at a careful distance.',
-      excommunicated: 'Buried at a crossroads by popular ecclesiastical demand.'
+      brave: FB.msg('legend.trait.brave', 'Never once ran. Running would have helped, but still.', {}),
+      craven: FB.msg('legend.trait.craven', 'Attended every battle from the safety of the rear.', {}),
+      ambitious: FB.msg('legend.trait.ambitious', 'Wanted more. Got a grave, which is technically more.', {}),
+      content: FB.msg('legend.trait.content', 'Wanted nothing, received exactly that, and was pleased.', {}),
+      greedy: FB.msg('legend.trait.greedy', 'Left instructions about the gold. Nobody can find them.', {}),
+      generous: FB.msg('legend.trait.generous', 'Gave away everything except the debts.', {}),
+      cruel: FB.msg('legend.trait.cruel', 'Feared in life; the mourning is largely procedural.', {}),
+      kind: FB.msg('legend.trait.kind', 'Genuinely mourned, which surprised no one more than them.', {}),
+      deceitful: FB.msg('legend.trait.deceitful', 'Died insisting they felt perfectly fine.', {}),
+      honest: FB.msg('legend.trait.honest', 'Never told a lie. The family found this exhausting.', {}),
+      lustful: FB.msg('legend.trait.lustful', 'Mourned by more households than the family admits.', {}),
+      chaste: FB.msg('legend.trait.chaste', 'Pure to the end, and faintly smug about it.', {}),
+      gluttonous: FB.msg('legend.trait.gluttonous', 'Out-ate every harvest set before them, and several that were not.', {}),
+      temperate: FB.msg('legend.trait.temperate', 'Moderate in all things, including, at the last, breathing.', {}),
+      wrathful: FB.msg('legend.trait.wrathful', 'Died angry. The wake was quieter than the life.', {}),
+      patient: FB.msg('legend.trait.patient', 'Waited for everything. Waited for this, too.', {}),
+      proud: FB.msg('legend.trait.proud', 'Bowed to no one. The grave accepts all bows as given.', {}),
+      humble: FB.msg('legend.trait.humble', 'Asked for a plain funeral and was, for once, obeyed.', {}),
+      zealous: FB.msg('legend.trait.zealous', 'Corrected priests on doctrine; has presumably gone to check.', {}),
+      cynical: FB.msg('legend.trait.cynical', 'Expected nothing of the afterlife and declines to be surprised.', {}),
+      genius: FB.msg('legend.trait.genius', 'Knew everything except how to stay.', {}),
+      quick: FB.msg('legend.trait.quick', 'Quick of wit, and quicker to mention it.', {}),
+      dull: FB.msg('legend.trait.dull', 'Untroubled by thought; slipped away in the absence of one.', {}),
+      strong: FB.msg('legend.trait.strong', 'Could lift an ox. The ox sends no condolences.', {}),
+      frail: FB.msg('legend.trait.frail', 'Fragile in body, punctual in the end.', {}),
+      comely: FB.msg('legend.trait.comely', 'The fairest burial the parish has managed in years.', {}),
+      homely: FB.msg('legend.trait.homely', 'A face only a mother could love, and she kept her counsel.', {}),
+      sickly: FB.msg('legend.trait.sickly', 'So often ill that the end registered as a scheduling change.', {}),
+      robust: FB.msg('legend.trait.robust', 'Never ill a day. The last day declined to comment.', {}),
+      drunkard: FB.msg('legend.trait.drunkard', 'The cup won in the end, exactly as the cup predicted.', {}),
+      scarred: FB.msg('legend.trait.scarred', 'Wore their scars like debts others owed. All settled now.', {}),
+      one_eyed: FB.msg('legend.trait.one_eyed', 'Lost an eye, gained a story, told it ten thousand times.', {}),
+      maimed: FB.msg('legend.trait.maimed', 'Broken in body, never once in complaint.', {}),
+      literate: FB.msg('legend.trait.literate', 'Read everything in reach, including, twice, a menu.', {}),
+      veteran: FB.msg('legend.trait.veteran', 'Survived the shield-wall. The years fought sneakier.', {}),
+      pilgrim: FB.msg('legend.trait.pilgrim', 'Walked the holy roads; took the last one without luggage.', {}),
+      kinslayer: FB.msg('legend.trait.kinslayer', 'The family attended the grave at a careful distance.', {}),
+      excommunicated: FB.msg('legend.trait.excommunicated', 'Buried at a crossroads by popular ecclesiastical demand.', {})
     };
     const SKILL_QUIPS = {
-      dip: 'Could talk a beggar into lending money, and did.',
-      mar: 'Settled most disputes by winning them.',
-      ste: 'Counted everything. The graveyard steward sends regards.',
-      int: 'Knew everyone’s secrets and took the best ones along.',
-      lea: 'Read more books than the parish owned.'
+      dip: FB.msg('legend.skill.dip', 'Could talk a beggar into lending money, and did.', {}),
+      mar: FB.msg('legend.skill.mar', 'Settled most disputes by winning them.', {}),
+      ste: FB.msg('legend.skill.ste', 'Counted everything. The graveyard steward sends regards.', {}),
+      int: FB.msg('legend.skill.int', 'Knew everyone’s secrets and took the best ones along.', {}),
+      lea: FB.msg('legend.skill.lea', 'Read more books than the parish owned.', {})
     };
     const pool = [];
     const age = FB.ageOf(me, s.date.year);
     const kids = me.childrenIds.length;
     for (const tid of me.traits) if (TRAIT_QUIPS[tid]) pool.push(TRAIT_QUIPS[tid]);
-    if (/sickness/i.test(causeText)) pool.push('Complained about the leech bill until the very end.');
-    if (/full of years/.test(causeText)) pool.push('Died full of years and of opinions about the young.');
-    if (/before their time/.test(causeText)) pool.push('Gone before their time; the time was never consulted.');
-    if (age >= 75) pool.push('Reached ' + age + ', an age the neighbors called showing off.');
-    if (age <= 20) pool.push('Gone at ' + age + '; the chronicle leaves most of the page blank.');
-    if (kids >= 8) pool.push('Leaves ' + kids + ' children and not one quiet meal behind.');
-    if (kids === 0) pool.push('Leaves no children; the gossips needed no invitation.');
-    if (s.player.gold >= 1000) pool.push('Died rich. The coffers were pried from still-warm fingers.');
-    if (s.player.gold < 10) pool.push('Died owing a goat. The goat has not forgotten.');
-    if (s.player.prestige >= 400) pool.push('So famous that strangers are mourning professionally.');
-    if (s.player.tier === 0) pool.push('Born a serf, died a serf, and outstubborned everyone in between.');
-    if (s.player.tier >= 6) pool.push('Ruled an empire; the empire has been formally notified.');
+    let causeKind = causeMsg && causeMsg.params ? causeMsg.params.cause : null;
+    if (!causeKind && /sickness/i.test(causeText || '')) causeKind = 'sickness';
+    else if (!causeKind && /full of years/.test(causeText || '')) causeKind = 'old';
+    else if (!causeKind && /before their time/.test(causeText || '')) causeKind = 'early';
+    if (causeMsg && (causeMsg.key === 'legend.death.wounds' || causeKind === 'sickness')) {
+      pool.push(FB.msg('legend.condition.sickness',
+        'Complained about the leech bill until the very end.', {}));
+    }
+    if (causeKind === 'old') pool.push(FB.msg('legend.condition.old',
+      'Died full of years and of opinions about the young.', {}));
+    if (causeKind === 'early') pool.push(FB.msg('legend.condition.early',
+      'Gone before their time; the time was never consulted.', {}));
+    if (age >= 75) pool.push(FB.msg('legend.condition.very_old',
+      'Reached {age}, an age the neighbors called showing off.', { age: age }));
+    if (age <= 20) pool.push(FB.msg('legend.condition.young',
+      'Gone at {age}; the chronicle leaves most of the page blank.', { age: age }));
+    if (kids >= 8) pool.push(FB.msg('legend.condition.many_children',
+      'Leaves {count} children and not one quiet meal behind.', { count: kids }));
+    if (kids === 0) pool.push(FB.msg('legend.condition.no_children',
+      'Leaves no children; the gossips needed no invitation.', {}));
+    if (s.player.gold >= 1000) pool.push(FB.msg('legend.condition.rich',
+      'Died rich. The coffers were pried from still-warm fingers.', {}));
+    if (s.player.gold < 10) pool.push(FB.msg('legend.condition.poor',
+      'Died owing a goat. The goat has not forgotten.', {}));
+    if (s.player.prestige >= 400) pool.push(FB.msg('legend.condition.famous',
+      'So famous that strangers are mourning professionally.', {}));
+    if (s.player.tier === 0) pool.push(FB.msg('legend.condition.serf',
+      'Born a serf, died a serf, and outstubborned everyone in between.', {}));
+    if (s.player.tier >= 6) pool.push(FB.msg('legend.condition.emperor',
+      'Ruled an empire; the empire has been formally notified.', {}));
     let best = null, bestV = 0;
     for (const k of FB.SKILLS) {
       const v = FB.skillOf(me, k);
       if (v > bestV) { bestV = v; best = k; }
     }
     if (bestV >= 16) pool.push(SKILL_QUIPS[best]);
-    if (!pool.length) pool.push('Lived. Died. The chronicle splits the difference.');
+    if (!pool.length) pool.push(FB.msg('legend.condition.default',
+      'Lived. Died. The chronicle splits the difference.', {}));
     return FB.pick(pool);
   }
 
@@ -1277,7 +1446,9 @@ window.FB = window.FB || {};
       };
     }
 
-    FB.news(s, '👤 ' + FB.fullName(heir) + ' takes up the family’s story. Generation ' + s.generation + '.');
+    FB.news(s, FB.msg('news.life.succession',
+      '👤 {name} takes up the family’s story. Generation {generation}.',
+      { name: FB.fullName(heir), generation: s.generation }));
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();
@@ -1305,7 +1476,10 @@ window.FB = window.FB || {};
     FB.map.centerOn(FB.state.player.provinceId, 2.0);
     FB.map.select(null);
     FB.ui.refresh();
-    FB.ui.toast('The chronicle resumes — ' + FB.SEASONS[FB.state.date.season] + ' ' + FB.state.date.year + ' AD.');
+    FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
+      season: FB.seasonName(FB.state.date.season),
+      year: FB.state.date.year
+    });
   };
 
   G.toTitle = function () {
