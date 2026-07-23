@@ -1,26 +1,28 @@
-/* Fallowborn — internationalization core (localization plumbing).
-   English ships in-code and is always the fallback; non-English overlays live in
-   FBDATA.lang[locale] and load client-side only (never on the MP server). Phase 1
-   is English-only and visibly inert: with no locale table present every accessor
-   returns its in-code source string. See notes/i18n.md for the full design. */
+/* Fallowborn — internationalization scaffold.
+   English ships in-code and is always the fallback. Phase 1 is English-only and
+   visibly inert: with no locale table present every accessor returns its in-code
+   source string. Several APIs below are deliberately preliminary; the rich
+   catalog, branch-first lookup, manifest/boot lifecycle, and durable-message
+   boundary must be finalized before a real locale is authored. */
 window.FB = window.FB || {};
 window.FBDATA = window.FBDATA || {};
 
 (function () {
   'use strict';
 
-  /* Locale overlays, one object per language, e.g.
-       FBDATA.lang.fr = { 'ui:Reputation among the folk': '…',
+  /* Preliminary flat locale overlays, one object per language, e.g.
+       FBDATA.lang.xx = { 'ui:Reputation among the folk': '…',
                           'event.meet_suitor.text': '…',
-                          words: { child: { m:'fils', f:'fille' } } }
-     English is NOT stored here — it is the source in the data/code files. */
+                          words: { child: { m:'…', f:'…' } } }
+     Do not author a real locale against this transitional shape: the target is
+     the schema-versioned {entries,words,pluralCategory} catalog in the design.
+     English is not stored here — it remains authoritative in source. */
   FBDATA.lang = FBDATA.lang || {};
 
   const LANG_KEY = 'fb_lang';
 
   /* Current locale — a shell/display setting, persisted to localStorage, kept
-     OUT of seeded state so a save renders identically in any language (see
-     docs/designs/state-and-saves.md). */
+     OUT of seeded state so a save renders identically in any language. */
   FB.locale = (function () {
     try { return localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { return 'en'; }
   })();
@@ -48,6 +50,17 @@ window.FBDATA = window.FBDATA || {};
     return FB.tsub(s, params);
   };
 
+  /* ---------- chronicle entries ----------
+     One state.log entry -> display text. A structured entry nests its durable
+     descriptor at `msg:{ key, params }` and re-renders in the current locale
+     (provisionally through FB.T until the opaque English registry lands); a
+     legacy entry carries a pre-rendered `t` string and shows verbatim. */
+  FB.newsText = function (entry) {
+    if (!entry) return '';
+    if (entry.msg && entry.msg.key !== undefined) return FB.T(entry.msg.key, entry.msg.params);
+    return entry.t || '';
+  };
+
   /* ---------- closed-vocabulary lexicon: FB.word(concept, features) ----------
      Replaces the (sex==='f'?'daughter':'son') splices. English lexicon in-code;
      a locale overrides via FBDATA.lang[loc].words. features are JSON-safe
@@ -73,10 +86,10 @@ window.FBDATA = window.FBDATA || {};
     return set[sex] || set.x || set.m || concept;
   };
 
-  /* ---------- plurals: FB.pluralCategory + FB.plural ----------
-     Replaces 'compan'+(n>1?'ies':'y'). English is {one, other}; Russian/Polish
-     etc. ship their own tiny n->category rule (CLDR-shaped, a few lines each) via
-     FB.registerPluralRule. Far short of ICU, which §3 rules out. */
+  /* ---------- provisional plural helpers ----------
+     pluralCategory survives in the target structured selector. FB.plural is only
+     a Phase 1 scaffold and must not become a prose-building API: complete phrases
+     belong in structured plural/value records. */
   const PLURAL_RULES = {
     en: function (n) { return n === 1 ? 'one' : 'other'; }
   };
@@ -91,14 +104,10 @@ window.FBDATA = window.FBDATA || {};
     return FB.tsub(f, { n: count });
   };
 
-  /* ---------- structured-data resolvers (id-keyed overlay) ----------
-     The abstraction boundary that keeps the mutate-vs-shadow decision (§10)
-     internal: every event/data text read goes through here, resolution stays
-     private. A locale maps 'event.<id>.<path>' / '<kind>.<id>.<path>' ->
-     translation; a miss uses the in-code English source (also the clearest
-     documentation of what the content says). Locale lookup only ever feeds
-     FB.fmt's INPUT, so the faith-variant and {token} layers compose beneath it
-     untouched (§3 resolution order). */
+  /* ---------- preliminary structured-data resolvers ----------
+     These establish the id/path accessor boundary and English fallback. Before a
+     real locale ships they must become owner-aware and select the English faith
+     branch before looking up and hashing that exact localized branch. */
   function getPath(obj, path) {
     if (!path) return obj;
     const parts = path.split('.');
@@ -120,10 +129,10 @@ window.FBDATA = window.FBDATA || {};
     return FB.fmt(state, src, ctx);
   };
 
-  /* ---------- dynamic locale loader ----------
-     file:// blocks fetch() of local files (why the whole data layer uses <script>
-     tags), so a locale table is loaded by injecting a <script> tag. Keeps the base
-     download lean; one file per language means a translator touches one file. */
+  /* ---------- preliminary dynamic locale loader ----------
+     file:// requires script injection rather than fetch. The target loader uses a
+     fixed locale manifest, loads the saved choice during boot, version-stamps only
+     HTTP(S) URLs, validates after mods, and switches by page reload. */
   FB.hasLocale = function (loc) { return loc === 'en' || !!FBDATA.lang[loc]; };
 
   FB.availableLocales = function () {
@@ -132,6 +141,14 @@ window.FBDATA = window.FBDATA || {};
       if (FBDATA.lang.hasOwnProperty(k) && k !== 'en') out.push(k);
     }
     return out;
+  };
+
+  /* Display name for a locale. A locale file may name itself in its own tongue
+     via FBDATA.lang[loc].langName; else fall back to a built-in name, then code. */
+  const LOCALE_NAMES = { en: 'English' };
+  FB.localeName = function (loc) {
+    const t = FBDATA.lang[loc];
+    return (t && t.langName) || LOCALE_NAMES[loc] || loc;
   };
 
   FB.loadLocale = function (loc, cb) {

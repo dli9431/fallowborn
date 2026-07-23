@@ -1252,12 +1252,25 @@ window.FB = window.FB || {};
     }
   };
 
-  FB.news = function (state, text) {
-    state.log.push({ y: state.date.year, s: state.date.season, d: state.date.day, t: text });
+  /* A chronicle entry is either a legacy pre-rendered string —
+     FB.news(state, 'The harvest fails.') — or a structured message —
+     FB.news(state, { key, params }). Structured entries nest the durable message
+     descriptor under `msg` so the chronicle can re-render in the current locale
+     while legacy strings stay frozen in their generation language. Both forms
+     coexist without save migration. */
+  FB.news = function (state, msg) {
+    const entry = { y: state.date.year, s: state.date.season, d: state.date.day };
+    if (msg && typeof msg === 'object' && msg.key !== undefined) {
+      entry.msg = { key: msg.key };
+      if (msg.params !== undefined) entry.msg.params = msg.params;
+    } else {
+      entry.t = msg;
+    }
+    state.log.push(entry);
     // the chronicle shows the last 80 entries; unbounded growth would make
     // every seasonal autosave serialize an ever-longer history
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
     // an observer who asked for quiet still gets the chronicle, not the popups
-    if (FB.ui && FB.ui.toast && !(FB.game.observe && FB.game.obsQuiet)) FB.ui.toast(text);
+    if (FB.ui && FB.ui.toast && !(FB.game.observe && FB.game.obsQuiet)) FB.ui.toast(FB.newsText(entry));
   };
 })();

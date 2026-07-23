@@ -68,5 +68,4 @@ wipes the slide flags with the rest of `player.flags`, so a stalled plot never o
 its generation. Province-by-province loss in a lost defensive war (`FB.warLoseProvince`)
 remains the other way down, landing at the same tier 2.
 
-Related: [provinces.md](provinces.md) for the land itself; [state-and-saves.md](state-and-saves.md)
-for where ownership is stored.
+Related: [provinces.md](provinces.md) for the land itself.

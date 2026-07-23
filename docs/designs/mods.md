@@ -17,5 +17,4 @@ differs from the active one.
 Mods dialog toggles them, and enabled ids persist in localStorage (`fb_mods_bundled`) and
 apply ahead of pasted mods.
 
-Related: [state-and-saves.md](state-and-saves.md); `docs/MODDING.md` is the full mod
-authoring reference.
+Related: `docs/MODDING.md` is the full mod authoring reference.

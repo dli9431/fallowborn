@@ -10,6 +10,17 @@ window.FB = window.FB || {};
   function $(id) { return document.getElementById(id); }
   function esc(s) { return FB.esc(s); }
 
+  /* localization chokepoints: a labeled stat row and a panel header. Each wraps
+     its (translatable) label through FB.T once, so every row/header is covered at
+     a single site rather than per literal. The value is caller-controlled HTML
+     and is passed through untouched. */
+  function kv(label, value) {
+    return '<div class="kv"><span>' + esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
+  }
+  function panelh(title) {
+    return '<div class="panelh">' + esc(FB.T(title)) + '</div>';
+  }
+
   let eventOpen = false;
   let pendingEvents = [];
 
@@ -40,12 +51,12 @@ window.FB = window.FB || {};
   };
 
   /* ================= toasts (tap one to dismiss it) ================= */
-  UI.toast = function (text) {
+  UI.toast = function (text, params) {
     const box = $('toasts');
     if (!box) return;
     const el = document.createElement('div');
     el.className = 'toast';
-    el.textContent = text;
+    el.textContent = FB.T(text, params);
     el.title = 'Dismiss';
     el.addEventListener('click', function () {
       if (el.parentNode) el.parentNode.removeChild(el);
@@ -332,7 +343,7 @@ window.FB = window.FB || {};
     if (s.player.flags.ill && !FB.hasAilmentKind(me, 'sickness')) {
       h += '<span class="traitchip" data-ailment="ill">🤒 Ill</span>';
     }
-    return '<div class="kv"><span>Ailments</span></div>' + h;
+    return '<div class="kv"><span>' + esc(FB.T('Ailments')) + '</span></div>' + h;
   }
 
   /* the 🎓 upbringing summary line, shared by the Self tab and character sheets */
@@ -365,7 +376,7 @@ window.FB = window.FB || {};
   function titleRows(s) {
     const t = FB.playerTitles(s);
     if (!t.high.length && !t.counties.length) return '';
-    let h = '<div class="panelh">Titles</div>';
+    let h = panelh('Titles');
     for (const e of t.high) h += '<div class="kv"><span>' + esc(e.d) + '</span><b>' + esc(e.t) + '</b></div>';
     if (t.counties.length) {
       const names = [];
@@ -384,23 +395,23 @@ window.FB = window.FB || {};
     let h =
       '<canvas id="selfportrait" class="pface" data-cid="' + me.id + '" width="72" height="82"></canvas>' +
       '<div class="panelh">' + esc(FB.fullName(me)) + '</div>' +
-      '<div class="kv"><span>Rank</span><b>' + esc(FB.styledTitle(s)) + '</b></div>' +
-      '<div class="kv"><span>Age</span><b>' + FB.ageOf(me, s.date.year) + '</b></div>' +
-      '<div class="kv"><span>Culture</span><b>' + esc(cul.name) + '</b></div>' +
-      '<div class="kv"><span>Faith</span><b>' + rel.icon + ' ' + esc(rel.name) + '</b></div>' +
-      '<div class="kv"><span>Health</span><b>' + Math.round(me.health) + ' / 10 · ' + healthWord(me.health) + '</b></div>' +
+      kv('Rank', esc(FB.styledTitle(s))) +
+      kv('Age', FB.ageOf(me, s.date.year)) +
+      kv('Culture', esc(cul.name)) +
+      kv('Faith', rel.icon + ' ' + esc(rel.name)) +
+      kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      '<div class="kv"><span>Reputation among the folk</span><b>' + Math.round(s.player.pop) + '</b></div>' +
-      (s.player.liege ? '<div class="kv"><span>Liege’s favor</span><b>' + Math.round(s.player.liegeOp || 0) + '</b></div>' : '') +
+      kv('Reputation among the folk', Math.round(s.player.pop)) +
+      (s.player.liege ? kv('Liege’s favor', Math.round(s.player.liegeOp || 0)) : '') +
       titleRows(s) +
-      '<div class="panelh">Skills</div>' + skillBars(me) +
-      '<div class="panelh">Traits</div>' + traitChips(me) +
-      '<div class="panelh">Possessions</div>' + itemChips(s) +
-      '<div class="panelh">Dynasty</div>' +
-      '<div class="kv"><span>House</span><b>' + esc(me.dyn || '—') + '</b></div>' +
-      '<div class="kv"><span>Generation</span><b>' + (s.generation || 1) + '</b></div>';
+      panelh('Skills') + skillBars(me) +
+      panelh('Traits') + traitChips(me) +
+      panelh('Possessions') + itemChips(s) +
+      panelh('Dynasty') +
+      kv('House', esc(me.dyn || '—')) +
+      kv('Generation', (s.generation || 1));
     if (FB.ageOf(me, s.date.year) < 16) {
-      h += '<div class="panelh">Upbringing</div>' + upbringingNote(s, me) +
+      h += panelh('Upbringing') + upbringingNote(s, me) +
         '<button class="actionbtn" id="self-edufocus">🎓 Choose your education focus…' +
         '<span class="adesc">Direct your formative years toward one art.</span></button>' +
         '<button class="actionbtn" id="self-tutor">🧑‍🏫 Choose a tutor…' +
@@ -565,16 +576,16 @@ window.FB = window.FB || {};
     let h = '<button class="btn small" id="btn-ftree" style="width:100%" ' +
       'title="See the whole family drawn as a tree">🌳 See the family tree</button>';
     const sps = FB.spousesOf(s, me);
-    h += '<div class="panelh">' + (sps.length > 1 ? 'Wives' : 'Spouse') + '</div>';
+    h += panelh(sps.length > 1 ? 'Wives' : 'Spouse');
     if (sps.length) {
       for (const sp of sps) h += charRow(s, sp, 'Age ' + FB.ageOf(sp, s.date.year));
     } else h += '<div class="cmeta" style="font-size:13px">Unwed. A dynasty needs heirs — seek a match.</div>';
     const su = s.player.courtingId ? s.chars[s.player.courtingId] : null;
     if (su) {
-      h += '<div class="panelh">Courting</div>' + UI.charCardHtml(s, su, true);
+      h += panelh('Courting') + UI.charCardHtml(s, su, true);
       h += '<div class="hint" style="margin:2px 0 0">Tap them to court, propose, or break it off.</div>';
     }
-    h += '<div class="panelh">Children</div>';
+    h += panelh('Children');
     const kids = me.childrenIds.map(function (id) { return s.chars[id]; })
       .filter(function (c) { return c && !c.dead; });
     if (kids.length) {
@@ -602,7 +613,7 @@ window.FB = window.FB || {};
     kinSection('Nieces & nephews', kin.niecesNephews);
     kinSection('Uncles & aunts', kin.unclesAunts);
     kinSection('Cousins', kin.cousins);
-    h += '<div class="panelh">Notable folk</div>';
+    h += panelh('Notable folk');
     for (const role of ['lord', 'priest', 'friend', 'rival']) {
       const c = FB.getRole(s, role, false);
       if (c && !c.dead) {
@@ -716,7 +727,7 @@ window.FB = window.FB || {};
     if (mo && (mo.fatherId || mo.motherId)) {
       const mroot = topOf(mo, 1);
       if (mroot.id !== mo.id && !drawn[mroot.id]) {
-        h += '<div class="panelh">Your mother’s kin</div>' +
+        h += panelh('Your mother’s kin') +
           '<div class="ftwrap"><div class="fttree">' + unit(mroot, 0) + '</div></div>';
       }
     }
@@ -812,7 +823,7 @@ window.FB = window.FB || {};
       let chain;
       if (holdId === 'player') chain = ['player'].concat(s.player.liege ? FB.liegeChain(s, s.player.liege) : []);
       else chain = FB.liegeChain(s, holdId);
-      h += '<div class="kv"><span>County</span><b>' + esc(pr.name) + '</b></div>';
+      h += kv('County', esc(pr.name));
       for (const cid of chain) {
         if (cid === 'player') {
           h += '<div class="kv"><span>' + esc(FB.styledTitle(s)) + '</span><b>You — held in your own hand</b></div>';
@@ -831,22 +842,22 @@ window.FB = window.FB || {};
         const parts = [FBDATA.duchies[dj.duchy].name];
         if (dj.kingdom) parts.push(FBDATA.kingdoms[dj.kingdom].name);
         if (dj.empire) parts.push(FBDATA.empires[dj.empire].name);
-        h += '<div class="kv"><span>De jure</span><b>' + esc(parts.join(' › ')) + '</b></div>';
+        h += kv('De jure', esc(parts.join(' › ')));
       }
       h +=
-        (realm ? '<div class="kv"><span>Sovereign</span><b>' + esc(realm.name) + '</b></div>' : '') +
-        (realm ? '<div class="kv"><span>Realm size</span><b>' + FB.realmProvinces(s, rid).length + ' counties</b></div>' : '') +
-        (realm ? '<div class="kv"><span>Realm host</span><b>~' + realmMen + ' men</b></div>' : '') +
-        '<div class="kv"><span>Culture</span><b>' + esc(cul.name) + '</b></div>' +
-        '<div class="kv"><span>Faith</span><b>' + rel.icon + ' ' + esc(rel.name) + '</b></div>' +
-        '<div class="kv"><span>Terrain</span><b>' + esc(pr.terrain) + (pr.coastal ? ', coastal' : '') + '</b></div>' +
-        '<div class="kv"><span>Development</span><b>' + (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid) + '</b></div>' +
-        '<div class="kv"><span>Province levy</span><b>~' + (s.dev[pid] || 1) * B.levyPerDev + ' men</b></div>';
+        (realm ? kv('Sovereign', esc(realm.name)) : '') +
+        (realm ? kv('Realm size', FB.realmProvinces(s, rid).length + ' counties') : '') +
+        (realm ? kv('Realm host', '~' + realmMen + ' men') : '') +
+        kv('Culture', esc(cul.name)) +
+        kv('Faith', rel.icon + ' ' + esc(rel.name)) +
+        kv('Terrain', esc(pr.terrain) + (pr.coastal ? ', coastal' : '')) +
+        kv('Development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
+        kv('Province levy', '~' + (s.dev[pid] || 1) * B.levyPerDev + ' men');
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
-        h += '<div class="kv"><span>Settlements</span><b>' + setts.map(function (st) {
+        h += kv('Settlements', setts.map(function (st) {
           return (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
-        }).join(' · ') + '</b></div>';
+        }).join(' · '));
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
         h += '<div class="progressnote">🏰 You hold this province.</div>';
@@ -866,7 +877,7 @@ window.FB = window.FB || {};
         h += '<div class="progressnote">🕊 A pact of peace holds until ' +
           (FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360)) + ' AD.</div>';
       }
-      h += '<div class="panelh">Notable folk</div>';
+      h += panelh('Notable folk');
       const nb = FB.provNotables(s, pid);
       if (nb.length) {
         for (const c of nb) {
@@ -897,7 +908,7 @@ window.FB = window.FB || {};
     for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
       const e = s.log[i];
       h += '<div class="logentry"><span class="ldate">' + FB.SEASONS[e.s] +
-        (e.d ? ' ' + e.d : '') + ', ' + e.y + '</span><br>' + esc(e.t) + '</div>';
+        (e.d ? ' ' + e.d : '') + ', ' + e.y + '</span><br>' + esc(FB.newsText(e)) + '</div>';
     }
     $('tab-log').innerHTML = h;
   }
@@ -1627,10 +1638,10 @@ window.FB = window.FB || {};
       '<div class="ccmeta">⚔ martial ' + r.ruler.mar + ' · favor <span class="' + FB.opClass(op) + '">' +
       (op > 0 ? '+' : '') + op + '</span></div></div></div>' +
       '<div style="margin-top:10px">' +
-      '<div class="kv"><span>Realm</span><b>' + esc(r.name) + '</b></div>' +
-      '<div class="kv"><span>Counties</span><b>' + FB.realmProvinces(s, rid).length + '</b></div>' +
-      '<div class="kv"><span>Realm host</span><b>~' + men + ' men</b></div>' +
-      (cap ? '<div class="kv"><span>Capital</span><b>' + esc(cap.name) + '</b></div>' : '') +
+      kv('Realm', esc(r.name)) +
+      kv('Counties', FB.realmProvinces(s, rid).length) +
+      kv('Realm host', '~' + men + ' men') +
+      (cap ? kv('Capital', esc(cap.name)) : '') +
       '</div>';
     h += '<button class="btn" id="gm-cancel">Close</button>';
     openModal(rid === s.player.liege ? 'Your Liege' : 'Realm Ruler', h);
@@ -2264,11 +2275,11 @@ window.FB = window.FB || {};
     for (const k of FB.SKILLS) {
       if (t[k]) fx += '<div class="kv"><span>' + FB.SKILL_NAMES[k] + '</span><b>' + (t[k] > 0 ? '+' : '') + t[k] + '</b></div>';
     }
-    if (t.health) fx += '<div class="kv"><span>Constitution</span><b>' + (t.health > 0 ? 'hardier' : 'frailer') + '</b></div>';
-    if (t.fert && t.fert !== 1) fx += '<div class="kv"><span>Fertility</span><b>' + (t.fert > 1 ? 'higher' : 'lower') + '</b></div>';
-    if (t.opinion) fx += '<div class="kv"><span>Others’ regard</span><b>' + (t.opinion > 0 ? '+' : '') + t.opinion + '</b></div>';
+    if (t.health) fx += kv('Constitution', (t.health > 0 ? 'hardier' : 'frailer'));
+    if (t.fert && t.fert !== 1) fx += kv('Fertility', (t.fert > 1 ? 'higher' : 'lower'));
+    if (t.opinion) fx += kv('Others’ regard', (t.opinion > 0 ? '+' : '') + t.opinion);
     if (t.opposite && FBDATA.traits[t.opposite]) {
-      fx += '<div class="kv"><span>Opposite of</span><b>' + esc(FBDATA.traits[t.opposite].name) + '</b></div>';
+      fx += kv('Opposite of', esc(FBDATA.traits[t.opposite].name));
     }
     openModal(t.icon + ' ' + t.name,
       '<div class="gm-body-text"><p><i>' + esc(t.desc) + '</i></p>' +
@@ -2330,10 +2341,10 @@ window.FB = window.FB || {};
     const years = s.date.year - FBDATA.balance.startYear;
     let h = '<div class="gm-body-text">' +
       '<p>Your saga spanned <b>' + years + ' years</b> and <b>' + (s.generation || 1) + ' generation(s)</b>.</p>' +
-      '<div class="kv"><span>Highest rank attained</span><b>' + esc(s.peakTitle || 'Serf') + '</b></div>' +
-      '<div class="kv"><span>Final wealth</span><b>' + Math.floor(s.player.gold) + ' gold</b></div>' +
-      '<div class="kv"><span>Prestige</span><b>' + Math.floor(s.player.prestige) + '</b></div>' +
-      '<div class="kv"><span>Piety</span><b>' + Math.floor(s.player.piety) + '</b></div>';
+      kv('Highest rank attained', esc(s.peakTitle || 'Serf')) +
+      kv('Final wealth', Math.floor(s.player.gold) + ' gold') +
+      kv('Prestige', Math.floor(s.player.prestige)) +
+      kv('Piety', Math.floor(s.player.piety));
     if (s.legends && s.legends.length) {
       h += '<h4>Those who carried the name</h4>';
       for (const lg of s.legends) {
@@ -2347,7 +2358,7 @@ window.FB = window.FB || {};
     }
     h += '<h4>Last lines of the chronicle</h4>';
     for (let i = Math.max(0, s.log.length - 6); i < s.log.length; i++) {
-      h += '<p>· ' + esc(s.log[i].t) + '</p>';
+      h += '<p>· ' + esc(FB.newsText(s.log[i])) + '</p>';
     }
     h += '</div><button class="btn primary" id="gm-title-btn">Return to title</button>';
     openModal('The Chronicle Closes', h, { dismissable: false });
@@ -2403,6 +2414,21 @@ window.FB = window.FB || {};
     });
   };
 
+  /* Phase 1 language chooser — hidden until a second table is already present, so
+     the English-only build shows no control. Replace loaded-table discovery and
+     live redraw with the fixed manifest + reload lifecycle before a locale ships. */
+  function langSelector() {
+    const locs = FB.availableLocales();
+    if (locs.length < 2) return '';
+    let opts = '';
+    for (const loc of locs) {
+      opts += '<option value="' + loc + '"' + (loc === FB.locale ? ' selected' : '') + '>' +
+        esc(FB.localeName(loc)) + '</option>';
+    }
+    return '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T('Language')) + '</p></div>' +
+      '<select id="set-lang" class="setlang">' + opts + '</select>';
+  }
+
   /* ================= settings ================= */
   UI.showSettings = function () {
     const G = FB.game;
@@ -2420,6 +2446,7 @@ window.FB = window.FB || {};
         '<label class="autorow"><input type="checkbox" id="set-obsbare"' + (G.obsBare ? ' checked' : '') + '> ' +
         '<b>Hide the Land & Chronicle panel</b><span class="adesc">Only the map and the flow of days remain.</span></label>';
     }
+    h += langSelector();
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal('Settings', h);
     function speedLabel(i) {
@@ -2438,6 +2465,15 @@ window.FB = window.FB || {};
         G.obsBare = $('set-obsbare').checked;
         document.body.classList.toggle('obshidepanel', G.obsBare);
         FB.map.resize(); // the freed space belongs to the map
+      });
+    }
+    const langSel = $('set-lang');
+    if (langSel) {
+      langSel.addEventListener('change', function () {
+        FB.setLocale(langSel.value, function () {
+          UI.showSettings();           // redraw this modal in the new language
+          if (FB.state) UI.refresh();  // and the panels behind it
+        });
       });
     }
     $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
@@ -2520,7 +2556,7 @@ window.FB = window.FB || {};
     h += '<div class="gm-body-text">' +
       '<p>Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, balance). See <b>docs/MODDING.md</b> in the game folder for the format. You can also edit the files in <b>data/</b> directly.</p>' +
       '<p>Mods stay on until removed, and saves remember their world — a life begun with a mod continues only while that mod is active.</p></div>' +
-      '<div class="panelh">Active mods</div>';
+      panelh('Active mods');
     if (mods.length) {
       for (let i = 0; i < mods.length; i++) {
         h += '<div class="modrow">🧩 ' + esc(mods[i].name) +
@@ -2530,7 +2566,7 @@ window.FB = window.FB || {};
     } else {
       h += '<p class="cmeta" style="font-size:13px;margin:4px 0">None — no JSON mods applied.</p>';
     }
-    h += '<div class="panelh">Add a mod</div>' +
+    h += panelh('Add a mod') +
       '<p style="margin:8px 0"><input type="file" id="modfile" accept=".json"></p>' +
       '<textarea class="modjson" id="modpaste" placeholder=\'Or paste mod JSON here, e.g. {"events":[...]}\'></textarea>' +
       '<div class="row gap wrap" style="margin-top:8px">' +
