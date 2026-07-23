@@ -9,7 +9,7 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.22.0';
+  FB.VERSION = '1.22.1';
   FB.CHANGELOG = [
     { v: '1.22.0', date: '2026-07-23', changes: [
       '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',

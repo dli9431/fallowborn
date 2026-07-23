@@ -78,6 +78,45 @@ window.FB = window.FB || {};
       window.matchMedia('(max-width: 820px), (max-height: 520px)').matches;
   };
 
+  /* ---------- distribution / host detection ----------
+     Which target is the game running on? Lets features be gated per platform
+     at runtime — one main branch, no git surgery — as the complement to the
+     per-release notes\itch-release deploy tool. itch HTML5 games run inside an
+     iframe served from itch content CDNs (itch.zone / hwcdn.net), not itch.io
+     itself, so match those hosts. */
+  FB.platform = (function () {
+    let host = '', proto = '';
+    try { host = (window.location.hostname || '').toLowerCase(); } catch (e) {}
+    try { proto = (window.location.protocol || '').toLowerCase(); } catch (e) {}
+    const isFile = proto === 'file:' || host === '';
+    const isLocal = isFile || host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    const isItch = /(^|\.)itch\.(zone|io)$/.test(host) || /(^|\.)hwcdn\.net$/.test(host);
+    const isPlay = /(^|\.)fallowborn\.com$/.test(host);
+    const name = isItch ? 'itch' : (isPlay ? 'play' : (isLocal ? 'local' : 'web'));
+    return { name: name, host: host, isItch: isItch, isPlay: isPlay, isLocal: isLocal, isFile: isFile };
+  })();
+
+  /* Per-platform feature switches. Map a feature name to the platforms it is
+     HIDDEN from: an array of platform names ('itch','play','local','web'), or
+     true to hide everywhere, or a function(platform) returning truthy to hide.
+     Anything not listed is enabled everywhere. Gate code with FB.feature(name),
+     or read FB.platform.isItch / .isPlay directly. Example:
+       FB.FEATURES = { experimentalWar: ['itch'] };  // off on itch, on elsewhere
+       if (FB.feature('experimentalWar')) { ... } */
+  FB.FEATURES = FB.FEATURES || {};
+  FB.feature = function (name) {
+    const rule = FB.FEATURES[name];
+    if (rule == null) return true;              // unlisted -> on everywhere
+    if (rule === true) return false;            // hard-off everywhere
+    if (typeof rule === 'function') {
+      try { return !rule(FB.platform); } catch (e) { return true; }
+    }
+    for (let i = 0; i < rule.length; i++) {
+      if (rule[i] === FB.platform.name) return false;   // hidden on this platform
+    }
+    return true;
+  };
+
   FB.esc = function (s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
