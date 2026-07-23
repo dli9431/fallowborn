@@ -3105,15 +3105,7 @@ window.FB = window.FB || {};
     const h = '<div class="gm-body-text"><p>' +
       'Describe the bug or your idea, then <b>📋 Copy report</b> — it bundles your words with the game version' +
       (withLife ? ', your start seed, and your current life as save text, so the exact moment can be reopened' : '') +
-      '. Paste it in any of these places:</p></div>' +
-      '<div class="gm-list">' +
-      '<a class="actionbtn" href="https://discord.gg/G8E67hY2pj" target="_blank" rel="noopener">💬 Discord' +
-      '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>' +
-      '<a class="actionbtn" href="mailto:hello@fallowborn.com">✉ Email' +
-      '<span class="adesc">hello@fallowborn.com</span></a>' +
-      '<a class="actionbtn" href="https://github.com/dli9431/fallowborn/issues" target="_blank" rel="noopener">🐙 GitHub Issues' +
-      '<span class="adesc">watch it get fixed</span></a>' +
-      '</div>' +
+      '.</p></div>' +
       '<select id="rp-type" class="setlang">' +
       '<option value="Bug">🐞 Bug — something went wrong</option>' +
       '<option value="Suggestion">💡 Suggestion — an idea for the game</option>' +
@@ -3125,6 +3117,15 @@ window.FB = window.FB || {};
       (withLife ? 'your message + game version, start seed &amp; your current life as save text' :
         'your message + game version') +
       '</span></button>' +
+      '</div>' +
+      '<div class="gm-body-text"><p>Then paste it in any of these places:</p></div>' +
+      '<div class="gm-list">' +
+      '<a class="actionbtn" href="https://discord.gg/G8E67hY2pj" target="_blank" rel="noopener">💬 Discord' +
+      '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>' +
+      '<a class="actionbtn" href="mailto:hello@fallowborn.com">✉ Email' +
+      '<span class="adesc">hello@fallowborn.com</span></a>' +
+      '<a class="actionbtn" href="https://github.com/dli9431/fallowborn/issues" target="_blank" rel="noopener">🐙 GitHub Issues' +
+      '<span class="adesc">watch it get fixed</span></a>' +
       '</div>' +
       '<button class="btn" id="gm-back">Back</button>';
     openModal('Report a Bug', h);
