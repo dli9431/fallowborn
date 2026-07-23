@@ -963,7 +963,19 @@ window.FB = window.FB || {};
      while days tick by. Event cooldowns in data are in seasons (90 days). */
   FB.pickDailyEvents = function (state) {
     const out = [];
-    while (state.eventQueue.length && out.length < 3) out.push(state.eventQueue.shift());
+    while (state.eventQueue.length && out.length < 3) {
+      const qev = state.eventQueue.shift();
+      // a tribute offer dies with its war: siege taken, terms sought, or the
+      // campaign broken before the envoys were received
+      if (qev.id === 'war_tribute_offer') {
+        const qw = state.player.war;
+        if (qw && !qw.defending &&
+          qw.wins >= FBDATA.balance.warWinsToTakeProvince &&
+          qw.losses < FBDATA.balance.warWinsToTakeProvince) out.push(qev);
+        continue;
+      }
+      out.push(qev);
+    }
 
     const slots = state.slotDays || [];
     const slotAt = slots.indexOf(state.date.day);

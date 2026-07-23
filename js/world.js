@@ -1031,14 +1031,27 @@ window.FB = window.FB || {};
 
   /* Check whether accumulated victories or defeats settle the war.
      Attackers take the target only by SIEGE (war_siege below); enough field
-     wins force tribute, enough defeats break the campaign. */
+     wins make the enemy sue for peace — the war_tribute_offer event then lets
+     the player choose tribute now or pressing on for the prize. Enough
+     defeats break the campaign. */
   FB.warOutcome = function (state) {
     const p = state.player;
     const w = p.war;
     if (!w) return;
     const enemy = state.realms[w.enemy];
     const NEED = FBDATA.balance.warWinsToTakeProvince;
-    if (w.wins >= NEED) {
+    // defeats first: once the tribute offer can be declined, wins and losses
+    // can BOTH pass the threshold — a broken campaign ends even so
+    if (w.losses >= NEED) {
+      if (w.defending) {
+        FB.warLoseProvince(state);
+      } else {
+        p.prestige = Math.max(0, p.prestige - 15);
+        FB.news(state, FB.msg('news.war.campaign_failed',
+          '🕊 The campaign has failed. The host limps home.', {}));
+        FB.endPlayerWar(state);
+      }
+    } else if (w.wins >= NEED) {
       if (w.defending) {
         FB.news(state, FB.msg('news.war.defensive_victory', {
           forms: {
@@ -1049,21 +1062,17 @@ window.FB = window.FB || {};
           }
         }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '' }));
         p.prestige += 25;
-      } else {
-        p.prestige += 20;
-        p.gold += 25;
-        FB.news(state, FB.msg('news.war.tribute',
-          '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));
-      }
-      FB.endPlayerWar(state);
-    } else if (w.losses >= NEED) {
-      if (w.defending) {
-        FB.warLoseProvince(state);
-      } else {
-        p.prestige = Math.max(0, p.prestige - 15);
-        FB.news(state, FB.msg('news.war.campaign_failed',
-          '🕊 The campaign has failed. The host limps home.', {}));
         FB.endPlayerWar(state);
+      } else {
+        // the beaten defender sues for peace — but the choice is the
+        // player's: tribute now, or press on for the prize. One offer waits
+        // at a time; a stale one is dropped when the queue is drawn
+        // (pickDailyEvents).
+        let queued = false;
+        for (const q of state.eventQueue) {
+          if (q.id === 'war_tribute_offer') { queued = true; break; }
+        }
+        if (!queued) state.eventQueue.push({ id: 'war_tribute_offer', ctx: {} });
       }
     }
   };
@@ -1214,6 +1223,17 @@ window.FB = window.FB || {};
   FB.fns.war_thin = function (state) {
     const w = state.player.war; if (!w) return;
     w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
+  };
+  /* the beaten defender's gold, taken: ends the war with tribute instead of
+     pressing on to the siege (the war_tribute_offer event's other choice) */
+  FB.fns.war_accept_tribute = function (state) {
+    const p = state.player;
+    const w = p.war; if (!w) return;
+    p.prestige += 20;
+    p.gold += 25;
+    FB.news(state, FB.msg('news.war.tribute',
+      '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));
+    FB.endPlayerWar(state);
   };
   FB.fns.war_terms = function (state) {
     const p = state.player;
