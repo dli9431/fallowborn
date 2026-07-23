@@ -55,11 +55,17 @@ cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG`
 
 ## Git workflow
 
-When work is done in a worktree, do not commit straight onto `main`. Instead:
+**Default: commit directly onto `main`.** In the primary working directory, just commit your
+work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
+
+**Only when working inside a git worktree** do not commit straight onto `main`. Instead:
 
 1. Create a commit on a temporary branch inside the worktree.
 2. Merge that temp branch into `main`.
 3. Delete the temp branch to clean up.
+
+Pushing is a separate step — commit when asked to commit; only push when asked to push (a push
+to `main` auto-deploys play.fallowborn.com).
 
 ## Architecture
 
