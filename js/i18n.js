@@ -470,6 +470,14 @@ window.FBDATA = window.FBDATA || {};
     try { localStorage.setItem(LANG_KEY, 'en'); } catch (e) { /* storage may be unavailable */ }
   }
   function applyStatic(root) {
+    /* English is the committed source of truth: static index.html already holds
+       correct English, using charset-safe HTML entities (&mdash;, &#9881;, …)
+       for every non-ASCII glyph. Overwriting textContent with the raw data-i18n
+       attribute value gains nothing for English, and when a host serves
+       index.html as non-UTF-8 (itch.io does) it swaps that safe entity text for
+       a mojibake raw literal — the em-dash/⚙ garble seen on the title screen.
+       Skip English entirely, matching localizeTree/translateKnownText. */
+    if (FB.locale === 'en') return;
     const scope = root || document;
     const nodes = scope.querySelectorAll('[data-i18n]');
     for (let i = 0; i < nodes.length; i++) {
