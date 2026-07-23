@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.22.0';
+  FB.VERSION = '1.25.0';
   FB.CHANGELOG = [
+    { v: '1.25.0', date: '2026-07-23', changes: [
+      'New de jure map filters: the 🗺 button / R key now also paints duchies and kingdoms, and names your strongest claim with the counties you hold and still need.',
+      'A county’s panel now shows your progress toward its duke, king, and emperor — and warns when a land feeds no title at all (wastelands, settled colonies, lone-county duchies).'
+    ] },
     { v: '1.22.0', date: '2026-07-23', changes: [
       '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',
       'The game now warns when the browser is blocking save storage, instead of letting a dynasty vanish silently.'

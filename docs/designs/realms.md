@@ -55,6 +55,13 @@ longer holds his home. Tier-2 (gentry) content gates on tier alone, not professi
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
 monk/priest) but manages the manor and may petition for a barony like any gentry. Promotions above count happen in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
+The exact rules live in `FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress`
+(`js/world.js`), shared by the tier check and the UI readouts: a duchy must span ≥2 de
+jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an empire two kingdom
+majorities. Wastelands and colonies settled on them have no de jure duchy, so they count
+toward no title. The province panel spells out have/need for the tapped county (and flags
+lands that feed no title), and the 🗺/R map filter has de jure duchy and kingdom modes
+that name the player's strongest claim.
 
 **Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
 give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a

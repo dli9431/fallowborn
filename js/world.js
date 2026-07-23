@@ -1271,12 +1271,38 @@ window.FB = window.FB || {};
     for (const pid of countyIds) if (p.provs.indexOf(pid) >= 0) n++;
     return n;
   }
+  /* progress toward a de jure dignity: how many of its counties the player
+     holds vs. what the title demands. One home for the promotion rules —
+     checkTierPromotions and the map/panel readouts both speak these.
+     A duchy must span 2+ counties and always demands at least 2 held; a
+     kingdom the bare majority; an empire the majority of two of its kingdoms.
+     Wastelands and colonies settled on them have no duchy, so they never
+     appear in any of these counts. */
+  FB.duchyProgress = function (state, did) {
+    const cs = FB.duchyCounties(did);
+    return { have: playerShare(state, cs), total: cs.length,
+      need: Math.max(2, Math.ceil(cs.length / 2)), titled: cs.length >= 2 };
+  };
+  FB.kingdomProgress = function (state, kid) {
+    const cs = FB.kingdomCounties(kid);
+    return { have: playerShare(state, cs), total: cs.length, need: Math.ceil(cs.length / 2) };
+  };
+  FB.empireProgress = function (state, eid) {
+    let have = 0, total = 0;
+    for (const kid of FB.empireKingdoms(eid)) {
+      const kp = FB.kingdomProgress(state, kid);
+      if (!kp.total) continue;
+      total++;
+      if (kp.have >= kp.need) have++;
+    }
+    return { have: have, total: total, need: 2 };
+  };
   /* all de jure duchies the player controls the majority of (min 2 counties) */
   FB.playerDuchies = function (state) {
     const out = [];
     for (const did in FBDATA.duchies) {
-      const cs = FB.duchyCounties(did);
-      if (cs.length >= 2 && playerShare(state, cs) >= Math.max(2, Math.ceil(cs.length / 2))) out.push(did);
+      const pr = FB.duchyProgress(state, did);
+      if (pr.titled && pr.have >= pr.need) out.push(did);
     }
     return out;
   };
@@ -1284,8 +1310,8 @@ window.FB = window.FB || {};
   FB.playerKingdoms = function (state) {
     const out = [];
     for (const kid in FBDATA.kingdoms) {
-      const cs = FB.kingdomCounties(kid);
-      if (cs.length && playerShare(state, cs) >= Math.ceil(cs.length / 2)) out.push(kid);
+      const pr = FB.kingdomProgress(state, kid);
+      if (pr.total && pr.have >= pr.need) out.push(kid);
     }
     return out;
   };
@@ -1293,12 +1319,7 @@ window.FB = window.FB || {};
   FB.playerEmpires = function (state) {
     const out = [];
     for (const eid in FBDATA.empires) {
-      let n = 0;
-      for (const kid of FB.empireKingdoms(eid)) {
-        const cs = FB.kingdomCounties(kid);
-        if (cs.length && playerShare(state, cs) >= Math.ceil(cs.length / 2)) n++;
-      }
-      if (n >= 2) out.push(eid);
+      if (FB.empireProgress(state, eid).have >= 2) out.push(eid);
     }
     return out;
   };
