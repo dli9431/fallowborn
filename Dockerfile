@@ -20,3 +20,10 @@ RUN set -eu; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" /usr/share/nginx/html/index.html; \
     rm -rf /usr/share/nginx/html/.git /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/nginx.conf; \
     echo "stamped ?v=$V"
+
+# Report container health so Coolify can wait for a healthy container before
+# swapping in a new deploy (graceful, near-zero-downtime rollout) and can restart
+# it if nginx dies. BusyBox wget ships in nginx:alpine; a 200 from the local
+# index means nginx is up and serving.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
