@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.26.1';
+FB.VERSION = '1.26.2';
   FB.CHANGELOG = [
+    { v: '1.26.2', date: '2026-07-23', changes: [
+      'A very long name (long first name plus a long seat) no longer breaks the top bar on mobile — it now trims with an ellipsis and keeps your name and the ☰ menu together on one line.'
+    ] },
     { v: '1.26.1', date: '2026-07-23', changes: [
       'On mobile, the in-game Menu, ⚙ Automation, and end-of-life screens now fill the whole screen instead of a cut-off sheet, with a large button pinned to the bottom middle — no more reaching for the top edge to dismiss them.',
       'On mobile, the date moves to its own line directly above your resources, so it no longer crowds your name and the ☰ menu at the top of the screen.',

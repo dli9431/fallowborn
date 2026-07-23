@@ -158,7 +158,11 @@ body.picking #mapwrap { flex: 1 1 auto; }
   padding-right: max(10px, env(safe-area-inset-right));
 }
 #crest { flex: 0 0 auto; }
-#tb-id { min-width: 0; }
+/* the identity block takes the leftover middle space with a *zero* basis, so a
+   long name can never dictate the row width: on the wrapping mobile bar an auto
+   (content-sized) basis would bump the ☰ menu to a new line before the name got
+   a chance to shrink. min-width:0 + the name's nowrap/ellipsis do the truncating. */
+#tb-id { flex: 1 1 0; min-width: 0; }
 #tb-name { font-weight: bold; color: #ecd9a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
 #tb-title { color: #a89878; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* the stats never wrap to a second row: when space runs out the row clips
