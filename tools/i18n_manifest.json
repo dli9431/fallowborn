@@ -915,7 +915,7 @@
       "glossary": [],
       "location": "data/economy.js",
       "source": {
-        "text": "Priest"
+        "text": "Clerical servant"
       }
     },
     "career.priest.ranks.master.default": {
@@ -21962,6 +21962,16 @@
         "text": "🪙 The estates vote {liege} a war subsidy of {gold} gold — your name was spoken warmly in the hall."
       }
     },
+    "news.religion.advanced": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🛐 {name} advances in religious standing."
+      }
+    },
     "news.social.befriended": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -25501,6 +25511,16 @@
         "text": "Defensive alliance"
       }
     },
+    "src.0f95dd75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Hajja"
+      }
+    },
     "src.0fa4514e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25629,6 +25649,16 @@
       ],
       "source": {
         "text": "Great men forget a child has ears. You learn things worth knowing."
+      }
+    },
+    "src.1075ba1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Church Patron"
       }
     },
     "src.10c3d811": {
@@ -26895,6 +26925,16 @@
         "text": "Take the reeve’s purse and office."
       }
     },
+    "src.1795ea0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Hajji"
+      }
+    },
     "src.1799b882": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27435,6 +27475,16 @@
       ],
       "source": {
         "text": "He blusters, bows, and yields. The hall takes note."
+      }
+    },
+    "src.1b733066": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires age {age}, {piety} piety, {prestige} prestige, and {gold} gold from the household."
       }
     },
     "src.1baa4378": {
@@ -28488,6 +28538,16 @@
         "text": "Hot as a forge one hour, ice the next."
       }
     },
+    "src.22ac2c45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Muezzin"
+      }
+    },
     "src.22c27c83": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29530,6 +29590,16 @@
         "text": "🍗 Hold a feast"
       }
     },
+    "src.290c109e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Archpriest"
+      }
+    },
     "src.2910e3b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30188,16 +30258,6 @@
       ],
       "source": {
         "text": "🤝 Swear fealty…"
-      }
-    },
-    "src.2cf5de22": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Learned household service"
       }
     },
     "src.2d08648b": {
@@ -31061,6 +31121,16 @@
       ],
       "source": {
         "text": "Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood."
+      }
+    },
+    "src.32a21de1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🛐 Religious standing — {rank}"
       }
     },
     "src.32a39b39": {
@@ -33116,6 +33186,16 @@
         "text": "🏰 Stand garrison duty"
       }
     },
+    "src.3fa6060d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Almsgiver"
+      }
+    },
     "src.3fcf83bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33566,6 +33646,16 @@
         "text": "Scribe"
       }
     },
+    "src.43327ee0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seek the next religious rank — {rank}"
+      }
+    },
     "src.433bac15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33911,6 +34001,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/events.js",
         "js/model.js"
       ],
@@ -34277,6 +34368,17 @@
       ],
       "source": {
         "text": "Teach them yourself"
+      }
+    },
+    "src.46ee63fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js",
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Abbess"
       }
     },
     "src.46f78917": {
@@ -36153,6 +36255,16 @@
         "text": "Their harvest-king falls in the first press and the host melts back to its plows. You are merciless in victory, and no one sings that song again."
       }
     },
+    "src.51aaaa66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Student of the Faith"
+      }
+    },
     "src.51b243f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37688,6 +37800,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/model.js"
       ],
       "source": {
@@ -38174,6 +38287,16 @@
       ],
       "source": {
         "text": "Mods"
+      }
+    },
+    "src.5d4fd496": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🛐 {name} advances in religious standing."
       }
     },
     "src.5d50cdb1": {
@@ -39396,6 +39519,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/model.js"
       ],
       "source": {
@@ -39870,6 +39994,16 @@
       ],
       "source": {
         "text": "The Banners Rise"
+      }
+    },
+    "src.682ea867": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Deacon"
       }
     },
     "src.6832695d": {
@@ -41594,6 +41728,16 @@
         "text": "Stewards and secretaries, all day. The great remain unseen."
       }
     },
+    "src.71fcf6e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Nun"
+      }
+    },
     "src.71ff349b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43009,6 +43153,16 @@
         "text": "Ask judgment of the mediator."
       }
     },
+    "src.79ea5fe7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Household faith and learned service"
+      }
+    },
     "src.79ee13ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44111,6 +44265,16 @@
         "text": "Your quiet work costs {name} dearly, and no one can prove a thing."
       }
     },
+    "src.80cc3cf9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This is the highest religious office open to {name} on this path."
+      }
+    },
     "src.80d88f54": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44609,6 +44773,16 @@
       ],
       "source": {
         "text": "the lord"
+      }
+    },
+    "src.8369d134": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Recognition adds {piety} piety each season."
       }
     },
     "src.837ead96": {
@@ -46516,6 +46690,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/model.js"
       ],
       "source": {
@@ -46607,7 +46782,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/traits.js"
+        "data/traits.js",
+        "js/economy.js"
       ],
       "source": {
         "text": "Pilgrim"
@@ -46671,6 +46847,16 @@
       ],
       "source": {
         "text": "👶 Your brother {parent} has a daughter, {baby}."
+      }
+    },
+    "src.8fda6ca3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seek the next religious rank — {rank} ({gold} gold)"
       }
     },
     "src.8fdbb1af": {
@@ -47548,7 +47734,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/economy.js",
+        "js/economy.js",
         "js/events.js",
         "js/model.js",
         "js/ui.js"
@@ -48147,6 +48333,16 @@
       ],
       "source": {
         "text": "Where were you born?"
+      }
+    },
+    "src.98a084c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Clerical servant"
       }
     },
     "src.98c8b390": {
@@ -51275,6 +51471,16 @@
         "text": "Knew everything except how to stay."
       }
     },
+    "src.abaa7b29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Parishioner"
+      }
+    },
     "src.abba5bf1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51423,6 +51629,16 @@
       ],
       "source": {
         "text": "Mods:"
+      }
+    },
+    "src.aca87c76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Licensed Scholar"
       }
     },
     "src.acdcb19d": {
@@ -52909,6 +53125,16 @@
         "text": ") cycles five ways to color the map:"
       }
     },
+    "src.b5ec355a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Chief Imam"
+      }
+    },
     "src.b619a155": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53057,6 +53283,16 @@
       ],
       "source": {
         "text": "Your golden lions delight the abbot."
+      }
+    },
+    "src.b6cea9f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {gold} gold from the household."
       }
     },
     "src.b6d39eca": {
@@ -53278,6 +53514,16 @@
       ],
       "source": {
         "text": "A few coins, and the dawn knock is not for you."
+      }
+    },
+    "src.b7ec3817": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Believer"
       }
     },
     "src.b814e6fc": {
@@ -53859,6 +54105,16 @@
       ],
       "source": {
         "text": "At the {temple}"
+      }
+    },
+    "src.bc45cd7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Novice"
       }
     },
     "src.bc516e7d": {
@@ -55566,6 +55822,16 @@
         "text": "There is little to do now but bar the door and pray."
       }
     },
+    "src.c7e3d863": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Chief Qadi"
+      }
+    },
     "src.c7e4b268": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57109,6 +57375,16 @@
         "text": "⚔ You declare war upon {enemy} for {province}!"
       }
     },
+    "src.d26094ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Mosque Servant"
+      }
+    },
     "src.d29a17d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57719,6 +57995,16 @@
         "text": "Spring"
       }
     },
+    "src.d64495d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Mufti"
+      }
+    },
     "src.d65af45e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57959,6 +58245,16 @@
         "text": "The camp remembers what you forgive."
       }
     },
+    "src.d796ee70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Professed Brother"
+      }
+    },
     "src.d7a1bce1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58168,6 +58464,16 @@
       ],
       "source": {
         "text": "Another man’s will is another man’s burden."
+      }
+    },
+    "src.d9127204": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Prioress"
       }
     },
     "src.d9268f2f": {
@@ -59191,6 +59497,16 @@
         "text": "Plan the ambush instead."
       }
     },
+    "src.df015762": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Acolyte"
+      }
+    },
     "src.df084adf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59559,6 +59875,16 @@
       ],
       "source": {
         "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
+      }
+    },
+    "src.e1341434": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Khatib"
       }
     },
     "src.e14cb0e3": {
@@ -60232,6 +60558,16 @@
       ],
       "source": {
         "text": "{count} archer"
+      }
+    },
+    "src.e586adcc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Mudarris"
       }
     },
     "src.e5a04c0d": {
@@ -61966,6 +62302,16 @@
         "text": "Let them compete for it."
       }
     },
+    "src.efdb18be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Professed Sister"
+      }
+    },
     "src.efe524bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62034,6 +62380,16 @@
       ],
       "source": {
         "text": "Work beside them until the fire is beaten."
+      }
+    },
+    "src.f0345857": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Prior"
       }
     },
     "src.f039952b": {
@@ -62204,6 +62560,16 @@
       ],
       "source": {
         "text": "🗺 {mode} — your best claim: {name}, {held} (need {need})"
+      }
+    },
+    "src.f146e366": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Waqf Patron"
       }
     },
     "src.f14daaf4": {
@@ -62634,6 +63000,16 @@
       ],
       "source": {
         "text": "best: {skill} {value}"
+      }
+    },
+    "src.f41645db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Recognition adds {piety} piety each season and raises social station."
       }
     },
     "src.f42ff828": {
@@ -64216,6 +64592,16 @@
       ],
       "source": {
         "text": "Astonishingly, the lie holds."
+      }
+    },
+    "src.fdd33ff2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Clerk"
       }
     },
     "src.fdda4cf7": {
@@ -66332,12 +66718,28 @@
         "text": "A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)"
       }
     },
+    "ui:Abbess": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/model.js",
+      "source": {
+        "text": "Abbess"
+      }
+    },
     "ui:Abbot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/model.js",
       "source": {
         "text": "Abbot"
+      }
+    },
+    "ui:Acolyte": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Acolyte"
       }
     },
     "ui:Age {age}": {
@@ -66398,6 +66800,14 @@
         "text": "Almoner"
       }
     },
+    "ui:Almsgiver": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Almsgiver"
+      }
+    },
     "ui:Already adopted:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66440,6 +66850,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Approach {name} for courtship"
+      }
+    },
+    "ui:Archpriest": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Archpriest"
       }
     },
     "ui:Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.": {
@@ -66516,6 +66934,14 @@
       "location": "js/main.js",
       "source": {
         "text": "Begin"
+      }
+    },
+    "ui:Believer": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Believer"
       }
     },
     "ui:Between sittings you can put a motion of your own before the estates — it costs {cost} gold in gifts and promises, and the lords will hear but one motion a year.": {
@@ -66668,6 +67094,22 @@
         "text": "Chamberlain"
       }
     },
+    "ui:Chief Imam": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Chief Imam"
+      }
+    },
+    "ui:Chief Qadi": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Chief Qadi"
+      }
+    },
     "ui:Choose an education focus first.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66708,6 +67150,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Chronicle of {dynasty}"
+      }
+    },
+    "ui:Church Patron": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Church Patron"
+      }
+    },
+    "ui:Clerk": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Clerk"
       }
     },
     "ui:Close": {
@@ -66844,6 +67302,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "De jure right through {title}"
+      }
+    },
+    "ui:Deacon": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Deacon"
       }
     },
     "ui:Debase the coinage": {
@@ -67201,6 +67667,22 @@
         "text": "Guild standing brings commissions, enterprise access, and better profits."
       }
     },
+    "ui:Hajja": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Hajja"
+      }
+    },
+    "ui:Hajji": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Hajji"
+      }
+    },
     "ui:Held by {realm}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67256,6 +67738,14 @@
         "text": "Hostile"
       }
     },
+    "ui:Household faith and learned service": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Household faith and learned service"
+      }
+    },
     "ui:Household upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67294,6 +67784,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ill"
+      }
+    },
+    "ui:Imam": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Imam"
       }
     },
     "ui:Improve relations": {
@@ -67360,6 +67858,14 @@
         "text": "Keep it"
       }
     },
+    "ui:Khatib": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Khatib"
+      }
+    },
     "ui:Kin and gossips name three who would hear your suit:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67384,14 +67890,6 @@
         "text": "Last lines of the chronicle"
       }
     },
-    "ui:Learned household service": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Learned household service"
-      }
-    },
     "ui:Leave it idle": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67406,6 +67904,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Lessons begin at age 6."
+      }
+    },
+    "ui:Licensed Scholar": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Licensed Scholar"
       }
     },
     "ui:Liege’s cut": {
@@ -67442,6 +67948,14 @@
         "text": "Merchant advance"
       }
     },
+    "ui:Mosque Servant": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Mosque Servant"
+      }
+    },
     "ui:Move for redress of grievances ({cost} gold)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67460,6 +67974,30 @@
       "location": "js/ui.js",
       "source": {
         "text": "Move for scutage ({cost} gold)"
+      }
+    },
+    "ui:Mudarris": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Mudarris"
+      }
+    },
+    "ui:Muezzin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Muezzin"
+      }
+    },
+    "ui:Mufti": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Mufti"
       }
     },
     "ui:Name {name} your enemy. (spends the day)": {
@@ -67660,6 +68198,22 @@
         "text": "Nothing of note."
       }
     },
+    "ui:Novice": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Novice"
+      }
+    },
+    "ui:Nun": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/model.js",
+      "source": {
+        "text": "Nun"
+      }
+    },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67746,6 +68300,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Over your limit — your own income and levy are cut until you grant land away."
+      }
+    },
+    "ui:Parishioner": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Parishioner"
       }
     },
     "ui:Paste a start code or world seed": {
@@ -67863,6 +68425,14 @@
         "text": "Piety each season"
       }
     },
+    "ui:Pilgrim": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Pilgrim"
+      }
+    },
     "ui:Pledged loan": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67947,6 +68517,46 @@
       "location": "js/ui.js",
       "source": {
         "text": "Preview"
+      }
+    },
+    "ui:Priest": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Priest"
+      }
+    },
+    "ui:Prior": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Prior"
+      }
+    },
+    "ui:Prioress": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Prioress"
+      }
+    },
+    "ui:Professed Brother": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Professed Brother"
+      }
+    },
+    "ui:Professed Sister": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Professed Sister"
       }
     },
     "ui:Property passes to your heirs — a household built up over generations is its own kind of greatness.": {
@@ -68078,6 +68688,26 @@
         "text": "Receive {principal} gold · {due} gold due {date} · pledge {asset}"
       }
     },
+    "ui:Recognition adds {piety} piety each season and raises social station.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Recognition adds {piety} piety each season and raises social station."
+      }
+    },
+    "ui:Recognition adds {piety} piety each season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Recognition adds {piety} piety each season."
+      }
+    },
     "ui:Renounce the claim.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -68185,6 +68815,34 @@
       "location": "js/ui.js",
       "source": {
         "text": "Requires a town or city in your home county."
+      }
+    },
+    "ui:Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {gold} gold from the household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "gold",
+        "learning",
+        "piety",
+        "prestige",
+        "years"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {gold} gold from the household."
+      }
+    },
+    "ui:Requires age {age}, {piety} piety, {prestige} prestige, and {gold} gold from the household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "gold",
+        "piety",
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires age {age}, {piety} piety, {prestige} prestige, and {gold} gold from the household."
       }
     },
     "ui:Requires development {development}.": {
@@ -68391,6 +69049,27 @@
         "text": "Seek the next guild rank — {rank} ({gold} gold)"
       }
     },
+    "ui:Seek the next religious rank — {rank}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seek the next religious rank — {rank}"
+      }
+    },
+    "ui:Seek the next religious rank — {rank} ({gold} gold)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "gold",
+        "rank"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seek the next religious rank — {rank} ({gold} gold)"
+      }
+    },
     "ui:Seeking a Match": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -68505,6 +69184,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)"
+      }
+    },
+    "ui:Student of the Faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Student of the Faith"
       }
     },
     "ui:Take seigniorage now; harm prices, prestige, popular trust, and future credit.": {
@@ -68689,6 +69376,16 @@
         "text": "This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
       }
     },
+    "ui:This is the highest religious office open to {name} on this path.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This is the highest religious office open to {name} on this path."
+      }
+    },
     "ui:This is you": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -68803,6 +69500,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Vassal dues"
+      }
+    },
+    "ui:Waqf Patron": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Waqf Patron"
       }
     },
     "ui:Warm": {
@@ -71309,6 +72014,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt."
+      }
+    },
+    "ui:🛐 Religious standing — {rank}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🛐 Religious standing — {rank}"
       }
     },
     "ui:🛑 No more children — open your spouse’s sheet to change this.": {

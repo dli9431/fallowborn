@@ -402,14 +402,16 @@ window.FB = window.FB || {};
       const g = rel.group;
       const profNames = {
         craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
-        monk: g === 'muslim' ? 'Scholar' : 'Monk',
+        monk: g === 'muslim' ? 'Scholar' : me.sex === 'f' ? 'Nun' : 'Monk',
         priest: g === 'muslim' ? 'Imam' : g === 'pagan' ? 'Godi' : 'Priest'
       };
       if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
     }
     if (state.player.flags.bishop) t = FB.T('Bishop');
     else if (state.player.flags.chief_qadi) t = FB.T('Grand Qadi');
-    else if (state.player.flags.abbot && p.tier === 2) t = FB.T('Abbot');
+    else if (state.player.flags.abbot && p.tier === 2) {
+      t = me.sex === 'f' ? FB.T('Abbess') : FB.T('Abbot');
+    }
     else if (state.player.flags.qadi && p.tier === 2) t = FB.T('Qadi');
     return t;
   };
@@ -431,7 +433,7 @@ window.FB = window.FB || {};
     const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) };
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       if (p.profession === 'monk') {
-        snap.special = rel.group === 'muslim' ? 'scholar' : 'monk';
+        snap.special = rel.group === 'muslim' ? 'scholar' : me.sex === 'f' ? 'nun' : 'monk';
       } else if (p.profession === 'priest') {
         snap.special = rel.group === 'muslim' ? 'imam' :
           (rel.group === 'pagan' ? 'godi' : 'priest');
@@ -442,7 +444,7 @@ window.FB = window.FB || {};
     }
     if (p.flags.bishop) snap.special = 'bishop';
     else if (p.flags.chief_qadi) snap.special = 'grand_qadi';
-    else if (p.flags.abbot && p.tier === 2) snap.special = 'abbot';
+    else if (p.flags.abbot && p.tier === 2) snap.special = me.sex === 'f' ? 'abbess' : 'abbot';
     else if (p.flags.qadi && p.tier === 2) snap.special = 'qadi';
     if (p.tier === 4 && p.provs && p.provs.length) {
       const pr = FB.world && FB.world.byId[p.provs[0]];
@@ -469,11 +471,11 @@ window.FB = window.FB || {};
     const index = FB.clamp(snapshot.tier || 0, 0, arr.length - 1);
     const specialWords = {
       craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
-      scholar: 'Scholar', monk: 'Monk', imam: 'Imam', godi: 'Godi', priest: 'Priest',
-      bishop: 'Bishop', grand_qadi: 'Grand Qadi', abbot: 'Abbot', qadi: 'Qadi'
+      scholar: 'Scholar', monk: 'Monk', nun: 'Nun', imam: 'Imam', godi: 'Godi', priest: 'Priest',
+      bishop: 'Bishop', grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi'
     };
     const title = snapshot.special && specialWords[snapshot.special]
-      ? FB.T(specialWords[snapshot.special])
+      ? (snapshot.special === 'nun' ? FB.T('Nun') : FB.T(specialWords[snapshot.special]))
       : (snapshot.word ? FB.T(snapshot.word) :
         FB.renderKey('title.' + snapshot.group + '.' + index + '.default',
           { text: arr[index] }, {}));

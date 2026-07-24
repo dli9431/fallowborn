@@ -708,9 +708,16 @@ window.FB = window.FB || {};
     if (!def) return '';
     let detail = FB.careerTitle(s, c);
     if (def.guild) detail += ' · ' + FB.guildTitle(career);
-    return '<div class="progressnote">' + esc(FB.T('🧰 Work — {career}', {
+    let h = '<div class="progressnote">' + esc(FB.T('🧰 Work — {career}', {
       career:detail
     })) + '</div>';
+    const religious = FB.religiousPathOf(s, c);
+    if (religious) {
+      h += '<div class="progressnote">' + esc(FB.T('🛐 Religious standing — {rank}', {
+        rank:FB.religiousRankTitle(s, c, religious)
+      })) + '</div>';
+    }
+    return h;
   }
 
   function itemChips(s) {
@@ -3721,6 +3728,45 @@ window.FB = window.FB || {};
           : FB.T('Guild standing brings commissions, enterprise access, and better profits.')) +
         '</span></button>';
     }
+    const religiousAdvance = FB.religiousAdvance(s, c);
+    if (religiousAdvance) {
+      const faithStep = religiousAdvance.step;
+      if (faithStep.maleOnly && c.sex !== 'm') {
+        h += '<div class="hint">' + esc(FB.T(
+          'This is the highest religious office open to {name} on this path.', { name:c.name })) +
+          '</div>';
+      } else {
+        const faithTitle = FB.religiousRankTitle(s, c, {
+          id:religiousAdvance.path.id, step:faithStep
+        });
+        h += '<button class="actionbtn" id="career-religious"' +
+          (religiousAdvance.blocked ? ' disabled' : '') + '>🛐 ' +
+          esc(faithStep.gold
+            ? FB.T('Seek the next religious rank — {rank} ({gold} gold)', {
+              rank:faithTitle, gold:faithStep.gold
+            })
+            : FB.T('Seek the next religious rank — {rank}', { rank:faithTitle })) +
+          '<span class="adesc">' +
+          esc(religiousAdvance.path.id.indexOf('_lay') >= 0
+            ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {gold} gold from the household.', {
+              age:faithStep.age || 0, piety:faithStep.piety || 0,
+              prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
+            })
+            : FB.T('Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {gold} gold from the household.', {
+              age:faithStep.age || 0, learning:faithStep.learning || 0,
+              years:faithStep.years || 0, piety:faithStep.piety || 0,
+              prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
+            })) + ' ' +
+          esc(faithStep.station !== undefined || faithStep.tier
+            ? FB.T('Recognition adds {piety} piety each season and raises social station.', {
+              piety:faithStep.pietyYield || 0
+            })
+            : FB.T('Recognition adds {piety} piety each season.', {
+              piety:faithStep.pietyYield || 0
+            })) +
+          '</span></button>';
+      }
+    }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Work of {name}', { name:c.name }), h);
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
@@ -3733,6 +3779,12 @@ window.FB = window.FB || {};
     const guild = $('career-guild');
     if (guild) guild.addEventListener('click', function () {
       if (!FB.takeGuildStep(s, c)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    const religious = $('career-religious');
+    if (religious) religious.addEventListener('click', function () {
+      if (!FB.takeReligiousStep(s, c)) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
     });

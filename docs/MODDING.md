@@ -515,11 +515,19 @@ character can learn and perform:
   household workers who are not staffing an enterprise.
 - `guild: true` enables member → master → officer → guildmaster progression.
 - `maleOnly: true` is reserved for historically sex-gated training such as arms.
+- `religionGroups` limits a career to characters whose faith belongs to one of the listed
+  groups; core Clerical Service uses `christian` and `muslim`.
 - `piety` is a seasonal piety contribution from clerical careers (monk, priest).
 - `hiddenChoice: true` keeps a career out of the player's chooser — it is entered only
   through an event or a marriage/background — though the household still works it.
 - Owned character state lives in `character.career`; `player.profession` remains the
   broad compatibility family used by existing `professions` event triggers.
+
+Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
+career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
+faiths simply receive no core ladder. Formal religious offices may raise `character.station`,
+and the player's abbot/qadi/bishop/chief-qadi milestones also preserve the legacy tier and flag
+effects used by events and titles.
 
 ## Childhood schooling
 

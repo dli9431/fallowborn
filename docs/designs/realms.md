@@ -103,7 +103,11 @@ the unsolicited offer. Both paths use `balance.baronyPrestige` and
 `balance.baronyOpinion`. Tier-2 scenarios begin with an established house, and older
 saves without the additive field are treated the same way. Battlefield knighting and
 the learned clerical paths remain exceptional personal careers: they may establish
-gentry or rise directly to tier 3 without this ordinary patronage gate. The unsolicited
+gentry or rise directly to tier 3 without this ordinary patronage gate. The household
+religious ladder in `js/economy.js` reaches the same compatibility flags and tiers
+directly: abbot/qadi raises a player to tier 2, bishop/chief qadi to tier 3, while a
+dependent character receives the corresponding marriage/social `station` without becoming
+the landed player. The unsolicited
 `grant_of_barony` event lets eligible gentry accept, decline for a purse, or decline
 graciously. Short of "Autoresolve everything", automation leaves every
 title-changing or independence decision to the player. Promotions above count happen

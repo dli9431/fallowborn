@@ -984,7 +984,7 @@ window.FB = window.FB || {};
     /* wages brought home by family members and profits from staffed enterprises */
     if (FB.livelihoodBreakdown) {
       for (const ln of FB.livelihoodBreakdown(state)) add('gold', ln.label, ln.amount);
-      add('piety', FB.T('Learned household service'), FB.livelihoodPiety(state));
+      add('piety', FB.T('Household faith and learned service'), FB.livelihoodPiety(state));
     }
 
     /* the daily focus trickle, as one expected season */

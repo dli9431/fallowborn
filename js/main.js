@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.49.0';
+  FB.VERSION = '1.50.0';
   FB.CHANGELOG = [
+    { v: '1.50.0', date: '2026-07-24', changes: [
+      'Catholic and Muslim household members can now climb a religious ladder beside their livelihood — a lay path of almsgiving and pilgrimage, or a monk’s or priest’s vocation — and rising to high office (abbot, qadi, bishop, chief qadi) lifts standing and can open the clerical route into gentry and baron.'
+    ] },
     { v: '1.49.0', date: '2026-07-24', changes: [
       'Keeping a household now costs coin — resident spouses and children add to seasonal upkeep — and children’s schooling gains paid options (home lessons, charity or merchant schools, personal tutors), each with its own fees and yearly learning odds.'
     ] },
