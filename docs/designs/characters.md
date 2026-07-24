@@ -22,6 +22,19 @@ Study runs at `dch(0.5)` — below the best adult focus's `dch(0.7)` — and chi
 lesson events carry 6–8-season cooldowns so the same lesson can't recur constantly.
 Keep new childhood content inside that envelope.
 
+**Arms training is male; command is not.** No formal arms training for girls in the
+867+ world: the martial *training* foci (`militia`, `drill`, `stand_guard`,
+`train_arms`) are hidden from female characters, girls' Play trains diplomacy instead
+of martial, and the Man-at-Arms chargen scenario is male-only (`sex:'m'` — the sex
+radio is pinned on the chargen screen and conflicting start codes are rejected). The
+historical nuance kept: noblewomen commanded castle *defense* as chatelaines —
+organizers and commanders, not drilled soldiers — so female rulers keep the war
+leadership deeds (`lead_host`, `muster_host`, `hire_mercs`, `declare_war`), and the
+replacement foci train what girls were actually schooled in: `keep_house`
+(household management, stewardship/diplomacy) and `courtly_graces` (hawking, letters,
+patronage — liege favor and prestige). Old saves self-heal: `FB.validateFocus` drops
+a now-hidden martial focus and `FB.defaultFocus` re-maps it.
+
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
 `c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).
 Hard blows (`fx.health` ≤ −2) add a random wound, severity 2 at −4 or worse;

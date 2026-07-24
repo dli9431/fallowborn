@@ -333,7 +333,8 @@ name (an empty field keeps the old one); an autoresolved event keeps the generat
 ## Buildings
 
 `FBDATA.buildings` (in `data/map_data.js`) defines what tier-3+ rulers can raise in any
-province they hold with the "Raise a building…" deed — one of each per province:
+province they hold with the "Raise a building…" deed — one of each per **settlement** of
+a province:
 
 ```json
 { "buildings": { "bathhouse": {
@@ -342,16 +343,22 @@ province they hold with the "Raise a building…" deed — one of each per provi
 ```
 
 - `cost` — gold (the Master Builder event discounts the next building by a quarter).
-- Siting: `devMin` (home province development), `coastal: true`, `terrains: [...]`.
+  Each further copy of the same building in the same county costs
+  `cost × balance.buildingRepeatCostGrowth^(copies standing)`.
+- Siting: `devMin` (home province development), `coastal: true`, `terrains: [...]` —
+  county gates, unchanged by the per-settlement model.
 - Ongoing: `tax` and `piety` per season, `levy` men added to the muster.
 - One-time on completion: `dev`, `pop` (popular opinion), `prestige`.
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
 - The `walls` id is special: the engine reads it for a defense bonus in the `war_battle`
-  chance.
+  chance — only when walls stand in the home county (`FB.hasBuildingIn`).
 
-Built buildings live in `state.buildings` keyed by **province id** — conquest takes them
-with the land, and they pass to heirs with it. Events can gate options or triggers on them
-via `buildings` / `notBuildings` (the famine event's granary option, for example).
+Built buildings live in `state.buildings` keyed by **province id**, each entry shaped
+`{ s: settlementIndex, id }` — conquest takes them with the land, and they pass to heirs
+with it. (Saves old enough to hold bare id strings are migrated in place by `FB.builtIn`
+into the head settlement, `s: 0`.) Events can gate options or triggers on them
+via `buildings` / `notBuildings` (the famine event's granary option, for example) —
+those read demesne-wide through `FB.hasBuilding`.
 
 ## Household holdings
 
@@ -452,6 +459,10 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 ```
 
 - `cost` scholarship · `yearMin` calendar gate · `req` prerequisite tech id.
+- `repeat: true` makes the innovation re-adoptable (the capstones of the three trees):
+  it stays in `FB.techAvailable` after adoption, each further rank appends the id to
+  `state.tech` again (so `FB.techBonus` sums it once more) and costs
+  `cost × balance.techRepeatCostGrowth^(ranks held)` via `FB.techCost`.
 - `fx` keys, summed across adopted techs by `FB.techBonus`: `tax`/`levy` (fractional
   multipliers), `battle` (added to war odds), `build` (fractional building discount),
   `devCap` (+development ceiling in the player's own provinces, past the usual 10),

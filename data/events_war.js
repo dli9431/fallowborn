@@ -58,7 +58,7 @@ FBDATA.events.push(
     { label:'Take the tribute.', desc:'Their gold, your glory — the war ends here.',
       effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
     { label:'Press on for {target}.', desc:'Keep your host standing on {target} and press the siege at each war council — three seasons of works take it.',
-      effects:{ prestige:2, log:'Refused tribute; the war goes on.' } }
+      effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
 
 /* ---------- riding with the liege’s host (vassals) ---------- */
@@ -133,7 +133,7 @@ FBDATA.events.push(
     { label:'“Spoils of war.” Look away.', desc:'The camp remembers what you forgive.', effects:{ piety:-4, prestige:-2 } }
   ]},
 { id:'war_deserters', title:'Empty Bedrolls',
-  trigger:{ tierMin:3, atWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:2,
+  trigger:{ tierMin:3, atWar:true, chance:0.2 }, wartime:true, weight:7, cooldown:4,
   text:'Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you.',
   options:[
     { label:'Hunt them down and hang one.', desc:'Fear keeps ranks better than love does.', effects:{ prestige:3, popularOpinion:-5 } },
@@ -141,7 +141,7 @@ FBDATA.events.push(
     { label:'Let the faint-hearted go.', desc:'A thin host, but a willing one.', effects:{ custom:'war_thin', prestige:-2 } }
   ]},
 { id:'war_grain_seller', title:'Grain at Sword-Season Prices',
-  trigger:{ tierMin:3, atWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:2,
+  trigger:{ tierMin:3, atWar:true, chance:0.2 }, wartime:true, weight:7, cooldown:4,
   text:'A merchant with excellent timing and no shame offers grain enough to keep the host fed — at thrice the honest price.',
   options:[
     { label:'Pay him. (8 gold)', require:{ goldMin:8 }, desc:'A fed host fights better.', effects:{ gold:-8, custom:'war_supply' } },

@@ -408,6 +408,11 @@ window.FB = window.FB || {};
       let pair = null;
       for (let i = 0; i < here.length && !pair; i++) {
         for (let j = i + 1; j < here.length; j++) {
+          /* rout grace: a freshly broken host is left to limp home — without
+             this, a host beaten on its own capital cannot flee (orderArmy
+             treats home as a halt) and the same battle re-fought daily */
+          if (here[i].broken !== undefined && state.turn - here[i].broken < B().armyRoutDays) continue;
+          if (here[j].broken !== undefined && state.turn - here[j].broken < B().armyRoutDays) continue;
           if (FB.armiesHostile(state, here[i], here[j])) { pair = [here[i], here[j]]; break; }
         }
       }

@@ -869,7 +869,11 @@ window.FB = window.FB || {};
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
         c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations
         c += (w.mass ? 0.05 : 0);                              // the great levy
-        if (w.defending && FB.hasBuilding(state, 'walls')) c += 0.08;
+        /* walls guard where they stand: the defensive war record has no target
+           county and the council's pitched battle no field province, so the
+           bonus reads the walls of the HOME county — the seat the host musters
+           at and the defense rallies around */
+        if (w.defending && FB.hasBuildingIn(state, FB.homeProv(state), 'walls')) c += 0.08;
         c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') + FB.itemBonus(state, 'battle');
         if (f.blessed_war) c += 0.06;
         return FB.clamp(c, 0.1, 0.9);
@@ -1695,8 +1699,11 @@ window.FB = window.FB || {};
     const rid = ctx && ctx.rid;
     const r = state.realms[rid];
     if (!r || !r.alive) return;
+    // capture the territory BEFORE cutting the liege: once liege is null,
+    // realmTerritory early-returns owner-keyed provs and a vassal owns none
+    const terr = FB.realmTerritory(state, rid);
     r.liege = null;
-    for (const pid of FB.realmTerritory(state, rid)) state.owner[pid] = rid;
+    for (const pid of terr) state.owner[pid] = rid;
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.event.vassal_released',
       '🕊 {realm} goes its own way, released from your fealty.', { realm: r.name }));
@@ -1709,8 +1716,13 @@ window.FB = window.FB || {};
     const rid = ctx && ctx.rid;
     const r = state.realms[rid];
     if (!r || !r.alive || p.war) return;
+    // capture the territory BEFORE cutting the liege: once liege is null,
+    // realmTerritory early-returns owner-keyed provs and a vassal owns none —
+    // without this the rebel's counties keep the old sovereign as owner and
+    // war_can_siege (owner[target] === enemy) can never come true
+    const terr = FB.realmTerritory(state, rid);
     r.liege = null;
-    for (const pid of FB.realmTerritory(state, rid)) state.owner[pid] = rid;
+    for (const pid of terr) state.owner[pid] = rid;
     FB.invalidateRealmCache();
     const held = FB.realmHeldCounties(state, rid);
     p.war = { enemy: rid, target: held[0] || null, wins: 0, losses: 0, seasons: 0, defending: false };

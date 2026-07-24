@@ -9,8 +9,20 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.32.0';
+  FB.VERSION = '1.33.0';
   FB.CHANGELOG = [
+    { v: '1.33.0', date: '2026-07-24', changes: [
+      'Buildings now rise settlement by settlement: each settlement of a county holds one of every work, further copies of the same work in one county cost half again as much, and tapping a settlement shows only what stands there. Works from older saves move to the head settlement.',
+      'Stone Walls now aid your defense only in the home county where they stand.',
+      'Three repeatable capstone innovations — Improved Husbandry, Martial Drill, and the Royal Catalogue — can be adopted rank after rank, each rank costing more scholarship than the last.',
+      'A host broken in battle is left to limp home for a while instead of being fought again on the same ground every day.',
+      'Refusing tribute is now remembered — once you press on, the white-flag envoys do not ride back for the rest of that war — and the war camp’s troubles (deserters, grain at sword-season prices) come less often.',
+      'Fixed revolt wars that could never be won by siege: a rebel’s counties now truly pass to his own banner when he breaks free or is released, so the “Press the siege” option appears as it should.',
+      'A war whose prize slips out of enemy hands now ends cleanly instead of dragging on to exhaustion.',
+      'Arms training is a man’s road: the drill and training foci are hidden from women, who instead 🧶 Keep the household or 🕊 Cultivate the court — new foci with their own gains — and girls at Play now learn diplomacy rather than swordplay.',
+      'The Man-at-Arms start is male-only, matching the levy call-ups; start codes that say otherwise are turned away.',
+      'Female rulers keep full war leadership — leading hosts, hiring mercenaries, declaring war.'
+    ] },
     { v: '1.32.0', date: '2026-07-24', changes: [
       '💍 Seek a match now sounds out three families: an established house (older, a step up — richer dowry, harder suit), a peer your own age, and a young match (a step down, but many childbearing years ahead). Older characters are no longer offered only suitors past childbearing.',
       'The three prospects wait until you choose — declining to decide today no longer reshuffles them.'
@@ -285,7 +297,7 @@ FB.VERSION = '1.32.0';
       intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.' },
     { id: 'soldier', name: 'Man-at-Arms', diff: '★★★ tricky',
       desc: 'Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them.',
-      tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3,
+      tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3, sex: 'm',
       intro: 'You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies.' },
     { id: 'knight', name: 'Hedge Knight', diff: '★★ fair',
       desc: 'Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted.',
@@ -332,6 +344,9 @@ FB.VERSION = '1.32.0';
       const name = parts[4].replace(/_/g, ' ').trim();
       if (!seed || !scen || !prov || prov.wasteland || (sex !== 'm' && sex !== 'f') ||
         !name || name.length > 20) return { error: bad };
+      if (scen.sex && sex !== scen.sex) {
+        return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
+      }
       return { seed: seed, scenario: scen, provinceId: prov.id, sex: sex, name: name };
     }
     const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -558,6 +573,13 @@ FB.VERSION = '1.32.0';
   }
 
   function showChargen() {
+    /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
+       and disables the other; any other scenario leaves both free */
+    const scenSex = G.pending.scenario && G.pending.scenario.sex;
+    document.querySelectorAll('input[name=cg-sex]').forEach(function (r) {
+      r.disabled = !!(scenSex && r.value !== scenSex);
+      if (scenSex) r.checked = r.value === scenSex;
+    });
     // a shared start code arrives with its hero chosen — pre-fill instead of suggesting
     if (G.pending.sex) {
       document.querySelector('input[name=cg-sex][value="' + G.pending.sex + '"]').checked = true;
