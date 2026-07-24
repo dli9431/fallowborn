@@ -592,7 +592,9 @@ window.FB = window.FB || {};
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
+        provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
+        landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
+        landPlotMigration: 1, manor: null, research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
@@ -701,7 +703,8 @@ window.FB = window.FB || {};
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
+        provs: [], war: null, focus: null, dead: false, holdings: [],
+        landPlots: [], landPlotMigration:1, manor:null, research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
@@ -783,7 +786,7 @@ window.FB = window.FB || {};
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
       p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep +
-        FB.holdingBonus(s, 'gold') + FB.itemBonus(s, 'gold'));
+        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold'));
       FB.livelihoodSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
@@ -1511,8 +1514,9 @@ window.FB = window.FB || {};
     }
 
     // only property passes; personal standing must be rebuilt somewhat
+    FB.landPlots(s); // normalize a legacy farm before its old flag is discarded
     const keep = {};
-    for (const fl of ['has_farm', 'own_ox']) if (p.flags[fl]) keep[fl] = 1; // buildings pass with the land itself
+    for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
     p.flags = keep;
     p.fired = {}; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);

@@ -420,6 +420,14 @@ in `player.holdings` and **persist across generations** — property passes to h
   `pledge: false` when authored events can transfer the asset or its story requires it to
   remain freely disposable; `eventOnly` holdings are never pledgeable.
 
+Freehold land is repeatable saved property rather than an authored holding definition.
+Each `player.landPlots` entry is `{provinceId, settlement}`. Its economy is tuned through
+`balance.landPlotCost`, `landPlotYield`, `landConsolidationBonus`, and
+`landPlotMaxSettlement`; `manorPlotRequirement` plots in one settlement plus
+`manorPrestige` standing allow the household to declare that holding a manor. Land income
+is inherited and appears in the seasonal ledger, but plots are not generic loan
+collateral.
+
 ## Careers and apprenticeships
 
 `FBDATA.careers` (in `data/economy.js`, mod key `careers`) defines the work a

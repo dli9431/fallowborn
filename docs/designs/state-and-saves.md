@@ -71,6 +71,12 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
+Freehold-land state is additive too. Repeatable plots live in `player.landPlots` as plain
+`{provinceId, settlement}` records and a declared site lives in `player.manor`. Both pass
+with the household across succession. `player.landPlotMigration` lazily turns the legacy
+`has_farm` flag into one home-settlement plot and preserves the assumed land behind an old
+tier-2 manor without raising the save-format version.
+
 Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
 price index, persistent pressure and shocks, loans, trade investments, stable contract ids,
 default history, and coinage history. Every record is plain JSON, so slots, autosave,

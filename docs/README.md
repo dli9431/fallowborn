@@ -101,10 +101,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
 ### The ladder
 
 Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor.
-The *Deeds* tab always shows a hint for the next rung. Wealth buys freedom and manors; a lord's
-favor and battlefield glory earn banners; the church raises the learned; marriage and scheming
-shortcut everything. Meanwhile ~65 sovereign realms fight their own wars — and their dukes
-and counts sometimes break away — so the map redraws itself decade by decade.
+The *Deeds* tab always shows a hint for the next rung. Wealth buys freedom; Freeholders
+then buy inherited plots settlement by settlement. Land held together grows more
+productive, and five plots in one settlement can be declared a manor once the family has
+the standing to join the gentry. A lord's favor and battlefield glory earn banners; the
+church raises the learned; marriage and scheming shortcut everything. Meanwhile ~65
+sovereign realms fight their own wars — and their dukes and counts sometimes break away —
+so the map redraws itself decade by decade.
 
 ### The feudal ladder
 

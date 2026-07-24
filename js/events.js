@@ -1416,7 +1416,12 @@ window.FB = window.FB || {};
         g = FB.ri(4, 8) + Math.floor(FB.skillOf(me, 'ste') / 3);
         if (p.flags.crop_risky) g += 6;
         if (p.flags.own_ox) g += 2;
-        if (p.flags.has_farm) g = Math.round(g * 1.6);
+        if (FB.landPlots) {
+          const plots = FB.landPlots(state).length;
+          if (plots) g = Math.round(g * (1 + Math.min(5, plots) * 0.12));
+        } else if (p.flags.has_farm) {
+          g = Math.round(g * 1.6);
+        }
       }
       p.gold = Math.max(0, p.gold + g);
     }

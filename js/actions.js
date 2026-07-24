@@ -107,13 +107,11 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier === 1 && s.player.profession === 'farmer'; },
     tick: function (s) {
       let g = FB.rf(FBDATA.balance.freeWage[0], FBDATA.balance.freeWage[1]);
-      if (s.player.flags.has_farm) g += 2;
       if (s.player.flags.own_ox) g += 1;
       s.player.gold += g / D;
     },
     gain: function (s) {
       let g = (FBDATA.balance.freeWage[0] + FBDATA.balance.freeWage[1]) / 2;
-      if (s.player.flags.has_farm) g += 2;
       if (s.player.flags.own_ox) g += 1;
       return { gold: g };
     } },
@@ -478,23 +476,36 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.action.freedom_bought',
         'Bought freedom from serfdom!', {}));
     } },
-  { id: 'buy_manor', label: '🏡 Buy a manor',
+  { id: 'buy_land', label: '🌾 Buy a plot of land…', noConsume: true,
     desc: function () {
-      return FB.T('{gold} gold and {prestige} prestige — join the gentry.',
-        { gold: FBDATA.balance.manorCost, prestige: FBDATA.balance.manorPrestige });
+      return FB.T('{gold} gold per plot. Land held together in one settlement is more productive.',
+        { gold: FB.landPlotCost() });
     },
-    show: function (s) { return s.player.tier === 1; },
+    show: function (s) { return s.player.tier === 1 && adult(s); },
     can: function (s) {
-      if (s.player.gold < FBDATA.balance.manorCost) return 'Not enough gold.';
+      if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
+      if (s.player.gold < FB.landPlotCost()) return 'Not enough gold.';
+      return true;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showLandMarket) FB.ui.showLandMarket();
+    } },
+  { id: 'declare_manor', label: '🏡 Declare a manor',
+    desc: function () {
+      return FB.T('Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.',
+        { plots: FBDATA.balance.manorPlotRequirement, prestige: FBDATA.balance.manorPrestige });
+    },
+    show: function (s) { return s.player.tier === 1 && adult(s); },
+    can: function (s) {
+      if (!FB.manorSite(s)) {
+        return FB.T('You need {plots} plots together in one settlement.',
+          { plots: FBDATA.balance.manorPlotRequirement });
+      }
       if (s.player.prestige < FBDATA.balance.manorPrestige) return 'You lack the standing.';
       return true;
     },
     run: function (s) {
-      FB.applyEffects(s, {
-        gold: -FBDATA.balance.manorCost, tierSet: 2, prestige: 30
-      });
-      FB.news(s, FB.msg('news.action.manor_bought',
-        'Bought a manor — gentry now!', {}));
+      FB.declareManor(s);
     } },
   { id: 'petition_barony', label: '📜 Petition for a barony', cd: 360,
     desc: function (s) {
@@ -828,6 +839,7 @@ window.FB = window.FB || {};
       total -= FB.buildingBonus(state, 'upkeep');
     }
     total += FB.holdingBonus(state, 'gold');
+    total += FB.landYield(state);
     total += FB.itemBonus(state, 'gold');
     if (FB.livelihoodBreakdown) {
       for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
@@ -909,6 +921,10 @@ window.FB = window.FB || {};
       for (const k in lines) {
         if (def.fx[k]) add(k, dataName('holding', hid, def), def.fx[k]);
       }
+    }
+    for (const land of FB.landBreakdown(state)) {
+      add('gold', FB.T('Fields at {settlement}', { settlement: land.settlementName }),
+        land.amount);
     }
     for (const iid of FB.itemList(state)) {
       const def = FBDATA.items[iid];
@@ -1582,6 +1598,152 @@ window.FB = window.FB || {};
     done.push(id);
     FB.news(state, FB.msg('news.action.holding_bought',
       '🏠 {holding} now belongs to the household.', { holding: FB.dataParam('holding', id) }));
+  };
+
+  /* ================= freehold land (the road from freedom to a manor) =================
+     Repeatable family plots belong to one stable derived settlement and pass
+     to heirs. Contiguous holdings are worked more efficiently; five plots in
+     one place may be declared a manor and raise the family into the gentry. */
+  FB.landPlotCost = function () {
+    return FBDATA.balance.landPlotCost || FBDATA.balance.farmCost || 120;
+  };
+
+  FB.landPlots = function (state) {
+    const p = state.player;
+    p.landPlots = p.landPlots || [];
+    if (!p.landPlotMigration) {
+      /* A legacy purchased farm becomes one plot. Legacy tier-2 lives were
+         built around an assumed manor, so preserve that property and station.
+         New games stamp the migration marker and receive only scenario land. */
+      if (p.flags && p.flags.has_farm && !p.landPlots.length) {
+        p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+        delete p.flags.has_farm;
+      } else if (p.tier === 2 && !p.landPlots.length &&
+          !(p.flags && (p.flags.abbot || p.flags.qadi))) {
+        const need = FBDATA.balance.manorPlotRequirement || 5;
+        for (let i = 0; i < need; i++) {
+          p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+        }
+        p.manor = { provinceId:p.provinceId, settlement:0 };
+      }
+      p.landPlotMigration = 1;
+    }
+    return p.landPlots;
+  };
+
+  FB.landGroupYield = function (count) {
+    const base = FBDATA.balance.landPlotYield || 0.6;
+    const together = FBDATA.balance.landConsolidationBonus || 0.10;
+    return base * count * (1 + Math.max(0, count - 1) * together);
+  };
+
+  FB.landBreakdown = function (state) {
+    const groups = {};
+    for (const plot of FB.landPlots(state)) {
+      const key = plot.provinceId + ':' + plot.settlement;
+      if (!groups[key]) {
+        groups[key] = {
+          provinceId:plot.provinceId, settlement:plot.settlement, count:0
+        };
+      }
+      groups[key].count++;
+    }
+    const out = [];
+    const together = FBDATA.balance.landConsolidationBonus || 0.10;
+    for (const key in groups) {
+      const g = groups[key];
+      const settlements = FB.settlementsOf(state, g.provinceId);
+      const province = FB.world.byId[g.provinceId];
+      g.settlementName = settlements[g.settlement]
+        ? settlements[g.settlement].name
+        : (province ? province.name : '?');
+      g.multiplier = 1 + Math.max(0, g.count - 1) * together;
+      g.amount = FB.landGroupYield(g.count);
+      out.push(g);
+    }
+    out.sort(function (a, b) {
+      if (a.provinceId !== b.provinceId) return a.provinceId < b.provinceId ? -1 : 1;
+      return a.settlement - b.settlement;
+    });
+    return out;
+  };
+
+  FB.landYield = function (state) {
+    let total = 0;
+    for (const group of FB.landBreakdown(state)) total += group.amount;
+    return total;
+  };
+
+  FB.landCountAt = function (state, provinceId, settlement) {
+    let count = 0;
+    for (const plot of FB.landPlots(state)) {
+      if (plot.provinceId === provinceId && plot.settlement === settlement) count++;
+    }
+    return count;
+  };
+
+  FB.landAvailable = function (state) {
+    const p = state.player;
+    if (p.tier !== 1) return [];
+    const out = [];
+    const max = FBDATA.balance.landPlotMaxSettlement ||
+      FBDATA.balance.manorPlotRequirement || 5;
+    const settlements = FB.settlementsOf(state, p.provinceId);
+    for (let i = 0; i < settlements.length; i++) {
+      const count = FB.landCountAt(state, p.provinceId, i);
+      if (count < max) out.push({
+        provinceId:p.provinceId, settlement:i, settlementName:settlements[i].name,
+        count:count
+      });
+    }
+    return out;
+  };
+
+  FB.buyLandPlot = function (state, settlement) {
+    const available = FB.landAvailable(state);
+    let site = null;
+    for (const item of available) if (item.settlement === settlement) site = item;
+    const cost = FB.landPlotCost();
+    if (!site || state.player.gold < cost) return false;
+    state.player.gold -= cost;
+    FB.landPlots(state).push({
+      provinceId:state.player.provinceId, settlement:settlement
+    });
+    FB.news(state, FB.msg('news.action.land_bought',
+      '🌾 The household buys another plot at {settlement}.',
+      { settlement:site.settlementName }));
+    return true;
+  };
+
+  FB.largestLandCluster = function (state) {
+    let best = null;
+    for (const group of FB.landBreakdown(state)) {
+      if (!best || group.count > best.count) best = group;
+    }
+    return best;
+  };
+
+  FB.manorSite = function (state) {
+    const need = FBDATA.balance.manorPlotRequirement || 5;
+    let best = null;
+    for (const group of FB.landBreakdown(state)) {
+      if (group.count >= need && (!best || group.count > best.count)) best = group;
+    }
+    return best;
+  };
+
+  FB.declareManor = function (state) {
+    const site = FB.manorSite(state);
+    if (!site || state.player.tier !== 1 ||
+        state.player.prestige < FBDATA.balance.manorPrestige) return false;
+    state.player.manor = {
+      provinceId:site.provinceId, settlement:site.settlement
+    };
+    FB.applyEffects(state, { tierSet:2, prestige:30 });
+    FB.news(state, FB.msg('news.action.manor_declared',
+      '🏡 The consolidated lands at {settlement} are declared a manor. The household joins the gentry.',
+      { settlement:site.settlementName }));
+    return true;
   };
 
   /* ================= technology (playing tall) =================
