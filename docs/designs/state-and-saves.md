@@ -71,6 +71,13 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
+Childhood instruction is additive too. `character.edu.school` optionally names an
+`FBDATA.schooling` arrangement, `lessonBoost` stores the fractional yearly chance earned by
+completed seasonal terms, and `schoolUnpaid` suppresses repeated notices while fees cannot
+be met. Missing fields mean home instruction and zero completed paid terms. A legacy
+generated hired tutor is recognized by its character role and lazily gains
+`school:'master'`; no save-version migration is required.
+
 Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
 price index, persistent pressure and shocks, loans, trade investments, stable contract ids,
 default history, and coinage history. Every record is plain JSON, so slots, autosave,

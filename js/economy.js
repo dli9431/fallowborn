@@ -165,6 +165,175 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* The old station-only upkeep remains the base cost. Extra resident family
+     members add food, clothing, and quarters at the standard their station is
+     expected to maintain. Married children have their own households. */
+  FB.householdUpkeepParts = function (state) {
+    const p = state.player;
+    const baseScale = FBDATA.balance.householdUpkeep || [1,1,2,4,6,9,14,20];
+    const memberScale = FBDATA.balance.householdMemberUpkeep || [0.1,0.25,0.5];
+    const lifestyle = FBDATA.balance.householdLifestyleMult || [1,1,1,1.25,1.5,2,2.5,3];
+    const base = baseScale[p.tier] === undefined ? 1 : baseScale[p.tier];
+    const mult = lifestyle[p.tier] || 1;
+    const me = playerChar(state);
+    let family = 0, residents = 0;
+    for (const c of FB.householdMembers(state)) {
+      if (c.id === me.id) continue;
+      const age = FB.ageOf(c, state.date.year);
+      family += (age < 6 ? memberScale[0] : age < 16 ? memberScale[1] : memberScale[2]) * mult;
+      residents++;
+    }
+    return { base:base, family:family, residents:residents, total:base + family };
+  };
+
+  FB.householdUpkeep = function (state) {
+    return FB.householdUpkeepParts(state).total;
+  };
+
+  /* A minor player and each unmarried child may receive instruction. The
+     focus is the subject; edu.school names a paid institution, while tutorId
+     keeps the existing named household/neighbour teacher. */
+  FB.educationStudents = function (state) {
+    const me = playerChar(state);
+    const out = [], seen = {};
+    function add(c) {
+      if (!c || c.dead || seen[c.id]) return;
+      const age = FB.ageOf(c, state.date.year);
+      if (age < 6 || age >= 16) return;
+      seen[c.id] = 1;
+      out.push(c);
+    }
+    add(me);
+    for (const id of (me.childrenIds || [])) {
+      const c = state.chars[id];
+      if (c && (!FB.spouseOf(state, c) || c.id === me.id)) add(c);
+    }
+    return out;
+  };
+
+  /* Old saves with a one-off hired master have no school id. Recognize the
+     generated tutor role and move them onto the recurring personal-master
+     arrangement lazily. */
+  FB.schoolingId = function (state, c) {
+    if (!c || !c.edu) return null;
+    if (c.edu.school && FBDATA.schooling[c.edu.school]) return c.edu.school;
+    const tutor = c.edu.tutorId && c.edu.tutorId !== 'self' ? state.chars[c.edu.tutorId] : null;
+    if (tutor && tutor.role === 'tutor') {
+      c.edu.school = 'master';
+      return 'master';
+    }
+    return null;
+  };
+
+  FB.educationTutor = function (state, c, reportLoss) {
+    if (!c || !c.edu || !c.edu.tutorId) return null;
+    const me = playerChar(state);
+    let tutor = null;
+    if (c.edu.tutorId === 'self') tutor = c.id === me.id ? null : me;
+    else tutor = state.chars[c.edu.tutorId];
+    if (tutor && !tutor.dead) return tutor;
+    c.edu.tutorId = null;
+    if (c.edu.school === 'master') c.edu.school = null;
+    if (reportLoss) {
+      FB.news(state, FB.msg('news.life.tutor_died', {
+        forms: {
+          select:'value', param:'self', cases:{
+            yes:'🕯 Your tutor has died; the lessons pause.',
+            other:'🕯 {name}’s tutor has died; the lessons pause.'
+          }
+        }
+      }, { self:c.id === me.id ? 'yes' : 'other', name:c.name }));
+    }
+    return null;
+  };
+
+  FB.schoolingAvailable = function (state, c, id) {
+    const def = FBDATA.schooling[id];
+    if (!def || !c) return false;
+    const age = FB.ageOf(c, state.date.year);
+    if (age < 6 || age >= 16) return false;
+    if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) return false;
+    if (def.focuses && (!c.edu || def.focuses.indexOf(c.edu.focus) < 0)) return false;
+    return true;
+  };
+
+  FB.schoolingCost = function (state, c) {
+    const id = FB.schoolingId(state, c);
+    const def = id && FBDATA.schooling[id];
+    if (id === 'master' && !FB.educationTutor(state, c, false)) return 0;
+    return c && c.edu && c.edu.focus && def && FB.schoolingAvailable(state, c, id) ?
+      (def.cost || 0) : 0;
+  };
+
+  /* Full-year directed-learning chance supplied by the current teacher or
+     school, before household "Letters" and before partial-term accounting. */
+  FB.educationInstructionChance = function (state, c) {
+    const B = FBDATA.balance;
+    const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
+    const cap = B.educationChanceCap || 0.9;
+    if (!c || !c.edu || !c.edu.focus) return base;
+    const id = FB.schoolingId(state, c);
+    const def = id && FBDATA.schooling[id];
+    if (def && FB.schoolingAvailable(state, c, id) && def.chance !== undefined) {
+      return Math.min(cap, def.chance);
+    }
+    const tutor = FB.educationTutor(state, c, false);
+    if (!tutor) return base;
+    return Math.min(cap, (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
+      FB.skillOf(tutor, c.edu && c.edu.focus) *
+      (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance));
+  };
+
+  FB.schoolingSeasonCost = function (state) {
+    let total = 0;
+    for (const c of FB.educationStudents(state)) total += FB.schoolingCost(state, c);
+    return total;
+  };
+
+  FB.schoolingCostBreakdown = function (state) {
+    const out = [];
+    for (const c of FB.educationStudents(state)) {
+      const cost = FB.schoolingCost(state, c);
+      const id = FB.schoolingId(state, c);
+      if (cost && id) out.push({ c:c, id:id, cost:cost });
+    }
+    return out;
+  };
+
+  /* Four paid seasonal terms build one year's instruction bonus. A missed
+     fee pauses only that term; earlier lessons remain useful and the school
+     retries next season. Free named tutors accrue terms through the same path. */
+  FB.educationSeason = function (state) {
+    const B = FBDATA.balance;
+    const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
+    for (const c of FB.educationStudents(state)) {
+      if (!c.edu || !c.edu.focus) continue;
+      const id = FB.schoolingId(state, c);
+      if (c.edu.tutorId && !FB.educationTutor(state, c, true)) continue;
+      const chance = FB.educationInstructionChance(state, c);
+      if (chance <= base) continue;
+      const def = id && FBDATA.schooling[id];
+      const cost = def ? (def.cost || 0) : 0;
+      if (cost && state.player.gold + 0.0001 < cost) {
+        if (!c.edu.schoolUnpaid) {
+          c.edu.schoolUnpaid = 1;
+          FB.news(state, FB.msg('news.education.fee_missed', {
+            forms: {
+              select:'value', param:'self', cases:{
+                yes:'📕 You cannot meet the school fee; your lessons pause for the season.',
+                other:'📕 The school fee for {name} cannot be met; their lessons pause for the season.'
+              }
+            }
+          }, { self:c.id === state.player.charId ? 'yes' : 'other', name:c.name }));
+        }
+        continue;
+      }
+      if (cost) state.player.gold -= cost;
+      delete c.edu.schoolUnpaid;
+      c.edu.lessonBoost = (c.edu.lessonBoost || 0) + (chance - base) / 4;
+    }
+  };
+
   FB.enterpriseList = function (state) {
     const p = state.player;
     p.enterprises = p.enterprises || [];

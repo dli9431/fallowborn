@@ -23,7 +23,8 @@ before locale validation so newly added mod text always has an English fallback.
 authored name, description, and prose remain English unless they exactly match a known
 catalog source; translation packs for third-party mods are outside the core v1 contract.
 
-Livelihood definitions are moddable data too. Top-level `careers` and `enterprises` tables
+Livelihood and instruction definitions are moddable data too. Top-level `careers`,
+`schooling`, and `enterprises` tables
 merge into `FBDATA` by id before a new campaign begins. Their `name` and `desc` fields, plus
 career rank names, use the same structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.

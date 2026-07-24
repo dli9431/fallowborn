@@ -29,7 +29,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   **☰ → Settings**.
 - **Hover or tap your gold, prestige, or piety** in the top bar for a source-by-source
   breakdown of what each brings in every season — focus, rents, dues, buildings,
-  household improvements, treasures, and upkeep. The gold sheet also records this year's
+  household improvements, resident-family costs, school fees, treasures, and upkeep.
+  The gold sheet also records this year's
   purchasing-power change from coin prices.
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
   on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
@@ -78,8 +79,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    of that blood carries a claim worth pressing. Faith writes the marriage law: some grant
    divorce, some let a man keep several wives, and a Christian match can only be unmade by
    the church. The desperate have been known to plot darker exits.
-   Choose each child's education focus and appoint a tutor whose
-   skill (and habits) shape them. From age twelve you can also arrange a child's match from
+   Choose each child's education focus, then arrange home teaching, charity or merchant
+   school, a known tutor, or a personal learned master. Better instruction raises the
+   yearly learning chance, while schools and masters charge every season. From age twelve
+   you can also arrange a child's match from
    their sheet: three families stand ready to hear an offer — a daughter's dowry is paid when
    the pledge is sealed, a son's bride brings hers to the wedding, and the vows follow once
    both are sixteen. Left alone, grown children find their own (unremarkable) matches —
@@ -90,7 +93,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    From age ten onward (depending on the trade), **Work & Enterprises** on a family
    member's sheet can place them in an apprenticeship. Adult spouses and unmarried children
    bring wages home or staff family fields, workshops, stalls, and other enterprises; a
-   business left idle earns nothing. Craft and merchant careers can climb the guild from
+   business left idle earns nothing. Resident spouses and children also add provisions and
+   quarters to seasonal household upkeep. Craft and merchant careers can climb the guild from
    ordinary membership to guildmaster.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
    The **🌳 See the family tree** button at the top of that tab draws the whole house as a

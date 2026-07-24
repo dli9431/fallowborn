@@ -26,7 +26,8 @@ and deflation increases it. A lender faced with repeated defaults or crown
 debasement may instead demand a real, weight-denominated contract whose due
 value does not move. `FB.reliableGoldIncome` is the shared numeric seasonal net
 used by the gold ledger and credit capacity; windfalls, sales, other loans, and
-unmatured investments never count.
+unmatured investments never count. Its recurring costs include both resident-family
+upkeep and the disclosed fees of current schooling arrangements.
 
 Loans mature as lump sums at season boundaries. An affordable maturity repays
 automatically. The first miss adds the signed 10% face penalty and grants two
