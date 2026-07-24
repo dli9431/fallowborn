@@ -63,7 +63,11 @@ touched by *every* change at the same spot, so doing them on a branch guarantees
 every other branch in flight (parallel worktrees are unaware of each other):
 
 1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
-   version and write the changelog line from the branch's description. See `docs/VERSIONS.md`.
+   version and write the changelog line from the branch's description. Keep each
+   `FB.CHANGELOG` entry **short, plain, and general — one or two sentences** that name the
+   feature and hint where the player runs into it, not the full mechanics. Players read it in
+   the in-game changelog modal; they want a pointer to the new thing, not a spec. See
+   `docs/VERSIONS.md`.
 2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — **every merge to `main`
    must regenerate them from the *merged* tree, before the push that ships it.** Run the recipe
    `extract → translate fr de it es → validate`; `validate` is the gate. Land them in the *same*
