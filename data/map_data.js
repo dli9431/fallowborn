@@ -805,7 +805,9 @@ FBDATA.tech = {
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
-  freedomCost: 100, farmCost: 120, manorCost: 600, manorPrestige: 150,
+  freedomCost: 100, landPlotCost: 120, landPlotYield: 0.6,
+  landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
+  manorPlotRequirement: 5, manorPrestige: 150,
   baronyGold: 2500, baronyPrestige: 400,
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial

@@ -164,13 +164,6 @@ FBDATA.events.push(
     { label:'Send to {lord} for soldiers.', desc:'The lord’s protection, at a small reminder of its price.', effects:{ opinion:{role:'lord', amt:3}, gold:-1 } },
     { label:'Pay them to move on.', require:{ goldMin:5 }, desc:'Buy quiet, and hope quiet stays bought.', effects:{ gold:-5 } }
   ]},
-{ id:'buy_farm', title:'Land of Your Own',
-  trigger:{ tierMin:1, tierMax:1, professions:['farmer'], goldMin:120, notFlags:['has_farm'], chance:0.5 }, weight:15,
-  text:'Old Widow Hedda’s strips lie fallow since her sons died. Her price is fair, and freehold land is the root of every fortune.',
-  options:[
-    { label:'Buy the land. (120 gold)', desc:'Everything you have, for ground no lord can take.', effects:{ gold:-120, setFlag:'has_farm', prestige:20, log:'Bought a freehold farm.' } },
-    { label:'Not yet.', desc:'The strips will wait; fortunes take longer.', effects:{ } }
-  ]},
 { id:'good_ox_year', title:'A Strong Team',
   trigger:{ flags:['own_ox'], seasons:[2], chance:0.5 }, weight:6, cooldown:3,
   text:'With the ox pulling, you plough deeper and faster than any neighbor. The extra furlongs pay.',

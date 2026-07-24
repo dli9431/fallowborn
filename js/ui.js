@@ -371,7 +371,8 @@ window.FB = window.FB || {};
   };
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
-    buy_freedom:'realm', buy_manor:'realm', build:'realm', adopt_tech:'realm',
+    buy_freedom:'realm', buy_land:'realm', declare_manor:'realm',
+    build:'realm', adopt_tech:'realm',
     squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
     settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
@@ -447,6 +448,19 @@ window.FB = window.FB || {};
         return d ? d.icon : '?';
       }).join('') + (hg ? ' · ' + esc(FB.T('+{amount} gold/season',
         { amount: Math.round(hg * 10) / 10 })) : '') + '</div>';
+    }
+    const land = FB.landPlots(s);
+    if (land.length) {
+      const cluster = FB.largestLandCluster(s);
+      h += '<div class="progressnote">' + esc(FB.T(
+        '🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{gold} gold/season',
+        {
+          plots:land.length,
+          cluster:cluster ? cluster.count : 0,
+          needed:FBDATA.balance.manorPlotRequirement,
+          settlement:cluster ? cluster.settlementName : '?',
+          gold:Math.round(FB.landYield(s) * 10) / 10
+        })) + '</div>';
     }
     if (s.player.tier >= 3) {
       const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
@@ -570,9 +584,14 @@ window.FB = window.FB || {};
         { gold: FBDATA.balance.freedomCost })) + '</div>';
     }
     if (s.player.tier === 1) {
+      const cluster = FB.largestLandCluster(s);
       return '<div class="progressnote">🧭 ' + esc(FB.T(
-        'Path: prosper, buy land, and a manor ({gold} gold + {prestige} prestige) to join the gentry. Soldiering and the church offer other roads.',
-        { gold: FBDATA.balance.manorCost, prestige: FBDATA.balance.manorPrestige })) + '</div>';
+        'Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads.',
+        {
+          cluster:cluster ? cluster.count : 0,
+          needed:FBDATA.balance.manorPlotRequirement,
+          prestige:FBDATA.balance.manorPrestige
+        })) + '</div>';
     }
     const tips = {
       2: 'Path: serve your lord, win renown (250+ prestige, lord’s favor 40+), and petition for a barony.',
@@ -3334,6 +3353,51 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         FB.buyHolding(FB.state, btn.dataset.holding);
         UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* ================= freehold land market ================= */
+  UI.showLandMarket = function () {
+    const s = FB.state;
+    const p = s.player;
+    const cost = FB.landPlotCost();
+    const max = FBDATA.balance.landPlotMaxSettlement ||
+      FBDATA.balance.manorPlotRequirement;
+    const settlements = FB.settlementsOf(s, p.provinceId);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor.',
+      {
+        bonus:Math.round((FBDATA.balance.landConsolidationBonus || 0.10) * 100),
+        needed:FBDATA.balance.manorPlotRequirement
+      })) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < settlements.length; i++) {
+      const count = FB.landCountAt(s, p.provinceId, i);
+      const full = count >= max;
+      const short = p.gold < cost;
+      const before = Math.round(FB.landGroupYield(count) * 10) / 10;
+      const after = Math.round(FB.landGroupYield(count + 1) * 10) / 10;
+      h += '<button class="actionbtn" data-land-settlement="' + i + '"' +
+        (full || short ? ' disabled' : '') + '>🌾 ' +
+        esc(FB.T('{settlement} — {count}/{max} plots', {
+          settlement:settlements[i].name, count:count, max:max
+        })) + '<span class="adesc">' +
+        (full
+          ? esc(FB.T('A manor-sized holding is assembled here.'))
+          : esc(FB.T('Buy the next plot for {cost} gold · seasonal yield {before} → {after}.', {
+            cost:cost, before:before, after:after
+          })) + (short ? ' ' + esc(FB.T('(not enough gold)')) : '')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
+    openModal(FB.T('🌾 Buy Freehold Land'), h);
+    document.querySelectorAll('[data-land-settlement]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.buyLandPlot(FB.state, parseInt(button.dataset.landSettlement, 10))) return;
+        UI.refresh();
+        UI.showLandMarket();
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);

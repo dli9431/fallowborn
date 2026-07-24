@@ -56,12 +56,12 @@
         "text": "⛓ Buy your freedom"
       }
     },
-    "action.buy_manor.label.default": {
-      "context": "action buy_manor, visible label.",
+    "action.buy_land.label.default": {
+      "context": "action buy_land, visible label.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "🏡 Buy a manor"
+        "text": "🌾 Buy a plot of land…"
       }
     },
     "action.coin_credit.label.default": {
@@ -86,6 +86,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "⚑ Declare independence…"
+      }
+    },
+    "action.declare_manor.label.default": {
+      "context": "action declare_manor, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🏡 Declare a manor"
       }
     },
     "action.declare_war.label.default": {
@@ -2590,62 +2598,6 @@
       "location": "data/events_noble.js",
       "source": {
         "text": "The Master Builder"
-      }
-    },
-    "event.buy_farm.options.0.desc.default": {
-      "context": "Event buy_farm, authored option 0, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Everything you have, for ground no lord can take."
-      }
-    },
-    "event.buy_farm.options.0.effects.log.default": {
-      "context": "Durable event log for buy_farm, authored option 0, effects.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Bought a freehold farm."
-      }
-    },
-    "event.buy_farm.options.0.label.default": {
-      "context": "Event buy_farm, authored option 0, label, branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Buy the land. (120 gold)"
-      }
-    },
-    "event.buy_farm.options.1.desc.default": {
-      "context": "Event buy_farm, authored option 1, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "The strips will wait; fortunes take longer."
-      }
-    },
-    "event.buy_farm.options.1.label.default": {
-      "context": "Event buy_farm, authored option 1, label, branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Not yet."
-      }
-    },
-    "event.buy_farm.text.default": {
-      "context": "Event buy_farm, text, faith branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Old Widow Hedda’s strips lie fallow since her sons died. Her price is fair, and freehold land is the root of every fortune."
-      }
-    },
-    "event.buy_farm.title.default": {
-      "context": "Event buy_farm, title, faith branch default.",
-      "glossary": [],
-      "location": "data/events_peasant.js",
-      "source": {
-        "text": "Land of Your Own"
       }
     },
     "event.camp_fires.options.0.desc.default": {
@@ -20543,12 +20495,24 @@
         "text": "The labor grinds you down."
       }
     },
-    "news.action.manor_bought": {
+    "news.action.land_bought": {
       "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [],
+      "glossary": [
+        "settlement"
+      ],
       "location": "js/actions.js",
       "source": {
-        "text": "Bought a manor — gentry now!"
+        "text": "🌾 The household buys another plot at {settlement}."
+      }
+    },
+    "news.action.manor_declared": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🏡 The consolidated lands at {settlement} are declared a manor. The household joins the gentry."
       }
     },
     "news.action.mediate_failure": {
@@ -22960,16 +22924,6 @@
         "text": "Dry priests preach kindly of their patrons."
       }
     },
-    "src.00b317ab": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Old Widow Hedda’s strips lie fallow since her sons died. Her price is fair, and freehold land is the root of every fortune."
-      }
-    },
     "src.00c27443": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23371,6 +23325,16 @@
       ],
       "source": {
         "text": "Decide later"
+      }
+    },
+    "src.043ba02f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads."
       }
     },
     "src.043bcee1": {
@@ -24424,6 +24388,16 @@
       ],
       "source": {
         "text": "🪙 The value of coin changes this year."
+      }
+    },
+    "src.0a6d6e23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🏡 The consolidated lands at {settlement} are declared a manor. The household joins the gentry."
       }
     },
     "src.0a798fe9": {
@@ -25888,6 +25862,16 @@
         "text": "Fix it yourself and be owed — or limp home."
       }
     },
+    "src.1433ba37": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "{gold} gold per plot. Land held together in one settlement is more productive."
+      }
+    },
     "src.1434886c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25916,6 +25900,16 @@
       ],
       "source": {
         "text": "+{amount}% for {years} years"
+      }
+    },
+    "src.14708a68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You need {plots} plots together in one settlement."
       }
     },
     "src.148d9aa4": {
@@ -30379,6 +30373,16 @@
         "text": "Random Province"
       }
     },
+    "src.31454960": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{settlement} — {count}/{max} plots"
+      }
+    },
     "src.31477cd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -31860,6 +31864,16 @@
         "text": "Bold — chase the bigger prize"
       }
     },
+    "src.3b5a5cf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌾 Buy a plot of land…"
+      }
+    },
     "src.3b6ac60b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32018,6 +32032,16 @@
       ],
       "source": {
         "text": "{count} mercenary"
+      }
+    },
+    "src.3ca4bc2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🏡 Declare a manor"
       }
     },
     "src.3cb47311": {
@@ -32860,6 +32884,16 @@
       ],
       "source": {
         "text": "A dying householder names who should receive the best beast, the tools, the household goods, and a final gift to the {temple}. There is no clerk — only breath, witnesses, and very little time."
+      }
+    },
+    "src.428ff519": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Buy the next plot for {cost} gold · seasonal yield {before} → {after}."
       }
     },
     "src.4291df29": {
@@ -34386,16 +34420,6 @@
       ],
       "source": {
         "text": "{lord} reins in beside your warhorse and looks it over far too long. “A fine beast,” he says, “for a common man.”"
-      }
-    },
-    "src.4b1fc734": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Land of Your Own"
       }
     },
     "src.4b4039cc": {
@@ -37493,16 +37517,6 @@
         "text": "{pct}% of your noble revenue"
       }
     },
-    "src.5e5809ba": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Bought a freehold farm."
-      }
-    },
     "src.5e5c8757": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37975,16 +37989,6 @@
         "text": "🧭 The trade partnership is resolved."
       }
     },
-    "src.60ad7e6a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "{gold} gold and {prestige} prestige — join the gentry."
-      }
-    },
     "src.60bcf769": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38343,16 +38347,6 @@
       ],
       "source": {
         "text": "(current)"
-      }
-    },
-    "src.62b2adce": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Bought a manor — gentry now!"
       }
     },
     "src.62d251be": {
@@ -43456,6 +43450,16 @@
         "text": "Raise it as your own."
       }
     },
+    "src.8232ade2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No more land is for sale here."
+      }
+    },
     "src.82460ba7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47214,16 +47218,6 @@
         "text": "Everyone shouts a different command until a stronger voice takes over."
       }
     },
-    "src.991d8e80": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🏡 Buy a manor"
-      }
-    },
     "src.9944b824": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49205,6 +49199,16 @@
       ],
       "source": {
         "text": "A fair plea — if the lord is feeling fair."
+      }
+    },
+    "src.a53c5229": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry."
       }
     },
     "src.a5520acd": {
@@ -52696,6 +52700,16 @@
         "text": "Another witness names the bargain aloud. The court turns on you."
       }
     },
+    "src.bc0a1ad4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌾 The household buys another plot at {settlement}."
+      }
+    },
     "src.bc0e4473": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53355,6 +53369,16 @@
       ],
       "source": {
         "text": "Sovereign — kneels to no one"
+      }
+    },
+    "src.c10fbd02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Fields at {settlement}"
       }
     },
     "src.c117a8bf": {
@@ -54621,16 +54645,6 @@
         "text": "⚠ The household defaults; the lender takes {asset} in settlement."
       }
     },
-    "src.c95b9060": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Path: prosper, buy land, and a manor ({gold} gold + {prestige} prestige) to join the gentry. Soldiering and the church offer other roads."
-      }
-    },
     "src.c981a186": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54740,6 +54754,16 @@
       ],
       "source": {
         "text": "Three nights guarding a nervous silk merchant. The pay is very good."
+      }
+    },
+    "src.ca4acb80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
       }
     },
     "src.ca535d95": {
@@ -55613,16 +55637,6 @@
         "text": "Event"
       }
     },
-    "src.d0421716": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Not yet."
-      }
-    },
     "src.d04be5a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56012,6 +56026,16 @@
       ],
       "source": {
         "text": "Words cost nothing and are spent as fast."
+      }
+    },
+    "src.d2d5e050": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{gold} gold/season"
       }
     },
     "src.d2fb3927": {
@@ -57054,16 +57078,6 @@
       ],
       "source": {
         "text": "this land"
-      }
-    },
-    "src.d95e8562": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Everything you have, for ground no lord can take."
       }
     },
     "src.d969b70d": {
@@ -58617,16 +58631,6 @@
         "text": "The miller arrives with his tally. Broken wheel or not, he says the lord is owed his customary share."
       }
     },
-    "src.e328a137": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_peasant.js"
-      ],
-      "source": {
-        "text": "Buy the land. (120 gold)"
-      }
-    },
     "src.e330b7bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59157,6 +59161,16 @@
       ],
       "source": {
         "text": "Layered linen stuffed with tow — humble armor that has turned many a tired blade."
+      }
+    },
+    "src.e6c46434": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A manor-sized holding is assembled here."
       }
     },
     "src.e6c84b29": {
@@ -60701,14 +60715,14 @@
         "text": "You wrestle the blade away and pin the assassin, roaring for guards."
       }
     },
-    "src.f0063dab": {
+    "src.effd3c93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/events_peasant.js"
+        "js/ui.js"
       ],
       "source": {
-        "text": "The strips will wait; fortunes take longer."
+        "text": "🌾 Buy Freehold Land"
       }
     },
     "src.f00be03c": {
@@ -64882,6 +64896,14 @@
         "text": "A four-season profit-sharing venture: productive risk, with no guaranteed return."
       }
     },
+    "ui:A manor-sized holding is assembled here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A manor-sized holding is assembled here."
+      }
+    },
     "ui:A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -65204,6 +65226,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "Buy productive property; further copies of one kind cost more."
+      }
+    },
+    "ui:Buy the next plot for {cost} gold · seasonal yield {before} → {after}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "after",
+        "before",
+        "cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Buy the next plot for {cost} gold · seasonal yield {before} → {after}."
       }
     },
     "ui:Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under.": {
@@ -65556,6 +65590,16 @@
         "text": "Favorable"
       }
     },
+    "ui:Fields at {settlement}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Fields at {settlement}"
+      }
+    },
     "ui:Financial contract": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -65616,6 +65660,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})"
+      }
+    },
+    "ui:Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "plots",
+        "prestige"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry."
       }
     },
     "ui:God": {
@@ -66218,15 +66273,16 @@
         "text": "Paste a start code or world seed"
       }
     },
-    "ui:Path: prosper, buy land, and a manor ({gold} gold + {prestige} prestige) to join the gentry. Soldiering and the church offer other roads.": {
+    "ui:Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "gold",
+        "cluster",
+        "needed",
         "prestige"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Path: prosper, buy land, and a manor ({gold} gold + {prestige} prestige) to join the gentry. Soldiering and the church offer other roads."
+        "text": "Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads."
       }
     },
     "ui:Path: save {gold} gold (or win your lord’s favor) to buy freedom.": {
@@ -66311,6 +66367,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Pledged: {asset}"
+      }
+    },
+    "ui:Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bonus",
+        "needed"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
       }
     },
     "ui:Policy toward {realm}": {
@@ -67330,6 +67397,16 @@
         "text": "You need at least {needed} prestige (now {current})."
       }
     },
+    "ui:You need {plots} plots together in one settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "plots"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You need {plots} plots together in one settlement."
+      }
+    },
     "ui:You renounce {liege} and raise your own banner over your lands. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68340,15 +68417,14 @@
         "text": "{gold} gold and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy."
       }
     },
-    "ui:{gold} gold and {prestige} prestige — join the gentry.": {
+    "ui:{gold} gold per plot. Land held together in one settlement is more productive.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "gold",
-        "prestige"
+        "gold"
       ],
       "location": "js/actions.js",
       "source": {
-        "text": "{gold} gold and {prestige} prestige — join the gentry."
+        "text": "{gold} gold per plot. Land held together in one settlement is more productive."
       }
     },
     "ui:{icon} {name} ×{rank}": {
@@ -68752,6 +68828,18 @@
         "text": "{season}, {year}"
       }
     },
+    "ui:{settlement} — {count}/{max} plots": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "max",
+        "settlement"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{settlement} — {count}/{max} plots"
+      }
+    },
     "ui:{sex} of {age}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -69089,6 +69177,28 @@
       "location": "js/ui.js",
       "source": {
         "text": "🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day."
+      }
+    },
+    "ui:🌾 Buy Freehold Land": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🌾 Buy Freehold Land"
+      }
+    },
+    "ui:🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{gold} gold/season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cluster",
+        "gold",
+        "needed",
+        "plots",
+        "settlement"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{gold} gold/season"
       }
     },
     "ui:🎓 Education of {name}": {

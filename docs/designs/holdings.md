@@ -9,6 +9,21 @@ Definitions marked `eventOnly` are excluded from the purchase picker. Rights of 
 are such a holding: the Old Custom landmark chain can secure the family's heritable
 pasture, fuel, and water rights, and those rights then pass to later generations.
 
+**Freeholders assemble land before they can claim a manor.** Repeatable plots live in
+`player.landPlots` as `{provinceId, settlement}` and pass to heirs. The Buy Freehold Land
+deed places each purchase in one of the home county's stable derived settlements. Every
+plot supplies seasonal produce through `FB.landYield`; plots consolidated in the same
+settlement receive `balance.landConsolidationBonus` for each additional plot in that
+holding. A settlement is capped by `balance.landPlotMaxSettlement`.
+
+`FB.manorSite` requires `balance.manorPlotRequirement` plots in one settlement. Once the
+family also has `balance.manorPrestige`, Declare a Manor records that site on
+`player.manor` and raises the player from Freeholder to Gentry. This replaces the former
+one-step manor purchase while preserving its total baseline cost: five plots at 120 gold
+each. The Free Farmer start owns its promised first plot. Legacy `has_farm` saves become
+one plot lazily, and legacy tier-2 saves built around the old assumed manor receive a
+complete holding unless their station came from the abbot/qadi path.
+
 Related: [development.md](development.md) for the tier-3+ equivalent (buildings),
 [realms.md](realms.md) for tiers.
 
