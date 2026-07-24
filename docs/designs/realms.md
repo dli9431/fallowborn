@@ -12,7 +12,9 @@ naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeC
 are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no foreign
 policy; strong vassals occasionally break away (`balance.breakawayChance`). The player
 interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
-`swear_fealty` / independence) and, once sovereign, runs vassals of their own
+`swear_fealty` / independence — and, tiers 3–5, the **estates**: the liege's
+assembly where the terms of service, the aid and scutage, are voted on — see
+[parliament.md](parliament.md)) and, once sovereign, runs vassals of their own
 (`grant_land` — a single county via `FB.grantCounty` or a whole de jure duchy via
 `FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal opinion lives in
 `player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate` and a

@@ -2436,6 +2436,59 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
   };
 
+  /* the estates of the realm (vassal tiers 3-5): the terms of the player's
+     service, and the motions they can buy between sittings — see
+     js/parliament.js for the machinery and FB.parliamentYearly for sessions */
+  UI.showParliament = function () {
+    const s = FB.state;
+    const obl = FB.parliamentEnsure(s);
+    if (!obl) return;
+    const B = FBDATA.balance;
+    const liege = s.realms[s.player.liege];
+    const cost = B.parliamentMotionCost || 15;
+    const moved = obl.lastMotion === s.date.year;
+    const aidMin = B.parliamentAidMin || 0.10;
+    let h = '<p class="hint">' + esc(FB.T(
+      'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.',
+      { liege: liege.name })) + '</p>';
+    h += '<div class="kv"><span>' + esc(FB.T('The liege’s aid')) + '</span><b>' +
+      esc(FB.T('{pct}% of your noble revenue', { pct: Math.round(obl.aid * 100) })) + '</b></div>';
+    h += '<div class="kv"><span>' + esc(FB.T('Banner service')) + '</span><b>' +
+      (obl.scutage
+        ? esc(FB.T('Scutage — silver answers the summons'))
+        : esc(FB.T('Spears — you must ride, or pay dearly'))) + '</b></div>';
+    h += '<div class="kv"><span>' + esc(FB.T('Your voice in the hall')) + '</span><b>' +
+      Math.round(FB.parliamentVoteChance(s) * 100) + '%</b></div>';
+    h += '<p class="hint">' + esc(FB.T(
+      'Between sittings you can put a motion of your own before the estates — it costs {cost} gold in gifts and promises, and the lords will hear but one motion a year.',
+      { cost: cost })) + '</p>';
+    if (moved) {
+      h += '<p class="hint">' + esc(FB.T('The estates have heard your motion this year; they will take another come the new year.')) + '</p>';
+    }
+    h += '<div class="gm-list">';
+    h += '<button class="actionbtn" data-motion="redress"' +
+      (moved || s.player.gold < cost || obl.aid <= aidMin + 0.001 ? ' disabled' : '') + '>⚖ ' +
+      esc(FB.T('Move for redress of grievances ({cost} gold)', { cost: cost })) +
+      '<span class="adesc">' + esc(FB.T('Put it to a vote: the liege’s aid down one step, if the hall backs you.')) + '</span></button>';
+    h += '<button class="actionbtn" data-motion="scutage"' +
+      (moved || s.player.gold < cost || obl.scutage ? ' disabled' : '') + '>🛡 ' +
+      esc(FB.T('Move for scutage ({cost} gold)', { cost: cost })) +
+      '<span class="adesc">' + esc(FB.T('Put it to a vote: silver for banner service — the aid creeps up in exchange.')) + '</span></button>';
+    h += '</div>';
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('The Estates'), h);
+    document.querySelectorAll('[data-motion]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (s.player.gold < cost || obl.lastMotion === s.date.year) return;
+        s.player.gold -= cost;
+        obl.lastMotion = s.date.year;
+        s.eventQueue.push({ id: 'parliament_' + btn.dataset.motion });
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
+  };
+
   /* demand a fief back from a vassal */
   UI.showRevoke = function () {
     const s = FB.state;

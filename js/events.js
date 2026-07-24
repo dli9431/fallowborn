@@ -944,6 +944,10 @@ window.FB = window.FB || {};
         if (rid2) c2 += FB.liegeOpOf(state, rid2) / 150;
         return FB.clamp(c2, 0.05, 0.95);
       }
+      case 'parliament_vote': {
+        // a motion before the estates: rank, diplomacy, name, and the liege's love
+        return FB.parliamentVoteChance ? FB.parliamentVoteChance(state) : 0.5;
+      }
       case 'plot': {
         let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
         c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery

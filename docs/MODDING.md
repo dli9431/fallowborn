@@ -175,7 +175,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
 | `popularOpinionBelow` | the commons' view of you |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`) |
 | `never` | only fired by other events' `queue` |
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
@@ -203,7 +203,7 @@ every option should carry one: vague flavor pointing at the thrust of the choice
 never exact numbers), optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
-liege_grant war_battle plot appeal_outcome vassal_comply county_petition`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
+liege_grant war_battle plot appeal_outcome vassal_comply county_petition parliament_vote`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
 `skill_lea` benefits from Letters in the Family and the monk/priest professions. The

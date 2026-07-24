@@ -720,6 +720,12 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { if (FB.ui && FB.ui.showRevoke) FB.ui.showRevoke(); } },
+  { id: 'the_estates', label: '🏛 The Estates…', noConsume: true,
+    desc: function () {
+      return FB.T('The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.');
+    },
+    show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
+    run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
   { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
     desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
     show: function (s) { return s.player.tier >= 6; },
@@ -744,7 +750,7 @@ window.FB = window.FB || {};
     let t = demesne + vassal;
     t += FB.buildingBonus(state, 'tax');
     t *= 1 + FB.techBonus(state, 'tax') + (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
-    if (p.liege) t *= 0.75; // liege's cut
+    if (p.liege) t *= 1 - (FB.parliamentAid ? FB.parliamentAid(state) : 0.25); // liege's cut — haggled in the estates
     return Math.round(t);
   };
 
@@ -833,7 +839,7 @@ window.FB = window.FB || {};
       const tolls = addBuildings('gold', 'tax');
       const innov = (rents + dues + tolls) * FB.techBonus(state, 'tax');
       add('gold', FB.T('Innovations'), innov);
-      if (p.liege) add('gold', FB.T('Liege’s cut'), -(rents + dues + tolls + innov) * 0.25);
+      if (p.liege) add('gold', FB.T('Liege’s cut'), -(rents + dues + tolls + innov) * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
 

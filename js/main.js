@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.37.0';
+  FB.VERSION = '1.38.0';
   FB.CHANGELOG = [
+    { v: '1.38.0', date: '2026-07-24', changes: [
+      'The Estates: barons, counts, and dukes sworn to a liege now sit in the realm’s assembly, summoned about once a year to vote on the terms of service. The liege’s aid — his cut of your noble revenue, once a fixed 25% — is now set by vote between 10% and 40%: the crown can demand more, the benches can refuse, and you can win it back down with a motion for redress.',
+      'Scutage: the estates can vote silver for banner service — the liege’s summons can then be answered with a cheap shield-tax instead of riding to war, and the aid creeps up in exchange.',
+      'Your voice in the hall scales with rank — a duke out-speaks a baron — plus diplomacy, prestige, and the liege’s own favor. Wartime sessions vote war subsidies, and fellow lords bring their grievances to the benches.',
+      'The 🏛 Estates deed shows your current terms and lets you put a motion of your own before the lords — redress or scutage, one a year, for a purse of gifts.'
+    ] },
     { v: '1.37.0', date: '2026-07-24', changes: [
       'Random treasure keeps its original rarity odds however full the family hoard becomes — keeping every lesser item no longer guarantees a famed one, and repeat chest theft no longer trains its own Intrigue.',
       'An offered barony may now be declined graciously, and ordinary automation pauses for every title or independence decision.'
@@ -840,6 +846,7 @@ window.FB = window.FB || {};
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
         p.research = (p.research || 0) + FB.buildingBonus(s, 'research') + FB.techBonus(s, 'research');
         if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
+        if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
         if (G.auto.research) FB.autoResearch(s);
       }
@@ -1127,6 +1134,7 @@ window.FB = window.FB || {};
     p.liegeOp = Math.round((p.liegeOp || 0) * 0.9);
     if (p.liegeOps) for (const rid in p.liegeOps) p.liegeOps[rid] = Math.round(p.liegeOps[rid] * 0.9);
     if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
+    if (FB.parliamentYearly) FB.parliamentYearly(s); // the liege may summon the estates to sit
   }
 
   /* ---------- education (yearly) ----------

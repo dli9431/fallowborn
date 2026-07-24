@@ -851,6 +851,13 @@ FBDATA.balance = {
   councilConsentBelow: 35, // below this crown authority the council blocks extraordinary taxes & revocations
   councilCharterAbove: 70, // authority above this with a sour council invites the charter of liberties
   councilGiftCost: 25, councilGiftOpinion: 15, // a gift to a sworn man: gold out, favor in
+  /* the estates / parliament (vassal tiers 3-5, js/parliament.js): the terms
+     of service a vassal can haggle over in the liege's assembly */
+  parliamentAidBase: 0.25, // the liege's customary cut of a vassal's noble revenue
+  parliamentAidMin: 0.10, parliamentAidMax: 0.40, parliamentAidStep: 0.05, // the estates move the aid one step per vote
+  parliamentSessionChance: 0.5, // yearly odds the liege summons the estates to sit
+  parliamentSubsidyGold: 20, // the war subsidy the estates may vote their liege
+  parliamentMotionCost: 15, // gold to sound out fellow lords and put a motion before the estates
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,

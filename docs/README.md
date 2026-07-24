@@ -100,7 +100,11 @@ his favor — 65 or more — and real standing of your own, 400+ prestige, and e
 both), pay homage at
 any court along your chain, appeal over a harsh liege's head to a higher lord, swear fealty
 to a different sovereign — or raise your own banner and fight for independence (the
-⚑ Declare independence deed, once you have 200+ prestige). As a **liege**
+⚑ Declare independence deed, once you have 200+ prestige). A sworn baron, count, or duke
+also sits in the realm's **estates** (the 🏛 Estates deed): summoned about once a year, the
+assembled lords vote on the terms of service — the liege's aid (his cut of your revenue,
+10–40%) and scutage (silver in place of banner service) — with your voice growing with rank,
+diplomacy, prestige, and the liege's favor. As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
 of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land —
 and the promotion is automatic the day you hold it: the majority of a duchy's counties makes
