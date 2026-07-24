@@ -2,8 +2,8 @@
 
 - Catalog schema: 1
 - Hash schema: 1
-- Keys: 6646
-- Unique English records: 3643
-- Approximate source words: 33412
+- Keys: 6792
+- Unique English records: 3715
+- Approximate source words: 34514
 - Routed inventory: structured event/data fields, durable messages, explicit localization calls, static HTML, and UI literal aliases.
 - Intentional exceptions: generated personal/place/realm names, mod-authored text without a matching catalog, legacy rendered save text, and the changelog.

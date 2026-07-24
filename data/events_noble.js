@@ -126,6 +126,7 @@ FBDATA.events.push(
     { label:'Ride to the muster.', desc:'Join the liege’s host for the length of the war.',
       effects:{ setFlag:'with_liege_host', focusSet:'lead_host', opinionLiege:10, prestige:4, log:'Rode to the liege’s war.' } },
     { label:'Send gold in your stead.', require:{ goldMin:20 }, desc:'Silver marches for you, and is noted.', effects:{ gold:-20, opinionLiege:-5 } },
+    { label:'Pay scutage, by the estates’ charter. (8 gold)', require:{ goldMin:8, custom:'parliament_has_scutage' }, desc:'The estates voted silver for service — the liege must take the coin.', effects:{ gold:-8, opinionLiege:-2 } },
     { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8 } }
   ]},
 { id:'title_request', title:'A Word With the Liege',
