@@ -863,6 +863,7 @@ FBDATA.balance = {
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,
+  liegeGrantRepeatMult: 0.2, // each successful feudal grant this lifetime multiplies the next grant's odds
   buyCountyBase: 400, buyCountyPerDev: 120, settleGold: 250, settlePrestige: 50,
   techRepeatCostGrowth: 1.6, // a repeatable innovation's cost multiplies by this per rank already held
   buildingRepeatCostGrowth: 1.5, // a building's 2nd/3rd/… copy in the same county costs cost × this^(copies standing)

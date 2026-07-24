@@ -3,7 +3,7 @@
     "action.adopt_tech.label.default": {
       "context": "action adopt_tech, visible label.",
       "glossary": [],
-      "location": "js/actions.js:530",
+      "location": "js/actions.js:532",
       "source": {
         "text": "💡 Adopt an innovation…"
       }
@@ -11,7 +11,7 @@
     "action.appeal_lord.label.default": {
       "context": "action appeal_lord, visible label.",
       "glossary": [],
-      "location": "js/actions.js:685",
+      "location": "js/actions.js:687",
       "source": {
         "text": "⚖ Appeal over your liege’s head…"
       }
@@ -35,7 +35,7 @@
     "action.build.label.default": {
       "context": "action build, visible label.",
       "glossary": [],
-      "location": "js/actions.js:519",
+      "location": "js/actions.js:521",
       "source": {
         "text": "🏗 Raise a building…"
       }
@@ -43,7 +43,7 @@
     "action.buy_county.label.default": {
       "context": "action buy_county, visible label.",
       "glossary": [],
-      "location": "js/actions.js:588",
+      "location": "js/actions.js:590",
       "source": {
         "text": "💰 Buy out a weak neighbor…"
       }
@@ -67,7 +67,7 @@
     "action.declare_independence.label.default": {
       "context": "action declare_independence, visible label.",
       "glossary": [],
-      "location": "js/actions.js:667",
+      "location": "js/actions.js:669",
       "source": {
         "text": "⚑ Declare independence…"
       }
@@ -75,7 +75,7 @@
     "action.declare_war.label.default": {
       "context": "action declare_war, visible label.",
       "glossary": [],
-      "location": "js/actions.js:660",
+      "location": "js/actions.js:662",
       "source": {
         "text": "⚔ Declare war…"
       }
@@ -83,7 +83,7 @@
     "action.demand_taxes.label.default": {
       "context": "action demand_taxes, visible label.",
       "glossary": [],
-      "location": "js/actions.js:701",
+      "location": "js/actions.js:703",
       "source": {
         "text": "💰 Demand extraordinary taxes"
       }
@@ -107,7 +107,7 @@
     "action.grant_land.label.default": {
       "context": "action grant_land, visible label.",
       "glossary": [],
-      "location": "js/actions.js:697",
+      "location": "js/actions.js:699",
       "source": {
         "text": "🎁 Grant land…"
       }
@@ -115,7 +115,7 @@
     "action.hire_mercs.label.default": {
       "context": "action hire_mercs, visible label.",
       "glossary": [],
-      "location": "js/actions.js:632",
+      "location": "js/actions.js:634",
       "source": {
         "text": "⚔ Hire a mercenary company"
       }
@@ -123,7 +123,7 @@
     "action.hold_court.label.default": {
       "context": "action hold_court, visible label.",
       "glossary": [],
-      "location": "js/actions.js:508",
+      "location": "js/actions.js:510",
       "source": {
         "text": "⚖ Hold court"
       }
@@ -131,7 +131,7 @@
     "action.hold_feast.label.default": {
       "context": "action hold_feast, visible label.",
       "glossary": [],
-      "location": "js/actions.js:540",
+      "location": "js/actions.js:542",
       "source": {
         "text": "🍗 Hold a feast"
       }
@@ -147,7 +147,7 @@
     "action.muster_host.label.default": {
       "context": "action muster_host, visible label.",
       "glossary": [],
-      "location": "js/actions.js:619",
+      "location": "js/actions.js:621",
       "source": {
         "text": "🚩 Muster the host"
       }
@@ -155,7 +155,7 @@
     "action.pay_homage.label.default": {
       "context": "action pay_homage, visible label.",
       "glossary": [],
-      "location": "js/actions.js:681",
+      "location": "js/actions.js:683",
       "source": {
         "text": "🙇 Pay homage…"
       }
@@ -171,7 +171,7 @@
     "action.petition_county.label.default": {
       "context": "action petition_county, visible label.",
       "glossary": [],
-      "location": "js/actions.js:561",
+      "location": "js/actions.js:563",
       "source": {
         "text": "🤝 Petition for a neighbor’s fief…"
       }
@@ -179,7 +179,7 @@
     "action.petition_liege.label.default": {
       "context": "action petition_liege, visible label.",
       "glossary": [],
-      "location": "js/actions.js:548",
+      "location": "js/actions.js:550",
       "source": {
         "text": "👑 Petition the liege for title"
       }
@@ -203,7 +203,7 @@
     "action.revoke_county.label.default": {
       "context": "action revoke_county, visible label.",
       "glossary": [],
-      "location": "js/actions.js:712",
+      "location": "js/actions.js:714",
       "source": {
         "text": "📜 Revoke a county…"
       }
@@ -211,7 +211,7 @@
     "action.royal_council.label.default": {
       "context": "action royal_council, visible label.",
       "glossary": [],
-      "location": "js/actions.js:729",
+      "location": "js/actions.js:731",
       "source": {
         "text": "🏛 The Royal Council…"
       }
@@ -253,7 +253,7 @@
     "action.settle_waste.label.default": {
       "context": "action settle_waste, visible label.",
       "glossary": [],
-      "location": "js/actions.js:604",
+      "location": "js/actions.js:606",
       "source": {
         "text": "🌱 Settle the wasteland…"
       }
@@ -261,7 +261,7 @@
     "action.squeeze_taxes.label.default": {
       "context": "action squeeze_taxes, visible label.",
       "glossary": [],
-      "location": "js/actions.js:512",
+      "location": "js/actions.js:514",
       "source": {
         "text": "💰 Squeeze the taxes"
       }
@@ -269,7 +269,7 @@
     "action.swear_fealty.label.default": {
       "context": "action swear_fealty, visible label.",
       "glossary": [],
-      "location": "js/actions.js:692",
+      "location": "js/actions.js:694",
       "source": {
         "text": "🤝 Swear fealty…"
       }
@@ -287,7 +287,7 @@
     "action.the_estates.label.default": {
       "context": "action the_estates, visible label.",
       "glossary": [],
-      "location": "js/actions.js:723",
+      "location": "js/actions.js:725",
       "source": {
         "text": "🏛 The Estates…"
       }
@@ -17717,7 +17717,7 @@
       "glossary": [
         "count"
       ],
-      "location": "js/actions.js:636",
+      "location": "js/actions.js:638",
       "source": {
         "forms": {
           "cases": {
@@ -18924,7 +18924,7 @@
     "legend.condition.default": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1531",
+      "location": "js/main.js:1536",
       "source": {
         "text": "Lived. Died. The chronicle splits the difference."
       }
@@ -18932,7 +18932,7 @@
     "legend.condition.early": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1505",
+      "location": "js/main.js:1510",
       "source": {
         "text": "Gone before their time; the time was never consulted."
       }
@@ -18940,7 +18940,7 @@
     "legend.condition.emperor": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1523",
+      "location": "js/main.js:1528",
       "source": {
         "text": "Ruled an empire; the empire has been formally notified."
       }
@@ -18948,7 +18948,7 @@
     "legend.condition.famous": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1519",
+      "location": "js/main.js:1524",
       "source": {
         "text": "So famous that strangers are mourning professionally."
       }
@@ -18958,7 +18958,7 @@
       "glossary": [
         "count"
       ],
-      "location": "js/main.js:1511",
+      "location": "js/main.js:1516",
       "source": {
         "text": "Leaves {count} children and not one quiet meal behind."
       }
@@ -18966,7 +18966,7 @@
     "legend.condition.no_children": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1513",
+      "location": "js/main.js:1518",
       "source": {
         "text": "Leaves no children; the gossips needed no invitation."
       }
@@ -18974,7 +18974,7 @@
     "legend.condition.old": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1503",
+      "location": "js/main.js:1508",
       "source": {
         "text": "Died full of years and of opinions about the young."
       }
@@ -18982,7 +18982,7 @@
     "legend.condition.poor": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1517",
+      "location": "js/main.js:1522",
       "source": {
         "text": "Died owing a goat. The goat has not forgotten."
       }
@@ -18990,7 +18990,7 @@
     "legend.condition.rich": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1515",
+      "location": "js/main.js:1520",
       "source": {
         "text": "Died rich. The coffers were pried from still-warm fingers."
       }
@@ -18998,7 +18998,7 @@
     "legend.condition.serf": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1521",
+      "location": "js/main.js:1526",
       "source": {
         "text": "Born a serf, died a serf, and outstubborned everyone in between."
       }
@@ -19006,7 +19006,7 @@
     "legend.condition.sickness": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1500",
+      "location": "js/main.js:1505",
       "source": {
         "text": "Complained about the leech bill until the very end."
       }
@@ -19016,7 +19016,7 @@
       "glossary": [
         "age"
       ],
-      "location": "js/main.js:1507",
+      "location": "js/main.js:1512",
       "source": {
         "text": "Reached {age}, an age the neighbors called showing off."
       }
@@ -19026,7 +19026,7 @@
       "glossary": [
         "age"
       ],
-      "location": "js/main.js:1509",
+      "location": "js/main.js:1514",
       "source": {
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
       }
@@ -19038,7 +19038,7 @@
         "name",
         "year"
       ],
-      "location": "js/main.js:1057",
+      "location": "js/main.js:1062",
       "source": {
         "forms": {
           "cases": {
@@ -19057,7 +19057,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:986",
+      "location": "js/main.js:991",
       "source": {
         "text": "Wounds and sickness prove too much. {name} does not see another season."
       }
@@ -19065,7 +19065,7 @@
     "legend.skill.dip": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1485",
+      "location": "js/main.js:1490",
       "source": {
         "text": "Could talk a beggar into lending money, and did."
       }
@@ -19073,7 +19073,7 @@
     "legend.skill.int": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1488",
+      "location": "js/main.js:1493",
       "source": {
         "text": "Knew everyone’s secrets and took the best ones along."
       }
@@ -19081,7 +19081,7 @@
     "legend.skill.lea": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1489",
+      "location": "js/main.js:1494",
       "source": {
         "text": "Read more books than the parish owned."
       }
@@ -19089,7 +19089,7 @@
     "legend.skill.mar": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1486",
+      "location": "js/main.js:1491",
       "source": {
         "text": "Settled most disputes by winning them."
       }
@@ -19097,7 +19097,7 @@
     "legend.skill.ste": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1487",
+      "location": "js/main.js:1492",
       "source": {
         "text": "Counted everything. The graveyard steward sends regards."
       }
@@ -19105,7 +19105,7 @@
     "legend.trait.ambitious": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1447",
+      "location": "js/main.js:1452",
       "source": {
         "text": "Wanted more. Got a grave, which is technically more."
       }
@@ -19113,7 +19113,7 @@
     "legend.trait.brave": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1445",
+      "location": "js/main.js:1450",
       "source": {
         "text": "Never once ran. Running would have helped, but still."
       }
@@ -19121,7 +19121,7 @@
     "legend.trait.chaste": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1456",
+      "location": "js/main.js:1461",
       "source": {
         "text": "Pure to the end, and faintly smug about it."
       }
@@ -19129,7 +19129,7 @@
     "legend.trait.comely": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1470",
+      "location": "js/main.js:1475",
       "source": {
         "text": "The fairest burial the parish has managed in years."
       }
@@ -19137,7 +19137,7 @@
     "legend.trait.content": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1448",
+      "location": "js/main.js:1453",
       "source": {
         "text": "Wanted nothing, received exactly that, and was pleased."
       }
@@ -19145,7 +19145,7 @@
     "legend.trait.craven": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1446",
+      "location": "js/main.js:1451",
       "source": {
         "text": "Attended every battle from the safety of the rear."
       }
@@ -19153,7 +19153,7 @@
     "legend.trait.cruel": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1451",
+      "location": "js/main.js:1456",
       "source": {
         "text": "Feared in life; the mourning is largely procedural."
       }
@@ -19161,7 +19161,7 @@
     "legend.trait.cynical": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1464",
+      "location": "js/main.js:1469",
       "source": {
         "text": "Expected nothing of the afterlife and declines to be surprised."
       }
@@ -19169,7 +19169,7 @@
     "legend.trait.deceitful": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1453",
+      "location": "js/main.js:1458",
       "source": {
         "text": "Died insisting they felt perfectly fine."
       }
@@ -19177,7 +19177,7 @@
     "legend.trait.drunkard": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1474",
+      "location": "js/main.js:1479",
       "source": {
         "text": "The cup won in the end, exactly as the cup predicted."
       }
@@ -19185,7 +19185,7 @@
     "legend.trait.dull": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1467",
+      "location": "js/main.js:1472",
       "source": {
         "text": "Untroubled by thought; slipped away in the absence of one."
       }
@@ -19193,7 +19193,7 @@
     "legend.trait.excommunicated": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1482",
+      "location": "js/main.js:1487",
       "source": {
         "text": "Buried at a crossroads by popular ecclesiastical demand."
       }
@@ -19201,7 +19201,7 @@
     "legend.trait.frail": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1469",
+      "location": "js/main.js:1474",
       "source": {
         "text": "Fragile in body, punctual in the end."
       }
@@ -19209,7 +19209,7 @@
     "legend.trait.generous": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1450",
+      "location": "js/main.js:1455",
       "source": {
         "text": "Gave away everything except the debts."
       }
@@ -19217,7 +19217,7 @@
     "legend.trait.genius": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1465",
+      "location": "js/main.js:1470",
       "source": {
         "text": "Knew everything except how to stay."
       }
@@ -19225,7 +19225,7 @@
     "legend.trait.gluttonous": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1457",
+      "location": "js/main.js:1462",
       "source": {
         "text": "Out-ate every harvest set before them, and several that were not."
       }
@@ -19233,7 +19233,7 @@
     "legend.trait.greedy": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1449",
+      "location": "js/main.js:1454",
       "source": {
         "text": "Left instructions about the gold. Nobody can find them."
       }
@@ -19241,7 +19241,7 @@
     "legend.trait.homely": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1471",
+      "location": "js/main.js:1476",
       "source": {
         "text": "A face only a mother could love, and she kept her counsel."
       }
@@ -19249,7 +19249,7 @@
     "legend.trait.honest": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1454",
+      "location": "js/main.js:1459",
       "source": {
         "text": "Never told a lie. The family found this exhausting."
       }
@@ -19257,7 +19257,7 @@
     "legend.trait.humble": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1462",
+      "location": "js/main.js:1467",
       "source": {
         "text": "Asked for a plain funeral and was, for once, obeyed."
       }
@@ -19265,7 +19265,7 @@
     "legend.trait.kind": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1452",
+      "location": "js/main.js:1457",
       "source": {
         "text": "Genuinely mourned, which surprised no one more than them."
       }
@@ -19273,7 +19273,7 @@
     "legend.trait.kinslayer": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1481",
+      "location": "js/main.js:1486",
       "source": {
         "text": "The family attended the grave at a careful distance."
       }
@@ -19281,7 +19281,7 @@
     "legend.trait.literate": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1478",
+      "location": "js/main.js:1483",
       "source": {
         "text": "Read everything in reach, including, twice, a menu."
       }
@@ -19289,7 +19289,7 @@
     "legend.trait.lustful": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1455",
+      "location": "js/main.js:1460",
       "source": {
         "text": "Mourned by more households than the family admits."
       }
@@ -19297,7 +19297,7 @@
     "legend.trait.maimed": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1477",
+      "location": "js/main.js:1482",
       "source": {
         "text": "Broken in body, never once in complaint."
       }
@@ -19305,7 +19305,7 @@
     "legend.trait.one_eyed": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1476",
+      "location": "js/main.js:1481",
       "source": {
         "text": "Lost an eye, gained a story, told it ten thousand times."
       }
@@ -19313,7 +19313,7 @@
     "legend.trait.patient": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1460",
+      "location": "js/main.js:1465",
       "source": {
         "text": "Waited for everything. Waited for this, too."
       }
@@ -19321,7 +19321,7 @@
     "legend.trait.pilgrim": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1480",
+      "location": "js/main.js:1485",
       "source": {
         "text": "Walked the holy roads; took the last one without luggage."
       }
@@ -19329,7 +19329,7 @@
     "legend.trait.proud": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1461",
+      "location": "js/main.js:1466",
       "source": {
         "text": "Bowed to no one. The grave accepts all bows as given."
       }
@@ -19337,7 +19337,7 @@
     "legend.trait.quick": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1466",
+      "location": "js/main.js:1471",
       "source": {
         "text": "Quick of wit, and quicker to mention it."
       }
@@ -19345,7 +19345,7 @@
     "legend.trait.robust": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1473",
+      "location": "js/main.js:1478",
       "source": {
         "text": "Never ill a day. The last day declined to comment."
       }
@@ -19353,7 +19353,7 @@
     "legend.trait.scarred": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1475",
+      "location": "js/main.js:1480",
       "source": {
         "text": "Wore their scars like debts others owed. All settled now."
       }
@@ -19361,7 +19361,7 @@
     "legend.trait.sickly": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1472",
+      "location": "js/main.js:1477",
       "source": {
         "text": "So often ill that the end registered as a scheduling change."
       }
@@ -19369,7 +19369,7 @@
     "legend.trait.strong": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1468",
+      "location": "js/main.js:1473",
       "source": {
         "text": "Could lift an ox. The ox sends no condolences."
       }
@@ -19377,7 +19377,7 @@
     "legend.trait.temperate": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1458",
+      "location": "js/main.js:1463",
       "source": {
         "text": "Moderate in all things, including, at the last, breathing."
       }
@@ -19385,7 +19385,7 @@
     "legend.trait.veteran": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1479",
+      "location": "js/main.js:1484",
       "source": {
         "text": "Survived the shield-wall. The years fought sneakier."
       }
@@ -19393,7 +19393,7 @@
     "legend.trait.wrathful": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1459",
+      "location": "js/main.js:1464",
       "source": {
         "text": "Died angry. The wake was quieter than the life."
       }
@@ -19401,7 +19401,7 @@
     "legend.trait.zealous": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1463",
+      "location": "js/main.js:1468",
       "source": {
         "text": "Corrected priests on doctrine; has presumably gone to check."
       }
@@ -19417,7 +19417,7 @@
     "news.action.barony_refused": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/actions.js:502",
+      "location": "js/actions.js:504",
       "source": {
         "text": "The lord smiles, promises nothing, and speaks of the weather."
       }
@@ -19437,7 +19437,7 @@
         "province",
         "settlement"
       ],
-      "location": "js/actions.js:1634",
+      "location": "js/actions.js:1636",
       "source": {
         "text": "🏗 {building} rises in {settlement}, {province}."
       }
@@ -19448,7 +19448,7 @@
         "gold",
         "province"
       ],
-      "location": "js/actions.js:1297",
+      "location": "js/actions.js:1299",
       "source": {
         "text": "💰 {province} is yours for {gold} gold — its old lord retires fat and forgotten. The court frowns on bought land."
       }
@@ -19459,7 +19459,7 @@
         "name",
         "province"
       ],
-      "location": "js/actions.js:1159",
+      "location": "js/actions.js:1161",
       "source": {
         "text": "🎁 {province} is granted to a loyal man — {name} holds it in your name."
       }
@@ -19469,7 +19469,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/actions.js:1295",
+      "location": "js/actions.js:1297",
       "source": {
         "text": "Bought {province} from its struggling lord."
       }
@@ -19481,7 +19481,7 @@
         "duchy",
         "name"
       ],
-      "location": "js/actions.js:1211",
+      "location": "js/actions.js:1213",
       "source": {
         "text": "🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name."
       }
@@ -19491,7 +19491,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/actions.js:1356",
+      "location": "js/actions.js:1358",
       "source": {
         "text": "🕊 The envoy returns, gifts refused. {realm} is unmoved."
       }
@@ -19501,7 +19501,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/actions.js:1353",
+      "location": "js/actions.js:1355",
       "source": {
         "text": "🕊 {realm} swears a pact of peace — two years of quiet borders."
       }
@@ -19511,7 +19511,7 @@
       "glossary": [
         "gold"
       ],
-      "location": "js/actions.js:1323",
+      "location": "js/actions.js:1325",
       "source": {
         "text": "💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while."
       }
@@ -19522,7 +19522,7 @@
         "liege",
         "realm"
       ],
-      "location": "js/actions.js:1119",
+      "location": "js/actions.js:1121",
       "source": {
         "text": "🤝 You swear fealty to {liege}. Your banners now fly under {realm}."
       }
@@ -19532,7 +19532,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/actions.js:1125",
+      "location": "js/actions.js:1127",
       "source": {
         "text": "🔥 {realm} names you traitor — war for your defection!"
       }
@@ -19550,7 +19550,7 @@
       "glossary": [
         "holding"
       ],
-      "location": "js/actions.js:1402",
+      "location": "js/actions.js:1404",
       "source": {
         "text": "🏠 {holding} now belongs to the household."
       }
@@ -19560,7 +19560,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/actions.js:1078",
+      "location": "js/actions.js:1080",
       "source": {
         "text": "🙇 You bend the knee at the court of {realm}."
       }
@@ -19602,7 +19602,7 @@
       "glossary": [
         "plot"
       ],
-      "location": "js/actions.js:1042",
+      "location": "js/actions.js:1044",
       "source": {
         "text": "🕸 A plot is set in motion: {plot}."
       }
@@ -19651,7 +19651,7 @@
       "glossary": [
         "innovation"
       ],
-      "location": "js/actions.js:1492",
+      "location": "js/actions.js:1494",
       "source": {
         "text": "💡 {innovation} takes root in your lands."
       }
@@ -19662,7 +19662,7 @@
         "enemy",
         "province"
       ],
-      "location": "js/actions.js:1675",
+      "location": "js/actions.js:1677",
       "source": {
         "text": "⚔ You declare war upon {enemy} for {province}!"
       }
@@ -19878,7 +19878,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/events.js:1414",
+      "location": "js/events.js:1416",
       "source": {
         "forms": {
           "cases": {
@@ -19898,7 +19898,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/events.js:1486",
+      "location": "js/events.js:1488",
       "source": {
         "forms": {
           "cases": {
@@ -19918,7 +19918,7 @@
         "new_liege",
         "old_liege"
       ],
-      "location": "js/events.js:1755",
+      "location": "js/events.js:1763",
       "source": {
         "forms": {
           "cases": {
@@ -19976,7 +19976,7 @@
         "age",
         "name"
       ],
-      "location": "js/events.js:1346",
+      "location": "js/events.js:1348",
       "source": {
         "text": "🕯 {name} has died, aged {age}."
       }
@@ -19987,7 +19987,7 @@
         "gold",
         "house"
       ],
-      "location": "js/events.js:1593",
+      "location": "js/events.js:1595",
       "source": {
         "text": "💰 The house of {house} buys back the claim for {gold} gold."
       }
@@ -19997,7 +19997,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/events.js:1826",
+      "location": "js/events.js:1834",
       "source": {
         "text": "📜 The fief returns to your demesne. {realm} is no more."
       }
@@ -20007,7 +20007,7 @@
       "glossary": [
         "gold"
       ],
-      "location": "js/events.js:1587",
+      "location": "js/events.js:1589",
       "source": {
         "text": "💰 A grudging purse of {gold} gold — and nothing more."
       }
@@ -20017,7 +20017,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/events.js:1636",
+      "location": "js/events.js:1641",
       "source": {
         "text": "⚔ {realm} will not let you go without a fight!"
       }
@@ -20025,7 +20025,7 @@
     "news.event.inheritance_raises_station": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/events.js:1580",
+      "location": "js/events.js:1582",
       "source": {
         "text": "🏛 Stewarding a noble inheritance raises you into the gentry."
       }
@@ -20035,7 +20035,7 @@
       "glossary": [
         "gold"
       ],
-      "location": "js/events.js:1574",
+      "location": "js/events.js:1576",
       "source": {
         "text": "💰 The inheritance settles {gold} gold under your stewardship."
       }
@@ -20045,7 +20045,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/events.js:1690",
+      "location": "js/events.js:1696",
       "source": {
         "text": "👑 Invested, you answer now to {realm}."
       }
@@ -20074,7 +20074,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/events.js:1702",
+      "location": "js/events.js:1709",
       "source": {
         "text": "🏰 The liege grants you {province}."
       }
@@ -20085,7 +20085,7 @@
         "gold",
         "name"
       ],
-      "location": "js/events.js:1442",
+      "location": "js/events.js:1444",
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {gold} gold on the match."
       }
@@ -20093,7 +20093,7 @@
     "news.event.married_above": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/events.js:1448",
+      "location": "js/events.js:1450",
       "source": {
         "text": "👑 You have wed above your station — your name rises with the match."
       }
@@ -20101,7 +20101,7 @@
     "news.event.married_below": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/events.js:1452",
+      "location": "js/events.js:1454",
       "source": {
         "text": "🗣 You have wed beneath your station, and folk mark it."
       }
@@ -20137,7 +20137,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/events.js:1617",
+      "location": "js/events.js:1622",
       "source": {
         "text": "🧭 You now dwell in {province}."
       }
@@ -20148,7 +20148,7 @@
         "lord",
         "province"
       ],
-      "location": "js/events.js:1724",
+      "location": "js/events.js:1732",
       "source": {
         "forms": {
           "cases": {
@@ -20165,7 +20165,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/events.js:1405",
+      "location": "js/events.js:1407",
       "source": {
         "text": "💔 The old pledge to {name} is quietly set aside."
       }
@@ -20175,7 +20175,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/events.js:1787",
+      "location": "js/events.js:1795",
       "source": {
         "text": "🕊 {realm} goes its own way, released from your fealty."
       }
@@ -20186,7 +20186,7 @@
         "gold",
         "realm"
       ],
-      "location": "js/events.js:1856",
+      "location": "js/events.js:1864",
       "source": {
         "text": "💰 {realm} pays {gold} gold under protest."
       }
@@ -20197,7 +20197,7 @@
         "gold",
         "house"
       ],
-      "location": "js/events.js:1566",
+      "location": "js/events.js:1568",
       "source": {
         "text": "💰 The house of {house} pays the full portion: {gold} gold."
       }
@@ -20208,7 +20208,7 @@
         "gold",
         "house"
       ],
-      "location": "js/events.js:1559",
+      "location": "js/events.js:1561",
       "source": {
         "text": "💰 The house of {house} settles {gold} gold on you."
       }
@@ -20219,7 +20219,7 @@
         "icon",
         "item"
       ],
-      "location": "js/actions.js:932",
+      "location": "js/actions.js:934",
       "source": {
         "forms": {
           "cases": {
@@ -20241,7 +20241,7 @@
         "icon",
         "item"
       ],
-      "location": "js/actions.js:1010",
+      "location": "js/actions.js:1012",
       "source": {
         "text": "🎒 Bought: {icon} {item}."
       }
@@ -20249,7 +20249,7 @@
     "news.item.duplicate": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/actions.js:927",
+      "location": "js/actions.js:929",
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
       }
@@ -20262,7 +20262,7 @@
         "name",
         "regard"
       ],
-      "location": "js/actions.js:979",
+      "location": "js/actions.js:981",
       "source": {
         "text": "🎁 You give {icon} {item} to {name}. (regard {regard})"
       }
@@ -20273,7 +20273,7 @@
         "icon",
         "item"
       ],
-      "location": "js/events.js:1322",
+      "location": "js/events.js:1324",
       "source": {
         "text": "🎒 {icon} {item} is yours now."
       }
@@ -20281,7 +20281,7 @@
     "news.item.nothing_new": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/actions.js:989",
+      "location": "js/actions.js:991",
       "source": {
         "text": "🎒 Nothing is offered that you do not already own."
       }
@@ -20293,7 +20293,7 @@
         "icon",
         "item"
       ],
-      "location": "js/actions.js:959",
+      "location": "js/actions.js:961",
       "source": {
         "text": "💰 Sold: {icon} {item} for {gold} gold."
       }
@@ -20304,7 +20304,7 @@
         "child",
         "name"
       ],
-      "location": "js/main.js:1105",
+      "location": "js/main.js:1110",
       "source": {
         "forms": {
           "cases": {
@@ -20325,7 +20325,7 @@
         "age",
         "name"
       ],
-      "location": "js/main.js:1098",
+      "location": "js/main.js:1103",
       "source": {
         "text": "🕯 Your child {name} has died, aged {age}."
       }
@@ -20337,7 +20337,7 @@
         "province",
         "year"
       ],
-      "location": "js/main.js:735",
+      "location": "js/main.js:739",
       "source": {
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
       }
@@ -20348,7 +20348,7 @@
         "baby",
         "parent"
       ],
-      "location": "js/main.js:1290",
+      "location": "js/main.js:1295",
       "source": {
         "forms": {
           "cases": {
@@ -20373,7 +20373,7 @@
         "name",
         "spouse"
       ],
-      "location": "js/main.js:1260",
+      "location": "js/main.js:1265",
       "source": {
         "forms": {
           "cases": {
@@ -20393,7 +20393,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1100",
+      "location": "js/main.js:1105",
       "source": {
         "text": "🕯 {name}, whom you courted, has died before any wedding."
       }
@@ -20403,7 +20403,7 @@
       "glossary": [
         "cause"
       ],
-      "location": "js/main.js:1414",
+      "location": "js/main.js:1419",
       "source": {
         "text": "☠ {cause}"
       }
@@ -20424,7 +20424,7 @@
         "age",
         "name"
       ],
-      "location": "js/main.js:1119",
+      "location": "js/main.js:1124",
       "source": {
         "forms": {
           "cases": {
@@ -20455,7 +20455,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1117",
+      "location": "js/main.js:1122",
       "source": {
         "text": "🕯 The lord {name} is dead. Another will take his seat."
       }
@@ -20463,7 +20463,7 @@
     "news.life.observe_begins": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:800",
+      "location": "js/main.js:805",
       "source": {
         "text": "👁 You settle in to watch the realms go about their centuries."
       }
@@ -20471,7 +20471,7 @@
     "news.life.player_pregnant": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/main.js:1352",
+      "location": "js/main.js:1357",
       "source": {
         "text": "🤰 You are with child."
       }
@@ -20481,7 +20481,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1037",
+      "location": "js/main.js:1042",
       "source": {
         "text": "💒 You wed {name}, as your late parent pledged."
       }
@@ -20491,7 +20491,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1093",
+      "location": "js/main.js:1098",
       "source": {
         "text": "🕯 Your spouse {name} has died. The house is quieter, and colder."
       }
@@ -20501,7 +20501,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1354",
+      "location": "js/main.js:1359",
       "source": {
         "text": "🤰 {name} is with child."
       }
@@ -20512,7 +20512,7 @@
         "generation",
         "name"
       ],
-      "location": "js/main.js:1598",
+      "location": "js/main.js:1604",
       "source": {
         "text": "👤 {name} takes up the family’s story. Generation {generation}."
       }
@@ -20522,7 +20522,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:1174",
+      "location": "js/main.js:1179",
       "source": {
         "forms": {
           "cases": {
@@ -20540,7 +20540,7 @@
         "name",
         "trait"
       ],
-      "location": "js/main.js:1200",
+      "location": "js/main.js:1205",
       "source": {
         "forms": {
           "cases": {
@@ -20720,7 +20720,7 @@
     "news.war.abandoned": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1316",
+      "location": "js/world.js:1335",
       "source": {
         "text": "🕊 The campaign is abandoned. The banners come home."
       }
@@ -20728,7 +20728,7 @@
     "news.war.campaign_failed": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1094",
+      "location": "js/world.js:1113",
       "source": {
         "text": "🕊 The campaign has failed. The host limps home."
       }
@@ -20738,7 +20738,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:961",
+      "location": "js/world.js:980",
       "source": {
         "text": "🏰 {province} is yours by conquest!"
       }
@@ -20748,7 +20748,7 @@
       "glossary": [
         "enemy"
       ],
-      "location": "js/world.js:1100",
+      "location": "js/world.js:1119",
       "source": {
         "forms": {
           "cases": {
@@ -20765,7 +20765,7 @@
       "glossary": [
         "enemy"
       ],
-      "location": "js/world.js:924",
+      "location": "js/world.js:943",
       "source": {
         "text": "⚠ {enemy} presses deep into your lands — another season unchecked, and something falls."
       }
@@ -20773,7 +20773,7 @@
     "news.war.enemy_gone": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:897",
+      "location": "js/world.js:916",
       "source": {
         "text": "🕊 The war ends — our enemy has ceased to exist."
       }
@@ -20781,7 +20781,7 @@
     "news.war.exhausted": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:913",
+      "location": "js/world.js:932",
       "source": {
         "text": "🕊 Exhaustion ends the war with nothing gained."
       }
@@ -20791,7 +20791,7 @@
       "glossary": [
         "losses"
       ],
-      "location": "js/world.js:1145",
+      "location": "js/world.js:1164",
       "source": {
         "forms": {
           "cases": {
@@ -20809,7 +20809,7 @@
         "needed",
         "wins"
       ],
-      "location": "js/world.js:1135",
+      "location": "js/world.js:1154",
       "source": {
         "text": "⚔ Victory in the field! ({wins}/{needed})"
       }
@@ -20819,7 +20819,7 @@
       "glossary": [
         "enemy"
       ],
-      "location": "js/world.js:1251",
+      "location": "js/world.js:1270",
       "source": {
         "forms": {
           "cases": {
@@ -20834,7 +20834,7 @@
     "news.war.landless": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1001",
+      "location": "js/world.js:1020",
       "source": {
         "text": "⬇ Landless once more. The banners are folded away."
       }
@@ -20844,7 +20844,7 @@
       "glossary": [
         "men"
       ],
-      "location": "js/world.js:1212",
+      "location": "js/world.js:1231",
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
       }
@@ -20854,7 +20854,7 @@
       "glossary": [
         "enemy"
       ],
-      "location": "js/world.js:1260",
+      "location": "js/world.js:1279",
       "source": {
         "forms": {
           "cases": {
@@ -20872,7 +20872,7 @@
         "cost",
         "enemy"
       ],
-      "location": "js/world.js:1306",
+      "location": "js/world.js:1325",
       "source": {
         "forms": {
           "cases": {
@@ -20889,7 +20889,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:996",
+      "location": "js/world.js:1015",
       "source": {
         "text": "🏚 {province} is torn from your grasp."
       }
@@ -20897,7 +20897,7 @@
     "news.war.reparations": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1006",
+      "location": "js/world.js:1025",
       "source": {
         "text": "🕊 A humiliating peace. Reparations drain your coffers."
       }
@@ -20908,7 +20908,7 @@
         "progress",
         "target"
       ],
-      "location": "js/world.js:1196",
+      "location": "js/world.js:1215",
       "source": {
         "text": "⚔ The siege of {target} tightens. ({progress}/3)"
       }
@@ -20918,7 +20918,7 @@
       "glossary": [
         "target"
       ],
-      "location": "js/world.js:1180",
+      "location": "js/world.js:1199",
       "source": {
         "text": "⚔ A sortie from {target} is thrown back. The siege holds."
       }
@@ -20926,7 +20926,7 @@
     "news.war.sortie_succeeds": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1186",
+      "location": "js/world.js:1205",
       "source": {
         "text": "⚔ A night sortie burns your siege-works — the ring is set back."
       }
@@ -20936,7 +20936,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:907",
+      "location": "js/world.js:926",
       "source": {
         "text": "🕊 {province} is no longer the enemy’s to lose — the war ends with nothing gained."
       }
@@ -20944,7 +20944,7 @@
     "news.war.tribute": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1286",
+      "location": "js/world.js:1305",
       "source": {
         "text": "🕊 Bled white in the field, the enemy buys peace with tribute."
       }
@@ -20952,7 +20952,7 @@
     "news.war.tribute_without_prize": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:969",
+      "location": "js/world.js:988",
       "source": {
         "text": "🕊 The prize has slipped away, but tribute is paid. The war ends in your favor."
       }
@@ -20962,7 +20962,7 @@
       "glossary": [
         "target"
       ],
-      "location": "js/world.js:1192",
+      "location": "js/world.js:1211",
       "source": {
         "text": "🏰 The walls of {target} are breached!"
       }
@@ -20973,7 +20973,7 @@
         "attacker",
         "defender"
       ],
-      "location": "js/world.js:747",
+      "location": "js/world.js:766",
       "source": {
         "text": "🔥 War! {attacker} marches against {defender}."
       }
@@ -20984,7 +20984,7 @@
         "liege",
         "realm"
       ],
-      "location": "js/world.js:794",
+      "location": "js/world.js:813",
       "source": {
         "forms": {
           "cases": {
@@ -20999,7 +20999,7 @@
     "news.world.cast_down": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/world.js:1072",
+      "location": "js/world.js:1091",
       "source": {
         "text": "⬇ Cast down. The family keeps its coffers and its name — but not an acre."
       }
@@ -21010,7 +21010,7 @@
         "liege",
         "province"
       ],
-      "location": "js/world.js:554",
+      "location": "js/world.js:573",
       "source": {
         "text": "🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}."
       }
@@ -21021,7 +21021,7 @@
         "liege",
         "province"
       ],
-      "location": "js/world.js:567",
+      "location": "js/world.js:586",
       "source": {
         "forms": {
           "cases": {
@@ -21038,7 +21038,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:542",
+      "location": "js/world.js:558",
       "source": {
         "text": "🕯 The lord of {province} dies without an heir — the fief returns to your hand."
       }
@@ -21049,7 +21049,7 @@
         "province",
         "winner"
       ],
-      "location": "js/world.js:712",
+      "location": "js/world.js:731",
       "source": {
         "text": "⚔ {winner} has conquered {province} — your home! New masters rule here now."
       }
@@ -21059,7 +21059,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/events.js:1880",
+      "location": "js/events.js:1888",
       "source": {
         "text": "👑 They say {realm} is the mightiest power of the age."
       }
@@ -21069,7 +21069,7 @@
       "glossary": [
         "liege"
       ],
-      "location": "js/world.js:1051",
+      "location": "js/world.js:1070",
       "source": {
         "forms": {
           "cases": {
@@ -21086,7 +21086,7 @@
       "glossary": [
         "title"
       ],
-      "location": "js/world.js:1497",
+      "location": "js/world.js:1516",
       "source": {
         "text": "👑 You are raised to {title}!"
       }
@@ -21097,7 +21097,7 @@
         "province",
         "winner"
       ],
-      "location": "js/world.js:718",
+      "location": "js/world.js:737",
       "source": {
         "text": "⚔ {province} has fallen to {winner}."
       }
@@ -21108,7 +21108,7 @@
         "attacker",
         "defender"
       ],
-      "location": "js/events.js:1867",
+      "location": "js/events.js:1875",
       "source": {
         "text": "⚔ {attacker} wars against {defender}."
       }
@@ -21119,7 +21119,7 @@
         "realm",
         "ruler"
       ],
-      "location": "js/world.js:684",
+      "location": "js/world.js:703",
       "source": {
         "text": "👑 The ruler of {realm} is dead. {ruler} rises in their place."
       }
@@ -21161,7 +21161,7 @@
       "glossary": [
         "ruler"
       ],
-      "location": "js/world.js:1042",
+      "location": "js/world.js:1061",
       "source": {
         "text": "🏴 {ruler} seizes the seat — the realm endures; your house does not."
       }
@@ -21171,7 +21171,7 @@
       "glossary": [
         "realm"
       ],
-      "location": "js/world.js:758",
+      "location": "js/world.js:777",
       "source": {
         "text": "🔥 {realm} declares war upon YOU!"
       }
@@ -21181,7 +21181,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:619",
+      "location": "js/world.js:638",
       "source": {
         "text": "🌱 You settle the empty land of {province} — smoke rises where only the wind went before."
       }
@@ -21191,7 +21191,7 @@
       "glossary": [
         "province"
       ],
-      "location": "js/world.js:614",
+      "location": "js/world.js:633",
       "source": {
         "text": "Settled the empty land of {province}."
       }
@@ -21401,7 +21401,7 @@
     "scenario.apprentice.desc.default": {
       "context": "New-game scenario apprentice, desc.",
       "glossary": [],
-      "location": "js/main.js:328",
+      "location": "js/main.js:331",
       "source": {
         "text": "Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb."
       }
@@ -21409,7 +21409,7 @@
     "scenario.apprentice.diff.default": {
       "context": "New-game scenario apprentice, diff.",
       "glossary": [],
-      "location": "js/main.js:327",
+      "location": "js/main.js:330",
       "source": {
         "text": "★★★★ hard"
       }
@@ -21420,7 +21420,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:330",
+      "location": "js/main.js:333",
       "source": {
         "text": "You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know."
       }
@@ -21428,7 +21428,7 @@
     "scenario.apprentice.name.default": {
       "context": "New-game scenario apprentice, name.",
       "glossary": [],
-      "location": "js/main.js:327",
+      "location": "js/main.js:330",
       "source": {
         "text": "Craftsman’s Apprentice"
       }
@@ -21436,7 +21436,7 @@
     "scenario.baron.desc.default": {
       "context": "New-game scenario baron, desc.",
       "glossary": [],
-      "location": "js/main.js:345",
+      "location": "js/main.js:348",
       "source": {
         "text": "A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start."
       }
@@ -21444,7 +21444,7 @@
     "scenario.baron.diff.default": {
       "context": "New-game scenario baron, diff.",
       "glossary": [],
-      "location": "js/main.js:344",
+      "location": "js/main.js:347",
       "source": {
         "text": "★ classic"
       }
@@ -21456,7 +21456,7 @@
         "province",
         "realm"
       ],
-      "location": "js/main.js:347",
+      "location": "js/main.js:350",
       "source": {
         "text": "You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise."
       }
@@ -21464,7 +21464,7 @@
     "scenario.baron.name.default": {
       "context": "New-game scenario baron, name.",
       "glossary": [],
-      "location": "js/main.js:344",
+      "location": "js/main.js:347",
       "source": {
         "text": "Petty Baron"
       }
@@ -21472,7 +21472,7 @@
     "scenario.farmer.desc.default": {
       "context": "New-game scenario farmer, desc.",
       "glossary": [],
-      "location": "js/main.js:324",
+      "location": "js/main.js:327",
       "source": {
         "text": "A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth."
       }
@@ -21480,7 +21480,7 @@
     "scenario.farmer.diff.default": {
       "context": "New-game scenario farmer, diff.",
       "glossary": [],
-      "location": "js/main.js:323",
+      "location": "js/main.js:326",
       "source": {
         "text": "★★★★ hard"
       }
@@ -21491,7 +21491,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:326",
+      "location": "js/main.js:329",
       "source": {
         "text": "You are {name}, a free farmer of {province}. Your land is small, your debts are few, and your ambitions need not be."
       }
@@ -21499,7 +21499,7 @@
     "scenario.farmer.name.default": {
       "context": "New-game scenario farmer, name.",
       "glossary": [],
-      "location": "js/main.js:323",
+      "location": "js/main.js:326",
       "source": {
         "text": "Free Farmer"
       }
@@ -21507,7 +21507,7 @@
     "scenario.knight.desc.default": {
       "context": "New-game scenario knight, desc.",
       "glossary": [],
-      "location": "js/main.js:341",
+      "location": "js/main.js:344",
       "source": {
         "text": "Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted."
       }
@@ -21515,7 +21515,7 @@
     "scenario.knight.diff.default": {
       "context": "New-game scenario knight, diff.",
       "glossary": [],
-      "location": "js/main.js:340",
+      "location": "js/main.js:343",
       "source": {
         "text": "★★ fair"
       }
@@ -21525,7 +21525,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js:343",
+      "location": "js/main.js:346",
       "source": {
         "text": "You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force."
       }
@@ -21533,7 +21533,7 @@
     "scenario.knight.name.default": {
       "context": "New-game scenario knight, name.",
       "glossary": [],
-      "location": "js/main.js:340",
+      "location": "js/main.js:343",
       "source": {
         "text": "Hedge Knight"
       }
@@ -21541,7 +21541,7 @@
     "scenario.monk.desc.default": {
       "context": "New-game scenario monk, desc.",
       "glossary": [],
-      "location": "js/main.js:332",
+      "location": "js/main.js:335",
       "source": {
         "text": "The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat."
       }
@@ -21549,7 +21549,7 @@
     "scenario.monk.diff.default": {
       "context": "New-game scenario monk, diff.",
       "glossary": [],
-      "location": "js/main.js:331",
+      "location": "js/main.js:334",
       "source": {
         "text": "★★★ tricky"
       }
@@ -21560,7 +21560,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:334",
+      "location": "js/main.js:337",
       "source": {
         "text": "You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
@@ -21571,7 +21571,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:335",
+      "location": "js/main.js:338",
       "source": {
         "text": "You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house."
       }
@@ -21579,7 +21579,7 @@
     "scenario.monk.name.default": {
       "context": "New-game scenario monk, name.",
       "glossary": [],
-      "location": "js/main.js:331",
+      "location": "js/main.js:334",
       "source": {
         "text": "Novice of the Faith"
       }
@@ -21587,7 +21587,7 @@
     "scenario.serf.desc.default": {
       "context": "New-game scenario serf, desc.",
       "glossary": [],
-      "location": "js/main.js:320",
+      "location": "js/main.js:323",
       "source": {
         "text": "Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for."
       }
@@ -21595,7 +21595,7 @@
     "scenario.serf.diff.default": {
       "context": "New-game scenario serf, diff.",
       "glossary": [],
-      "location": "js/main.js:319",
+      "location": "js/main.js:322",
       "source": {
         "text": "★★★★★ hardest"
       }
@@ -21606,7 +21606,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:322",
+      "location": "js/main.js:325",
       "source": {
         "text": "You are {name}, a serf of {province}. The lord owns your labor; the church owns your Sundays; the soil will own your bones — unless you claw your way to something more."
       }
@@ -21614,7 +21614,7 @@
     "scenario.serf.name.default": {
       "context": "New-game scenario serf, name.",
       "glossary": [],
-      "location": "js/main.js:319",
+      "location": "js/main.js:322",
       "source": {
         "text": "Serf"
       }
@@ -21622,7 +21622,7 @@
     "scenario.soldier.desc.default": {
       "context": "New-game scenario soldier, desc.",
       "glossary": [],
-      "location": "js/main.js:337",
+      "location": "js/main.js:340",
       "source": {
         "text": "Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them."
       }
@@ -21630,7 +21630,7 @@
     "scenario.soldier.diff.default": {
       "context": "New-game scenario soldier, diff.",
       "glossary": [],
-      "location": "js/main.js:336",
+      "location": "js/main.js:339",
       "source": {
         "text": "★★★ tricky"
       }
@@ -21641,7 +21641,7 @@
         "name",
         "province"
       ],
-      "location": "js/main.js:339",
+      "location": "js/main.js:342",
       "source": {
         "text": "You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies."
       }
@@ -21649,7 +21649,7 @@
     "scenario.soldier.name.default": {
       "context": "New-game scenario soldier, name.",
       "glossary": [],
-      "location": "js/main.js:336",
+      "location": "js/main.js:339",
       "source": {
         "text": "Man-at-Arms"
       }
@@ -21804,8 +21804,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1042",
-        "js/actions.js:1043"
+        "js/actions.js:1044",
+        "js/actions.js:1045"
       ],
       "source": {
         "text": "🕸 A plot is set in motion: {plot}."
@@ -21815,7 +21815,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:513"
+        "js/actions.js:515"
       ],
       "source": {
         "text": "Extra silver now; grumbling later."
@@ -21845,7 +21845,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1447"
+        "js/main.js:1452"
       ],
       "source": {
         "text": "Wanted more. Got a grave, which is technically more."
@@ -21895,7 +21895,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:802"
+        "js/main.js:807"
       ],
       "source": {
         "text": "☰ → Settings sets the speed of days."
@@ -22098,7 +22098,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:585"
+        "js/main.js:588"
       ],
       "source": {
         "text": "No one is born in {province}. Pick a settled land."
@@ -22258,8 +22258,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1856",
-        "js/events.js:1857"
+        "js/events.js:1864",
+        "js/events.js:1865"
       ],
       "source": {
         "text": "💰 {realm} pays {gold} gold under protest."
@@ -22560,7 +22560,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1122"
+        "js/main.js:1127"
       ],
       "source": {
         "text": "🕯 Your father {name} has died, aged {age}."
@@ -22764,8 +22764,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:800",
-        "js/main.js:801"
+        "js/main.js:805",
+        "js/main.js:806"
       ],
       "source": {
         "text": "👁 You settle in to watch the realms go about their centuries."
@@ -22825,7 +22825,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1455"
+        "js/main.js:1460"
       ],
       "source": {
         "text": "Mourned by more households than the family admits."
@@ -22855,7 +22855,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:598",
+        "js/main.js:601",
         "index.html:54"
       ],
       "source": {
@@ -22997,7 +22997,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1458"
+        "js/main.js:1463"
       ],
       "source": {
         "text": "Moderate in all things, including, at the last, breathing."
@@ -23017,7 +23017,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1294"
+        "js/main.js:1299"
       ],
       "source": {
         "text": "👶 Your son {parent} has a son, {baby}."
@@ -23097,8 +23097,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:897",
-        "js/world.js:898"
+        "js/world.js:916",
+        "js/world.js:917"
       ],
       "source": {
         "text": "🕊 The war ends — our enemy has ceased to exist."
@@ -23118,7 +23118,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1448"
+        "js/main.js:1453"
       ],
       "source": {
         "text": "Wanted nothing, received exactly that, and was pleased."
@@ -23178,7 +23178,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1469"
+        "js/main.js:1474"
       ],
       "source": {
         "text": "Fragile in body, punctual in the end."
@@ -23218,8 +23218,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1517",
-        "js/main.js:1518"
+        "js/main.js:1522",
+        "js/main.js:1523"
       ],
       "source": {
         "text": "Died owing a goat. The goat has not forgotten."
@@ -23450,7 +23450,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:733"
+        "js/main.js:737"
       ],
       "source": {
         "text": "Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names."
@@ -23570,8 +23570,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1503",
-        "js/main.js:1504"
+        "js/main.js:1508",
+        "js/main.js:1509"
       ],
       "source": {
         "text": "Died full of years and of opinions about the young."
@@ -23621,7 +23621,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:723"
+        "js/actions.js:725"
       ],
       "source": {
         "text": "🏛 The Estates…"
@@ -23673,8 +23673,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:619",
-        "js/world.js:620"
+        "js/world.js:638",
+        "js/world.js:639"
       ],
       "source": {
         "text": "🌱 You settle the empty land of {province} — smoke rises where only the wind went before."
@@ -24065,8 +24065,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1135",
-        "js/world.js:1136"
+        "js/world.js:1154",
+        "js/world.js:1155"
       ],
       "source": {
         "text": "⚔ Victory in the field! ({wins}/{needed})"
@@ -24186,7 +24186,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1463"
+        "js/main.js:1468"
       ],
       "source": {
         "text": "Corrected priests on doctrine; has presumably gone to check."
@@ -24410,7 +24410,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:695"
+        "js/actions.js:697"
       ],
       "source": {
         "text": "No neighboring sovereign would take your oath."
@@ -24431,8 +24431,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1001",
-        "js/world.js:1002"
+        "js/world.js:1020",
+        "js/world.js:1021"
       ],
       "source": {
         "text": "⬇ Landless once more. The banners are folded away."
@@ -24612,8 +24612,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1346",
-        "js/events.js:1347"
+        "js/events.js:1348",
+        "js/events.js:1349"
       ],
       "source": {
         "text": "🕯 {name} has died, aged {age}."
@@ -24633,7 +24633,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1111"
+        "js/main.js:1116"
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your son {child}, has died before the wedding. The dowry returns to your coffers."
@@ -24693,9 +24693,9 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1153",
-        "js/world.js:316",
-        "js/world.js:323"
+        "js/actions.js:1155",
+        "js/world.js:332",
+        "js/world.js:339"
       ],
       "source": {
         "text": "County of"
@@ -25032,7 +25032,7 @@
         "index.html:8",
         "index.html:18",
         "index.html:26",
-        "js/main.js:416",
+        "js/main.js:419",
         "js/ui.js:3918"
       ],
       "source": {
@@ -25143,7 +25143,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1450"
+        "js/main.js:1455"
       ],
       "source": {
         "text": "Gave away everything except the debts."
@@ -25325,7 +25325,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:701"
+        "js/actions.js:703"
       ],
       "source": {
         "text": "💰 Demand extraordinary taxes"
@@ -25365,8 +25365,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1617",
-        "js/events.js:1618"
+        "js/events.js:1622",
+        "js/events.js:1623"
       ],
       "source": {
         "text": "🧭 You now dwell in {province}."
@@ -25456,7 +25456,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:820"
+        "js/actions.js:822"
       ],
       "source": {
         "text": "{building} upkeep"
@@ -25486,7 +25486,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1254"
+        "js/world.js:1273"
       ],
       "source": {
         "text": "🚩 The host marches to bring {enemy} to battle."
@@ -25536,7 +25536,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1468"
+        "js/main.js:1473"
       ],
       "source": {
         "text": "Could lift an ox. The ox sends no condolences."
@@ -25697,8 +25697,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1402",
-        "js/actions.js:1403"
+        "js/actions.js:1404",
+        "js/actions.js:1405"
       ],
       "source": {
         "text": "🏠 {holding} now belongs to the household."
@@ -25779,7 +25779,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:661"
+        "js/actions.js:663"
       ],
       "source": {
         "text": "Choose a neighboring land to seize by force."
@@ -25789,8 +25789,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1186",
-        "js/world.js:1187"
+        "js/world.js:1205",
+        "js/world.js:1206"
       ],
       "source": {
         "text": "⚔ A night sortie burns your siege-works — the ring is set back."
@@ -25820,8 +25820,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1867",
-        "js/events.js:1868"
+        "js/events.js:1875",
+        "js/events.js:1876"
       ],
       "source": {
         "text": "⚔ {attacker} wars against {defender}."
@@ -25971,7 +25971,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1466"
+        "js/main.js:1471"
       ],
       "source": {
         "text": "Quick of wit, and quicker to mention it."
@@ -26002,7 +26002,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:340"
+        "js/main.js:343"
       ],
       "source": {
         "text": "★★ fair"
@@ -26012,7 +26012,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:530"
+        "js/actions.js:532"
       ],
       "source": {
         "text": "💡 Adopt an innovation…"
@@ -26062,10 +26062,10 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:706",
-        "js/world.js:718",
-        "js/world.js:707",
-        "js/world.js:719"
+        "js/world.js:725",
+        "js/world.js:737",
+        "js/world.js:726",
+        "js/world.js:738"
       ],
       "source": {
         "text": "⚔ {province} has fallen to {winner}."
@@ -26139,8 +26139,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1212",
-        "js/world.js:1213"
+        "js/world.js:1231",
+        "js/world.js:1232"
       ],
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
@@ -26190,7 +26190,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:593"
+        "js/actions.js:595"
       ],
       "source": {
         "text": "Your liege must at least tolerate you (favor 20+, now {current})."
@@ -26220,7 +26220,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1177"
+        "js/main.js:1182"
       ],
       "source": {
         "text": "🕯 Your tutor has died; the lessons pause."
@@ -26300,8 +26300,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:989",
-        "js/actions.js:990"
+        "js/actions.js:991",
+        "js/actions.js:992"
       ],
       "source": {
         "text": "🎒 Nothing is offered that you do not already own."
@@ -26681,7 +26681,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:597",
+        "js/actions.js:599",
         "js/ui.js:2308"
       ],
       "source": {
@@ -26692,7 +26692,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:553"
+        "js/actions.js:555"
       ],
       "source": {
         "text": "Your liege’s favor must be 65 or more (now {current})."
@@ -26762,7 +26762,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:637"
+        "js/main.js:640"
       ],
       "source": {
         "text": "beginning in {year} AD, aged {age}."
@@ -26923,8 +26923,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1519",
-        "js/main.js:1520"
+        "js/main.js:1524",
+        "js/main.js:1525"
       ],
       "source": {
         "text": "So famous that strangers are mourning professionally."
@@ -26934,8 +26934,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1505",
-        "js/main.js:1506"
+        "js/main.js:1510",
+        "js/main.js:1511"
       ],
       "source": {
         "text": "Gone before their time; the time was never consulted."
@@ -27128,7 +27128,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1452"
+        "js/main.js:1457"
       ],
       "source": {
         "text": "Genuinely mourned, which surprised no one more than them."
@@ -27148,7 +27148,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1126"
+        "js/main.js:1131"
       ],
       "source": {
         "text": "🕯 Your brother {name} has died, aged {age}."
@@ -27329,7 +27329,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:702"
+        "js/actions.js:704"
       ],
       "source": {
         "text": "Squeeze your vassals for four seasons’ taxes at once. They will not love it."
@@ -27349,7 +27349,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1266"
+        "js/main.js:1271"
       ],
       "source": {
         "text": "💍 Your sister {name} weds {spouse}."
@@ -27369,7 +27369,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:540"
+        "js/actions.js:542"
       ],
       "source": {
         "text": "🍗 Hold a feast"
@@ -27520,7 +27520,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:561"
+        "js/actions.js:563"
       ],
       "source": {
         "text": "🤝 Petition for a neighbor’s fief…"
@@ -27630,7 +27630,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:373"
+        "js/main.js:376"
       ],
       "source": {
         "text": "Paste a start code or world seed first."
@@ -27770,7 +27770,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1474"
+        "js/main.js:1479"
       ],
       "source": {
         "text": "The cup won in the end, exactly as the cup predicted."
@@ -27872,7 +27872,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:334"
+        "js/main.js:337"
       ],
       "source": {
         "text": "You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
@@ -27882,8 +27882,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1353",
-        "js/actions.js:1354"
+        "js/actions.js:1355",
+        "js/actions.js:1356"
       ],
       "source": {
         "text": "🕊 {realm} swears a pact of peace — two years of quiet borders."
@@ -27973,7 +27973,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:692"
+        "js/actions.js:694"
       ],
       "source": {
         "text": "🤝 Swear fealty…"
@@ -28063,7 +28063,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1489"
+        "js/events.js:1491"
       ],
       "source": {
         "text": "⛪ The marriage to {name} is declared void — before Allah, it never was."
@@ -28093,7 +28093,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1134"
+        "js/main.js:1139"
       ],
       "source": {
         "text": "🕯 Your uncle {name} has died, aged {age}."
@@ -28153,8 +28153,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1448",
-        "js/events.js:1449"
+        "js/events.js:1450",
+        "js/events.js:1451"
       ],
       "source": {
         "text": "👑 You have wed above your station — your name rises with the match."
@@ -28426,7 +28426,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1419"
+        "js/events.js:1421"
       ],
       "source": {
         "text": "💍 {name} enters your household as your fourth wife."
@@ -28498,7 +28498,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:494"
+        "js/main.js:497"
       ],
       "source": {
         "text": "Paste a start code or world seed"
@@ -28528,7 +28528,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:326"
+        "js/main.js:329"
       ],
       "source": {
         "text": "You are {name}, a free farmer of {province}. Your land is small, your debts are few, and your ambitions need not be."
@@ -28639,7 +28639,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:547"
+        "js/main.js:550"
       ],
       "source": {
         "text": "no one, watching"
@@ -28739,7 +28739,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:677"
+        "js/actions.js:679"
       ],
       "source": {
         "text": "You need at least 200 prestige to rally men to your banner (now {current})."
@@ -28860,7 +28860,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:588"
+        "js/actions.js:590"
       ],
       "source": {
         "text": "💰 Buy out a weak neighbor…"
@@ -28880,8 +28880,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1587",
-        "js/events.js:1588"
+        "js/events.js:1589",
+        "js/events.js:1590"
       ],
       "source": {
         "text": "💰 A grudging purse of {gold} gold — and nothing more."
@@ -28891,8 +28891,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:639",
-        "js/actions.js:646"
+        "js/actions.js:641",
+        "js/actions.js:648"
       ],
       "source": {
         "text": "~150 spears: 15 gold now, 4 a season while the war lasts."
@@ -28902,7 +28902,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:319"
+        "js/main.js:322"
       ],
       "source": {
         "text": "★★★★★ hardest"
@@ -29182,7 +29182,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:499"
+        "js/main.js:502"
       ],
       "source": {
         "text": "Cancel"
@@ -29392,7 +29392,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:508"
+        "js/actions.js:510"
       ],
       "source": {
         "text": "⚖ Hold court"
@@ -29474,7 +29474,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:743"
+        "js/main.js:747"
       ],
       "source": {
         "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
@@ -29547,7 +29547,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1061"
+        "js/main.js:1066"
       ],
       "source": {
         "text": "{name} dies in {year} AD, aged {age} — taken by sickness."
@@ -29597,7 +29597,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:336"
+        "js/main.js:339"
       ],
       "source": {
         "text": "Man-at-Arms"
@@ -29627,7 +29627,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:639"
+        "js/main.js:642"
       ],
       "source": {
         "text": "🔑 World seed:"
@@ -29707,7 +29707,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:744"
+        "js/main.js:748"
       ],
       "source": {
         "text": "Begin"
@@ -29717,8 +29717,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1159",
-        "js/actions.js:1160"
+        "js/actions.js:1161",
+        "js/actions.js:1162"
       ],
       "source": {
         "text": "🎁 {province} is granted to a loyal man — {name} holds it in your name."
@@ -29808,7 +29808,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:697"
+        "js/actions.js:699"
       ],
       "source": {
         "text": "🎁 Grant land…"
@@ -30048,8 +30048,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:712",
-        "js/world.js:713"
+        "js/world.js:731",
+        "js/world.js:732"
       ],
       "source": {
         "text": "⚔ {winner} has conquered {province} — your home! New masters rule here now."
@@ -30179,7 +30179,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1705"
+        "js/actions.js:1707"
       ],
       "source": {
         "text": "Ready in {days} days."
@@ -30349,7 +30349,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1456"
+        "js/main.js:1461"
       ],
       "source": {
         "text": "Pure to the end, and faintly smug about it."
@@ -30439,9 +30439,9 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1380",
+        "js/events.js:1382",
         "js/ui.js:3476",
-        "js/events.js:1381",
+        "js/events.js:1383",
         "js/ui.js:3477"
       ],
       "source": {
@@ -30492,8 +30492,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1295",
-        "js/actions.js:1296"
+        "js/actions.js:1297",
+        "js/actions.js:1298"
       ],
       "source": {
         "text": "Bought {province} from its struggling lord."
@@ -30634,7 +30634,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1267"
+        "js/main.js:1272"
       ],
       "source": {
         "text": "💍 Your kinsman {name} weds {spouse}."
@@ -30805,7 +30805,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1263"
+        "js/world.js:1282"
       ],
       "source": {
         "text": "🚩 There is no road from here to the host of {enemy}."
@@ -30825,7 +30825,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1609"
+        "js/main.js:1615"
       ],
       "source": {
         "text": "No save found."
@@ -30835,7 +30835,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1482"
+        "js/main.js:1487"
       ],
       "source": {
         "text": "Buried at a crossroads by popular ecclesiastical demand."
@@ -30905,7 +30905,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:347"
+        "js/main.js:350"
       ],
       "source": {
         "text": "You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise."
@@ -31036,8 +31036,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1593",
-        "js/events.js:1594"
+        "js/events.js:1595",
+        "js/events.js:1596"
       ],
       "source": {
         "text": "💰 The house of {house} buys back the claim for {gold} gold."
@@ -31087,7 +31087,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1298"
+        "js/main.js:1303"
       ],
       "source": {
         "text": "👶 Your brother {parent} has a son, {baby}."
@@ -31107,7 +31107,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:543"
+        "js/actions.js:545"
       ],
       "source": {
         "text": "Meat, sherbet, and politics."
@@ -31177,7 +31177,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1055"
+        "js/world.js:1074"
       ],
       "source": {
         "text": "📜 Your fiefs escheat to your liege."
@@ -31187,8 +31187,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1702",
-        "js/events.js:1703"
+        "js/events.js:1709",
+        "js/events.js:1710"
       ],
       "source": {
         "text": "🏰 The liege grants you {province}."
@@ -31412,7 +31412,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:509"
+        "js/actions.js:511"
       ],
       "source": {
         "text": "Hear petitions and render judgment."
@@ -31422,7 +31422,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1442"
+        "js/world.js:1461"
       ],
       "source": {
         "text": "Empire"
@@ -31532,7 +31532,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:490"
+        "js/main.js:493"
       ],
       "source": {
         "text": "A new seed is rolled — your own 867 to shape."
@@ -31593,7 +31593,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:672"
+        "js/actions.js:674"
       ],
       "source": {
         "text": "Renounce your liege and raise your own banner — it means war."
@@ -31824,7 +31824,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1309"
+        "js/world.js:1328"
       ],
       "source": {
         "text": "🕊 Peace is bought from {enemy} for {cost} gold."
@@ -31834,8 +31834,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1442",
-        "js/events.js:1443"
+        "js/events.js:1444",
+        "js/events.js:1445"
       ],
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {gold} gold on the match."
@@ -31998,7 +31998,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1125"
+        "js/main.js:1130"
       ],
       "source": {
         "text": "🕯 Your grandmother {name} has died, aged {age}."
@@ -32089,7 +32089,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:833"
+        "js/actions.js:835"
       ],
       "source": {
         "text": "Rents from your lands"
@@ -32120,7 +32120,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1481"
+        "js/main.js:1486"
       ],
       "source": {
         "text": "The family attended the grave at a careful distance."
@@ -32181,7 +32181,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1032"
+        "js/world.js:1051"
       ],
       "source": {
         "text": "the Usurper"
@@ -32231,7 +32231,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1103"
+        "js/world.js:1122"
       ],
       "source": {
         "text": "🕊 {enemy} sues for peace. Your lands are safe."
@@ -32321,7 +32321,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1135"
+        "js/main.js:1140"
       ],
       "source": {
         "text": "🕯 Your aunt {name} has died, aged {age}."
@@ -32413,7 +32413,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:589"
+        "js/actions.js:591"
       ],
       "source": {
         "text": "Gold talks: a small, struggling neighbor sells his county and retires to obscurity."
@@ -32443,7 +32443,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1109"
+        "js/main.js:1114"
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your daughter {child}, has died before the wedding. The dowry returns to your coffers."
@@ -32583,8 +32583,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1509",
-        "js/main.js:1510"
+        "js/main.js:1514",
+        "js/main.js:1515"
       ],
       "source": {
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
@@ -32614,7 +32614,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:840"
+        "js/actions.js:842"
       ],
       "source": {
         "text": "Vassal dues"
@@ -32704,8 +32704,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1513",
-        "js/main.js:1514"
+        "js/main.js:1518",
+        "js/main.js:1519"
       ],
       "source": {
         "text": "Leaves no children; the gossips needed no invitation."
@@ -32766,7 +32766,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:570"
+        "js/world.js:589"
       ],
       "source": {
         "text": "🕯 {province} escheats to {liege} — its lord died without an heir."
@@ -32846,7 +32846,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:632"
+        "js/actions.js:634"
       ],
       "source": {
         "text": "⚔ Hire a mercenary company"
@@ -32886,7 +32886,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1489"
+        "js/main.js:1494"
       ],
       "source": {
         "text": "Read more books than the parish owned."
@@ -32946,8 +32946,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1507",
-        "js/main.js:1508"
+        "js/main.js:1512",
+        "js/main.js:1513"
       ],
       "source": {
         "text": "Reached {age}, an age the neighbors called showing off."
@@ -33018,8 +33018,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:959",
-        "js/actions.js:960"
+        "js/actions.js:961",
+        "js/actions.js:962"
       ],
       "source": {
         "text": "💰 Sold: {icon} {item} for {gold} gold."
@@ -33170,8 +33170,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:913",
-        "js/world.js:914"
+        "js/world.js:932",
+        "js/world.js:933"
       ],
       "source": {
         "text": "🕊 Exhaustion ends the war with nothing gained."
@@ -33251,7 +33251,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1112"
+        "js/main.js:1117"
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your child {child}, has died before the wedding."
@@ -33301,7 +33301,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:344"
+        "js/main.js:347"
       ],
       "source": {
         "text": "Petty Baron"
@@ -33524,7 +33524,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1123"
+        "js/main.js:1128"
       ],
       "source": {
         "text": "🕯 Your mother {name} has died, aged {age}."
@@ -33594,7 +33594,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1264"
+        "js/world.js:1283"
       ],
       "source": {
         "text": "🚩 There is no road from here to the enemy host."
@@ -33654,7 +33654,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1110"
+        "js/main.js:1115"
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your son {child}, has died before the wedding."
@@ -33735,7 +33735,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:643"
+        "js/actions.js:645"
       ],
       "source": {
         "text": "~150 spears: 15 gold now, 4 a season while the war lasts. ({count} companies under your banner)"
@@ -33797,8 +33797,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1316",
-        "js/world.js:1317"
+        "js/world.js:1335",
+        "js/world.js:1336"
       ],
       "source": {
         "text": "🕊 The campaign is abandoned. The banners come home."
@@ -33878,7 +33878,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1063"
+        "js/main.js:1068"
       ],
       "source": {
         "text": "{name} dies in {year} AD, aged {age}."
@@ -33918,7 +33918,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1492"
+        "js/events.js:1494"
       ],
       "source": {
         "text": "⛪ The marriage to {name} is declared void — before God, it never was."
@@ -34098,8 +34098,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1511",
-        "js/main.js:1512"
+        "js/main.js:1516",
+        "js/main.js:1517"
       ],
       "source": {
         "text": "Leaves {count} children and not one quiet meal behind."
@@ -34420,7 +34420,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1296"
+        "js/main.js:1301"
       ],
       "source": {
         "text": "👶 Your daughter {parent} has a son, {baby}."
@@ -34501,7 +34501,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1476"
+        "js/main.js:1481"
       ],
       "source": {
         "text": "Lost an eye, gained a story, told it ten thousand times."
@@ -34653,7 +34653,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:438"
+        "js/main.js:441"
       ],
       "source": {
         "text": "🧩 Mod active: {names}"
@@ -34844,7 +34844,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:606",
+        "js/main.js:609",
         "js/ui.js:363"
       ],
       "source": {
@@ -34855,8 +34855,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:961",
-        "js/world.js:962"
+        "js/world.js:980",
+        "js/world.js:981"
       ],
       "source": {
         "text": "🏰 {province} is yours by conquest!"
@@ -34916,7 +34916,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:497"
+        "js/main.js:500"
       ],
       "source": {
         "text": "🔑 Use this seed"
@@ -34936,7 +34936,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1137"
+        "js/main.js:1142"
       ],
       "source": {
         "text": "🕯 Your kinsman {name} has died, aged {age}."
@@ -35006,8 +35006,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1072",
-        "js/world.js:1073"
+        "js/world.js:1091",
+        "js/world.js:1092"
       ],
       "source": {
         "text": "⬇ Cast down. The family keeps its coffers and its name — but not an acre."
@@ -35028,7 +35028,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1236",
+        "js/main.js:1241",
         "js/model.js:366",
         "js/ui.js:810"
       ],
@@ -35214,7 +35214,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:798"
+        "js/world.js:817"
       ],
       "source": {
         "text": "🔥 {realm} renounces the suzerainty of the crown!"
@@ -35445,7 +35445,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:877"
+        "js/actions.js:879"
       ],
       "source": {
         "text": "Household upkeep"
@@ -35455,7 +35455,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:619"
+        "js/actions.js:621"
       ],
       "source": {
         "text": "🚩 Muster the host"
@@ -35475,8 +35475,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1354",
-        "js/main.js:1355"
+        "js/main.js:1359",
+        "js/main.js:1360"
       ],
       "source": {
         "text": "🤰 {name} is with child."
@@ -35546,7 +35546,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:844"
+        "js/actions.js:846"
       ],
       "source": {
         "text": "Liege’s cut"
@@ -35767,7 +35767,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:609"
+        "js/actions.js:611"
       ],
       "source": {
         "text": "No empty land borders your demesne."
@@ -35817,7 +35817,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:332"
+        "js/main.js:335"
       ],
       "source": {
         "text": "The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat."
@@ -35857,7 +35857,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1178"
+        "js/main.js:1183"
       ],
       "source": {
         "text": "🕯 {name}’s tutor has died; the lessons pause."
@@ -35958,8 +35958,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1492",
-        "js/actions.js:1493"
+        "js/actions.js:1494",
+        "js/actions.js:1495"
       ],
       "source": {
         "text": "💡 {innovation} takes root in your lands."
@@ -36019,7 +36019,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:729"
+        "js/actions.js:731"
       ],
       "source": {
         "text": "🏛 The Royal Council…"
@@ -36112,8 +36112,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1094",
-        "js/world.js:1095"
+        "js/world.js:1113",
+        "js/world.js:1114"
       ],
       "source": {
         "text": "🕊 The campaign has failed. The host limps home."
@@ -36133,8 +36133,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1192",
-        "js/world.js:1193"
+        "js/world.js:1211",
+        "js/world.js:1212"
       ],
       "source": {
         "text": "🏰 The walls of {target} are breached!"
@@ -36296,7 +36296,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1727"
+        "js/events.js:1735"
       ],
       "source": {
         "text": "🤝 Your liege strips {lord} of {province} and invests you with it."
@@ -36316,7 +36316,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:492"
+        "js/main.js:495"
       ],
       "source": {
         "text": "…or play a start someone shared:"
@@ -36498,7 +36498,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1417"
+        "js/events.js:1419"
       ],
       "source": {
         "text": "💍 {name} enters your household as your second wife."
@@ -36721,7 +36721,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1420"
+        "js/events.js:1422"
       ],
       "source": {
         "text": "💍 {name} enters your household as your fifth wife."
@@ -36903,7 +36903,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1301"
+        "js/main.js:1306"
       ],
       "source": {
         "text": "👶 Your kinsman {parent} has a child, {baby}."
@@ -36943,7 +36943,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1454"
+        "js/world.js:1473"
       ],
       "source": {
         "text": "Duchy"
@@ -37124,7 +37124,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:548"
+        "js/actions.js:550"
       ],
       "source": {
         "text": "👑 Petition the liege for title"
@@ -37144,8 +37144,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1598",
-        "js/main.js:1599"
+        "js/main.js:1604",
+        "js/main.js:1605"
       ],
       "source": {
         "text": "👤 {name} takes up the family’s story. Generation {generation}."
@@ -37165,7 +37165,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1148"
+        "js/world.js:1167"
       ],
       "source": {
         "text": "⚔ The host is bested… ({losses} defeat)"
@@ -37325,7 +37325,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:642"
+        "js/actions.js:644"
       ],
       "source": {
         "text": "~150 spears: 15 gold now, 4 a season while the war lasts. ({count} company under your banner)"
@@ -37395,7 +37395,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:693"
+        "js/actions.js:695"
       ],
       "source": {
         "text": "Offer your sword and your lands to a neighboring sovereign."
@@ -37425,7 +37425,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:943"
+        "js/main.js:948"
       ],
       "source": {
         "text": "⏱ Speed {current}/{total}"
@@ -37505,7 +37505,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1634"
+        "js/main.js:1640"
       ],
       "source": {
         "text": "The chronicle resumes — {season} {year} AD."
@@ -37515,7 +37515,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1414"
+        "js/main.js:1419"
       ],
       "source": {
         "text": "☠ {cause}"
@@ -37535,7 +37535,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1480"
+        "js/main.js:1485"
       ],
       "source": {
         "text": "Walked the holy roads; took the last one without luggage."
@@ -37565,8 +37565,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1580",
-        "js/events.js:1581"
+        "js/events.js:1582",
+        "js/events.js:1583"
       ],
       "source": {
         "text": "🏛 Stewarding a noble inheritance raises you into the gentry."
@@ -37646,7 +37646,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1470"
+        "js/main.js:1475"
       ],
       "source": {
         "text": "The fairest burial the parish has managed in years."
@@ -37759,8 +37759,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:907",
-        "js/world.js:908"
+        "js/world.js:926",
+        "js/world.js:927"
       ],
       "source": {
         "text": "🕊 {province} is no longer the enemy’s to lose — the war ends with nothing gained."
@@ -37982,7 +37982,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1236",
+        "js/main.js:1241",
         "js/model.js:365"
       ],
       "source": {
@@ -38013,8 +38013,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1286",
-        "js/world.js:1287"
+        "js/world.js:1305",
+        "js/world.js:1306"
       ],
       "source": {
         "text": "🕊 Bled white in the field, the enemy buys peace with tribute."
@@ -38034,7 +38034,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1478"
+        "js/main.js:1483"
       ],
       "source": {
         "text": "Read everything in reach, including, twice, a menu."
@@ -38275,7 +38275,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:324"
+        "js/main.js:327"
       ],
       "source": {
         "text": "A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth."
@@ -38346,7 +38346,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:641"
+        "js/main.js:644"
       ],
       "source": {
         "text": "once your story begins, the ☰ menu holds the full start code to share."
@@ -38426,8 +38426,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1690",
-        "js/events.js:1691"
+        "js/events.js:1696",
+        "js/events.js:1697"
       ],
       "source": {
         "text": "👑 Invested, you answer now to {realm}."
@@ -38488,7 +38488,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:376"
+        "js/main.js:379"
       ],
       "source": {
         "text": "That start code doesn’t parse — check it was copied whole."
@@ -38850,8 +38850,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1323",
-        "js/actions.js:1324"
+        "js/actions.js:1325",
+        "js/actions.js:1326"
       ],
       "source": {
         "text": "💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while."
@@ -38902,7 +38902,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:323"
+        "js/main.js:326"
       ],
       "source": {
         "text": "Free Farmer"
@@ -39224,7 +39224,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1203"
+        "js/main.js:1208"
       ],
       "source": {
         "text": "🎓 You grow {trait}, like your tutor."
@@ -39274,7 +39274,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:548"
+        "js/main.js:551"
       ],
       "source": {
         "text": "Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions."
@@ -39534,8 +39534,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:927",
-        "js/actions.js:928"
+        "js/actions.js:929",
+        "js/actions.js:930"
       ],
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
@@ -39565,7 +39565,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:521"
+        "js/actions.js:523"
       ],
       "source": {
         "text": "The master mason waits — a quarter off your next work."
@@ -39606,8 +39606,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1078",
-        "js/actions.js:1079"
+        "js/actions.js:1080",
+        "js/actions.js:1081"
       ],
       "source": {
         "text": "🙇 You bend the knee at the court of {realm}."
@@ -39628,7 +39628,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1310"
+        "js/world.js:1329"
       ],
       "source": {
         "text": "🕊 Peace is bought from the enemy for {cost} gold."
@@ -39789,7 +39789,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:522"
+        "js/actions.js:524"
       ],
       "source": {
         "text": "Mills, walls, markets — stone outlasts silver."
@@ -39959,8 +39959,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:323",
-        "js/main.js:327"
+        "js/main.js:326",
+        "js/main.js:330"
       ],
       "source": {
         "text": "★★★★ hard"
@@ -40040,7 +40040,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:391"
+        "js/main.js:394"
       ],
       "source": {
         "text": "That seed has no usable letters or digits."
@@ -40050,8 +40050,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:554",
-        "js/world.js:555"
+        "js/world.js:573",
+        "js/world.js:574"
       ],
       "source": {
         "text": "🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}."
@@ -40081,7 +40081,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:730"
+        "js/actions.js:732"
       ],
       "source": {
         "text": "Your great officers of the crown — their offices, their tempers, and the weight they throw around."
@@ -40171,7 +40171,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1491"
+        "js/events.js:1493"
       ],
       "source": {
         "text": "⛪ The marriage to {name} is declared void — before the Lord, it never was."
@@ -40251,8 +40251,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:684",
-        "js/world.js:685"
+        "js/world.js:703",
+        "js/world.js:704"
       ],
       "source": {
         "text": "👑 The ruler of {realm} is dead. {ruler} rises in their place."
@@ -40322,7 +40322,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1445"
+        "js/main.js:1450"
       ],
       "source": {
         "text": "Never once ran. Running would have helped, but still."
@@ -40584,7 +40584,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:532"
+        "js/actions.js:534"
       ],
       "source": {
         "text": "Scholarship: {amount} — spend it on advances that outlive you."
@@ -40604,8 +40604,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:502",
-        "js/actions.js:503"
+        "js/actions.js:504",
+        "js/actions.js:505"
       ],
       "source": {
         "text": "The lord smiles, promises nothing, and speaks of the weather."
@@ -40645,7 +40645,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:339"
+        "js/main.js:342"
       ],
       "source": {
         "text": "You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies."
@@ -40745,7 +40745,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1131"
+        "js/main.js:1136"
       ],
       "source": {
         "text": "🕯 Your granddaughter {name} has died, aged {age}."
@@ -40755,7 +40755,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1054"
+        "js/world.js:1073"
       ],
       "source": {
         "text": "📜 Your fiefs escheat to {liege}."
@@ -40836,7 +40836,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1462"
+        "js/main.js:1467"
       ],
       "source": {
         "text": "Asked for a plain funeral and was, for once, obeyed."
@@ -40846,7 +40846,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1265"
+        "js/main.js:1270"
       ],
       "source": {
         "text": "💍 Your brother {name} weds {spouse}."
@@ -40967,7 +40967,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1129"
+        "js/main.js:1134"
       ],
       "source": {
         "text": "🕯 Your daughter {name} has died, aged {age}."
@@ -41067,8 +41067,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:706",
-        "js/actions.js:717"
+        "js/actions.js:708",
+        "js/actions.js:719"
       ],
       "source": {
         "text": "Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time."
@@ -41098,7 +41098,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:489"
+        "js/main.js:492"
       ],
       "source": {
         "text": "🌱 Fresh start"
@@ -41339,8 +41339,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:996",
-        "js/world.js:997"
+        "js/world.js:1015",
+        "js/world.js:1016"
       ],
       "source": {
         "text": "🏚 {province} is torn from your grasp."
@@ -41350,8 +41350,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1880",
-        "js/events.js:1881"
+        "js/events.js:1888",
+        "js/events.js:1889"
       ],
       "source": {
         "text": "👑 They say {realm} is the mightiest power of the age."
@@ -41361,8 +41361,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1566",
-        "js/events.js:1567"
+        "js/events.js:1568",
+        "js/events.js:1569"
       ],
       "source": {
         "text": "💰 The house of {house} pays the full portion: {gold} gold."
@@ -41442,7 +41442,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1487"
+        "js/main.js:1492"
       ],
       "source": {
         "text": "Counted everything. The graveyard steward sends regards."
@@ -41452,7 +41452,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:622"
+        "js/actions.js:624"
       ],
       "source": {
         "text": "Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it."
@@ -41492,7 +41492,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1728"
+        "js/events.js:1736"
       ],
       "source": {
         "text": "🤝 Your liege strips the old lord of {province} and invests you with it."
@@ -41523,7 +41523,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:345"
+        "js/main.js:348"
       ],
       "source": {
         "text": "A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start."
@@ -41643,7 +41643,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1300"
+        "js/main.js:1305"
       ],
       "source": {
         "text": "👶 Your sister {parent} has a son, {baby}."
@@ -41673,7 +41673,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:698"
+        "js/actions.js:700"
       ],
       "source": {
         "text": "Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember."
@@ -41723,8 +41723,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1032",
-        "js/world.js:1332"
+        "js/world.js:1051",
+        "js/world.js:1351"
       ],
       "source": {
         "text": "Realm of"
@@ -42067,8 +42067,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:924",
-        "js/world.js:925"
+        "js/world.js:943",
+        "js/world.js:944"
       ],
       "source": {
         "text": "⚠ {enemy} presses deep into your lands — another season unchecked, and something falls."
@@ -42098,7 +42098,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:938"
+        "js/actions.js:940"
       ],
       "source": {
         "text": "✨ Out of the earth: {icon} {item}."
@@ -42168,8 +42168,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1574",
-        "js/events.js:1575"
+        "js/events.js:1576",
+        "js/events.js:1577"
       ],
       "source": {
         "text": "💰 The inheritance settles {gold} gold under your stewardship."
@@ -42219,7 +42219,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:685"
+        "js/actions.js:687"
       ],
       "source": {
         "text": "⚖ Appeal over your liege’s head…"
@@ -42229,7 +42229,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1488"
+        "js/main.js:1493"
       ],
       "source": {
         "text": "Knew everyone’s secrets and took the best ones along."
@@ -42269,8 +42269,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1787",
-        "js/events.js:1788"
+        "js/events.js:1795",
+        "js/events.js:1796"
       ],
       "source": {
         "text": "🕊 {realm} goes its own way, released from your fealty."
@@ -42300,7 +42300,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1104"
+        "js/world.js:1123"
       ],
       "source": {
         "text": "🕊 The enemy sues for peace. Your lands are safe."
@@ -42390,7 +42390,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:340"
+        "js/main.js:343"
       ],
       "source": {
         "text": "Hedge Knight"
@@ -42501,8 +42501,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1093",
-        "js/main.js:1094"
+        "js/main.js:1098",
+        "js/main.js:1099"
       ],
       "source": {
         "text": "🕯 Your spouse {name} has died. The house is quieter, and colder."
@@ -42603,7 +42603,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:605"
+        "js/actions.js:607"
       ],
       "source": {
         "text": "Found a new holding on empty land bordering your demesne."
@@ -42644,8 +42644,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1636",
-        "js/events.js:1637"
+        "js/events.js:1641",
+        "js/events.js:1642"
       ],
       "source": {
         "text": "⚔ {realm} will not let you go without a fight!"
@@ -42677,8 +42677,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1211",
-        "js/actions.js:1212"
+        "js/actions.js:1213",
+        "js/actions.js:1214"
       ],
       "source": {
         "text": "🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name."
@@ -42778,7 +42778,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1297"
+        "js/main.js:1302"
       ],
       "source": {
         "text": "👶 Your brother {parent} has a daughter, {baby}."
@@ -42808,7 +42808,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:725"
+        "js/actions.js:727"
       ],
       "source": {
         "text": "The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears."
@@ -42898,7 +42898,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1472"
+        "js/main.js:1477"
       ],
       "source": {
         "text": "So often ill that the end registered as a scheduling change."
@@ -42908,7 +42908,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1460"
+        "js/main.js:1465"
       ],
       "source": {
         "text": "Waited for everything. Waited for this, too."
@@ -42948,8 +42948,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1523",
-        "js/main.js:1524"
+        "js/main.js:1528",
+        "js/main.js:1529"
       ],
       "source": {
         "text": "Ruled an empire; the empire has been formally notified."
@@ -42979,7 +42979,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1010"
+        "js/actions.js:1012"
       ],
       "source": {
         "text": "🎒 Bought: {icon} {item}."
@@ -43002,7 +43002,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1758"
+        "js/events.js:1766"
       ],
       "source": {
         "text": "⚖ {new_liege} takes you as his direct man — {old_liege} is passed over."
@@ -43072,7 +43072,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:512"
+        "js/actions.js:514"
       ],
       "source": {
         "text": "💰 Squeeze the taxes"
@@ -43183,7 +43183,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1434"
+        "js/world.js:1453"
       ],
       "source": {
         "text": "Barony"
@@ -43253,7 +43253,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1449"
+        "js/main.js:1454"
       ],
       "source": {
         "text": "Left instructions about the gold. Nobody can find them."
@@ -43333,8 +43333,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:542",
-        "js/world.js:543"
+        "js/world.js:558",
+        "js/world.js:559"
       ],
       "source": {
         "text": "🕯 The lord of {province} dies without an heir — the fief returns to your hand."
@@ -43434,7 +43434,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1421"
+        "js/events.js:1423"
       ],
       "source": {
         "text": "💍 {name} enters your household as your newest wife."
@@ -43545,7 +43545,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:546"
+        "js/actions.js:548"
       ],
       "source": {
         "text": "Too poor to feast anyone."
@@ -43709,8 +43709,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1521",
-        "js/main.js:1522"
+        "js/main.js:1526",
+        "js/main.js:1527"
       ],
       "source": {
         "text": "Born a serf, died a serf, and outstubborned everyone in between."
@@ -43903,7 +43903,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1473"
+        "js/main.js:1478"
       ],
       "source": {
         "text": "Never ill a day. The last day declined to comment."
@@ -43923,7 +43923,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1475"
+        "js/main.js:1480"
       ],
       "source": {
         "text": "Wore their scars like debts others owed. All settled now."
@@ -44084,8 +44084,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1042",
-        "js/world.js:1043"
+        "js/world.js:1061",
+        "js/world.js:1062"
       ],
       "source": {
         "text": "🏴 {ruler} seizes the seat — the realm endures; your house does not."
@@ -44185,7 +44185,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1295"
+        "js/main.js:1300"
       ],
       "source": {
         "text": "👶 Your daughter {parent} has a daughter, {baby}."
@@ -44296,8 +44296,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:758",
-        "js/world.js:759"
+        "js/world.js:777",
+        "js/world.js:778"
       ],
       "source": {
         "text": "🔥 {realm} declares war upon YOU!"
@@ -44411,7 +44411,7 @@
       "glossary": [],
       "location": [
         "index.html:31",
-        "js/main.js:500"
+        "js/main.js:503"
       ],
       "source": {
         "text": "New Game"
@@ -44581,7 +44581,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:581"
+        "js/actions.js:583"
       ],
       "source": {
         "text": "You must first bleed in your liege’s wars (service {needed}+, now {current})."
@@ -44631,7 +44631,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1454"
+        "js/main.js:1459"
       ],
       "source": {
         "text": "Never told a lie. The family found this exhausting."
@@ -44741,8 +44741,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1500",
-        "js/main.js:1501"
+        "js/main.js:1505",
+        "js/main.js:1506"
       ],
       "source": {
         "text": "Complained about the leech bill until the very end."
@@ -44884,7 +44884,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:935"
+        "js/actions.js:937"
       ],
       "source": {
         "text": "🎒 Plunder: {icon} {item}."
@@ -45431,7 +45431,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1479"
+        "js/main.js:1484"
       ],
       "source": {
         "text": "Survived the shield-wall. The years fought sneakier."
@@ -45904,7 +45904,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:664"
+        "js/actions.js:666"
       ],
       "source": {
         "text": "No reachable enemy lands border yours."
@@ -45984,8 +45984,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1202",
-        "js/world.js:310"
+        "js/actions.js:1204",
+        "js/world.js:326"
       ],
       "source": {
         "text": "Duchy of"
@@ -46055,7 +46055,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:570"
+        "js/actions.js:572"
       ],
       "source": {
         "text": "Your liege’s favor must be {needed} or more (now {current})."
@@ -46446,7 +46446,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1459"
+        "js/main.js:1464"
       ],
       "source": {
         "text": "Died angry. The wake was quieter than the life."
@@ -46466,7 +46466,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1451"
+        "js/main.js:1456"
       ],
       "source": {
         "text": "Feared in life; the mourning is largely procedural."
@@ -46607,7 +46607,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:740"
+        "js/main.js:744"
       ],
       "source": {
         "text": "Your Story Begins"
@@ -46647,7 +46647,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:549"
+        "js/actions.js:551"
       ],
       "source": {
         "text": "Ask for greater lands and higher style."
@@ -46697,8 +46697,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1125",
-        "js/actions.js:1126"
+        "js/actions.js:1127",
+        "js/actions.js:1128"
       ],
       "source": {
         "text": "🔥 {realm} names you traitor — war for your defection!"
@@ -46718,7 +46718,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1299"
+        "js/main.js:1304"
       ],
       "source": {
         "text": "👶 Your sister {parent} has a daughter, {baby}."
@@ -46859,7 +46859,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:527"
+        "js/actions.js:529"
       ],
       "source": {
         "text": "Nothing more can be raised in your lands."
@@ -46991,7 +46991,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1465"
+        "js/main.js:1470"
       ],
       "source": {
         "text": "Knew everything except how to stay."
@@ -47071,7 +47071,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:322"
+        "js/main.js:325"
       ],
       "source": {
         "text": "You are {name}, a serf of {province}. The lord owns your labor; the church owns your Sundays; the soil will own your bones — unless you claw your way to something more."
@@ -47442,7 +47442,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1127"
+        "js/main.js:1132"
       ],
       "source": {
         "text": "🕯 Your sister {name} has died, aged {age}."
@@ -47462,7 +47462,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1471"
+        "js/main.js:1476"
       ],
       "source": {
         "text": "A face only a mother could love, and she kept her counsel."
@@ -47502,7 +47502,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1130"
+        "js/main.js:1135"
       ],
       "source": {
         "text": "🕯 Your grandson {name} has died, aged {age}."
@@ -47535,7 +47535,7 @@
         "js/keys.js:70",
         "js/keys.js:71",
         "js/keys.js:163",
-        "js/main.js:523",
+        "js/main.js:526",
         "js/ui.js:3937"
       ],
       "source": {
@@ -47627,7 +47627,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1619"
+        "js/main.js:1625"
       ],
       "source": {
         "text": "🧩 That life was lived in a modded world. Enable the same mod(s) (Mods menu) to continue it."
@@ -47758,7 +47758,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1467"
+        "js/main.js:1472"
       ],
       "source": {
         "text": "Untroubled by thought; slipped away in the absence of one."
@@ -47778,7 +47778,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:671"
+        "js/actions.js:673"
       ],
       "source": {
         "text": "Renounce {liege} and raise your own banner — it means war."
@@ -47818,7 +47818,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1108"
+        "js/main.js:1113"
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your daughter {child}, has died before the wedding."
@@ -47858,8 +47858,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:599",
-        "js/actions.js:611"
+        "js/actions.js:601",
+        "js/actions.js:613"
       ],
       "source": {
         "text": "You need at least {needed} gold (now {current})."
@@ -47959,7 +47959,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1132"
+        "js/main.js:1137"
       ],
       "source": {
         "text": "🕯 Your nephew {name} has died, aged {age}."
@@ -48224,7 +48224,7 @@
       "glossary": [],
       "location": [
         "js/model.js:456",
-        "js/world.js:1330"
+        "js/world.js:1349"
       ],
       "source": {
         "text": "Empire of"
@@ -48446,7 +48446,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1464"
+        "js/main.js:1469"
       ],
       "source": {
         "text": "Expected nothing of the afterlife and declines to be surprised."
@@ -48499,8 +48499,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1634",
-        "js/actions.js:1635"
+        "js/actions.js:1636",
+        "js/actions.js:1637"
       ],
       "source": {
         "text": "🏗 {building} rises in {settlement}, {province}."
@@ -48511,7 +48511,7 @@
       "glossary": [],
       "location": [
         "js/events.js:615",
-        "js/events.js:1555",
+        "js/events.js:1557",
         "js/events.js"
       ],
       "source": {
@@ -48552,7 +48552,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1133"
+        "js/main.js:1138"
       ],
       "source": {
         "text": "🕯 Your niece {name} has died, aged {age}."
@@ -48602,7 +48602,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1136"
+        "js/main.js:1141"
       ],
       "source": {
         "text": "🕯 Your cousin {name} has died, aged {age}."
@@ -48662,7 +48662,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:386"
+        "js/main.js:389"
       ],
       "source": {
         "text": "That start code pairs a scenario and a sex that don’t go together."
@@ -48769,7 +48769,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:330"
+        "js/main.js:333"
       ],
       "source": {
         "text": "You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know."
@@ -48859,8 +48859,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1515",
-        "js/main.js:1516"
+        "js/main.js:1520",
+        "js/main.js:1521"
       ],
       "source": {
         "text": "Died rich. The coffers were pried from still-warm fingers."
@@ -48981,7 +48981,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1448"
+        "js/world.js:1467"
       ],
       "source": {
         "text": "Kingdom"
@@ -49061,7 +49061,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:843"
+        "js/actions.js:845"
       ],
       "source": {
         "text": "Innovations"
@@ -49272,7 +49272,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1236",
+        "js/main.js:1241",
         "js/model.js:365"
       ],
       "source": {
@@ -49333,7 +49333,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1062"
+        "js/main.js:1067"
       ],
       "source": {
         "text": "{name} dies in {year} AD, aged {age} — before their time."
@@ -49533,7 +49533,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:546"
+        "js/main.js:549"
       ],
       "source": {
         "text": "👁 Observe"
@@ -49624,7 +49624,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:939"
+        "js/actions.js:941"
       ],
       "source": {
         "text": "🎒 From the chest: {icon} {item}."
@@ -49784,8 +49784,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:331",
-        "js/main.js:336"
+        "js/main.js:334",
+        "js/main.js:339"
       ],
       "source": {
         "text": "★★★ tricky"
@@ -49940,8 +49940,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:986",
-        "js/main.js:987"
+        "js/main.js:991",
+        "js/main.js:992"
       ],
       "source": {
         "text": "Wounds and sickness prove too much. {name} does not see another season."
@@ -49994,7 +49994,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:563"
+        "js/actions.js:565"
       ],
       "source": {
         "text": "Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}."
@@ -50005,7 +50005,7 @@
       "glossary": [],
       "location": [
         "js/model.js:455",
-        "js/world.js:1331"
+        "js/world.js:1350"
       ],
       "source": {
         "text": "Kingdom of"
@@ -50076,7 +50076,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:604"
+        "js/actions.js:606"
       ],
       "source": {
         "text": "🌱 Settle the wasteland…"
@@ -50238,7 +50238,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1149"
+        "js/world.js:1168"
       ],
       "source": {
         "text": "⚔ The host is bested… ({losses} defeats)"
@@ -50248,7 +50248,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:556"
+        "js/actions.js:558"
       ],
       "source": {
         "text": "You need at least 400 prestige (now {current})."
@@ -50398,8 +50398,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1356",
-        "js/actions.js:1357"
+        "js/actions.js:1358",
+        "js/actions.js:1359"
       ],
       "source": {
         "text": "🕊 The envoy returns, gifts refused. {realm} is unmoved."
@@ -50471,7 +50471,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:337"
+        "js/main.js:340"
       ],
       "source": {
         "text": "Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them."
@@ -50481,7 +50481,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1060"
+        "js/main.js:1065"
       ],
       "source": {
         "text": "{name} dies in {year} AD, aged {age} — full of years."
@@ -50501,7 +50501,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:437"
+        "js/main.js:440"
       ],
       "source": {
         "text": "🧩 Mods active: {names}"
@@ -50551,8 +50551,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1559",
-        "js/events.js:1560"
+        "js/events.js:1561",
+        "js/events.js:1562"
       ],
       "source": {
         "text": "💰 The house of {house} settles {gold} gold on you."
@@ -50562,7 +50562,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1486"
+        "js/main.js:1491"
       ],
       "source": {
         "text": "Settled most disputes by winning them."
@@ -50733,7 +50733,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1490"
+        "js/events.js:1492"
       ],
       "source": {
         "text": "⛪ The marriage to {name} is declared void — before the gods, it never was."
@@ -51097,7 +51097,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:686"
+        "js/actions.js:688"
       ],
       "source": {
         "text": "Carry your suit to a higher lord: escape a harsh liege, or rise under a greater one."
@@ -51117,7 +51117,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1264"
+        "js/main.js:1269"
       ],
       "source": {
         "text": "💍 Your daughter {name} weds {spouse}."
@@ -51147,7 +51147,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:667"
+        "js/actions.js:669"
       ],
       "source": {
         "text": "⚑ Declare independence…"
@@ -51167,8 +51167,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1037",
-        "js/main.js:1038"
+        "js/main.js:1042",
+        "js/main.js:1043"
       ],
       "source": {
         "text": "💒 You wed {name}, as your late parent pledged."
@@ -51268,7 +51268,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:571"
+        "js/world.js:590"
       ],
       "source": {
         "text": "🕯 {province} escheats to the crown — its lord died without an heir."
@@ -51329,7 +51329,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:940"
+        "js/actions.js:942"
       ],
       "source": {
         "text": "🎒 Yours now: {icon} {item}."
@@ -51542,7 +51542,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:712"
+        "js/actions.js:714"
       ],
       "source": {
         "text": "📜 Revoke a county…"
@@ -51654,7 +51654,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1293"
+        "js/main.js:1298"
       ],
       "source": {
         "text": "👶 Your son {parent} has a daughter, {baby}."
@@ -51974,8 +51974,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1826",
-        "js/events.js:1827"
+        "js/events.js:1834",
+        "js/events.js:1835"
       ],
       "source": {
         "text": "📜 The fief returns to your demesne. {realm} is no more."
@@ -52186,8 +52186,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1675",
-        "js/actions.js:1676"
+        "js/actions.js:1677",
+        "js/actions.js:1678"
       ],
       "source": {
         "text": "⚔ You declare war upon {enemy} for {province}!"
@@ -52439,7 +52439,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1477"
+        "js/main.js:1482"
       ],
       "source": {
         "text": "Broken in body, never once in complaint."
@@ -52589,8 +52589,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1006",
-        "js/world.js:1007"
+        "js/world.js:1025",
+        "js/world.js:1026"
       ],
       "source": {
         "text": "🕊 A humiliating peace. Reparations drain your coffers."
@@ -52700,7 +52700,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1263"
+        "js/main.js:1268"
       ],
       "source": {
         "text": "💍 Your son {name} weds {spouse}."
@@ -53367,7 +53367,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:344"
+        "js/main.js:347"
       ],
       "source": {
         "text": "★ classic"
@@ -53417,7 +53417,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:936"
+        "js/actions.js:938"
       ],
       "source": {
         "text": "⚔ Among the spoils: {icon} {item}."
@@ -53457,7 +53457,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:630"
+        "js/main.js:633"
       ],
       "source": {
         "text": "{scenario} in {province}"
@@ -53588,7 +53588,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1255"
+        "js/world.js:1274"
       ],
       "source": {
         "text": "🚩 The host marches to bring the enemy to battle."
@@ -53818,8 +53818,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:576",
-        "js/actions.js:614"
+        "js/actions.js:578",
+        "js/actions.js:616"
       ],
       "source": {
         "text": "You need at least {needed} prestige (now {current})."
@@ -53919,8 +53919,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1497",
-        "js/world.js:1498"
+        "js/world.js:1516",
+        "js/world.js:1517"
       ],
       "source": {
         "text": "👑 You are raised to {title}!"
@@ -54090,8 +54090,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1531",
-        "js/main.js:1532"
+        "js/main.js:1536",
+        "js/main.js:1537"
       ],
       "source": {
         "text": "Lived. Died. The chronicle splits the difference."
@@ -54141,8 +54141,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1405",
-        "js/events.js:1406"
+        "js/events.js:1407",
+        "js/events.js:1408"
       ],
       "source": {
         "text": "💔 The old pledge to {name} is quietly set aside."
@@ -54464,8 +54464,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1100",
-        "js/main.js:1101"
+        "js/main.js:1105",
+        "js/main.js:1106"
       ],
       "source": {
         "text": "🕯 {name}, whom you courted, has died before any wedding."
@@ -54515,7 +54515,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1485"
+        "js/main.js:1490"
       ],
       "source": {
         "text": "Could talk a beggar into lending money, and did."
@@ -54738,7 +54738,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1453"
+        "js/main.js:1458"
       ],
       "source": {
         "text": "Died insisting they felt perfectly fine."
@@ -54959,8 +54959,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1119",
-        "js/actions.js:1120"
+        "js/actions.js:1121",
+        "js/actions.js:1122"
       ],
       "source": {
         "text": "🤝 You swear fealty to {liege}. Your banners now fly under {realm}."
@@ -55101,8 +55101,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:979",
-        "js/actions.js:980"
+        "js/actions.js:981",
+        "js/actions.js:982"
       ],
       "source": {
         "text": "🎁 You give {icon} {item} to {name}. (regard {regard})"
@@ -55184,7 +55184,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1759"
+        "js/events.js:1767"
       ],
       "source": {
         "text": "⚖ {new_liege} takes you as his direct man — your old lord is passed over."
@@ -55194,7 +55194,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1620"
+        "js/main.js:1626"
       ],
       "source": {
         "text": "🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it."
@@ -55214,8 +55214,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1452",
-        "js/events.js:1453"
+        "js/events.js:1454",
+        "js/events.js:1455"
       ],
       "source": {
         "text": "🗣 You have wed beneath your station, and folk mark it."
@@ -55315,7 +55315,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:331"
+        "js/main.js:334"
       ],
       "source": {
         "text": "Novice of the Faith"
@@ -55427,7 +55427,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1204"
+        "js/main.js:1209"
       ],
       "source": {
         "text": "🎓 {name} grows {trait}, like their tutor."
@@ -55477,7 +55477,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:335"
+        "js/main.js:338"
       ],
       "source": {
         "text": "You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house."
@@ -55527,7 +55527,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:327"
+        "js/main.js:330"
       ],
       "source": {
         "text": "Craftsman’s Apprentice"
@@ -55617,7 +55617,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:341"
+        "js/main.js:344"
       ],
       "source": {
         "text": "Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted."
@@ -55718,7 +55718,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1446"
+        "js/main.js:1451"
       ],
       "source": {
         "text": "Attended every battle from the safety of the rear."
@@ -55728,7 +55728,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:682"
+        "js/actions.js:684"
       ],
       "source": {
         "text": "Bend the knee at your liege’s court — or a court above his. (+opinion)"
@@ -55889,7 +55889,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:519",
+        "js/actions.js:521",
         "js/ui.js:2113"
       ],
       "source": {
@@ -56011,7 +56011,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1461"
+        "js/main.js:1466"
       ],
       "source": {
         "text": "Bowed to no one. The grave accepts all bows as given."
@@ -56021,7 +56021,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:537"
+        "js/actions.js:539"
       ],
       "source": {
         "text": "No new innovation is within reach — prerequisites, or the age itself."
@@ -56041,8 +56041,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1117",
-        "js/main.js:1118"
+        "js/main.js:1122",
+        "js/main.js:1123"
       ],
       "source": {
         "text": "🕯 The lord {name} is dead. Another will take his seat."
@@ -56122,8 +56122,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:614",
-        "js/world.js:615"
+        "js/world.js:633",
+        "js/world.js:634"
       ],
       "source": {
         "text": "Settled the empty land of {province}."
@@ -56374,7 +56374,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1322"
+        "js/events.js:1324"
       ],
       "source": {
         "text": "🎒 {icon} {item} is yours now."
@@ -56807,7 +56807,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1457"
+        "js/main.js:1462"
       ],
       "source": {
         "text": "Out-ate every harvest set before them, and several that were not."
@@ -57077,7 +57077,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:653"
+        "js/actions.js:655"
       ],
       "source": {
         "text": "Costs 15 gold."
@@ -57178,8 +57178,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1180",
-        "js/world.js:1181"
+        "js/world.js:1199",
+        "js/world.js:1200"
       ],
       "source": {
         "text": "⚔ A sortie from {target} is thrown back. The siege holds."
@@ -57329,7 +57329,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:797"
+        "js/world.js:816"
       ],
       "source": {
         "text": "🔥 {realm} renounces the suzerainty of {liege}!"
@@ -57350,8 +57350,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:1297",
-        "js/actions.js:1298"
+        "js/actions.js:1299",
+        "js/actions.js:1300"
       ],
       "source": {
         "text": "💰 {province} is yours for {gold} gold — its old lord retires fat and forgotten. The court frowns on bought land."
@@ -57434,7 +57434,7 @@
         "data/map_data.js:608",
         "data/map_data.js:609",
         "data/map_data.js:614",
-        "js/main.js:319"
+        "js/main.js:322"
       ],
       "source": {
         "text": "Serf"
@@ -57504,7 +57504,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1124"
+        "js/main.js:1129"
       ],
       "source": {
         "text": "🕯 Your grandfather {name} has died, aged {age}."
@@ -57524,7 +57524,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:543"
+        "js/actions.js:545"
       ],
       "source": {
         "text": "Meat, mead, and politics."
@@ -57564,7 +57564,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js:1418"
+        "js/events.js:1420"
       ],
       "source": {
         "text": "💍 {name} enters your household as your third wife."
@@ -57777,8 +57777,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1352",
-        "js/main.js:1353"
+        "js/main.js:1357",
+        "js/main.js:1358"
       ],
       "source": {
         "text": "🤰 You are with child."
@@ -57929,8 +57929,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:735",
-        "js/main.js:736"
+        "js/main.js:739",
+        "js/main.js:740"
       ],
       "source": {
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
@@ -57950,8 +57950,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:747",
-        "js/world.js:748"
+        "js/world.js:766",
+        "js/world.js:767"
       ],
       "source": {
         "text": "🔥 War! {attacker} marches against {defender}."
@@ -57971,8 +57971,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:1196",
-        "js/world.js:1197"
+        "js/world.js:1215",
+        "js/world.js:1216"
       ],
       "source": {
         "text": "⚔ The siege of {target} tightens. ({progress}/3)"
@@ -58162,7 +58162,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:320"
+        "js/main.js:323"
       ],
       "source": {
         "text": "Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for."
@@ -58172,7 +58172,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:343"
+        "js/main.js:346"
       ],
       "source": {
         "text": "You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force."
@@ -58342,7 +58342,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:937"
+        "js/actions.js:939"
       ],
       "source": {
         "text": "⚔ Taken in the raid: {icon} {item}."
@@ -58433,8 +58433,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/world.js:969",
-        "js/world.js:970"
+        "js/world.js:988",
+        "js/world.js:989"
       ],
       "source": {
         "text": "🕊 The prize has slipped away, but tribute is paid. The war ends in your favor."
@@ -58505,7 +58505,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:660"
+        "js/actions.js:662"
       ],
       "source": {
         "text": "⚔ Declare war…"
@@ -58627,8 +58627,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1098",
-        "js/main.js:1099"
+        "js/main.js:1103",
+        "js/main.js:1104"
       ],
       "source": {
         "text": "🕯 Your child {name} has died, aged {age}."
@@ -58678,7 +58678,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:713"
+        "js/actions.js:715"
       ],
       "source": {
         "text": "Take a fief back from a vassal — by law if he bends, by force if he rises."
@@ -58879,7 +58879,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js:681"
+        "js/actions.js:683"
       ],
       "source": {
         "text": "🙇 Pay homage…"
@@ -58949,7 +58949,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:1128"
+        "js/main.js:1133"
       ],
       "source": {
         "text": "🕯 Your son {name} has died, aged {age}."
@@ -59080,7 +59080,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js:328"
+        "js/main.js:331"
       ],
       "source": {
         "text": "Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb."
@@ -60835,7 +60835,7 @@
       "glossary": [
         "service"
       ],
-      "location": "js/actions.js:563",
+      "location": "js/actions.js:565",
       "source": {
         "text": "Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}."
       }
@@ -60869,7 +60869,7 @@
     "ui:Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:548",
+      "location": "js/main.js:551",
       "source": {
         "text": "Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions."
       }
@@ -60877,7 +60877,7 @@
     "ui:Begin": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:744",
+      "location": "js/main.js:748",
       "source": {
         "text": "Begin"
       }
@@ -61281,7 +61281,7 @@
     "ui:Household upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:877",
+      "location": "js/actions.js:879",
       "source": {
         "text": "Household upkeep"
       }
@@ -61313,7 +61313,7 @@
     "ui:Innovations": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:843",
+      "location": "js/actions.js:845",
       "source": {
         "text": "Innovations"
       }
@@ -61377,7 +61377,7 @@
     "ui:Liege’s cut": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:844",
+      "location": "js/actions.js:846",
       "source": {
         "text": "Liege’s cut"
       }
@@ -61479,7 +61479,7 @@
     "ui:No province chosen — a random home will be found.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:598",
+      "location": "js/main.js:601",
       "source": {
         "text": "No province chosen — a random home will be found."
       }
@@ -61581,7 +61581,7 @@
     "ui:Paste a start code or world seed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:494",
+      "location": "js/main.js:497",
       "source": {
         "text": "Paste a start code or world seed"
       }
@@ -61708,7 +61708,7 @@
       "glossary": [
         "men"
       ],
-      "location": "js/actions.js:622",
+      "location": "js/actions.js:624",
       "source": {
         "text": "Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it."
       }
@@ -61726,7 +61726,7 @@
       "glossary": [
         "days"
       ],
-      "location": "js/actions.js:1705",
+      "location": "js/actions.js:1707",
       "source": {
         "text": "Ready in {days} days."
       }
@@ -61734,7 +61734,7 @@
     "ui:Renounce your liege and raise your own banner — it means war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:672",
+      "location": "js/actions.js:674",
       "source": {
         "text": "Renounce your liege and raise your own banner — it means war."
       }
@@ -61744,7 +61744,7 @@
       "glossary": [
         "liege"
       ],
-      "location": "js/actions.js:671",
+      "location": "js/actions.js:673",
       "source": {
         "text": "Renounce {liege} and raise your own banner — it means war."
       }
@@ -61752,7 +61752,7 @@
     "ui:Rents from your lands": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:833",
+      "location": "js/actions.js:835",
       "source": {
         "text": "Rents from your lands"
       }
@@ -61829,7 +61829,7 @@
       "glossary": [
         "amount"
       ],
-      "location": "js/actions.js:532",
+      "location": "js/actions.js:534",
       "source": {
         "text": "Scholarship: {amount} — spend it on advances that outlive you."
       }
@@ -61913,7 +61913,7 @@
     "ui:Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:743",
+      "location": "js/main.js:747",
       "source": {
         "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
       }
@@ -62015,7 +62015,7 @@
     "ui:The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:725",
+      "location": "js/actions.js:727",
       "source": {
         "text": "The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears."
       }
@@ -62193,7 +62193,7 @@
     "ui:Vassal dues": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js:840",
+      "location": "js/actions.js:842",
       "source": {
         "text": "Vassal dues"
       }
@@ -62281,7 +62281,7 @@
         "current",
         "needed"
       ],
-      "location": "js/actions.js:581",
+      "location": "js/actions.js:583",
       "source": {
         "text": "You must first bleed in your liege’s wars (service {needed}+, now {current})."
       }
@@ -62291,7 +62291,7 @@
       "glossary": [
         "current"
       ],
-      "location": "js/actions.js:677",
+      "location": "js/actions.js:679",
       "source": {
         "text": "You need at least 200 prestige to rally men to your banner (now {current})."
       }
@@ -62301,7 +62301,7 @@
       "glossary": [
         "current"
       ],
-      "location": "js/actions.js:556",
+      "location": "js/actions.js:558",
       "source": {
         "text": "You need at least 400 prestige (now {current})."
       }
@@ -62312,7 +62312,7 @@
         "current",
         "needed"
       ],
-      "location": "js/actions.js:611",
+      "location": "js/actions.js:613",
       "source": {
         "text": "You need at least {needed} gold (now {current})."
       }
@@ -62323,7 +62323,7 @@
         "current",
         "needed"
       ],
-      "location": "js/actions.js:614",
+      "location": "js/actions.js:616",
       "source": {
         "text": "You need at least {needed} prestige (now {current})."
       }
@@ -62376,7 +62376,7 @@
       "glossary": [
         "authority"
       ],
-      "location": "js/actions.js:717",
+      "location": "js/actions.js:719",
       "source": {
         "text": "Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time."
       }
@@ -62410,7 +62410,7 @@
       "glossary": [
         "current"
       ],
-      "location": "js/actions.js:593",
+      "location": "js/actions.js:595",
       "source": {
         "text": "Your liege must at least tolerate you (favor 20+, now {current})."
       }
@@ -62420,7 +62420,7 @@
       "glossary": [
         "current"
       ],
-      "location": "js/actions.js:553",
+      "location": "js/actions.js:555",
       "source": {
         "text": "Your liege’s favor must be 65 or more (now {current})."
       }
@@ -62431,7 +62431,7 @@
         "current",
         "needed"
       ],
-      "location": "js/actions.js:570",
+      "location": "js/actions.js:572",
       "source": {
         "text": "Your liege’s favor must be {needed} or more (now {current})."
       }
@@ -62558,7 +62558,7 @@
         "age",
         "year"
       ],
-      "location": "js/main.js:637",
+      "location": "js/main.js:640",
       "source": {
         "text": "beginning in {year} AD, aged {age}."
       }
@@ -62713,7 +62713,7 @@
     "ui:no one, watching": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:547",
+      "location": "js/main.js:550",
       "source": {
         "text": "no one, watching"
       }
@@ -62755,7 +62755,7 @@
     "ui:once your story begins, the ☰ menu holds the full start code to share.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:641",
+      "location": "js/main.js:644",
       "source": {
         "text": "once your story begins, the ☰ menu holds the full start code to share."
       }
@@ -63200,7 +63200,7 @@
       "glossary": [
         "building"
       ],
-      "location": "js/actions.js:820",
+      "location": "js/actions.js:822",
       "source": {
         "text": "{building} upkeep"
       }
@@ -63514,7 +63514,7 @@
         "province",
         "scenario"
       ],
-      "location": "js/main.js:630",
+      "location": "js/main.js:633",
       "source": {
         "text": "{scenario} in {province}"
       }
@@ -63882,7 +63882,7 @@
     "ui:👁 Observe": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:546",
+      "location": "js/main.js:549",
       "source": {
         "text": "👁 Observe"
       }
@@ -63991,7 +63991,7 @@
     "ui:🔑 World seed:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js:639",
+      "location": "js/main.js:642",
       "source": {
         "text": "🔑 World seed:"
       }

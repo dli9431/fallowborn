@@ -225,6 +225,22 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* A lord may raise one servant far; repeatedly enriching the same man in
+     one lifetime is another matter. Every successful feudal grant compounds
+     the odds of the next by balance.liegeGrantRepeatMult. Purchases, conquest,
+     settlement, inheritance, and de jure promotions never call this helper. */
+  FB.liegeGrantMultiplier = function (state) {
+    const B = FBDATA.balance;
+    const mult = B.liegeGrantRepeatMult !== undefined ? B.liegeGrantRepeatMult : 0.2;
+    return Math.pow(mult, (state.player && state.player.liegeGrants) || 0);
+  };
+  FB.liegeGrantChance = function (state, chance) {
+    return FB.clamp(chance, 0, 1) * FB.liegeGrantMultiplier(state);
+  };
+  FB.recordLiegeGrant = function (state) {
+    state.player.liegeGrants = (state.player.liegeGrants || 0) + 1;
+  };
+
   /* de jure ids of a county: {duchy, kingdom, empire} */
   FB.dejureOf = function (pid) {
     const pr = FB.world && FB.world.byId[pid];
@@ -548,9 +564,12 @@ window.FB = window.FB || {};
         let borders = false;
         for (const my of p.provs) { if (FB.world.adj[my] && FB.world.adj[my][pid]) { borders = true; break; } }
         if (borders) {
-          const c = FB.clamp(0.10 + FB.liegeOpOf(state, liege) / 250 + p.prestige / 2000 + (p.warService || 0) / 100, 0.05, 0.6);
+          const c = FB.liegeGrantChance(state,
+            FB.clamp(0.10 + FB.liegeOpOf(state, liege) / 250 + p.prestige / 2000 +
+              (p.warService || 0) / 100, 0.05, 0.6));
           if (FB.chance(c)) {
             toPlayer = true;
+            FB.recordLiegeGrant(state);
             FB.news(state, FB.msg('news.world.escheat_granted',
               '🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}.',
               { province: pr.name, liege: state.realms[liege].name }));

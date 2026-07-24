@@ -916,7 +916,8 @@ window.FB = window.FB || {};
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
-        return FB.clamp(0.05 + (p.liegeOp || 0) / 450 + p.prestige / 1800, 0.02, 0.35);
+        return FB.liegeGrantChance(state,
+          FB.clamp(0.05 + (p.liegeOp || 0) / 450 + p.prestige / 1800, 0.02, 0.35));
       }
       case 'county_petition': {
         // stripping a disgraced vassal for the player's sake: the liege's love
@@ -926,8 +927,9 @@ window.FB = window.FB || {};
         const hr = hp ? state.realms[hp] : null;
         if (!hr || !hr.alive) return 0;
         const fav = hr.favor || 0;
-        return FB.clamp(0.35 + FB.liegeOpOf(state, p.liege) / 300 + p.prestige / 1500 +
-          (p.warService || 0) / 80 - fav / 150, 0.1, 0.85);
+        return FB.liegeGrantChance(state,
+          FB.clamp(0.35 + FB.liegeOpOf(state, p.liege) / 300 + p.prestige / 1500 +
+            (p.warService || 0) / 80 - fav / 150, 0.1, 0.85));
       }
       case 'appeal_outcome': {
         // a suit carried over the liege's head: charm, cunning, and how the
@@ -1594,6 +1596,9 @@ window.FB = window.FB || {};
       '💰 The house of {house} buys back the claim for {gold} gold.',
       { house: lateName(ctx), gold: g }));
   };
+  FB.fns.record_liege_grant = function (state) {
+    FB.recordLiegeGrant(state);
+  };
 
   FB.movePlayerRandom = function (state) {
     const p = state.player;
@@ -1665,6 +1670,7 @@ window.FB = window.FB || {};
       if (p.provs.indexOf(p.provinceId) < 0) p.provs.push(p.provinceId);
       if (state.holder) state.holder[p.provinceId] = 'player';
       p.tier = 4;
+      FB.recordLiegeGrant(state);
       const old = p.liege && state.realms[p.liege];
       if (old) {
         // favor earned with the old lord stays on his name; the new liege
@@ -1698,6 +1704,7 @@ window.FB = window.FB || {};
         const got = FB.pick(cands);
         p.provs.push(got);
         state.holder[got] = 'player';
+        FB.recordLiegeGrant(state);
         FB.invalidateRealmCache();
         FB.news(state, FB.msg('news.event.liege_grants_county',
           '🏰 The liege grants you {province}.', { province: FB.world.byId[got].name }));
@@ -1719,6 +1726,7 @@ window.FB = window.FB || {};
     p.provs = p.provs || [];
     if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     state.holder[pid] = 'player';
+    FB.recordLiegeGrant(state);
     FB.invalidateRealmCache();
     FB.realmBuryIfEmpty(state, old);
     FB.news(state, FB.msg('news.event.petition_granted', {
