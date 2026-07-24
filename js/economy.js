@@ -499,6 +499,10 @@ window.FB = window.FB || {};
     if (!Array.isArray(e.loans)) e.loans = [];
     if (!Array.isArray(e.investments)) e.investments = [];
     if (!(e.nextId >= 1)) e.nextId = 1;
+    let highestId = 0;
+    for (const loan of e.loans) if (loan.id > highestId) highestId = loan.id;
+    for (const inv of e.investments) if (inv.id > highestId) highestId = inv.id;
+    if (e.nextId <= highestId) e.nextId = highestId + 1;
     if (!(e.defaults >= 0)) e.defaults = 0;
     if (!(e.debasements >= 0)) e.debasements = 0;
     if (!(e.recoinages >= 0)) e.recoinages = 0;
@@ -594,13 +598,20 @@ window.FB = window.FB || {};
     return total;
   }
 
+  function assignedRevenueBase(state, loan) {
+    if (loan.kind === 'merchant' && FB.reliableGoldIncome) {
+      return Math.max(0, FB.reliableGoldIncome(state, true));
+    }
+    return Math.max(0, FB.playerTax ? FB.playerTax(state) : 0);
+  }
+
   FB.financeAssignedIncomeCost = function (state) {
     const share = FBDATA.balance.financeRevenueShare || 0.25;
     let assigned = 0;
     for (const loan of FB.financeActiveLoans(state)) {
       if (loan.status === 'default' && loan.defaultKind === 'revenue') {
         assigned += Math.min(FB.financeDueNow(state, loan),
-          Math.max(0, FB.playerTax ? FB.playerTax(state) * share : 0));
+          assignedRevenueBase(state, loan) * share);
       }
     }
     return assigned;
@@ -823,7 +834,7 @@ window.FB = window.FB || {};
       if (loan.status !== 'default' || loan.defaultKind !== 'revenue') continue;
       const due = FB.financeDueNow(state, loan);
       const levy = Math.min(due, state.player.gold,
-        Math.max(0, FB.playerTax ? FB.playerTax(state) * share : 0));
+        assignedRevenueBase(state, loan) * share);
       if (!(levy > 0)) continue;
       state.player.gold -= levy;
       if (loan.denomination === 'real') loan.face = Math.max(0, loan.face - levy);
