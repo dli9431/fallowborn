@@ -475,6 +475,16 @@ def html_segments(value: str) -> Iterable[str]:
             yield chunk
 
 
+def strip_line(location: str) -> str:
+    """Drop a trailing ':<line>' so manifest locations stay stable across edits that
+    only shift line numbers — that is what kept churning tools/i18n_manifest.json (a
+    3-line insert rewrote hundreds of location values) and made every parallel branch
+    collide on it. The owner key already identifies the record; the file is the useful
+    part. Locations become file-only and only change when a string moves between files."""
+    head, sep, tail = location.rpartition(":")
+    return head if sep and tail.isdigit() else location
+
+
 class Inventory:
     def __init__(self) -> None:
         self.entries: dict[str, dict[str, Any]] = {}
@@ -489,6 +499,7 @@ class Inventory:
         context: str,
         glossary: Iterable[str] = (),
     ) -> None:
+        location = strip_line(location)
         old = self.entries.get(key)
         if old is not None and old != record:
             raise ValueError(f"colliding source key {key}: {old!r} != {record!r}")
