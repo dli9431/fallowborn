@@ -10,7 +10,9 @@ promotions (`FB.checkTierPromotions` = majority of a duchy/kingdom/empire), real
 naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
 `FB.realmTerritory`, `FB.realmHeldCounties`, `FB.dejureOf`; owner/holder-derived lists
 are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no foreign
-policy; strong vassals occasionally break away (`balance.breakawayChance`). The player
+policy; strong vassals occasionally break away (`balance.breakawayChance`). A sovereign’s foreign
+opinion and non-aggression pacts now modulate whether an adjacent AI realm attacks the
+independent player — see [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md). The player
 interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 `swear_fealty` / independence — and, tiers 3–5, the **estates**: the liege's
 assembly where the terms of service, the aid and scutage, are voted on — see

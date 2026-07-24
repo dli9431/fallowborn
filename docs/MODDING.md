@@ -179,7 +179,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `rivalHeatMin` / `rivalHeatMax` | active rivalry heat at or above/below the number (0–100) |
 | `popularOpinionBelow` | the commons' view of you |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
@@ -285,7 +285,7 @@ pressure, negative lowers it) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
-war_hunt war_supply war_thin war_terms war_accept_tribute` (and the `war_can_siege` / `war_no_enemy_host` /
+war_hunt war_supply war_thin war_terms war_accept_tribute war_press_on` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant
@@ -293,7 +293,9 @@ record_liege_grant` and the
 disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{suitor}` role) /
 `polly_rout` (the small mortal-wound roll on a lost shield-wall) live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
-gentry — the second flees abroad) live in `js/world.js`; mods may register their own before use).
+gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
+handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
+partnership at the given base stake) live in `js/economy.js`; mods may register their own before use).
 
 Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
 loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;
@@ -444,6 +446,9 @@ character can learn and perform:
   household workers who are not staffing an enterprise.
 - `guild: true` enables member → master → officer → guildmaster progression.
 - `maleOnly: true` is reserved for historically sex-gated training such as arms.
+- `piety` is a seasonal piety contribution from clerical careers (monk, priest).
+- `hiddenChoice: true` keeps a career out of the player's chooser — it is entered only
+  through an event or a marriage/background — though the household still works it.
 - Owned character state lives in `character.career`; `player.profession` remains the
   broad compatibility family used by existing `professions` event triggers.
 

@@ -13,7 +13,10 @@ options end with `{custom:'plot_end'}`). The Scheming focus is the repeatable so
 Intrigue growth; the repeatable Locked Chest payout does not also train the skill that
 speeds and strengthens its next attempt. Diplomacy has envoys buying
 non-aggression pacts (`state.pacts`, honored by the AI and by `FB.warTargets`),
-oath-brotherhood, and quarrel mediation. An independent count or duke also has two points
+oath-brotherhood, and quarrel mediation — one ending for the **interactive rivalries** a
+slighted character can declare after real hostile contact, whose visible feud heat escalates
+toward claims and knives or is bought off by compensation, a witnessed oath, common cause,
+or a duel (see [events.md](events.md) and [characters.md](characters.md)). An independent count or duke also has two points
 of **political attention**, a king three, and an emperor four. Each point can maintain an
 Improve or Provoke direction toward one adjacent sovereign court. The direction persists
 in `player.foreignPolicy` and changes that realm’s opinion of the current ruler at every

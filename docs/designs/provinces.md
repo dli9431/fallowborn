@@ -2,7 +2,8 @@
 
 **Provinces have no drawn borders — and each is one county.** `js/world.js` rasterizes
 the map at boot: scanline-fills the land polygons (Mercator projection from `js/util.js`),
-then assigns every land pixel to the nearest county seed (~480 seeds; the assignment
+then assigns every land pixel to the nearest county seed (~500 seeds — counties plus a
+handful of wastelands; the assignment
 scans an x-sorted seed window, so the denser map costs no extra boot time). Adjacency,
 coastal flags, and centroids are derived from that raster. Changing `FBDATA.provinces`
 (authored as compact rows in `data/counties.js`) reshapes the map automatically.
@@ -21,4 +22,5 @@ up every province sharing the clicked one's group key (strong tint + golden oute
 `groupOf` comes from `mapGroupOf` in ui.js and follows the map filter (`R` key / 🗺 HUD
 button): **Realm** (default — your own province lights your own realm, demesne + vassals;
 a foreign one lights its sovereign's), **Mine** (only your realm), **Liege** (your liege's
-whole sub-realm). Membership walks `FB.liegeChain` over `state.holder`.
+whole sub-realm), **De jure duchies**, and **De jure kingdoms** (the historical de jure
+groupings). Membership walks `FB.liegeChain` over `state.holder` for the realm-based modes.

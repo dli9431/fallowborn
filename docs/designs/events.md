@@ -45,7 +45,10 @@ one through `endRivalry:true`. The `rivalHeatMin` / `rivalHeatMax` triggers sepa
 quarrels from the high-heat claim and murder cascades. The settlement stories use
 compensation, third-party mediation, witnessed oaths, common labor, and satisfaction by
 duel; Muslim, pagan, and Jewish branches phrase the public settlement in their own legal
-and religious idiom.
+and religious idiom. Rivalries can also begin without any event: the seasonal
+`FB.tickRivalry` driver (see [time.md](time.md)) ages a character’s accumulated hostile
+contacts and may have a slighted NPC declare a feud on its own, and a non-kin, non-spouse
+rivalry outlives its holder — passing to the heir as a legacy feud ([characters.md](characters.md)).
 
 **Lower-station stories have two paces.** The Old Custom landmark chain starts randomly
 for an adult at tier 0–2, then advances through high-weight stage flags so its five

@@ -14,7 +14,8 @@ follows. Outliving a spouse of higher station queues `widow_settlement` /
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
 
 Faith sets doctrine (`FB.marriageDoctrine` in model.js): muslim/pagan/jewish players
-divorce from the spouse's char sheet (costs scale off `dowryByStation`), Christians
+divorce from the spouse's char sheet (muslim `talaq` and jewish `get` scale off
+`dowryByStation`; pagan `sunder` costs no coin but a prestige hit instead), Christians
 petition via the `annulment_plea` event (`annulment` named chance, yearly cooldown), and
 `balance.wivesByGroup` grants polygyny (`FB.spousesOf`/`FB.canWed`/`FB.promoteSpouse`;
 every wife can conceive, the first holds the spouse role). The spouse sheet carries a

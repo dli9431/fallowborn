@@ -31,8 +31,9 @@ Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.has
 `state.buildings` is keyed by province id, so conquest moves buildings and ruins with the
 land.
 
-**Non-revenue buildings cost upkeep.** Granaries, Bridges, Walls, Temples, and Libraries
-cost 1 gold each season; Keeps cost 2. Mills, Markets, and Harbors directly fund themselves
+**Non-revenue buildings cost upkeep.** Granaries, Bridges, Walls, Temples, Libraries, and
+Archery Butts cost 1 gold each season; Keeps cost 2 and Barracks 3 (a barracks’ paid
+men-at-arms are the dearest of all to keep). Mills, Markets, and Harbors directly fund themselves
 and have no separate upkeep. The seasonal charge applies only while the building stands in
 the player's demesne and is itemized in `FB.incomeBreakdown`. Automation will not add an
 upkeep-bearing building unless the current steady seasonal balance covers it.

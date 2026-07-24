@@ -66,3 +66,10 @@ For an independent count or higher, season boundaries also run
 opinion deterministically after the player’s war tick. On the winter boundary this happens
 before `FB.worldTick`, so the new opinion affects that year’s AI declarations; yearly
 opinion decay follows in `yearlyLife`.
+
+Season boundaries also run `FB.tickRivalry`, for every player, right after
+`FB.financeSeason` and before the season ledger closes: it ages recorded hostile contacts,
+decays an active feud’s heat, honors post-settlement peace cooldowns, and can have a
+slighted NPC declare a rivalry of its own. It moves no gold/prestige/piety, so the measured
+season net is unchanged. See [events.md](events.md) for the feud interpreter and
+[characters.md](characters.md) for rivalry state and the heir’s legacy-feud choice.

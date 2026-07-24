@@ -169,9 +169,11 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/portrait.js` — procedural portraits/heraldry.
 - `js/util.js` — RNG, projection, helpers.
 - `js/keys.js`, `js/save.js`, `js/mods.js` — keyboard, persistence, runtime mods.
+- `js/messages.js`, `js/i18n.js` — durable saved-message descriptors; localization catalog lookup and locale lifecycle.
 - `data/*.js` — the whole moddable world; `data/map_data.js` ends with `FBDATA.balance`
   (every economy/war/mortality knob in one place). `data/counties.js` holds the county
   table (one historical county per province, each tagged with its de jure duchy).
+  `data/economy.js` holds careers, enterprises, and finance-contract terms.
 
 ## Reference docs
 

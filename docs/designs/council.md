@@ -10,7 +10,7 @@ living vassal not in open disgrace (favor above −50).
 
 **Councillors are people, not chairs.** Generated rulers (`realm.ruler`, world.js) carry
 a `trait` from `FB.RULER_TRAITS` — the house's temper. Ambitious, deceitful, proud,
-cruel, or wrathful officers with cold favor become **schemers**; warm ones become
+envious, cruel, or wrathful officers with cold favor become **schemers**; warm ones become
 **sycophants** who curry favor with gifts and flattery. This is a deliberate enrichment
 of the lightweight ruler object (see [realms.md](realms.md)) — vassal rulers are still
 not full characters.
