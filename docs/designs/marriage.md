@@ -4,8 +4,12 @@
 (`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps
 up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up
 (`balance.proposalStationPenalty`), weddings settle a station-scaled dowry and prestige
-swing (`FB.doMarry`), and matchmade suitors come from the player's own walk
-(`FB.spawnSuitor`). Outliving a spouse of higher station queues `widow_settlement` /
+swing (`FB.doMarry`), and matchmaking sounds out three families at once
+(`FB.spawnSuitor`): an established house (older, a step up — fatter dowry, harder
+suit, fewer childbearing years), a peer, and a young match a step down. The three
+persist on the player as `suitorIds` until one is chosen in the picker
+(`UI.showSuitorPicker` → `FB.pickSuitor`); the usual meet-and-court event flow
+follows. Outliving a spouse of higher station queues `widow_settlement` /
 `house_claim` (`FB.spouseDied`, called from the mortality tick and `killRole:'spouse'`;
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
 

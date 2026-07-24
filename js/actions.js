@@ -297,7 +297,7 @@ window.FB = window.FB || {};
           'The scheme unravels, and fingers point at you.', {}));
       }
     } },
-  { id: 'seek_match', label: '💍 Seek a match', cd: 30,
+  { id: 'seek_match', label: '💍 Seek a match', cd: 30, noConsume: true,
     desc: function () { return 'Ask kin and gossips to find you a spouse from your own walk of life.'; },
     show: function (s) {
       const m = me(s);
@@ -305,8 +305,12 @@ window.FB = window.FB || {};
       return adult(s) && FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
     run: function (s) {
-      FB.spawnSuitor(s);
-      s.eventQueue.push({ id: 'meet_suitor', ctx: {} });
+      const cands = FB.spawnSuitor(s);
+      if (FB.ui && FB.ui.showSuitorPicker) FB.ui.showSuitorPicker();
+      else { // no UI to choose with: take the peer match through the old door
+        FB.pickSuitor(s, cands[1] ? cands[1].id : cands[0].id);
+        s.eventQueue.push({ id: 'meet_suitor', ctx: {} });
+      }
     } },
   { id: 'propose', label: '💒 Propose marriage', cd: 20,
     desc: function () { return 'Ask for their hand. Standing and wealth weigh heavily.'; },
