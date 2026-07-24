@@ -63,6 +63,39 @@ Everything about the world is data. There are two ways to mod:
    Mods are stored in your browser and re-applied on every load, *before* the world is
    generated. Same-`id` entries **replace** the originals; new ids are **added**.
 
+## Make a JSON mod with ChatGPT (no coding required)
+
+1. Start a new ChatGPT conversation and attach this `docs/MODDING.md` file. If your
+   ChatGPT interface does not offer file attachments, paste the document into the
+   conversation instead.
+2. Describe the mod in ordinary language. Say what should be added or changed, who or
+   what it should affect, and any numbers, names, or restrictions you care about.
+3. Ask ChatGPT to create an **importable Fallowborn JSON mod**, not a bundled JavaScript
+   mod. Ask it to follow `docs/MODDING.md`, include a unique `name`, preserve every
+   documented `{token}`, and return valid JSON with no comments or trailing commas.
+4. If the mod changes existing content, also provide the relevant file from `data/`
+   when ChatGPT asks for it. Existing ids and complete replacement entries must come
+   from the game files; ChatGPT should not guess them.
+5. Ask ChatGPT to check the finished result against the guide. Copy the JSON into a
+   plain-text file, save it with a `.json` extension such as `my_mod.json`, and make
+   sure the editor has not added `.txt` to the filename.
+
+A useful request to copy and fill in:
+
+> Read the attached `docs/MODDING.md` as the source of truth. Create an importable
+> Fallowborn JSON mod named "[mod name]" that [describe the change]. Do not write a
+> bundled JavaScript mod or change the base game files. Do not invent existing ids;
+> tell me which `data/` file you need if an id or complete replacement definition is
+> missing. Preserve documented text tokens and return the finished mod as valid JSON
+> in one code block, with no comments or trailing commas.
+
+To import the file, open Fallowborn and choose **Mods** on the title screen, or open
+the **☰ menu → Mods** during a game. Choose the `.json` file, then select
+**Apply & reload**. You may paste the JSON into the box in the same dialog instead.
+Begin a new life after changing mods: saves remember their exact mod set and will only
+load while that same set is active. Re-importing a mod with the same `name` replaces
+its previous copy.
+
 Mods placed in `mods/*.js` (with a matching `<script>` tag in `index.html`) are
 **bundled mods**: each registers `{id, name, desc, data}` into `window.FBMODS` via a
 script tag, and the Mods dialog offers an Enable/Disable toggle per mod. Enabled ids
@@ -75,12 +108,16 @@ A JSON mod is one object with any of these keys:
   "name": "My Mod (cosmetic, optional)",
   "provinces": [ ... ],
   "realms":    [ ... ],
+  "empires":   { "id": { ... } },
+  "kingdoms":  { "id": { ... } },
+  "duchies":   { "id": { ... } },
   "events":    [ ... ],
   "straits":   [ ["provA","provB"] ],
   "scripted":  [ ... ],
   "cultures":  { "id": { ... } },
   "religions": { "id": { ... } },
   "traits":    { "id": { ... } },
+  "ailments":  { "id": { ... } },
   "buildings": { "id": { ... } },
   "tech":      { "id": { ... } },
   "holdings":  { "id": { ... } },
@@ -89,7 +126,10 @@ A JSON mod is one object with any of these keys:
   "enterprises": { "id": { ... } },
   "travelPurposes": { "id": { ... } },
   "travelSites": [ ... ],
-  "finance":    { "pledge": { ... }, "merchant": { ... } },
+  "finance":    {
+    "pledge": { ... }, "merchant": { ... }, "revenue": { ... },
+    "tradePartnership": { ... }
+  },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
