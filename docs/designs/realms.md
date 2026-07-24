@@ -63,7 +63,9 @@ a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire fo
 The exact rules live in `FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress`
 (`js/world.js`), shared by the tier check and the UI readouts: a duchy must span ≥2 de
 jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an empire two kingdom
-majorities. Wastelands and colonies settled on them have no de jure duchy, so they count
+majorities. Every empire therefore has at least two de jure kingdoms; Italia is divided
+between Italy and Sicily, with Benevento, Apulia, Calabria, and Sicily belonging to the
+latter. Wastelands and colonies settled on them have no de jure duchy, so they count
 toward no title. The province panel spells out have/need for the tapped county (and flags
 lands that feed no title) under a row labeled "De jure (rightful liege)" — How to Play
 glosses the term in plain language — and the 🗺/R map filter has de jure duchy and

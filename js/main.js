@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.36.0';
+  FB.VERSION = '1.36.1';
   FB.CHANGELOG = [
+    { v: '1.36.1', date: '2026-07-24', changes: [
+      'Italia now contains the kingdoms of Italy and Sicily, making its imperial crown attainable.'
+    ] },
     { v: '1.36.0', date: '2026-07-24', changes: [
       'The Royal Council: crowned Kings and Emperors now rule with five great officers of the crown — Seneschal, Constable, Treasurer, Almoner, Chamberlain — raised from your own vassals. Each office lends real strength (taxes, levies, cheaper buildings, piety, a watcher against schemes) while a loyal man holds it.',
       'Magnates have tempers now: every lord carries a personality. Flatterers bring gifts and honeyed words; the ambitious weave schemes against an unwary king — a seated Chamberlain uncovers them, without one they strike from the dark.',
