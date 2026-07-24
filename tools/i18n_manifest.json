@@ -64,6 +64,22 @@
         "text": "🏡 Buy a manor"
       }
     },
+    "action.coin_credit.label.default": {
+      "context": "action coin_credit, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🪙 Coin & Credit…"
+      }
+    },
+    "action.debase_coinage.label.default": {
+      "context": "action debase_coinage, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🪙 Debase the coinage…"
+      }
+    },
     "action.declare_independence.label.default": {
       "context": "action declare_independence, visible label.",
       "glossary": [],
@@ -2837,15 +2853,7 @@
       "glossary": [],
       "location": "data/events_paths.js",
       "source": {
-        "text": "A modest stake could double — or vanish with the caravan."
-      }
-    },
-    "event.caravan_venture.options.0.failure.text.default": {
-      "context": "Event caravan_venture, authored option 0, failure text, branch default.",
-      "glossary": [],
-      "location": "data/events_paths.js",
-      "source": {
-        "text": "Raiders took the caravan at a desert well. Your silver is scattered across the sand."
+        "text": "The stake leaves now; the partnership returns in four seasons, if it returns at all."
       }
     },
     "event.caravan_venture.options.0.label.default": {
@@ -2856,36 +2864,12 @@
         "text": "Stake 20 gold."
       }
     },
-    "event.caravan_venture.options.0.success.effects.log.default": {
-      "context": "Durable event log for caravan_venture, authored option 0, success.effects.",
-      "glossary": [],
-      "location": "data/events_paths.js",
-      "source": {
-        "text": "A trade venture paid off."
-      }
-    },
-    "event.caravan_venture.options.0.success.text.default": {
-      "context": "Event caravan_venture, authored option 0, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_paths.js",
-      "source": {
-        "text": "Months later word returns: the venture prospered! Your stake comes back doubled."
-      }
-    },
     "event.caravan_venture.options.1.desc.default": {
       "context": "Event caravan_venture, authored option 1, desc, branch default.",
       "glossary": [],
       "location": "data/events_paths.js",
       "source": {
-        "text": "A heavier purse rides the same dangerous roads."
-      }
-    },
-    "event.caravan_venture.options.1.failure.text.default": {
-      "context": "Event caravan_venture, authored option 1, failure text, branch default.",
-      "glossary": [],
-      "location": "data/events_paths.js",
-      "source": {
-        "text": "The sea — or the steppe — keeps your fortune. A bitter year."
+        "text": "A larger four-season partnership risks more coin on the same distant roads."
       }
     },
     "event.caravan_venture.options.1.label.default": {
@@ -2894,14 +2878,6 @@
       "location": "data/events_paths.js",
       "source": {
         "text": "Stake 50 gold."
-      }
-    },
-    "event.caravan_venture.options.1.success.text.default": {
-      "context": "Event caravan_venture, authored option 1, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_paths.js",
-      "source": {
-        "text": "The great gamble pays! Profits beyond your hopes."
       }
     },
     "event.caravan_venture.options.2.desc.default": {
@@ -18739,6 +18715,41 @@
         }
       }
     },
+    "fx.ui.finance_debt_count": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "amount",
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "One obligation worth {amount} gold passes with the household.",
+            "other": "{count} obligations worth {amount} gold pass with the household."
+          },
+          "param": "count",
+          "select": "plural"
+        }
+      }
+    },
+    "fx.ui.finance_offer_count": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "One exact offer is available.",
+            "other": "{count} exact offers are available."
+          },
+          "param": "count",
+          "select": "plural"
+        }
+      }
+    },
     "fx.ui.hired_master_focus": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -20667,6 +20678,158 @@
       "location": "js/events.js",
       "source": {
         "text": "💰 The house of {house} settles {gold} gold on you."
+      }
+    },
+    "news.finance.arrears": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⌛ A payment is missed. The lender adds the signed penalty and grants two more seasons."
+      }
+    },
+    "news.finance.collateral_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "asset"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚠ The household defaults; the lender takes {asset} in settlement."
+      }
+    },
+    "news.finance.debasement": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "gold"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🪙 The crown debases the coinage and takes {gold} gold in seigniorage. Prices and confidence suffer."
+      }
+    },
+    "news.finance.default_unsecured": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚠ The household defaults. Its name is struck from the lenders’ good books."
+      }
+    },
+    "news.finance.inherited": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "amount",
+        "count"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "📜 The successor inherits one active obligation, now worth {amount} gold.",
+            "other": "📜 The successor inherits {count} active obligations, now worth {amount} gold."
+          },
+          "param": "count",
+          "select": "plural"
+        }
+      }
+    },
+    "news.finance.investment_matured": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "payout"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "exceptional": "✨ The trade partnership returns a remarkable {payout} gold.",
+            "loss": "🌊 The trade partnership is lost with every coin committed.",
+            "other": "🧭 The trade partnership is resolved.",
+            "partial": "🧭 The trade partnership limps home; {payout} gold is salvaged.",
+            "profit": "🧭 The trade partnership prospers and returns {payout} gold."
+          },
+          "param": "outcome",
+          "select": "value"
+        }
+      }
+    },
+    "news.finance.investment_started": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "stake"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🧭 The household commits {stake} gold to a distant trade partnership."
+      }
+    },
+    "news.finance.loan_repaid": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ The household repays {amount} gold and clears its obligation."
+      }
+    },
+    "news.finance.loan_taken": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "due",
+        "principal"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 A lender advances {principal} gold to the household; the signed obligation is worth {due} gold today."
+      }
+    },
+    "news.finance.prices": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "amount",
+        "rate"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "deflation": "🪙 Prices fall {rate}% this year; the purse gains {amount} gold of purchasing power.",
+            "deflation_empty": "🪙 Prices fall {rate}% this year; circulating coin buys more.",
+            "inflation": "🪙 Prices rise {rate}% this year; the purse loses {amount} gold of purchasing power.",
+            "inflation_empty": "🪙 Prices rise {rate}% this year; circulating coin buys less.",
+            "other": "🪙 The value of coin changes this year."
+          },
+          "param": "direction",
+          "select": "value"
+        }
+      }
+    },
+    "news.finance.recoinage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "cost"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ The crown calls in the light coin and restores its weight at a cost of {cost} gold."
+      }
+    },
+    "news.finance.revenue_default": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚠ The household defaults; one quarter of its regular revenues is assigned to the lender until the obligation is cleared."
+      }
+    },
+    "news.finance.revenue_settled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ The last assigned revenues reach the lender; the defaulted obligation is settled."
       }
     },
     "news.guild.advanced": {
@@ -23289,6 +23452,16 @@
         "text": "Stand your ground, and let the marriage weather it."
       }
     },
+    "src.080645b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Face value {face} nominal coin; its value in gold moves with prices."
+      }
+    },
     "src.0832ec51": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23530,6 +23703,16 @@
         "text": "Keep your host standing on {target} and press the siege at each war council — three seasons of works take it."
       }
     },
+    "src.09684866": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Receive now"
+      }
+    },
     "src.096acd3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23548,6 +23731,16 @@
       ],
       "source": {
         "text": "Moderate in all things, including, at the last, breathing."
+      }
+    },
+    "src.09819d60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Purse"
       }
     },
     "src.099afd78": {
@@ -23658,6 +23851,16 @@
       ],
       "source": {
         "text": "A wound — it knits as your strength returns, a year or so at most."
+      }
+    },
+    "src.0a60363a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 The value of coin changes this year."
       }
     },
     "src.0a798fe9": {
@@ -23850,6 +24053,16 @@
         "text": "Choose Your Beginning — Anno Domini 867"
       }
     },
+    "src.0be28b8c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ The crown calls in the light coin and restores its weight at a cost of {cost} gold."
+      }
+    },
     "src.0bec2574": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23928,6 +24141,16 @@
       ],
       "source": {
         "text": "The lessons are yours to spend now."
+      }
+    },
+    "src.0cbc662b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The crown’s coinage"
       }
     },
     "src.0cbec701": {
@@ -24932,6 +25155,16 @@
         "text": "Pursue marriage with {name}: court them daily, then propose."
       }
     },
+    "src.1384c790": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Risk of total loss"
+      }
+    },
     "src.13978df1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25082,6 +25315,16 @@
         "text": "Childhood is short. Spend it well."
       }
     },
+    "src.143d4a3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{amount}% for {years} years"
+      }
+    },
     "src.148d9aa4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25222,6 +25465,16 @@
         "text": "Hang them before the tents."
       }
     },
+    "src.151ec801": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count."
+      }
+    },
     "src.15373b1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25331,6 +25584,16 @@
       ],
       "source": {
         "text": "Bad Blood"
+      }
+    },
+    "src.15bf603a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The last debasement is still remembered. Five years must pass."
       }
     },
     "src.15fc60a1": {
@@ -25472,6 +25735,16 @@
       ],
       "source": {
         "text": "Tap them to court, propose, or break it off."
+      }
+    },
+    "src.171ce2cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No coin is committed to distant trade."
       }
     },
     "src.172228ff": {
@@ -26127,6 +26400,16 @@
         "text": "He blusters, bows, and yields. The hall takes note."
       }
     },
+    "src.1bb1ae1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
+      }
+    },
     "src.1bfd0c12": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26397,6 +26680,16 @@
         "text": "Choose a neighboring land to seize by force."
       }
     },
+    "src.1df9ed64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Restore the coinage…"
+      }
+    },
     "src.1dfe10fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26575,6 +26868,16 @@
       ],
       "source": {
         "text": "Royalty"
+      }
+    },
+    "src.1f4e5deb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Repay now ({amount} gold)"
       }
     },
     "src.1f5a9860": {
@@ -26808,6 +27111,16 @@
         "text": "Your liege must at least tolerate you (favor 20+, now {current})."
       }
     },
+    "src.20d00b97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "In arrears — the next missed deadline defaults."
+      }
+    },
     "src.20f19772": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26826,6 +27139,16 @@
       ],
       "source": {
         "text": "Hard drill today keeps you breathing tomorrow."
+      }
+    },
+    "src.210bce95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🪙 Debase the coinage…"
       }
     },
     "src.2117cad7": {
@@ -27339,6 +27662,16 @@
         "text": "No weak neighbor holds land beside yours."
       }
     },
+    "src.242faa23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Contract"
+      }
+    },
     "src.2446ef09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27447,6 +27780,16 @@
       ],
       "source": {
         "text": "Wander the pleasure quarter."
+      }
+    },
+    "src.24d3a8dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No lender will advance more while revenues are in default."
       }
     },
     "src.24fec001": {
@@ -27800,6 +28143,16 @@
         "text": "Honest"
       }
     },
+    "src.272c5b8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Restore the coinage?"
+      }
+    },
     "src.2734ed18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27858,6 +28211,16 @@
       ],
       "source": {
         "text": "The balance reveals the fraud before the seller leaves."
+      }
+    },
+    "src.277b1867": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Receive {principal} gold · {due} gold due {date} · pledge {asset}"
       }
     },
     "src.277bdb85": {
@@ -28780,6 +29143,16 @@
         "text": "Lose a vassal quietly, keep the rest calm."
       }
     },
+    "src.2db2f379": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Urgent obligations"
+      }
+    },
     "src.2dd29628": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28898,6 +29271,16 @@
       ],
       "source": {
         "text": "Grinds the valley’s grain for a fee."
+      }
+    },
+    "src.2f0f97da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Second missed payment:"
       }
     },
     "src.2f12a835": {
@@ -29090,6 +29473,26 @@
       ],
       "source": {
         "text": "Who are you?"
+      }
+    },
+    "src.304ff7fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "None"
+      }
+    },
+    "src.3067f21e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 Prices fall {rate}% this year; the purse gains {amount} gold of purchasing power."
       }
     },
     "src.306adcd8": {
@@ -29423,6 +29826,16 @@
         "text": "Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood."
       }
     },
+    "src.32a39b39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A four-season profit-sharing venture: productive risk, with no guaranteed return."
+      }
+    },
     "src.32b94572": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29491,6 +29904,16 @@
       ],
       "source": {
         "text": "🤝 Both sides leave angrier — at each other, and at you."
+      }
+    },
+    "src.332e8cc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "First missed payment:"
       }
     },
     "src.3334bdfb": {
@@ -30073,6 +30496,16 @@
         "text": "A bench, a cup, an hour’s peace."
       }
     },
+    "src.37280d7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Last annual movement"
+      }
+    },
     "src.373a95db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30181,6 +30614,16 @@
       ],
       "source": {
         "text": "Callused hands never go hungry for long."
+      }
+    },
+    "src.3825f75f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} exact offers are available."
       }
     },
     "src.382c155a": {
@@ -30424,6 +30867,16 @@
         "text": "Cast out by the church."
       }
     },
+    "src.3990beb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚠ The household defaults; one quarter of its regular revenues is assigned to the lender until the obligation is cleared."
+      }
+    },
     "src.399fad0b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30532,6 +30985,16 @@
       ],
       "source": {
         "text": "Appeal to a Higher Lord"
+      }
+    },
+    "src.3a83f201": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 The crown debases the coinage and takes {gold} gold in seigniorage. Prices and confidence suffer."
       }
     },
     "src.3a9c95a6": {
@@ -30742,6 +31205,16 @@
       ],
       "source": {
         "text": "The households crowd the hall. The reeve has his tally and his men; you have whatever truth, skill, and favor you managed to gather."
+      }
+    },
+    "src.3bdc02c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} obligations worth {amount} gold pass with the household."
       }
     },
     "src.3be55318": {
@@ -31234,6 +31707,16 @@
       ],
       "source": {
         "text": "You leave the hall with three new friends and a standing invitation. Your name is warming in the realm."
+      }
+    },
+    "src.3f5e17a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Debase the coinage"
       }
     },
     "src.3f63901f": {
@@ -31857,6 +32340,16 @@
         "text": "A devoted councillor sends a casket to your chamber: silver, and a letter protesting — at tedious length — that loyalty like his needs no reward. It is, of course, itemized."
       }
     },
+    "src.44197855": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The successor inherits one active obligation, now worth {amount} gold."
+      }
+    },
     "src.442631c2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32299,6 +32792,16 @@
         "text": "Pay the amercement. (8 gold)"
       }
     },
+    "src.465e2b45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stake now"
+      }
+    },
     "src.4678e8d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32307,6 +32810,16 @@
       ],
       "source": {
         "text": "A Mitre Within Reach"
+      }
+    },
+    "src.468a3d98": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Loans"
       }
     },
     "src.468d471e": {
@@ -32892,6 +33405,16 @@
         "text": "Walked the holy roads."
       }
     },
+    "src.4a19aba2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Repay early?"
+      }
+    },
     "src.4a25c599": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32930,6 +33453,16 @@
       ],
       "source": {
         "text": "slowest"
+      }
+    },
+    "src.4a49e026": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pledged loan"
       }
     },
     "src.4a565bb0": {
@@ -33222,6 +33755,16 @@
         "text": "🧰 Choose work or training…"
       }
     },
+    "src.4c209eee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Confirm the contract"
+      }
+    },
     "src.4c3a22b9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33421,16 +33964,6 @@
       ],
       "source": {
         "text": "Any direction chosen here remains assigned but is suspended until the war ends."
-      }
-    },
-    "src.4d5a1bc3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "The great gamble pays! Profits beyond your hopes."
       }
     },
     "src.4d5b0474": {
@@ -33643,6 +34176,16 @@
         "text": "It will not stop a lance, but it has turned many a tired sword."
       }
     },
+    "src.4ec161a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Financial contract"
+      }
+    },
     "src.4ed34540": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33651,6 +34194,16 @@
       ],
       "source": {
         "text": "The levy broke first at {cname}, as levy will. Your men-at-arms sold their ground dearly and formed the rearguard that bore you off — bloodied, beaten, but breathing."
+      }
+    },
+    "src.4ed9ac9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🪙 Coin & Credit…"
       }
     },
     "src.4ee05e54": {
@@ -33731,6 +34284,16 @@
       ],
       "source": {
         "text": "Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance."
+      }
+    },
+    "src.4f51748a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Debase the coinage…"
       }
     },
     "src.4f7e1e2b": {
@@ -34171,6 +34734,16 @@
       ],
       "source": {
         "text": "Rich pickings, with {god} watching."
+      }
+    },
+    "src.52226962": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Trade partnerships"
       }
     },
     "src.5232db25": {
@@ -35073,6 +35646,16 @@
         "text": "📜 Petition for a barony"
       }
     },
+    "src.581f22b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Debase the coinage?"
+      }
+    },
     "src.582e165e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35181,6 +35764,16 @@
       ],
       "source": {
         "text": "Ask {priest} to stand as protector. (5 piety)"
+      }
+    },
+    "src.58ef1aa2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 A lender advances {principal} gold to the household; the signed obligation is worth {due} gold today."
       }
     },
     "src.5900e91d": {
@@ -36007,6 +36600,16 @@
         "text": "Daughter"
       }
     },
+    "src.5d625253": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Take seigniorage now; harm prices, prestige, popular trust, and future credit."
+      }
+    },
     "src.5d75e2de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36519,6 +37122,16 @@
         "text": "He defaults — but the mill pledge makes you whole, and an enemy."
       }
     },
+    "src.608bd625": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Trade partnership"
+      }
+    },
     "src.6097c93d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36527,6 +37140,16 @@
       ],
       "source": {
         "text": "Liege’s cut"
+      }
+    },
+    "src.609e199d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The trade partnership is resolved."
       }
     },
     "src.60ad7e6a": {
@@ -36779,6 +37402,16 @@
         "text": "Call in the favor heaven owes you."
       }
     },
+    "src.622b331e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Maturity"
+      }
+    },
     "src.622ef3e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36917,6 +37550,16 @@
       ],
       "source": {
         "text": "your lands"
+      }
+    },
+    "src.6326a093": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design."
       }
     },
     "src.6327dba8": {
@@ -37121,16 +37764,6 @@
         "text": "🏰 The walls of {target} are breached!"
       }
     },
-    "src.64c024f2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "Months later word returns: the venture prospered! Your stake comes back doubled."
-      }
-    },
     "src.64c1e57b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37149,6 +37782,16 @@
       ],
       "source": {
         "text": "Flee to another province."
+      }
+    },
+    "src.650b0acc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seek a loan"
       }
     },
     "src.650db82d": {
@@ -37311,6 +37954,16 @@
         "text": "🏛 Govern the demesne"
       }
     },
+    "src.661a842a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ The household repays {amount} gold and clears its obligation."
+      }
+    },
     "src.662b1710": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37439,6 +38092,16 @@
       ],
       "source": {
         "text": "Miller’s son"
+      }
+    },
+    "src.66ebf7f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cost now"
       }
     },
     "src.66f4036e": {
@@ -37639,6 +38302,16 @@
       ],
       "source": {
         "text": "The Banners Rise"
+      }
+    },
+    "src.6832695d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current value due"
       }
     },
     "src.6838df61": {
@@ -38112,6 +38785,16 @@
         "text": "Your name over your own door."
       }
     },
+    "src.6af2c59d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount}% for {years} years"
+      }
+    },
     "src.6b0322f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38150,6 +38833,16 @@
       ],
       "source": {
         "text": "👑 Petition the liege for title"
+      }
+    },
+    "src.6b3916a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{asset} is taken, prestige falls, and lenders refuse the household for four seasons."
       }
     },
     "src.6b4e4e80": {
@@ -38222,6 +38915,16 @@
         "text": "Read the mint and ruler on the face."
       }
     },
+    "src.6bbea03e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 Prices rise {rate}% this year; circulating coin buys less."
+      }
+    },
     "src.6bc683fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38250,6 +38953,16 @@
       ],
       "source": {
         "text": "💬 Discord"
+      }
+    },
+    "src.6bfc418b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "First miss: 10% face penalty and two more seasons. Default: {consequence}"
       }
     },
     "src.6c11b014": {
@@ -38310,6 +39023,16 @@
       ],
       "source": {
         "text": "Smith’s son"
+      }
+    },
+    "src.6c935cf9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{season} {year}"
       }
     },
     "src.6c94b6b3": {
@@ -38742,6 +39465,16 @@
         "text": "Once-in-a-life moments and story events — but never one that could cost you your life, name an heir, accept a title, or declare independence. Those are always shown."
       }
     },
+    "src.6f1dc842": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Price index"
+      }
+    },
     "src.6f2e48b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39011,6 +39744,16 @@
       ],
       "source": {
         "text": "No enterprise yet. Open one in a settlement below."
+      }
+    },
+    "src.70e74f12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Commit {amount} gold"
       }
     },
     "src.70efcabf": {
@@ -39435,6 +40178,16 @@
         "text": "The Taxman Cometh"
       }
     },
+    "src.73ad4fcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Merchant advance"
+      }
+    },
     "src.73d62940": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39643,6 +40396,16 @@
       ],
       "source": {
         "text": "Ruins of {building}"
+      }
+    },
+    "src.74ddd590": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 Prices rise {rate}% this year; the purse loses {amount} gold of purchasing power."
       }
     },
     "src.74fcb403": {
@@ -39945,6 +40708,16 @@
       ],
       "source": {
         "text": "Take his hand — you did not cross a war to lose him now."
+      }
+    },
+    "src.76f479c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{stake} gold at risk · matures {date}"
       }
     },
     "src.770db4b7": {
@@ -40388,6 +41161,16 @@
         "text": "Perhaps no one is watching."
       }
     },
+    "src.79bdcddc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Confirm the partnership"
+      }
+    },
     "src.79be1efe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40426,6 +41209,16 @@
       ],
       "source": {
         "text": "Take what was offered and call it enough."
+      }
+    },
+    "src.79d61fde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under."
       }
     },
     "src.79ee13ce": {
@@ -40720,6 +41513,16 @@
         "text": "Countess"
       }
     },
+    "src.7c0189b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "In default — assigned revenues are paying this down."
+      }
+    },
     "src.7c06e419": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40758,6 +41561,16 @@
       ],
       "source": {
         "text": "Some heights are not worth the climb."
+      }
+    },
+    "src.7c449655": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Immediate seigniorage"
       }
     },
     "src.7c5c321c": {
@@ -41620,6 +42433,16 @@
         "text": "💰 You settle a dowry of {gold} gold on the match."
       }
     },
+    "src.81851a74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Inherited debt:"
+      }
+    },
     "src.81a19d84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41768,6 +42591,16 @@
       ],
       "source": {
         "text": "The {holy} Comes Calling"
+      }
+    },
+    "src.827dd7ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Qirad partnership"
       }
     },
     "src.8294759a": {
@@ -42179,6 +43012,16 @@
       ],
       "source": {
         "text": "Another strip under the plough. It pays only while someone works it."
+      }
+    },
+    "src.84a01b3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount}%"
       }
     },
     "src.84aa0ab1": {
@@ -42631,6 +43474,16 @@
         "text": "🤝 Your liege strips the old lord of {province} and invests you with it."
       }
     },
+    "src.8792fec5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
+      }
+    },
     "src.87980f7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43001,6 +43854,16 @@
         "text": "There is a young man of the next holding — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the lord’s serjeants are taking every unwed man who can hold a spear, and this morning he stands in the muster line with a borrowed shield on his arm and no notion that you exist. By dusk the company will be a smudge of dust on the war road, and him with it. A woman does not follow an army. Everyone knows that."
       }
     },
+    "src.8a6df1c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Repay {amount} gold"
+      }
+    },
     "src.8a70d014": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43291,6 +44154,16 @@
         "text": "Seneschal"
       }
     },
+    "src.8c2688de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Reliable seasonal net"
+      }
+    },
     "src.8c3dba80": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43389,6 +44262,16 @@
       ],
       "source": {
         "text": "Grain laid up against the hungry years."
+      }
+    },
+    "src.8cfabec2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Sign and receive {amount} gold"
       }
     },
     "src.8cfae98f": {
@@ -43779,6 +44662,16 @@
       ],
       "source": {
         "text": "My soul, made ready."
+      }
+    },
+    "src.8f1c6e5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pay {amount} gold now and clear this obligation. There is no early-payment penalty."
       }
     },
     "src.8f240a75": {
@@ -44603,16 +45496,6 @@
         "text": "Guild master"
       }
     },
-    "src.94d85fed": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "Raiders took the caravan at a desert well. Your silver is scattered across the sand."
-      }
-    },
     "src.94e2fc90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44976,6 +45859,16 @@
         "text": "Musters, war councils, tribute envoys, and battle reports. Your hosts still raise, march, and fight on the map by their own rules — this chooses your orders each season."
       }
     },
+    "src.9765e595": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pledged collateral"
+      }
+    },
     "src.976de118": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45145,6 +46038,16 @@
       ],
       "source": {
         "text": "Keep every stalk."
+      }
+    },
+    "src.983bf1cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "10% is added to the signed face and the deadline moves two seasons."
       }
     },
     "src.983fbc67": {
@@ -45750,6 +46653,16 @@
         "text": "A keen reply could shame him — or you."
       }
     },
+    "src.9ba7d086": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚠ The household defaults. Its name is struck from the lenders’ good books."
+      }
+    },
     "src.9bb0ab82": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46320,6 +47233,16 @@
         "text": "No pact or war"
       }
     },
+    "src.9ee87271": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount} gold due {date}"
+      }
+    },
     "src.9efc3b29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46390,16 +47313,6 @@
         "text": "Counties"
       }
     },
-    "src.9f32d8ee": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "A heavier purse rides the same dangerous roads."
-      }
-    },
     "src.9f3b0582": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46458,6 +47371,16 @@
       ],
       "source": {
         "text": "Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made."
+      }
+    },
+    "src.9f7c4918": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🪙 Coin & Credit"
       }
     },
     "src.9fa69249": {
@@ -46558,16 +47481,6 @@
       ],
       "source": {
         "text": "Examine the master’s ledger."
-      }
-    },
-    "src.9fea987c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "The sea — or the steppe — keeps your fortune. A bitter year."
       }
     },
     "src.9ffa4203": {
@@ -46720,6 +47633,16 @@
         "text": "A little silver, a lot of the world."
       }
     },
+    "src.a0fc32ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unsecured credit capacity"
+      }
+    },
     "src.a10c4f73": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46868,6 +47791,16 @@
       ],
       "source": {
         "text": "Master craftsman"
+      }
+    },
+    "src.a21b6dad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The trade partnership prospers and returns {payout} gold."
       }
     },
     "src.a2324eed": {
@@ -47148,6 +48081,16 @@
       ],
       "source": {
         "text": "Talk your house upward."
+      }
+    },
+    "src.a42b76f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⌛ A payment is missed. The lender adds the signed penalty and grants two more seasons."
       }
     },
     "src.a44569f3": {
@@ -47880,6 +48823,16 @@
       ],
       "source": {
         "text": "Drink until the face blurs."
+      }
+    },
+    "src.a8bc3bab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting."
       }
     },
     "src.a8c8220b": {
@@ -48704,6 +49657,26 @@
         "text": "Karl"
       }
     },
+    "src.ae77bd54": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pledged: {asset}"
+      }
+    },
+    "src.ae802a6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Spend {amount} gold and restore the coin"
+      }
+    },
     "src.ae85f03f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48904,6 +49877,16 @@
       ],
       "source": {
         "text": "Throw yourself into the training."
+      }
+    },
+    "src.b04dac2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Face value: {face} nominal coin. What that face value can buy may rise or fall with prices."
       }
     },
     "src.b0530f83": {
@@ -49296,6 +50279,16 @@
         "text": "Set foreign policy"
       }
     },
+    "src.b2e0f76c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This contract is reckoned by weight: price changes do not change the gold due."
+      }
+    },
     "src.b2e22054": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49344,6 +50337,16 @@
       ],
       "source": {
         "text": "row on any province, and the 🗺 map filters ("
+      }
+    },
+    "src.b328a03e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🪙 Prices fall {rate}% this year; circulating coin buys more."
       }
     },
     "src.b32b1d4f": {
@@ -49888,6 +50891,16 @@
         "text": "🕯 Your niece {name} has died, aged {age}."
       }
     },
+    "src.b6c03d53": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "The stake leaves now; the partnership returns in four seasons, if it returns at all."
+      }
+    },
     "src.b6c232c3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50029,6 +51042,16 @@
         "text": "{count} men-at-arms"
       }
     },
+    "src.b769a688": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ The last assigned revenues reach the lender; the defaulted obligation is settled."
+      }
+    },
     "src.b782c0bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50137,6 +51160,16 @@
       ],
       "source": {
         "text": "Every county belongs by ancient right to a duchy, a kingdom, and an empire — its"
+      }
+    },
+    "src.b84cc030": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "✨ The trade partnership returns a remarkable {payout} gold."
       }
     },
     "src.b8630818": {
@@ -50380,6 +51413,16 @@
         "text": "Diplomacy"
       }
     },
+    "src.bacaa8ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Weight-denominated contract; price movement does not change the amount due."
+      }
+    },
     "src.badc5af7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50418,6 +51461,16 @@
       ],
       "source": {
         "text": "Small enough to be modest, bright enough to be noticed."
+      }
+    },
+    "src.bb074402": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No active household obligations."
       }
     },
     "src.bb0863b0": {
@@ -50711,6 +51764,16 @@
         "text": "You lose, thoroughly. But you got up every time, and everyone saw that too."
       }
     },
+    "src.bcdfb3e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Commenda partnership"
+      }
+    },
     "src.bd0aade1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50809,6 +51872,16 @@
       ],
       "source": {
         "text": "Over your limit — your own income and levy are cut until you grant land away."
+      }
+    },
+    "src.bded073d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Loan against revenues"
       }
     },
     "src.bdf9bb42": {
@@ -50961,6 +52034,16 @@
         "text": " — {gold} gold"
       }
     },
+    "src.bf1d56d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Coin and household means"
+      }
+    },
     "src.bf2fc5f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51049,16 +52132,6 @@
       ],
       "source": {
         "text": "Worth about {gold} gold."
-      }
-    },
-    "src.c012da19": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "A modest stake could double — or vanish with the caravan."
       }
     },
     "src.c01b63d7": {
@@ -51604,6 +52677,26 @@
         "text": "You need at least 400 prestige (now {current})."
       }
     },
+    "src.c3202711": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No offer fits the household’s income, collateral, or current obligations."
+      }
+    },
+    "src.c3224894": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🌊 The trade partnership is lost with every coin committed."
+      }
+    },
     "src.c3894449": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51903,6 +52996,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} settles {gold} gold on you."
+      }
+    },
+    "src.c5907470": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Coin and prices this year"
       }
     },
     "src.c5b1ed93": {
@@ -52383,6 +53486,16 @@
       ],
       "source": {
         "text": "Let the plough do the boasting."
+      }
+    },
+    "src.c956c935": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚠ The household defaults; the lender takes {asset} in settlement."
       }
     },
     "src.c95b9060": {
@@ -52906,6 +54019,16 @@
         "text": "favor {favor}"
       }
     },
+    "src.ccb21320": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "One obligation worth {amount} gold passes with the household."
+      }
+    },
     "src.ccb6ea0f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53297,6 +54420,16 @@
         "text": "Won a duel of honor."
       }
     },
+    "src.cf7efb41": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pay to call in light coin, restore weight, and press prices back toward stability."
+      }
+    },
     "src.cf8838dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53395,6 +54528,16 @@
       ],
       "source": {
         "text": "📜 The fief returns to your demesne. {realm} is no more."
+      }
+    },
+    "src.d07e3e3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{rate}%"
       }
     },
     "src.d085ca9c": {
@@ -53555,6 +54698,16 @@
       ],
       "source": {
         "text": "Good pay, if harder men don’t want it too."
+      }
+    },
+    "src.d1d4ca51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Price pressure"
       }
     },
     "src.d1de6650": {
@@ -53746,6 +54899,16 @@
       ],
       "source": {
         "text": "The work comes together beneath hands the master trained."
+      }
+    },
+    "src.d31896fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "A larger four-season partnership risks more coin on the same distant roads."
       }
     },
     "src.d3199d1f": {
@@ -54076,6 +55239,16 @@
       ],
       "source": {
         "text": "🕊 A humiliating peace. Reparations drain your coffers."
+      }
+    },
+    "src.d58b1503": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Emergency silver for an independent crown — at the price of confidence, standing, and rising prices."
       }
     },
     "src.d58d8f7d": {
@@ -55210,6 +56383,16 @@
         "text": "Caught in the moonlight, shovel in hand. The moot fines you."
       }
     },
+    "src.dcac4ffd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Receive {principal} gold · {due} gold due {date}"
+      }
+    },
     "src.dcb23e72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55470,6 +56653,16 @@
         "text": "🏅 {name} is raised as guildmaster."
       }
     },
+    "src.de340d31": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "One exact offer is available."
+      }
+    },
     "src.de34e4f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55488,6 +56681,16 @@
       ],
       "source": {
         "text": "open the Deeds / Self / Kin / Land / Chronicle panels ·"
+      }
+    },
+    "src.de3d66ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Revenue assigned to lenders"
       }
     },
     "src.de52de8a": {
@@ -55538,6 +56741,16 @@
       ],
       "source": {
         "text": "Let them talk. You chose well."
+      }
+    },
+    "src.de7e9297": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Prices, reliable income, loans, pledged property, and trade partnerships."
       }
     },
     "src.de87fc01": {
@@ -56540,6 +57753,16 @@
       ],
       "source": {
         "text": "The Open Road"
+      }
+    },
+    "src.e550d2ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Commit {stake} gold…"
       }
     },
     "src.e559b261": {
@@ -58285,6 +59508,16 @@
         "text": "Masses sung for your ancestors. (25 piety)"
       }
     },
+    "src.f026d8cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The household commits {stake} gold to a distant trade partnership."
+      }
+    },
     "src.f039952b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58313,16 +59546,6 @@
       ],
       "source": {
         "text": "Raised to the gentry for valor!"
-      }
-    },
-    "src.f07d63be": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "A trade venture paid off."
       }
     },
     "src.f088c8c9": {
@@ -58803,6 +60026,16 @@
       ],
       "source": {
         "text": "Side with the one in the right."
+      }
+    },
+    "src.f399d2b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The trade partnership limps home; {payout} gold is salvaged."
       }
     },
     "src.f3a6242a": {
@@ -59887,6 +61120,16 @@
         "text": "Shared work, shared honey, stronger friendship."
       }
     },
+    "src.fa948e5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seek a loan…"
+      }
+    },
     "src.faaf37c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59895,6 +61138,16 @@
       ],
       "source": {
         "text": "The motion carries, to the relief of every manor with a leaking hall. Henceforth the liege’s summons can be answered with a purse — and the aid creeps up to pay for the privilege."
+      }
+    },
+    "src.fabee0a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Defaults remembered"
       }
     },
     "src.fadb4a06": {
@@ -60197,6 +61450,16 @@
         "text": "Set a trap for their agent."
       }
     },
+    "src.fcaff49f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared."
+      }
+    },
     "src.fcbe332a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60255,6 +61518,16 @@
       ],
       "source": {
         "text": "Heroism the whole road will remember — if you live."
+      }
+    },
+    "src.fd01cf0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The successor inherits {count} active obligations, now worth {amount} gold."
       }
     },
     "src.fd0bb33e": {
@@ -62301,6 +63574,17 @@
         "text": "+{amount} scholarship each season"
       }
     },
+    "ui:+{amount}% for {years} years": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "years"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{amount}% for {years} years"
+      }
+    },
     "ui:+{men} men to the levy": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62319,6 +63603,14 @@
         "text": "10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest."
       }
     },
+    "ui:10% is added to the signed face and the deadline moves two seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "10% is added to the signed face and the deadline moves two seasons."
+      }
+    },
     "ui:A Match for {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62327,6 +63619,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "A Match for {name}"
+      }
+    },
+    "ui:A four-season profit-sharing venture: productive risk, with no guaranteed return.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A four-season profit-sharing venture: productive risk, with no guaranteed return."
       }
     },
     "ui:A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.": {
@@ -62645,6 +63945,22 @@
         "text": "Buy productive property; further copies of one kind cost more."
       }
     },
+    "ui:Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under."
+      }
+    },
+    "ui:Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count."
+      }
+    },
     "ui:Chamberlain": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62679,12 +63995,64 @@
         "text": "Close"
       }
     },
+    "ui:Coin and prices this year": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Coin and prices this year"
+      }
+    },
     "ui:Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):"
+      }
+    },
+    "ui:Commenda partnership": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Commenda partnership"
+      }
+    },
+    "ui:Commit {amount} gold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Commit {amount} gold"
+      }
+    },
+    "ui:Commit {stake} gold…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Commit {stake} gold…"
+      }
+    },
+    "ui:Confirm the contract": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Confirm the contract"
+      }
+    },
+    "ui:Confirm the partnership": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Confirm the partnership"
       }
     },
     "ui:Constable": {
@@ -62743,6 +64111,30 @@
       "location": "js/ui.js",
       "source": {
         "text": "Daily focus — continues until changed"
+      }
+    },
+    "ui:Debase the coinage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Debase the coinage"
+      }
+    },
+    "ui:Debase the coinage?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Debase the coinage?"
+      }
+    },
+    "ui:Debase the coinage…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Debase the coinage…"
       }
     },
     "ui:Decide nothing today": {
@@ -62849,6 +64241,34 @@
         "text": "Enterprise in {settlement}"
       }
     },
+    "ui:Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting."
+      }
+    },
+    "ui:Face value {face} nominal coin; its value in gold moves with prices.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "face"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Face value {face} nominal coin; its value in gold moves with prices."
+      }
+    },
+    "ui:Face value: {face} nominal coin. What that face value can buy may rise or fall with prices.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "face"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Face value: {face} nominal coin. What that face value can buy may rise or fall with prices."
+      }
+    },
     "ui:Families willing to hear an offer for {name}’s hand:": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62875,6 +64295,14 @@
         "text": "Favorable"
       }
     },
+    "ui:Financial contract": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Financial contract"
+      }
+    },
     "ui:First copy in this county: {cost} gold.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62883,6 +64311,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "First copy in this county: {cost} gold."
+      }
+    },
+    "ui:First miss: 10% face penalty and two more seasons. Default: {consequence}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "consequence"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "First miss: 10% face penalty and two more seasons. Default: {consequence}"
+      }
+    },
+    "ui:First missed payment:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "First missed payment:"
       }
     },
     "ui:Foreign Policy": {
@@ -63057,6 +64503,30 @@
         "text": "Improve relations"
       }
     },
+    "ui:In arrears — the next missed deadline defaults.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "In arrears — the next missed deadline defaults."
+      }
+    },
+    "ui:In default — assigned revenues are paying this down.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "In default — assigned revenues are paying this down."
+      }
+    },
+    "ui:Inherited debt:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Inherited debt:"
+      }
+    },
     "ui:Innovations": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63145,6 +64615,14 @@
         "text": "Liege’s cut"
       }
     },
+    "ui:Loan against revenues": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Loan against revenues"
+      }
+    },
     "ui:Man of {age}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -63163,6 +64641,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Map filter: {mode} (R)"
+      }
+    },
+    "ui:Merchant advance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Merchant advance"
       }
     },
     "ui:Move for redress of grievances ({cost} gold)": {
@@ -63203,6 +64689,14 @@
         "text": "Neutral"
       }
     },
+    "ui:No active household obligations.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No active household obligations."
+      }
+    },
     "ui:No apprenticeship chosen": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63229,6 +64723,14 @@
         "text": "No buildings stand in {settlement} yet."
       }
     },
+    "ui:No coin is committed to distant trade.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No coin is committed to distant trade."
+      }
+    },
     "ui:No eligible worker yet — it would stand idle.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63243,6 +64745,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No enterprise yet. Open one in a settlement below."
+      }
+    },
+    "ui:No lender will advance more while revenues are in default.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No lender will advance more while revenues are in default."
       }
     },
     "ui:No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.": {
@@ -63269,6 +64779,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "No occupation"
+      }
+    },
+    "ui:No offer fits the household’s income, collateral, or current obligations.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No offer fits the household’s income, collateral, or current obligations."
       }
     },
     "ui:No open settlement remains.": {
@@ -63311,6 +64829,14 @@
         "text": "No unseated vassal remains to raise — grant land to loyal men, and offices will follow."
       }
     },
+    "ui:None": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "None"
+      }
+    },
     "ui:None — this land feeds no duchy or crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63341,6 +64867,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there."
+      }
+    },
+    "ui:One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
       }
     },
     "ui:Only your home county can raise this.": {
@@ -63444,6 +64978,24 @@
         "text": "Path: save {gold} gold (or win your lord’s favor) to buy freedom."
       }
     },
+    "ui:Pay to call in light coin, restore weight, and press prices back toward stability.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pay to call in light coin, restore weight, and press prices back toward stability."
+      }
+    },
+    "ui:Pay {amount} gold now and clear this obligation. There is no early-payment penalty.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pay {amount} gold now and clear this obligation. There is no early-payment penalty."
+      }
+    },
     "ui:Pay {gold} gold to be struck from the serf-roll.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -63480,6 +65032,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Piety each season"
+      }
+    },
+    "ui:Pledged loan": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pledged loan"
+      }
+    },
+    "ui:Pledged: {asset}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "asset"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pledged: {asset}"
       }
     },
     "ui:Policy toward {realm}": {
@@ -63521,6 +65091,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Political attention: {used} of {capacity} assigned."
+      }
+    },
+    "ui:Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design."
       }
     },
     "ui:Preview": {
@@ -63591,6 +65169,14 @@
         "text": "Qadi"
       }
     },
+    "ui:Qirad partnership": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Qirad partnership"
+      }
+    },
     "ui:Raise a Building in {settlement}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -63637,6 +65223,31 @@
         "text": "Ready in {days} days."
       }
     },
+    "ui:Receive {principal} gold · {due} gold due {date}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "due",
+        "principal"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Receive {principal} gold · {due} gold due {date}"
+      }
+    },
+    "ui:Receive {principal} gold · {due} gold due {date} · pledge {asset}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "asset",
+        "date",
+        "due",
+        "principal"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Receive {principal} gold · {due} gold due {date} · pledge {asset}"
+      }
+    },
     "ui:Renounce your liege and raise your own banner — it means war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63661,6 +65272,34 @@
       "location": "js/actions.js",
       "source": {
         "text": "Rents from your lands"
+      }
+    },
+    "ui:Repay early?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Repay early?"
+      }
+    },
+    "ui:Repay now ({amount} gold)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Repay now ({amount} gold)"
+      }
+    },
+    "ui:Repay {amount} gold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Repay {amount} gold"
       }
     },
     "ui:Repeat copy {number}: its price has risen to {cost} gold.": {
@@ -63723,12 +65362,36 @@
         "text": "Requires {skill} Stewardship."
       }
     },
+    "ui:Restore the coinage?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Restore the coinage?"
+      }
+    },
+    "ui:Restore the coinage…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Restore the coinage…"
+      }
+    },
     "ui:Return to title": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Return to title"
+      }
+    },
+    "ui:Revenue assigned to lenders": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Revenue assigned to lenders"
       }
     },
     "ui:Ruins of {building}": {
@@ -63767,6 +65430,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Scutage — silver answers the summons"
+      }
+    },
+    "ui:Second missed payment:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Second missed payment:"
       }
     },
     "ui:See the buildings of {settlement}": {
@@ -63817,6 +65488,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "See your liege’s sheet"
+      }
+    },
+    "ui:Seek a loan": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seek a loan"
+      }
+    },
+    "ui:Seek a loan…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seek a loan…"
       }
     },
     "ui:Seek the next guild rank — {rank} ({gold} gold)": {
@@ -63880,6 +65567,16 @@
         "text": "Sickness has taken hold."
       }
     },
+    "ui:Sign and receive {amount} gold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Sign and receive {amount} gold"
+      }
+    },
     "ui:Sovereign — kneels to no one": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63916,6 +65613,16 @@
         "text": "Speed {current} / {total} — {description}"
       }
     },
+    "ui:Spend {amount} gold and restore the coin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Spend {amount} gold and restore the coin"
+      }
+    },
     "ui:Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -63924,6 +65631,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)"
+      }
+    },
+    "ui:Take seigniorage now; harm prices, prestige, popular trust, and future credit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Take seigniorage now; harm prices, prestige, popular trust, and future credit."
       }
     },
     "ui:Tap a treasure to see its powers — or to sell or gift it.": {
@@ -64076,12 +65791,36 @@
         "text": "There is no heir."
       }
     },
+    "ui:This contract is reckoned by weight: price changes do not change the gold due.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This contract is reckoned by weight: price changes do not change the gold due."
+      }
+    },
+    "ui:This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
+      }
+    },
     "ui:This is you": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "This is you"
+      }
+    },
+    "ui:This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared."
       }
     },
     "ui:Those who carried the name": {
@@ -64108,6 +65847,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Trackless {terrain}. No lord rules here — it feeds no duchy or crown."
+      }
+    },
+    "ui:Trade partnership": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Trade partnership"
       }
     },
     "ui:Treasurer": {
@@ -64193,6 +65940,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Weaving: {power}/{needed} — patience, whispers, ink."
+      }
+    },
+    "ui:Weight-denominated contract; price movement does not change the amount due.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Weight-denominated contract; price movement does not change the amount due."
       }
     },
     "ui:When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.": {
@@ -65168,6 +66923,17 @@
         "text": "{amount} gold"
       }
     },
+    "ui:{amount} gold due {date}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "date"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount} gold due {date}"
+      }
+    },
     "ui:{amount} piety a season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65199,6 +66965,16 @@
         "text": "{amount} {skill}"
       }
     },
+    "ui:{amount}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount}%"
+      }
+    },
     "ui:{amount}% battle odds": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65207,6 +66983,27 @@
       "location": "js/ui.js",
       "source": {
         "text": "{amount}% battle odds"
+      }
+    },
+    "ui:{amount}% for {years} years": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "years"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount}% for {years} years"
+      }
+    },
+    "ui:{asset} is taken, prestige falls, and lenders refuse the household for four seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "asset"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{asset} is taken, prestige falls, and lenders refuse the household for four seasons."
       }
     },
     "ui:{building} upkeep": {
@@ -65463,6 +67260,16 @@
         "text": "{place} · {worker} · about {gold} gold/season"
       }
     },
+    "ui:{rate}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rate"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{rate}%"
+      }
+    },
     "ui:{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65640,6 +67447,17 @@
         "text": "{season} {day}, {year}"
       }
     },
+    "ui:{season} {year}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "season",
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{season} {year}"
+      }
+    },
     "ui:{season}, {year}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65671,6 +67489,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{skill} {value}"
+      }
+    },
+    "ui:{stake} gold at risk · matures {date}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{stake} gold at risk · matures {date}"
       }
     },
     "ui:{stance} — suspended during war": {
@@ -66312,6 +68141,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "🧰 Work — {career}"
+      }
+    },
+    "ui:🪙 Coin & Credit": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🪙 Coin & Credit"
       }
     },
     "word.ui.fast.default": {
