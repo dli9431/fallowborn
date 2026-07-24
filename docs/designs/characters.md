@@ -55,11 +55,27 @@ It gates deeds and events (courtship, petitions, `roleOpinionAbove/Below` trigge
 three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggregate now
 scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
-add the target's `opinion/500` to success — a trusting victim is easier to undo. The rival
-seat (`state.roles.rival`) is **player-declared**: nothing assigns it automatically — a
-⚡ Declare rival button appears on a non-family character's sheet at opinion ≤ −40, and
-🕊 Let the feud die clears it; events that speak of `{rival}` are all gated behind
-`hasRole:'rival'` so the interpreter's lazy role creation can no longer invent one.
+add the target's `opinion/500` to success — a trusting victim is easier to undo.
+
+**Rivalries grow out of contact.** The rival seat remains `state.roles.rival`, so old saves,
+events, and mods keep one canonical personal enemy. The player may deliberately name any
+non-family character at opinion ≤ −40. An NPC may claim the seat only if that exact,
+already-existing character has a life-local entry in `player.rivalContacts`, written by an
+explicit hostile interaction (`FB.noteRivalContact` / event effect `rivalContact`), and is
+also at opinion ≤ `balance.rivalOpinionThreshold`. Merely losing opinion is not enough, and
+`{rival}` text or an `opinion` effect can never lazily invent a rival. Contacts expire after
+`balance.rivalContactMaxAge`; wrathful, proud, cruel, and ambitious characters are readier
+to declare, while patient, humble, kind, and content characters are slower.
+
+An active feud has life-local `player.rivalry` metadata with heat 0–100. Heat, not opinion,
+gates escalation: opinion measures willingness to make peace, while heat measures whether
+the quarrel is cooling, simmering, open, or a blood feud. Hostile deeds and event choices
+raise it; restraint and common cause lower it; a long quiet reduces it toward 5. The
+character sheet offers mediated settlement instead of unilateral deletion. `FB.endRivalry`
+clears the seat, rival plot, and rival-specific downfall flags, then protects the peace for
+`balance.rivalPeaceDays`. On succession contacts reset and an active enemy produces the
+queued `rival_legacy` choice: bury the dead ruler's quarrel, seek peace, or inherit it.
+Old saves with a rival lazily receive `balance.rivalHeatOldSave`.
 
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.

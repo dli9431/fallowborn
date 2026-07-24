@@ -46,11 +46,11 @@ FBDATA.events.push(
   text:'The forester marches you before {lord}. Poaching the lord’s game can cost a hand — or worse.',
   options:[
     { label:'Beg for mercy.', desc:'A bent knee may soften the sentence — or not.', chance:0.6,
-      success:{ text:'The lord waves you off with a fine and a warning.', effects:{ gold:-5, opinion:{role:'lord', amt:-10} } },
-      failure:{ text:'The lord orders you flogged in the yard as a lesson.', effects:{ health:-2, prestige:-5, opinion:{role:'lord', amt:-10} } } },
+      success:{ text:'The lord waves you off with a fine and a warning.', effects:{ gold:-5, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'poaching'} } },
+      failure:{ text:'The lord orders you flogged in the yard as a lesson.', effects:{ health:-2, prestige:-5, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'poaching'} } } },
     { label:'Claim the deer was already dead.', desc:'A bold lie, and a thin one to hang your hand on.', chance:0.3,
       success:{ text:'Astonishingly, the lie holds.', effects:{ skills:{int:1} } },
-      failure:{ text:'No one believes it. The flogging is worse for the insult.', effects:{ health:-2, prestige:-8, opinion:{role:'lord', amt:-15} } } }
+      failure:{ text:'No one believes it. The flogging is worse for the insult.', effects:{ health:-2, prestige:-8, opinion:{role:'lord', amt:-15}, rivalContact:{role:'lord', score:2, cause:'poaching_lie'} } } }
   ]},
 
 /* ---------- the lord's shadow (serfs) ---------- */
@@ -134,7 +134,7 @@ FBDATA.events.push(
     { label:'Move it back by night.', desc:'Stones are quietest movers after dark.', chance:0.7,
       success:{ text:'The stone returns as mysteriously as it left.', effects:{ skills:{int:1} } },
       failure:{ text:'Caught in the moonlight, shovel in hand. The moot fines you.', effects:{ gold:-4, prestige:-4 } } },
-    { label:'Let it go.', desc:'A strip of land is cheaper than a feud.', effects:{ opinion:{role:'rival', amt:5} } }
+    { label:'Let it go.', desc:'A strip of land is cheaper than a feud.', effects:{ piety:2, prestige:-1 } }
   ]},
 { id:'foundling', title:'The Basket at the Door',
   trigger:{ tierMax:1, chance:0.06, married:true }, weight:3, once:true,
@@ -192,7 +192,7 @@ FBDATA.events.push(
   options:[
     { label:'Run.', desc:'Freedom at the end of the road — or a halter.', chance:0.5,
       success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ tierSet:1, moveRandom:true, gold:-3, prestige:5, log:'Fled serfdom to a new land!' } },
-      failure:{ text:'The lord’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, opinion:{role:'lord', amt:-20} } } },
+      failure:{ text:'The lord’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, opinion:{role:'lord', amt:-20}, rivalContact:{role:'lord', score:2, cause:'attempted_escape'} } } },
     { label:'Stay. This is home, chains and all.', desc:'Better the known yoke than the unknown road.', effects:{ } }
   ]},
 

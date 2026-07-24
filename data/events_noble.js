@@ -50,7 +50,7 @@ FBDATA.events.push(
       failure:{ text:'Everyone notices. “The Watered Cup,” they murmur, snickering.', effects:{ gold:-3, prestige:-8 } } }
   ]},
 { id:'assassin_night', title:'A Step on the Stair',
-  trigger:{ tierMin:3, chance:0.06 }, weight:5, cooldown:16,
+  trigger:{ tierMin:3, hasRole:'rival', rivalHeatMin:80, chance:0.06 }, weight:5, cooldown:16,
   text:'You wake to a floorboard’s groan. A shadow crosses your chamber — and moonlight finds the knife.',
   options:[
     { label:'Fight for your life.', desc:'Grapple the blade and hope the dark is kind.', chance:'battle',
@@ -63,9 +63,9 @@ FBDATA.events.push(
 { id:'assassin_caught', title:'The Question', trigger:{ never:true },
   text:'The assassin hangs in your dungeon. Under hard questioning, a name is finally spat out — a rival hand paid for your death.',
   options:[
-    { label:'Justice, publicly.', desc:'Let the crowd watch the law work.', effects:{ prestige:8, opinion:{role:'rival', amt:-30} } },
+    { label:'Justice, publicly.', desc:'Let the crowd watch the law work.', effects:{ prestige:8, opinion:{role:'rival', amt:-30}, rivalHeat:15 } },
     { label:'Turn the blade back on its buyer.', desc:'A quiet death answers a quiet death.', effects:{ skills:{int:2}, killRole:'rival', prestige:-5, log:'Repaid an assassin in kind.' } },
-    { label:'Mercy — and a message.', desc:'Spare the tool to shame the hand.', effects:{ piety:8, prestige:4 } }
+    { label:'Mercy — and a message.', desc:'Spare the tool to shame the hand.', effects:{ piety:8, prestige:4, rivalHeat:-10 } }
   ]},
 { id:'build_opportunity', title:'The Master Builder',
   trigger:{ tierMin:3, chance:0.2, notFlags:['mason_visit'] }, weight:6, cooldown:12,
@@ -255,7 +255,7 @@ FBDATA.events.push(
       effects:{ gold:-20, opinionLiege:-10, clearFlag:'df_unrest', clearFlag2:'df_league', log:'The liege’s host put down the rising — at a price.' } }
   ]},
 { id:'df_claim_whispers', title:'A Rival’s Quiet Work',
-  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-40 }, notFlags:['df_claim'], chance:0.12 }, weight:5, cooldown:12,
+  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-40 }, rivalHeatMin:70, notFlags:['df_claim'], chance:0.12 }, weight:5, cooldown:12,
   text:'{rival} dines your neighbors, remembers their sons’ names, and asks — always lightly — whether the land might not be better served. A spy in their household brings worse: parchments are being drawn up.',
   options:[
     { label:'Buy off the waverers. (20 gold)', require:{ goldMin:20 }, desc:'Loyalty, like cattle, can be purchased by the head.', effects:{ gold:-20, log:'Spent freely to keep the fence-sitters loyal.' } },
@@ -269,9 +269,9 @@ FBDATA.events.push(
   text:'It is done openly now: {rival} publishes a claim to everything you hold — a worm-eaten genealogy, a bought witness, and promises to every malcontent in the county, with foreign gold behind all of it. Men begin choosing which side to kneel to.',
   options:[
     { label:'Settle: gold for a renunciation. (30 gold)', require:{ goldMin:30 }, desc:'A heavy purse buys back a quiet name.',
-      effects:{ gold:-30, prestige:-5, clearFlag:'df_claim', log:'Bought off a rival’s claim.' } },
+      effects:{ gold:-30, prestige:-5, clearFlag:'df_claim', rivalHeat:-20, log:'Bought off a rival’s claim.' } },
     { label:'Answer with a counter-plot.', desc:'Unravel their witnesses before yours unravel.', chance:'plot',
-      success:{ text:'Their bought witness recants, loudly, in the wrong company. The claim collapses into laughter.', effects:{ clearFlag:'df_claim', prestige:8, log:'Unraveled a rival’s claim.' } },
+      success:{ text:'Their bought witness recants, loudly, in the wrong company. The claim collapses into laughter.', effects:{ clearFlag:'df_claim', prestige:8, rivalHeat:-15, log:'Unraveled a rival’s claim.' } },
       failure:{ text:'Your agent is caught, and talks. Now the claim has a martyr’s righteousness about it — and backers with spears.', effects:{ setFlag:'df_claim2', prestige:-5 } } },
     { label:'Let them shout.', desc:'Shouts unanswered start to sound like truth.', effects:{ setFlag:'df_claim2' } }
   ]},
@@ -286,12 +286,12 @@ FBDATA.events.push(
       effects:{ custom:'df_fall_flee', log:'Yielded everything to a rival claimant.' } }
   ]},
 { id:'df_omen', title:'An Omen of Knives',
-  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-50 }, notFlags:['df_marked'], chance:0.1 }, weight:5, cooldown:16,
+  trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-50 }, rivalHeatMin:80, notFlags:['df_marked'], chance:0.1 }, weight:5, cooldown:16,
   text:'A dead dog at your threshold, its throat cut. A serving girl who knew your habits, gone in the night. Your spymaster — you pay him well — says the pattern points one way: {rival} is done waiting for you to die naturally.',
   options:[
     { label:'Double the guard, reward the loyal. (15 gold)', require:{ goldMin:15 }, desc:'Watched doors sleep better at night.', effects:{ gold:-15 } },
     { label:'Set a trap for their agent.', desc:'Catch the poisoner — or teach him your defenses.', chance:'plot',
-      success:{ text:'The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know.', effects:{ prestige:6, skills:{int:1} } },
+      success:{ text:'The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know.', effects:{ prestige:6, skills:{int:1}, rivalHeat:-15 } },
       failure:{ text:'Your trap catches a scullion — innocent, probably. The real agent reports your defenses in detail.', effects:{ setFlag:'df_marked' } } },
     { label:'Omens are for old women.', desc:'Dead dogs do not cut their own throats.', effects:{ setFlag:'df_marked' } }
   ]},
@@ -303,7 +303,7 @@ FBDATA.events.push(
       success:{ text:'Three servants taken in the night; one talks. The paid knife flees your hall ahead of the rope, and the silence lifts.', effects:{ clearFlag:'df_marked', prestige:-5, piety:-3, log:'Purged a murderous conspiracy.' } },
       failure:{ text:'You seize the wrong people, and the true conspirators use the fear — half your servants flee, and the rest dare not warn you now.', effects:{ setFlag:'df_doom', prestige:-8 } } },
     { label:'Lie low at a kinsman’s hall. (10 gold)', require:{ goldMin:10 }, desc:'A season away cools even hot blood.',
-      effects:{ gold:-10, prestige:-5, clearFlag:'df_marked' } },
+      effects:{ gold:-10, prestige:-5, clearFlag:'df_marked', rivalHeat:-10 } },
     { label:'Trust your stars.', desc:'The stars have never yet held a shield.', effects:{ setFlag:'df_doom' } }
   ]},
 { id:'df_knife', title:'The Knife',

@@ -36,6 +36,17 @@ A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename fiel
 modal — prefilled with the generated name, applied when any option is chosen; autoresolve
 keeps the generated name.
 
+**Rival events require a real rival.** `FB.prepareEvent` and `FB.applyEffects` never create
+the `rival` role from a `{rival}` token or `opinion:{role:'rival'}`. The random picker must
+gate such events with `hasRole:'rival'`; code-queued rivalry events assign the exact
+character before queueing. An event records a genuine hostile encounter with
+`rivalContact:{role,score,cause}`, adjusts an existing feud with `rivalHeat`, and resolves
+one through `endRivalry:true`. The `rivalHeatMin` / `rivalHeatMax` triggers separate ordinary
+quarrels from the high-heat claim and murder cascades. The settlement stories use
+compensation, third-party mediation, witnessed oaths, common labor, and satisfaction by
+duel; Muslim, pagan, and Jewish branches phrase the public settlement in their own legal
+and religious idiom.
+
 **Lower-station stories have two paces.** The Old Custom landmark chain starts randomly
 for an adult at tier 0–2, then advances through high-weight stage flags so its five
 chapters unfold across later event slots. Its hearing uses four stat-specific formulas,

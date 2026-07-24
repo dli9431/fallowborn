@@ -321,10 +321,12 @@ window.FB = window.FB || {};
       if (FB.chance(0.35 + inn * 0.03 + (r ? r.opinion : 0) / 500)) {
         FB.applyEffects(s, { prestige: 4, skills: { int: FB.chance(0.5) ? 1 : 0 } });
         r.opinion = FB.clamp(r.opinion - 10, -100, 100);
+        FB.changeRivalHeat(s, 10);
         FB.news(s, FB.msg('news.action.scheme_rival_success',
           'Your quiet work costs {name} dearly.', { name: r.name }));
       } else {
         FB.applyEffects(s, { prestige: -4 });
+        FB.changeRivalHeat(s, 14);
         FB.news(s, FB.msg('news.action.scheme_rival_failure',
           'The scheme unravels, and fingers point at you.', {}));
       }

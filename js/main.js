@@ -679,6 +679,7 @@ window.FB = window.FB || {};
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
@@ -783,6 +784,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
@@ -877,6 +879,7 @@ window.FB = window.FB || {};
         if (G.auto.research) FB.autoResearch(s);
       }
       FB.playerWarTick(s);
+      FB.tickRivalry(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -1572,6 +1575,8 @@ window.FB = window.FB || {};
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter
+    p.rivalContacts = {};
+    p.rivalPeace = {};
     p.itemOffer = null; // the peddler moves on; carried items pass to the heir
     s.pregnant = null;
     // treasures gifted to the heir in life rejoin the family hoard
@@ -1596,6 +1601,25 @@ window.FB = window.FB || {};
     s.seasonNet = null;
     FB.syncPlayerCareer(s);
     delete s.roles.spouse; delete s.roles.suitor;
+    const inheritedRival = FB.getRole(s, 'rival', false);
+    const inheritedIsKin = inheritedRival && !!FB.kinOf(s).byId[inheritedRival.id];
+    const inheritedIsSpouse = inheritedRival && FB.spousesOf(s, heir).some(function (sp) {
+      return sp.id === inheritedRival.id;
+    });
+    if (inheritedRival && !inheritedIsKin && !inheritedIsSpouse) {
+      p.rivalry = {
+        heat: FBDATA.balance.rivalHeatLegacyStart !== undefined
+          ? FBDATA.balance.rivalHeatLegacyStart : 25,
+        startedTurn: s.turn,
+        lastMoveTurn: s.turn,
+        initiator: 'legacy',
+        cause: 'inherited'
+      };
+      s.eventQueue.push({ id: 'rival_legacy', ctx: {} });
+    } else {
+      if (inheritedRival) FB.endRivalry(s, inheritedRival.id, true);
+      else p.rivalry = null;
+    }
     p.namedHeirId = null; // the new life names its own successor
     p.focus = FB.defaultFocus(s);
 

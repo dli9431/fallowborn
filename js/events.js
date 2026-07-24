@@ -30,6 +30,160 @@ window.FB = window.FB || {};
     return c;
   };
 
+  /* ---------- rivalry ----------
+     `state.roles.rival` remains the canonical seat for old saves, events, and
+     mods. The life-local records below remember which EXISTING characters have
+     actually crossed the player, so an AI rivalry can never materialize a
+     stranger merely because an event mentions {rival}. */
+  function rivalBalance(key, fallback) {
+    return FBDATA.balance[key] !== undefined ? FBDATA.balance[key] : fallback;
+  }
+  FB.rivalryState = function (state, create) {
+    const p = state.player;
+    const rival = FB.getRole(state, 'rival', false);
+    if (!rival) {
+      if (p.rivalry) p.rivalry = null;
+      return null;
+    }
+    if (!p.rivalry && create !== false) {
+      p.rivalry = {
+        heat: rivalBalance('rivalHeatOldSave', 35),
+        startedTurn: state.turn,
+        lastMoveTurn: state.turn,
+        initiator: 'legacy',
+        cause: 'old_feud'
+      };
+    }
+    return p.rivalry || null;
+  };
+
+  FB.rivalHeat = function (state) {
+    const feud = FB.rivalryState(state, true);
+    return feud ? feud.heat : 0;
+  };
+
+  FB.changeRivalHeat = function (state, amount) {
+    const feud = FB.rivalryState(state, true);
+    if (!feud) return 0;
+    feud.heat = FB.clamp((feud.heat || 0) + amount, 0, 100);
+    if (amount) feud.lastMoveTurn = state.turn;
+    return feud.heat;
+  };
+
+  FB.noteRivalContact = function (state, c, score, cause) {
+    if (!state || !c || c.dead || c.id === state.player.charId) return;
+    const p = state.player;
+    p.rivalContacts = p.rivalContacts || {};
+    const old = p.rivalContacts[c.id] || { score: 0, lastTurn: state.turn, cause: cause || 'conflict' };
+    old.score = FB.clamp((old.score || 0) + (score || 1), 1, 5);
+    old.lastTurn = state.turn;
+    old.cause = cause || old.cause || 'conflict';
+    p.rivalContacts[c.id] = old;
+    if (state.roles.rival === c.id) {
+      FB.changeRivalHeat(state, (score || 1) * rivalBalance('rivalContactHeat', 8));
+    }
+  };
+
+  function canBecomeRival(state, c, contact) {
+    if (!c || c.dead || c.id === state.player.charId || !contact || !contact.score) return false;
+    if (FB.ageOf(c, state.date.year) < 16) return false;
+    if (FB.kinOf(state).byId[c.id]) return false;
+    const me = state.chars[state.player.charId];
+    if (FB.spousesOf(state, me).some(function (sp) { return sp.id === c.id; })) return false;
+    const peace = state.player.rivalPeace || {};
+    if (peace[c.id] && peace[c.id] > state.turn) return false;
+    return c.opinion <= rivalBalance('rivalOpinionThreshold', -40);
+  }
+
+  FB.startRivalry = function (state, c, initiator, cause, queueEvent) {
+    if (!state || !c || c.dead) return false;
+    const current = FB.getRole(state, 'rival', false);
+    if (current && current.id !== c.id) return false;
+    FB.noteRivalContact(state, c, 1, cause || 'declared');
+    state.roles.rival = c.id;
+    state.player.rivalry = {
+      heat: initiator === 'npc'
+        ? rivalBalance('rivalHeatNpcStart', 30)
+        : rivalBalance('rivalHeatPlayerStart', 20),
+      startedTurn: state.turn,
+      lastMoveTurn: state.turn,
+      initiator: initiator || 'player',
+      cause: cause || 'declared'
+    };
+    if (queueEvent) state.eventQueue.push({ id: queueEvent, ctx: {} });
+    return true;
+  };
+
+  FB.endRivalry = function (state, cid, noPeace) {
+    const p = state.player;
+    const rival = FB.getRole(state, 'rival', false);
+    const id = cid || (rival && rival.id);
+    if (id && state.roles.rival === id) delete state.roles.rival;
+    p.rivalry = null;
+    p.rivalContacts = p.rivalContacts || {};
+    if (id) delete p.rivalContacts[id];
+    if (id && !noPeace) {
+      p.rivalPeace = p.rivalPeace || {};
+      p.rivalPeace[id] = state.turn + rivalBalance('rivalPeaceDays', 1440);
+    }
+    if (p.plot && p.plot.id === 'ruin_rival') p.plot = null;
+    const rivalQueues = {
+      make_rival: 1, rival_mediation: 1, rival_legacy: 1,
+      plot_ruin_rival: 1, assassin_caught: 1
+    };
+    state.eventQueue = state.eventQueue.filter(function (ev) { return !rivalQueues[ev.id]; });
+    for (const fl of ['df_claim', 'df_claim2', 'df_marked', 'df_doom']) delete p.flags[fl];
+  };
+
+  FB.tickRivalry = function (state) {
+    const p = state.player;
+    p.rivalContacts = p.rivalContacts || {};
+    p.rivalPeace = p.rivalPeace || {};
+    for (const id in p.rivalPeace) if (p.rivalPeace[id] <= state.turn) delete p.rivalPeace[id];
+
+    const rival = FB.getRole(state, 'rival', false);
+    if (rival) {
+      const feud = FB.rivalryState(state, true);
+      const delay = rivalBalance('rivalHeatDecayDelay', 720);
+      if (state.turn - (feud.lastMoveTurn || 0) >= delay && feud.heat > 5) {
+        feud.heat = Math.max(5, feud.heat - rivalBalance('rivalHeatDecay', 3));
+      }
+      return;
+    }
+
+    const maxAge = rivalBalance('rivalContactMaxAge', 1440);
+    const candidates = [];
+    for (const id in p.rivalContacts) {
+      const contact = p.rivalContacts[id];
+      if (!contact || state.turn - contact.lastTurn > maxAge) {
+        delete p.rivalContacts[id];
+        continue;
+      }
+      const c = state.chars[id];
+      if (canBecomeRival(state, c, contact)) candidates.push({ c: c, contact: contact });
+    }
+    if (!candidates.length) return;
+    candidates.sort(function (a, b) {
+      return b.contact.score - a.contact.score ||
+        a.c.opinion - b.c.opinion ||
+        b.contact.lastTurn - a.contact.lastTurn ||
+        (a.c.id < b.c.id ? -1 : 1);
+    });
+    const pick = candidates[0];
+    let mult = 1;
+    const traits = pick.c.traits || [];
+    for (const t of ['wrathful', 'proud', 'cruel', 'ambitious']) if (traits.indexOf(t) >= 0) mult += 0.2;
+    for (const t of ['patient', 'humble', 'kind', 'content']) if (traits.indexOf(t) >= 0) mult -= 0.15;
+    const hostility = 1 + Math.max(0, -pick.c.opinion - 40) / 60;
+    const baseChance = rivalBalance('rivalClaimChance', 0.05);
+    if (baseChance <= 0) return;
+    const chance = FB.clamp(baseChance *
+      pick.contact.score * hostility * Math.max(0.25, mult), 0.01, 0.45);
+    if (FB.chance(chance)) {
+      FB.startRivalry(state, pick.c, 'npc', pick.contact.cause, 'make_rival');
+    }
+  };
+
   /* Living spouse of a character — self-healing: a link to a dead or missing
      character is stale (older bugs could leave one) and gets cleared here.
      Under polygamy this is the FIRST wife; FB.spousesOf lists them all. */
@@ -87,6 +241,7 @@ window.FB = window.FB || {};
     if (state.roles.spouse === sp.id) delete state.roles.spouse;
     if (sp.role === 'spouse') sp.role = null;
     sp.opinion = FB.clamp(sp.opinion - 50, -100, 100);
+    FB.noteRivalContact(state, sp, 2, 'divorce');
     FB.promoteSpouse(state);
   };
 
@@ -95,6 +250,7 @@ window.FB = window.FB || {};
      but not yet wed for returns to the player's coffers. */
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
+    if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
     if (c.betrothedId && c.dowryAsk) {
@@ -674,7 +830,7 @@ window.FB = window.FB || {};
     if (typeof source !== 'string') return;
     source.replace(/\{(lord|priest|friend|rival|spouse|suitor)\}/g,
       function (whole, role) {
-        FB.getRole(state, role, true);
+        FB.getRole(state, role, role !== 'rival');
         return whole;
       });
   }
@@ -692,7 +848,7 @@ window.FB = window.FB || {};
        card, then every role mentioned anywhere in visible event prose. */
     materializeTextRoles(state, ev.title, ctx);
     materializeTextRoles(state, ev.text, ctx);
-    if (ev.charCard) FB.getRole(state, ev.charCard, true);
+    if (ev.charCard) FB.getRole(state, ev.charCard, ev.charCard !== 'rival');
     let raw = ' ';
     function add(value) {
       if (!value) return;
@@ -715,7 +871,7 @@ window.FB = window.FB || {};
     }
     const order = ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor'];
     for (let i = 0; i < order.length; i++) {
-      if (raw.indexOf('{' + order[i] + '}') >= 0) FB.getRole(state, order[i], true);
+      if (raw.indexOf('{' + order[i] + '}') >= 0) FB.getRole(state, order[i], order[i] !== 'rival');
     }
   };
 
@@ -819,6 +975,15 @@ window.FB = window.FB || {};
         if (me.traits.indexOf('comely') >= 0) c += 0.08;
         if (me.traits.indexOf('homely') >= 0) c -= 0.08;
         return FB.clamp(c, 0.05, 0.95);
+      }
+      case 'rival_peace': {
+        const rival = FB.getRole(state, 'rival', false);
+        let c = 0.45 + FB.skillOf(me, 'dip') * 0.02;
+        if (rival) c += rival.opinion / 200;
+        c -= FB.rivalHeat(state) / 250;
+        if (me.traits.indexOf('kind') >= 0) c += 0.08;
+        if (me.traits.indexOf('proud') >= 0) c -= 0.05;
+        return FB.clamp(c, 0.1, 0.9);
       }
       case 'house_claim': {
         // pressing a child's claim on the late spouse's house: standing and
@@ -1058,6 +1223,8 @@ window.FB = window.FB || {};
       const c = FB.getRole(state, tg.roleOpinionBelow.role, false);
       if (!c || c.opinion > tg.roleOpinionBelow.value) return false;
     }
+    if (tg.rivalHeatMin !== undefined && FB.rivalHeat(state) < tg.rivalHeatMin) return false;
+    if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
     if (tg.popularOpinionBelow !== undefined && p.pop > tg.popularOpinionBelow) return false;
     if (tg.custom && FB.fns[tg.custom] && !FB.fns[tg.custom](state)) return false;
     return true;
@@ -1293,12 +1460,19 @@ window.FB = window.FB || {};
       delete p.flags.blessed_crops; // the blessing is spent with the harvest
     }
     if (fx.opinion) {
-      const c = FB.getRole(state, fx.opinion.role, true);
+      const c = FB.getRole(state, fx.opinion.role, fx.opinion.role !== 'rival');
       // a likeable name speeds the warming: trait opinion scales gains (never losses)
       let amt = fx.opinion.amt;
       if (amt > 0) amt = Math.max(1, Math.round(amt * (1 + FB.traitAgg(me).opinion / 200)));
       if (c) c.opinion = FB.clamp(c.opinion + amt, -100, 100);
     }
+    if (fx.rivalContact) {
+      const rc = fx.rivalContact;
+      const c = FB.getRole(state, rc.role, false);
+      if (c) FB.noteRivalContact(state, c, rc.score || 1, rc.cause || 'conflict');
+    }
+    if (fx.rivalHeat) FB.changeRivalHeat(state, fx.rivalHeat);
+    if (fx.endRivalry) FB.endRivalry(state);
     if (fx.opinionLiege) p.liegeOp = FB.clamp((p.liegeOp || 0) + fx.opinionLiege, -100, 100);
     if (fx.popularOpinion) p.pop = FB.clamp(p.pop + fx.popularOpinion, -100, 100);
     if (fx.profession) {
