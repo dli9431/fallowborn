@@ -28,6 +28,8 @@ A JSON mod is one object with any of these keys:
   "buildings": { "id": { ... } },
   "tech":      { "id": { ... } },
   "holdings":  { "id": { ... } },
+  "careers":   { "id": { ... } },
+  "enterprises": { "id": { ... } },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
@@ -388,6 +390,60 @@ in `player.holdings` and **persist across generations** — property passes to h
 - `name`/`desc` accept text tokens and religion-variant objects.
 - Events can gate on `holdings`/`notHoldings` and grant or seize property with the
   `holding`/`loseHolding` effects (see `lord_covets_horse`).
+
+## Careers and apprenticeships
+
+`FBDATA.careers` (in `data/economy.js`, mod key `careers`) defines the work a
+character can learn and perform:
+
+```json
+{ "careers": { "brewer": {
+  "name": "Brewing", "icon": "🍺", "skill": "ste",
+  "apprenticeAge": 10, "apprenticeCost": 6,
+  "wage": 1.5, "masterWage": 2.5, "guild": true,
+  "ranks": {
+    "apprentice": "Brewer's apprentice",
+    "journeyman": "Brewer",
+    "master": "Master brewer"
+  },
+  "desc": "Malt, barrels, and careful accounts."
+} } }
+```
+
+- `skill` is trained during apprenticeship and occasionally during adult work.
+- `apprenticeAge` / `apprenticeCost` gate a child's entry.
+- `tierMin` can keep a career closed until the household reaches sufficient station.
+- `wage` / `masterWage` are seasonal contributions from resident non-player
+  household workers who are not staffing an enterprise.
+- `guild: true` enables member → master → officer → guildmaster progression.
+- `maleOnly: true` is reserved for historically sex-gated training such as arms.
+- Owned character state lives in `character.career`; `player.profession` remains the
+  broad compatibility family used by existing `professions` event triggers.
+
+## Family enterprises
+
+`FBDATA.enterprises` (in `data/economy.js`, mod key `enterprises`) defines repeatable
+productive property:
+
+```json
+{ "enterprises": { "brew_house": {
+  "name": "Brew House", "icon": "🍺", "cost": 70,
+  "profession": "brewer", "yield": 3, "devMin": 2,
+  "guildRank": "member",
+  "desc": "A public brew-house staffed by a trained household member."
+} } }
+```
+
+- `profession` identifies eligible workers; `guildRank` optionally sets the minimum
+  guild standing.
+- Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
+- `yield` is the base seasonal gold before worker skill, local development, and guild
+  rank modify it.
+- Instances live in `player.enterprises` as
+  `{uid,type,provinceId,settlement,workerId}`. One type may stand once per settlement,
+  but the family may own further copies elsewhere; repeat cost grows by
+  `balance.enterpriseRepeatCostGrowth`.
+- An idle or invalidly staffed enterprise earns nothing.
 
 ## Settlements
 

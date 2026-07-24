@@ -41,6 +41,8 @@ STRUCTURED_DATA = {
     "religions": "religion",
     "buildings": "building",
     "holdings": "holding",
+    "careers": "career",
+    "enterprises": "enterprise",
     "items": "item",
     "plots": "plot",
     "tech": "tech",
@@ -580,6 +582,7 @@ def extract_structured(inv: Inventory) -> None:
     for data_name, namespace in STRUCTURED_DATA.items():
         path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                        "cultures.js" if data_name in ("cultures", "religions") else
+                       "economy.js" if data_name in ("careers", "enterprises") else
                        "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
@@ -594,6 +597,17 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, {field}, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
+            if data_name == "careers":
+                ranks = node_object(item.get("ranks")) or {}
+                for rank_id, rank_node in ranks.items():
+                    for branch, record, line in branch_records(rank_node):
+                        inv.add(
+                            f"{namespace}.{item_id}.ranks.{rank_id}.{branch}",
+                            record,
+                            f"{rel}:{line}",
+                            f"{namespace} {item_id}, rank {rank_id}, faith branch {branch}.",
+                            TOKEN_RE.findall(record["text"]),
+                        )
 
     titles = node_object(find_assignment(DATA / "map_data.js", "FBDATA", "titles")) or {}
     for group, values_node in titles.items():

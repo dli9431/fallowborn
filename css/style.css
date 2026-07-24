@@ -259,6 +259,14 @@ a.actionbtn { text-decoration: none; }
 .actionbtn:disabled { opacity: .45; cursor: default; }
 .actionbtn .adesc { display: block; color: #97876a; font-size: 12px; }
 .actionbtn.done { border-style: dashed; opacity: .55; }
+.actiongroup-toggle {
+  display:flex; justify-content:space-between; gap:10px; width:100%; min-height:44px;
+  margin:10px 0 6px; padding:9px 10px; border:1px solid #55452a; border-radius:8px;
+  background:#211b12; color:#d8b24a; font:inherit; text-align:left; cursor:pointer;
+}
+.actiongroup-toggle:hover { border-color:#c9a24a; }
+.actiongroup-toggle span:last-child { color:#97876a; font-size:12px; white-space:nowrap; }
+.actionsubhead { color:#ad9870; font-size:12px; margin:7px 3px 5px; }
 .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
 .kv b { color: #ecd9a0; font-weight: normal; }
 .traitchip {

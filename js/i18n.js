@@ -239,7 +239,8 @@ window.FBDATA = window.FBDATA || {};
         const tables = {
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
-          ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions
+          ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
+          career: FBDATA.careers, enterprise: FBDATA.enterprises
         };
         const def = tables[value.$data] && tables[value.$data][value.id];
         out[key] = def && state

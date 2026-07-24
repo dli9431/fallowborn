@@ -444,6 +444,11 @@ window.FB = window.FB || {};
     },
     run: function (s) { if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings(); } },
 
+  { id: 'livelihoods', label: '🧰 Work, training & enterprises…', noConsume: true,
+    desc: function () { return 'Choose occupations, arrange apprenticeships, staff shops, and grow family businesses.'; },
+    show: function (s) { return adult(s) || FB.householdMembers(s).length > 1; },
+    run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
+
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
     desc: function () {
       return FB.T('Pay {gold} gold to be struck from the serf-roll.',
@@ -786,6 +791,7 @@ window.FB = window.FB || {};
      above; a change there wants a change here. */
   FB.incomeBreakdown = function (state) {
     const p = state.player, B = FBDATA.balance;
+    if (FB.enterpriseList) FB.enterpriseList(state); // normalize legacy business holdings first
     const lines = { gold: [], prestige: [], piety: [] };
     function add(stat, label, amount) {
       if (!amount) return; // a dry source is no line at all
@@ -851,6 +857,12 @@ window.FB = window.FB || {};
       for (const k in lines) {
         if (def.fx[k]) add(k, dataName('item', iid, def), def.fx[k]);
       }
+    }
+
+    /* wages brought home by family members and profits from staffed enterprises */
+    if (FB.livelihoodBreakdown) {
+      for (const ln of FB.livelihoodBreakdown(state)) add('gold', ln.label, ln.amount);
+      add('piety', FB.T('Learned household service'), FB.livelihoodPiety(state));
     }
 
     /* the daily focus trickle, as one expected season */

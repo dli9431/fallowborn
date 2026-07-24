@@ -44,6 +44,12 @@ strings are NOT rejected: `FB.builtIn` migrates them lazily in place at first to
 landing the old buildings in the head settlement (`s: 0`) — the same no-version-bump
 pattern as the other lazy inits.
 
+Livelihood state is additive and does not raise the save-format version. Careers live on
+characters; repeatable enterprises live in `player.enterprises`. Old characters gain a
+career deterministically from the current compatibility profession/station when first
+read. Old business-like holdings migrate once into enterprise instances in the home
+settlement, while all other holdings remain unchanged.
+
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set, and
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries.
 

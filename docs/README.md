@@ -76,6 +76,11 @@ Time passes **day by day** (90-day seasons, 360-day years).
    sheet stops further conceptions.
    When death comes (it will), continue as your heir — and if
    your heir is still a child, their upbringing is yours to direct from the *Self* tab.
+   From age ten onward (depending on the trade), **Work & Enterprises** on a family
+   member's sheet can place them in an apprenticeship. Adult spouses and unmarried children
+   bring wages home or staff family fields, workshops, stalls, and other enterprises; a
+   business left idle earns nothing. Craft and merchant careers can climb the guild from
+   ordinary membership to guildmaster.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
    The **🌳 See the family tree** button at the top of that tab draws the whole house as a
    tree — couples share a box, each brood hangs beneath its parents, † marks the dead.

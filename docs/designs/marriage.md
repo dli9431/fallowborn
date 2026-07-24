@@ -34,3 +34,10 @@ matches above the player's station gate on prestige (20 per step).
 
 Related: [characters.md](characters.md) for the rest of the character lifecycle,
 [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for the plot system.
+
+**Occupational marriage backgrounds are real state.** The station-flavored match
+epithets seed a compatible career on the candidate. In particular, a
+Guildmaster's son or daughter carries `background.guildmasterFamily`; marriage sponsors
+a craft/merchant player into the guild, or otherwise brings ten gold and commercial
+contacts. The spouse then joins the managed household workforce and may staff an
+enterprise like any other resident adult.

@@ -1504,6 +1504,7 @@ window.FB = window.FB || {};
       if (indep) FB.foundPlayerRealm(state); // restyle the realm at its new dignity
       if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
     }
+    if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
   };
 
 })();
