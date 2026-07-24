@@ -34,7 +34,10 @@ window.FB = window.FB || {};
     }, { skill: key, value: FB.skillOf(m, key) }));
   }
 
-  /* ================= FOCUSES (daily) ================= */
+  /* ================= FOCUSES (daily) =================
+     gain (optional): the focus's expected per-season gold/prestige/piety,
+     shown in the topbar stat breakdown. It mirrors tick's trickle (random
+     ranges at their midpoint) — a changed tick wants its gain changed too. */
   FB.focuses = [
 
   { id: 'study', label: '📖 Study', desc: function () { return 'Learn from whoever will teach you.'; },
@@ -57,7 +60,8 @@ window.FB = window.FB || {};
       s.player.piety += (3 + z) / D;
       const pr = FB.getRole(s, 'priest', false);
       if (pr) pr.opinion = FB.clamp(pr.opinion + 2 / D, -100, 100);
-    } },
+    },
+    gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
   { id: 'court_suitor', label: '🌷 Court {suitor}',
     desc: function (s) {
       const su = FB.getRole(s, 'suitor');
@@ -80,6 +84,9 @@ window.FB = window.FB || {};
         me(s).health = Math.max(0, me(s).health - 1);
         FB.news(s, FB.msg('news.action.labor_hurts', 'The labor grinds you down.', {}));
       }
+    },
+    gain: function () {
+      return { gold: (FBDATA.balance.serfWage[0] + FBDATA.balance.serfWage[1]) / 2 };
     } },
   { id: 'militia', label: '🛡 Drill with the levy',
     desc: function () { return 'Spear practice on the green. (+martial over time)'; },
@@ -94,6 +101,12 @@ window.FB = window.FB || {};
       if (s.player.flags.has_farm) g += 2;
       if (s.player.flags.own_ox) g += 1;
       s.player.gold += g / D;
+    },
+    gain: function (s) {
+      let g = (FBDATA.balance.freeWage[0] + FBDATA.balance.freeWage[1]) / 2;
+      if (s.player.flags.has_farm) g += 2;
+      if (s.player.flags.own_ox) g += 1;
+      return { gold: g };
     } },
   { id: 'market', label: '⚖ Haggle at market',
     desc: function () { return 'Turn surplus into silver. (stewardship pays)'; },
@@ -101,7 +114,8 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
       if (dch(0.35)) skillUp(s, 'ste');
-    } },
+    },
+    gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
   { id: 'craft_work', label: '🔨 Work the bench',
     desc: function () { return 'Steady hands, steady coin.'; },
@@ -109,7 +123,8 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0)) / D;
       if (dch(0.3)) skillUp(s, 'ste');
-    } },
+    },
+    gain: function (s) { return { gold: 3.5 + (s.player.flags.guild_member ? 1 : 0) }; } },
   { id: 'trade_run', label: '🐫 Run trade ventures',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
     show: function (s) { return s.player.profession === 'merchant' && s.player.tier <= 2; },
@@ -120,6 +135,13 @@ window.FB = window.FB || {};
       if (s.player.gold < 10) g *= 0.3;
       s.player.gold += Math.max(0.5, g) / D;
       if (dch(0.4)) skillUp(s, 'ste');
+    },
+    gain: function (s) {
+      const ste = FB.skillOf(me(s), 'ste');
+      const c = 0.55 + ste * 0.015;
+      let g = c * (9 + ste / 2) - (1 - c) * 6;
+      if (s.player.gold < 10) g *= 0.3;
+      return { gold: Math.max(0.5, g) };
     } },
 
   { id: 'drill', label: '⚔ Drill at arms',
@@ -128,7 +150,8 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += 1 / D;
       if (dch(0.7)) skillUp(s, 'mar');
-    } },
+    },
+    gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard', label: '🏰 Stand garrison duty',
     desc: function () { return 'Dull, cold, and paid.'; },
     show: function (s) { return s.player.profession === 'soldier'; },
@@ -136,7 +159,8 @@ window.FB = window.FB || {};
       s.player.gold += 2 / D;
       const lord = FB.getRole(s, 'lord', false);
       if (lord) lord.opinion = FB.clamp(lord.opinion + 2 / D, -100, 100);
-    } },
+    },
+    gain: function () { return { gold: 2 }; } },
 
   { id: 'copy_books', label: '✒ Copy manuscripts',
     desc: function () { return 'Letters, slowly mastered. (+learning, +piety)'; },
@@ -144,7 +168,8 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.piety += 2 / D;
       if (dch(0.6)) { skillUp(s, 'lea'); FB.addTrait(me(s), 'literate'); }
-    } },
+    },
+    gain: function () { return { piety: 2 }; } },
   { id: 'serve_church', label: '🕯 Serve the faithful',
     desc: function () { return 'Alms, sermons, and burials.'; },
     show: function (s) { return s.player.profession === 'monk' || s.player.profession === 'priest'; },
@@ -152,7 +177,8 @@ window.FB = window.FB || {};
       s.player.piety += 4 / D;
       s.player.prestige += 2 / D;
       s.player.pop = FB.clamp(s.player.pop + 2 / D, -100, 100);
-    } },
+    },
+    gain: function () { return { piety: 4, prestige: 2 }; } },
 
   { id: 'manage_manor', label: '🏡 Manage the manor',
     desc: function () { return 'Rents, reeves, and repairs.'; },
@@ -160,6 +186,10 @@ window.FB = window.FB || {};
     tick: function (s) {
       const B = FBDATA.balance;
       s.player.gold += (FB.rf(B.manorIncome[0], B.manorIncome[1]) + FB.skillOf(me(s), 'ste') / 4) / D;
+    },
+    gain: function (s) {
+      const B = FBDATA.balance;
+      return { gold: (B.manorIncome[0] + B.manorIncome[1]) / 2 + FB.skillOf(me(s), 'ste') / 4 };
     } },
   { id: 'serve_lord', label: '🤝 Attend the lord’s hall',
     desc: function () { return 'Be seen, be useful, be remembered.'; },
@@ -169,7 +199,8 @@ window.FB = window.FB || {};
       if (lord) lord.opinion = FB.clamp(lord.opinion + 6 / D, -100, 100);
       s.player.prestige += 2 / D;
       if (dch(0.3)) skillUp(s, 'dip');
-    } },
+    },
+    gain: function () { return { prestige: 2 }; } },
   { id: 'train_arms', label: '⚔ Train at arms',
     desc: function () { return 'A blade kept sharp.'; },
     show: function (s) { return s.player.tier >= 2 && adult(s); },
@@ -217,7 +248,8 @@ window.FB = window.FB || {};
       s.player.gold += FB.playerTax(s) * 0.15 / D;
       s.player.pop = FB.clamp(s.player.pop + 3 / D, -100, 100);
       if (dch(0.25)) skillUp(s, 'ste');
-    } },
+    },
+    gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
   { id: 'patronize', label: '📜 Patronize scholars',
     desc: function (s) {
       return FB.T('Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})',
@@ -228,7 +260,8 @@ window.FB = window.FB || {};
       s.player.research = (s.player.research || 0) + (4 + FB.skillOf(me(s), 'lea') / 3) / D;
       s.player.gold = Math.max(0, s.player.gold - 2 / D);
       if (dch(0.3)) skillUp(s, 'lea');
-    } }
+    },
+    gain: function () { return { gold: -2 }; } }
   ];
 
   /* ================= INSTANTS (one-shot deeds) ================= */
@@ -657,6 +690,112 @@ window.FB = window.FB || {};
     const over = FB.domainOver(state);
     if (!over) return 1;
     return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15), over);
+  };
+
+  /* the current focus's expected per-season yield (the `gain` mirror of its
+     daily tick), or null when the focus pays no gold/prestige/piety */
+  FB.focusIncome = function (state) {
+    for (const f of FB.focuses) {
+      if (f.id === state.player.focus) return f.gain ? f.gain(state) : null;
+    }
+    return null;
+  };
+
+  /* Standing per-season gold/prestige/piety, itemized by source — feeds the
+     topbar stat breakdown (hover on desktop, tap for a modal). Display-only:
+     computed on demand, never stored, so labels render in the player's
+     locale. Mirrors the season-boundary ledger in main.js and playerTax
+     above; a change there wants a change here. */
+  FB.incomeBreakdown = function (state) {
+    const p = state.player, B = FBDATA.balance;
+    const lines = { gold: [], prestige: [], piety: [] };
+    function add(stat, label, amount) {
+      if (!amount) return; // a dry source is no line at all
+      lines[stat].push({ label: label, amount: amount });
+    }
+    function dataName(kind, id, def) {
+      return def.icon + ' ' + FB.dataText(state, p.charId, kind, id, def, 'name');
+    }
+    /* buildings, grouped by kind across the demesne (⚙ Watermill ×2 +4);
+       appends lines for one def key (tax feeds gold, piety feeds piety)
+       and returns the summed amount for the tax arithmetic below */
+    function addBuildings(stat, key) {
+      const count = {};
+      for (const pid of FB.demesne(state)) {
+        for (const bid of FB.builtIn(state, pid)) {
+          const def = FBDATA.buildings[bid];
+          if (def && def[key]) count[bid] = (count[bid] || 0) + 1;
+        }
+      }
+      let sum = 0;
+      for (const bid in count) {
+        const def = FBDATA.buildings[bid];
+        const amt = def[key] * count[bid];
+        sum += amt;
+        add(stat, dataName('building', bid, def) + (count[bid] > 1 ? ' ×' + count[bid] : ''), amt);
+      }
+      return sum;
+    }
+
+    /* noble revenue (playerTax, unrounded so the lines tell the truth):
+       demesne rents, vassal dues, tolls — grown by innovations, cut by a liege */
+    if (p.tier >= 3) {
+      let rents = 0;
+      for (const pid of (p.provs || [])) rents += (state.dev[pid] || 1) * B.taxPerDev;
+      if (p.tier === 3) rents = Math.max(rents, 6); // barony rents
+      rents *= FB.domainPenalty(state); // overload past the domain limit lets tax leak away
+      add('gold', FB.T('Rents from your lands'), rents);
+      let dues = 0;
+      for (const vid of FB.playerVassals(state)) {
+        for (const pid of FB.realmHeldCounties(state, vid)) {
+          dues += (state.dev[pid] || 1) * B.vassalTaxRate;
+        }
+      }
+      add('gold', FB.T('Vassal dues'), dues);
+      const tolls = addBuildings('gold', 'tax');
+      const innov = (rents + dues + tolls) * FB.techBonus(state, 'tax');
+      add('gold', FB.T('Innovations'), innov);
+      if (p.liege) add('gold', FB.T('Liege’s cut'), -(rents + dues + tolls + innov) * 0.25);
+      addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
+    }
+
+    /* household property and carried treasures, line by line */
+    for (const hid of FB.holdingList(state)) {
+      const def = FBDATA.holdings[hid];
+      if (!def || !def.fx) continue;
+      for (const k in lines) {
+        if (def.fx[k]) add(k, dataName('holding', hid, def), def.fx[k]);
+      }
+    }
+    for (const iid of FB.itemList(state)) {
+      const def = FBDATA.items[iid];
+      if (!def || !def.fx) continue;
+      for (const k in lines) {
+        if (def.fx[k]) add(k, dataName('item', iid, def), def.fx[k]);
+      }
+    }
+
+    /* the daily focus trickle, as one expected season */
+    const fg = FB.focusIncome(state);
+    if (fg) {
+      let flabel = null;
+      for (const f of FB.focuses) {
+        if (f.id === p.focus) { flabel = FB.dataText(state, p.charId, 'focus', f.id, f, 'label'); break; }
+      }
+      for (const k in fg) { if (lines[k]) add(k, flabel, fg[k]); }
+    }
+
+    /* keeping a household costs coin at every station */
+    const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
+    add('gold', FB.T('Household upkeep'), -upkeep);
+
+    const out = {};
+    for (const k in lines) {
+      let total = 0;
+      for (const ln of lines[k]) total += ln.amount;
+      out[k] = { lines: lines[k], total: total };
+    }
+    return out;
   };
 
   /* ================= items (personal treasures) =================
