@@ -9,30 +9,22 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.45.0';
+  FB.VERSION = '1.45.1';
   FB.CHANGELOG = [
     { v: '1.45.0', date: '2026-07-24', changes: [
-      'Rivals can now declare feuds after real hostile encounters; visible feud heat drives escalation, and compensation, mediation, public oaths, common cause, duels, or an heir’s clean slate can end the quarrel.'
+      'Rivalries come alive: anger someone enough and they may declare a feud, whose heat escalates toward claims and knives until it is settled — by mediation, oaths, common cause, or a duel — or dies with an heir.'
     ] },
     { v: '1.44.0', date: '2026-07-24', changes: [
-      'Coin and prices now move: a slow yearly price index revalues your loose purse as it inflates or deflates, while lean harvests, pestilence, personal war, and a sovereign’s debasement each push prices around. Authored costs, wages, holdings, and buildings keep their familiar gold values.',
-      'Credit arrives — pledged loans, merchant advances, and loans against your revenues grant gold now against fixed terms. Miss a maturity and a penalty and grace season follow; miss again and the disclosed default bites: pledged property is seized, a quarter of your revenue is garnished, and the credit market closes to your household for a year. Every default also costs prestige, and a ruler loses standing with his council or his liege.',
-      'Trade partnerships are real ventures, not savings: commit coin as a commenda, qirad, or trade house stake for four seasons and reap loss, break-even, or profit — established houses and guild rank open larger stakes.',
-      'Independent kings and emperors may debase the coin once every five years for a one-time seigniorage windfall, at a lasting cost to prestige, popular trust, council relations, and future terms; a later costly recoinage eases prices and restores lender confidence. The 💰 Finance sheet tracks prices, open contracts, and the nearest deadline.'
+      'Coin, credit, and prices arrive: a yearly price index nudges the value of loose coin, and the 💰 Finance sheet lets you take loans, pledge collateral, and back trade ventures. Debt can be inherited, and a king may debase the coin.'
     ] },
     { v: '1.43.0', date: '2026-07-24', changes: [
-      'Independent rulers can now direct foreign policy: assign political attention to neighboring sovereigns to steadily improve or provoke their opinion of you each season.',
-      'Political attention is a capacity, not a hoardable resource — counts and dukes hold two, kings three, emperors four, and each standing assignment spends one. Diplomacy sets how fast a relation moves, not how many courts you can work at once.',
-      'The 🕊 Foreign policy deed lists the realms within reach with their ruler, opinion band, and pact status; set each to Improve, Neutral, or Provoke. Policy is suspended while at war.'
+      'Independent rulers can steer foreign policy — the 🕊 Foreign policy deed sets whether neighboring sovereigns warm to you or sour, within a limited span of attention.'
     ] },
     { v: '1.42.0', date: '2026-07-24', changes: [
-      'Livelihoods belong to people now: choose work for yourself and your household, place children in apprenticeships from age ten onward as each trade allows, and watch them graduate at sixteen.',
-      'Commoner families can own multiple productive enterprises across their home settlements — fields, orchards, presses, workshops, stalls, trading houses, and fishing boats — but each pays only while an eligible household member works it.',
-      'Craft and merchant guilds have real ranks from member to guildmaster. Guild standing opens the grander businesses and improves their profits; marrying into a guildmaster’s family now brings an actual connection.',
-      'The Deeds panel is organized into collapsible Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War & Diplomacy sections. Only visible actions take number-key slots.'
+      'Livelihoods for the whole household: choose work, apprentice your children, and run fields, workshops, and trading houses with guild rank that opens the grander trades. The Deeds panel is now sorted into collapsible sections.'
     ] },
     { v: '1.41.0', date: '2026-07-24', changes: [
-      'A liege’s generosity now wanes sharply within one lifetime: after each barony, title, neighboring fief, or court-awarded escheat, the chance of another grant falls to one fifth. A new heir begins with a clean slate.'
+      'A liege’s generosity now runs dry within a lifetime — each grant makes the next far less likely, and a new heir starts fresh.'
     ] },
     { v: '1.40.1', date: '2026-07-24', changes: [
       'Italia now contains the kingdoms of Italy and Sicily, making its imperial crown attainable.'
@@ -41,294 +33,199 @@ window.FB = window.FB || {};
       'Barracks and Archery Butts now cost seasonal upkeep too — a barracks’ paid men-at-arms are the dearest of all to keep.'
     ] },
     { v: '1.39.0', date: '2026-07-24', changes: [
-      'Raise Next keeps the county building ledger open for repeated construction, shows the exact next price, and warns that every repeat copy costs half again as much.',
-      'Granaries, Bridges, Walls, Temples, Libraries, and Keeps now cost seasonal upkeep; the gold breakdown itemizes every charge.',
-      'Granaries are limited to one across the demesne, Stone Walls to one in the home county, and unwanted buildings can be permanently demolished into upkeep-free ruins.'
+      'Several buildings now cost seasonal upkeep, some are limited or can be demolished into ruins, and Raise Next streamlines repeated construction.'
     ] },
     { v: '1.38.0', date: '2026-07-24', changes: [
-      'The Estates: barons, counts, and dukes sworn to a liege now sit in the realm’s assembly, summoned about once a year to vote on the terms of service. The liege’s aid — his cut of your noble revenue, once a fixed 25% — is now set by vote between 10% and 40%: the crown can demand more, the benches can refuse, and you can win it back down with a motion for redress.',
-      'Scutage: the estates can vote silver for banner service — the liege’s summons can then be answered with a cheap shield-tax instead of riding to war, and the aid creeps up in exchange.',
-      'Your voice in the hall scales with rank — a duke out-speaks a baron — plus diplomacy, prestige, and the liege’s own favor. Wartime sessions vote war subsidies, and fellow lords bring their grievances to the benches.',
-      'The 🏛 Estates deed shows your current terms and lets you put a motion of your own before the lords — redress or scutage, one a year, for a purse of gifts.'
+      'The Estates: vassals sworn to a liege now meet in assembly to vote the terms of service — the liege’s aid and scutage. The 🏛 Estates deed shows your terms and lets you put your own motion before the lords.'
     ] },
     { v: '1.37.0', date: '2026-07-24', changes: [
-      'Random treasure keeps its original rarity odds however full the family hoard becomes — keeping every lesser item no longer guarantees a famed one, and repeat chest theft no longer trains its own Intrigue.',
-      'An offered barony may now be declined graciously, and ordinary automation pauses for every title or independence decision.'
+      'Random treasure keeps its rarity odds however full your hoard grows, and an offered barony can now be declined graciously.'
     ] },
     { v: '1.36.0', date: '2026-07-24', changes: [
-      'The Royal Council: crowned Kings and Emperors now rule with five great officers of the crown — Seneschal, Constable, Treasurer, Almoner, Chamberlain — raised from your own vassals. Each office lends real strength (taxes, levies, cheaper buildings, piety, a watcher against schemes) while a loyal man holds it.',
-      'Magnates have tempers now: every lord carries a personality. Flatterers bring gifts and honeyed words; the ambitious weave schemes against an unwary king — a seated Chamberlain uncovers them, without one they strike from the dark.',
-      'Crown authority: high-handed rule (extraordinary taxes, revoked fiefs, dismissed officers) makes the crown stronger and the council colder. Pressed too far, the barons unite behind a charter of liberties — seal it and yield power, or tear it up and risk armed defiance. Let authority fall too low and the council ties your hands entirely.',
-      'The 🏛 Royal Council deed opens the board: offices, tempers, and favor, with gifts to win hearts and appointments or dismissals to shape it.',
-      'Ruler sheets now show a lord’s personality.'
+      'The Royal Council: crowned rulers govern through five great officers raised from their vassals, each lending real strength. Manage crown authority, schemers, and flatterers from the 🏛 Royal Council deed.'
     ] },
     { v: '1.35.0', date: '2026-07-24', changes: [
-      'Levy tiers: a host is now a composition, not just a headcount — the peasant levy mass, bowmen, hired companies, and a hard core of men-at-arms. Men-at-arms punch far above their numbers and die last; the levy takes the brunt of every battle, and a resting host refills with fresh levy only — a long campaign grinds an army down toward its peasant mass.',
-      'New war buildings: 🛡 Barracks (+40 men-at-arms) and 🏹 Archery Butts (+50 archers); the Stone Keep now also keeps 20 men-at-arms, and Mail Hauberks arms another 20.',
-      'The war status and your host’s banner in the Land tab now show what the host is made of, and battle events tell of the men-at-arms’ stand when they fought.',
-      'AI realms field their own small core of men-at-arms and archers, growing after the year 1000.'
+      'Armies are a composition now, not a headcount — peasant levy, archers, mercenaries, and a hard core of men-at-arms who punch above their weight. New 🛡 Barracks and 🏹 Archery Butts recruit them, and the Land tab shows what your host is made of.'
     ] },
     { v: '1.34.0', date: '2026-07-24', changes: [
-      'A new story for women who would rather fight than be left behind: when the man an unwed woman of low station has set her heart on is swept into the war levy, she may cut her hair, take a man’s name, and follow him into the ranks. It can arrive on its own, or overtake a 💒 Propose marriage when the serjeants take her intended before he can answer. A chain of chapters across about a year — enlisting, drilling, drawing kit and pay, and a shield-wall that can win loot, leave scars, or end her — that teaches real martial skill, then a reunion she ends on her own terms: wed him, spurn him grandly, or slip away a stranger and keep the tale for herself. While she is afield her daily focus is a soldier’s — drill, rest, and prayers — not the household or the market stall. The tale is told in the local idiom, too: the amir’s muster in Muslim lands, the war-band and the shield-ring among the pagans.',
-      'New humble armor — the Padded Jack — a gambeson of layered linen that turns a tired blade.'
+      'A new story for a low-born woman who cuts her hair and follows the man she loves into the war levy in disguise — a year of chapters that teach real martial skill and end on her own terms. Adds humble new armor, the Padded Jack.'
     ] },
     { v: '1.33.0', date: '2026-07-24', changes: [
-      'Buildings now rise settlement by settlement: each settlement of a county holds one of every work, further copies of the same work in one county cost half again as much, and tapping a settlement shows only what stands there. Works from older saves move to the head settlement.',
-      'Stone Walls now aid your defense only in the home county where they stand.',
-      'Three repeatable capstone innovations — Improved Husbandry, Martial Drill, and the Royal Catalogue — can be adopted rank after rank, each rank costing more scholarship than the last.',
-      'A host broken in battle is left to limp home for a while instead of being fought again on the same ground every day.',
-      'Refusing tribute is now remembered — once you press on, the white-flag envoys do not ride back for the rest of that war — and the war camp’s troubles (deserters, grain at sword-season prices) come less often.',
-      'Fixed revolt wars that could never be won by siege: a rebel’s counties now truly pass to his own banner when he breaks free or is released, so the “Press the siege” option appears as it should.',
-      'A war whose prize slips out of enemy hands now ends cleanly instead of dragging on to exhaustion.',
-      'Arms training is a man’s road: the drill and training foci are hidden from women, who instead 🧶 Keep the household or 🕊 Cultivate the court — new foci with their own gains — and girls at Play now learn diplomacy rather than swordplay.',
-      'The Man-at-Arms start is male-only, matching the levy call-ups; start codes that say otherwise are turned away.',
-      'Female rulers keep full war leadership — leading hosts, hiring mercenaries, declaring war.'
+      'Buildings now rise settlement by settlement within a county, and repeatable capstone innovations arrive. Arms training becomes a man’s road — women instead keep the household or cultivate the court — plus assorted war and revolt fixes.'
     ] },
     { v: '1.32.0', date: '2026-07-24', changes: [
-      '💍 Seek a match now sounds out three families: an established house (older, a step up — richer dowry, harder suit), a peer your own age, and a young match (a step down, but many childbearing years ahead). Older characters are no longer offered only suitors past childbearing.',
-      'The three prospects wait until you choose — declining to decide today no longer reshuffles them.'
+      '💍 Seek a match now offers three families at once — an established house, a peer your own age, and a younger match — and they wait until you choose.'
     ] },
     { v: '1.31.0', date: '2026-07-23', changes: [
-      'Every event choice now carries a short hint beneath it, so you never choose blind.',
-      'New ways to spend piety at the temple: a good word with your lord, masses for your ancestors, a blessing on your house — and a 🕯 Give alms deed to turn coin into piety.',
-      'On mobile, the event dialog now floats above the screen edge with its full frame — no more cut-off bottom.'
+      'Every event choice now carries a short hint, new ways to spend piety appear at the temple (including a 🕯 Give alms deed), and the mobile event dialog no longer clips at the bottom.'
     ] },
     { v: '1.30.0', date: '2026-07-23', changes: [
-      'Twice as many given names for every culture, and newborns no longer take the name of a living kinsman of the same house.',
-      'Rivals are now your choice: insults no longer make an enemy of someone on their own — when someone’s regard falls low enough, a ⚡ Declare rival button appears on their sheet (and 🕊 Let the feud die ends it).',
-      'Regard now cuts both ways: likeable traits make folk warm to you faster, plots and schemes succeed more easily against someone who trusts you, and new events reward a devoted friend — or punish a lord who despises you.',
-      'The map zooms much further in, and county names appear at lower zoom — small counties can always be named now. A first-game hint and a fuller How to Play explain panning, zooming, and the five map filters.',
-      'War guidance: when your host musters you are told to tap it, then tap a province to march; How to Play and the Deeds tab now spell out that the host never moves on its own.',
-      '“De jure” is explained in How to Play and glossed as “rightful liege” on every province panel.',
-      'Resting at the ale-house now costs 2 gold for its +1 health, like the other houses of healing.',
-      'Children come a little less often, and a new 🛑 No more children toggle on your spouse’s sheet stops further conceptions (a pregnancy already begun still comes to term).'
+      'Rivals are now your choice — a ⚡ Declare rival button appears when someone’s regard sinks low enough. Plus twice as many names per culture, deeper map zoom with county labels, clearer war guidance, and a 🛑 No more children toggle.'
     ] },
     { v: '1.29.0', date: '2026-07-23', changes: [
-      'Tap a settlement in your own county (Land tab) to see the buildings standing there and what each provides — gold, levy, piety, scholarship — with a button to raise new works.'
+      'Tap a settlement in your own county (Land tab) to see the buildings standing there and what each provides, with a button to raise new works.'
     ] },
     { v: '1.28.0', date: '2026-07-23', changes: [
-      'Vassals now ride to war for you: every county a vassal holds sends a share of its levy to your host, on top of the taxes it already renders — granting land no longer means giving away your army.',
-      'New domain limit — you may hold only so many counties in your own hand (four, plus one for every five points of Stewardship). Each county over the limit drains your own income and levy; grant the surplus to vassals to lift it. The realm panel shows your domain against its limit.',
-      'Your dignity now counts every county your realm holds, through vassals as well as in hand — so you can rise to Duke, King, and Emperor by delegating land, not only by hoarding it yourself.',
-      '🎁 Grant a county… becomes 🎁 Grant land… — hand a loyal man a single county, or (when you hold every county of a de jure duchy in your own hand) raise a duke over the whole duchy at once.',
-      '💰 Demand extraordinary taxes now wrings out four seasons’ dues (up from three) and scales with your Stewardship.'
+      'Vassals now send a share of their levy to your host, not just taxes, so granting land no longer weakens your army. A new domain limit drains income from counties held over your cap — 🎁 Grant land to vassals to relieve it and still rise in rank.'
     ] },
     { v: '1.27.0', date: '2026-07-23', changes: [
-      'Hover (or tap) your gold, prestige, or piety in the top bar to see what each one brings in every season, source by source — focus, rents, vassal dues, buildings, household improvements, treasures, and upkeep.'
+      'Hover or tap your gold, prestige, or piety in the top bar to see what each brings in every season, source by source.'
     ] },
     { v: '1.26.2', date: '2026-07-23', changes: [
-      'A very long name (long first name plus a long seat) no longer breaks the top bar on mobile — it now trims with an ellipsis and keeps your name and the ☰ menu together on one line.'
+      'A very long name no longer breaks the top bar on mobile — it now trims with an ellipsis.'
     ] },
     { v: '1.26.1', date: '2026-07-23', changes: [
-      'On mobile, the in-game Menu, ⚙ Automation, and end-of-life screens now fill the whole screen instead of a cut-off sheet, with a large button pinned to the bottom middle — no more reaching for the top edge to dismiss them.',
-      'On mobile, the date moves to its own line directly above your resources, so it no longer crowds your name and the ☰ menu at the top of the screen.',
-      'The play/pause button no longer repeats the date, so it stops nudging the time bar’s width as the days pass; the fast-forward (▶▶) button keeps its F key hint on desktop.'
+      'On mobile, menus and end-of-life screens now fill the screen with a button pinned to the bottom, and the date sits on its own line above your resources.'
     ] },
     { v: '1.26.0', date: '2026-07-23', changes: [
-      '⚙ Automation is now four clear choices: minor events, major events (never life-threatening ones or the naming of an heir — those are always shown), war events, or everything (only death and the succession screen stop the days).',
-      'Your host now musters by itself the moment war is declared — the muster events only decide whether mercenaries or a great levy join it.',
-      'New automation: command your host in war — Defensive (throw back invaders, refit at home) or Offensive (hunt their host when stronger, then besiege the prize). A route you tap by hand always plays out first.',
-      'War councils resolved automatically now press the siege when your host stands on the prize — before, the auto-picker preferred "Fall back and refit" every season, so an automated war could never take land.',
-      'War now teaches itself: the conquest picker, the muster, the tribute offer, and How to Play all say plainly that land is taken only by siege — your host standing on the prize through three war councils.'
+      '⚙ Automation is now four clear choices, your host musters itself the moment war is declared, and you can command it in war — Defensive or Offensive.'
     ] },
     { v: '1.25.3', date: '2026-07-23', changes: [
-      'On mobile, the top bar now shows the full date — including the year — beside your name, in the space freed by moving your gold, prestige, piety, and health to their own row.'
+      'On mobile, the top bar now shows the full date, including the year, beside your name.'
     ] },
     { v: '1.25.2', date: '2026-07-23', changes: [
-      'On touch, event choices ignore taps for a heartbeat after the dialog appears — so a tap already on its way down toward the time bar can no longer pick an outcome by accident.'
+      'On touch, event choices ignore taps for a moment after the dialog appears, so a stray tap can no longer pick an outcome by accident.'
     ] },
     { v: '1.25.1', date: '2026-07-23', changes: [
-      'Fixed the skip (▶▶) and automation (⚙) time buttons stacking their icons onto two lines in the mobile bar.'
+      'Fixed the skip and automation time buttons stacking onto two lines in the mobile bar.'
     ] },
     { v: '1.25.0', date: '2026-07-23', changes: [
-      'New de jure map filters: the 🗺 button / R key now also paints duchies and kingdoms, and names your strongest claim with the counties you hold and still need.',
-      'A county’s panel now shows your progress toward its duke, king, and emperor — and warns when a land feeds no title at all (wastelands, settled colonies, lone-county duchies).'
+      'New de jure map filters: the 🗺 button / R key now also paints duchies and kingdoms, and a county panel shows your progress toward its duke, king, and emperor.'
     ] },
     { v: '1.24.0', date: '2026-07-23', changes: [
-      'Three field victories no longer force an attacking war to end in tribute — the beaten enemy now sends envoys, and you choose: take the silver, or press on to besiege the prize you declared for.'
+      'Three field victories no longer force a war to end in tribute — the beaten enemy sends envoys, and you choose to take the silver or press on to the siege.'
     ] },
     { v: '1.23.2', date: '2026-07-23', changes: [
-      'Fixed garbled characters (— and ⚙ showing as â€" / âš™) on the title-screen menu when the game is served with a non-UTF-8 charset, as on itch.io.'
+      'Fixed garbled characters on the title-screen menu when the game is served with a non-UTF-8 charset, as on itch.io.'
     ] },
     { v: '1.23.1', date: '2026-07-23', changes: [
-      'Report a bug dialog reordered: describe the bug or idea first, then 📋 Copy report, with the Discord / email / GitHub links below.'
+      'Report a bug dialog reordered: describe the bug or idea first, then 📋 Copy report, with the links below.'
     ] },
     { v: '1.23.0', date: '2026-07-23', changes: [
-      'New ☰ menu button: 🐞 Report a bug — describe the problem or idea, copy a ready-made report (your words plus game version, start seed, and your current life as save text), and paste it on Discord, in an email, or as a GitHub issue.'
+      'New ☰ menu button, 🐞 Report a bug: describe the problem and copy a ready-made report to paste on Discord, in an email, or as a GitHub issue.'
     ] },
     { v: '1.22.0', date: '2026-07-23', changes: [
-      '📤 Export a life as text and 📥 import it back — new buttons in the save and load dialogs. A copied save survives browsers that wipe local storage (a known iPhone trouble) and moves a life between devices.',
-      'The game now warns when the browser is blocking save storage, instead of letting a dynasty vanish silently.'
+      '📤 Export a life as text and 📥 import it back — a copied save survives storage wipes and moves between devices, and the game now warns when saving is blocked.'
     ] },
     { v: '1.21.1', date: '2026-07-23', changes: [
       'Browser tabs and iOS home-screen shortcuts now show a Fallowborn icon.'
     ] },
     { v: '1.21.0', date: '2026-07-23', changes: [
-      'Settings can now switch the interface, core stories, and new Chronicle entries to French, German, Italian, or Spanish.',
-      'The four new languages are marked AI Preview; proper names, mod text, prose frozen in old saves, and the Changelog may remain English.'
+      'Settings can now switch the game to French, German, Italian, or Spanish — marked AI Preview, with proper names and old saved prose staying English.'
     ] },
     { v: '1.20.2', date: '2026-07-23', changes: [
-      'The Play/Pause button now flips to ▶ Play when the game pauses itself — on losing focus, or at your death — instead of keeping the stale ❚❚ Pause.'
+      'The Play/Pause button now flips to ▶ Play when the game pauses itself, instead of showing a stale Pause.'
     ] },
     { v: '1.20.1', date: '2026-07-23', changes: [
-      'On phone-sized screens the game pauses and autosaves the moment the page loses focus — switching apps or answering a call no longer lets days run on unseen.'
+      'On phones the game pauses and autosaves the moment the page loses focus — switching apps no longer lets days run on unseen.'
     ] },
     { v: '1.20.0', date: '2026-07-22', changes: [
-      'Lower-status lives gain a five-part struggle over common rights, three two-part stories, and five everyday incidents shaped by skills, profession, property, relationships, and faith.',
-      'Winning the Old Custom can secure heritable Rights of Common, personal freedom for a serf, or favor toward the next rung.'
+      'Low-born lives gain a five-part struggle over common rights, more short stories, and everyday incidents — winning the Old Custom can secure heritable rights or a serf’s freedom.'
     ] },
     { v: '1.19.3', date: '2026-07-22', changes: [
-      'The ☰ menu button stays pinned to the top right on portrait phones — the new resources row no longer drags it toward the middle.'
+      'The ☰ menu button stays pinned to the top right on portrait phones.'
     ] },
     { v: '1.19.2', date: '2026-07-22', changes: [
-      'On portrait phones the four resources move to their own full-width row under the topbar — gold no longer clips off the edge on narrow screens.'
+      'On portrait phones the four resources move to their own row so gold no longer clips off the edge.'
     ] },
     { v: '1.19.1', date: '2026-07-22', changes: [
       'The Settings dialog picks the speed of days with a single slider instead of five buttons.'
     ] },
     { v: '1.19.0', date: '2026-07-22', changes: [
-      'New Game now asks Fresh start or I have a seed — paste a friend’s start code for their exact world and character, or a bare world seed for the same 867 with your own picks.',
-      'Your start’s seed shows in the ☰ menu — tap it to copy and share.'
+      'New Game now takes a start seed — paste a friend’s code for their exact world and character, and your own seed shows in the ☰ menu to copy and share.'
     ] },
     { v: '1.18.0', date: '2026-07-22', changes: [
-      'New deed: Petition for a neighbor’s fief — a liege who loves you and despises the sitting lord may strip him and invest you with his county. Riding to the liege’s wars now builds a service tally that convinces him.',
-      'New deed: Buy out a weak neighbor — a struggling count beside you sells his county for gold.',
-      'New deed: Settle the wasteland — found a new county on empty land bordering your demesne.',
-      'Petty counts can now die without an heir: the fief escheats to the liege — unless you border it and your standing wins the scramble. Heirless fiefs of your own vassals return to your hand.',
-      'AI vassal houses now carry a standing at their liege’s court that drifts over the years.'
+      'New deeds to expand by land: petition for a neighbor’s fief, buy out a weak count, or settle the wasteland — and heirless neighboring counties can now fall to you if your standing wins the scramble.'
     ] },
     { v: '1.17.2', date: '2026-07-22', changes: [
-      'Hold F to fast-forward again — keeping it pressed skips ahead repeatedly, instead of one skip per press.'
+      'Hold F to fast-forward repeatedly, instead of one skip per press.'
     ] },
     { v: '1.17.1', date: '2026-07-22', changes: [
-      'On phones the Changelog now sits as an evenly framed panel with a Close button pinned to the bottom middle — no more scrolling to the end of a long list to shut it.'
+      'On phones the Changelog now sits as a framed panel with a Close button pinned to the bottom.'
     ] },
     { v: '1.17.0', date: '2026-07-22', changes: [
-      'Wounds and sicknesses now have names: hard blows leave a named wound and falling ill names the sickness — listed on your character sheet with a detail note, and visible on your portrait as bandages, cuts, bruises, and a pale, haggard face.',
-      'Scarred and one-eyed characters now bear their marks on every portrait, yours and others’.'
+      'Wounds and sicknesses now have names, listed on your character sheet and drawn on your portrait as bandages, cuts, bruises, and a haggard face.'
     ] },
     { v: '1.16.4', date: '2026-07-22', changes: [
-      'A vassal breaking away from YOUR realm now starts a real defensive war — no more eternal war flag and an enemy host squatting unfightable in your capital.',
-      'Losing a defensive war now takes one of your own border counties, as the siege warning promises — it used to fizzle into reparations whenever the roll landed on a vassal’s land.',
-      'The game autosaves when the tab is hidden or closed — a backgrounded phone no longer loses everything since the last season.',
-      'The 🎲 random province and name suggestions differ per visit — the pre-game dice were stuck on the same roll for everyone.',
-      'Cancelling the Pay Homage or Appeal pickers no longer burns their long cooldowns.',
-      'Holding Space/E no longer flickers pause, and holding F fires one skip per press, not a stream.',
-      'Sickness events about a young child now name the child — and the one named is the one at risk.',
-      'A kinsman betrothed to you when you die can wed again; the stale pledge used to bar marriage forever.',
-      'An arranged-match shortlist thinned by a death is topped back up to three families.',
-      'Gifting items to your lord now caps his opinion at 100 like every other favor.',
-      'Starting siblings are never same-year twins (the intended guard was inert).',
-      'The Chronicle shows the full last 80 entries, not 79.',
-      'Loading a save right after another life no longer briefly reads the old realm’s lands (taxes, borders) until the next day.',
-      'Enemy strength readouts (“fields ~N men”) follow the aiHostPerDev balance knob instead of a hardcoded 0.3.',
-      'balance.mortalityBase now truly scales the yearly mortality curve.',
-      'A cancelled touch gesture (notification shade, incoming call) no longer counts as a map tap or march order.',
-      'Tapping stacked hosts prefers your own; halting or releasing a host repaints at once; an impossible march order says so.',
-      'Map label and marker outlines scale with screen density — readable halos on high-DPI phones.',
-      'Faster: hidden Self/Kin drawer skips its rebuild each tick, the map skips the highlight layer when nothing is selected, the Chronicle skips identical rebuilds, save dialogs parse each slot once, and the daily focus check, tier check, and yearly breakaway sweep drop most of their work.'
+      'A large batch of fixes and performance work — real defensive wars against breakaway vassals, more reliable autosaving, steadier touch input on the map, and faster fast-forward among many others.'
     ] },
     { v: '1.16.3', date: '2026-07-22', changes: [
-      'Death no longer flashes by at high speed: automation never resolves an event whose outcome could kill you — the blow is always shown — and the succession screen waits for a deliberate choice instead of taking a stray Space/Enter on the first heir.',
-      'The death screen now speaks the chronicler’s parting line for the life just ended.'
+      'Death no longer flashes by at speed: a fatal event is always shown, and the succession screen waits for a deliberate choice.'
     ] },
     { v: '1.16.2', date: '2026-07-22', changes: [
-      'Fixed a baron left sworn to a lord who lost his home county: when the county changes hands the baron answers to its new holder, and stale liege bonds in old saves are re-homed to the county’s holder.'
+      'Fixed a baron left sworn to a lord who lost his home county — he now answers to the county’s new holder.'
     ] },
     { v: '1.16.1', date: '2026-07-22', changes: [
-      'Older saves that knew only your brothers and sisters now name your late parents too — the family tree no longer shows "Unrecorded" above your brood.'
+      'Older saves now name your late parents, instead of “Unrecorded”, above your siblings.'
     ] },
     { v: '1.16.0', date: '2026-07-22', changes: [
-      'Name your newborn children: the birth event shows a name field with the generated name — edit it or roll the dice for another.'
+      'Name your newborn children: the birth event shows a name field you can edit or reroll.'
     ] },
     { v: '1.15.1', date: '2026-07-22', changes: [
-      'Fixed the panels and map bouncing while time runs: the topbar stats stay on one line and clip instead of wrapping when space is tight.',
-      'Single-digit days keep the date a fixed width (a collapsing space used to shrink it).'
+      'Fixed the panels and map bouncing while time runs, and kept the date a fixed width.'
     ] },
     { v: '1.15.0', date: '2026-07-22', changes: [
       'While observing, ☰ → Settings can silence the world-news toasts and hide the Land & Chronicle panel — the map alone on stage.'
     ] },
     { v: '1.14.4', date: '2026-07-22', changes: [
-      'Long dialogs — the Changelog and How to Play — open at the top instead of jumping down to the Close button.'
+      'Long dialogs — the Changelog and How to Play — now open at the top instead of jumping down to the Close button.'
     ] },
     { v: '1.14.3', date: '2026-07-22', changes: [
-      'Your host always marches under a green banner; your war enemy’s host always marches under a red one.'
+      'Your host always marches under a green banner, your war enemy’s under red.'
     ] },
     { v: '1.14.2', date: '2026-07-22', changes: [
-      'Hosts stand on a disc of their realm’s color, and hosts clashing in a province bear a ⚔ for the day — battles on the map read at a glance.'
+      'Hosts stand on a disc of their realm’s color, and a clash shows a ⚔ for the day — battles read at a glance on the map.'
     ] },
     { v: '1.14.1', date: '2026-07-22', changes: [
-      'Hosts on the map are drawn on the province they stand in, not mid-road toward the next — a host crossing the Channel no longer floats in the sea.'
+      'Hosts on the map are drawn on the province they stand in, not mid-road — no more floating in the Channel.'
     ] },
     { v: '1.14.0', date: '2026-07-22', changes: [
-      'New Game offers an 👁 Observe mode: no character, no events — the centuries flow and the realms war, fall, and redraw the map while you watch.',
-      'While observing, the chronicle reports every war, battle, succession, and conquest in the world, not only those near home.'
+      'New Game offers an 👁 Observe mode: no character, no events — watch the centuries flow as realms war, fall, and redraw the map, with the chronicle reporting the whole world.'
     ] },
     { v: '1.13.0', date: '2026-07-22', changes: [
-      'The menu gains a Settings dialog with a tap-friendly chooser for the speed of days — the five speeds used to be reachable only by the −/+ keys.',
-      'The in-game help no longer mislabels −/+ as zoom keys.'
+      'The menu gains a Settings dialog with a tap-friendly speed chooser, and the help no longer mislabels −/+ as zoom keys.'
     ] },
     { v: '1.12.0', date: '2026-07-22', changes: [
-      'The menu gains a Changelog button above Abandon to title and shows the game version at its foot.'
+      'The menu gains a Changelog button and shows the game version at its foot.'
     ] },
     { v: '1.11.1', date: '2026-07-22', changes: [
-      'Hosts on the map are drawn larger and easier to tap; ordering a march now lets go of the host, so further taps browse the map instead of re-tasking it.',
-      'A side whose host was shattered fields only a remnant in the war council’s pitched battle while it re-forms — no more phantom full-strength armies.',
-      'Hunting an enemy host now tracks it day by day instead of marching to where it stood; every march leg costs the full march time; hosts resting on home ground slowly refill their ranks.',
-      'Faster fast-forward: the daily army tick no longer grinds through every pair of realms.'
+      'Hosts on the map are easier to tap and re-task, hunting an enemy host tracks it day by day, and fast-forward is quicker.'
     ] },
     { v: '1.11.0', date: '2026-07-22', changes: [
-      'New deed: ⚑ Declare independence — any sworn lord or baron with 200+ prestige can renounce his liege and fight for his own banner.',
-      'Declaring independence now puts you on a war footing and calls the muster, like any other defensive war.',
-      'Fixed barons left "independent" with no path upward when their lord’s house died: a baron now answers to whoever holds his home county.',
-      'A baron who declares independence properly seizes his home county — a lord left landless by the seizure no longer lingers as a realm.'
+      'New deed: ⚑ Declare independence — a sworn lord or baron with enough prestige can renounce his liege, seize his home county, and fight for his own banner.'
     ] },
     { v: '1.10.0', date: '2026-07-22', changes: [
-      'Wars take the field: realms at war raise hosts of spearmen on the map that march province to province and fight where they meet.',
-      'Muster your own host (🚩 deed or the muster event), hire companies to swell it, then tap the host and tap a province to march it.',
-      'A siege now needs your host standing in the target province; an invader kept out of your lands can no longer take a county.',
-      'The war council’s pitched battle is for an enemy without a host in the field — to beat their army, hunt it on the map.'
+      'Wars now take the field: realms raise hosts on the map that march province to province and fight where they meet. Muster your own (🚩), march it, and take a county by siege.'
     ] },
     { v: '1.9.0', date: '2026-07-21', changes: [
-      'Events show a card for every character they name — face, house arms, home, allegiance, skills, and traits — so a rival never arrives as a bare name.',
-      'Character cards and sheets show the character’s house arms and the coat of arms of the realm that holds their home.'
+      'Events now show a card for every character they name — face, house arms, home, allegiance, skills, and traits — so a rival never arrives as a bare name.'
     ] },
     { v: '1.8.0', date: '2026-07-21', changes: [
-      'The end screen rolls the dynasty’s dead: every life you played, with years, title, and one line the chronicler should have kept to themselves.'
+      'The end screen rolls the dynasty’s dead: every life you played, with years, title, and a parting line from the chronicler.'
     ] },
     { v: '1.7.0', date: '2026-07-21', changes: [
-      'Great houses can fall: neglect a rising of the commons, a rival’s claim, or a murder plot through three warnings, and you lose every acre.',
-      'Deposed sovereigns are replaced by a usurper realm that keeps the realm’s name, color, and vassals; a deposed vassal’s fiefs escheat to the liege.',
-      'The fallen drop to landless gentry, keeping gold, treasures, and family property.'
+      'Great houses can fall: ignore a rising, a rival’s claim, or a murder plot through three warnings and you lose every acre, dropping to landless gentry.'
     ] },
     { v: '1.6.1', date: '2026-07-20', changes: [
-      'A child’s Study focus trains half as fast (it was twice the best adult focus).',
-      'Childhood lesson events recur half as often (cooldowns doubled to 6–8 seasons).'
+      'A child’s Study focus trains more slowly, and childhood lesson events recur less often.'
     ] },
     { v: '1.6.0', date: '2026-07-20', changes: [
-      'The ladder is steeper: freedom costs 100 gold, a manor 600 gold and 150 prestige, a barony 250 prestige, a liege’s grant 400 prestige and favor 65.',
-      'Petitions to lord and liege can be brought less often, and lieges grant land more grudgingly.',
-      'Name pools for every culture roughly tripled — fewer repeating faces across the generations.',
-      'Fixed a fleeing lord being named vassal of himself when he landed in his own demesne.'
+      'The climb is steeper — freedom, manors, baronies, and liege grants all cost more, and lieges grant land more grudgingly. Every culture’s name pool roughly tripled.'
     ] },
     { v: '1.5.0', date: '2026-07-20', changes: [
-      'Only gentle households (gentry and above) may send a child to be educated by the lord.',
-      'A baron raised to a county answers to the granting lord’s own liege — counts no longer answer to counts.',
-      'A lord who grants away his last county no longer lingers as a landless realm.'
+      'Only gentle households may send a child to be educated by the lord, and a baron raised to a county now answers to the granting lord’s own liege.'
     ] },
     { v: '1.4.0', date: '2026-07-20', changes: [
-      'Clicking the dead in the family tree opens their sheet: birth and death years, skills, and traits.'
+      'Clicking the dead in the family tree opens their sheet — birth and death years, skills, and traits.'
     ] },
     { v: '1.3.0', date: '2026-07-20', changes: [
-      'Clicking your own province highlights your own realm, not your liege’s.',
-      'New map filter (🗺 button or R key) cycles the highlight: Realm → Mine → Liege.'
+      'Clicking your own province now highlights your own realm, and a new map filter (🗺 button or R key) cycles Realm → Mine → Liege.'
     ] },
     { v: '1.2.0', date: '2026-07-20', changes: [
       'The liege’s name in the Deeds banner opens his sheet.'
     ] },
     { v: '1.1.0', date: '2026-07-20', changes: [
-      'Title screen shows the game version.',
-      'Changelog opens from the title screen.'
+      'The title screen shows the game version, and the Changelog opens from it.'
     ] },
     { v: '1.0.0', date: '2026-07-20', changes: [
       'First release.'
