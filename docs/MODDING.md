@@ -630,6 +630,8 @@ Skills grow on a soft cap: below `skillSoftCap` (default 20) every gain lands; p
 point must beat a `(skillSoftCap / current)^2` roll (`FB.gainSkill`, js/model.js), so even a
 life spent on one stat diminishes hard — `skillHardCap` (default 40) is the true ceiling,
 and traits/items can push a read skill (`FB.skillOf`) no higher than that.
+`focusSkillGainRate` (default 0.75) multiplies only the authored seasonal skill-training
+chances of daily focuses before they are converted to daily rolls.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
 skill (traits and carried items included), on top of the per-development base, building
 `levy` bonuses, and the `levy` tech multiplier.

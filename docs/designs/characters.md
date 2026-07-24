@@ -5,7 +5,9 @@ education, coming of age) goes through `FB.gainSkill` (model.js): below
 `balance.skillSoftCap` (20) each point lands; past it each must beat a
 `(softCap/current)^2` roll, so single-stat stacking diminishes hard toward
 `balance.skillHardCap` (40), the true ceiling `FB.skillOf` also reads up to.
-Never write `c.skills[k]++` directly outside it.
+Never write `c.skills[k]++` directly outside it. Daily focus training applies
+`balance.focusSkillGainRate` (0.75) to its authored seasonal chance before this
+soft-cap roll; event, education, and coming-of-age gains are unaffected.
 
 **Children are players too.** When a minor heir succeeds (age < 16), the daily picker
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
@@ -18,9 +20,10 @@ fosters only gentle children — the tutor picker offers him only at
 
 **Childhood pacing.** A child's total skill income (Study focus, education tick,
 childhood events) is tuned to land only modestly above an adult's (~5/yr vs ~3–4/yr):
-Study runs at `dch(0.5)` — below the best adult focus's `dch(0.7)` — and childhood
-lesson events carry 6–8-season cooldowns so the same lesson can't recur constantly.
-Keep new childhood content inside that envelope.
+Study starts from a 0.5 seasonal chance before the shared 0.75 focus-training
+multiplier — below the best adult focus's 0.7 base chance — and childhood lesson
+events carry 6–8-season cooldowns so the same lesson can't recur constantly. Keep
+new childhood content inside that envelope.
 
 **Arms training is male; command is not.** No formal arms training for girls in the
 867+ world: the martial *training* foci (`militia`, `drill`, `stand_guard`,

@@ -3,7 +3,9 @@
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`
 counts days. Each day the player's **focus** ticks (`FB.focuses` in actions.js — continuous
 activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that spend
-the day and use day-based cooldowns (`cd`). Martial *training* foci (`militia`, `drill`,
+the day and use day-based cooldowns (`cd`). Focus-based skill training applies the shared
+`balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
+focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,
 household thrift into coin) and `courtly_graces` (tier ≥ 2, court favor and polish), and
 `FB.defaultFocus` maps female characters to them. The one exception: while a woman is *afield*

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.45.1';
+  FB.VERSION = '1.45.2';
   FB.CHANGELOG = [
+    { v: '1.45.2', date: '2026-07-24', changes: [
+      'Daily focuses now train skills more slowly.'
+    ] },
     { v: '1.45.0', date: '2026-07-24', changes: [
       'Rivalries come alive: anger someone enough and they may declare a feud, whose heat escalates toward claims and knives until it is settled — by mediation, oaths, common cause, or a duel — or dies with an heir.'
     ] },
