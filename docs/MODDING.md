@@ -87,6 +87,8 @@ A JSON mod is one object with any of these keys:
   "careers":   { "id": { ... } },
   "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
+  "travelPurposes": { "id": { ... } },
+  "travelSites": [ ... ],
   "finance":    { "pledge": { ... }, "merchant": { ... } },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
@@ -265,12 +267,14 @@ never exact numbers), optional `require` (same syntax as triggers — hides the 
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
-vassal_comply county_petition parliament_vote`) with `success` / `failure` branches
-(`{text, effects}`), and `effects`.
+vassal_comply county_petition parliament_vote travel_trade`) with `success` / `failure`
+branches (`{text, effects}`), and `effects`.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
-`skill_lea` benefits from Letters in the Family and the monk/priest professions. The
-four `rights_*` formulas are the matching checks for the Old Custom chain: evidence
+`skill_lea` benefits from Letters in the Family and the monk/priest professions.
+`travel_trade` bargain starts at 28%, adds 4.5% per Stewardship point, and clamps
+to 10–92%.
+The four `rights_*` formulas are the matching checks for the Old Custom chain: evidence
 adds a large bonus, with lord opinion helping Diplomacy, working professions helping
 Stewardship, and letters or a religious profession helping Learning. `swarm` is a
 Stewardship check helped by a Hearth Garden or Orchard.
@@ -335,6 +339,8 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (scholarship points) ·
+`travelReturn: true` (begin the saved route home) · `travelSettle: true` (move the
+household to the completed destination without converting culture/faith) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
 `giveItem: "id"` (grant one specific heirloom from `FBDATA.items` — issued kit, gifts, quest
 rewards; random finds use `custom: "loot_item"` instead) ·
@@ -371,13 +377,15 @@ key is `ailments`.
 ### Text tokens
 
 `{name} {dyn} {title} {spouse} {suitor} {late} {lord} {priest} {friend} {rival} {childname}
-{province} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
+{province} {location} {destination} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
 enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
 `ctx.settlement` (set by the go-into-town deed's queue); `{item}` and `{itemprice}`
 describe the currently offered item (`player.itemOffer`); `{liege}` is the player's direct
 liege realm; `{rname}` / `{rulername}` are the realm and ruler named by `ctx.rid` (set by
 appeal/revoke pickers and vassal events); `{cname}` is the county named by `ctx.pid`.
+`{location}` is the traveler’s current county (or `ctx.locationId`) and
+`{destination}` is the journey destination (or `ctx.destinationId`).
 `{god}`/`{holy}`/`{temple}` adapt to the player's faith (God/priest/church,
 Allah/imam/mosque, the gods/godi/shrine…) — prefer them over hard-coded religious words so
 events read correctly for every culture.
@@ -579,6 +587,43 @@ productive property:
   but the family may own further copies elsewhere; repeat cost grows by
   `balance.enterpriseRepeatCostGrowth`.
 - An idle or invalidly staffed enterprise earns nothing.
+
+## Overland travel
+
+`FBDATA.travelPurposes` and `FBDATA.travelSites` live in `data/travel.js`;
+runtime mods use the `travelPurposes` and `travelSites` keys. Purpose ids replace
+by key, and site objects replace by their required stable `id`.
+
+```json
+{
+  "travelPurposes": {
+    "embassy": {
+      "name": "Private embassy", "icon": "🕊",
+      "desc": "Carry a message to an authored court.",
+      "cost": 4, "mode": "sites"
+    }
+  },
+  "travelSites": [
+    { "id": "embassy_paris", "purpose": "embassy", "provinceId": "paris",
+      "religionGroups": ["christian"] }
+  ]
+}
+```
+
+- A purpose carries localized `name`/`desc`, optional `icon`, added upfront
+  `cost`, and one destination `mode`: `sites`, `developed` (with `minDev`), or
+  `capitals` (the current capitals of living realms).
+- A site carries `id`, `purpose`, and `provinceId`; optional `religions` and
+  `religionGroups` restrict it to the traveler’s faith.
+- Routes use settled, non-wasteland adjacency. Entries in `straits` therefore
+  work as travel crossings too.
+- Travel events are normal event objects with `trigger:{"never":true}` and
+  top-level `travel:{"kind":"culture|road|capstone|decision"}`. A capstone may
+  add `"purpose":"id"`. Culture/road events are drawn without repetition up to
+  the journey caps; the core driver queues a purpose’s capstone by the id
+  `travel_capstone_<purpose id>`.
+- `balance.travelLegDays`, `travelCooldownDays`, `travelCultureEventCap`, and
+  `travelRoadEventCap` tune the subsystem.
 
 ## Finance contracts
 

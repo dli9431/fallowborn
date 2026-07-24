@@ -726,6 +726,23 @@ window.FB = window.FB || {};
           out[k] = pr ? pr.name :
             (semantic ? neutralParam('fx.param.this_land') : FB.T('this land'));
           break;
+        case 'location': {
+          const locationId = ctx && ctx.locationId;
+          const location = locationId ? FB.world.byId[locationId] :
+            (FB.travelLocation ? FB.travelLocation(state) : pr);
+          out[k] = location ? location.name :
+            (semantic ? neutralParam('fx.param.this_land') : FB.T('this land'));
+          break;
+        }
+        case 'destination': {
+          const travel = state.player.travel;
+          const destinationId = (ctx && ctx.destinationId) ||
+            (travel && travel.destinationId);
+          const destination = destinationId ? FB.world.byId[destinationId] : null;
+          out[k] = destination ? destination.name :
+            (semantic ? neutralParam('fx.param.the_county') : FB.T('the county'));
+          break;
+        }
         case 'realm':
           out[k] = realm ? realm.name :
             (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
@@ -1047,6 +1064,8 @@ window.FB = window.FB || {};
           FB.hasHouseholdAsset(state, 'workshop')) c += 0.06;
         return FB.clamp(c, 0.1, 0.9);
       }
+      case 'travel_trade':
+        return FB.clamp(0.28 + FB.skillOf(me, 'ste') * 0.045, 0.1, 0.92);
       case 'skill_int': return FB.clamp(0.30 + FB.skillOf(me, 'int') * 0.04, 0.1, 0.9);
       case 'skill_lea': {
         let c = 0.30 + FB.skillOf(me, 'lea') * 0.04;
@@ -1325,6 +1344,10 @@ window.FB = window.FB || {};
       slots.splice(slotAt, 1);
     }
     if (!isSlot || out.length >= 2) return out;
+    /* The road supplies its own paced encounters. Queued home events that
+       already existed still resolve above, but no new home slot event is
+       selected while the traveler is away. */
+    if (state.player.travel) return out;
 
     // personally at war: only wartime-tagged events fire; the rest of life waits
     const wartime = FB.atWarPersonally(state);
@@ -1641,6 +1664,8 @@ window.FB = window.FB || {};
       }
     }
     if (fx.moveRandom) FB.movePlayerRandom(state);
+    if (fx.travelReturn && FB.travelReturn) FB.travelReturn(state);
+    if (fx.travelSettle && FB.travelSettle) FB.travelSettle(state);
     if (fx.convertToProvince) {
       const pr = FB.world.byId[p.provinceId];
       if (pr) me.religion = pr.religion;
@@ -1664,6 +1689,7 @@ window.FB = window.FB || {};
     if (fx.worldNews) FB.randomWorldNews(state);
     if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));
     if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
+    if (FB.travelValidate) FB.travelValidate(state);
 
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
   };

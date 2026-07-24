@@ -332,12 +332,28 @@
         "text": "🔗 Swear brotherhood with {friend}"
       }
     },
+    "action.take_road.label.default": {
+      "context": "action take_road, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🧭 Take to the road…"
+      }
+    },
     "action.the_estates.label.default": {
       "context": "action the_estates, visible label.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "🏛 The Estates…"
+      }
+    },
+    "action.travel_turn_back.label.default": {
+      "context": "action travel_turn_back, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "↩ Turn back toward home"
       }
     },
     "ailment.broken_bone.desc.default": {
@@ -12072,80 +12088,6 @@
         "text": "The Dying Time"
       }
     },
-    "event.pilgrimage_call.options.0.desc.default": {
-      "context": "Event pilgrimage_call, authored option 0, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "A long road, worn shoes, and a cleaner soul."
-      }
-    },
-    "event.pilgrimage_call.options.0.effects.log.default": {
-      "context": "Durable event log for pilgrimage_call, authored option 0, effects.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Went on pilgrimage."
-      }
-    },
-    "event.pilgrimage_call.options.0.label.default": {
-      "context": "Event pilgrimage_call, authored option 0, label, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Take up the staff and go."
-      }
-    },
-    "event.pilgrimage_call.options.1.desc.default": {
-      "context": "Event pilgrimage_call, authored option 1, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Holiness by proxy, at a kinder price."
-      }
-    },
-    "event.pilgrimage_call.options.1.label.default": {
-      "context": "Event pilgrimage_call, authored option 1, label, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Give alms instead."
-      }
-    },
-    "event.pilgrimage_call.options.2.desc.default": {
-      "context": "Event pilgrimage_call, authored option 2, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "The holy places will manage without you."
-      }
-    },
-    "event.pilgrimage_call.options.2.label.default": {
-      "context": "Event pilgrimage_call, authored option 2, label, branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "The road is for dreamers."
-      }
-    },
-    "event.pilgrimage_call.text.default": {
-      "context": "Event pilgrimage_call, text, faith branch default.",
-      "glossary": [
-        "province"
-      ],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Pilgrims pass through {province}, footsore and shining-eyed, bound for the holy places. Something in you stirs to follow."
-      }
-    },
-    "event.pilgrimage_call.title.default": {
-      "context": "Event pilgrimage_call, title, faith branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "The Long Road Calls"
-      }
-    },
     "event.player_comes_of_age.options.0.desc.default": {
       "context": "Event player_comes_of_age, authored option 0, desc, branch default.",
       "glossary": [],
@@ -16142,6 +16084,1000 @@
       "location": "data/events_paths.js",
       "source": {
         "text": "A Voice in the Town"
+      }
+    },
+    "event.travel_arrival_choice.options.0.desc.default": {
+      "context": "Event travel_arrival_choice, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Travel automatically back along the saved route."
+      }
+    },
+    "event.travel_arrival_choice.options.0.effects.log.default": {
+      "context": "Durable event log for travel_arrival_choice, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Turned homeward from {destination}."
+      }
+    },
+    "event.travel_arrival_choice.options.0.label.default": {
+      "context": "Event travel_arrival_choice, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Return home."
+      }
+    },
+    "event.travel_arrival_choice.options.1.desc.default": {
+      "context": "Event travel_arrival_choice, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Move the household here without changing culture or faith."
+      }
+    },
+    "event.travel_arrival_choice.options.1.effects.log.default": {
+      "context": "Durable event log for travel_arrival_choice, authored option 1, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Settled the household in {destination}."
+      }
+    },
+    "event.travel_arrival_choice.options.1.label.default": {
+      "context": "Event travel_arrival_choice, authored option 1, label, branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Settle in {destination}."
+      }
+    },
+    "event.travel_arrival_choice.text.default": {
+      "context": "Event travel_arrival_choice, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Your purpose in {destination} is complete. Home still waits across the same long road, but a new life could begin here."
+      }
+    },
+    "event.travel_arrival_choice.title.default": {
+      "context": "Event travel_arrival_choice, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Where the Road Leads Next"
+      }
+    },
+    "event.travel_capstone_pilgrimage.options.0.desc.default": {
+      "context": "Event travel_capstone_pilgrimage, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Pray, give thanks, and carry the road’s mark home."
+      }
+    },
+    "event.travel_capstone_pilgrimage.options.0.effects.log.default": {
+      "context": "Durable event log for travel_capstone_pilgrimage, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Completed a pilgrimage to {destination}."
+      }
+    },
+    "event.travel_capstone_pilgrimage.options.0.label.default": {
+      "context": "Event travel_capstone_pilgrimage, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Complete the pilgrimage."
+      }
+    },
+    "event.travel_capstone_pilgrimage.text.default": {
+      "context": "Event travel_capstone_pilgrimage, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "After the long road, {destination} stands before you. Dust, fatigue, and all the miles fall quiet at the sacred threshold."
+      }
+    },
+    "event.travel_capstone_pilgrimage.title.default": {
+      "context": "Event travel_capstone_pilgrimage, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "At the Holy Place"
+      }
+    },
+    "event.travel_capstone_service.options.0.desc.default": {
+      "context": "Event travel_capstone_service, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Earn wages, polish, and useful notice."
+      }
+    },
+    "event.travel_capstone_service.options.0.effects.log.default": {
+      "context": "Durable event log for travel_capstone_service, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Served at the court in {destination}."
+      }
+    },
+    "event.travel_capstone_service.options.0.label.default": {
+      "context": "Event travel_capstone_service, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Take service in the court."
+      }
+    },
+    "event.travel_capstone_service.options.1.desc.default": {
+      "context": "Event travel_capstone_service, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Martial service is open only to an eligible man."
+      }
+    },
+    "event.travel_capstone_service.options.1.effects.log.default": {
+      "context": "Durable event log for travel_capstone_service, authored option 1, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Served in the warband at {destination}."
+      }
+    },
+    "event.travel_capstone_service.options.1.label.default": {
+      "context": "Event travel_capstone_service, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Join the warband."
+      }
+    },
+    "event.travel_capstone_service.text.default": {
+      "context": "Event travel_capstone_service, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "At {destination}, the court has work for an able outsider. Service in hall and office is open to you; the warband judges by older rules."
+      }
+    },
+    "event.travel_capstone_service.title.default": {
+      "context": "Event travel_capstone_service, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Service at a Foreign Court"
+      }
+    },
+    "event.travel_capstone_study.options.0.desc.default": {
+      "context": "Event travel_capstone_study, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Return with a broader and better-trained mind."
+      }
+    },
+    "event.travel_capstone_study.options.0.effects.log.default": {
+      "context": "Durable event log for travel_capstone_study, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Studied with the masters of {destination}."
+      }
+    },
+    "event.travel_capstone_study.options.0.label.default": {
+      "context": "Event travel_capstone_study, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Devote yourself to learning."
+      }
+    },
+    "event.travel_capstone_study.options.1.desc.default": {
+      "context": "Event travel_capstone_study, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Train the skill and experience used in your present career."
+      }
+    },
+    "event.travel_capstone_study.options.1.effects.log.default": {
+      "context": "Durable event log for travel_capstone_study, authored option 1, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Advanced a profession in {destination}."
+      }
+    },
+    "event.travel_capstone_study.options.1.label.default": {
+      "context": "Event travel_capstone_study, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Advance your calling."
+      }
+    },
+    "event.travel_capstone_study.text.default": {
+      "context": "Event travel_capstone_study, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "In {destination}, masters preserve methods and books unknown at home. You may follow learning for its own sake or bring sharper craft back to your profession."
+      }
+    },
+    "event.travel_capstone_study.title.default": {
+      "context": "Event travel_capstone_study, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Lessons Worth the Road"
+      }
+    },
+    "event.travel_capstone_trade.options.0.desc.default": {
+      "context": "Event travel_capstone_trade, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Recover the stake with a modest profit."
+      }
+    },
+    "event.travel_capstone_trade.options.0.effects.log.default": {
+      "context": "Durable event log for travel_capstone_trade, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Closed a cautious venture in {destination}."
+      }
+    },
+    "event.travel_capstone_trade.options.0.label.default": {
+      "context": "Event travel_capstone_trade, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Take the cautious return."
+      }
+    },
+    "event.travel_capstone_trade.options.1.desc.default": {
+      "context": "Event travel_capstone_trade, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Your Stewardship decides whether the venture prospers."
+      }
+    },
+    "event.travel_capstone_trade.options.1.failure.effects.log.default": {
+      "context": "Durable event log for travel_capstone_trade, authored option 1, failure.effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The venture in {destination} barely returned a coin."
+      }
+    },
+    "event.travel_capstone_trade.options.1.failure.text.default": {
+      "context": "Event travel_capstone_trade, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A hidden fee and a spoiled consignment consume nearly all the stake."
+      }
+    },
+    "event.travel_capstone_trade.options.1.label.default": {
+      "context": "Event travel_capstone_trade, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Press the great bargain."
+      }
+    },
+    "event.travel_capstone_trade.options.1.success.effects.log.default": {
+      "context": "Durable event log for travel_capstone_trade, authored option 1, success.effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Won a rich bargain in {destination}."
+      }
+    },
+    "event.travel_capstone_trade.options.1.success.text.default": {
+      "context": "Event travel_capstone_trade, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Every weight, promise, and delivery falls into place. The venture returns handsomely."
+      }
+    },
+    "event.travel_capstone_trade.text.default": {
+      "context": "Event travel_capstone_trade, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The markets of {destination} are ready. Your stake can be turned quickly and safely, or risked on the bargain you came all this way to make."
+      }
+    },
+    "event.travel_capstone_trade.title.default": {
+      "context": "Event travel_capstone_trade, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Venture’s Reckoning"
+      }
+    },
+    "event.travel_culture_hospitality.options.0.desc.default": {
+      "context": "Event travel_culture_hospitality, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A gift completes the bond."
+      }
+    },
+    "event.travel_culture_hospitality.options.0.label.default": {
+      "context": "Event travel_culture_hospitality, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Return the courtesy generously."
+      }
+    },
+    "event.travel_culture_hospitality.options.1.desc.default": {
+      "context": "Event travel_culture_hospitality, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Useful hands are welcome in any tongue."
+      }
+    },
+    "event.travel_culture_hospitality.options.1.label.default": {
+      "context": "Event travel_culture_hospitality, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Offer service in place of coin."
+      }
+    },
+    "event.travel_culture_hospitality.text.default": {
+      "context": "Event travel_culture_hospitality, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Hospitality in {location} comes with obligations left artfully unspoken. Your host waits to see whether you understand."
+      }
+    },
+    "event.travel_culture_hospitality.title.default": {
+      "context": "Event travel_culture_hospitality, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Debt of a Welcome"
+      }
+    },
+    "event.travel_culture_language.options.0.desc.default": {
+      "context": "Event travel_culture_language, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Patience teaches what confidence cannot."
+      }
+    },
+    "event.travel_culture_language.options.0.label.default": {
+      "context": "Event travel_culture_language, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Listen before speaking."
+      }
+    },
+    "event.travel_culture_language.options.1.desc.default": {
+      "context": "Event travel_culture_language, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Shared embarrassment becomes shared good humor."
+      }
+    },
+    "event.travel_culture_language.options.1.label.default": {
+      "context": "Event travel_culture_language, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Laugh at the mistake."
+      }
+    },
+    "event.travel_culture_language.text.default": {
+      "context": "Event travel_culture_language, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "In {location}, a familiar gesture draws blank faces, and your careful words land with quite another meaning."
+      }
+    },
+    "event.travel_culture_language.title.default": {
+      "context": "Event travel_culture_language, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A Word Mislaid"
+      }
+    },
+    "event.travel_culture_law.options.0.desc.default": {
+      "context": "Event travel_culture_law, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Adaptation is cheaper than pride."
+      }
+    },
+    "event.travel_culture_law.options.0.label.default": {
+      "context": "Event travel_culture_law, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Dress as local custom requires."
+      }
+    },
+    "event.travel_culture_law.options.1.desc.default": {
+      "context": "Event travel_culture_law, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A clear account may carry the day."
+      }
+    },
+    "event.travel_culture_law.options.1.failure.text.default": {
+      "context": "Event travel_culture_law, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The explanation becomes a fine and a long lecture."
+      }
+    },
+    "event.travel_culture_law.options.1.label.default": {
+      "context": "Event travel_culture_law, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Explain your true standing."
+      }
+    },
+    "event.travel_culture_law.options.1.success.text.default": {
+      "context": "Event travel_culture_law, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The officer accepts the explanation and waves you on."
+      }
+    },
+    "event.travel_culture_law.text.default": {
+      "context": "Event travel_culture_law, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "In {location}, your dress announces a station you do not hold, and a local officer explains the law before someone less patient does."
+      }
+    },
+    "event.travel_culture_law.title.default": {
+      "context": "Event travel_culture_law, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Cloth, Rank, and Custom"
+      }
+    },
+    "event.travel_culture_table.options.0.desc.default": {
+      "context": "Event travel_culture_table, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Observation keeps offense from the table."
+      }
+    },
+    "event.travel_culture_table.options.0.label.default": {
+      "context": "Event travel_culture_table, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Follow your host’s hands."
+      }
+    },
+    "event.travel_culture_table.options.1.desc.default": {
+      "context": "Event travel_culture_table, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Courage is sometimes measured by the spoonful."
+      }
+    },
+    "event.travel_culture_table.options.1.label.default": {
+      "context": "Event travel_culture_table, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Taste everything offered."
+      }
+    },
+    "event.travel_culture_table.text.default": {
+      "context": "Event travel_culture_table, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The food in {location} is served in an order you do not know, under table customs everyone else learned as children."
+      }
+    },
+    "event.travel_culture_table.title.default": {
+      "context": "Event travel_culture_table, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "At a Stranger’s Table"
+      }
+    },
+    "event.travel_culture_weights.options.0.desc.default": {
+      "context": "Event travel_culture_weights, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Stewardship makes a common language."
+      }
+    },
+    "event.travel_culture_weights.options.0.label.default": {
+      "context": "Event travel_culture_weights, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Set every measure side by side."
+      }
+    },
+    "event.travel_culture_weights.options.1.desc.default": {
+      "context": "Event travel_culture_weights, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A small loss buys useful knowledge."
+      }
+    },
+    "event.travel_culture_weights.options.1.label.default": {
+      "context": "Event travel_culture_weights, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Pay for the lesson."
+      }
+    },
+    "event.travel_culture_weights.text.default": {
+      "context": "Event travel_culture_weights, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A merchant in {location} names weights, measures, and a price custom unlike any used at home."
+      }
+    },
+    "event.travel_culture_weights.title.default": {
+      "context": "Event travel_culture_weights, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Measure of a Market"
+      }
+    },
+    "event.travel_culture_worship.options.0.desc.default": {
+      "context": "Event travel_culture_worship, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Reverence travels better than certainty."
+      }
+    },
+    "event.travel_culture_worship.options.0.label.default": {
+      "context": "Event travel_culture_worship, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Ask the proper observance."
+      }
+    },
+    "event.travel_culture_worship.options.1.desc.default": {
+      "context": "Event travel_culture_worship, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Respect needs no perfect understanding."
+      }
+    },
+    "event.travel_culture_worship.options.1.label.default": {
+      "context": "Event travel_culture_worship, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Withdraw with thanks."
+      }
+    },
+    "event.travel_culture_worship.text.default": {
+      "context": "Event travel_culture_worship, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A threshold in {location} is sacred in ways no one thought to explain. A keeper quietly stops you before you cross it wrongly."
+      }
+    },
+    "event.travel_culture_worship.title.default": {
+      "context": "Event travel_culture_worship, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Across a Sacred Boundary"
+      }
+    },
+    "event.travel_patron_gone.options.0.desc.default": {
+      "context": "Event travel_patron_gone, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "There is no patron left to pay you."
+      }
+    },
+    "event.travel_patron_gone.options.0.effects.log.default": {
+      "context": "Durable event log for travel_patron_gone, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Reached {destination} after its patron was gone."
+      }
+    },
+    "event.travel_patron_gone.options.0.label.default": {
+      "context": "Event travel_patron_gone, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Accept what the road has brought."
+      }
+    },
+    "event.travel_patron_gone.text.default": {
+      "context": "Event travel_patron_gone, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "You reach {destination}, but the court that promised service has vanished—conquered, scattered, or moved beyond your reach."
+      }
+    },
+    "event.travel_patron_gone.title.default": {
+      "context": "Event travel_patron_gone, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Patron Is Gone"
+      }
+    },
+    "event.travel_road_bandits.options.0.desc.default": {
+      "context": "Event travel_road_bandits, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Cunning against watchful eyes."
+      }
+    },
+    "event.travel_road_bandits.options.0.failure.text.default": {
+      "context": "Event travel_road_bandits, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "They catch you in the thorns and take what they can."
+      }
+    },
+    "event.travel_road_bandits.options.0.label.default": {
+      "context": "Event travel_road_bandits, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Slip away through the brush."
+      }
+    },
+    "event.travel_road_bandits.options.0.success.text.default": {
+      "context": "Event travel_road_bandits, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Their curses fade behind you while your purse stays put."
+      }
+    },
+    "event.travel_road_bandits.options.1.desc.default": {
+      "context": "Event travel_road_bandits, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Better a lighter purse than an early grave."
+      }
+    },
+    "event.travel_road_bandits.options.1.label.default": {
+      "context": "Event travel_road_bandits, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Give up a few coins."
+      }
+    },
+    "event.travel_road_bandits.text.default": {
+      "context": "Event travel_road_bandits, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Beyond {location}, armed shapes step into the road and ask for your purse with studied politeness."
+      }
+    },
+    "event.travel_road_bandits.title.default": {
+      "context": "Event travel_road_bandits, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Shapes in the Hedgerow"
+      }
+    },
+    "event.travel_road_illness.options.0.desc.default": {
+      "context": "Event travel_road_illness, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Bitter herbs and a day beneath blankets."
+      }
+    },
+    "event.travel_road_illness.options.0.label.default": {
+      "context": "Event travel_road_illness, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Rest and drink what the healer gives."
+      }
+    },
+    "event.travel_road_illness.options.1.desc.default": {
+      "context": "Event travel_road_illness, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The body may follow where will leads."
+      }
+    },
+    "event.travel_road_illness.options.1.label.default": {
+      "context": "Event travel_road_illness, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Keep moving."
+      }
+    },
+    "event.travel_road_illness.text.default": {
+      "context": "Event travel_road_illness, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A chill takes hold after leaving {location}. By nightfall, the road sways even when you stand still."
+      }
+    },
+    "event.travel_road_illness.title.default": {
+      "context": "Event travel_road_illness, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Road Fever"
+      }
+    },
+    "event.travel_road_lodging.options.0.desc.default": {
+      "context": "Event travel_road_lodging, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Warmth, straw, and a barred door."
+      }
+    },
+    "event.travel_road_lodging.options.0.label.default": {
+      "context": "Event travel_road_lodging, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Pay for the bed. (2 gold)"
+      }
+    },
+    "event.travel_road_lodging.options.1.desc.default": {
+      "context": "Event travel_road_lodging, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The ditch asks no coin."
+      }
+    },
+    "event.travel_road_lodging.options.1.label.default": {
+      "context": "Event travel_road_lodging, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Sleep beneath your cloak."
+      }
+    },
+    "event.travel_road_lodging.text.default": {
+      "context": "Event travel_road_lodging, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "At {location}, one bed remains beneath a sound roof. The price rises while you stand in the doorway."
+      }
+    },
+    "event.travel_road_lodging.title.default": {
+      "context": "Event travel_road_lodging, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Last Bed"
+      }
+    },
+    "event.travel_road_toll.options.0.desc.default": {
+      "context": "Event travel_road_toll, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Some arguments cost more than the answer."
+      }
+    },
+    "event.travel_road_toll.options.0.label.default": {
+      "context": "Event travel_road_toll, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Pay and pass. (2 gold)"
+      }
+    },
+    "event.travel_road_toll.options.1.desc.default": {
+      "context": "Event travel_road_toll, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Accounts and confidence against cudgels."
+      }
+    },
+    "event.travel_road_toll.options.1.failure.text.default": {
+      "context": "Event travel_road_toll, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The toll doubles while the cudgels remain persuasive."
+      }
+    },
+    "event.travel_road_toll.options.1.label.default": {
+      "context": "Event travel_road_toll, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Question how ancient it is."
+      }
+    },
+    "event.travel_road_toll.options.1.success.text.default": {
+      "context": "Event travel_road_toll, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Their figures collapse under examination, and so does the toll."
+      }
+    },
+    "event.travel_road_toll.text.default": {
+      "context": "Event travel_road_toll, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Men with a painted board have stretched a rope across the road near {location}. They call the demand an ancient toll."
+      }
+    },
+    "event.travel_road_toll.title.default": {
+      "context": "Event travel_road_toll, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A Rope Across the Road"
+      }
+    },
+    "event.travel_road_weather.options.0.desc.default": {
+      "context": "Event travel_road_weather, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A dry night is worth a delayed dawn."
+      }
+    },
+    "event.travel_road_weather.options.0.label.default": {
+      "context": "Event travel_road_weather, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Find shelter and wait it out."
+      }
+    },
+    "event.travel_road_weather.options.1.desc.default": {
+      "context": "Event travel_road_weather, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Keep the road, whatever the sky says."
+      }
+    },
+    "event.travel_road_weather.options.1.label.default": {
+      "context": "Event travel_road_weather, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Press through it."
+      }
+    },
+    "event.travel_road_weather.text.default": {
+      "context": "Event travel_road_weather, text, faith branch default.",
+      "glossary": [
+        "location"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Hard weather closes around the road outside {location}; every rut fills and every mile lengthens."
+      }
+    },
+    "event.travel_road_weather.title.default": {
+      "context": "Event travel_road_weather, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Weather on the Road"
       }
     },
     "event.vassal_demand.options.0.desc.default": {
@@ -22104,6 +23040,57 @@
         "text": "Your quiet work costs {name} dearly, and no one can prove a thing."
       }
     },
+    "news.travel.cancelled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 The journey ends as your station or obligations change. The household remains at {home}."
+      }
+    },
+    "news.travel.departed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 Set out from {home} for {destination}."
+      }
+    },
+    "news.travel.returned": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 Returned home to {home}."
+      }
+    },
+    "news.travel.settled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 The household settles in {destination}."
+      }
+    },
+    "news.travel.turned_back": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 Turned back toward {home}."
+      }
+    },
     "news.war.abandoned": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -23244,6 +24231,16 @@
         "text": "Granary"
       }
     },
+    "src.008253b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A dry night is worth a delayed dawn."
+      }
+    },
     "src.009fe254": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23303,6 +24300,26 @@
       ],
       "source": {
         "text": "🕸 A plot is set in motion: {plot}."
+      }
+    },
+    "src.012a02a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Some arguments cost more than the answer."
+      }
+    },
+    "src.012ce0dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Listen before speaking."
       }
     },
     "src.013de910": {
@@ -23506,16 +24523,6 @@
         "text": "Pilgrims and silver — unless the bishop counts sheep bones."
       }
     },
-    "src.02d4ab7d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The Long Road Calls"
-      }
-    },
     "src.02defae5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23524,6 +24531,16 @@
       ],
       "source": {
         "text": "Nurse them day and night."
+      }
+    },
+    "src.02fb67a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Patron Is Gone"
       }
     },
     "src.033334e3": {
@@ -23857,6 +24874,16 @@
         "text": "Yesterday’s battles teach tomorrow’s."
       }
     },
+    "src.05733b0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "In {location}, your dress announces a station you do not hold, and a local officer explains the law before someone less patient does."
+      }
+    },
     "src.0577a264": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24037,6 +25064,16 @@
         "text": "Collectors arrive from {liege} with tallies and wax: the lord calls an extraordinary aid upon all his vassals — your chest included."
       }
     },
+    "src.0660beea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Patience teaches what confidence cannot."
+      }
+    },
     "src.06832d33": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24157,6 +25194,16 @@
         "text": "War Comes to You"
       }
     },
+    "src.070300b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The explanation becomes a fine and a long lecture."
+      }
+    },
     "src.070e3a53": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24175,6 +25222,16 @@
       ],
       "source": {
         "text": "The Succession"
+      }
+    },
+    "src.07268c9d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Venture’s Reckoning"
       }
     },
     "src.07299687": {
@@ -24389,6 +25446,16 @@
         "text": "👁 You settle in to watch the realms go about their centuries."
       }
     },
+    "src.083e8013": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "At {location}, one bed remains beneath a sound roof. The price rises while you stand in the doorway."
+      }
+    },
     "src.0846e560": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24427,6 +25494,16 @@
       ],
       "source": {
         "text": "Wants more. Always more."
+      }
+    },
+    "src.08842914": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The venture in {destination} barely returned a coin."
       }
     },
     "src.088c1531": {
@@ -25020,6 +26097,16 @@
         "text": "Choose Your Beginning — Anno Domini 867"
       }
     },
+    "src.0bddd536": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Every weight, promise, and delivery falls into place. The venture returns handsomely."
+      }
+    },
     "src.0be28b8c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25128,6 +26215,16 @@
       ],
       "source": {
         "text": "a curiosity"
+      }
+    },
+    "src.0cd7ce4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Stewardship makes a common language."
       }
     },
     "src.0cf16e55": {
@@ -25380,6 +26477,16 @@
         "text": "🏛 The Estates…"
       }
     },
+    "src.0e79119e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Offer service in place of coin."
+      }
+    },
     "src.0e7d4611": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25571,6 +26678,16 @@
         "text": "Name"
       }
     },
+    "src.0fe8e2c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Turned homeward from {destination}."
+      }
+    },
     "src.0feb4f23": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25579,6 +26696,16 @@
       ],
       "source": {
         "text": "⚡ {name} now counts you an enemy."
+      }
+    },
+    "src.1009839b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
       }
     },
     "src.10182c06": {
@@ -25871,6 +26998,16 @@
         "text": "Capital"
       }
     },
+    "src.11d46fc4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{destination}: {legs} legs, {days} days each way, {cost} gold."
+      }
+    },
     "src.11dff73f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25899,6 +27036,16 @@
       ],
       "source": {
         "text": "A Token of Esteem"
+      }
+    },
+    "src.12191d9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The roads are not ready."
       }
     },
     "src.1221947f": {
@@ -25971,6 +27118,16 @@
         "text": "Path: petition your liege for a county — or declare independence and take one."
       }
     },
+    "src.12613f4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Served in the warband at {destination}."
+      }
+    },
     "src.12619885": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26009,6 +27166,16 @@
       ],
       "source": {
         "text": "One back bent so the village stands straight."
+      }
+    },
+    "src.1284ea8b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Last Bed"
       }
     },
     "src.128b9d13": {
@@ -26102,6 +27269,16 @@
         "text": "The request is judged reasonable. The miller is told to swallow the loss."
       }
     },
+    "src.12edb726": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Press the great bargain."
+      }
+    },
     "src.130cd7cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26170,6 +27347,16 @@
       ],
       "source": {
         "text": "Pursue marriage with {name}: court them daily, then propose."
+      }
+    },
+    "src.137ec3b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 Returned home to {home}."
       }
     },
     "src.1384c790": {
@@ -26882,6 +28069,16 @@
       ],
       "source": {
         "text": "Cut her way to her beloved’s shoulder and held."
+      }
+    },
+    "src.17744c27": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Your purpose in {destination} is complete. Home still waits across the same long road, but a new life could begin here."
       }
     },
     "src.17799bc7": {
@@ -27647,6 +28844,16 @@
         "text": "Swore an oath of brotherhood."
       }
     },
+    "src.1cd4bd9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Recover the stake with a modest profit."
+      }
+    },
     "src.1cdfeece": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27787,6 +28994,16 @@
         "text": "No one notices. Profitably done."
       }
     },
+    "src.1db4a32a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A hidden fee and a spoiled consignment consume nearly all the stake."
+      }
+    },
     "src.1dbcf5a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27877,16 +29094,6 @@
         "text": "Turn surplus into silver. (stewardship pays)"
       }
     },
-    "src.1e6f524f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Take up the staff and go."
-      }
-    },
     "src.1e93f87f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27965,6 +29172,16 @@
       ],
       "source": {
         "text": "Witnesses at the door, their goods on the cart. Folk will talk. (−5 prestige, spends the day)"
+      }
+    },
+    "src.1efd4b17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Pay for the bed. (2 gold)"
       }
     },
     "src.1f003bd3": {
@@ -28366,16 +29583,6 @@
       ],
       "source": {
         "text": "education focus"
-      }
-    },
-    "src.2156d2d5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Holiness by proxy, at a kinder price."
       }
     },
     "src.2169c317": {
@@ -29770,6 +30977,26 @@
         "text": "Walk away, and let the village judge."
       }
     },
+    "src.2a4dec0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Hospitality in {location} comes with obligations left artfully unspoken. Your host waits to see whether you understand."
+      }
+    },
+    "src.2a70b752": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Their figures collapse under examination, and so does the toll."
+      }
+    },
     "src.2a740abf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29850,6 +31077,16 @@
         "text": "Debts, rumors, and old friends turn all at once. {rival} is ruined — everyone suspects you, and no one can prove it."
       }
     },
+    "src.2ad93b51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Hard weather closes around the road outside {location}; every rut fills and every mile lengthens."
+      }
+    },
     "src.2ae02fc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29878,6 +31115,16 @@
       ],
       "source": {
         "text": "Paste a start code or world seed first."
+      }
+    },
+    "src.2b2a35cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Move the household here without changing culture or faith."
       }
     },
     "src.2b355b1e": {
@@ -29928,6 +31175,16 @@
       ],
       "source": {
         "text": "your faith permits no more wives."
+      }
+    },
+    "src.2bc9a4c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{purpose} · {phase} · now in {location} · destination {destination}"
       }
     },
     "src.2bd01f48": {
@@ -30068,6 +31325,16 @@
       ],
       "source": {
         "text": "Not now"
+      }
+    },
+    "src.2c407028": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "At the Holy Place"
       }
     },
     "src.2c49efe7": {
@@ -30390,6 +31657,16 @@
         "text": "He calls the repair a tenant’s duty and takes the toll besides."
       }
     },
+    "src.2dd849f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Return home."
+      }
+    },
     "src.2df378d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30692,6 +31969,16 @@
         "text": "Not enough gold."
       }
     },
+    "src.2fde9433": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A small loss buys useful knowledge."
+      }
+    },
     "src.2fec4f4d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30800,6 +32087,16 @@
       ],
       "source": {
         "text": "Invalid JSON: {message}"
+      }
+    },
+    "src.30ad485c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{legs} county legs · {days} days each way · {cost} gold"
       }
     },
     "src.30b0ac86": {
@@ -30941,6 +32238,16 @@
       ],
       "source": {
         "text": "The great officers sit in council on the war: the realm bleeds, they say, and the realm’s silver should bleed with it. They offer a subsidy from their own coffers — for the duration, and not, they make clear, as a precedent. It is absolutely a precedent."
+      }
+    },
+    "src.314284f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "↩ Turn back toward home"
       }
     },
     "src.31443ae2": {
@@ -31091,6 +32398,16 @@
       ],
       "source": {
         "text": "{owner} (~{men})"
+      }
+    },
+    "src.322d1f1d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Offer your hands and talents at the court of a living realm."
       }
     },
     "src.3246df88": {
@@ -31627,6 +32944,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui.js",
+        "index.html",
         "js/main.js"
       ],
       "source": {
@@ -32364,6 +33683,16 @@
         "text": "🎁 Grant land…"
       }
     },
+    "src.3abfe075": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A Word Mislaid"
+      }
+    },
     "src.3acc0fda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32574,6 +33903,16 @@
         "text": "Your trap catches a scullion — innocent, probably. The real agent reports your defenses in detail."
       }
     },
+    "src.3bf8a2dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Martial service is open only to an eligible man."
+      }
+    },
     "src.3bfd3baf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32582,6 +33921,16 @@
       ],
       "source": {
         "text": "Keyboard (desktop)"
+      }
+    },
+    "src.3c1a8b6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Taste everything offered."
       }
     },
     "src.3c289c7d": {
@@ -32714,6 +34063,26 @@
         "text": "Appeal over the dog to the hand that feeds it."
       }
     },
+    "src.3cd96da5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Won a rich bargain in {destination}."
+      }
+    },
+    "src.3ce30400": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A Rope Across the Road"
+      }
+    },
     "src.3cfc87dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32775,11 +34144,22 @@
         "text": "Defiance is cheap until the tally comes due."
       }
     },
+    "src.3d64ff4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The body may follow where will leads."
+      }
+    },
     "src.3d713847": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/actions.js",
+        "js/travel.js"
       ],
       "source": {
         "text": "Ready in {days} days."
@@ -32803,6 +34183,16 @@
       ],
       "source": {
         "text": "The old injury has found a name. Before neighbors and kin, {rival} declares that no friendship stands between your houses and that every slight will be answered."
+      }
+    },
+    "src.3d9fdf63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "at the destination"
       }
     },
     "src.3da23686": {
@@ -33286,6 +34676,16 @@
         "text": "The Banners Meet"
       }
     },
+    "src.40df5f38": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Devote yourself to learning."
+      }
+    },
     "src.40e5ba78": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33354,6 +34754,16 @@
       ],
       "source": {
         "text": "Report a Bug"
+      }
+    },
+    "src.4110a7d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Settled the household in {destination}."
       }
     },
     "src.412feddc": {
@@ -33476,6 +34886,16 @@
         "text": "🚩 There is no road from here to the host of {enemy}."
       }
     },
+    "src.41d87d9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Courage is sometimes measured by the spoonful."
+      }
+    },
     "src.41de154d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33564,6 +34984,26 @@
       ],
       "source": {
         "text": "Bad coin travels fast — and so do reputations."
+      }
+    },
+    "src.42ba673f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Reached {destination} after its patron was gone."
+      }
+    },
+    "src.42c69a63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "After the long road, {destination} stands before you. Dust, fatigue, and all the miles fall quiet at the sacred threshold."
       }
     },
     "src.42d92902": {
@@ -33694,6 +35134,16 @@
       ],
       "source": {
         "text": "The lord tires of the question. The toll stands."
+      }
+    },
+    "src.4347014d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 Turned back toward {home}."
       }
     },
     "src.43555785": {
@@ -34130,6 +35580,16 @@
         "text": "Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map."
       }
     },
+    "src.4590ea85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "There is no patron left to pay you."
+      }
+    },
     "src.459a6081": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34300,6 +35760,17 @@
         "text": "Break the seal and read the inventory."
       }
     },
+    "src.46916c65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review journey"
+      }
+    },
     "src.469911bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34344,7 +35815,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/armies.js"
+        "js/armies.js",
+        "js/travel.js"
       ],
       "source": {
         "text": "px Georgia"
@@ -34379,6 +35851,16 @@
       ],
       "source": {
         "text": "Abbess"
+      }
+    },
+    "src.46f164f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A gift completes the bond."
       }
     },
     "src.46f78917": {
@@ -34429,6 +35911,16 @@
       ],
       "source": {
         "text": "Humility pleases the powerful, and asks for nothing."
+      }
+    },
+    "src.473cc515": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Road Fever"
       }
     },
     "src.473f1468": {
@@ -34699,6 +36191,16 @@
       ],
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {gold} gold on the match."
+      }
+    },
+    "src.48768f96": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "A prisoner cannot leave."
       }
     },
     "src.48796f01": {
@@ -34992,6 +36494,16 @@
       ],
       "source": {
         "text": "Pledged loan"
+      }
+    },
+    "src.4a527313": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Return the courtesy generously."
       }
     },
     "src.4a565bb0": {
@@ -35545,6 +37057,16 @@
         "text": "{title} {ruler} · fields ~{men}"
       }
     },
+    "src.4d6d6cab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Pay for the lesson."
+      }
+    },
     "src.4d8407e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35653,6 +37175,16 @@
       ],
       "source": {
         "text": "Charm a honey-cake from the baker."
+      }
+    },
+    "src.4e1a65b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Exact upfront cost: {cost} gold."
       }
     },
     "src.4e57a864": {
@@ -36345,6 +37877,16 @@
         "text": "Rich pickings, with {god} watching."
       }
     },
+    "src.520f2851": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Service at a Foreign Court"
+      }
+    },
     "src.52226962": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36856,6 +38398,26 @@
         "text": "No power but its worth."
       }
     },
+    "src.55458dd8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Carry a stake to a developed market and bargain for a return."
+      }
+    },
+    "src.5547ce8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Rest and drink what the healer gives."
+      }
+    },
     "src.55667f3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37106,6 +38668,16 @@
         "text": "⚔ martial {martial} · opinion {opinion} ({band})"
       }
     },
+    "src.56cd88cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The markets of {destination} are ready. Your stake can be turned quickly and safely, or risked on the bargain you came all this way to make."
+      }
+    },
     "src.56ce17af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37144,6 +38716,16 @@
       ],
       "source": {
         "text": "Decline politely."
+      }
+    },
+    "src.56ed9d94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Complete the pilgrimage."
       }
     },
     "src.56fd808c": {
@@ -37336,6 +38918,16 @@
         "text": "Debase the coinage?"
       }
     },
+    "src.58290ecd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Men with a painted board have stretched a rope across the road near {location}. They call the demand an ancient toll."
+      }
+    },
     "src.582e165e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37424,6 +39016,16 @@
       ],
       "source": {
         "text": "⭐ Prestige each season"
+      }
+    },
+    "src.58cad766": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No qualifying destination can be reached."
       }
     },
     "src.58d10c65": {
@@ -37634,6 +39236,16 @@
       ],
       "source": {
         "text": "👶 Your daughter {parent} has a son, {baby}."
+      }
+    },
+    "src.5a087210": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "not enough gold"
       }
     },
     "src.5a093f19": {
@@ -38218,6 +39830,16 @@
         "text": "A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this."
       }
     },
+    "src.5cfcd238": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Pay and pass. (2 gold)"
+      }
+    },
     "src.5d199cff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38309,6 +39931,16 @@
       ],
       "source": {
         "text": "Daughter"
+      }
+    },
+    "src.5d5bd172": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Already returning home."
       }
     },
     "src.5d625253": {
@@ -38543,6 +40175,16 @@
         "text": "Demand a duel."
       }
     },
+    "src.5f3f9ea9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Accept what the road has brought."
+      }
+    },
     "src.5f5652d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38741,6 +40383,16 @@
       ],
       "source": {
         "text": "Tengrism"
+      }
+    },
+    "src.6036d142": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Useful hands are welcome in any tongue."
       }
     },
     "src.604b2702": {
@@ -39103,6 +40755,16 @@
         "text": "Call in the favor heaven owes you."
       }
     },
+    "src.62265a71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Across a Sacred Boundary"
+      }
+    },
     "src.622b331e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39121,6 +40783,16 @@
       ],
       "source": {
         "text": "A stranger of real accomplishment in stewardship."
+      }
+    },
+    "src.62441616": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The officer accepts the explanation and waves you on."
       }
     },
     "src.6244b997": {
@@ -39171,6 +40843,16 @@
       ],
       "source": {
         "text": "🕯 {name}’s tutor has died; the lessons pause."
+      }
+    },
+    "src.6274a86c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a destination for {purpose}"
       }
     },
     "src.62823a02": {
@@ -39293,6 +40975,16 @@
         "text": "The Old Sergeant’s Wager"
       }
     },
+    "src.63854a25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A chill takes hold after leaving {location}. By nightfall, the road sways even when you stand still."
+      }
+    },
     "src.638e3a31": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39363,6 +41055,16 @@
       ],
       "source": {
         "text": "Cousin"
+      }
+    },
+    "src.64658258": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to destinations"
       }
     },
     "src.646b14f2": {
@@ -39676,6 +41378,16 @@
         "text": "Gluttonous"
       }
     },
+    "src.6639eb27": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "At {destination}, the court has work for an able outsider. Service in hall and office is open to you; the warband judges by older rules."
+      }
+    },
     "src.66466e78": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39954,6 +41666,16 @@
       ],
       "source": {
         "text": "Nothing. So enjoy the wine."
+      }
+    },
+    "src.67f4fe57": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The household settles in {destination}."
       }
     },
     "src.680132f1": {
@@ -40245,6 +41967,16 @@
       ],
       "source": {
         "text": "Merchant"
+      }
+    },
+    "src.696798fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "You cannot leave while personally at war."
       }
     },
     "src.69687e3a": {
@@ -40727,16 +42459,6 @@
         "text": "Court Physicians"
       }
     },
-    "src.6c5508f9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A long road, worn shoes, and a cleaner soul."
-      }
-    },
     "src.6c878d69": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40927,6 +42649,16 @@
         "text": "⏱ Speed {current}/{total}"
       }
     },
+    "src.6d68f05d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Cloth, Rank, and Custom"
+      }
+    },
     "src.6d69168f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40935,6 +42667,16 @@
       ],
       "source": {
         "text": "Through the din you see it: {lord} down, horse screaming, enemies closing like crows. No one else is near enough. You are."
+      }
+    },
+    "src.6d7b1d62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The ditch asks no coin."
       }
     },
     "src.6d7cb594": {
@@ -41237,6 +42979,16 @@
         "text": "Raise a Building in {settlement}"
       }
     },
+    "src.6eec4916": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Your Stewardship decides whether the venture prospers."
+      }
+    },
     "src.6ef87ec8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41415,6 +43167,16 @@
       ],
       "source": {
         "text": "Wages for hunger — labor that may pay double."
+      }
+    },
+    "src.70136fc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Studied with the masters of {destination}."
       }
     },
     "src.7015bfa6": {
@@ -42351,6 +44113,16 @@
         "text": "A ready ear is a small congregation."
       }
     },
+    "src.7577685c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Shapes in the Hedgerow"
+      }
+    },
     "src.757a9914": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42479,6 +44251,16 @@
       ],
       "source": {
         "text": "{school} — {name}"
+      }
+    },
+    "src.75fef9e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Trade venture"
       }
     },
     "src.761f5490": {
@@ -43073,6 +44855,16 @@
         "text": "Perhaps no one is watching."
       }
     },
+    "src.79ad420b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Abandon the journey and retrace the road. Nothing is refunded."
+      }
+    },
     "src.79b07462": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43251,6 +45043,16 @@
       ],
       "source": {
         "text": "Granted a higher title by the liege!"
+      }
+    },
+    "src.7aa176e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Give up a few coins."
       }
     },
     "src.7ab16f9e": {
@@ -43535,6 +45337,16 @@
         "text": "Immediate seigniorage"
       }
     },
+    "src.7c508d88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "The road is open to freeholders and gentry."
+      }
+    },
     "src.7c5c321c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43795,6 +45607,16 @@
         "text": "Send them to the lord’s court."
       }
     },
+    "src.7dfeae28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Accounts and confidence against cudgels."
+      }
+    },
     "src.7e0911a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43853,6 +45675,16 @@
       ],
       "source": {
         "text": "Truth is a tool like any other."
+      }
+    },
+    "src.7e326311": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Keep the road, whatever the sky says."
       }
     },
     "src.7e3faa66": {
@@ -44133,6 +45965,16 @@
       ],
       "source": {
         "text": "👑 The ruler of {realm} is dead. {ruler} rises in their place."
+      }
+    },
+    "src.7fab08d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Settle in {destination}."
       }
     },
     "src.7fc09435": {
@@ -44565,6 +46407,16 @@
         "text": "The Estates Assemble"
       }
     },
+    "src.824e397f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The journey ends as your station or obligations change. The household remains at {home}."
+      }
+    },
     "src.8260cf65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44593,6 +46445,16 @@
       ],
       "source": {
         "text": "The Long Look Back"
+      }
+    },
+    "src.8264dba1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Adaptation is cheaper than pride."
       }
     },
     "src.82713103": {
@@ -44986,6 +46848,16 @@
         "text": "Guild standing brings commissions, enterprise access, and better profits."
       }
     },
+    "src.84381eae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Laugh at the mistake."
+      }
+    },
     "src.843fd5f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45306,6 +47178,16 @@
         "text": "Letters learned young are kept for life."
       }
     },
+    "src.864601c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Choose a destination"
+      }
+    },
     "src.864ea70d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45466,6 +47348,16 @@
         "text": "Counted everything. The graveyard steward sends regards."
       }
     },
+    "src.873f4e00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Dress as local custom requires."
+      }
+    },
     "src.875ee6f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45474,6 +47366,16 @@
       ],
       "source": {
         "text": "Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it."
+      }
+    },
+    "src.876989a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map."
       }
     },
     "src.87707475": {
@@ -45886,6 +47788,16 @@
         "text": "There is a young man of the next holding — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the lord’s serjeants are taking every unwed man who can hold a spear, and this morning he stands in the muster line with a borrowed shield on his arm and no notion that you exist. By dusk the company will be a smudge of dust on the war road, and him with it. A woman does not follow an army. Everyone knows that."
       }
     },
+    "src.8a6a177c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "That county does not qualify for this journey."
+      }
+    },
     "src.8a6df1c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46096,6 +48008,16 @@
         "text": "Take a good fighting knife from the cart."
       }
     },
+    "src.8b341b58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Sleep beneath your cloak."
+      }
+    },
     "src.8b3cc76e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46124,6 +48046,16 @@
       ],
       "source": {
         "text": "Himself a vassal of {liege}"
+      }
+    },
+    "src.8bb6b410": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Study or apprenticeship"
       }
     },
     "src.8bbb8083": {
@@ -46444,6 +48376,16 @@
       ],
       "source": {
         "text": "plays / pauses the flow of days ·"
+      }
+    },
+    "src.8da87f13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Only an adult can take to the road."
       }
     },
     "src.8db2fbaf": {
@@ -47019,6 +48961,16 @@
         "text": "☠ {name} is Dead"
       }
     },
+    "src.90a579b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Explain your true standing."
+      }
+    },
     "src.90a69ed3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47428,6 +49380,16 @@
       ],
       "source": {
         "text": "“Is that a DOG in the Gospel?” Scraping vellum for a month."
+      }
+    },
+    "src.9383db6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Beyond {location}, armed shapes step into the road and ask for your purse with studied politeness."
       }
     },
     "src.93a61dc1": {
@@ -47983,6 +49945,16 @@
         "text": "Musters, war councils, tribute envoys, and battle reports. Your hosts still raise, march, and fight on the map by their own rules — this chooses your orders each season."
       }
     },
+    "src.975c4b3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Press through it."
+      }
+    },
     "src.9765e595": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48021,6 +49993,16 @@
       ],
       "source": {
         "text": "Against all cynics, holiness prevails. The mitre is yours."
+      }
+    },
+    "src.979dd730": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Visit a holy place of your faith and return with a pilgrim’s standing."
       }
     },
     "src.97a80d1c": {
@@ -48295,16 +50277,6 @@
         "text": "Letters & Faith"
       }
     },
-    "src.98808e79": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Went on pilgrimage."
-      }
-    },
     "src.988ed17b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48545,6 +50517,16 @@
         "text": "🔥 {realm} declares war upon YOU!"
       }
     },
+    "src.9a49696e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Train the skill and experience used in your present career."
+      }
+    },
     "src.9a4e6ee6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48563,6 +50545,26 @@
       ],
       "source": {
         "text": "(or ▶▶) skips straight to the next happening. Events halt the days while they await your choice."
+      }
+    },
+    "src.9a51c84e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Pray, give thanks, and carry the road’s mark home."
+      }
+    },
+    "src.9a530daf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "At a Stranger’s Table"
       }
     },
     "src.9a545cdc": {
@@ -48847,6 +50849,16 @@
         "text": "He grunts, half insulted and half impressed, and rides on."
       }
     },
+    "src.9bfe96a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A threshold in {location} is sacred in ways no one thought to explain. A keeper quietly stops you before you cross it wrongly."
+      }
+    },
     "src.9c017863": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49075,6 +51087,16 @@
       ],
       "source": {
         "text": "Accepted a mediated peace with a rival."
+      }
+    },
+    "src.9d14ccc7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The toll doubles while the cudgels remain persuasive."
       }
     },
     "src.9d182261": {
@@ -49337,6 +51359,16 @@
         "text": "Every term becomes another argument. At last the mediator rises and leaves you to your anger."
       }
     },
+    "src.9e776184": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Withdraw with thanks."
+      }
+    },
     "src.9e7844e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49495,6 +51527,16 @@
       ],
       "source": {
         "text": "Counties"
+      }
+    },
+    "src.9f379eae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Bitter herbs and a day beneath blankets."
       }
     },
     "src.9f3b0582": {
@@ -49687,6 +51729,16 @@
         "text": "Your seconding carries the hall; the old lord wins his judgment and grips your hand till it hurts. The liege’s clerks write something down."
       }
     },
+    "src.a004e0f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Earn wages, polish, and useful notice."
+      }
+    },
     "src.a010f7d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49877,6 +51929,16 @@
         "text": "{icon} {name} ×{rank}"
       }
     },
+    "src.a140f474": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Pilgrimage"
+      }
+    },
     "src.a1450f43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49905,6 +51967,16 @@
       ],
       "source": {
         "text": "The lord’s protection, at a small reminder of its price."
+      }
+    },
+    "src.a15fb5a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Shared embarrassment becomes shared good humor."
       }
     },
     "src.a170b70b": {
@@ -50005,6 +52077,16 @@
       ],
       "source": {
         "text": "Freedom keeps; the charter can wait another season."
+      }
+    },
+    "src.a2020845": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You are already traveling home."
       }
     },
     "src.a208d106": {
@@ -50257,6 +52339,16 @@
         "text": "🤝 Attend the lord’s hall"
       }
     },
+    "src.a3d2b56d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "outbound"
+      }
+    },
     "src.a3d53703": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50295,6 +52387,16 @@
       ],
       "source": {
         "text": "{spouse} speaks quietly after the hall empties: a shrewd reading of your rivals, your coffers, and your next move."
+      }
+    },
+    "src.a40eb986": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Return with a broader and better-trained mind."
       }
     },
     "src.a4158509": {
@@ -50416,6 +52518,16 @@
       ],
       "source": {
         "text": "A fair plea — if the lord is feeling fair."
+      }
+    },
+    "src.a532cf3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A clear account may carry the day."
       }
     },
     "src.a53c5229": {
@@ -50607,6 +52719,16 @@
       ],
       "source": {
         "text": "Someone has talked. Conversations die when you approach; eyes follow you out of rooms. The plot is known — or nearly."
+      }
+    },
+    "src.a6143de1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Their curses fade behind you while your purse stays put."
       }
     },
     "src.a62303a4": {
@@ -50839,6 +52961,16 @@
         "text": "What the House Owes"
       }
     },
+    "src.a7633950": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Keep moving."
+      }
+    },
     "src.a78231e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50877,16 +53009,6 @@
       ],
       "source": {
         "text": "Died angry. The wake was quieter than the life."
-      }
-    },
-    "src.a7a7d3d8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The road is for dreamers."
       }
     },
     "src.a7ac91cd": {
@@ -50977,6 +53099,16 @@
       ],
       "source": {
         "text": "Pay the fine before it grows. (6 gold)"
+      }
+    },
+    "src.a866826b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Advanced a profession in {destination}."
       }
     },
     "src.a8688e77": {
@@ -51099,6 +53231,17 @@
         "text": "The War Lets You Go"
       }
     },
+    "src.a8cfcf07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Take to the road…"
+      }
+    },
     "src.a8debf20": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51107,6 +53250,16 @@
       ],
       "source": {
         "text": "A traveling singer works the crowd by the fire — wars in far lands, kings dead and crowned, and a rumor for every purse."
+      }
+    },
+    "src.a9086f96": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Question how ancient it is."
       }
     },
     "src.a9098a5a": {
@@ -51471,6 +53624,16 @@
         "text": "Knew everything except how to stay."
       }
     },
+    "src.aba8e3fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Travel automatically back along the saved route."
+      }
+    },
     "src.abaa7b29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51601,6 +53764,16 @@
         "text": "Freeman"
       }
     },
+    "src.ac50a1af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Reverence travels better than certainty."
+      }
+    },
     "src.ac8b9f8c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51639,6 +53812,16 @@
       ],
       "source": {
         "text": "Licensed Scholar"
+      }
+    },
+    "src.acba1976": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Take service in the court."
       }
     },
     "src.acdcb19d": {
@@ -51931,6 +54114,16 @@
         "text": "Sickly"
       }
     },
+    "src.ae687c31": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Debt of a Welcome"
+      }
+    },
     "src.ae6deacf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51939,6 +54132,16 @@
       ],
       "source": {
         "text": "Karl"
+      }
+    },
+    "src.ae719ab6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Advance your calling."
       }
     },
     "src.ae77bd54": {
@@ -52573,6 +54776,16 @@
         "text": "🧰 Work & Wealth"
       }
     },
+    "src.b2b72958": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "returning home"
+      }
+    },
     "src.b2bb7904": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52753,6 +54966,16 @@
         "text": "Fall back and refit."
       }
     },
+    "src.b3b5e759": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "You reach {destination}, but the court that promised service has vanished—conquered, scattered, or moved beyond your reach."
+      }
+    },
     "src.b3b6f62f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52872,6 +55095,16 @@
       ],
       "source": {
         "text": "Your {cleric}"
+      }
+    },
+    "src.b46e55de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Depart for {destination}"
       }
     },
     "src.b4766ca2": {
@@ -53265,6 +55498,16 @@
         "text": "{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender."
       }
     },
+    "src.b6c66da6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Better a lighter purse than an early grave."
+      }
+    },
     "src.b6c8d399": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53363,6 +55606,16 @@
       ],
       "source": {
         "text": "Repent and tell the court about the bribe."
+      }
+    },
+    "src.b7494aa4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Paid service"
       }
     },
     "src.b74d4ff4": {
@@ -53546,6 +55799,16 @@
         "text": "Every county belongs by ancient right to a duchy, a kingdom, and an empire — its"
       }
     },
+    "src.b836eca1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "They catch you in the thorns and take what they can."
+      }
+    },
     "src.b84cc030": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53604,6 +55867,16 @@
       ],
       "source": {
         "text": "Hunt them down and hang one."
+      }
+    },
+    "src.b8f594a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Served at the court in {destination}."
       }
     },
     "src.b8ff8731": {
@@ -54188,6 +56461,16 @@
         "text": "Heavy coin for a thing that may outlast you."
       }
     },
+    "src.bc8bc663": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Seek instruction in one of the great learned or urban centers."
+      }
+    },
     "src.bcb35291": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54738,6 +57021,16 @@
         "text": "Raise a duke over a duchy you hold in full"
       }
     },
+    "src.c0f2facd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Ask the proper observance."
+      }
+    },
     "src.c103062f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55091,6 +57384,26 @@
         "text": "🚩 {realm} takes the field — some {men} spears against you."
       }
     },
+    "src.c2bacdb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "In {destination}, masters preserve methods and books unknown at home. You may follow learning for its own sake or bring sharper craft back to your profession."
+      }
+    },
+    "src.c2c61150": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Tap a marked county or choose it from the list. Routes use settled counties and authored straits."
+      }
+    },
     "src.c2de5a3f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55099,6 +57412,16 @@
       ],
       "source": {
         "text": "The Tithe Barn"
+      }
+    },
+    "src.c2f09b61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Completed a pilgrimage to {destination}."
       }
     },
     "src.c2fc86f1": {
@@ -55329,6 +57652,16 @@
       ],
       "source": {
         "text": "Nothing of note."
+      }
+    },
+    "src.c4d38622": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Choose a purpose and travel county by county over game time."
       }
     },
     "src.c4da0cc9": {
@@ -55722,6 +58055,16 @@
         "text": "Excommunicated"
       }
     },
+    "src.c73b400d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Where the Road Leads Next"
+      }
+    },
     "src.c73f060e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55740,6 +58083,26 @@
       ],
       "source": {
         "text": "Grease the loudest tongues."
+      }
+    },
+    "src.c74a9221": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{days} travel days remain"
+      }
+    },
+    "src.c74da64e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Cunning against watchful eyes."
       }
     },
     "src.c759bc83": {
@@ -56113,6 +58476,16 @@
         "text": "A new heir can say what the dead could not."
       }
     },
+    "src.ca2c6a8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Measure of a Market"
+      }
+    },
     "src.ca30bec7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56161,6 +58534,16 @@
       ],
       "source": {
         "text": "You make an enemy for life, and other vassals mutter."
+      }
+    },
+    "src.ca793553": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} destinations in reach."
       }
     },
     "src.ca79723e": {
@@ -56523,6 +58906,16 @@
         "text": "Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}"
       }
     },
+    "src.cc618a07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Set every measure side by side."
+      }
+    },
     "src.cc67feee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56531,6 +58924,16 @@
       ],
       "source": {
         "text": "The stars have never yet held a shield."
+      }
+    },
+    "src.cc8a2701": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "In {location}, a familiar gesture draws blank faces, and your careful words land with quite another meaning."
       }
     },
     "src.cc8fa198": {
@@ -56852,16 +59255,6 @@
       ],
       "source": {
         "text": "Coin over ceremony."
-      }
-    },
-    "src.ce763767": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Pilgrims pass through {province}, footsore and shining-eyed, bound for the holy places. Something in you stirs to follow."
       }
     },
     "src.ce8100f8": {
@@ -57204,6 +59597,16 @@
         "text": "“Come and take it,” he answers, and rides home to raise his spears."
       }
     },
+    "src.d14a4c51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A merchant in {location} names weights, measures, and a price custom unlike any used at home."
+      }
+    },
     "src.d1571f8e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57543,16 +59946,6 @@
       ],
       "source": {
         "text": "See the chronicle"
-      }
-    },
-    "src.d368bda3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Give alms instead."
       }
     },
     "src.d3873458": {
@@ -58085,6 +60478,16 @@
         "text": "Speak the word."
       }
     },
+    "src.d6c800ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 Set out from {home} for {destination}."
+      }
+    },
     "src.d6d9e207": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58344,6 +60747,16 @@
       ],
       "source": {
         "text": "Your reply cuts twice as deep. The gathering roars; his shame will outlive him."
+      }
+    },
+    "src.d840017f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Turning back refunds nothing."
       }
     },
     "src.d84ab6c3": {
@@ -58715,6 +61128,16 @@
       ],
       "source": {
         "text": "Use the ledger to demand the true price."
+      }
+    },
+    "src.da50f5b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Warmth, straw, and a barred door."
       }
     },
     "src.da6ef46f": {
@@ -60560,6 +62983,16 @@
         "text": "{count} archer"
       }
     },
+    "src.e57ad863": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Join the warband."
+      }
+    },
     "src.e586adcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60708,6 +63141,16 @@
       ],
       "source": {
         "text": "⚖ {new_liege} takes you as his direct man — your old lord is passed over."
+      }
+    },
+    "src.e6b05655": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The food in {location} is served in an order you do not know, under table customs everyone else learned as children."
       }
     },
     "src.e6b12e16": {
@@ -61030,16 +63473,6 @@
         "text": "The willow will keep its dare for braver fools."
       }
     },
-    "src.e823234c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The holy places will manage without you."
-      }
-    },
     "src.e82877c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61058,6 +63491,16 @@
       ],
       "source": {
         "text": "Craftsman’s Apprentice"
+      }
+    },
+    "src.e830791d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Lessons Worth the Road"
       }
     },
     "src.e834745c": {
@@ -61348,6 +63791,16 @@
       ],
       "source": {
         "text": "Bolts of dyed cloth and a purse of foreign silver, safely hidden."
+      }
+    },
+    "src.ea2898a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Find shelter and wait it out."
       }
     },
     "src.ea295e25": {
@@ -63313,6 +65766,16 @@
         "text": "Dull roads, good pay."
       }
     },
+    "src.f58ccea2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Observation keeps offense from the table."
+      }
+    },
     "src.f5b4c327": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63644,6 +66107,16 @@
         "text": "Send him on his way."
       }
     },
+    "src.f76b8ac6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Respect needs no perfect understanding."
+      }
+    },
     "src.f7750ded": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63864,6 +66337,16 @@
         "text": " — your liege"
       }
     },
+    "src.f8fc8cbd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Closed a cautious venture in {destination}."
+      }
+    },
     "src.f906fa50": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64044,6 +66527,16 @@
         "text": "The ± beside the stat is last season’s real change — events and deeds included."
       }
     },
+    "src.fa6bb723": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Weather on the Road"
+      }
+    },
     "src.fa759946": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64192,6 +66685,16 @@
       ],
       "source": {
         "text": "A Vassal’s Suit"
+      }
+    },
+    "src.fb38b9c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Take the cautious return."
       }
     },
     "src.fb3b63b5": {
@@ -64384,6 +66887,16 @@
         "text": "Work the extra days instead."
       }
     },
+    "src.fc59c6a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{destination} costs {cost} gold; you have {gold}."
+      }
+    },
     "src.fc65ae7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64494,6 +67007,16 @@
         "text": "📜 The successor inherits {count} active obligations, now worth {amount} gold."
       }
     },
+    "src.fd052e3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Follow your host’s hands."
+      }
+    },
     "src.fd0bb33e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64554,6 +67077,16 @@
         "text": "A crown that jumps at shadows looks afraid of everything."
       }
     },
+    "src.fd803511": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Slip away through the brush."
+      }
+    },
     "src.fd98018c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64592,6 +67125,16 @@
       ],
       "source": {
         "text": "Astonishingly, the lie holds."
+      }
+    },
+    "src.fdc20a7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Already on the road."
       }
     },
     "src.fdd33ff2": {
@@ -66416,6 +68959,70 @@
         "text": "Zealous"
       }
     },
+    "travelPurpose.pilgrimage.desc.default": {
+      "context": "travelPurpose pilgrimage, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Visit a holy place of your faith and return with a pilgrim’s standing."
+      }
+    },
+    "travelPurpose.pilgrimage.name.default": {
+      "context": "travelPurpose pilgrimage, name, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Pilgrimage"
+      }
+    },
+    "travelPurpose.service.desc.default": {
+      "context": "travelPurpose service, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Offer your hands and talents at the court of a living realm."
+      }
+    },
+    "travelPurpose.service.name.default": {
+      "context": "travelPurpose service, name, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Paid service"
+      }
+    },
+    "travelPurpose.study.desc.default": {
+      "context": "travelPurpose study, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Seek instruction in one of the great learned or urban centers."
+      }
+    },
+    "travelPurpose.study.name.default": {
+      "context": "travelPurpose study, name, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Study or apprenticeship"
+      }
+    },
+    "travelPurpose.trade.desc.default": {
+      "context": "travelPurpose trade, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Carry a stake to a developed market and bargain for a return."
+      }
+    },
+    "travelPurpose.trade.name.default": {
+      "context": "travelPurpose trade, name, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Trade venture"
+      }
+    },
     "ui: (including ~{men} from {ally})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -66676,6 +69283,14 @@
         "text": "A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery."
       }
     },
+    "ui:A prisoner cannot leave.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "A prisoner cannot leave."
+      }
+    },
     "ui:A stranger of real accomplishment.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66716,6 +69331,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)"
+      }
+    },
+    "ui:Abandon the journey and retrace the road. Nothing is refunded.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Abandon the journey and retrace the road. Nothing is refunded."
       }
     },
     "ui:Abbess": {
@@ -66826,6 +69449,22 @@
         "text": "Already occupying {settlement}:"
       }
     },
+    "ui:Already on the road.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Already on the road."
+      }
+    },
+    "ui:Already returning home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Already returning home."
+      }
+    },
     "ui:An idle enterprise produces no seasonal income.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66910,6 +69549,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Back"
+      }
+    },
+    "ui:Back to destinations": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to destinations"
       }
     },
     "ui:Banner service": {
@@ -67078,6 +69725,14 @@
         "text": "Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under."
       }
     },
+    "ui:Cancel": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cancel"
+      }
+    },
     "ui:Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67110,6 +69765,24 @@
         "text": "Chief Qadi"
       }
     },
+    "ui:Choose a destination for {purpose}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "purpose"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a destination for {purpose}"
+      }
+    },
+    "ui:Choose a purpose and travel county by county over game time.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Choose a purpose and travel county by county over game time."
+      }
+    },
     "ui:Choose an education focus first.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67132,6 +69805,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
+      }
+    },
+    "ui:Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map."
       }
     },
     "ui:Chronicle of the realms": {
@@ -67408,6 +70089,16 @@
         "text": "Demolish…"
       }
     },
+    "ui:Depart for {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Depart for {destination}"
+      }
+    },
     "ui:Dismiss": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67472,6 +70163,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting."
+      }
+    },
+    "ui:Exact upfront cost: {cost} gold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Exact upfront cost: {cost} gold."
       }
     },
     "ui:Fabricated county claim": {
@@ -68150,6 +70851,14 @@
         "text": "No province chosen — a random home will be found."
       }
     },
+    "ui:No qualifying destination can be reached.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No qualifying destination can be reached."
+      }
+    },
     "ui:No steady sources yet — deeds and events still move it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -68228,6 +70937,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
+      }
+    },
+    "ui:Only an adult can take to the road.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Only an adult can take to the road."
       }
     },
     "ui:Only your home county can raise this.": {
@@ -68658,7 +71375,7 @@
       "glossary": [
         "days"
       ],
-      "location": "js/actions.js",
+      "location": "js/travel.js",
       "source": {
         "text": "Ready in {days} days."
       }
@@ -69202,6 +71919,14 @@
         "text": "Take seigniorage now; harm prices, prestige, popular trust, and future credit."
       }
     },
+    "ui:Tap a marked county or choose it from the list. Routes use settled counties and authored straits.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Tap a marked county or choose it from the list. Routes use settled counties and authored straits."
+      }
+    },
     "ui:Tap a treasure to see its powers — or to sell or gift it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -69224,6 +71949,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Teach them yourself"
+      }
+    },
+    "ui:That county does not qualify for this journey.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "That county does not qualify for this journey."
       }
     },
     "ui:The Estates": {
@@ -69326,6 +72059,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "The liege’s aid"
+      }
+    },
+    "ui:The road is open to freeholders and gentry.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "The road is open to freeholders and gentry."
+      }
+    },
+    "ui:The roads are not ready.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The roads are not ready."
       }
     },
     "ui:The terrain is unsuitable.": {
@@ -69450,6 +72199,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Treasurer"
+      }
+    },
+    "ui:Turning back refunds nothing.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Turning back refunds nothing."
       }
     },
     "ui:Undermine your rival by fair means or foul.": {
@@ -69627,6 +72384,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "You are already at war."
+      }
+    },
+    "ui:You are already traveling home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You are already traveling home."
+      }
+    },
+    "ui:You cannot leave while personally at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "You cannot leave while personally at war."
       }
     },
     "ui:You hold no landed realm from which to wage war.": {
@@ -69967,6 +72740,14 @@
         "text": "another realm"
       }
     },
+    "ui:at the destination": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "at the destination"
+      }
+    },
     "ui:beginning in {year} AD, aged {age}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -70229,6 +73010,14 @@
         "text": "none chosen"
       }
     },
+    "ui:not enough gold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "not enough gold"
+      }
+    },
     "ui:nothing more to raise": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -70261,6 +73050,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "open feud"
+      }
+    },
+    "ui:outbound": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "outbound"
       }
     },
     "ui:overextended — your income & levy cut {pct}%": {
@@ -70305,6 +73102,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "reigning ruler"
+      }
+    },
+    "ui:returning home": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "returning home"
       }
     },
     "ui:royal marriage": {
@@ -70838,6 +73643,16 @@
         "text": "{count} counties"
       }
     },
+    "ui:{count} destinations in reach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} destinations in reach."
+      }
+    },
     "ui:{count} eligible household workers.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -70856,6 +73671,54 @@
       "location": "js/ui.js",
       "source": {
         "text": "{count} possible"
+      }
+    },
+    "ui:{days} travel days remain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{days} travel days remain"
+      }
+    },
+    "ui:{destination} costs {cost} gold; you have {gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "destination",
+        "gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{destination} costs {cost} gold; you have {gold}."
+      }
+    },
+    "ui:{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "legs",
+        "outbound",
+        "returnDays"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
+      }
+    },
+    "ui:{destination}: {legs} legs, {days} days each way, {cost} gold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "days",
+        "destination",
+        "legs"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{destination}: {legs} legs, {days} days each way, {cost} gold."
       }
     },
     "ui:{gold} gold and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.": {
@@ -70960,6 +73823,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "{kind} · a day’s outing"
+      }
+    },
+    "ui:{legs} county legs · {days} days each way · {cost} gold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "days",
+        "legs"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{legs} county legs · {days} days each way · {cost} gold"
       }
     },
     "ui:{marital} · regard {regard}": {
@@ -71092,6 +73967,19 @@
       "location": "js/ui.js",
       "source": {
         "text": "{place} · {worker} · about {gold} gold/season"
+      }
+    },
+    "ui:{purpose} · {phase} · now in {location} · destination {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "location",
+        "phase",
+        "purpose"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{purpose} · {phase} · now in {location} · destination {destination}"
       }
     },
     "ui:{rate}%": {

@@ -252,12 +252,15 @@ window.FB = window.FB || {};
   };
   FB.playerStation = function (state) { return FB.clamp(state.player.tier, 0, 4); };
 
-  /* A character's home county. Roles (lord, priest, friend, rival) are
-     generated from the player's home; notables of other provinces persist in
-     state.provChars; kin, spouses, suitors, and matches live where the player
-     lives. Cards use this to say whose banner a stranger marches under. */
+  /* A character's home county. A retained nonlocal contact may carry an
+     explicit homeProvinceId; roles otherwise come from the player's home,
+     while notables of other provinces persist in state.provChars. Cards use
+     this to say whose banner a stranger marches under. */
   FB.homeOf = function (state, c) {
     if (!c) return null;
+    if (c.homeProvinceId && FB.world && FB.world.byId[c.homeProvinceId]) {
+      return c.homeProvinceId;
+    }
     if (state.provChars) {
       for (const pid in state.provChars) {
         if (state.provChars[pid].indexOf(c.id) >= 0) return pid;

@@ -112,6 +112,17 @@
             aria-label="Map filter: Realm (R)" data-i18n-title="Map filter: Realm (R)"
             data-i18n-aria-label="Map filter: Realm (R)">&#128506;</button>
         </div>
+        <div id="travel-picker" class="travel-picker hidden" role="dialog"
+          aria-labelledby="travel-picker-title">
+          <h3 id="travel-picker-title" data-i18n="Choose a destination">Choose a destination</h3>
+          <div id="travel-picker-summary" class="hint"></div>
+          <div id="travel-destination-list" class="travel-destination-list"></div>
+          <div class="travel-picker-actions">
+            <button class="btn" id="travel-picker-cancel" data-i18n="Cancel">Cancel</button>
+            <button class="btn primary" id="travel-picker-continue" disabled
+              data-i18n="Review journey">Review journey</button>
+          </div>
+        </div>
         <div id="toasts"></div>
       </div>
       <!-- #panels is invisible on desktop (display:contents) and becomes a
@@ -178,6 +189,7 @@
 <script src="data/cultures.js"></script>
 <script src="data/traits.js"></script>
 <script src="data/economy.js"></script>
+<script src="data/travel.js"></script>
 <script src="data/events_common.js"></script>
 <script src="data/events_peasant.js"></script>
 <script src="data/events_paths.js"></script>
@@ -186,6 +198,7 @@
 <script src="data/events_war.js"></script>
 <script src="data/events_council.js"></script>
 <script src="data/events_parliament.js"></script>
+<script src="data/events_travel.js"></script>
 <!-- bundled mods (register into window.FBMODS): add <script> tags here -->
 <!-- engine -->
 <script src="js/util.js"></script>
@@ -197,6 +210,7 @@
 <script src="js/world.js"></script>
 <script src="js/economy.js"></script>
 <script src="js/armies.js"></script>
+<script src="js/travel.js"></script>
 <script src="js/mapview.js"></script>
 <script src="js/events.js"></script>
 <script src="js/actions.js"></script>

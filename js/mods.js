@@ -167,6 +167,10 @@ window.FBMODS = window.FBMODS || [];
     if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
     if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.travelPurposes) {
+      for (const k in mod.travelPurposes) FBDATA.travelPurposes[k] = mod.travelPurposes[k];
+    }
+    if (mod.travelSites) mergeById(FBDATA.travelSites, mod.travelSites, 'id');
     if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];

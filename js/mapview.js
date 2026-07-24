@@ -264,6 +264,8 @@ window.FB = window.FB || {};
     }
     // field armies (hosts on the march, battle markers)
     if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
+    // overland journeys: valid destination rings, route, and traveler
+    if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
 
     // player home marker
     if (M.playerProv) {

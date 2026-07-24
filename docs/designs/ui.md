@@ -70,6 +70,16 @@ Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobi
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show opinion and the current direction.
 
+The tier-1/2 **Take to the road…** deed opens a purpose dialog, then a map picker
+with marked valid destinations and a synchronized, focusable destination list.
+Map taps and list buttons select the same county and preview the settled-only
+route; the final confirmation states county legs, days each way, and exact cost.
+The picker pauses time, supports the normal map keyboard navigation, number keys,
+Tab, Enter, and Escape, and becomes a bottom sheet on narrow screens. During a
+journey the map keeps the gold household flag at home, draws a separate traveler
+compass and remaining route, and the Deeds panel replaces focuses/actions with
+current journey status and **Turn back toward home**.
+
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar

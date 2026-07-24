@@ -392,6 +392,29 @@ window.FB = window.FB || {};
     show: function (s) { return adult(s); },
     can: function (s) { return FB.settlementsOf(s, s.player.provinceId).length ? true : 'Only wilderness here.'; },
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
+  { id: 'take_road', label: '🧭 Take to the road…', noConsume: true,
+    desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
+    show: function (s) {
+      return !s.player.travel && s.player.tier >= 1 && s.player.tier <= 2 && adult(s);
+    },
+    can: function (s) {
+      return FB.travelEligible ? FB.travelEligible(s) : FB.T('The roads are not ready.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showTravelPurposes) FB.ui.showTravelPurposes();
+    } },
+  { id: 'travel_turn_back', label: '↩ Turn back toward home', noConsume: true,
+    desc: function (s) {
+      return s.player.travel && s.player.travel.phase === 'return'
+        ? FB.T('You are already traveling home.')
+        : FB.T('Abandon the journey and retrace the road. Nothing is refunded.');
+    },
+    show: function (s) { return !!s.player.travel; },
+    can: function (s) {
+      return s.player.travel && s.player.travel.phase !== 'return'
+        ? true : FB.T('Already returning home.');
+    },
+    run: function (s) { if (FB.travelTurnBack) FB.travelTurnBack(s); } },
 
   { id: 'seek_blessing', label: '🕊 Seek a blessing', cd: 90,
     desc: function (s) {
@@ -868,6 +891,7 @@ window.FB = window.FB || {};
   /* the current focus's expected per-season yield (the `gain` mirror of its
      daily tick), or null when the focus pays no gold/prestige/piety */
   FB.focusIncome = function (state) {
+    if (state.player.travel) return null;
     for (const f of FB.focuses) {
       if (f.id === state.player.focus) return f.gain ? f.gain(state) : null;
     }
@@ -2328,6 +2352,7 @@ window.FB = window.FB || {};
   };
 
   FB.listFocuses = function (state) {
+    if (state.player.travel) return [];
     const all = FB.focuses.filter(function (f) { return f.show(state); });
     // afield in disguise, the household/market/court focuses make no sense —
     // pare the menu down to a soldier's day: drill, mend, and prayers
@@ -2341,6 +2366,7 @@ window.FB = window.FB || {};
   FB.listInstants = function (state) {
     const out = [];
     for (const a of FB.instants) {
+      if (state.player.travel && a.id !== 'travel_turn_back') continue;
       if (!a.show(state)) continue;
       let can = true, reason = '';
       if (a.cd !== undefined) {
@@ -2394,6 +2420,7 @@ window.FB = window.FB || {};
   };
 
   FB.validateFocus = function (state) {
+    if (state.player.travel) return;
     const cur = state.player.focus;
     // daily hot path: if the current focus is still offered, skip the full
     // listFocuses sweep (all ~27 show() callbacks) entirely. While afield the
@@ -2416,6 +2443,7 @@ window.FB = window.FB || {};
   };
 
   FB.tickFocus = function (state) {
+    if (state.player.travel) return;
     FB.validateFocus(state);
     for (const f of FB.focuses) {
       if (f.id === state.player.focus) { f.tick(state); return; }
