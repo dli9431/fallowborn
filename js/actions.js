@@ -740,6 +740,22 @@ window.FB = window.FB || {};
     },
     show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
     run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
+  { id: 'coin_credit', label: '🪙 Coin & Credit…', noConsume: true,
+    desc: function () {
+      return 'Prices, reliable income, loans, pledged property, and trade partnerships.';
+    },
+    show: function (s) { return adult(s); },
+    run: function () { if (FB.ui && FB.ui.showFinance) FB.ui.showFinance(); } },
+  { id: 'debase_coinage', label: '🪙 Debase the coinage…', noConsume: true,
+    desc: function () {
+      return 'Emergency silver for an independent crown — at the price of confidence, standing, and rising prices.';
+    },
+    show: function (s) { return s.player.tier >= 6 && !s.player.liege; },
+    can: function (s) {
+      return FB.financeCanDebase(s) ? true :
+        'The last debasement is still remembered. Five years must pass.';
+    },
+    run: function () { if (FB.ui && FB.ui.showDebasement) FB.ui.showDebasement(); } },
   { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
     desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
     show: function (s) { return s.player.tier >= 6; },
@@ -797,6 +813,29 @@ window.FB = window.FB || {};
       if (f.id === state.player.focus) return f.gain ? f.gain(state) : null;
     }
     return null;
+  };
+
+  /* Locale-neutral standing seasonal cash flow. Credit capacity and the
+     displayed ledger both use this numeric source; neither parses localized
+     labels from incomeBreakdown. */
+  FB.reliableGoldIncome = function (state, ignoreAssignments) {
+    const p = state.player;
+    let total = -([1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1);
+    if (p.tier >= 3) {
+      total += FB.playerTax(state);
+      total -= FB.buildingBonus(state, 'upkeep');
+    }
+    total += FB.holdingBonus(state, 'gold');
+    total += FB.itemBonus(state, 'gold');
+    if (FB.livelihoodBreakdown) {
+      for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
+    }
+    const focus = FB.focusIncome(state);
+    if (focus && focus.gold) total += focus.gold;
+    if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
+      total -= FB.financeAssignedIncomeCost(state);
+    }
+    return total;
   };
 
   /* Standing per-season gold/prestige/piety, itemized by source — feeds the
@@ -896,6 +935,9 @@ window.FB = window.FB || {};
     /* keeping a household costs coin at every station */
     const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
     add('gold', FB.T('Household upkeep'), -upkeep);
+    if (FB.financeAssignedIncomeCost) {
+      add('gold', FB.T('Revenue assigned to lenders'), -FB.financeAssignedIncomeCost(state));
+    }
 
     const out = {};
     for (const k in lines) {
@@ -903,6 +945,11 @@ window.FB = window.FB || {};
       for (const ln of lines[k]) total += ln.amount;
       out[k] = { lines: lines[k], total: total };
     }
+    /* Use the shared numeric total for gold even if rounded noble-tax display
+       lines differ by a fraction. Annual coin revaluation is an adjustment,
+       not a recurring source, and is carried separately for the gold sheet. */
+    out.gold.total = FB.reliableGoldIncome(state);
+    if (FB.ensureEconomy) out.gold.coinAdjustment = FB.ensureEconomy(state).lastAdjustment;
     return out;
   };
 
@@ -973,13 +1020,15 @@ window.FB = window.FB || {};
     const list = FB.itemList(state);
     const i = list.indexOf(id);
     const def = FBDATA.items[id];
-    if (i < 0 || !def) return;
+    if (i < 0 || !def || (FB.financeCollateralPledged &&
+      FB.financeCollateralPledged(state, 'item', id))) return false;
     list.splice(i, 1);
     const gold = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
     state.player.gold += gold;
     FB.news(state, FB.msg('news.item.sold',
       '💰 Sold: {icon} {item} for {gold} gold.',
       { icon: def.icon, item: FB.dataParam('item', id), gold: gold }));
+    return true;
   };
 
   FB.giftOpinion = function (def) {
@@ -990,7 +1039,8 @@ window.FB = window.FB || {};
     const i = list.indexOf(id);
     const c = state.chars[cid];
     const def = FBDATA.items[id];
-    if (i < 0 || !c || c.dead || !def) return;
+    if (i < 0 || !c || c.dead || !def || (FB.financeCollateralPledged &&
+      FB.financeCollateralPledged(state, 'item', id))) return false;
     list.splice(i, 1);
     c.items = c.items || [];
     if (c.items.indexOf(id) < 0) c.items.push(id);
@@ -1002,6 +1052,7 @@ window.FB = window.FB || {};
         icon: def.icon, item: FB.dataParam('item', id), name: c.name,
         regard: Math.round(c.opinion)
       }));
+    return true;
   };
 
   FB.offerItem = function (state) {

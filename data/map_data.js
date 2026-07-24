@@ -693,7 +693,7 @@ FBDATA.holdings = {
   /* the sword */
   good_mail:  { name:'A Hauberk That Fits', icon:'🛡', cost:30, tierMax:2, professions:['soldier'],
     desc:'Dead men earn no wages.', fx:{ battle:0.04 } },
-  warhorse:   { name:'Warhorse', icon:'🐎', cost:80, tierMax:2, professions:['soldier'], req:'good_mail',
+  warhorse:   { name:'Warhorse', icon:'🐎', cost:80, tierMax:2, professions:['soldier'], req:'good_mail', pledge:false,
     desc:'Half a knight is the horse.', fx:{ battle:0.06, prestige:0.5 } }
 };
 
@@ -874,6 +874,19 @@ FBDATA.balance = {
   buyCountyBase: 400, buyCountyPerDev: 120, settleGold: 250, settlePrestige: 50,
   techRepeatCostGrowth: 1.6, // a repeatable innovation's cost multiplies by this per rank already held
   buildingRepeatCostGrowth: 1.5, // a building's 2nd/3rd/… copy in the same county costs cost × this^(copies standing)
+  /* coin, credit, and fixed-term financial contracts (js/economy.js) */
+  pricePressurePersistence: 0.55, priceRandomPressure: 0.015,
+  priceWarPressure: 0.01, priceMeanReversion: 0.04,
+  priceAnnualMin: -0.03, priceAnnualMax: 0.04,
+  priceShockMin: -0.12, priceShockMax: 0.15,
+  priceMin: 0.5, priceMax: 3,
+  financeMaxLoans: 2, financeMaxInvestments: 3,
+  financeUnsecuredSeasons: 2, financeSecuredSeasons: 4,
+  financeCollateralRatio: 0.35, financePrestigeMax: 25,
+  financeArrearsSeasons: 2, financeArrearsPenalty: 0.10,
+  financeDefaultPrestige: 15, financeDefaultBanSeasons: 4, financeRevenueShare: 0.25,
+  financeDebaseYears: 4, financeDebasePressure: 0.06,
+  financeDebaseCooldown: 1800,
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
   skillHardCap: 40  // the true ceiling no stat can pass
 };

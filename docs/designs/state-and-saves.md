@@ -63,8 +63,16 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
-Related: [mods.md](mods.md) for how saves are stamped with the active mod set, and
-[i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries.
+Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
+price index, persistent pressure and shocks, loans, trade investments, stable contract ids,
+default history, and coinage history. Every record is plain JSON, so slots, autosave,
+export/import, and succession preserve exact faces, denominations, deadlines, pledges, and
+already-resolved investment outcomes without a save-version bump. An older save starts at
+price 1 and is first revalued on its next annual tick; no historical inflation is invented.
+
+Related: [mods.md](mods.md) for how saves are stamped with the active mod set,
+[i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries,
+and [finance.md](finance.md) for the saved contract schema.
 
 Saves from before parents were recorded (first-generation siblings known only
 by role) have a father and mother synthesized on load — long dead, ages

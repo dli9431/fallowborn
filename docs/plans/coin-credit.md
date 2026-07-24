@@ -1,6 +1,6 @@
 # Coin, credit, and financial contracts
 
-Status: proposed
+Status: implemented (phases 1–4; phase 5 remains conditional as specified)
 
 ## Goal
 

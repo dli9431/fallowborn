@@ -37,6 +37,11 @@ and have no separate upkeep. The seasonal charge applies only while the building
 the player's demesne and is itemized in `FB.incomeBreakdown`. Automation will not add an
 upkeep-bearing building unless the current steady seasonal balance covers it.
 
+Building income and upkeep feed the locale-neutral `FB.reliableGoldIncome` calculation used
+for credit capacity. Buildings remain real land assets when the price index moves and are
+never seized by an ordinary generic default; a landed revenue default assigns one quarter
+of regular income instead.
+
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
 occupy that settlement slot. One-time development, opinion, and prestige already granted

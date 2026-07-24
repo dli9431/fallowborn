@@ -1253,6 +1253,10 @@ window.FB = window.FB || {};
       }
       p.gold = Math.max(0, p.gold + g);
     }
+    if (fx.pricePressure && FB.addPricePressure) {
+      FB.addPricePressure(state, fx.pricePressure, fx.pricePressureYears || 1,
+        fx.pricePressureSource || 'event');
+    }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
     if (fx.warService) p.warService = Math.max(0, (p.warService || 0) + fx.warService);

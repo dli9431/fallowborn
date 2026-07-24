@@ -30,6 +30,7 @@ A JSON mod is one object with any of these keys:
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
   "enterprises": { "id": { ... } },
+  "finance":    { "pledge": { ... }, "merchant": { ... } },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
@@ -268,6 +269,9 @@ go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
 `giveItem: "id"` (grant one specific heirloom from `FBDATA.items` — issued kit, gifts, quest
 rewards; random finds use `custom: "loot_item"` instead) ·
+`pricePressure: n` with optional `pricePressureYears: n` and
+`pricePressureSource: "stable_id"` (a saved annual price-index shock; positive raises
+pressure, negative lowers it) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
@@ -400,6 +404,9 @@ in `player.holdings` and **persist across generations** — property passes to h
 - `name`/`desc` accept text tokens and religion-variant objects.
 - Events can gate on `holdings`/`notHoldings` and grant or seize property with the
   `holding`/`loseHolding` effects (see `lord_covets_horse`).
+- Purchased holdings with a positive `cost` may be offered as loan collateral. Set
+  `pledge: false` when authored events can transfer the asset or its story requires it to
+  remain freely disposable; `eventOnly` holdings are never pledgeable.
 
 ## Careers and apprenticeships
 
@@ -454,6 +461,36 @@ productive property:
   but the family may own further copies elsewhere; repeat cost grows by
   `balance.enterpriseRepeatCostGrowth`.
 - An idle or invalidly staffed enterprise earns nothing.
+
+## Finance contracts
+
+`FBDATA.finance` (in `data/economy.js`, mod key `finance`) defines the three
+player-originated loan families and the trade partnership:
+
+```json
+{ "finance": {
+  "pledge": {
+    "maxPrincipal": 40, "markup": 0.25, "termSeasons": 4,
+    "collateralRatio": 0.60, "lender": "moneychanger",
+    "defaultKind": "collateral"
+  },
+  "tradePartnership": {
+    "termSeasons": 4, "risk": 0.25, "profitShare": 0.45
+  }
+} }
+```
+
+- `markup` is the total fixed markup signed into the face, not an annual rate.
+- `termSeasons` sets the season-boundary maturity. `maxPrincipal` caps an offer
+  after reliable-income, collateral, reputation, and outstanding-debt capacity.
+- `defaultKind` is `collateral` (take the named pledge) or `revenue` (assign the
+  configured share of regular revenue until paid).
+- `collateralRatio` caps a pledged principal against the asset's base value.
+- A trade partnership consumes `risk` once at maturity; `profitShare` sizes the
+  profitable return. The resolved roll and payout are stored in the save.
+- Finance and price bounds, pressure, loan count, capacity, arrears, default,
+  revenue-share, and coinage tunables are the `price*` and `finance*` keys under
+  `FBDATA.balance`.
 
 ## Settlements
 

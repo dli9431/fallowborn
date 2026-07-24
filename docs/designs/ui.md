@@ -45,6 +45,15 @@ treasures, upkeep), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation.
 
+The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
+obligations are ordered by deadline before metrics so the urgent contract remains first on
+a narrow phone. The sheet shows purse, price index, last movement and purse adjustment,
+reliable net income, credit capacity and defaults, exact loan faces/current values/dates,
+pledges, and investment maturities. Borrowing, investment, debasement, and recoinage use a
+final confirmation whose first action receives focus; every term and default consequence is
+visible above the buttons. The gold source sheet also carries a non-recurring **Coin and
+prices this year** line.
+
 The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Family,
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
 with `aria-expanded`; closed actions are not rendered, so number-key selection can never

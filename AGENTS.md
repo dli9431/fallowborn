@@ -80,9 +80,11 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`,
-  `data/traits.js`, then eight event packs (`events_common/peasant/paths/noble/world/war/council/parliament.js`).
-- Engine second, all writing to `window.FB`: `util → model → portrait → world → armies →
-  mapview → events → actions → council → parliament → ui → keys → save → mods → main`.
+  `data/traits.js`, `data/economy.js`, then eight event packs
+  (`events_common/peasant/paths/noble/world/war/council/parliament.js`).
+- Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
+  model → portrait → world → economy → armies → mapview → events → actions → council →
+  parliament → ui → keys → save → mods → main`.
 
 ## Design decisions
 
@@ -103,6 +105,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/holdings.md` — commoner family property.
 - `docs/designs/tech.md` — innovations and research.
 - `docs/designs/piety-intrigue-diplomacy.md` — blessings, plots, pacts.
+- `docs/designs/finance.md` — price index, loans, defaults, trade partnerships, coinage.
 - `docs/designs/council.md` — the royal council: great officers, crown authority, schemers and sycophants.
 - `docs/designs/parliament.md` — the estates: vassal-tier assembly, the liege's aid and scutage votes.
 - `docs/designs/mods.md` — runtime + bundled mods, save stamping.
@@ -148,6 +151,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   adjacency, battles when hostile hosts meet, army map markers and tap orders.
 - `js/mapview.js` — canvas map rendering, pan/zoom, input.
 - `js/events.js` — event trigger/effect interpreter.
+- `js/economy.js` — livelihoods, enterprises, prices, loans, and trade partnerships.
 - `js/actions.js` — focuses and one-shot deeds (the Deeds tab).
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
 - `js/parliament.js` — the estates (vassal tiers 3–5): the liege's aid and scutage terms, yearly sessions, parliament event customs.

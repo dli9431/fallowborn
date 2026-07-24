@@ -29,7 +29,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   **☰ → Settings**.
 - **Hover or tap your gold, prestige, or piety** in the top bar for a source-by-source
   breakdown of what each brings in every season — focus, rents, dues, buildings,
-  household improvements, treasures, and upkeep.
+  household improvements, treasures, and upkeep. The gold sheet also records this year's
+  purchasing-power change from coin prices.
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
   on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.
@@ -56,6 +57,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    land, drill with the levy, haggle at market, copy manuscripts, court your intended…
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
+   **Coin & Credit** is a no-day-cost household ledger: borrow against reliable income or
+   named collateral, repay early, and commit merchant coin to four-season trade
+   partnerships. Prices can raise or lower the purchasing power of idle coin and fixed
+   nominal debts; holdings, buildings, items, and all familiar authored prices stay in base
+   gold. Miss one loan deadline and its face grows; miss the extension and the disclosed
+   pledge or revenue assignment is enforced. Debt passes to heirs.
 3. Press **Space** (or the Play/Pause button) to set time flowing — days pass on their own
    (~3 per second) — and press it again to pause. **F** / the ▶▶ button skips straight to the
    next happening. Events pause the days while they await your choice; they land on their own

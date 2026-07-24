@@ -27,4 +27,10 @@ envoy success and multiplies the annual chance that an adjacent AI realm attacks
 player, but never forbids war. Opinion and political directions clear on succession;
 state-level pacts do not.
 
-Related: [events.md](events.md) for named chances, [war.md](war.md) for what pacts block.
+Finance uses the same economic core across faiths. The UI selects complete culturally
+appropriate partnership phrases (including qirad and commenda) without a blanket
+allowed/forbidden interest rule. Relationship loans remain event territory; the always
+available Finance deed offers explicit pledge, merchant, and revenue contracts instead.
+
+Related: [events.md](events.md) for named chances, [war.md](war.md) for what pacts block,
+and [finance.md](finance.md) for contract forms.

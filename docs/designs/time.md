@@ -18,6 +18,14 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
+At a season boundary the household receives normal income and pays upkeep, then
+`FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
+in stable numeric-id order. The measured season ledger closes after those contracts. At a
+new year `FB.financeYear` then moves the price index and revalues the remaining purse before
+`FB.worldTick`, autosave, and yearly life. The revaluation is visible immediately in
+Finance but enters the following season's measured net. `economy.lastYear` prevents a
+loaded spring save from applying the annual step twice.
+
 An observe mode (`G.observe`, New Game → 👁 Observe) strips `passDay` to the
 calendar, the yearly world tick, and daily army marches — no focus, upkeep,
 mortality, births, events, or autosaves — while the UI hides the player chrome
@@ -45,7 +53,7 @@ innovation each season (`FB.autoBuild`/`FB.autoResearch`). Event-data `cooldown`
 stays in seasons — the engine multiplies by 90.
 
 Related: [events.md](events.md) for the event interpreter, [war.md](war.md) for the
-seasonal war tick.
+seasonal war tick, and [finance.md](finance.md) for contract and annual price processing.
 
 Season boundaries also run `FB.livelihoodSeason`: wages from resident household members,
 profits from staffed enterprises, and learned household piety enter the same measured

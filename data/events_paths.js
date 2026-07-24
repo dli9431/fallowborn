@@ -25,15 +25,14 @@ FBDATA.events.push(
       failure:{ text:'A flaw in the final hour ruins it. The patron pays half, scowling.', effects:{ gold:5, prestige:-4 } } }
   ]},
 { id:'caravan_venture', title:'The Caravan',
-  trigger:{ professions:['merchant','craftsman'], tierMin:1, goldMin:20, chance:0.35 }, weight:10, cooldown:6,
+  trigger:{ professions:['merchant','craftsman'], tierMin:1, goldMin:20, chance:0.35,
+    custom:'finance_can_invest' }, weight:10, cooldown:6,
   text:'A caravan is forming for the long route — spice, cloth, and salt. Shares are open to any with silver and a strong stomach for risk.',
   options:[
-    { label:'Stake 20 gold.', desc:'A modest stake could double — or vanish with the caravan.', chance:0.65,
-      success:{ text:'Months later word returns: the venture prospered! Your stake comes back doubled.', effects:{ gold:22, skills:{ste:1}, log:'A trade venture paid off.' } },
-      failure:{ text:'Raiders took the caravan at a desert well. Your silver is scattered across the sand.', effects:{ gold:-20 } } },
-    { label:'Stake 50 gold.', require:{ goldMin:50 }, desc:'A heavier purse rides the same dangerous roads.', chance:0.65,
-      success:{ text:'The great gamble pays! Profits beyond your hopes.', effects:{ gold:60, prestige:5, skills:{ste:1} } },
-      failure:{ text:'The sea — or the steppe — keeps your fortune. A bitter year.', effects:{ gold:-50 } } },
+    { label:'Stake 20 gold.', desc:'The stake leaves now; the partnership returns in four seasons, if it returns at all.',
+      effects:{ custom:'finance_trade_20' } },
+    { label:'Stake 50 gold.', require:{ goldMin:50 }, desc:'A larger four-season partnership risks more coin on the same distant roads.',
+      effects:{ custom:'finance_trade_50' } },
     { label:'Keep your coin at home.', desc:'No risk, no profit, no stories.', effects:{ } }
   ]},
 { id:'shop_fire', title:'Fire!',

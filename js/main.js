@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.43.0';
+  FB.VERSION = '1.44.0';
   FB.CHANGELOG = [
+    { v: '1.44.0', date: '2026-07-24', changes: [
+      'Coin and prices now move: a slow yearly price index revalues your loose purse as it inflates or deflates, while lean harvests, pestilence, personal war, and a sovereign’s debasement each push prices around. Authored costs, wages, holdings, and buildings keep their familiar gold values.',
+      'Credit arrives — pledged loans, merchant advances, and loans against your revenues grant gold now against fixed terms. Miss a maturity and a penalty and grace season follow; miss again and the disclosed default bites: pledged property is seized, a quarter of your revenue is garnished, and the credit market closes to your household for a year. Every default also costs prestige, and a ruler loses standing with his council or his liege.',
+      'Trade partnerships are real ventures, not savings: commit coin as a commenda, qirad, or trade house stake for four seasons and reap loss, break-even, or profit — established houses and guild rank open larger stakes.',
+      'Independent kings and emperors may debase the coin once every five years for a one-time seigniorage windfall, at a lasting cost to prestige, popular trust, council relations, and future terms; a later costly recoinage eases prices and restores lender confidence. The 💰 Finance sheet tracks prices, open contracts, and the nearest deadline.'
+    ] },
     { v: '1.43.0', date: '2026-07-24', changes: [
       'Independent rulers can now direct foreign policy: assign political attention to neighboring sovereigns to steadily improve or provoke their opinion of you each season.',
       'Political attention is a capacity, not a hoardable resource — counts and dukes hold two, kings three, emperors four, and each standing assignment spends one. Diplomacy sets how fast a relation moves, not how many courts you can work at once.',
@@ -688,6 +694,10 @@ window.FB = window.FB || {};
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
+      economy: {
+        price:1, lastRate:0, pressure:0, lastAdjustment:0,
+        shocks:[], loans:[], investments:[], nextId:1, defaults:0
+      },
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
     };
     FB.state = state;
@@ -870,7 +880,8 @@ window.FB = window.FB || {};
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
-      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep + FB.holdingBonus(s, 'gold'));
+      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep +
+        FB.holdingBonus(s, 'gold') + FB.itemBonus(s, 'gold'));
       FB.livelihoodSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
@@ -884,6 +895,7 @@ window.FB = window.FB || {};
       }
       FB.playerWarTick(s);
       FB.tickForeignPolicy(s);
+      FB.financeSeason(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -896,6 +908,10 @@ window.FB = window.FB || {};
       }
       s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
       scheduleSlots(s);
+      /* Annual revaluation follows the completed winter ledger. Its purse
+         adjustment is therefore measured in the next spring-to-summer net,
+         while Finance and the gold sheet show it immediately. */
+      if (newYear) FB.financeYear(s);
       if (newYear) FB.worldTick(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
@@ -1576,6 +1592,7 @@ window.FB = window.FB || {};
     p.charId = heir.id;
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
+    FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter

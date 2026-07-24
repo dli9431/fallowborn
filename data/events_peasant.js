@@ -30,7 +30,9 @@ FBDATA.events.push(
   options:[
     { label:'Bring it in.', desc:'Sweat now, and winter will tell you what it was worth.', chance:'harvest',
       success:{ text:'A fat harvest! Granaries groan, and there is a surplus to sell.', effects:{ gold:'harvest_good', prestige:2, clearHarvestFlags:true } },
-      failure:{ text:'A thin, sad yield. Winter will have teeth this year.', effects:{ gold:1, setFlag:'lean_winter', clearHarvestFlags:true } } }
+      failure:{ text:'A thin, sad yield. Winter will have teeth this year.',
+        effects:{ gold:1, setFlag:'lean_winter', clearHarvestFlags:true,
+          pricePressure:0.015, pricePressureYears:2, pricePressureSource:'lean_harvest' } } }
   ]},
 { id:'lean_winter', title:'The Hungry Months',
   trigger:{ tierMax:1, seasons:[3], flags:['lean_winter'] }, weight:25,
