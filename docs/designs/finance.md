@@ -33,7 +33,8 @@ automatically. The first miss adds the signed 10% face penalty and grants two
 seasons; the second enforces the disclosed default. Pledged property is taken
 in settlement. Merchant and landed defaults assign one quarter of regular
 revenue until the remaining obligation is cleared. At most two loans may be
-open, no loan may begin during a revenue default, and pledged treasures cannot
+open, no loan may begin during a revenue default, every default closes the
+credit market to the household for four seasons, and pledged treasures cannot
 be sold or gifted. Death dues are assessed first; mature debt then settles if
 possible and every remaining id, face, denomination, deadline, and pledge
 passes unchanged to the successor.

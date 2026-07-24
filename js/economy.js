@@ -645,14 +645,15 @@ window.FB = window.FB || {};
   }
 
   FB.financeLoanOffers = function (state) {
-    FB.ensureEconomy(state);
+    const e = FB.ensureEconomy(state);
     const B = FBDATA.balance;
     const defs = FBDATA.finance || {};
     const out = [];
     const borrower = state.chars[state.player.charId];
     if (!borrower || FB.ageOf(borrower, state.date.year) < 16 ||
       FB.financeActiveLoans(state).length >= (B.financeMaxLoans || 2) ||
-      FB.financeHasDefault(state)) return out;
+      FB.financeHasDefault(state) ||
+      (e.creditBanUntil !== undefined && state.turn < e.creditBanUntil)) return out;
 
     const pledge = defs.pledge;
     if (pledge) {
@@ -782,6 +783,8 @@ window.FB = window.FB || {};
   function defaultLoan(state, loan) {
     const e = FB.ensureEconomy(state);
     e.defaults++;
+    e.creditBanUntil = Math.max(e.creditBanUntil || 0, state.turn +
+      (FBDATA.balance.financeDefaultBanSeasons || 4) * 90);
     state.player.prestige = Math.max(0, state.player.prestige -
       (FBDATA.balance.financeDefaultPrestige || 15));
     if (loan.defaultKind === 'collateral') {
@@ -990,11 +993,14 @@ window.FB = window.FB || {};
           select:'value', param:'direction', cases:{
             inflation:'🪙 Prices rise {rate}% this year; the purse loses {amount} gold of purchasing power.',
             deflation:'🪙 Prices fall {rate}% this year; the purse gains {amount} gold of purchasing power.',
+            inflation_empty:'🪙 Prices rise {rate}% this year; circulating coin buys less.',
+            deflation_empty:'🪙 Prices fall {rate}% this year; circulating coin buys more.',
             other:'🪙 The value of coin changes this year.'
           }
         }
       }, {
-        direction:e.lastRate >= 0 ? 'inflation' : 'deflation',
+        direction:(e.lastRate >= 0 ? 'inflation' : 'deflation') +
+          (Math.abs(e.lastAdjustment) < 0.05 ? '_empty' : ''),
         rate:Math.round(Math.abs(e.lastRate) * 1000) / 10,
         amount:Math.round(Math.abs(e.lastAdjustment) * 10) / 10
       }));

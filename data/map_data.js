@@ -878,7 +878,7 @@ FBDATA.balance = {
   financeUnsecuredSeasons: 2, financeSecuredSeasons: 4,
   financeCollateralRatio: 0.35, financePrestigeMax: 25,
   financeArrearsSeasons: 2, financeArrearsPenalty: 0.10,
-  financeDefaultPrestige: 15, financeRevenueShare: 0.25,
+  financeDefaultPrestige: 15, financeDefaultBanSeasons: 4, financeRevenueShare: 0.25,
   financeDebaseYears: 4, financeDebasePressure: 0.06,
   financeDebaseCooldown: 1800,
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
