@@ -371,7 +371,7 @@ window.FB = window.FB || {};
       }
       const parts = [];
       for (const bp of FB.demesne(s)) {
-        const blt = FB.builtIn(s, bp);
+        const blt = FB.builtIn(s, bp).filter(function (e) { return !e.ruined; });
         if (blt.length) {
           parts.push(esc(FB.world.byId[bp].name) + ' ' + blt.map(function (e) {
             const d = FBDATA.buildings[e.id];
@@ -1830,10 +1830,42 @@ window.FB = window.FB || {};
   };
 
   /* ================= building picker =================
-     Buildings rise in a SETTLEMENT (one of each per settlement): with more
-     than one province a province list comes first, then the province's
-     settlements, then what that one settlement can still raise. */
-  UI.showBuildings = function (pid, idx) {
+     The deed is a fast county ledger: choose a province when necessary, then
+     Raise Next repeatedly without leaving the dialog. The Land-tab settlement
+     path still passes idx for exact placement. */
+  function buildingEffects(d) {
+    const fx = [];
+    if (d.tax) fx.push(FB.T('+{amount} gold each season', { amount: d.tax }));
+    if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
+    if (d.research) fx.push(FB.T('+{amount} scholarship each season', { amount: d.research }));
+    if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
+    if (d.upkeep) fx.push(FB.T('−{amount} gold upkeep each season', { amount: d.upkeep }));
+    if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
+    if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
+    if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
+    return fx;
+  }
+
+  function buildingUnavailableText(s, pid, id, d) {
+    const pr = FB.world.byId[pid];
+    if (d.homeOnly && FB.homeProv(s) !== pid) return FB.T('Only your home county can raise this.');
+    if (d.maxDemesne && FB.buildingCount(s, id, false) >= d.maxDemesne) {
+      return FB.T('Only {count} may stand across your demesne.', { count: d.maxDemesne });
+    }
+    if (d.maxCounty && FB.buildingCountIn(s, pid, id, false) >= d.maxCounty) {
+      return FB.T('Only {count} may stand in one county.', { count: d.maxCounty });
+    }
+    if (d.devMin && (s.dev[pid] || 1) < d.devMin) {
+      return FB.T('Requires development {development}.', { development: d.devMin });
+    }
+    if (d.coastal && (!pr || !pr.coastal)) return FB.T('Requires a coastal county.');
+    if (d.terrains && (!pr || d.terrains.indexOf(pr.terrain) < 0)) {
+      return FB.T('The terrain is unsuitable.');
+    }
+    return FB.T('No open settlement remains.');
+  }
+
+  UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
     const provs = FB.demesne(s);
     if (!pid && provs.length > 1) {
@@ -1847,7 +1879,7 @@ window.FB = window.FB || {};
           '<span class="adesc">' + esc(FB.T(
             'development {development} · {built} built · {remaining}', {
               development: s.dev[id] || 1,
-              built: FB.builtIn(s, id).length,
+              built: FB.builtIn(s, id).filter(function (e) { return !e.ruined; }).length,
               remaining: open
                 ? FB.T('{count} possible', { count: open })
                 : FB.T('nothing more to raise')
@@ -1865,23 +1897,67 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[pid];
     const sts = FB.settlementsOf(s, pid);
     if (idx === undefined || idx === null) {
-      /* the settlement step: every province holds 2-4 stable settlements,
-         each with its own one-of-each building slots */
-      let h = '<div class="gm-list">';
-      for (let i = 0; i < sts.length; i++) {
-        const open = FB.buildable(s, pid, i).length;
-        h += '<button class="actionbtn" data-bsett="' + i + '"' + (open ? '' : ' disabled') + '>' +
-          SETT_ICON[sts[i].kind] + ' ' + esc(sts[i].name) +
-          '<span class="adesc">' + esc(open
-            ? FB.T('{count} possible', { count: open })
-            : FB.T('nothing more to raise')) + '</span></button>';
+      const growth = Math.round(((FBDATA.balance.buildingRepeatCostGrowth || 1.5) - 1) * 100);
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building.')) +
+        '</p><p><b>' + esc(FB.T(
+          'Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price.',
+          { percent: growth })) + '</b></p></div><div class="gm-list">';
+      for (const id in FBDATA.buildings) {
+        const d = FBDATA.buildings[id];
+        const slots = FB.buildingSlots(s, pid, id);
+        const standing = FB.buildingCountIn(s, pid, id, false);
+        const copies = FB.buildingCountIn(s, pid, id, true);
+        const cost = FB.buildCost(s, pid, id);
+        const effects = buildingEffects(d).join(' · ');
+        if (slots.length) {
+          const short = s.player.gold < cost;
+          const repeat = copies
+            ? FB.T('Repeat copy {number}: its price has risen to {cost} gold.',
+              { number: copies + 1, cost: cost })
+            : FB.T('First copy in this county: {cost} gold.', { cost: cost });
+          h += '<button class="actionbtn" data-bquick="' + esc(id) + '"' + (short ? ' disabled' : '') + '>' +
+            esc(FB.T('{icon} {name} — Raise Next for {cost} gold', {
+              icon: d.icon, name: dt(s, 'building', id, d, 'name'), cost: cost
+            })) + '<span class="adesc">' +
+            esc(FB.T('{standing} standing · next in {settlement}.', {
+              standing: standing, settlement: sts[slots[0]].name
+            })) + ' ' + esc(repeat) + (effects ? ' ' + esc(effects) : '') +
+            (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
+        } else {
+          h += '<button class="actionbtn" disabled>' + d.icon + ' ' +
+            esc(dt(s, 'building', id, d, 'name')) + '<span class="adesc">' +
+            esc(buildingUnavailableText(s, pid, id, d)) +
+            (effects ? ' ' + esc(effects) : '') + '</span></button>';
+        }
       }
       h += '</div><button class="btn" id="gm-cancel">' +
         esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
-      openModal(FB.T('Build Where in {province}?', { province: pr.name }), h);
-      document.querySelectorAll('[data-bsett]').forEach(function (btn) {
-        btn.addEventListener('click', function () { UI.showBuildings(pid, parseInt(btn.dataset.bsett, 10)); });
+      openModal(FB.T('Building Works in {province}', { province: pr.name }), h);
+      document.querySelectorAll('[data-bquick]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const scrollTop = $('gm-body').scrollTop;
+          const focusId = btn.dataset.bquick;
+          const slots = FB.buildingSlots(FB.state, pid, btn.dataset.bquick);
+          if (slots.length && FB.build(FB.state, pid, slots[0], btn.dataset.bquick)) {
+            UI.refresh();
+          }
+          UI.showBuildings(pid, null, { scrollTop: scrollTop, focusId: focusId });
+        });
       });
+      if (keep) {
+        $('gm-body').scrollTop = keep.scrollTop || 0;
+        setTimeout(function () {
+          let found = false;
+          document.querySelectorAll('[data-bquick]').forEach(function (same) {
+            if (same.dataset.bquick === keep.focusId) {
+              found = true;
+              same.focus();
+            }
+          });
+          if (!found) $('gm-body').scrollTop = keep.scrollTop || 0;
+        }, 0);
+      }
       $('gm-cancel').addEventListener('click', provs.length > 1
         ? function () { UI.showBuildings(); } : UI.closeModal);
       return;
@@ -1889,32 +1965,48 @@ window.FB = window.FB || {};
     const st = sts[idx];
     if (!st) return;
     const done = [];
-    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e.id);
+    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
     let h = '<div class="gm-list">';
     for (const b of FB.buildable(s, pid, idx)) {
       const short = s.player.gold < b.cost;
+      const copies = FB.buildingCountIn(s, pid, b.id, true);
+      const repeat = copies
+        ? FB.T('Repeat copy {number}: its price has risen to {cost} gold.',
+          { number: copies + 1, cost: b.cost })
+        : FB.T('First copy in this county: {cost} gold.', { cost: b.cost });
       h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
         esc(FB.T('{icon} {name} — {cost} gold', {
           icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name'), cost: b.cost
         })) + '<span class="adesc">' + esc(dt(s, 'building', b.id, b.def, 'desc')) +
+        ' ' + esc(repeat) + ' ' + esc(buildingEffects(b.def).join(' · ')) +
         (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
     }
     h += '</div>';
     if (done.length) {
-      h += '<p class="hint">' + esc(FB.T('Already standing in {settlement}:',
-        { settlement: st.name })) + ' ' + done.map(function (id) {
-        const d = FBDATA.buildings[id];
-        return d ? d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) : esc(id);
+      h += '<p class="hint">' + esc(FB.T('Already occupying {settlement}:',
+        { settlement: st.name })) + ' ' + done.map(function (e) {
+        const d = FBDATA.buildings[e.id];
+        if (!d) return esc(e.id);
+        const name = dt(s, 'building', e.id, d, 'name');
+        return d.icon + ' ' + esc(e.ruined ? FB.T('Ruins of {building}', { building: name }) : name);
       }).join(' · ') + '</p>';
     }
     h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Raise a Building in {settlement}', { settlement: st.name }), h);
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.build(FB.state, pid, idx, btn.dataset.build);
-        UI.closeModal(); UI.refresh();
+        const focusId = btn.dataset.build;
+        if (FB.build(FB.state, pid, idx, btn.dataset.build)) UI.refresh();
+        UI.showBuildings(pid, idx, { focusId: focusId });
       });
     });
+    if (keep && keep.focusId) {
+      setTimeout(function () {
+        document.querySelectorAll('[data-build]').forEach(function (same) {
+          if (same.dataset.build === keep.focusId) same.focus();
+        });
+      }, 0);
+    }
     $('gm-cancel').addEventListener('click', function () { UI.showBuildings(pid); });
   };
 
@@ -1957,23 +2049,24 @@ window.FB = window.FB || {};
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
     const done = [];
-    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e.id);
+    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
     let h = '';
     if (done.length) {
-      for (const id of done) {
+      for (const e of done) {
+        const id = e.id;
         const d = FBDATA.buildings[id];
         if (!d) continue;
-        const fx = [];
-        if (d.tax) fx.push(FB.T('+{amount} gold each season', { amount: d.tax }));
-        if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
-        if (d.research) fx.push(FB.T('+{amount} scholarship each season', { amount: d.research }));
-        if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
-        if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
-        if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
-        if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
-        h += '<div class="kv"><span>' + d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) +
-          '</span><b>' + esc(fx.join(' · ') || '—') + '</b></div>' +
-          '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>';
+        if (e.ruined) {
+          h += '<div class="kv"><span>' + d.icon + ' ' +
+            esc(FB.T('Ruins of {building}', { building: dt(s, 'building', id, d, 'name') })) +
+            '</span><b>' + esc(FB.T('No benefit · no upkeep')) + '</b></div>';
+        } else {
+          h += '<div class="kv"><span>' + d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) +
+            '</span><b>' + esc(buildingEffects(d).join(' · ') || '—') + '</b></div>' +
+            '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>' +
+            '<button class="btn sett-demolish" data-demolish="' + esc(id) + '">' +
+            esc(FB.T('Demolish…')) + '</button>';
+        }
       }
     } else {
       h += '<p class="hint">' + esc(FB.T('No buildings stand in {settlement} yet.',
@@ -1990,6 +2083,28 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
+    document.querySelectorAll('[data-demolish]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const id = btn.dataset.demolish;
+        const d = FBDATA.buildings[id];
+        const name = dt(FB.state, 'building', id, d, 'name');
+        let body = '<div class="gm-body-text"><p>' + esc(FB.T(
+          'Demolishing {building} is permanent and gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement.',
+          { building: name })) + '</p></div><div class="gm-list">' +
+          '<button class="actionbtn op-bad" id="gm-demolish-confirm">' +
+          esc(FB.T('Demolish {building}', { building: name })) + '</button></div>' +
+          '<button class="btn" id="gm-demolish-back">' + esc(FB.T('Keep it')) + '</button>';
+        openModal(FB.T('Demolish {building}?', { building: name }), body);
+        $('gm-demolish-confirm').addEventListener('click', function () {
+          if (FB.demolishBuilding(FB.state, pid, idx, id)) {
+            UI.toast('🏚 {building} was demolished.', { building: name });
+            UI.refresh();
+          }
+          UI.showSettlement(pid, idx);
+        });
+        $('gm-demolish-back').addEventListener('click', function () { UI.showSettlement(pid, idx); });
+      });
+    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 

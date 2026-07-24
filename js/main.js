@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.33.0';
+  FB.VERSION = '1.34.0';
   FB.CHANGELOG = [
+    { v: '1.34.0', date: '2026-07-24', changes: [
+      'Raise Next keeps the county building ledger open for repeated construction, shows the exact next price, and warns that every repeat copy costs half again as much.',
+      'Granaries, Bridges, Walls, Temples, Libraries, and Keeps now cost seasonal upkeep; the gold breakdown itemizes every charge.',
+      'Granaries are limited to one across the demesne, Stone Walls to one in the home county, and unwanted buildings can be permanently demolished into upkeep-free ruins.'
+    ] },
     { v: '1.33.0', date: '2026-07-24', changes: [
       'Buildings now rise settlement by settlement: each settlement of a county holds one of every work, further copies of the same work in one county cost half again as much, and tapping a settlement shows only what stands there. Works from older saves move to the head settlement.',
       'Stone Walls now aid your defense only in the home county where they stand.',
@@ -812,7 +817,8 @@ window.FB = window.FB || {};
     if (seasonBoundary) {
       const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
-      p.gold = Math.max(0, p.gold + income - upkeep + FB.holdingBonus(s, 'gold'));
+      const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
+      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep + FB.holdingBonus(s, 'gold'));
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {

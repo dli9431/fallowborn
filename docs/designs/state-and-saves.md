@@ -38,8 +38,10 @@ time; older metadata with a frozen `title` remains readable.
 `state.seed` records the start code the life began with ([seeds.md](seeds.md)); saves
 from before it existed simply hide the seed row in the menu.
 
-`state.buildings[pid]` entries are shaped `{ s: settlementIndex, id }` (per-settlement
-buildings — see [development.md](development.md)). Saves old enough to hold bare id
+`state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
+(per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
+optional backwards-compatible tombstone that occupies the slot but provides no bonus and
+charges no upkeep. Saves old enough to hold bare id
 strings are NOT rejected: `FB.builtIn` migrates them lazily in place at first touch,
 landing the old buildings in the head settlement (`s: 0`) — the same no-version-bump
 pattern as the other lazy inits.
