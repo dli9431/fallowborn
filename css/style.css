@@ -278,6 +278,13 @@ a.actionbtn { text-decoration: none; }
 .charrow[data-cid]:hover { border-color: #c9a24a; }
 .linklike { color: #d8b24a; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .linklike:hover { color: #ecd9a0; }
+/* a link-styled button (settlement names in the Land panel): looks like the
+   span variant but keeps native focus + Enter/Space activation. The color
+   repeats here so it beats the `.kv b` value styling (equal specificity,
+   later rule wins) */
+button.linklike { background: none; border: 0; padding: 0; font: inherit; color: #d8b24a; }
+/* a building's flavor line under its kv row in the settlement view */
+.settdesc { margin: 0 0 8px; }
 .charcard[data-cid] { cursor: pointer; }
 .charcard[data-cid]:hover { border-color: #c9a24a; }
 .charrow .cname { color: #ecd9a0; }

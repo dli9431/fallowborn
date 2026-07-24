@@ -1198,9 +1198,19 @@ window.FB = window.FB || {};
         kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
-        h += kv('Settlements', setts.map(function (st) {
-          return (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
+        // in your own demesne a settlement is a button: it opens the buildings
+        // standing in the province and what each provides (UI.showSettlement)
+        const own = FB.demesne(s).indexOf(pid) >= 0;
+        h += kv('Settlements', setts.map(function (st, si) {
+          const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
+          return own
+            ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
+              esc(FB.T('See the buildings of {province}', { province: pr.name })) + '">' + label + '</button>'
+            : label;
         }).join(' · '));
+        if (own) {
+          h += '<div class="hint">' + esc(FB.T('Tap a settlement to see its buildings and what they provide.')) + '</div>';
+        }
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
         h += '<div class="progressnote">' + esc(FB.T('🏰 You hold this province.')) + '</div>';
@@ -1250,6 +1260,9 @@ window.FB = window.FB || {};
     FB.paintFaces($('tab-prov'), s);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
+    document.querySelectorAll('#tab-prov .settlink').forEach(function (btn) {
+      btn.addEventListener('click', function () { UI.showSettlement(pid, +btn.dataset.sett); });
+    });
   }
 
   let logRenderedTail = null, logRenderedLen = -1; // skip identical rebuilds on quiet ticks
@@ -1890,6 +1903,52 @@ window.FB = window.FB || {};
       delete FB.state.player.cooldowns.go_to_town; // no visit, no cooldown
       UI.closeModal(); UI.refresh();
     });
+  };
+
+  /* ================= settlement view =================
+     Tapping a settlement in your own demesne (Land tab) opens what stands
+     there: every building raised in the province, with what it provides.
+     Buildings are province-wide (state.buildings[pid]) — the settlement is
+     the doorway; a "raise" button hands over to the building picker. */
+  UI.showSettlement = function (pid, idx) {
+    const s = FB.state;
+    const pr = FB.world.byId[pid];
+    if (!s || !pr) return;
+    const st = FB.settlementsOf(s, pid)[idx];
+    if (!st) return;
+    const done = FB.builtIn(s, pid);
+    let h = '';
+    if (done.length) {
+      for (const id of done) {
+        const d = FBDATA.buildings[id];
+        if (!d) continue;
+        const fx = [];
+        if (d.tax) fx.push(FB.T('+{amount} gold each season', { amount: d.tax }));
+        if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
+        if (d.research) fx.push(FB.T('+{amount} scholarship each season', { amount: d.research }));
+        if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
+        if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
+        if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
+        if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
+        h += '<div class="kv"><span>' + d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) +
+          '</span><b>' + esc(fx.join(' · ') || '—') + '</b></div>' +
+          '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>';
+      }
+    } else {
+      h += '<p class="hint">' + esc(FB.T('No buildings stand here yet.')) + '</p>';
+    }
+    const canRaise = FB.demesne(s).indexOf(pid) >= 0 && s.player.tier >= 3 &&
+      FB.buildable(s, pid).length > 0;
+    if (canRaise) {
+      h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
+        esc(FB.T('🏗 Raise a building…')) + '</button></div>';
+    }
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
+    openModal(SETT_ICON[st.kind] + ' ' + st.name, h);
+    if (canRaise) {
+      $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid); });
+    }
+    $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
   /* ================= plot picker ================= */

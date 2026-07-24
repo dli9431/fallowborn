@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.28.0';
+FB.VERSION = '1.29.0';
   FB.CHANGELOG = [
+    { v: '1.29.0', date: '2026-07-23', changes: [
+      'Tap a settlement in your own county (Land tab) to see the buildings standing there and what each provides — gold, levy, piety, scholarship — with a button to raise new works.'
+    ] },
     { v: '1.28.0', date: '2026-07-23', changes: [
       'Vassals now ride to war for you: every county a vassal holds sends a share of its levy to your host, on top of the taxes it already renders — granting land no longer means giving away your army.',
       'New domain limit — you may hold only so many counties in your own hand (four, plus one for every five points of Stewardship). Each county over the limit drains your own income and levy; grant the surplus to vassals to lift it. The realm panel shows your domain against its limit.',
