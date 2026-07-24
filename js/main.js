@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.38.0';
+  FB.VERSION = '1.39.0';
   FB.CHANGELOG = [
+    { v: '1.39.0', date: '2026-07-24', changes: [
+      'Raise Next keeps the county building ledger open for repeated construction, shows the exact next price, and warns that every repeat copy costs half again as much.',
+      'Granaries, Bridges, Walls, Temples, Libraries, and Keeps now cost seasonal upkeep; the gold breakdown itemizes every charge.',
+      'Granaries are limited to one across the demesne, Stone Walls to one in the home county, and unwanted buildings can be permanently demolished into upkeep-free ruins.'
+    ] },
     { v: '1.38.0', date: '2026-07-24', changes: [
       'The Estates: barons, counts, and dukes sworn to a liege now sit in the realm’s assembly, summoned about once a year to vote on the terms of service. The liege’s aid — his cut of your noble revenue, once a fixed 25% — is now set by vote between 10% and 40%: the crown can demand more, the benches can refuse, and you can win it back down with a motion for redress.',
       'Scutage: the estates can vote silver for banner service — the liege’s summons can then be answered with a cheap shield-tax instead of riding to war, and the aid creeps up in exchange.',
@@ -839,7 +844,8 @@ window.FB = window.FB || {};
     if (seasonBoundary) {
       const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
-      p.gold = Math.max(0, p.gold + income - upkeep + FB.holdingBonus(s, 'gold'));
+      const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
+      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep + FB.holdingBonus(s, 'gold'));
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {

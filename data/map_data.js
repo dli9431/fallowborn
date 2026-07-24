@@ -617,9 +617,10 @@ FBDATA.titles = {
    raised via the "Raise a building…" deed) — modders welcome.
    cost: gold (a visiting master mason discounts it; each further copy of the
    same building in the same county costs ×balance.buildingRepeatCostGrowth) ·
-   siting: devMin, coastal, terrains (county gates) · ongoing: tax & piety per
-   season, levy men · one-time on completion: dev, pop (popular opinion),
-   prestige. state.buildings[pid] holds { s: settlement index, id } entries.
+   siting: devMin, coastal, terrains (county gates), homeOnly, maxCounty,
+   maxDemesne · ongoing: tax, piety & upkeep per season, levy men · one-time
+   on completion: dev, pop (popular opinion), prestige. state.buildings[pid]
+   holds { s: settlement index, id, ruined? } entries.
    The 'walls' id is special: it strengthens the ruler when defending the
    home county it stands in.
    War keys: levy (untrained foot, mustered with the host), retinue
@@ -628,21 +629,21 @@ FBDATA.titles = {
 FBDATA.buildings = {
   mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2,
     desc:'Grinds the valley’s grain for a fee.' },
-  granary: { name:'Granary', icon:'🌾', cost:40,
+  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1,
     desc:'Grain laid up against the hungry years.' },
-  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, dev:1, pop:10,
+  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10,
     desc:'Trade crosses where the ford once drowned it.' },
-  walls:   { name:'Stone Walls', icon:'🧱', cost:60,
-    desc:'A wall pays its mason once and its lord forever. (stronger when defending)' },
+  walls:   { name:'Stone Walls', icon:'🧱', cost:60, upkeep:1, maxCounty:1, homeOnly:true,
+    desc:'Stone walls rally the defense of your home county.' },
   market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3,
     desc:'Tolls, stalls, and strangers’ silver.' },
-  temple:  { name:'Great {temple}', icon:'🛐', cost:70, piety:2, pop:5,
+  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5,
     desc:'Stone raised toward heaven — and remembered on earth.' },
   harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4,
     desc:'Every tide brings someone who owes you a toll.' },
-  library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, devMin:4, research:1,
+  library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1,
     desc:'Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)' },
-  keep:    { name:'Stone Keep', icon:'🏰', cost:100, devMin:5, levy:60, retinue:20, prestige:10,
+  keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10,
     desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
   barracks:{ name:'Barracks', icon:'🛡', cost:120, devMin:6, retinue:40,
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },

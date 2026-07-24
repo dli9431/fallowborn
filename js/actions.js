@@ -803,20 +803,22 @@ window.FB = window.FB || {};
     /* buildings, grouped by kind across the demesne (⚙ Watermill ×2 +4);
        appends lines for one def key (tax feeds gold, piety feeds piety)
        and returns the summed amount for the tax arithmetic below */
-    function addBuildings(stat, key) {
+    function addBuildings(stat, key, multiplier, isUpkeep) {
       const count = {};
       for (const pid of FB.demesne(state)) {
         for (const e of FB.builtIn(state, pid)) {
           const def = FBDATA.buildings[e.id];
-          if (def && def[key]) count[e.id] = (count[e.id] || 0) + 1;
+          if (!e.ruined && def && def[key]) count[e.id] = (count[e.id] || 0) + 1;
         }
       }
       let sum = 0;
       for (const bid in count) {
         const def = FBDATA.buildings[bid];
-        const amt = def[key] * count[bid];
+        const amt = def[key] * count[bid] * (multiplier || 1);
         sum += amt;
-        add(stat, dataName('building', bid, def) + (count[bid] > 1 ? ' ×' + count[bid] : ''), amt);
+        let label = dataName('building', bid, def) + (count[bid] > 1 ? ' ×' + count[bid] : '');
+        if (isUpkeep) label = FB.T('{building} upkeep', { building: label });
+        add(stat, label, amt);
       }
       return sum;
     }
@@ -840,6 +842,7 @@ window.FB = window.FB || {};
       const innov = (rents + dues + tolls) * FB.techBonus(state, 'tax');
       add('gold', FB.T('Innovations'), innov);
       if (p.liege) add('gold', FB.T('Liege’s cut'), -(rents + dues + tolls + innov) * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
+      addBuildings('gold', 'upkeep', -1, true);
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
 
@@ -1451,10 +1454,15 @@ window.FB = window.FB || {};
   /* ---- automation (the ⚙ Automation dialog): one purchase per season ---- */
   FB.autoBuild = function (state) {
     let best = null, bestPid = null, bestIdx = 0;
+    const p = state.player;
+    const household = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
+    const steadyGold = FB.playerTax(state) + FB.holdingBonus(state, 'gold') -
+      household - FB.buildingBonus(state, 'upkeep');
     for (const pid of FB.demesne(state)) {
       const sts = FB.settlementsOf(state, pid);
       for (let idx = 0; idx < sts.length; idx++) {
         for (const b of FB.buildable(state, pid, idx)) {
+          if (b.def.upkeep && steadyGold < b.def.upkeep) continue;
           if (!best || b.cost < best.cost) { best = b; bestPid = pid; bestIdx = idx; }
         }
       }
@@ -1510,11 +1518,25 @@ window.FB = window.FB || {};
     return list;
   };
 
+  FB.buildingCountIn = function (state, pid, id, includeRuins) {
+    let count = 0;
+    for (const e of FB.builtIn(state, pid)) {
+      if (e.id === id && (includeRuins || !e.ruined)) count++;
+    }
+    return count;
+  };
+
+  FB.buildingCount = function (state, id, includeRuins) {
+    let count = 0;
+    for (const pid of FB.demesne(state)) count += FB.buildingCountIn(state, pid, id, includeRuins);
+    return count;
+  };
+
   /* built anywhere in the demesne (the reading used by event triggers) */
   FB.hasBuilding = function (state, id) {
     for (const pid of FB.demesne(state)) {
       const done = FB.builtIn(state, pid);
-      for (const e of done) if (e.id === id) return true;
+      for (const e of done) if (e.id === id && !e.ruined) return true;
     }
     return false;
   };
@@ -1522,7 +1544,7 @@ window.FB = window.FB || {};
   /* built in ONE province (walls guard the county they stand in) */
   FB.hasBuildingIn = function (state, pid, id) {
     const done = FB.builtIn(state, pid);
-    for (const e of done) if (e.id === id) return true;
+    for (const e of done) if (e.id === id && !e.ruined) return true;
     return false;
   };
 
@@ -1531,7 +1553,7 @@ window.FB = window.FB || {};
     for (const pid of FB.demesne(state)) {
       for (const e of FB.builtIn(state, pid)) {
         const def = FBDATA.buildings[e.id];
-        if (def && def[key]) sum += def[key];
+        if (!e.ruined && def && def[key]) sum += def[key];
       }
     }
     return sum;
@@ -1542,29 +1564,45 @@ window.FB = window.FB || {};
      instead of the bonus shrinking */
   FB.buildCost = function (state, pid, id) {
     const def = FBDATA.buildings[id];
-    let copies = 0;
-    for (const e of FB.builtIn(state, pid)) if (e.id === id) copies++;
+    const copies = FB.buildingCountIn(state, pid, id, true);
     let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       (1 - FB.techBonus(state, 'build') - (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     if (state.player.flags.mason_visit) c *= 0.75;
     return Math.round(c);
   };
 
-  /* what one settlement can still raise: one of each building per
-     settlement; the county gates (devMin, coastal, terrains) are unchanged */
-  FB.buildable = function (state, pid, idx) {
+  FB.canBuildAt = function (state, pid, idx, id) {
+    const def = FBDATA.buildings[id];
     const pr = FB.world.byId[pid];
+    if (!def || FB.demesne(state).indexOf(pid) < 0 || !FB.settlementsOf(state, pid)[idx]) return false;
     const done = FB.builtIn(state, pid);
+    for (const e of done) if (e.id === id && e.s === idx) return false;
+    if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
+    if (def.coastal && (!pr || !pr.coastal)) return false;
+    if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) return false;
+    if (def.homeOnly && FB.homeProv(state) !== pid) return false;
+    if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
+    if (def.maxDemesne && FB.buildingCount(state, id, false) >= def.maxDemesne) return false;
+    return true;
+  };
+
+  /* what one settlement can still raise: one of each building per
+     settlement, subject to county/demesne limits and siting gates */
+  FB.buildable = function (state, pid, idx) {
     const out = [];
     for (const id in FBDATA.buildings) {
       const def = FBDATA.buildings[id];
-      let here = false;
-      for (const e of done) if (e.id === id && e.s === idx) { here = true; break; }
-      if (here) continue;
-      if (def.devMin && (state.dev[pid] || 1) < def.devMin) continue;
-      if (def.coastal && (!pr || !pr.coastal)) continue;
-      if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) continue;
+      if (!FB.canBuildAt(state, pid, idx, id)) continue;
       out.push({ id: id, def: def, cost: FB.buildCost(state, pid, id) });
+    }
+    return out;
+  };
+
+  FB.buildingSlots = function (state, pid, id) {
+    const out = [];
+    const sts = FB.settlementsOf(state, pid);
+    for (let idx = 0; idx < sts.length; idx++) {
+      if (FB.canBuildAt(state, pid, idx, id)) out.push(idx);
     }
     return out;
   };
@@ -1580,11 +1618,10 @@ window.FB = window.FB || {};
 
   FB.build = function (state, pid, idx, id) {
     const def = FBDATA.buildings[id];
-    if (!def || FB.demesne(state).indexOf(pid) < 0) return;
+    if (!def || !FB.canBuildAt(state, pid, idx, id)) return false;
     const done = FB.builtIn(state, pid);
-    for (const e of done) if (e.id === id && e.s === idx) return; // one of each per settlement
     const cost = FB.buildCost(state, pid, id);
-    if (state.player.gold < cost) return;
+    if (state.player.gold < cost) return false;
     state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
     done.push({ s: idx, id: id });
@@ -1599,6 +1636,18 @@ window.FB = window.FB || {};
       { building: FB.dataParam('building', id),
         settlement: st ? st.name : FB.world.byId[pid].name,
         province: FB.world.byId[pid].name }));
+    return true;
+  };
+
+  FB.demolishBuilding = function (state, pid, idx, id) {
+    if (FB.demesne(state).indexOf(pid) < 0) return false;
+    for (const e of FB.builtIn(state, pid)) {
+      if (e.id === id && e.s === idx && !e.ruined) {
+        e.ruined = true;
+        return true;
+      }
+    }
+    return false;
   };
 
   FB.warTargets = function (state) {

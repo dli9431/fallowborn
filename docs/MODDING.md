@@ -348,10 +348,14 @@ a province:
 
 - `cost` — gold (the Master Builder event discounts the next building by a quarter).
   Each further copy of the same building in the same county costs
-  `cost × balance.buildingRepeatCostGrowth^(copies standing)`.
-- Siting: `devMin` (home province development), `coastal: true`, `terrains: [...]` —
-  county gates, unchanged by the per-settlement model.
-- Ongoing: `tax` and `piety` per season, `levy` men added to the muster.
+  `cost × balance.buildingRepeatCostGrowth^(copies ever raised)`. Demolished ruins remain
+  in that count, so demolition does not reset the price.
+- Siting: `devMin` (province development), `coastal: true`, `terrains: [...]`,
+  `homeOnly: true`, `maxCounty`, and `maxDemesne`. The last two limit standing copies;
+  a ruin still occupies its settlement slot but no longer consumes the standing limit.
+- Ongoing: `tax`, `piety`, `research`, and `upkeep` per season; `levy` men added to the
+  muster. Upkeep is gold and is charged only while the building stands in the player's
+  directly held demesne.
 - War keys: `retinue` (professional men-at-arms) and `archers` — flat men mustered with
   the host as those classes, fighting at their own quality (see `balance.quality*` and
   docs/designs/war.md).
@@ -361,11 +365,13 @@ a province:
   chance — only when walls stand in the home county (`FB.hasBuildingIn`).
 
 Built buildings live in `state.buildings` keyed by **province id**, each entry shaped
-`{ s: settlementIndex, id }` — conquest takes them with the land, and they pass to heirs
+`{ s: settlementIndex, id, ruined? }` — conquest takes them with the land, and they pass to heirs
 with it. (Saves old enough to hold bare id strings are migrated in place by `FB.builtIn`
-into the head settlement, `s: 0`.) Events can gate options or triggers on them
-via `buildings` / `notBuildings` (the famine event's granary option, for example) —
-those read demesne-wide through `FB.hasBuilding`.
+into the head settlement, `s: 0`.) `ruined:true` is created by permanent demolition: the
+entry keeps occupying its slot and counting toward repeat prices, but supplies no benefit,
+upkeep, or event requirement. Events can gate options or triggers on standing buildings
+via `buildings` / `notBuildings` (the famine event's granary option, for example) — those
+read demesne-wide through `FB.hasBuilding`.
 
 ## Household holdings
 

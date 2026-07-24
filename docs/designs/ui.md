@@ -33,6 +33,11 @@ edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, 
 `.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
 footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
 Hover-only affordances need a tap path (item chips toast their description).
+The building deed's county ledger stays open after **Raise Next**, so repeated construction
+does not traverse province and settlement dialogs for every work. Its nine building rows
+retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
+repeat copies in one county become 50% dearer each time. Exact settlement placement and
+permanent demolition remain available from the Land-tab settlement view.
 The topbar resources (gold/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
