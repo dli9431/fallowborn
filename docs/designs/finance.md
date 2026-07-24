@@ -39,6 +39,10 @@ be sold or gifted. Death dues are assessed first; mature debt then settles if
 possible and every remaining id, face, denomination, deadline, and pledge
 passes unchanged to the successor.
 
+Every default also costs prestige. A crowned ruler loses council authority and
+councillor favor; a sworn landed ruler loses standing with the liege, giving
+the existing political institutions a visible hold over failed finance.
+
 **Trade partnerships are real investments, not deposits.** A merchant or
 craft household can commit coin for four seasons; established trade houses and
 guild rank open larger stakes. At maturity a single stored seeded roll produces

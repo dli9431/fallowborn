@@ -787,6 +787,16 @@ window.FB = window.FB || {};
       (FBDATA.balance.financeDefaultBanSeasons || 4) * 90);
     state.player.prestige = Math.max(0, state.player.prestige -
       (FBDATA.balance.financeDefaultPrestige || 15));
+    if (state.player.tier >= 6 && FB.councilAuthority) {
+      FB.councilAuthority(state, -5);
+      if (FB.councilMembers && FB.adjustLiegeOp) {
+        for (const member of FB.councilMembers(state)) {
+          FB.adjustLiegeOp(state, member.rid, -5);
+        }
+      }
+    } else if (state.player.tier >= 3 && state.player.liege) {
+      state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) - 5, -100, 100);
+    }
     if (loan.defaultKind === 'collateral') {
       const lost = loseCollateral(state, loan.collateral);
       loan.status = 'defaulted';

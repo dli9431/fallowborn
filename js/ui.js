@@ -2772,11 +2772,11 @@ window.FB = window.FB || {};
 
   function financeDefaultText(s, contract) {
     if (contract.defaultKind === 'collateral' && contract.collateral) {
-      return FB.T('{asset} is taken by the lender.', {
+      return FB.T('{asset} is taken, prestige falls, and lenders refuse the household for four seasons.', {
         asset:financeAssetName(s, contract.collateral)
       });
     }
-    return FB.T('One quarter of regular revenues is assigned to the lender until the debt is cleared.');
+    return FB.T('One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons.');
   }
 
   function financeOfferCountText(s, count) {
