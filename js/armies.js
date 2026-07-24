@@ -152,12 +152,16 @@ window.FB = window.FB || {};
     const comp = FB.playerComposition(state);
     const units = { levy: comp.levy, arch: comp.arch, ret: comp.ret, mercs: (w.mercCos || 0) * cs };
     if (w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
+    const allied = w.defending && FB.alliedReinforcement
+      ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
+    if (allied.men) units.levy += allied.men;
     let men = units.levy + units.arch + units.ret + units.mercs;
     const floor = B().armyMinMen || 40;
     if (men < floor) { units.levy += floor - men; men = floor; }
     const home = playerHome(state);
     const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
+    if (allied.men) host.allied = allied;
     state.armies.push(host);
     FB.news(state, FB.msg('news.army.player_musters',
       '🚩 The host musters at {province} — {men} men take the field.',
@@ -173,12 +177,26 @@ window.FB = window.FB || {};
   function raiseAIHost(state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
-    const men = Math.max(60, Math.round(FB.realmStrength(state, rid) * B().levyPerDev * (B().aiHostPerDev || 0.3)));
+    let men = Math.max(60, Math.round(FB.realmStrength(state, rid) * B().levyPerDev * (B().aiHostPerDev || 0.3)));
+    let defending = !!(state.player.war && !state.player.war.defending && state.player.war.enemy === rid);
+    if (!defending) {
+      for (const id in state.realms) {
+        const attacker = state.realms[id];
+        if (attacker && attacker.alive && attacker.war && attacker.war.enemy === rid) {
+          defending = true; break;
+        }
+      }
+    }
+    const allied = defending && FB.alliedReinforcement
+      ? FB.alliedReinforcement(state, rid) : { ally: null, men: 0 };
+    men += allied.men;
     const f = aiFracs(state);
-    const units = { ret: Math.round(men * f.ret), arch: Math.round(men * f.arch), levy: 0, mercs: 0 };
-    units.levy = men - units.ret - units.arch;
+    const base = men - allied.men;
+    const units = { ret: Math.round(base * f.ret), arch: Math.round(base * f.arch), levy: 0, mercs: 0 };
+    units.levy = base - units.ret - units.arch + allied.men;
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
+    if (allied.men) host.allied = allied;
     state.armies.push(host);
     if (state.player.war && state.player.war.enemy === rid) {
       FB.news(state, FB.msg('news.army.enemy_musters',
@@ -390,7 +408,21 @@ window.FB = window.FB || {};
     const p = state.player;
     const warring = warringMap(state);
     const hostByRealm = {};
-    for (const a of state.armies) hostByRealm[a.realm] = a;
+    for (const a of state.armies) {
+      hostByRealm[a.realm] = a;
+      if (a.allied && a.allied.men) {
+        const current = FB.alliedReinforcement
+          ? FB.alliedReinforcement(state, a.realm) : { ally: null, men: 0 };
+        if (current.ally !== a.allied.ally || !current.men) {
+          FB.hostUnits(a);
+          const gone = Math.min(a.allied.men, a.units.levy || 0, a.men);
+          a.units.levy -= gone;
+          a.men -= gone;
+          a.size = Math.max(a.men, (a.size || a.men) - gone);
+          a.allied = null;
+        }
+      }
+    }
 
     // sovereigns at war raise their host (the player musters by deed/event)
     for (const id in state.realms) {

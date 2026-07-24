@@ -157,6 +157,8 @@ window.FB = window.FB || {};
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
     backfillParents(FB.state);
+    if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
     return FB.state;
   };
 })();

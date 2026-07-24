@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.47.0';
+  FB.VERSION = '1.48.0';
   FB.CHANGELOG = [
+    { v: '1.48.0', date: '2026-07-24', changes: [
+      'Dynastic alliances and casus belli: marry into a realm’s ruling house to forge ties and claims — the designated heir’s line can carry a crown to your house — and fabricate claims to justify wars of conquest.'
+    ] },
     { v: '1.47.0', date: '2026-07-24', changes: [
       'Petitioning for a barony now needs an established gentle house — an heir must inherit your gentry standing before a lord will grant one.'
     ] },
@@ -593,6 +596,7 @@ window.FB = window.FB || {};
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
       armies: [], armyDown: {},
+      alliances: [],
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -603,7 +607,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
-        landPlotMigration: 1, manor: null, research: 0
+        landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null, research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
@@ -705,6 +709,7 @@ window.FB = window.FB || {};
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
       armies: [], armyDown: {},
+      alliances: [],
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -713,7 +718,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [],
-        landPlots: [], landPlotMigration:1, manor:null, research: 0
+        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null, research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
@@ -1239,6 +1244,7 @@ window.FB = window.FB || {};
         });
         baby.health = 7;
         k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
+        if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         if (close) {
           FB.news(s, FB.msg('news.life.close_kin_birth', {
             forms: {
@@ -1280,6 +1286,9 @@ window.FB = window.FB || {};
           });
           baby.health = 7;
           me.childrenIds.push(baby.id);
+          if (father && father !== me && father.childrenIds.indexOf(baby.id) < 0) father.childrenIds.push(baby.id);
+          if (mother && mother !== me && mother.childrenIds.indexOf(baby.id) < 0) mother.childrenIds.push(baby.id);
+          if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
           s.eventQueue.push({ id: 'child_born_flavor', ctx: { childId: baby.id } });
         }
       }
@@ -1361,6 +1370,9 @@ window.FB = window.FB || {};
       : String(cause === undefined || cause === null ? '' : cause);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
+    if (FB.endRoyalCompact) FB.endRoyalCompact(s);
+    if (FB.breakAlliance) FB.breakAlliance(s, 'player');
+    if (FB.royalCharDied) FB.royalCharDied(s, me);
     p.dead = true;
     recordLegend(s, me, causeMsg, causeText);
     if (causeMsg) {
@@ -1511,6 +1523,7 @@ window.FB = window.FB || {};
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter
+    p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};
     p.rivalPeace = {};
     p.itemOffer = null; // the peddler moves on; carried items pass to the heir
@@ -1561,15 +1574,30 @@ window.FB = window.FB || {};
     p.focus = FB.defaultFocus(s);
 
     // heirs of ruling houses keep the liege bond
-    if (p.tier >= 3 && !p.liege && !(s.realms.player && s.realms.player.alive)) {
+    if (p.tier >= 3 && !p.liege && !FB.isPlayerSovereign(s)) {
       const rid = (s.holder && s.holder[p.provinceId]) || s.owner[p.provinceId];
       if (rid && rid !== 'player') p.liege = rid;
     }
+    if (heir.royalLine) {
+      const rr = s.realms[heir.royalLine.realmId];
+      const rs = rr && FB.ensureRealmSuccession(s, heir.royalLine.realmId);
+      if (rr && rr.alive && rs && rs.rulerMemberId === heir.royalLine.memberId) {
+        FB.absorbRealm(s, heir.royalLine.realmId, heir);
+      }
+    }
     if (s.realms.player && s.realms.player.alive) {
+      const oldGeneration = s.realms.player.ruler &&
+        s.realms.player.ruler.generation !== undefined
+        ? s.realms.player.ruler.generation : 1;
       s.realms.player.ruler = {
-        name: heir.name, culture: heir.culture,
-        age: FB.ageOf(heir, s.date.year), mar: FB.skillOf(heir, 'mar')
+        name: heir.name, sex: heir.sex, culture: heir.culture,
+        age: FB.ageOf(heir, s.date.year), mar: FB.skillOf(heir, 'mar'),
+        generation: oldGeneration + 1
       };
+      s.realms.player.succession = s.realms.player.succession || { playerDynasty: true };
+      s.realms.player.succession.rulerGeneration = oldGeneration + 1;
+      s.realms.player.succession.heirCharId = null;
+      s.realms.player.liege = p.liege || null;
     }
 
     FB.news(s, FB.msg('news.life.succession',

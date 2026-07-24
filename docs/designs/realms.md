@@ -1,5 +1,30 @@
 # Realms, the liege hierarchy & tiers
 
+## Dynastic realm identity
+
+Every living rank-1 through rank-4 AI realm carries `realm.succession`: lightweight
+sons and daughters, a ruler-generation stamp, a single designated heir, and an ordered
+line. Sons precede daughters and older children precede younger ones. If the designated
+heir dies, that child's living descendants retain the branch's place before the heir's
+siblings. These people remain compact records until the player courts one;
+`FB.materializeRoyalChild` then creates the ordinary `state.chars` character used by
+courtship, marriage, births, and mortality while retaining its `royalLine` identity.
+
+The special `state.realms.player` node is the player's landed realm, not a synonym for
+independence. It may have a `liege`; `state.owner` continues to name the top sovereign
+while `state.holder` names the player or one of the player's vassals. Foreign-policy,
+crown, and attack gates use `FB.isPlayerSovereign`, while landed-hierarchy operations
+use the player realm itself. Swearing fealty reparents this node instead of dissolving
+it.
+
+When a materialized rightful ruler becomes the protagonist, `FB.absorbRealm` joins that
+realm to the player's: its ruler's demesne enters the player's hand, its vassals reattach
+intact, hierarchy cycles are prevented, outgoing wars end in white peace, and title,
+rank, capital, and map ownership are synchronized. Only a sovereign inherited title
+changes the sovereign owner of the combined hierarchy. An intact player crown handed
+to a downfall usurper may instead leave the displaced rightful character one narrow
+restoration right; ordinary county conquest never creates one.
+
 **Realms form a liege hierarchy.** Every realm has a `rank` (1 count … 4 emperor) and a
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,
 war target); `state.holder[pid]` is the county's direct holder. Authored realms are

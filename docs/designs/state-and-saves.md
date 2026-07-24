@@ -1,5 +1,20 @@
 # Game state & saves
 
+Dynastic diplomacy is additive and does not change save version 3.
+`realm.succession` holds lightweight royal members and a ruler-generation identity;
+materialized characters point back through `char.royalLine`.
+`state.alliances` holds canonical, generation-stamped defensive realm pairs.
+`player.royalCompact` identifies the current protagonist's one royal marriage compact,
+and `player.fabricatedClaim` holds the single `{pid, madeTurn}` county claim.
+`player.war.casus` records the semantic cause selected for a new war, while a displaced
+rightful character may carry one `restorationRight`. `FB.ensureDynasticState`,
+`FB.fabricatedClaimOf`, and the normal load repairs lazily initialize and validate all
+of these fields, so older version-3 saves require no migration.
+
+Targeted plots persist their selection in `player.plot.context` (for claim fabrication,
+`{pid}`). Discovery and final resolution both receive this stored context, so
+save/export/import cannot silently retarget a plot in progress.
+
 **Game state is one serializable object** (`FB.state`), created in `js/main.js`. Political
 ownership lives in `state.owner` / `state.holder` / `state.dev` / `state.realms`, not in
 world data. `js/save.js` snapshots `FB.state` + RNG state + uid counter to localStorage;

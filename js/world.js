@@ -301,6 +301,7 @@ window.FB = window.FB || {};
     // generate the dukes and counts inside each authored realm
     for (const r of FBDATA.realms) buildVassals(state, r.id);
     FB.invalidateRealmCache();
+    FB.ensureDynasticState(state);
   };
 
   /* Group a realm's counties by duchy and hand out titles:
@@ -356,6 +357,7 @@ window.FB = window.FB || {};
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
+    if (state.date) FB.ensureRealmSuccession(state, r.id);
     return r;
   };
 
@@ -377,12 +379,407 @@ window.FB = window.FB || {};
   function makeRuler(culture) {
     return {
       name: FB.randomName(culture, 'm'),
+      sex: 'm',
       culture: culture,
       age: FB.ri(20, 55),
       mar: FB.ri(2, 14),
-      trait: FB.pick(FB.RULER_TRAITS)
+      trait: FB.pick(FB.RULER_TRAITS),
+      generation: 1
     };
   }
+
+  /* ================= DYNASTIC REALMS & ALLIANCES =================
+     AI courts keep a compact family tree rather than full characters. A royal
+     child becomes a real character only when play needs one (courtship), while
+     the lightweight member id remains the durable succession identity. */
+
+  function royalMemberSort(a, b) {
+    if (a.sex !== b.sex) return a.sex === 'm' ? -1 : 1;
+    return a.born - b.born;
+  }
+
+  function realmFaithGroup(state, rid) {
+    const r = state.realms[rid];
+    const pr = r && FB.world.byId[r.capital];
+    return pr ? FB.religionOf(pr.religion).group : null;
+  }
+  FB.realmFaithGroup = realmFaithGroup;
+
+  function newRoyalMember(state, realm, parentId, ageMax) {
+    const sex = FB.chance(0.55) ? 'm' : 'f';
+    const max = Math.max(0, ageMax === undefined ? 28 : ageMax);
+    return {
+      id: 'royal_' + realm.id + '_' + FB.uid(),
+      name: FB.randomName(realm.ruler.culture, sex),
+      sex: sex,
+      born: state.date.year - FB.ri(0, max),
+      alive: true,
+      parentId: parentId || null,
+      childIds: [],
+      charId: null
+    };
+  }
+
+  function orderedMemberIds(succession, parentId) {
+    const list = [];
+    for (const id in succession.members) {
+      const m = succession.members[id];
+      if ((m.parentId || null) === (parentId || null)) list.push(m);
+    }
+    list.sort(royalMemberSort);
+    return list.map(function (m) { return m.id; });
+  }
+
+  function expandDeadBranch(succession, id, out, seen) {
+    if (seen[id]) return;
+    seen[id] = 1;
+    const m = succession.members[id];
+    if (!m) return;
+    if (m.alive !== false) { out.push(id); return; }
+    const kids = orderedMemberIds(succession, id);
+    for (const kid of kids) expandDeadBranch(succession, kid, out, seen);
+  }
+
+  FB.refreshRealmSuccession = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive) return null;
+    const s = r.succession;
+    if (!s || !s.members) return FB.ensureRealmSuccession(state, rid);
+    const source = s.order && s.order.length ? s.order.slice() :
+      orderedMemberIds(s, s.rulerMemberId || null);
+    const out = [], seen = {};
+    for (const id of source) {
+      const m = s.members[id];
+      if (m && m.charId) {
+        const c = state.chars && state.chars[m.charId];
+        if (!c || c.dead) m.alive = false;
+      }
+      expandDeadBranch(s, id, out, seen);
+    }
+    s.order = out;
+    s.heirId = out.length ? out[0] : null;
+    // Every compact royal house exposes one designated successor. If an
+    // entire lightweight line dies out, repair it with a young collateral
+    // branch instead of leaving the UI and ruler transition heirless.
+    if (!s.heirId) makeHeirIfEmpty(state, r, s);
+    return s;
+  };
+
+  FB.ensureRealmSuccession = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive || rid === 'player') return null;
+    if (!r.ruler) {
+      const cap = FB.world.byId[r.capital];
+      r.ruler = makeRuler(cap ? cap.culture : 'frankish');
+    }
+    if (r.ruler.generation === undefined) r.ruler.generation = 1;
+    if (!r.succession || !r.succession.members) {
+      const s = {
+        rulerGeneration: r.ruler.generation,
+        rulerMemberId: null,
+        members: {},
+        order: [],
+        heirId: null
+      };
+      const possibleAge = Math.max(0, Math.min(28, r.ruler.age - 16));
+      const count = FB.ri(2, 4);
+      const made = [];
+      for (let i = 0; i < count; i++) {
+        const m = newRoyalMember(state, r, null, possibleAge);
+        s.members[m.id] = m;
+        made.push(m);
+      }
+      made.sort(royalMemberSort);
+      s.order = made.map(function (m) { return m.id; });
+      s.heirId = s.order[0];
+      r.succession = s;
+    }
+    return FB.refreshRealmSuccession(state, rid);
+  };
+
+  FB.ensureDynasticState = function (state) {
+    state.alliances = state.alliances || [];
+    for (const rid in state.realms) {
+      const r = state.realms[rid];
+      if (!r || !r.alive) continue;
+      if (rid === 'player') {
+        if (r.ruler && r.ruler.generation === undefined) r.ruler.generation = 1;
+        r.succession = r.succession || {
+          playerDynasty: true,
+          rulerGeneration: r.ruler ? r.ruler.generation : 1,
+          heirCharId: null
+        };
+      } else {
+        FB.ensureRealmSuccession(state, rid);
+      }
+    }
+    FB.repairAlliances(state);
+  };
+
+  FB.realmFamily = function (state, rid) {
+    const r = state.realms[rid];
+    const s = FB.ensureRealmSuccession(state, rid);
+    if (!r || !s) return [];
+    const parent = s.rulerMemberId || null;
+    const ids = orderedMemberIds(s, parent).filter(function (id) {
+      return s.members[id] && s.members[id].alive !== false;
+    });
+    for (const id of s.order) if (ids.indexOf(id) < 0) ids.push(id);
+    return ids.slice(0, 6).map(function (id) { return s.members[id]; });
+  };
+
+  function tickRoyalFamily(state, rid) {
+    const s = FB.ensureRealmSuccession(state, rid);
+    if (!s) return;
+    for (const id in s.members) {
+      const m = s.members[id];
+      if (m.alive === false || id === s.rulerMemberId || m.charId) continue;
+      const age = Math.max(0, state.date.year - m.born);
+      const q = age < 5 ? 0.03 : age < 16 ? 0.006 : age < 50 ? 0.008 :
+        age < 65 ? 0.03 : age < 80 ? 0.1 : 0.25;
+      if (FB.chance(q)) m.alive = false;
+    }
+    FB.refreshRealmSuccession(state, rid);
+  }
+
+  FB.materializeRoyalChild = function (state, rid, memberId) {
+    const r = state.realms[rid];
+    const s = FB.ensureRealmSuccession(state, rid);
+    const m = s && s.members[memberId];
+    if (!r || !m || m.alive === false) return null;
+    if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) return state.chars[m.charId];
+    const cap = FB.world.byId[r.capital];
+    const c = FB.makeCharacter(state, {
+      name: m.name,
+      sex: m.sex,
+      culture: r.ruler.culture,
+      religion: cap ? cap.religion : state.chars[state.player.charId].religion,
+      born: m.born,
+      dyn: 'of ' + r.name,
+      station: r.rank <= 2 ? 3 : 4,
+      quality: Math.max(2, r.rank + 1),
+      opinion: FB.ri(-5, 20)
+    });
+    c.health = 8;
+    c.royalLine = { realmId: rid, memberId: memberId };
+    m.charId = c.id;
+    return c;
+  };
+
+  /* The compact tree still enforces the ordinary close-blood marriage bar.
+     Root members share the unmaterialized founding ruler (parentId null);
+     cousins remain eligible, matching the full-character kin rules. */
+  FB.royalCloseKin = function (state, a, b) {
+    if (!a || !b || !a.royalLine || !b.royalLine ||
+        a.royalLine.realmId !== b.royalLine.realmId) return false;
+    const r = state.realms[a.royalLine.realmId];
+    const s = r && FB.ensureRealmSuccession(state, r.id);
+    const ma = s && s.members[a.royalLine.memberId];
+    const mb = s && s.members[b.royalLine.memberId];
+    if (!ma || !mb) return false;
+    if (ma.id === mb.id || ma.parentId === mb.id || mb.parentId === ma.id) return true;
+    function siblings(x, y) {
+      return !!x && !!y && x.id !== y.id &&
+        (x.parentId || null) === (y.parentId || null);
+    }
+    if (siblings(ma, mb)) return true;
+    const pa = ma.parentId && s.members[ma.parentId];
+    const pb = mb.parentId && s.members[mb.parentId];
+    if ((pa && siblings(pa, mb)) || (pb && siblings(pb, ma))) return true;
+    if ((pa && pa.parentId === mb.id) || (pb && pb.parentId === ma.id)) return true;
+    return false;
+  };
+
+  FB.registerRoyalBirth = function (state, child, father, mother) {
+    const candidates = [];
+    if (father && father.royalLine) candidates.push(father);
+    if (mother && mother.royalLine) candidates.push(mother);
+    const compact = state.player && state.player.royalCompact;
+    let royal = null;
+    if (compact) {
+      for (const candidate of candidates) {
+        if (candidate.royalLine.realmId === compact.realmId) {
+          royal = candidate;
+          break;
+        }
+      }
+    }
+    if (!royal) {
+      for (const candidate of candidates) {
+        const candidateRealm = state.realms[candidate.royalLine.realmId];
+        if (candidateRealm && candidateRealm.alive) {
+          royal = candidate;
+          break;
+        }
+      }
+    }
+    if (!royal || !child) return;
+    const line = royal.royalLine;
+    const r = state.realms[line.realmId];
+    const s = r && FB.ensureRealmSuccession(state, line.realmId);
+    const parent = s && s.members[line.memberId];
+    if (!r || !s || !parent) return;
+    const m = {
+      id: 'royal_' + r.id + '_' + FB.uid(),
+      name: child.name,
+      sex: child.sex,
+      born: child.born,
+      alive: !child.dead,
+      parentId: parent.id,
+      childIds: [],
+      charId: child.id
+    };
+    s.members[m.id] = m;
+    parent.childIds = parent.childIds || [];
+    parent.childIds.push(m.id);
+    child.royalLine = { realmId: r.id, memberId: m.id };
+    if (s.rulerMemberId === parent.id) {
+      const children = orderedMemberIds(s, parent.id);
+      const rest = s.order.filter(function (id) { return children.indexOf(id) < 0; });
+      s.order = children.concat(rest);
+    }
+    FB.refreshRealmSuccession(state, r.id);
+  };
+
+  FB.royalCharDied = function (state, c) {
+    if (!c || !c.royalLine) return;
+    const line = c.royalLine;
+    const r = state.realms[line.realmId];
+    const s = r && FB.ensureRealmSuccession(state, line.realmId);
+    const m = s && s.members[line.memberId];
+    if (!m) return;
+    m.alive = false;
+    if (s.rulerMemberId === m.id && r.alive) FB.advanceRealmSuccession(state, r.id);
+    else FB.refreshRealmSuccession(state, r.id);
+  };
+
+  function makeHeirIfEmpty(state, r, s) {
+    if (s.order.length) return;
+    const parentId = s.rulerMemberId || null;
+    const m = newRoyalMember(state, r, parentId, Math.max(0, Math.min(8, r.ruler.age - 16)));
+    s.members[m.id] = m;
+    if (parentId && s.members[parentId]) {
+      s.members[parentId].childIds = s.members[parentId].childIds || [];
+      s.members[parentId].childIds.push(m.id);
+    }
+    s.order = [m.id];
+    s.heirId = m.id;
+  }
+
+  FB.advanceRealmSuccession = function (state, rid) {
+    const r = state.realms[rid];
+    const s = FB.ensureRealmSuccession(state, rid);
+    if (!r || !s) return null;
+    FB.refreshRealmSuccession(state, rid);
+    makeHeirIfEmpty(state, r, s);
+    const heirId = s.order.shift();
+    const heir = s.members[heirId];
+    if (!heir) return null;
+    s.rulerMemberId = heirId;
+    const children = orderedMemberIds(s, heirId);
+    s.order = children.concat(s.order.filter(function (id) { return children.indexOf(id) < 0; }));
+    const c = heir.charId && state.chars[heir.charId];
+    r.ruler = {
+      name: c ? c.name : heir.name,
+      sex: c ? c.sex : heir.sex,
+      culture: c ? c.culture : r.ruler.culture,
+      age: c ? FB.ageOf(c, state.date.year) : Math.max(0, state.date.year - heir.born),
+      mar: c ? FB.skillOf(c, 'mar') : FB.ri(2, 14),
+      trait: c && c.traits && c.traits.length ? c.traits[0] : FB.pick(FB.RULER_TRAITS),
+      generation: (s.rulerGeneration || 1) + 1
+    };
+    s.rulerGeneration = r.ruler.generation;
+    makeHeirIfEmpty(state, r, s);
+    FB.refreshRealmSuccession(state, rid);
+    FB.repairAlliances(state);
+    if (c && c.id === state.player.charId && FB.absorbRealm) FB.absorbRealm(state, rid, c);
+    return heir;
+  };
+
+  function pairIds(a, b) { return a < b ? [a, b] : [b, a]; }
+
+  FB.realmRulerGeneration = function (state, rid) {
+    const r = state.realms[rid];
+    return r && r.ruler && r.ruler.generation !== undefined ? r.ruler.generation : 1;
+  };
+
+  FB.repairAlliances = function (state) {
+    state.alliances = state.alliances || [];
+    const out = [], occupied = {};
+    for (const a of state.alliances) {
+      if (!a || !a.a || !a.b || a.a === a.b || occupied[a.a] || occupied[a.b]) continue;
+      const ra = state.realms[a.a], rb = state.realms[a.b];
+      if (!ra || !rb || !ra.alive || !rb.alive) continue;
+      if (a.aGen !== FB.realmRulerGeneration(state, a.a) ||
+          a.bGen !== FB.realmRulerGeneration(state, a.b)) continue;
+      occupied[a.a] = occupied[a.b] = 1;
+      out.push(a);
+    }
+    state.alliances = out;
+    return out;
+  };
+
+  FB.allianceOf = function (state, rid) {
+    FB.repairAlliances(state);
+    for (const a of state.alliances) if (a.a === rid || a.b === rid) return a;
+    return null;
+  };
+
+  FB.alliedRealm = function (state, rid) {
+    const a = FB.allianceOf(state, rid);
+    return a ? (a.a === rid ? a.b : a.a) : null;
+  };
+
+  FB.areAllied = function (state, a, b) {
+    const p = pairIds(a, b), al = FB.allianceOf(state, p[0]);
+    return !!al && al.a === p[0] && al.b === p[1];
+  };
+
+  FB.formAlliance = function (state, a, b, source) {
+    const p = pairIds(a, b);
+    if (p[0] === p[1] || FB.allianceOf(state, p[0]) || FB.allianceOf(state, p[1])) return false;
+    const ra = state.realms[p[0]], rb = state.realms[p[1]];
+    if (!ra || !rb || !ra.alive || !rb.alive) return false;
+    if (FB.isRealmAtWar && (FB.isRealmAtWar(state, p[0]) || FB.isRealmAtWar(state, p[1]))) {
+      return false;
+    }
+    state.alliances.push({
+      a: p[0], b: p[1], source: source || 'diplomacy',
+      aGen: FB.realmRulerGeneration(state, p[0]),
+      bGen: FB.realmRulerGeneration(state, p[1])
+    });
+    return true;
+  };
+
+  FB.breakAlliance = function (state, rid, partner) {
+    state.alliances = (state.alliances || []).filter(function (a) {
+      return !((a.a === rid && (!partner || a.b === partner)) ||
+        (a.b === rid && (!partner || a.a === partner)));
+    });
+  };
+
+  FB.aiBaseHost = function (state, rid) {
+    return Math.max(60, Math.round(FB.realmStrength(state, rid) *
+      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3)));
+  };
+
+  FB.alliedReinforcement = function (state, defenderId) {
+    const allyId = FB.alliedRealm(state, defenderId);
+    if (!allyId || FB.isRealmAtWar(state, allyId)) return { ally: null, men: 0 };
+    const defenderBase = defenderId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, defenderId);
+    const allyBase = allyId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, allyId);
+    return { ally: allyId, men: Math.max(0, Math.round(Math.min(allyBase * 0.25, defenderBase * 0.5))) };
+  };
+
+  FB.realmDefensiveStrength = function (state, rid) {
+    const base = rid === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, rid);
+    return base + FB.alliedReinforcement(state, rid).men;
+  };
+
+  FB.isPlayerSovereign = function (state) {
+    const r = state.realms.player;
+    return !!(r && r.alive && !r.liege);
+  };
 
   /* ================= settlements =================
      Each province holds 2-4 named settlements, generated deterministically
@@ -425,11 +822,19 @@ window.FB = window.FB || {};
 
   FB.realmProvinces = function (state, realmId) {
     rcEnsure(state);
+    const realm = state.realms[realmId];
+    if (realm && realm.liege) return FB.realmTerritory(state, realmId);
     return rc.provs[realmId] || [];
   };
 
   FB.realmStrength = function (state, realmId) {
     rcEnsure(state);
+    const realm = state.realms[realmId];
+    if (realm && realm.liege) {
+      let strength = 0;
+      for (const pid of FB.realmTerritory(state, realmId)) strength += state.dev[pid] || 1;
+      return strength;
+    }
     return rc.strength[realmId] || 0;
   };
 
@@ -608,8 +1013,8 @@ window.FB = window.FB || {};
 
   FB.playerRealmId = function (state) {
     // the SOVEREIGN realm the player answers to (liege's top, own realm, or home)
+    if (state.realms.player && state.realms.player.alive) return FB.topRealm(state, 'player');
     if (state.player.liege) return FB.topRealm(state, state.player.liege);
-    if (state.realms.player && state.realms.player.alive) return 'player';
     return state.owner[state.player.provinceId] || null;
   };
 
@@ -658,6 +1063,7 @@ window.FB = window.FB || {};
 
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
+    FB.ensureDynasticState(state);
     // scripted history
     const scripted = FBDATA.scripted || [];
     for (let scriptedIndex = 0; scriptedIndex < scripted.length; scriptedIndex++) {
@@ -675,6 +1081,7 @@ window.FB = window.FB || {};
           rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
           alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic'), war: null, op: 0
         };
+        FB.ensureRealmSuccession(state, rid);
       }
       if (state.realms[rid] && state.realms[rid].alive) {
         for (const pid of ev.targets) {
@@ -690,22 +1097,42 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || id === 'player') continue;
+      FB.ensureRealmSuccession(state, id);
+      tickRoyalFamily(state, id);
       // a vassal house's standing at its liege's court drifts with the years
       if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
       // ruler ages & dies
       r.ruler.age++;
       const q = r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02;
       if (FB.chance(q)) {
-        // a petty count may die without an heir: the fief escheats upward —
-        // unless a bordering vassal of standing (maybe you) wins the scramble
-        if (r.liege && r.rank === 1 && FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
-        const cap = FB.world.byId[r.capital];
-        r.ruler = makeRuler(cap ? cap.culture : r.ruler.culture);
+        const succession = FB.refreshRealmSuccession(state, id);
+        // Escheat is now the last resort for a genuinely exhausted count line.
+        if (r.liege && r.rank === 1 && (!succession || !succession.heirId) &&
+            FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
+        const oldGeneration = r.ruler.generation;
+        const rulerMember = succession && succession.members[succession.rulerMemberId];
+        const rulerChar = rulerMember && rulerMember.charId &&
+          state.chars[rulerMember.charId];
+        if (rulerChar && !rulerChar.dead && FB.killChar) {
+          // A courted royal remains a full character after taking the throne.
+          // Use the normal death path so marriage and role links also close;
+          // royalCharDied advances the realm exactly once.
+          FB.killChar(state, rulerChar);
+        } else {
+          if (rulerMember) rulerMember.alive = false;
+          FB.advanceRealmSuccession(state, id);
+        }
+        // Defensive repair for malformed saves whose materialized ruler was
+        // already dead but had not advanced the compact succession record.
+        if (r.alive && r.ruler.generation === oldGeneration) {
+          FB.advanceRealmSuccession(state, id);
+        }
         if (FB.game.observe || id === FB.playerRealmId(state) || id === state.player.liege) {
           FB.news(state, FB.msg('news.world.ruler_succeeds',
             '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
             { realm: r.name, ruler: r.ruler.name }));
         }
+        if (!r.alive) continue; // the new ruler was the protagonist and joined the realms
       }
       if (r.liege) continue; // vassals make no foreign policy of their own
       // war resolution
@@ -714,7 +1141,10 @@ window.FB = window.FB || {};
         if (!enemy || !enemy.alive) { r.war = null; continue; }
         const sa = FB.realmStrength(state, id) * (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
           (1 + 0.12 * ((r.war.fw || 0) - (r.war.fl || 0))); // field wins tilt the war
-        const sd = FB.realmStrength(state, r.war.enemy) * (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
+        const defenseRatio = FB.realmDefensiveStrength(state, r.war.enemy) /
+          Math.max(1, FB.aiBaseHost(state, r.war.enemy));
+        const sd = FB.realmStrength(state, r.war.enemy) * defenseRatio *
+          (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
           (1 + 0.12 * ((r.war.fl || 0) - (r.war.fw || 0)));
         const winner = sa > sd ? id : r.war.enemy;
         const loser = winner === id ? r.war.enemy : id;
@@ -754,15 +1184,18 @@ window.FB = window.FB || {};
         for (const id2 in state.realms) {
           if (id2 === id) continue;
           const r2 = state.realms[id2];
-          if (!r2.alive || r2.liege) continue; // sovereigns only
+          if (!r2.alive || r2.liege || FB.areAllied(state, id, id2)) continue; // sovereigns only
           if (id2 === 'player') continue; // wars vs player handled below
           if (FB.realmsAdjacent(state, id, id2)) targets.push(id2);
         }
         if (targets.length) {
           // prefer weaker targets
-          targets.sort(function (a, b) { return FB.realmStrength(state, a) - FB.realmStrength(state, b); });
+          targets.sort(function (a, b) {
+            return FB.realmDefensiveStrength(state, a) - FB.realmDefensiveStrength(state, b);
+          });
           const t = targets[FB.chance(0.6) ? 0 : Math.floor(FB.rng() * targets.length)];
-          r.war = { enemy: t, years: 0, captures: 0 };
+          r.war = { enemy: t, years: 0, captures: 0,
+            casus: { type: 'border', label: 'Border war' } };
           const homeRealm = state.owner[state.player.provinceId];
           if (FB.game.observe || id === homeRealm || t === homeRealm) {
             FB.news(state, FB.msg('news.world.ai_war',
@@ -777,10 +1210,15 @@ window.FB = window.FB || {};
         B.foreignOpinionAttackMin,
         B.foreignOpinionAttackMax
       );
-      if (!r.war && state.realms.player && state.realms.player.alive && !state.player.war &&
+      const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
+        Math.max(1, FB.realmDefensiveStrength(state, 'player')), 0.25, 1.25);
+      if (!r.war && FB.isPlayerSovereign(state) && !state.player.war &&
         !(state.pacts && state.pacts[id] > state.turn) &&
-        FB.chance(0.04 * r.aggression * relationMult) && FB.realmsAdjacent(state, id, 'player')) {
-        state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
+        !FB.areAllied(state, id, 'player') &&
+        FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
+        FB.realmsAdjacent(state, id, 'player')) {
+        state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
+          defending: true, casus: { type: 'border', label: 'Border war' } };
         FB.news(state, FB.msg('news.world.war_declared_on_player',
           '🔥 {realm} declares war upon YOU!', { realm: r.name }));
         FB.warFooting(state);
@@ -809,12 +1247,14 @@ window.FB = window.FB || {};
         // player's, never as realms.player.war — the AI loop skips the
         // player, so a war parked there could neither resolve nor be fought
         if (tr && tr.alive && !state.player.war) {
-          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
+          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
+            defending: true, casus: { type: 'independence' } };
           FB.warFooting(state);
           state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
         }
       } else if (tr && tr.alive && !tr.war) {
-        tr.war = { enemy: id, years: 0, captures: 0 };
+        tr.war = { enemy: id, years: 0, captures: 0,
+          casus: { type: 'border', label: 'Breakaway war' } };
       }
       if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
         FB.news(state, FB.msg('news.world.breakaway', {
@@ -825,6 +1265,35 @@ window.FB = window.FB || {};
             }
           }
         }, { overlord: tr ? 'realm' : 'other', realm: r.name, liege: tr ? tr.name : '' }));
+      }
+    }
+
+    /* A rare yearly opening between neighboring, peaceful sovereign crowns.
+       The compact is bilateral and defensive; no allied war is created. */
+    const courted = {};
+    for (const id in state.realms) {
+      const r = state.realms[id];
+      if (id === 'player' || !r.alive || r.liege || r.rank < 3 || FB.isRealmAtWar(state, id) ||
+          courted[id] || FB.allianceOf(state, id) || !FB.chance(0.08)) continue;
+      const choices = [];
+      for (const id2 in state.realms) {
+        const r2 = state.realms[id2];
+        if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || r2.rank < 3 ||
+            FB.isRealmAtWar(state, id2) || courted[id2] || FB.allianceOf(state, id2)) continue;
+        if (!FB.realmsAdjacent(state, id, id2)) continue;
+        if (realmFaithGroup(state, id) !== realmFaithGroup(state, id2)) continue;
+        choices.push(id2);
+      }
+      if (choices.length) {
+        const partner = FB.pick(choices);
+        if (FB.formAlliance(state, id, partner, 'dynastic')) {
+          courted[id] = courted[partner] = 1;
+          if (FB.game.observe || id === FB.playerRealmId(state) || partner === FB.playerRealmId(state)) {
+            FB.news(state, FB.msg('news.world.alliance_formed',
+              '🤝 {realm} and {ally} bind themselves in a defensive alliance.',
+              { realm: r.name, ally: state.realms[partner].name }));
+          }
+        }
       }
     }
 
@@ -926,6 +1395,10 @@ window.FB = window.FB || {};
     }
     w.seasons++;
     p.gold = Math.max(0, p.gold - (2 + (p.provs ? p.provs.length : 0) + (w.mercCos || 0) * 4));
+    if (!w.defending && w.casus && w.casus.type === 'restoration' && enemy.capital) {
+      w.target = enemy.capital; // the right follows the living seat of the usurped crown
+      w.casus.target = enemy.capital;
+    }
     /* attacking a target that has slipped out of the enemy's hands (revolt
        settled elsewhere, province lost to a third party): the war has no
        object left — end it gracefully rather than dragging to exhaustion */
@@ -975,15 +1448,31 @@ window.FB = window.FB || {};
     const p = state.player;
     const w = p.war;
     const pid = w && w.target;
+    if (w && w.casus && w.casus.type === 'restoration') {
+      const enemy = state.realms[w.enemy];
+      const me = state.chars[p.charId];
+      if (enemy && enemy.alive && FB.absorbRealm(state, w.enemy, me)) {
+        if (me && me.restorationRight && me.restorationRight.realmId === w.enemy) {
+          delete me.restorationRight;
+        }
+        p.prestige += 100;
+        FB.news(state, FB.msg('news.war.crown_restored',
+          '👑 The usurper’s crown and vassals return intact to your rightful rule.', {}));
+        FB.endPlayerWar(state);
+        return;
+      }
+    }
     if (pid && state.owner[pid] === w.enemy) {
-      const myRealm = state.realms.player && state.realms.player.alive ? 'player'
-        : (p.liege ? FB.topRealm(state, p.liege) : 'player');
-      if (myRealm === 'player' && !(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
-      FB.transferProvince(state, pid, myRealm);
+      if (!(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
+      FB.transferProvince(state, pid, FB.playerRealmId(state) || 'player');
       if (state.holder) state.holder[pid] = 'player'; // the player's own demesne
       FB.invalidateRealmCache(); // transferProvince rebuilt before the holder rewrite
       p.provs = p.provs || [];
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
+      if (w.casus && w.casus.type === 'fabricated') {
+        const claim = p.fabricatedClaim;
+        if (claim && (claim.pid || claim) === pid) p.fabricatedClaim = null;
+      }
       FB.news(state, FB.msg('news.war.conquest',
         '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
       p.prestige += 50;
@@ -1016,7 +1505,7 @@ window.FB = window.FB || {};
       }
       if (opts.length) lost = FB.pick(opts);
     }
-    if (!lost) lost = FB.borderProvince(state, state.realms.player && state.realms.player.alive ? 'player' : FB.playerRealmId(state), w.enemy);
+    if (!lost) lost = FB.borderProvince(state, FB.playerRealmId(state), w.enemy);
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
@@ -1049,8 +1538,8 @@ window.FB = window.FB || {};
     // the slide is over, one way or another — none of it follows the heir
     for (const df of ['df_unrest', 'df_league', 'df_claim', 'df_claim2', 'df_marked', 'df_doom']) delete p.flags[df];
     if (p.provs && p.provs.length) {
-      if ((state.realms.player && state.realms.player.alive) || !p.liege) {
-        const old = (state.realms.player && state.realms.player.alive) ? state.realms.player : null;
+      if (FB.isPlayerSovereign(state) || !p.liege) {
+        const old = FB.isPlayerSovereign(state) ? state.realms.player : null;
         const cap = (old && old.capital) || p.provs[0];
         const pr = FB.world.byId[cap];
         const uid = 'usurper_' + state.turn;
@@ -1060,7 +1549,19 @@ window.FB = window.FB || {};
           culture: pr ? pr.culture : 'frankish'
         });
         u.color = old ? old.color : '#f0c840'; // the map barely ripples
-        if (old) { old.alive = false; old.war = null; }
+        if (old) {
+          old.alive = false; old.war = null;
+          FB.breakAlliance(state, 'player');
+          if (old.rank >= 3) {
+            const rightful = state.chars[p.charId];
+            rightful.restorationRight = {
+              realmId: uid,
+              titleName: old.name,
+              rank: old.rank,
+              createdTurn: state.turn
+            };
+          }
+        }
         for (const pid of p.provs) { state.owner[pid] = uid; state.holder[pid] = uid; }
         for (const vid in state.realms) {
           if (state.realms[vid].liege === 'player') state.realms[vid].liege = uid;
@@ -1087,6 +1588,13 @@ window.FB = window.FB || {};
         }));
       }
       p.provs = [];
+    }
+    if (state.realms.player && state.realms.player.alive) {
+      state.realms.player.alive = false;
+      state.realms.player.war = null;
+      for (const vid in state.realms) {
+        if (state.realms[vid].liege === 'player') state.realms[vid].liege = p.liege || null;
+      }
     }
     p.tier = 2;
     p.liege = null; p.liegeOp = 0; p.liegeOps = {};
@@ -1356,17 +1864,101 @@ window.FB = window.FB || {};
     const nm = e ? 'Empire of ' + FBDATA.empires[e].name
              : k ? 'Kingdom of ' + FBDATA.kingdoms[k].name
              : 'Realm of ' + (me.dyn || me.name);
-    state.realms.player = {
-      id: 'player', name: nm, color: '#f0c840',
-      capital: (p.provs && p.provs[0]) || p.provinceId,
-      aggression: 0, alive: true, rank: Math.max(1, p.tier - 3), liege: null,
-      ruler: { name: me.name, culture: me.culture, age: FB.ageOf(me, state.date.year), mar: FB.skillOf(me, 'mar') },
-      war: null, op: 0
+    const old = state.realms.player;
+    const generation = old && old.ruler && old.ruler.generation !== undefined
+      ? old.ruler.generation : 1;
+    const r = old || { id: 'player', color: '#f0c840', aggression: 0, war: null, op: 0 };
+    r.name = nm;
+    r.capital = (p.provs && p.provs[0]) || p.provinceId;
+    r.alive = true;
+    r.rank = Math.max(1, p.tier - 3);
+    r.liege = p.liege || null;
+    r.ruler = {
+      name: me.name, sex: me.sex, culture: me.culture,
+      age: FB.ageOf(me, state.date.year), mar: FB.skillOf(me, 'mar'),
+      generation: generation
     };
-    for (const pid of (p.provs || [])) { state.owner[pid] = 'player'; state.holder[pid] = 'player'; }
-    p.liege = null;
+    const playerHeirs = FB.heirsOf ? FB.heirsOf(state) : [];
+    r.succession = r.succession || { playerDynasty: true };
+    r.succession.playerDynasty = true;
+    r.succession.rulerGeneration = generation;
+    r.succession.heirCharId = playerHeirs.length ? playerHeirs[0].id : null;
+    state.realms.player = r;
+    const sovereign = r.liege ? FB.topRealm(state, r.liege) : 'player';
+    for (const pid of (p.provs || [])) {
+      state.owner[pid] = sovereign;
+      state.holder[pid] = 'player';
+    }
+    FB.invalidateRealmCache();
+    for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = sovereign;
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+  };
+
+  /* Join an inherited realm to the protagonist's landed realm. The inherited
+     title's demesne comes into hand, its vassals reattach intact, and outgoing
+     wars end in white peace. Sovereign inheritance makes the joined realm
+     sovereign; a vassal inheritance preserves the inherited liege. */
+  FB.absorbRealm = function (state, rid, rulerChar) {
+    const inherited = state.realms[rid];
+    if (!inherited || !inherited.alive || rid === 'player') return false;
+    const p = state.player;
+    const sovereignTitle = !inherited.liege;
+    const inheritedLiege = inherited.liege || null;
+    if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
+    const mine = state.realms.player;
+    if (sovereignTitle) {
+      p.liege = null;
+      mine.liege = null;
+    } else if (mine.rank < inherited.rank || !mine.liege) {
+      p.liege = inheritedLiege;
+      mine.liege = inheritedLiege;
+    }
+    const demesne = FB.realmHeldCounties(state, rid).slice();
+    p.provs = p.provs || [];
+    for (const pid of demesne) {
+      if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
+      state.holder[pid] = 'player';
+    }
+    for (const vid in state.realms) {
+      if (vid !== 'player' && state.realms[vid].liege === rid) state.realms[vid].liege = 'player';
+    }
+    inherited.war = null;
+    for (const otherId in state.realms) {
+      const other = state.realms[otherId];
+      if (other && other.war && other.war.enemy === rid) other.war = null;
+    }
+    inherited.alive = false;
+    FB.breakAlliance(state, rid);
+    const oldRank = mine.rank || Math.max(1, p.tier - 3);
+    mine.rank = Math.max(oldRank, inherited.rank || 1);
+    p.tier = Math.max(p.tier, mine.rank + 3);
+    if ((inherited.rank || 0) >= oldRank) {
+      mine.name = inherited.name;
+      mine.color = inherited.color || mine.color;
+      mine.capital = inherited.capital || mine.capital;
+    }
+    mine.ruler = {
+      name: rulerChar ? rulerChar.name : state.chars[p.charId].name,
+      sex: rulerChar ? rulerChar.sex : state.chars[p.charId].sex,
+      culture: rulerChar ? rulerChar.culture : state.chars[p.charId].culture,
+      age: FB.ageOf(rulerChar || state.chars[p.charId], state.date.year),
+      mar: FB.skillOf(rulerChar || state.chars[p.charId], 'mar'),
+      generation: (mine.ruler && mine.ruler.generation !== undefined ? mine.ruler.generation : 1)
+    };
+    const top = mine.liege ? FB.topRealm(state, mine.liege) : 'player';
+    for (const pid in state.owner) {
+      const h = state.holder && state.holder[pid];
+      if (h === 'player' || (h && underPlayer(state, h))) state.owner[pid] = top;
+      else if (sovereignTitle && state.owner[pid] === rid) state.owner[pid] = 'player';
+    }
+    FB.invalidateRealmCache();
+    FB.checkTierPromotions(state);
+    if (FB.councilEnsure && p.tier >= 6) FB.councilEnsure(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.news(state, FB.msg('news.world.realm_inherited',
+      '👑 {realm} joins your rule by rightful succession.', { realm: inherited.name }));
+    return true;
   };
 
   /* how many of the given counties the player personally holds */
@@ -1499,7 +2091,11 @@ window.FB = window.FB || {};
       if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive && p.liege !== bh) p.liege = bh;
     }
     const n = p.provs ? p.provs.length : 0;
-    const indep = state.realms.player && state.realms.player.alive;
+    if (n && p.tier >= 4 && (!state.realms.player || !state.realms.player.alive)) FB.foundPlayerRealm(state);
+    if (state.realms.player && state.realms.player.alive) {
+      state.realms.player.liege = p.liege || null;
+    }
+    const indep = FB.isPlayerSovereign(state);
     // a liege must outrank his man (a count answers to a duke, a duke to a
     // king): older grants could leave the player kneeling to a mere peer —
     // walk up the chain to the first lord of truly higher rank
@@ -1527,7 +2123,7 @@ window.FB = window.FB || {};
         state.peakTitleData = titleData;
       }
       p.prestige += 30 * newTier;
-      if (indep) FB.foundPlayerRealm(state); // restyle the realm at its new dignity
+      FB.foundPlayerRealm(state); // restyle the landed realm at its new dignity
       if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
     }
     if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);

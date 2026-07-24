@@ -1,5 +1,37 @@
 # Wars
 
+## Causes and defensive alliances
+
+Player offensive wars require a semantic cause. `FB.warCauses(state)` returns cause
+records rather than unrestricted adjacent county ids. A new county war needs a bordering
+county inside a de jure duchy, kingdom, or empire the player actually holds (the most
+specific title wins), or the player's one fabricated county claim. Pacts and alliances
+remain hard declaration blocks. `FB.warTargets` and string calls to
+`FB.startPlayerWar` remain compatibility surfaces, while a new war stores the selected
+record in `player.war.casus`. Old in-progress wars without that field keep their legacy
+capture behavior.
+
+The exceptional `restoration` cause belongs to one displaced rightful crowned
+protagonist. It ignores adjacency, follows the usurper realm's current capital through
+the usual field campaign and three-step siege, and on victory absorbs the current realm
+and its vassal hierarchy intact. Defeat does not consume the right. Independence remains
+its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
+store only a descriptive `border` cause.
+
+Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
+canonical realm pairs with their source and both ruler-generation stamps, and each realm
+may have only one ally. Partners cannot attack each other; a ruler change expires the
+compact. Peaceful neighboring same-faith-group sovereign kingdoms and empires receive a
+rare yearly opportunity to ally. Independent player kings and emperors can instead
+succeed with a 25-gold envoy at opinion 60+, or gain an alliance from a royal marriage
+to the adjacent sovereign court.
+
+When an allied realm defends, an available ally contributes 25% of its ordinary host,
+capped at 50% of the defender's base host. The men are folded into the defending host's
+levy but remain separately recorded for display. An ally already at war contributes
+nothing. The same effective defensive strength informs AI targeting and abstract yearly
+resolution; there are no allied hosts, calls to arms, chained alliances, or shared peace.
+
 **Wars put hosts on the map.** `js/armies.js` keeps `state.armies`: one field host per
 sovereign at war (levies, with hired mercenary companies folded into the player's), each
 standing in or marching between provinces. AI sovereigns raise automatically when a war

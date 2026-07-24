@@ -230,12 +230,37 @@ window.FB = window.FB || {};
     delete state.roles.spouse;
   };
 
+  FB.endRoyalCompact = function (state, sp) {
+    const compact = state.player.royalCompact;
+    if (!compact) return;
+    if (sp && compact.charId && compact.charId !== sp.id) return;
+    const alliance = FB.allianceOf ? FB.allianceOf(state, 'player') : null;
+    if (alliance && alliance.source === 'royal_marriage' &&
+        (alliance.a === compact.realmId || alliance.b === compact.realmId)) {
+      FB.breakAlliance(state, 'player', compact.realmId);
+    }
+    state.player.royalCompact = null;
+  };
+
+  FB.royalCompactOf = function (state) {
+    const compact = state.player.royalCompact;
+    if (!compact) return null;
+    const me = state.chars[state.player.charId];
+    const sp = state.chars[compact.charId];
+    if (!me || !sp || sp.dead || !((me.spouseId === sp.id) || (sp.spouseId === me.id))) {
+      FB.endRoyalCompact(state);
+      return null;
+    }
+    return compact;
+  };
+
   /* Dissolve a marriage (divorce or annulment — the caller pays the costs
      and tells the story). Children and their claims are untouched. */
   FB.doDivorce = function (state, spId) {
     const me = state.chars[state.player.charId];
     const sp = state.chars[spId];
     if (!sp) return;
+    FB.endRoyalCompact(state, sp);
     if (me.spouseId === sp.id) me.spouseId = null;
     if (sp.spouseId === me.id) sp.spouseId = null;
     if (state.roles.spouse === sp.id) delete state.roles.spouse;
@@ -250,9 +275,12 @@ window.FB = window.FB || {};
      but not yet wed for returns to the player's coffers. */
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
+    const me = state.chars[state.player.charId];
+    if (me && (me.spouseId === c.id || c.spouseId === me.id)) FB.endRoyalCompact(state, c);
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
+    if (FB.royalCharDied) FB.royalCharDied(state, c);
     if (c.betrothedId && c.dowryAsk) {
       state.player.gold += c.dowryAsk;
       delete c.dowryAsk;
@@ -280,6 +308,8 @@ window.FB = window.FB || {};
   FB.canCourt = function (state, c) {
     const me = state.chars[state.player.charId];
     if (!c || c.dead || c.id === me.id) return false;
+    if (c.royalLine && FB.royalCompactOf(state)) return false;
+    if (FB.royalCloseKin && FB.royalCloseKin(state, me, c)) return false;
     const y = state.date.year;
     if (FB.ageOf(me, y) < 16 || FB.ageOf(c, y) < 16) return false;
     if (c.sex === me.sex) return false;
@@ -974,8 +1004,20 @@ window.FB = window.FB || {};
         else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
         if (me.traits.indexOf('comely') >= 0) c += 0.08;
         if (me.traits.indexOf('homely') >= 0) c -= 0.08;
+        if (s && s.royalLine) {
+          c += FB.realmOpinionOf(state, s.royalLine.realmId) / 400;
+          return FB.clamp(c, 0.05, 0.9);
+        }
         return FB.clamp(c, 0.05, 0.95);
       }
+      case 'fabricate_claim': {
+        const c = 0.30 + FB.skillOf(me, 'int') * 0.03 +
+          FB.skillOf(me, 'lea') * 0.01 + p.prestige / 1000;
+        return FB.clamp(c, 0.10, 0.90);
+      }
+      case 'plot_discovery':
+        return p.plot && p.plot.id === 'fabricate_claim'
+          ? FB.namedChance(state, 'fabricate_claim') : 0.35;
       case 'rival_peace': {
         const rival = FB.getRole(state, 'rival', false);
         let c = 0.45 + FB.skillOf(me, 'dip') * 0.02;
@@ -1670,6 +1712,23 @@ window.FB = window.FB || {};
     p.courtingId = null;
     delete p.flags.courting;
     p.marriedAt = state.turn;
+    if (s.royalLine) {
+      const rs = FB.ensureRealmSuccession(state, s.royalLine.realmId);
+      p.royalCompact = {
+        realmId: s.royalLine.realmId,
+        memberId: s.royalLine.memberId,
+        charId: s.id,
+        transmitsCrown: !!(rs && rs.heirId === s.royalLine.memberId),
+        madeTurn: state.turn
+      };
+      if (FB.maybeRoyalMarriageAlliance) FB.maybeRoyalMarriageAlliance(state, s.royalLine.realmId);
+      FB.news(state, FB.msg('news.event.royal_marriage',
+        '👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown.',
+        {
+          name: s.name,
+          realm: state.realms[s.royalLine.realmId] ? state.realms[s.royalLine.realmId].name : ''
+        }));
+    }
     // the match settles a dowry, and rank rubs off both ways
     const B = FBDATA.balance;
     const gap = FB.stationOf(s) - FB.playerStation(state);
@@ -1771,6 +1830,7 @@ window.FB = window.FB || {};
      child of that blood, a claim to press (events in events_common.js).
      Spouses without an explicit station (older saves) pass in silence. */
   FB.spouseDied = function (state, sp) {
+    FB.endRoyalCompact(state, sp);
     if (sp.station === undefined || sp.station === null) return;
     if (sp.station - FB.playerStation(state) <= 0) return;
     const me = state.chars[state.player.charId];
@@ -1875,9 +1935,12 @@ window.FB = window.FB || {};
       if (p.tier < 4) p.tier = 4;
       FB.transferProvince(state, p.provinceId, 'player');
     }
+    p.liege = null;
+    if (state.realms.player) state.realms.player.liege = null;
     FB.foundPlayerRealm(state);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
-      p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
+      p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0,
+        defending: true, casus: { type: 'independence' } };
       FB.news(state, FB.msg('news.event.independence_war',
         '⚔ {realm} will not let you go without a fight!',
         { realm: state.realms[oldLiege].name }));
@@ -1922,6 +1985,7 @@ window.FB = window.FB || {};
         p.liege = old.liege || null;
         p.liegeOp = (p.liege && p.liegeOps && p.liegeOps[p.liege]) || 0;
         if (p.liege && p.liegeOps) delete p.liegeOps[p.liege];
+        FB.foundPlayerRealm(state);
         FB.invalidateRealmCache();
         // a granter left holding no county at all dissolves — any vassals of
         // his reattach upward, exactly as in FB.transferProvince
@@ -1997,6 +2061,7 @@ window.FB = window.FB || {};
     if (!r || !r.alive || !p.liege || rid === p.liege) return;
     const old = p.liege;
     p.liege = rid;
+    if (state.realms.player && state.realms.player.alive) state.realms.player.liege = rid;
     FB.adjustLiegeOp(state, rid, 15);
     FB.adjustLiegeOp(state, old, -25);
     p.prestige += 8;

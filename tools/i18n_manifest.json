@@ -1,5 +1,13 @@
 {
   "entries": {
+    "action.abandon_claim.label.default": {
+      "context": "action abandon_claim, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 Abandon fabricated claim"
+      }
+    },
     "action.adopt_tech.label.default": {
       "context": "action adopt_tech, visible label.",
       "glossary": [],
@@ -12396,6 +12404,84 @@
         "text": "The Web Trembles"
       }
     },
+    "event.plot_fabricate_claim.options.0.desc.default": {
+      "context": "Event plot_fabricate_claim, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Intrigue, learning, and renown must carry a document older-looking than it is."
+      }
+    },
+    "event.plot_fabricate_claim.options.0.failure.text.default": {
+      "context": "Event plot_fabricate_claim, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A witness changes his story. The seals are named false, and the charter is torn in open court."
+      }
+    },
+    "event.plot_fabricate_claim.options.0.label.default": {
+      "context": "Event plot_fabricate_claim, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Present the charter."
+      }
+    },
+    "event.plot_fabricate_claim.options.0.success.effects.log.default": {
+      "context": "Durable event log for plot_fabricate_claim, authored option 0, success.effects.",
+      "glossary": [
+        "cname"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Fabricated a claim to {cname}."
+      }
+    },
+    "event.plot_fabricate_claim.options.0.success.text.default": {
+      "context": "Event plot_fabricate_claim, authored option 0, success text, branch default.",
+      "glossary": [
+        "cname"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The objections tangle and fail. Your right to {cname} is entered into the rolls."
+      }
+    },
+    "event.plot_fabricate_claim.options.1.desc.default": {
+      "context": "Event plot_fabricate_claim, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Abandon the scheme without testing the lie."
+      }
+    },
+    "event.plot_fabricate_claim.options.1.label.default": {
+      "context": "Event plot_fabricate_claim, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Burn it before anyone reads it."
+      }
+    },
+    "event.plot_fabricate_claim.text.default": {
+      "context": "Event plot_fabricate_claim, text, faith branch default.",
+      "glossary": [
+        "cname"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The ink is dry, the seals are warm, and three well-paid witnesses remember that {cname} belonged to your forebears. Only the final recital before the court remains."
+      }
+    },
+    "event.plot_fabricate_claim.title.default": {
+      "context": "Event plot_fabricate_claim, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A Charter from the Dust"
+      }
+    },
     "event.plot_locked_chest.options.0.desc.default": {
       "context": "Event plot_locked_chest, authored option 0, desc, branch default.",
       "glossary": [],
@@ -20328,6 +20414,26 @@
         "text": "Corrected priests on doctrine; has presumably gone to check."
       }
     },
+    "news.action.alliance_failure": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🕊 {realm} receives the gifts but refuses the defensive compact."
+      }
+    },
+    "news.action.alliance_success": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🤝 {realm} accepts your envoy: your crowns will defend one another until either ruler dies."
+      }
+    },
     "news.action.alms": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -20362,6 +20468,34 @@
       "location": "js/actions.js",
       "source": {
         "text": "🏗 {building} rises in {settlement}, {province}."
+      }
+    },
+    "news.action.claim_abandoned": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 You abandon the claim to {province}."
+      }
+    },
+    "news.action.claim_fabricated": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 Witnesses and ink establish your claim to {province}."
+      }
+    },
+    "news.action.claim_failed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 The false witnesses unravel. No claim remains, and your name suffers."
       }
     },
     "news.action.county_bought": {
@@ -20515,6 +20649,16 @@
         "text": "🏡 The consolidated lands at {settlement} are declared a manor. The household joins the gentry."
       }
     },
+    "news.action.marriage_alliance": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🤝 The marriage binds your crown and {realm} in a defensive alliance."
+      }
+    },
     "news.action.mediate_failure": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -20539,6 +20683,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "🕸 A plot is set in motion: {plot}."
+      }
+    },
+    "news.action.plot_target_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🕸 The plot ends: {province} is no longer a valid target."
       }
     },
     "news.action.scheme_rival_failure": {
@@ -21142,6 +21296,17 @@
       "location": "js/events.js",
       "source": {
         "text": "💔 The old pledge to {name} is quietly set aside."
+      }
+    },
+    "news.event.royal_marriage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "realm"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown."
       }
     },
     "news.event.vassal_released": {
@@ -21863,6 +22028,17 @@
         "text": "⚡ {name} now counts you an enemy."
       }
     },
+    "news.social.royal_courting_begins": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🌷 You begin courting {name} of {realm}."
+      }
+    },
     "news.social.undermine_failure": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -21907,6 +22083,14 @@
       "location": "js/world.js",
       "source": {
         "text": "🏰 {province} is yours by conquest!"
+      }
+    },
+    "news.war.crown_restored": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "👑 The usurper’s crown and vassals return intact to your rightful rule."
       }
     },
     "news.war.defensive_victory": {
@@ -22144,6 +22328,17 @@
         "text": "🔥 War! {attacker} marches against {defender}."
       }
     },
+    "news.world.alliance_formed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "ally",
+        "realm"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🤝 {realm} and {ally} bind themselves in a defensive alliance."
+      }
+    },
     "news.world.breakaway": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -22279,6 +22474,16 @@
         "text": "⚔ {attacker} wars against {defender}."
       }
     },
+    "news.world.realm_inherited": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "👑 {realm} joins your rule by rightful succession."
+      }
+    },
     "news.world.ruler_succeeds": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -22376,6 +22581,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Whispers at Court"
+      }
+    },
+    "plot.fabricate_claim.desc.default": {
+      "context": "plot fabricate_claim, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Buy witnesses, copy charters, and give a neighboring county a lawful-looking past."
+      }
+    },
+    "plot.fabricate_claim.name.default": {
+      "context": "plot fabricate_claim, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Fabricate a County Claim"
       }
     },
     "plot.locked_chest.desc.default": {
@@ -23025,6 +23246,16 @@
         "text": "Kin by marriage"
       }
     },
+    "src.01ad87d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "(made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it)."
+      }
+    },
     "src.01b4638d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23537,6 +23768,16 @@
         "text": "The great mortality walks, and it stopped here."
       }
     },
+    "src.05a292c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Intrigue, learning, and renown must carry a document older-looking than it is."
+      }
+    },
     "src.05af28ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23727,6 +23968,16 @@
         "text": "Uncle"
       }
     },
+    "src.06abd28f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No neighboring court has an available offer."
+      }
+    },
     "src.06b0b078": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23855,6 +24106,16 @@
       ],
       "source": {
         "text": "A slow market day. You barely cover the road."
+      }
+    },
+    "src.075f92de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "A baron must first hold a county before waging a foreign war."
       }
     },
     "src.076020b5": {
@@ -23989,6 +24250,16 @@
         "text": "Face value {face} nominal coin; its value in gold moves with prices."
       }
     },
+    "src.082da04d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "envoy compact"
+      }
+    },
     "src.0832ec51": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24118,6 +24389,16 @@
       ],
       "source": {
         "text": "🎓 Choose your education focus…"
+      }
+    },
+    "src.08d9fa82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Burn it before anyone reads it."
       }
     },
     "src.08dbc0e5": {
@@ -24360,6 +24641,16 @@
         "text": "Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations."
       }
     },
+    "src.0a49959d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Renounce your claim to {province}; the slot becomes free for another plot."
+      }
+    },
     "src.0a4a70aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24378,6 +24669,16 @@
       ],
       "source": {
         "text": "A wound — it knits as your strength returns, a year or so at most."
+      }
+    },
+    "src.0a5ea554": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}"
       }
     },
     "src.0a60363a": {
@@ -24568,6 +24869,26 @@
       ],
       "source": {
         "text": "The grain jar echoes. Your household chews bark-bread and watches the snow."
+      }
+    },
+    "src.0ba81191": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "daughter"
+      }
+    },
+    "src.0bca4656": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join."
       }
     },
     "src.0bd208af": {
@@ -24798,6 +25119,16 @@
       ],
       "source": {
         "text": "Old grudges prove stronger than old custom. Half the village will not stand beside the other half."
+      }
+    },
+    "src.0d61ff13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "👑 {realm} joins your rule by rightful succession."
       }
     },
     "src.0d7af261": {
@@ -25069,6 +25400,16 @@
       ],
       "source": {
         "text": "Withdraw the plea."
+      }
+    },
+    "src.0f9572ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Defensive alliance"
       }
     },
     "src.0fa70fa1": {
@@ -26294,6 +26635,16 @@
         "text": "“I broke worse at your age.”"
       }
     },
+    "src.16ab5d12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " · designated heir"
+      }
+    },
     "src.16ac166f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26545,16 +26896,6 @@
       ],
       "source": {
         "text": "Their word is iron."
-      }
-    },
-    "src.18683219": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Gifts and good words buy years of quiet borders. (10 gold)"
       }
     },
     "src.187d748a": {
@@ -27147,6 +27488,16 @@
         "text": "Fire takes a neighbor’s roof in a hard wind. You and {rival} arrive from opposite lanes, each with people and ladders, and find yourselves holding the same sagging beam while sparks fall around you."
       }
     },
+    "src.1caf5f02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Disputed crown"
+      }
+    },
     "src.1cb85199": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27227,6 +27578,16 @@
         "text": "🏠 {holding} now belongs to the household."
       }
     },
+    "src.1d7f9104": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The objections tangle and fail. Your right to {cname} is entered into the rolls."
+      }
+    },
     "src.1d83b6ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27305,16 +27666,6 @@
       ],
       "source": {
         "text": "Promoted to sergeant."
-      }
-    },
-    "src.1dc69bb9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Choose a neighboring land to seize by force."
       }
     },
     "src.1df9ed64": {
@@ -27455,6 +27806,16 @@
       ],
       "source": {
         "text": "A trader down on his luck offers a sturdy ox for a quarter its worth. His eyes dart as he talks."
+      }
+    },
+    "src.1edb8fbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "fabricated claim"
       }
     },
     "src.1eee0dc9": {
@@ -27625,6 +27986,16 @@
       ],
       "source": {
         "text": "⚔ {province} has fallen to {winner}."
+      }
+    },
+    "src.2032b121": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "designated heir"
       }
     },
     "src.20526ce0": {
@@ -29350,6 +29721,16 @@
         "text": "Paste a start code or world seed first."
       }
     },
+    "src.2b355b1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "kinsman"
+      }
+    },
     "src.2b81e976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29478,6 +29859,16 @@
       ],
       "source": {
         "text": "Fortune smiles."
+      }
+    },
+    "src.2c2188ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown."
       }
     },
     "src.2c31097c": {
@@ -29930,6 +30321,16 @@
         "text": "Out of the Earth"
       }
     },
+    "src.2ec5ddf7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "(including ~{men} from {ally})"
+      }
+    },
     "src.2ed50618": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29998,6 +30399,16 @@
       ],
       "source": {
         "text": "👑 {name}: you hold the majority, {held}."
+      }
+    },
+    "src.2f4c33dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "de jure right"
       }
     },
     "src.2f50d04f": {
@@ -30381,6 +30792,16 @@
       ],
       "source": {
         "text": "The local {holy} arrives in state, praising your piety at length — and, at greater length, the leaking roof of the great {temple}."
+      }
+    },
+    "src.3147b3d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This creates a dynastic tie, but this child does not currently transmit the crown."
       }
     },
     "src.317a8b92": {
@@ -33819,6 +34240,16 @@
         "text": "The granary fed {province} through the famine."
       }
     },
+    "src.47a68156": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🕊 {realm} receives the gifts but refuses the defensive compact."
+      }
+    },
     "src.47bb74bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34061,6 +34492,16 @@
         "text": "{sex} of {age}"
       }
     },
+    "src.4944da7c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Overlord"
+      }
+    },
     "src.494732b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34069,6 +34510,16 @@
       ],
       "source": {
         "text": "{rival} pushes the purse back. “Silver cannot buy what was taken.” The go-between has no peace to witness."
+      }
+    },
+    "src.4952cb4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "From baron upward the Deeds tab always shows"
       }
     },
     "src.49569c1a": {
@@ -34280,6 +34731,16 @@
       ],
       "source": {
         "text": "Ask {lord} for lands and a banner."
+      }
+    },
+    "src.4a69e443": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "An alliance envoy requires 25 gold in gifts."
       }
     },
     "src.4a7a2c3a": {
@@ -34613,6 +35074,16 @@
         "text": "{count} levyman"
       }
     },
+    "src.4c6a74cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The designated heir can transmit the crown to your shared branch."
+      }
+    },
     "src.4c6b8829": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34923,6 +35394,16 @@
         "text": "Sweat is the surest inheritance."
       }
     },
+    "src.4e805789": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You are already at war."
+      }
+    },
     "src.4e93c80e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35231,6 +35712,16 @@
       ],
       "source": {
         "text": "Choose Your Conquest"
+      }
+    },
+    "src.50769973": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{ruler} · opinion {opinion} · chance ~{chance}% · their aid would add up to ~{men} defenders"
       }
     },
     "src.50827aa6": {
@@ -35977,6 +36468,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/events.js"
       ],
       "source": {
@@ -36413,6 +36905,16 @@
         "text": "Look to your own hearth."
       }
     },
+    "src.57595d4c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Breakaway war"
+      }
+    },
     "src.577a9737": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36501,6 +37003,26 @@
       ],
       "source": {
         "text": "📜 Petition for a barony"
+      }
+    },
+    "src.57ee15d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "· designated heir"
+      }
+    },
+    "src.57efb27f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "another realm"
       }
     },
     "src.581f22b5": {
@@ -37083,6 +37605,16 @@
         "text": "Took the enemy’s tribute and ended the war."
       }
     },
+    "src.5b77f5fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
+      }
+    },
     "src.5b8313d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37392,6 +37924,16 @@
       ],
       "source": {
         "text": "A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this."
+      }
+    },
+    "src.5d199cff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · chance ~{chance}%"
       }
     },
     "src.5d1c4898": {
@@ -37777,6 +38319,16 @@
       ],
       "source": {
         "text": "The sermon will keep; so will the bench."
+      }
+    },
+    "src.5fdd0d67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🤝 {realm} and {ally} bind themselves in a defensive alliance."
       }
     },
     "src.5feb0bca": {
@@ -38511,6 +39063,16 @@
         "text": "Patient knots might fill a thin pot."
       }
     },
+    "src.647af104": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Held by {realm}"
+      }
+    },
     "src.648224f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38529,6 +39091,16 @@
       ],
       "source": {
         "text": "Take it, and remember."
+      }
+    },
+    "src.64a37800": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 {men} allied defenders from {realm}"
       }
     },
     "src.64ae0a58": {
@@ -39211,6 +39783,16 @@
         "text": "💍 {name} enters your household as your fifth wife."
       }
     },
+    "src.68a06772": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A peace envoy carries 10 gold in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying 25 gold; either offer uses the same envoy odds."
+      }
+    },
     "src.68c3e96d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39360,6 +39942,16 @@
       ],
       "source": {
         "text": "Your gift pleases {name}. (regard {regard})"
+      }
+    },
+    "src.697495bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " (including ~{men} from {ally})"
       }
     },
     "src.69811ea2": {
@@ -40472,6 +41064,16 @@
         "text": "Keep the hearth, keep the faith, and pray the war gives him back to ask again."
       }
     },
+    "src.702cb746": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Peace pact with {realm}"
+      }
+    },
     "src.7042145c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40601,6 +41203,16 @@
       ],
       "source": {
         "text": "Commit {amount} gold"
+      }
+    },
+    "src.70ee93dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fabricated claim"
       }
     },
     "src.70efcabf": {
@@ -41035,6 +41647,16 @@
         "text": "Merchant advance"
       }
     },
+    "src.73b3b6c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again."
+      }
+    },
     "src.73d62940": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41093,6 +41715,16 @@
       ],
       "source": {
         "text": "A sentry’s cry, a running fight in the dark. You crawl back to the lines bleeding."
+      }
+    },
+    "src.741f83bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 Witnesses and ink establish your claim to {province}."
       }
     },
     "src.742cf178": {
@@ -41526,6 +42158,16 @@
         "text": "💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while."
       }
     },
+    "src.76b82c68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "in the succession"
+      }
+    },
     "src.76d9061a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41705,6 +42347,16 @@
       ],
       "source": {
         "text": "{rival} comes with witnesses and a careful proposal of ṣulḥ: speak the claims plainly, settle them fairly, and swear before {god} that the quarrel is ended."
+      }
+    },
+    "src.77c8407d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "👑 Royal line of {realm} · {status}"
       }
     },
     "src.77e3740b": {
@@ -42026,6 +42678,16 @@
       ],
       "source": {
         "text": "Perhaps no one is watching."
+      }
+    },
+    "src.79b07462": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your defensive alliance forbids an attack on the only realm you have cause against."
       }
     },
     "src.79bdcddc": {
@@ -42390,6 +43052,16 @@
         "text": "A Door Half-Shut"
       }
     },
+    "src.7be902c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "A sworn peace pact protects the only realm you have cause against."
+      }
+    },
     "src.7bec1f79": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42588,6 +43260,16 @@
       ],
       "source": {
         "text": "Hire your blade out."
+      }
+    },
+    "src.7d7a0380": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🤝 {realm} accepts your envoy: your crowns will defend one another until either ruler dies."
       }
     },
     "src.7d87d9a6": {
@@ -44611,16 +45293,6 @@
         "text": "Reputation among the folk"
       }
     },
-    "src.8919cdd3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "keep the host standing on the prize and press the siege at each season’s war council — after three, the county is yours. Field victories only make the enemy sue for peace: take the tribute, or press on for the walls. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. And wars bleed gold and men: past eight seasons, exhaustion ends them with nothing gained."
-      }
-    },
     "src.891f8eb3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46183,6 +46855,16 @@
         "text": "Make them shake hands like children."
       }
     },
+    "src.9260ec39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
+      }
+    },
     "src.928f2551": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46361,6 +47043,16 @@
       ],
       "source": {
         "text": "A show of force on the roads."
+      }
+    },
+    "src.93e262cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "An envoy without 10 gold in gifts insults his host."
       }
     },
     "src.9408f4b6": {
@@ -46551,6 +47243,16 @@
       ],
       "source": {
         "text": "Too poor to feast anyone."
+      }
+    },
+    "src.956a52c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} · {relation}, age {age}{heir}"
       }
     },
     "src.95815ae0": {
@@ -47900,6 +48602,16 @@
         "text": "Find words older than the reeve."
       }
     },
+    "src.9d5089f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the Target"
+      }
+    },
     "src.9d58ef81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47988,16 +48700,6 @@
       ],
       "source": {
         "text": "Sheikh"
-      }
-    },
-    "src.9dcbb29b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Land is taken only by siege: march your host onto the prize and keep it standing there — press the siege at each season’s war council, and after three the county is yours. Field victories bring the enemy to the table, nothing more."
       }
     },
     "src.9de5a859": {
@@ -48540,6 +49242,26 @@
         "text": "A Suit Against a Neighbor"
       }
     },
+    "src.a0624a21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Royal marriage compact"
+      }
+    },
+    "src.a095c50f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Fabricate a County Claim"
+      }
+    },
     "src.a099f546": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48638,6 +49360,16 @@
       ],
       "source": {
         "text": "Free lessons from the safe side of the yard."
+      }
+    },
+    "src.a112bb69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Abandon the scheme without testing the lie."
       }
     },
     "src.a129ff10": {
@@ -49088,16 +49820,6 @@
       ],
       "source": {
         "text": "⌛ A payment is missed. The lender adds the signed penalty and grants two more seasons."
-      }
-    },
-    "src.a44569f3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No reachable enemy lands border yours."
       }
     },
     "src.a46018c9": {
@@ -50143,16 +50865,6 @@
         "text": "The Infirmary"
       }
     },
-    "src.aae95f09": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "From count upward the Deeds tab offers"
-      }
-    },
     "src.aaf11603": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50946,6 +51658,16 @@
         "text": "kB)"
       }
     },
+    "src.b056abf7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🤝 The marriage binds your crown and {realm} in a defensive alliance."
+      }
+    },
     "src.b05896b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51094,6 +51816,16 @@
       ],
       "source": {
         "text": "Untroubled by thought; slipped away in the absence of one."
+      }
+    },
+    "src.b128635c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": ", with the exact reason when it is locked. A county war requires a bordering"
       }
     },
     "src.b13b8f84": {
@@ -51597,6 +52329,16 @@
         "text": "someone"
       }
     },
+    "src.b45b00e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No bordering county lies within a title you hold, and you have no fabricated claim."
+      }
+    },
     "src.b46a9a0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51768,6 +52510,16 @@
         "text": "Learn the spear as if your life depends on it."
       }
     },
+    "src.b5715912": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Defensive alliance with {realm}"
+      }
+    },
     "src.b572b269": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51906,16 +52658,6 @@
       ],
       "source": {
         "text": "your late spouse"
-      }
-    },
-    "src.b6552bbf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Held by {realm} ({counties}) · they can field ~{theirs} against your ~{yours}"
       }
     },
     "src.b65f9bd3": {
@@ -52329,6 +53071,16 @@
         "text": "The reeves report it carefully, eyes down: the villages are sullen, the tax carts need armed escorts, and an old song about kinder lords is sung again in the taverns of {province}."
       }
     },
+    "src.b94b7eca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fabricated county claim"
+      }
+    },
     "src.b9688249": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52347,6 +53099,16 @@
       ],
       "source": {
         "text": "The lords vote — your voice carries as far as your rank and name."
+      }
+    },
+    "src.b98e9361": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You hold no landed realm from which to wage war."
       }
     },
     "src.b9a1e89a": {
@@ -52600,6 +53362,16 @@
         "text": "You kneel before {rulername} of {rname} and lay out your suit: your own lord is unjust, you say, and you would serve a worthier hand — his."
       }
     },
+    "src.bb701ce4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🌷 You begin courting {name} of {realm}."
+      }
+    },
     "src.bb86e512": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52668,6 +53440,16 @@
       ],
       "source": {
         "text": "Man-at-arms"
+      }
+    },
+    "src.bbd724ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A witness changes his story. The seals are named false, and the charter is torn in open court."
       }
     },
     "src.bbd88096": {
@@ -54245,6 +55027,16 @@
         "text": "Freedom, and no friends at the bench."
       }
     },
+    "src.c644582b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Renounce the claim."
+      }
+    },
     "src.c6477849": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54433,6 +55225,16 @@
       ],
       "source": {
         "text": "Well-wishers bring gifts to the new couple — a pig, a bolt of cloth, a few coins pressed into your palm."
+      }
+    },
+    "src.c7aff059": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 The false witnesses unravel. No claim remains, and your name suffers."
       }
     },
     "src.c7b1f1d5": {
@@ -54653,16 +55455,6 @@
       ],
       "source": {
         "text": "Festival Day"
-      }
-    },
-    "src.c9977533": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%"
       }
     },
     "src.c9a0730c": {
@@ -54926,6 +55718,16 @@
         "text": "🕯 {province} escheats to the crown — its lord died without an heir."
       }
     },
+    "src.cb7584e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The ink is dry, the seals are warm, and three well-paid witnesses remember that {cname} belonged to your forebears. Only the final recital before the court remains."
+      }
+    },
     "src.cb7e5332": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55026,6 +55828,16 @@
         "text": "Demand a fief back into your own hand. A contented vassal yields; a bitter one answers with spears."
       }
     },
+    "src.cbcf07a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Approach {name} for courtship"
+      }
+    },
     "src.cbd023af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55094,6 +55906,16 @@
       ],
       "source": {
         "text": "Steward of a manor"
+      }
+    },
+    "src.cc41c0e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Present the charter."
       }
     },
     "src.cc501424": {
@@ -55467,6 +56289,16 @@
         "text": "Silver staves off hunger — at the season’s bitter price."
       }
     },
+    "src.ce827f1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Offer a peace pact — or, as an independent king or emperor, one defensive alliance."
+      }
+    },
     "src.ceacdf14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55525,16 +56357,6 @@
       ],
       "source": {
         "text": "Sell it quietly."
-      }
-    },
-    "src.cee6831e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No neighboring court to treat with."
       }
     },
     "src.cf1557ac": {
@@ -56738,6 +57560,16 @@
         "text": "👑 Rank & Realm"
       }
     },
+    "src.d72bd2b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Restore the crown of {title}"
+      }
+    },
     "src.d73aaa15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56816,16 +57648,6 @@
       ],
       "source": {
         "text": "The camp remembers what you forgive."
-      }
-    },
-    "src.d797505b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest."
       }
     },
     "src.d7a1bce1": {
@@ -57150,6 +57972,16 @@
         "text": "Swore a public peace with a rival."
       }
     },
+    "src.d9cadb24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 You abandon the claim to {province}."
+      }
+    },
     "src.d9d8f6b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57448,6 +58280,16 @@
       ],
       "source": {
         "text": "A child of your standing serves at the high table before ruling from behind it: pouring, carrying, and above all listening."
+      }
+    },
+    "src.dbb715bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "👑 The usurper’s crown and vassals return intact to your rightful rule."
       }
     },
     "src.dbc9a075": {
@@ -57900,6 +58742,16 @@
         "text": "Stewardship (tier 3+, once a season):"
       }
     },
+    "src.de5b7361": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "dynastic compact"
+      }
+    },
     "src.de6add76": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57978,6 +58830,16 @@
       ],
       "source": {
         "text": "A Lord Unhorsed"
+      }
+    },
+    "src.ded6ff6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🕸 The plot ends: {province} is no longer a valid target."
       }
     },
     "src.dee56b71": {
@@ -58178,6 +59040,16 @@
       ],
       "source": {
         "text": "The back pays what the purse is spared."
+      }
+    },
+    "src.e0363a7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "son"
       }
     },
     "src.e03779bb": {
@@ -58729,6 +59601,16 @@
       ],
       "source": {
         "text": "Chronicle of {dynasty}"
+      }
+    },
+    "src.e3d78676": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "reigning ruler"
       }
     },
     "src.e3fe5f32": {
@@ -60024,16 +60906,6 @@
         "text": "No new innovation is within reach — prerequisites, or the age itself."
       }
     },
-    "src.ebdce1b2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "An envoy without gifts insults his host."
-      }
-    },
     "src.ebeafb07": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60152,6 +61024,16 @@
       ],
       "source": {
         "text": "Their coin and their stories, if the dice are kind."
+      }
+    },
+    "src.ecba6446": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "through a duchy, kingdom, or empire you hold, or your one"
       }
     },
     "src.ecc0e3ad": {
@@ -60455,6 +61337,26 @@
         "text": "Grievously wounded"
       }
     },
+    "src.ee74299a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A Charter from the Dust"
+      }
+    },
+    "src.ee8e5814": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "royal marriage"
+      }
+    },
     "src.eeac12e7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60525,6 +61427,16 @@
         "text": "Give it to the {temple}."
       }
     },
+    "src.ef1d2283": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Defensive allies - neither realm may attack the other"
+      }
+    },
     "src.ef1d983e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60563,6 +61475,16 @@
       ],
       "source": {
         "text": "The wolf eats what patience costs."
+      }
+    },
+    "src.ef61a875": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Border war"
       }
     },
     "src.ef7114ed": {
@@ -60803,6 +61725,16 @@
       ],
       "source": {
         "text": "Raised to the gentry for valor!"
+      }
+    },
+    "src.f07890f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "kinswoman"
       }
     },
     "src.f088c8c9": {
@@ -61225,6 +62157,16 @@
         "text": "{name} (your mother)"
       }
     },
+    "src.f32ebaba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Buy witnesses, copy charters, and give a neighboring county a lawful-looking past."
+      }
+    },
     "src.f33224cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61353,16 +62295,6 @@
       ],
       "source": {
         "text": "best: {skill} {value}"
-      }
-    },
-    "src.f411ab37": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Man of {age}"
       }
     },
     "src.f42ff828": {
@@ -61806,6 +62738,16 @@
         "text": "Trade in the great market."
       }
     },
+    "src.f6846837": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained."
+      }
+    },
     "src.f69412a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61826,6 +62768,16 @@
         "text": "⚖ Haggle at market"
       }
     },
+    "src.f6a4c0e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "De jure right through {title}"
+      }
+    },
     "src.f6bbaaf6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61844,6 +62796,16 @@
       ],
       "source": {
         "text": "A name in the right ledger opens doors."
+      }
+    },
+    "src.f6cad0a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Press a de jure right, a fabricated county claim, or a crown-restoration right."
       }
     },
     "src.f6d4ebb8": {
@@ -61904,6 +62866,16 @@
       ],
       "source": {
         "text": "Debts called in, rumors seeded, friends bought away."
+      }
+    },
+    "src.f74409ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ruler’s family and succession"
       }
     },
     "src.f756097f": {
@@ -62567,6 +63539,16 @@
         "text": "Days later the horse is “requisitioned for the levy.” You are paid a tenth of its worth."
       }
     },
+    "src.fb96f908": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{realm} · {source} · until either ruler changes · defensive support ~{men}"
+      }
+    },
     "src.fba19319": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62897,16 +63879,6 @@
         "text": "Astonishingly, the lie holds."
       }
     },
-    "src.fdd530b9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Marry and raise children. When you die, you continue as your heir. No heir — no story."
-      }
-    },
     "src.fdda4cf7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63047,6 +64019,16 @@
         "text": "The cheapest available building, when the treasury can spare it."
       }
     },
+    "src.fec360e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 Abandon fabricated claim"
+      }
+    },
     "src.fed64e46": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63147,6 +64129,16 @@
         "text": "Dues owed are dues collected, one way or another."
       }
     },
+    "src.ff3e99b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Fabricated a claim to {cname}."
+      }
+    },
     "src.ff70c1aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63205,6 +64197,16 @@
       ],
       "source": {
         "text": "Hunger is cheaper than grain this season."
+      }
+    },
+    "src.ff965d03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Crown-restoration right"
       }
     },
     "src.ff9a99a6": {
@@ -64689,6 +65691,25 @@
         "text": "Zealous"
       }
     },
+    "ui: (including ~{men} from {ally})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "ally",
+        "men"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": " (including ~{men} from {ally})"
+      }
+    },
+    "ui: · designated heir": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": " · designated heir"
+      }
+    },
     "ui: — your liege": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -64872,14 +65893,6 @@
         "text": "+{men} men to the levy"
       }
     },
-    "ui:10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest."
-      }
-    },
     "ui:10% is added to the signed face and the deadline moves two seasons.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -64898,6 +65911,14 @@
         "text": "A Match for {name}"
       }
     },
+    "ui:A baron must first hold a county before waging a foreign war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "A baron must first hold a county before waging a foreign war."
+      }
+    },
     "ui:A four-season profit-sharing venture: productive risk, with no guaranteed return.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -64912,6 +65933,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "A manor-sized holding is assembled here."
+      }
+    },
+    "ui:A peace envoy carries 10 gold in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying 25 gold; either offer uses the same envoy odds.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A peace envoy carries 10 gold in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying 25 gold; either offer uses the same envoy odds."
       }
     },
     "ui:A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.": {
@@ -64930,12 +65959,28 @@
         "text": "A stranger of real accomplishment."
       }
     },
+    "ui:A sworn peace pact protects the only realm you have cause against.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "A sworn peace pact protects the only realm you have cause against."
+      }
+    },
     "ui:A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the favor. Your dignity still counts land held through vassals.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the favor. Your dignity still counts land held through vassals."
+      }
+    },
+    "ui:A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
       }
     },
     "ui:A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)": {
@@ -65046,6 +66091,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Any direction chosen here remains assigned but is suspended until the war ends."
+      }
+    },
+    "ui:Approach {name} for courtship": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Approach {name} for courtship"
       }
     },
     "ui:Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.": {
@@ -65274,6 +66329,22 @@
         "text": "Chamberlain"
       }
     },
+    "ui:Choose the Target": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the Target"
+      }
+    },
+    "ui:Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
+      }
+    },
     "ui:Chronicle of the realms": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -65418,6 +66489,16 @@
         "text": "Daily focus — continues until changed"
       }
     },
+    "ui:De jure right through {title}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "De jure right through {title}"
+      }
+    },
     "ui:Debase the coinage": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -65456,6 +66537,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Deeds — done at once unless noted"
+      }
+    },
+    "ui:Defensive alliance with {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Defensive alliance with {realm}"
+      }
+    },
+    "ui:Defensive allies - neither realm may attack the other": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Defensive allies - neither realm may attack the other"
       }
     },
     "ui:Demolish {building}": {
@@ -65502,6 +66601,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Dismiss"
+      }
+    },
+    "ui:Disputed crown": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Disputed crown"
       }
     },
     "ui:Done": {
@@ -65552,6 +66659,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting."
+      }
+    },
+    "ui:Fabricated county claim": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fabricated county claim"
       }
     },
     "ui:Face value {face} nominal coin; its value in gold moves with prices.": {
@@ -65731,17 +66846,14 @@
         "text": "Guild standing brings commissions, enterprise access, and better profits."
       }
     },
-    "ui:Held by {realm} ({counties}) · they can field ~{theirs} against your ~{yours}": {
+    "ui:Held by {realm}": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "counties",
-        "realm",
-        "theirs",
-        "yours"
+        "realm"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Held by {realm} ({counties}) · they can field ~{theirs} against your ~{yours}"
+        "text": "Held by {realm}"
       }
     },
     "ui:Held directly: {held} of {cap}.": {
@@ -65893,14 +67005,6 @@
         "text": "Kin and gossips name three who would hear your suit:"
       }
     },
-    "ui:Land is taken only by siege: march your host onto the prize and keep it standing there — press the siege at each season’s war council, and after three the county is yours. Field victories bring the enemy to the table, nothing more.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Land is taken only by siege: march your host onto the prize and keep it standing there — press the siege at each season’s war council, and after three the county is yours. Field victories bring the enemy to the table, nothing more."
-      }
-    },
     "ui:Language": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -65947,16 +67051,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Loan against revenues"
-      }
-    },
-    "ui:Man of {age}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "age"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Man of {age}"
       }
     },
     "ui:Map filter: {mode} (R)": {
@@ -66037,6 +67131,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No benefit · no upkeep"
+      }
+    },
+    "ui:No bordering county lies within a title you hold, and you have no fabricated claim.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "No bordering county lies within a title you hold, and you have no fabricated claim."
       }
     },
     "ui:No buildings stand in {settlement} yet.": {
@@ -66372,6 +67474,16 @@
         "text": "Peace pact until {year} AD · at war elsewhere"
       }
     },
+    "ui:Peace pact with {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Peace pact with {realm}"
+      }
+    },
     "ui:Piety each season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66595,6 +67707,24 @@
         "text": "Receive {principal} gold · {due} gold due {date} · pledge {asset}"
       }
     },
+    "ui:Renounce the claim.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Renounce the claim."
+      }
+    },
+    "ui:Renounce your claim to {province}; the slot becomes free for another plot.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Renounce your claim to {province}; the slot becomes free for another plot."
+      }
+    },
     "ui:Renounce your liege and raise your own banner — it means war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66725,6 +67855,16 @@
         "text": "Restore the coinage…"
       }
     },
+    "ui:Restore the crown of {title}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Restore the crown of {title}"
+      }
+    },
     "ui:Return to title": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66749,6 +67889,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ruins of {building}"
+      }
+    },
+    "ui:Ruler’s family and succession": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ruler’s family and succession"
       }
     },
     "ui:Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations.": {
@@ -67046,6 +68194,14 @@
         "text": "The council now outweighs the crown: extraordinary taxes and revocations are beyond you until authority mends (below {limit})."
       }
     },
+    "ui:The designated heir can transmit the crown to your shared branch.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The designated heir can transmit the crown to your shared branch."
+      }
+    },
     "ui:The estates have heard your motion this year; they will take another come the new year.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67144,6 +68300,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This contract is reckoned by weight: price changes do not change the gold due."
+      }
+    },
+    "ui:This creates a dynastic tie, but this child does not currently transmit the crown.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This creates a dynastic tie, but this child does not currently transmit the crown."
       }
     },
     "ui:This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.": {
@@ -67373,6 +68537,22 @@
         "text": "Worth about {gold} gold."
       }
     },
+    "ui:You are already at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You are already at war."
+      }
+    },
+    "ui:You hold no landed realm from which to wage war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You hold no landed realm from which to wage war."
+      }
+    },
     "ui:You must first bleed in your liege’s wars (service {needed}+, now {current}).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67498,6 +68678,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time."
+      }
+    },
+    "ui:Your defensive alliance forbids an attack on the only realm you have cause against.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your defensive alliance forbids an attack on the only realm you have cause against."
+      }
+    },
+    "ui:Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again."
       }
     },
     "ui:Your father": {
@@ -67679,6 +68875,14 @@
         "text": "also above"
       }
     },
+    "ui:another realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "another realm"
+      }
+    },
     "ui:beginning in {year} AD, aged {age}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67741,6 +68945,22 @@
         "text": "courting"
       }
     },
+    "ui:daughter": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "daughter"
+      }
+    },
+    "ui:designated heir": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "designated heir"
+      }
+    },
     "ui:dev {development} · {terrain}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67764,6 +68984,14 @@
         "text": "development {development} · {built} built · {remaining}"
       }
     },
+    "ui:dynastic compact": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "dynastic compact"
+      }
+    },
     "ui:empty {terrain}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67772,6 +69000,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "empty {terrain}"
+      }
+    },
+    "ui:envoy compact": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "envoy compact"
       }
     },
     "ui:favor {favor}": {
@@ -67816,12 +69052,36 @@
         "text": "imam"
       }
     },
+    "ui:in the succession": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "in the succession"
+      }
+    },
     "ui:independent": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "independent"
+      }
+    },
+    "ui:kinsman": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "kinsman"
+      }
+    },
+    "ui:kinswoman": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "kinswoman"
       }
     },
     "ui:lord": {
@@ -67955,6 +69215,22 @@
         "text": "regard {amount}"
       }
     },
+    "ui:reigning ruler": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "reigning ruler"
+      }
+    },
+    "ui:royal marriage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "royal marriage"
+      }
+    },
     "ui:she would bring a dowry of {gold} gold": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67987,6 +69263,14 @@
       "location": "js/events.js",
       "source": {
         "text": "someone"
+      }
+    },
+    "ui:son": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "son"
       }
     },
     "ui:sworn to you": {
@@ -68424,6 +69708,21 @@
         "text": "{building} upkeep"
       }
     },
+    "ui:{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cause",
+        "counties",
+        "realm",
+        "support",
+        "theirs",
+        "yours"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}"
+      }
+    },
     "ui:{count} counties": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68610,6 +69909,19 @@
         "text": "{name} ({role})"
       }
     },
+    "ui:{name} · {relation}, age {age}{heir}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "heir",
+        "name",
+        "relation"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} · {relation}, age {age}{heir}"
+      }
+    },
     "ui:{name} — {title}, {season} {year}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68738,6 +70050,18 @@
         "text": "{realm} · {ruler} · the liege’s favor {favor} · dev {development} · your suit ~{odds}%"
       }
     },
+    "ui:{realm} · {source} · until either ruler changes · defensive support ~{men}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men",
+        "realm",
+        "source"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{realm} · {source} · until either ruler changes · defensive support ~{men}"
+      }
+    },
     "ui:{relation} · regard {regard}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68795,7 +70119,20 @@
         "text": "{ruler} · opinion {opinion}"
       }
     },
-    "ui:{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%": {
+    "ui:{ruler} · opinion {opinion} · chance ~{chance}% · their aid would add up to ~{men} defenders": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "men",
+        "opinion",
+        "ruler"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{ruler} · opinion {opinion} · chance ~{chance}% · their aid would add up to ~{men} defenders"
+      }
+    },
+    "ui:{ruler} · {counties} · fields ~{men} · opinion {opinion} · chance ~{chance}%": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "chance",
@@ -68806,7 +70143,7 @@
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%"
+        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · chance ~{chance}%"
       }
     },
     "ui:{save} · 🧩 another world — its mods are not the ones active now": {
@@ -69329,6 +70666,17 @@
         "text": "👁 Observing"
       }
     },
+    "ui:👑 Royal line of {realm} · {status}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm",
+        "status"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "👑 Royal line of {realm} · {status}"
+      }
+    },
     "ui:👑 {name}: you hold the majority, {held} — independence would make you its king.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -69539,6 +70887,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "🤝 betrothed"
+      }
+    },
+    "ui:🤝 {men} allied defenders from {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 {men} allied defenders from {realm}"
       }
     },
     "ui:🦅 {name}: you rule {share} — independence would make you its emperor.": {
