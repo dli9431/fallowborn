@@ -45,6 +45,11 @@ treasures, upkeep), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation.
 
+The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Family,
+Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
+with `aria-expanded`; closed actions are not rendered, so number-key selection can never
+activate an invisible deed. The current daily focus remains pinned above the groups.
+
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar

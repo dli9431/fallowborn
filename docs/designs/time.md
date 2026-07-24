@@ -46,3 +46,9 @@ stays in seasons — the engine multiplies by 90.
 
 Related: [events.md](events.md) for the event interpreter, [war.md](war.md) for the
 seasonal war tick.
+
+Season boundaries also run `FB.livelihoodSeason`: wages from resident household members,
+profits from staffed enterprises, and learned household piety enter the same measured
+season ledger as focus income and upkeep. New years run `FB.livelihoodYearly` for
+apprenticeship progress and ordinary career experience. All career progression and
+enterprise outcomes use the saved RNG.

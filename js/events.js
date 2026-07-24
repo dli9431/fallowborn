@@ -308,7 +308,12 @@ window.FB = window.FB || {};
       }
     }
     state.player.suitorIds = [];
-    for (const m of out) state.player.suitorIds.push(m.id);
+    for (const m of out) {
+      if (!m.career && FB.applyMarriageBackground) {
+        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg);
+      }
+      state.player.suitorIds.push(m.id);
+    }
     for (let i = 0; i < SUITOR_PROFILES.length; i++) {
       if (out.some(function (m) { return m.suitorProfile === i; })) continue;
       const prof = SUITOR_PROFILES[i];
@@ -322,6 +327,7 @@ window.FB = window.FB || {};
       });
       c.suitorProfile = i;
       c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
+      if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg);
       out.push(c);
       state.player.suitorIds.push(c.id);
     }
@@ -365,7 +371,12 @@ window.FB = window.FB || {};
     const cAge = FB.ageOf(child, y);
     const steps = [-1, 0, 1];
     child.matchIds = [];
-    for (const m of out) child.matchIds.push(m.id);
+    for (const m of out) {
+      if (!m.career && FB.applyMarriageBackground) {
+        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg);
+      }
+      child.matchIds.push(m.id);
+    }
     for (let i = out.length; i < 3; i++) {
       const st = FB.clamp(ps + steps[i], 0, 3);
       const m = FB.makeCharacter(state, {
@@ -375,6 +386,7 @@ window.FB = window.FB || {};
         role: 'match', station: st, quality: st + FB.ri(0, 1)
       });
       m.epithetMsg = FB.pick(SUITOR_EPITHETS[st][m.sex]);
+      if (FB.applyMarriageBackground) FB.applyMarriageBackground(m, st, m.epithetMsg);
       const sum = Math.round((FBDATA.balance.dowryByStation[st] || 0) * FB.rf(0.7, 1.3));
       if (child.sex === 'f') m.dowryAsk = sum; else m.dowryDue = sum;
       out.push(m);
@@ -421,6 +433,9 @@ window.FB = window.FB || {};
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';
+    if (k.id === state.player.charId && FB.receiveMarriageLivelihood) {
+      FB.receiveMarriageLivelihood(state, sp);
+    }
     FB.news(state, FB.msg('news.event.kin_wedding', {
       forms: {
         select: 'value', param: 'sex', cases: {
@@ -821,8 +836,8 @@ window.FB = window.FB || {};
       case 'skill_dip': return FB.clamp(0.30 + FB.skillOf(me, 'dip') * 0.04, 0.1, 0.9);
       case 'skill_ste': {
         let c = 0.30 + FB.skillOf(me, 'ste') * 0.04;
-        const hs = FB.holdingList(state);
-        if (hs.indexOf('fine_tools') >= 0 || hs.indexOf('workshop') >= 0) c += 0.06;
+        if (FB.hasHouseholdAsset(state, 'fine_tools') ||
+          FB.hasHouseholdAsset(state, 'workshop')) c += 0.06;
         return FB.clamp(c, 0.1, 0.9);
       }
       case 'skill_int': return FB.clamp(0.30 + FB.skillOf(me, 'int') * 0.04, 0.1, 0.9);
@@ -861,9 +876,8 @@ window.FB = window.FB || {};
       }
       case 'swarm': {
         let c = 0.35 + FB.skillOf(me, 'ste') * 0.035;
-        const hs = FB.holdingList(state);
-        if (hs.indexOf('hearth_garden') >= 0) c += 0.1;
-        if (hs.indexOf('orchard') >= 0) c += 0.12;
+        if (FB.hasHouseholdAsset(state, 'hearth_garden')) c += 0.1;
+        if (FB.hasHouseholdAsset(state, 'orchard')) c += 0.12;
         return FB.clamp(c, 0.15, 0.9);
       }
       case 'war_battle': {
@@ -1013,8 +1027,8 @@ window.FB = window.FB || {};
     if (tg.notBuildings) for (const b of tg.notBuildings) if (FB.hasBuilding(state, b)) return false;
     if (tg.techs) for (const t of tg.techs) if (FB.techList(state).indexOf(t) < 0) return false;
     if (tg.notTechs) for (const t of tg.notTechs) if (FB.techList(state).indexOf(t) >= 0) return false;
-    if (tg.holdings) for (const hd of tg.holdings) if (FB.holdingList(state).indexOf(hd) < 0) return false;
-    if (tg.notHoldings) for (const hd of tg.notHoldings) if (FB.holdingList(state).indexOf(hd) >= 0) return false;
+    if (tg.holdings) for (const hd of tg.holdings) if (!FB.hasHouseholdAsset(state, hd)) return false;
+    if (tg.notHoldings) for (const hd of tg.notHoldings) if (FB.hasHouseholdAsset(state, hd)) return false;
     if (tg.religionGroup && FB.religionOf(me.religion).group !== tg.religionGroup) return false;
     if (tg.religionGroups && tg.religionGroups.indexOf(FB.religionOf(me.religion).group) < 0) return false;
     if (tg.provinceReligionGroup && (!pr || FB.religionOf(pr.religion).group !== tg.provinceReligionGroup)) return false;
@@ -1263,6 +1277,11 @@ window.FB = window.FB || {};
     if (fx.setFlag2) p.flags[fx.setFlag2] = 1;
     if (fx.clearFlag) delete p.flags[fx.clearFlag];
     if (fx.clearFlag2) delete p.flags[fx.clearFlag2];
+    if ((fx.setFlag === 'guild_member' || fx.setFlag2 === 'guild_member') && FB.careerOf) {
+      const guildCareer = FB.careerOf(state, me);
+      guildCareer.guildRank = guildCareer.guildRank === 'none' ? 'member' : guildCareer.guildRank;
+      guildCareer.guildStanding = Math.max(20, guildCareer.guildStanding || 0);
+    }
     // falling ill names the sickness; recovering casts it off
     if (fx.setFlag === 'ill' || fx.setFlag2 === 'ill') {
       const sick = FB.randomSickness();
@@ -1285,11 +1304,16 @@ window.FB = window.FB || {};
     if (fx.profession) {
       if (!p.professionBack && p.profession !== 'soldier') p.professionBack = p.profession;
       p.profession = fx.profession;
+      if (fx.setFlag !== 'on_campaign' && fx.setFlag2 !== 'on_campaign' && FB.setCareer) {
+        p.professionBack = null;
+        FB.setCareer(state, me, fx.profession, 'journeyman');
+      }
     }
     if (fx.focusSet) p.focus = fx.focusSet;
     if (fx.restoreProfession) {
       p.profession = p.professionBack || 'farmer';
       p.professionBack = null;
+      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
     if (fx.tierSet !== undefined && fx.tierSet > p.tier) {
       p.tier = fx.tierSet;
@@ -1298,6 +1322,7 @@ window.FB = window.FB || {};
         if (rid && rid !== 'player') p.liege = rid;
       }
       if (p.tier >= 2 && p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
+      if (p.tier >= 2 && FB.setCareer && p.profession === 'noble') FB.setCareer(state, me, 'noble', 'master');
     }
     if (fx.tierUp) {
       FB.grantByLiege(state);
@@ -1425,6 +1450,7 @@ window.FB = window.FB || {};
         }
       }, { order: order, name: s.name }));
     }
+    if (FB.receiveMarriageLivelihood) FB.receiveMarriageLivelihood(state, s);
     s.role = 'spouse';
     // a spouse cannot stay your lord, priest, friend, or rival — those seats
     // empty and are lazily refilled where the game next needs them
@@ -1515,6 +1541,7 @@ window.FB = window.FB || {};
       role: 'suitor', opinion: FB.ri(10, 30), station: st, quality: st + FB.ri(0, 1)
     });
     if (SUITOR_EPITHETS[st] && SUITOR_EPITHETS[st].m) c.epithetMsg = FB.pick(SUITOR_EPITHETS[st].m);
+    if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg);
     p.courtingId = c.id;
   };
   /* the losing side of the shield-wall: the grave wound itself is the data
@@ -1579,6 +1606,9 @@ window.FB = window.FB || {};
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
       p.tier = 2;
       if (p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
+      if (p.profession === 'noble' && FB.setCareer) {
+        FB.setCareer(state, state.chars[p.charId], 'noble', 'master');
+      }
       FB.news(state, FB.msg('news.event.inheritance_raises_station',
         '🏛 Stewarding a noble inheritance raises you into the gentry.', {}));
     }

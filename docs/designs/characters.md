@@ -63,3 +63,16 @@ seat (`state.roles.rival`) is **player-declared**: nothing assigns it automatica
 
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.
+
+**Careers belong to characters.** Every managed household member lazily receives
+`c.career = {profession,rank,experience,startedYear,guildRank,guildStanding,chosen}` through
+`FB.careerOf` (`js/economy.js`). `player.profession` remains a compatibility mirror for
+existing events, portraits, titles, and mods; succession mirrors the heir's own career
+instead of inheriting the dead parent's occupation.
+
+**Apprenticeship complements tutoring.** A child old enough for a career's
+`apprenticeAge` may be placed with that trade from their sheet. It costs the career's
+entry fee, adds vocational experience and the career skill during the yearly life tick,
+and becomes journeyman work at sixteen. The ordinary education focus and tutor continue
+in parallel. Household work is intentionally limited to the player, spouses, and
+unmarried dependent children; distant kin do not send invisible wages home.

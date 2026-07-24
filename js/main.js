@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.41.0';
+  FB.VERSION = '1.42.0';
   FB.CHANGELOG = [
+    { v: '1.42.0', date: '2026-07-24', changes: [
+      'Livelihoods belong to people now: choose work for yourself and your household, place children in apprenticeships from age ten onward as each trade allows, and watch them graduate at sixteen.',
+      'Commoner families can own multiple productive enterprises across their home settlements — fields, orchards, presses, workshops, stalls, trading houses, and fishing boats — but each pays only while an eligible household member works it.',
+      'Craft and merchant guilds have real ranks from member to guildmaster. Guild standing opens the grander businesses and improves their profits; marrying into a guildmaster’s family now brings an actual connection.',
+      'The Deeds panel is organized into collapsible Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War & Diplomacy sections. Only visible actions take number-key slots.'
+    ] },
     { v: '1.41.0', date: '2026-07-24', changes: [
       'A liege’s generosity now wanes sharply within one lifetime: after each barony, title, neighboring fief, or court-awarded escheat, the chance of another grant falls to one fifth. A new heir begins with a clean slate.'
     ] },
@@ -673,7 +679,7 @@ window.FB = window.FB || {};
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
-        provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
+        provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
@@ -691,6 +697,7 @@ window.FB = window.FB || {};
     me.dyn = FB.dynastyName(pr.culture, me.name, pr.name);
     if (sc.mar) me.skills.mar = FB.clamp(me.skills.mar + sc.mar, 0, FBDATA.balance.skillHardCap || 40);
     state.player.charId = me.id;
+    FB.setCareer(state, me, sc.profession, 'journeyman');
 
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
@@ -856,7 +863,9 @@ window.FB = window.FB || {};
       const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
+      FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
       p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep + FB.holdingBonus(s, 'gold'));
+      FB.livelihoodSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
@@ -1005,6 +1014,7 @@ window.FB = window.FB || {};
 
     // children: schooling, then coming of age
     educationTick(s);
+    FB.livelihoodYearly(s);
     for (const cid of me.childrenIds) {
       const c = s.chars[cid];
       if (c && !c.dead && FB.ageOf(c, year) === 16) {
@@ -1555,6 +1565,7 @@ window.FB = window.FB || {};
     s.eventQueue = s.eventQueue.filter(function (ev) {
       return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated';
     });
+    FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     p.charId = heir.id;
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
@@ -1583,8 +1594,7 @@ window.FB = window.FB || {};
     // death dues and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
     s.seasonNet = null;
-    if (p.profession === 'monk' || p.profession === 'priest') p.profession = 'farmer';
-    if (p.tier >= 2) p.profession = 'noble';
+    FB.syncPlayerCareer(s);
     delete s.roles.spouse; delete s.roles.suitor;
     p.namedHeirId = null; // the new life names its own successor
     p.focus = FB.defaultFocus(s);
@@ -1627,6 +1637,7 @@ window.FB = window.FB || {};
       return false;
     }
     FB.save.restore(data);
+    FB.syncPlayerCareer(FB.state);
     G.observe = false;
     document.body.classList.remove('observing');
     G.pickMode = false;

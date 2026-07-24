@@ -308,6 +308,36 @@ window.FB = window.FB || {};
   let activeTab = 'actions';    // right panel: actions | prov | log
   let activeLeftTab = 'char';   // left panel: char | family (Self open by default)
   const LEFT_TABS = ['char', 'family'];
+  const actionGroupsOpen = { work:true, life:false, faith:false, realm:false, war:false };
+  const ACTION_GROUPS = [
+    { id:'work', label:'🧰 Work & Wealth' },
+    { id:'life', label:'🌿 Life & Family' },
+    { id:'faith', label:'🕯 Faith & Community' },
+    { id:'realm', label:'👑 Rank & Realm' },
+    { id:'war', label:'⚔ War & Diplomacy' }
+  ];
+  const FOCUS_GROUP = {
+    study:'life', play:'life', rest:'life', pray:'faith', court_suitor:'life',
+    toil:'work', work_land:'work', market:'work', keep_house:'work',
+    craft_work:'work', trade_run:'work', copy_books:'faith', serve_church:'faith',
+    militia:'war', drill:'war', stand_guard:'war', train_arms:'war', lead_host:'war',
+    manage_manor:'realm', serve_lord:'realm', courtly_graces:'realm',
+    scheming:'realm', govern:'realm', patronize:'realm'
+  };
+  const DEED_GROUP = {
+    poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
+    buy_freedom:'realm', buy_manor:'realm', build:'realm', adopt_tech:'realm',
+    squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
+    petition_liege:'realm', petition_county:'realm', buy_county:'realm',
+    settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
+    revoke_county:'realm', royal_council:'realm',
+    seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
+    scheme_rival:'life', begin_plot:'life',
+    seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
+    send_envoy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
+    declare_independence:'war', pay_homage:'war', appeal_lord:'war',
+    swear_fealty:'war'
+  };
 
   function renderActiveTab() {
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
@@ -394,44 +424,75 @@ window.FB = window.FB || {};
         }).join('') : '') + '</div>';
     }
     h += nextStepHint(s);
-    box.innerHTML = h;
-    let n = 0; // shared 1-9 hotkey numbering across both lists
-
-    const fh = document.createElement('div');
-    fh.className = 'panelh';
-    fh.textContent = FB.T('Focus — pursued every day until changed');
-    box.appendChild(fh);
-    for (const f of FB.listFocuses(s)) {
-      const cur = s.player.focus === f.id;
-      const btn = document.createElement('button');
-      btn.className = 'actionbtn' + (cur ? ' focused' : '');
-      btn.innerHTML = hintFor(n) +
-        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
-        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
-      (function (id) {
-        btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
-      })(f.id);
-      box.appendChild(btn);
-      n++;
+    let currentFocus = null;
+    for (const focus of FB.focuses) if (focus.id === s.player.focus) currentFocus = focus;
+    if (currentFocus) {
+      h += '<div class="progressnote">' + esc(FB.T('◉ Current focus: {focus}', {
+        focus:dt(s, 'focus', currentFocus.id, currentFocus, 'label')
+      })) + '</div>';
     }
-
-    const ih = document.createElement('div');
-    ih.className = 'panelh';
-    ih.textContent = FB.T('Deeds — done at once (each spends the day)');
-    box.appendChild(ih);
-    for (const item of FB.listInstants(s)) {
-      const btn = document.createElement('button');
-      btn.className = 'actionbtn';
-      btn.disabled = !item.can;
-      const label = dt(s, 'action', item.a.id, item.a, 'label');
-      btn.innerHTML = hintFor(n) +
-        esc(label) + '<span class="adesc">' +
-        esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) + '</span>';
+    box.innerHTML = h;
+    let n = 0; // hotkey numbering covers only actions visible in open groups
+    const focuses = FB.listFocuses(s);
+    const instants = FB.listInstants(s);
+    for (const group of ACTION_GROUPS) {
+      const gf = focuses.filter(function (f) { return (FOCUS_GROUP[f.id] || 'realm') === group.id; });
+      const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
+      if (!gf.length && !ga.length) continue;
+      const toggle = document.createElement('button');
+      const open = !!actionGroupsOpen[group.id];
+      toggle.className = 'actiongroup-toggle';
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.innerHTML = '<span>' + esc(FB.T(group.label)) + '</span><span>' +
+        esc(String(gf.length + ga.length)) + ' ' +
+        (open ? '▾' : '▸') + '</span>';
       (function (id) {
-        btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
-      })(item.a.id);
-      box.appendChild(btn);
-      n++;
+        toggle.addEventListener('click', function () {
+          actionGroupsOpen[id] = !actionGroupsOpen[id];
+          renderActions();
+        });
+      })(group.id);
+      box.appendChild(toggle);
+      if (!open) continue;
+      if (gf.length) {
+        const fh = document.createElement('div');
+        fh.className = 'actionsubhead';
+        fh.textContent = FB.T('Daily focus — continues until changed');
+        box.appendChild(fh);
+      }
+      for (const f of gf) {
+        const cur = s.player.focus === f.id;
+        const btn = document.createElement('button');
+        btn.className = 'actionbtn' + (cur ? ' focused' : '');
+        btn.innerHTML = hintFor(n) +
+          (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
+          '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
+        (function (id) {
+          btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
+        })(f.id);
+        box.appendChild(btn);
+        n++;
+      }
+      if (ga.length) {
+        const ih = document.createElement('div');
+        ih.className = 'actionsubhead';
+        ih.textContent = FB.T('Deeds — done at once unless noted');
+        box.appendChild(ih);
+      }
+      for (const item of ga) {
+        const btn = document.createElement('button');
+        btn.className = 'actionbtn';
+        btn.disabled = !item.can;
+        const label = dt(s, 'action', item.a.id, item.a, 'label');
+        btn.innerHTML = hintFor(n) +
+          esc(label) + '<span class="adesc">' +
+          esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) + '</span>';
+        (function (id) {
+          btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
+        })(item.a.id);
+        box.appendChild(btn);
+        n++;
+      }
     }
     FB.localizeTree(box);
   }
@@ -516,6 +577,17 @@ window.FB = window.FB || {};
       esc(FB.T('(lessons begin at age 6)')) + '</span>' : '') + '</div>';
   }
 
+  function livelihoodNote(s, c) {
+    const career = FB.careerOf(s, c);
+    const def = career && FBDATA.careers[career.profession];
+    if (!def) return '';
+    let detail = FB.careerTitle(s, c);
+    if (def.guild) detail += ' · ' + FB.guildTitle(career);
+    return '<div class="progressnote">' + esc(FB.T('🧰 Work — {career}', {
+      career:detail
+    })) + '</div>';
+  }
+
   function itemChips(s) {
     const ids = FB.itemList(s);
     if (!ids.length) return '<span class="cmeta">' + esc(FB.T('Nothing of note.')) + '</span>';
@@ -574,6 +646,13 @@ window.FB = window.FB || {};
       panelh('Dynasty') +
       kv('House', esc(me.dyn || '—')) +
       kv('Generation', (s.generation || 1));
+    h += panelh('Livelihood') + livelihoodNote(s, me);
+    if (FB.ageOf(me, s.date.year) >= 10) {
+      h += '<button class="actionbtn" id="self-work">🧰 Work, training & enterprises…' +
+        '<span class="adesc">Manage the occupations and productive property of your household.</span></button>';
+    } else {
+      h += '<div class="hint">' + esc(FB.T('Too young for an apprenticeship yet.')) + '</div>';
+    }
     if (FB.ageOf(me, s.date.year) < 16) {
       h += panelh('Upbringing') + upbringingNote(s, me) +
         '<button class="actionbtn" id="self-edufocus">🎓 Choose your education focus…' +
@@ -588,6 +667,8 @@ window.FB = window.FB || {};
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
     const stu = $('self-tutor');
     if (stu) stu.addEventListener('click', function () { UI.showTutorPick(me.id); });
+    const sw = $('self-work');
+    if (sw) sw.addEventListener('click', UI.showLivelihoods);
   }
 
   function charRow(s, c, meta, stats) {
@@ -2661,6 +2742,185 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* ================= household livelihoods & enterprises ================= */
+  UI.showLivelihoods = function () {
+    const s = FB.state;
+    const me = s.chars[s.player.charId];
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
+      '</p></div><div class="panelh">' + esc(FB.T('Household work')) + '</div><div class="gm-list">';
+    for (const c of FB.householdMembers(s)) {
+      const age = FB.ageOf(c, s.date.year);
+      if (age < 10) continue;
+      const career = FB.careerOf(s, c);
+      const def = FBDATA.careers[career.profession];
+      h += '<button class="actionbtn" data-career="' + c.id + '">' +
+        FB.faceTag(c, 30, 36) + ' ' + esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
+        '<span class="adesc">' + esc(FB.careerTitle(s, c) +
+          (def && def.guild ? ' · ' + FB.guildTitle(career) : '')) + '</span></button>';
+    }
+    h += '</div><div class="panelh">' + esc(FB.T('Family enterprises')) + '</div><div class="gm-list">';
+    const enterprises = FB.enterpriseList(s);
+    if (!enterprises.length) {
+      h += '<div class="hint">' + esc(FB.T('No enterprise yet. Open one in a settlement below.')) + '</div>';
+    }
+    for (const e of enterprises) {
+      const def = FBDATA.enterprises[e.type];
+      if (!def) continue;
+      const worker = e.workerId && s.chars[e.workerId] && !s.chars[e.workerId].dead ?
+        s.chars[e.workerId] : null;
+      const pr = FB.world.byId[e.provinceId];
+      const sts = pr ? FB.settlementsOf(s, e.provinceId) : [];
+      const place = sts[e.settlement] ? sts[e.settlement].name : (pr ? pr.name : '?');
+      h += '<button class="actionbtn" data-enterprise="' + esc(e.uid) + '">' +
+        esc(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name')) +
+        '<span class="adesc">' + esc(FB.T('{place} · {worker} · about {gold} gold/season', {
+          place:place,
+          worker:worker ? FB.T('worked by {name}', { name:worker.name }) : FB.T('idle — no worker'),
+          gold:Math.round(FB.enterpriseYield(s, e) * 10) / 10
+        })) + '</span></button>';
+    }
+    const settlements = FB.settlementsOf(s, s.player.provinceId);
+    for (let i = 0; i < settlements.length; i++) {
+      if (!FB.enterpriseAvailable(s, i).length) continue;
+      h += '<button class="actionbtn" data-enterprise-settlement="' + i + '">🏪 ' +
+        esc(FB.T('Open an enterprise in {settlement}…', { settlement:settlements[i].name })) +
+        '<span class="adesc">' + esc(FB.T('Buy productive property; further copies of one kind cost more.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('🧰 Work & Enterprises'), h);
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-career]').forEach(function (b) {
+      b.addEventListener('click', function () { UI.showCareerPicker(b.dataset.career); });
+    });
+    document.querySelectorAll('[data-enterprise]').forEach(function (b) {
+      b.addEventListener('click', function () { UI.showEnterpriseManage(b.dataset.enterprise); });
+    });
+    document.querySelectorAll('[data-enterprise-settlement]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        UI.showEnterpriseMarket(parseInt(b.dataset.enterpriseSettlement, 10));
+      });
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showCareerPicker = function (cid) {
+    const s = FB.state;
+    const c = s.chars[cid];
+    if (!c || c.dead) return;
+    const age = FB.ageOf(c, s.date.year);
+    const career = FB.careerOf(s, c);
+    let h = livelihoodNote(s, c) + '<div class="gm-body-text"><p>' + esc(FB.T(
+      age < 16
+        ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
+        : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.')) +
+      '</p></div><div class="gm-list">';
+    for (const item of FB.careerChoices(s, c)) {
+      const same = career.chosen && career.profession === item.id;
+      const short = s.player.gold < item.cost;
+      h += '<button class="actionbtn" data-career-choice="' + item.id + '"' +
+        (same || short ? ' disabled' : '') + '>' +
+        esc(item.def.icon + ' ' + dt(s, 'career', item.id, item.def, 'name') +
+          (item.cost ? FB.T(' — {gold} gold', { gold:item.cost }) : '')) +
+        '<span class="adesc">' + esc(dt(s, 'career', item.id, item.def, 'desc')) +
+        (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough gold)')) : '') +
+        '</span></button>';
+    }
+    const step = FB.guildAdvance(s, c);
+    if (step) {
+      const blocked = step.blocked || s.player.gold < step.cost;
+      h += '<button class="actionbtn" id="career-guild"' + (blocked ? ' disabled' : '') + '>🏅 ' +
+        esc(FB.T('Seek the next guild rank — {rank} ({gold} gold)', {
+          rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
+        })) + '<span class="adesc">' +
+        esc(step.blocked
+          ? (step.prestige
+            ? FB.T('Requires {skill} Stewardship and {prestige} prestige.', {
+              skill:step.need, prestige:step.prestige
+            })
+            : FB.T('Requires {skill} Stewardship.', { skill:step.need }))
+          : FB.T('Guild standing brings commissions, enterprise access, and better profits.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Work of {name}', { name:c.name }), h);
+    document.querySelectorAll('[data-career-choice]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      });
+    });
+    const guild = $('career-guild');
+    if (guild) guild.addEventListener('click', function () {
+      if (!FB.takeGuildStep(s, c)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+  };
+
+  UI.showEnterpriseMarket = function (settlement) {
+    const s = FB.state;
+    const sts = FB.settlementsOf(s, s.player.provinceId);
+    const place = sts[settlement] ? sts[settlement].name : '?';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.')) +
+      '</p></div><div class="gm-list">';
+    for (const item of FB.enterpriseAvailable(s, settlement)) {
+      const short = s.player.gold < item.cost;
+      h += '<button class="actionbtn" data-enterprise-buy="' + item.id + '"' +
+        (short ? ' disabled' : '') + '>' +
+        esc(FB.T('{icon} {name} — {gold} gold', {
+          icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name'), gold:item.cost
+        })) + '<span class="adesc">' + esc(dt(s, 'enterprise', item.id, item.def, 'desc')) +
+        ' ' + esc(item.workers.length
+          ? FB.T('{count} eligible household workers.', { count:item.workers.length })
+          : FB.T('No eligible worker yet — it would stand idle.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h);
+    document.querySelectorAll('[data-enterprise-buy]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      });
+    });
+    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+  };
+
+  UI.showEnterpriseManage = function (uid) {
+    const s = FB.state;
+    let e = null;
+    for (const item of FB.enterpriseList(s)) if (item.uid === uid) e = item;
+    if (!e || !FBDATA.enterprises[e.type]) return;
+    const def = FBDATA.enterprises[e.type];
+    let h = '<div class="gm-body-text"><p>' + esc(dt(s, 'enterprise', e.type, def, 'desc')) +
+      '</p></div><div class="gm-list">';
+    for (const c of FB.enterpriseWorkers(s, e.type)) {
+      h += '<button class="actionbtn" data-enterprise-worker="' + c.id + '">' +
+        (e.workerId === c.id ? '◉ ' : '○ ') + FB.faceTag(c, 30, 36) + ' ' + esc(c.name) +
+        '<span class="adesc">' + esc(FB.careerTitle(s, c)) + '</span></button>';
+    }
+    h += '<button class="actionbtn" data-enterprise-worker="">' +
+      (e.workerId ? '○ ' : '◉ ') + esc(FB.T('Leave it idle')) +
+      '<span class="adesc">' + esc(FB.T('An idle enterprise produces no seasonal income.')) +
+      '</span></button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h);
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
+        UI.showLivelihoods();
+        UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+  };
+
   /* ================= innovation picker ================= */
   UI.showTech = function () {
     const s = FB.state;
@@ -2728,8 +2988,15 @@ window.FB = window.FB || {};
       return;
     }
     h += '<div class="gm-list" style="margin-top:10px">';
-    const isFamily = c.id === me.spouseId || me.childrenIds.indexOf(c.id) >= 0 ||
+    const isFamily = FB.spousesOf(s, me).some(function (sp) { return sp.id === c.id; }) ||
+      me.childrenIds.indexOf(c.id) >= 0 ||
       (c.role === 'sibling' && c.dyn === me.dyn);
+    const isHousehold = FB.householdMembers(s).some(function (member) { return member.id === c.id; });
+    if (isHousehold && FB.ageOf(c, s.date.year) >= 10) {
+      h += livelihoodNote(s, c);
+      h += '<button class="actionbtn" id="cm-career">🧰 Choose work or training…' +
+        '<span class="adesc">Arrange an apprenticeship, change occupation, or seek guild rank.</span></button>';
+    }
     if (c.id !== me.id) {
       h += '<button class="actionbtn" id="cm-befriend">🤝 Spend the day in their company' +
         '<span class="adesc">Warm their regard for you. (spends the day)</span></button>';
@@ -3005,6 +3272,8 @@ window.FB = window.FB || {};
     if (ef) ef.addEventListener('click', function () { UI.showEduFocus(c.id); });
     const tu = $('cm-tutor');
     if (tu) tu.addEventListener('click', function () { UI.showTutorPick(c.id); });
+    const cr = $('cm-career');
+    if (cr) cr.addEventListener('click', function () { UI.showCareerPicker(c.id); });
     const mt = $('cm-match');
     if (mt) mt.addEventListener('click', function () { UI.showMatchPicker(c.id); });
     $('cm-close').addEventListener('click', UI.closeModal);
