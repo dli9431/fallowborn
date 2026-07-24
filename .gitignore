@@ -21,3 +21,9 @@ yarn-error.log*
 
 # Deployment artifacts (itch.io zips are built from the folder contents)
 *.zip
+
+# Developer notes — local-only working files (deploy scripts, devlogs, planning,
+# site mockups). Never shipped and not part of the game. Kept out of the repo.
+# (Committed here so the rule travels to every clone/worktree; the old
+# .git/info/exclude entry was local-only and let files slip in via merges.)
+notes/
