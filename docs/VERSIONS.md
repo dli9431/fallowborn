@@ -1,15 +1,33 @@
 # Versions
 
-Fallowborn uses [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`.
+Fallowborn's version is `MAJOR.MINOR.PATCH` — SemVer-shaped, with the emphasis below.
 
-- **MAJOR** — incompatible changes: saves stop loading, data schemas break,
-  total overhauls.
-- **MINOR** — new features and content, backwards compatible.
-- **PATCH** — bug fixes only, no new behavior.
+- **MAJOR** (first number) — launch milestones and total overhauls. Rarely bumped;
+  `1.x.x` is the current post-launch era.
+- **MINOR** (middle number) — a genuinely new feature or a body of new content: something a
+  player recognizes as *a new thing*. **Not** the default — do not raise it for adjustments
+  to things that already exist.
+- **PATCH** (last number) — **balance changes, tweaks, and bug fixes. This is the common
+  case.** Any balance pass, number nudge, small content edit, or fix that does not introduce
+  a genuinely new feature bumps the last number, not the middle one.
+
+Rule of thumb: **most changes are a PATCH**; a minority are MINOR, and MAJOR almost never.
+Torn between MINOR and PATCH? It is a PATCH. (Historically we leaned on MINOR far too
+often — steer small and balance work to the last number.)
 
 The current version lives in `FB.VERSION` at the top of `js/main.js`. It is
 shown on the title screen. The changelog lives next to it in `FB.CHANGELOG`
 and opens as a modal from the title screen.
+
+## The save-format version is separate — and human-gated
+
+`js/save.js` carries its own save-format version (`v:`, currently `3`) that is **not** the
+displayed `FB.VERSION`. A save whose `v` does not match is rejected outright, so raising it
+invalidates every existing life. **Never bump the save-format version as part of a routine
+change — a save-format bump (e.g. `3` → `4`) always requires the owner's manual review
+first.** The additive-migration discipline in
+[designs/state-and-saves.md](designs/state-and-saves.md) exists precisely so new state can
+land *without* touching `v`: keep new fields lazily initialized and the save version holds.
 
 ## Changelog rules
 
@@ -19,8 +37,10 @@ Terse. No nonsense.
 - One line per change. Plain English.
 - Say what changed, not why. No "improved", "enhanced", "various", "misc".
 - No contributor names, no ticket numbers, no marketing.
-- Every player-facing change bumps the version and adds lines. Invisible
-  refactors need no line, but still bump PATCH when shipped code changes.
+- Every player-facing change bumps the version and adds a line. Invisible refactors
+  need no line but still bump PATCH when they change shipped code (`js`/`css`/`data`/`mods`).
+  A docs-only change ships nothing — `FB.VERSION` is a cache-bust key, and docs are not
+  shipped to players — so it needs no bump and no line.
 
 Entry format in `FB.CHANGELOG`:
 
@@ -46,5 +66,5 @@ Why: branches developed in parallel each guess the same "next" version and each 
 `FB.CHANGELOG`, so every branch collides with every other on the `js/main.js` top at merge — and
 would ship a duplicated, wrong number. Deferring the number to the merge is the only way to hand
 out a correct, unique version. Choose MAJOR/MINOR/PATCH by the rules above from the change being
-landed. `FB.VERSION`/`FB.CHANGELOG` and the i18n catalogs are the repo's *integration-owned
+landed — for most merges that is a PATCH. `FB.VERSION`/`FB.CHANGELOG` and the i18n catalogs are the repo's *integration-owned
 artifacts* — see the **Git workflow** section of `AGENTS.md`.

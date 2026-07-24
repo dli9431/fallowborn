@@ -19,7 +19,10 @@ save/export/import cannot silently retarget a plot in progress.
 ownership lives in `state.owner` / `state.holder` / `state.dev` / `state.realms`, not in
 world data. `js/save.js` snapshots `FB.state` + RNG state + uid counter to localStorage;
 the raster is rebuilt deterministically at boot, so saves only reference ids. Saves are
-version 3; older saves are rejected. A boot-time probe (`S.available`) detects browsers
+version 3; older saves are rejected. Raising that save-format version rejects every existing
+life, so it is a deliberate, owner-reviewed decision — never a routine bump, and separate
+from the displayed `FB.VERSION` (see [../VERSIONS.md](../VERSIONS.md)). The additive-migration
+discipline throughout this doc is what lets new state land without touching it. A boot-time probe (`S.available`) detects browsers
 that refuse localStorage outright (iOS in-app webviews, blocked cookies) so the UI can
 warn instead of failing silently; ephemeral storage (private mode, third-party-iframe
 eviction) passes the probe — for those, `S.exportState` / `S.parseExport` carry a life

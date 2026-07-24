@@ -33,8 +33,10 @@ itch and `play.fallowborn.com` (a separate Coolify origin that auto-deploys on e
 `immutable` assets both key on it. Never add `?v=` to the committed `index.html` — query strings
 break `file://`. Both targets and the stamping mechanics: **`docs/deployment.md`**.
 
-**Hard rule — every change that lands on `main` bumps `FB.VERSION` (top of `js/main.js`), no
-exceptions.** It is the cache-bust key for *both* distribution targets: the itch `?v=` stamp and
+**Hard rule — every change to shipped code (`js`/`css`/`data`/`mods`) that lands on `main` bumps
+`FB.VERSION` (top of `js/main.js`), no exceptions** (a docs-only commit ships nothing, so it needs
+no bump — `FB.VERSION` is purely a cache-bust key; see `docs/VERSIONS.md`). It is the cache-bust
+key for *both* distribution targets: the itch `?v=` stamp and
 play.fallowborn.com's immutable asset caching both key on it. Ship changed files without bumping
 it and returning players are served **stale** `js`/`css`/`data` — and on play.fallowborn.com the
 `immutable` cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG`
@@ -63,7 +65,9 @@ touched by *every* change at the same spot, so doing them on a branch guarantees
 every other branch in flight (parallel worktrees are unaware of each other):
 
 1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
-   version and write the changelog line from the branch's description. Keep each
+   version — **usually a PATCH (last number: balance, tweak, or fix); reserve a MINOR bump for a
+   genuinely new feature, per `docs/VERSIONS.md`** — and write the changelog line from the
+   branch's description. Keep each
    `FB.CHANGELOG` entry **short, plain, and general — one or two sentences** that name the
    feature and hint where the player runs into it, not the full mechanics. Players read it in
    the in-game changelog modal; they want a pointer to the new thing, not a spec. See
