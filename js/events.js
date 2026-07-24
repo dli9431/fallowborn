@@ -709,12 +709,30 @@ window.FB = window.FB || {};
     if (!war) return '';
     const host = FB.playerHost ? FB.playerHost(state) : null;
     const men = host ? host.men :
-      Math.round(Math.max(40, FB.playerLevy(state)) * (war.strength || 1) + (war.mercCos || 0) * 150);
+      Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(state)) * (war.strength || 1) +
+        (war.mercCos || 0) * (FBDATA.balance.mercCompanySize || 150));
     const clauses = [
       FB.renderKey('fx.warstate.host',
         { text: 'Your host: ~{men} men at {condition}% condition' },
         { men: men, condition: Math.round((war.strength || 1) * 100) })
     ];
+    // what the host is made of: the levy mass, the bowmen, the hard core
+    if (host && host.units) {
+      const u = host.units;
+      const compKeys = [
+        ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
+        ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
+        ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }]
+      ];
+      const parts = [];
+      for (const ck of compKeys) {
+        if (!u[ck[0]]) continue;
+        parts.push(FB.renderKey(ck[1], {
+          forms: { select: 'plural', param: 'count', cases: ck[2] }
+        }, { count: u[ck[0]] }));
+      }
+      if (parts.length) clauses.push(parts.join(', '));
+    }
     if (war.mercCos) {
       clauses.push(FB.renderKey('fx.warstate.mercenaries', {
         forms: {
@@ -852,19 +870,36 @@ window.FB = window.FB || {};
         const w = p.war;
         if (!w) return 0.5;
         const enemy = state.realms[w.enemy];
+        const bal = FBDATA.balance;
+        const cs = bal.mercCompanySize || 150;
         // real men: the fielded host if there is one, else the levy the
         // muster would raise (worn by the host's condition either way); a
-        // side still re-forming a shattered host fields only a remnant
+        // side still re-forming a shattered host fields only a remnant.
+        // Composition counts: men-at-arms and archers punch above levy weight
         const host = FB.playerHost ? FB.playerHost(state) : null;
-        const myMen = (host ? host.men
-          : (Math.max(40, FB.playerLevy(state)) + (w.mercCos || 0) * 150) *
-            (FB.rearmScale ? FB.rearmScale(state, 'player') : 1)) * (w.strength || 1);
-        const myStr = myMen * (1 + FB.skillOf(me, 'mar') / 14);
+        let myMen, myQ;
+        if (host) {
+          myMen = host.men * (w.strength || 1);
+          myQ = FB.compQuality ? FB.compQuality(host.units, host.men) : 1;
+        } else {
+          const comp = FB.playerComposition ? FB.playerComposition(state)
+            : { levy: FB.playerLevy(state), arch: 0, ret: 0 };
+          const units = { levy: comp.levy, arch: comp.arch, ret: comp.ret, mercs: (w.mercCos || 0) * cs };
+          let men = units.levy + units.arch + units.ret + units.mercs;
+          const fl = bal.armyMinMen || 40;
+          if (men < fl) { units.levy += fl - men; men = fl; }
+          myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
+          myMen = men * (FB.rearmScale ? FB.rearmScale(state, 'player') : 1) * (w.strength || 1);
+        }
+        const myStr = myMen * myQ * (1 + FB.skillOf(me, 'mar') / (bal.battleMarPlayer || 14));
         const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
         const enMen = ehost ? ehost.men
-          : FB.realmStrength(state, w.enemy) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+          : FB.realmStrength(state, w.enemy) * bal.levyPerDev * (bal.aiHostPerDev || 0.3) *
             (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
-        const enStr = enMen * (1 + (enemy ? enemy.ruler.mar : 5) / 22);
+        const enQ = ehost
+          ? (FB.compQuality ? FB.compQuality(ehost.units, ehost.men) : 1)
+          : (FB.aiHostQuality ? FB.aiHostQuality(state) : 1);
+        const enStr = enMen * enQ * (1 + (enemy ? enemy.ruler.mar : 5) / (bal.battleMarAI || 22));
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
         c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations
@@ -907,6 +942,7 @@ window.FB = window.FB || {};
       }
       case 'plot': {
         let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
+        c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery
         // a trusting victim is easier to ensnare — when the plot in motion has
         // a personal target, their opinion of the player counts too
         const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
@@ -1731,6 +1767,7 @@ window.FB = window.FB || {};
     }
     r.alive = false;
     FB.invalidateRealmCache();
+    if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes
     FB.news(state, FB.msg('news.event.fief_reclaimed',
       '📜 The fief returns to your demesne. {realm} is no more.', { realm: r.name }));
     FB.checkTierPromotions(state);

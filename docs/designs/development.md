@@ -5,7 +5,9 @@ map_data.js, one of each per province) via the build deed — `FB.build`/`FB.bui
 actions.js, picker in ui.js (`UI.showBuildings`). Tapping a settlement in your own demesne
 (Land tab) opens `UI.showSettlement`: the buildings standing in that province with what each
 provides, plus a raise button. Ongoing bonuses flow through `FB.buildingBonus` (tax, levy,
-piety), walls strengthen defense in `war_battle`, and events gate on `buildings` /
+piety, and the war keys `retinue`/`archers` — flat men added to the host's composition at
+muster, see [war.md](war.md)), walls strengthen defense in `war_battle`, and events gate
+on `buildings` /
 `notBuildings` triggers. `state.buildings` is keyed by province id, so conquest moves them
 with the land.
 

@@ -9,8 +9,21 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.32.0';
+FB.VERSION = '1.34.0';
   FB.CHANGELOG = [
+    { v: '1.34.0', date: '2026-07-24', changes: [
+      'The Royal Council: crowned Kings and Emperors now rule with five great officers of the crown — Seneschal, Constable, Treasurer, Almoner, Chamberlain — raised from your own vassals. Each office lends real strength (taxes, levies, cheaper buildings, piety, a watcher against schemes) while a loyal man holds it.',
+      'Magnates have tempers now: every lord carries a personality. Flatterers bring gifts and honeyed words; the ambitious weave schemes against an unwary king — a seated Chamberlain uncovers them, without one they strike from the dark.',
+      'Crown authority: high-handed rule (extraordinary taxes, revoked fiefs, dismissed officers) makes the crown stronger and the council colder. Pressed too far, the barons unite behind a charter of liberties — seal it and yield power, or tear it up and risk armed defiance. Let authority fall too low and the council ties your hands entirely.',
+      'The 🏛 Royal Council deed opens the board: offices, tempers, and favor, with gifts to win hearts and appointments or dismissals to shape it.',
+      'Ruler sheets now show a lord’s personality.'
+    ] },
+    { v: '1.33.0', date: '2026-07-24', changes: [
+      'Levy tiers: a host is now a composition, not just a headcount — the peasant levy mass, bowmen, hired companies, and a hard core of men-at-arms. Men-at-arms punch far above their numbers and die last; the levy takes the brunt of every battle, and a resting host refills with fresh levy only — a long campaign grinds an army down toward its peasant mass.',
+      'New war buildings: 🛡 Barracks (+40 men-at-arms) and 🏹 Archery Butts (+50 archers); the Stone Keep now also keeps 20 men-at-arms, and Mail Hauberks arms another 20.',
+      'The war status and your host’s banner in the Land tab now show what the host is made of, and battle events tell of the men-at-arms’ stand when they fought.',
+      'AI realms field their own small core of men-at-arms and archers, growing after the year 1000.'
+    ] },
     { v: '1.32.0', date: '2026-07-24', changes: [
       '💍 Seek a match now sounds out three families: an established house (older, a step up — richer dowry, harder suit), a peer your own age, and a young match (a step down, but many childbearing years ahead). Older characters are no longer offered only suitors past childbearing.',
       'The three prospects wait until you choose — declining to decide today no longer reshuffles them.'
@@ -794,8 +807,9 @@ FB.VERSION = '1.32.0';
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
-        p.piety += FB.buildingBonus(s, 'piety');
+        p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
         p.research = (p.research || 0) + FB.buildingBonus(s, 'research') + FB.techBonus(s, 'research');
+        if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
         if (G.auto.build) FB.autoBuild(s);
         if (G.auto.research) FB.autoResearch(s);
       }
@@ -1082,6 +1096,7 @@ FB.VERSION = '1.32.0';
     p.pop = Math.round(p.pop * 0.85);
     p.liegeOp = Math.round((p.liegeOp || 0) * 0.9);
     if (p.liegeOps) for (const rid in p.liegeOps) p.liegeOps[rid] = Math.round(p.liegeOps[rid] * 0.9);
+    if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
   }
 
   /* ---------- education (yearly) ----------

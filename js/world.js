@@ -352,12 +352,18 @@ window.FB = window.FB || {};
     return '#' + ((1 << 24) + (c((n >> 16) & 255) << 16) + (c((n >> 8) & 255) << 8) + c(n & 255)).toString(16).slice(1);
   }
 
+  /* the tempers of generated rulers — a house's personality, read by the
+     royal council (schemers, flatterers, loyal men) at king tier and up */
+  FB.RULER_TRAITS = ['ambitious', 'content', 'greedy', 'generous', 'cruel', 'kind',
+    'deceitful', 'honest', 'proud', 'humble', 'zealous', 'cynical', 'wrathful', 'patient'];
+
   function makeRuler(culture) {
     return {
       name: FB.randomName(culture, 'm'),
       culture: culture,
       age: FB.ri(20, 55),
-      mar: FB.ri(2, 14)
+      mar: FB.ri(2, 14),
+      trait: FB.pick(FB.RULER_TRAITS)
     };
   }
 
@@ -804,33 +810,48 @@ window.FB = window.FB || {};
 
   /* ================= PLAYER WAR (seasonal) ================= */
 
-  FB.playerLevy = function (state) {
+  /* The player's host composition: the dev-driven muster is the levy (massed,
+     untrained foot); war buildings, the arms techs, and a landed baron's
+     standing household contribute a hard core of men-at-arms (ret) and
+     bowmen (arch). FB.playerLevy stays the total headcount for every caller
+     that only wants a number. */
+  FB.playerComposition = function (state) {
     const B = FBDATA.balance;
     const p = state.player;
-    let men = 0;
+    const comp = { levy: 0, arch: 0, ret: 0 };
     if (p.provs && p.provs.length) {
-      for (const pid of p.provs) men += (state.dev[pid] || 1) * B.levyPerDev;
+      for (const pid of p.provs) comp.levy += (state.dev[pid] || 1) * B.levyPerDev;
     } else if (p.tier >= 3) {
-      men = 120; // barony retinue
+      comp.ret = B.baronyRetinue || 120; // the barony's standing men-at-arms
     }
     if (p.tier >= 3) {
-      men += FB.buildingBonus(state, 'levy');
-      // the lord raises the host in person: martial skill sways how many
-      // answer the call — traits and carried items count through skillOf
+      comp.levy += FB.buildingBonus(state, 'levy');
+      comp.ret += FB.buildingBonus(state, 'retinue') + FB.techBonus(state, 'retinue');
+      comp.arch += FB.buildingBonus(state, 'archers') + FB.techBonus(state, 'archers');
+      // the lord raises the levy in person: martial skill sways how many
+      // answer the call — traits and carried items count through skillOf;
+      // the professionals are already sworn and paid
       const me = state.chars[p.charId];
-      men *= (1 + FB.techBonus(state, 'levy')) *
+      comp.levy *= (1 + FB.techBonus(state, 'levy') + (FB.councilBonus ? FB.councilBonus(state, 'levy') : 0)) *
         (1 + (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0));
-      men *= FB.domainPenalty(state); // too much land in hand — the muster falters
+      comp.levy *= FB.domainPenalty(state); // too much land in hand — the muster falters
       // vassals answer the summons with a fraction of their own levies
       const vr = B.vassalLevyRate || 0;
       if (vr) {
         for (const vid of FB.playerVassals(state)) {
-          for (const pid of FB.realmHeldCounties(state, vid)) men += (state.dev[pid] || 1) * B.levyPerDev * vr;
+          for (const pid of FB.realmHeldCounties(state, vid)) comp.levy += (state.dev[pid] || 1) * B.levyPerDev * vr;
         }
       }
-      men = Math.round(men);
+      comp.levy = Math.round(comp.levy);
+      comp.ret = Math.round(comp.ret);
+      comp.arch = Math.round(comp.arch);
     }
-    return men;
+    return comp;
+  };
+
+  FB.playerLevy = function (state) {
+    const c = FB.playerComposition(state);
+    return c.levy + c.arch + c.ret;
   };
 
   /* Is the player personally caught up in a war? While true, only events
@@ -1169,14 +1190,17 @@ window.FB = window.FB || {};
   };
   FB.fns.war_mercs = function (state) {
     const w = state.player.war; if (!w) return;
+    const cs = FBDATA.balance.mercCompanySize || 150;
     w.mercCos = (w.mercCos || 0) + 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
     if (host) {
-      host.men += 150; host.mercs = (host.mercs || 0) + 150;
-      host.size = (host.size === undefined ? host.men : host.size + 150); // the company swells the muster
+      FB.hostUnits(host); // migrates hosts from before composition
+      host.units.mercs += cs;
+      host.men += cs;
+      host.size = (host.size === undefined ? host.men : host.size + cs); // the company swells the muster
     }
     FB.news(state, FB.msg('news.war.mercenaries_join',
-      '⚔ A mercenary company takes your coin — ~150 spears join the host.', {}));
+      '⚔ A mercenary company takes your coin — ~{men} spears join the host.', { men: cs }));
   };
   /* mustering: the host takes the field at your seat (js/armies.js) */
   FB.fns.war_raise = function (state) {
@@ -1186,9 +1210,13 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.mass = 1;
     const host = FB.playerHost ? FB.playerHost(state) : null;
-    if (host) { // already mustered: swell it now
-      host.men = Math.round(host.men * 1.35);
-      host.size = host.size === undefined ? host.men : Math.round(host.size * 1.35);
+    if (host) { // already mustered: swell the levy now (the professionals stay as they are)
+      const mult = FBDATA.balance.massLevyMult || 1.35;
+      FB.hostUnits(host);
+      const add = Math.round(host.units.levy * (mult - 1));
+      host.units.levy += add;
+      host.men += add;
+      host.size = host.size === undefined ? host.men : host.size + add;
     } else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
   };
   /* the council's abstract pitched battle exists only while the enemy has
@@ -1456,6 +1484,7 @@ window.FB = window.FB || {};
       }
       p.prestige += 30 * newTier;
       if (indep) FB.foundPlayerRealm(state); // restyle the realm at its new dignity
+      if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
     }
   };
 

@@ -161,5 +161,16 @@ FBDATA.events.push(
   text:'The line bent, then broke at {cname}. You are borne away with the remnant of your host — bloodied, beaten, but breathing.',
   options:[
     { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4 } }
+  ]},
+/* variants for a host with men-at-arms: the hard core earns a mention */
+{ id:'field_battle_won_steel', title:'Battle — the Field Is Yours', trigger:{ never:true }, wartime:true,
+  text:'Steel and shouting at {cname} — the levy wavered, but your men-at-arms stood like a wall and it was their banner that fell back, their dead that thickened the ground. Your host holds the field.',
+  options:[
+    { label:'Tend the wounded, and count the spoils.', desc:'Savor it; the crows already do.', effects:{ prestige:8, skills:{mar:1} } }
+  ]},
+{ id:'field_battle_lost_steel', title:'Battle — the Day Is Lost', trigger:{ never:true }, wartime:true,
+  text:'The levy broke first at {cname}, as levy will. Your men-at-arms sold their ground dearly and formed the rearguard that bore you off — bloodied, beaten, but breathing.',
+  options:[
+    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4 } }
   ]}
 );

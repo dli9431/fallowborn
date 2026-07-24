@@ -43,9 +43,12 @@ count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearl
 tick): the fief escheats to the liege unless a bordering player of the same sovereign
 wins the scramble (liege opinion, prestige, service) — and heirless fiefs of the
 player's own vassals simply return to the player's hand.
-AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial), not
-full chars — the Deeds banner's "vassal of X" links to their sheet via
-`UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`.
+AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial, and a
+`trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads at
+king tier and up), not full chars — the Deeds banner's "vassal of X" links to their sheet via
+`UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`. See
+[council.md](council.md) for how the player monarch's own vassal rulers sit as great
+officers of the crown.
 
 **Tiers** 0–7 (serf…emperor) + `profession` gate actions (`js/actions.js`) and events. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a

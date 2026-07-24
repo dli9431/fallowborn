@@ -175,7 +175,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
 | `popularOpinionBelow` | the commons' view of you |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, and the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`) |
 | `never` | only fired by other events' `queue` |
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
@@ -344,6 +344,9 @@ province they hold with the "Raise a building…" deed — one of each per provi
 - `cost` — gold (the Master Builder event discounts the next building by a quarter).
 - Siting: `devMin` (home province development), `coastal: true`, `terrains: [...]`.
 - Ongoing: `tax` and `piety` per season, `levy` men added to the muster.
+- War keys: `retinue` (professional men-at-arms) and `archers` — flat men mustered with
+  the host as those classes, fighting at their own quality (see `balance.quality*` and
+  docs/designs/war.md).
 - One-time on completion: `dev`, `pop` (popular opinion), `prestige`.
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
 - The `walls` id is special: the engine reads it for a defense bonus in the `war_battle`
@@ -455,7 +458,8 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 - `fx` keys, summed across adopted techs by `FB.techBonus`: `tax`/`levy` (fractional
   multipliers), `battle` (added to war odds), `build` (fractional building discount),
   `devCap` (+development ceiling in the player's own provinces, past the usual 10),
-  `health` (lower yearly mortality for the ruler), `research` (+scholarship per season).
+  `health` (lower yearly mortality for the ruler), `research` (+scholarship per season),
+  `retinue`/`archers` (flat men of that class mustered with the host).
 - `name`/`desc` accept text tokens and religion-variant objects.
 - Events can grant scholarship with the `research` effect and gate on `techs`/`notTechs`.
 - Buildings may carry a `research` per-season key (see the library).

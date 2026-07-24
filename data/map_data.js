@@ -618,7 +618,10 @@ FBDATA.titles = {
    cost: gold (a visiting master mason discounts it) · siting: devMin,
    coastal, terrains · ongoing: tax & piety per season, levy men ·
    one-time on completion: dev, pop (popular opinion), prestige.
-   The 'walls' id is special: it strengthens the ruler when defending. */
+   The 'walls' id is special: it strengthens the ruler when defending.
+   War keys: levy (untrained foot, mustered with the host), retinue
+   (professional men-at-arms — few, hard to kill), archers (bowmen) —
+   all three join the host's composition at muster (see docs/designs/war.md). */
 FBDATA.buildings = {
   mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2,
     desc:'Grinds the valley’s grain for a fee.' },
@@ -636,8 +639,12 @@ FBDATA.buildings = {
     desc:'Every tide brings someone who owes you a toll.' },
   library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, devMin:4, research:1,
     desc:'Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)' },
-  keep:    { name:'Stone Keep', icon:'🏰', cost:100, devMin:5, levy:60, prestige:10,
-    desc:'The last argument of a lord — and the first thing raiders see.' }
+  keep:    { name:'Stone Keep', icon:'🏰', cost:100, devMin:5, levy:60, retinue:20, prestige:10,
+    desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
+  barracks:{ name:'Barracks', icon:'🛡', cost:120, devMin:6, retinue:40,
+    desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
+  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, archers:50,
+    desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' }
 };
 
 /* Household holdings (tiers 0-2; bought with gold via the "Better the
@@ -752,7 +759,8 @@ FBDATA.plots = {
    fx keys (summed by FB.techBonus): tax/levy (fractional multipliers),
    battle (added to war odds), build (fractional building discount),
    devCap (+demesne development ceiling), health (lower yearly mortality),
-   research (+scholarship per season). */
+   research (+scholarship per season), retinue/archers (flat men added to
+   the host's composition at muster). */
 FBDATA.tech = {
   /* husbandry */
   heavy_plough:  { name:'Heavy Plough', icon:'🌾', cost:30, yearMin:880,
@@ -767,7 +775,7 @@ FBDATA.tech = {
   stirrups:      { name:'Stirrup Cavalry', icon:'🐎', cost:60, yearMin:920, req:'ringworks',
     desc:'Shock riders who stay in the saddle. (+5% battle odds)', fx:{ battle:0.05 } },
   mail_hauberks: { name:'Mail Hauberks', icon:'⛓', cost:100, yearMin:980, req:'stirrups',
-    desc:'A shirt of rings for every serious man. (+15% levy, +3% battle odds)', fx:{ levy:0.15, battle:0.03 } },
+    desc:'A shirt of rings for every serious man. (+15% levy, +3% battle odds, +20 men-at-arms)', fx:{ levy:0.15, battle:0.03, retinue:20 } },
   /* learning */
   scriptoria:    { name:{ default:'Scriptoria', muslim:'Paper Mills' }, icon:'📜', cost:30, yearMin:880,
     desc:'Knowledge that outlives its keepers. (+1 scholarship per season)', fx:{ research:1 } },
@@ -803,8 +811,18 @@ FBDATA.balance = {
   armyMarchDays: 6, // days for a host to cross one province
   armyRearmDays: 60, // a shattered host may muster again after this long
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
+  armyMinMen: 40, // a host under this many men disperses; also the smallest muster
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
+  battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)
+  /* host composition (levy tiers): a host's men split into classes, each with
+     its own battle quality; casualties fall levy-first, men-at-arms last */
+  qualityLevy: 0.85, qualityArcher: 1.2, qualityRetinue: 2.5, qualityMerc: 1.5,
+  mercCompanySize: 150, // men per hired company
+  massLevyMult: 1.35, // the great levy swells the levy class by this
+  baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
+  aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI hosts: this fraction of their men are men-at-arms / archers
+  aiEraStepYear: 1000, aiEraStepFrac: 0.04, // from this year AI professional fractions grow by this
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
   /* domain limit: counties the player may hold DIRECTLY before overload.
@@ -813,6 +831,10 @@ FBDATA.balance = {
      Grant the surplus to vassals to lift it. */
   domainBase: 4, domainStewPer: 5, overDomainPenalty: 0.15,
   demandTaxSeasons: 4, demandTaxPerSte: 0.015, // extraordinary taxes: seasons squeezed + per-stewardship bonus
+  /* the royal council (tier 6+, js/council.js) */
+  councilConsentBelow: 35, // below this crown authority the council blocks extraordinary taxes & revocations
+  councilCharterAbove: 70, // authority above this with a sour council invites the charter of liberties
+  councilGiftCost: 25, councilGiftOpinion: 15, // a gift to a sworn man: gold out, favor in
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,

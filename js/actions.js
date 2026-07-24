@@ -576,7 +576,7 @@ window.FB = window.FB || {};
     desc: function (s) {
       const w = s.player.war;
       return FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
-        { men: FB.playerLevy(s) + ((w && w.mercCos) || 0) * 150 });
+        { men: FB.playerLevy(s) + ((w && w.mercCos) || 0) * (FBDATA.balance.mercCompanySize || 150) });
     },
     show: function (s) {
       if (!s.player.war) return false;
@@ -657,11 +657,29 @@ window.FB = window.FB || {};
   { id: 'demand_taxes', label: '💰 Demand extraordinary taxes', cd: 90,
     desc: function () { return 'Squeeze your vassals for four seasons’ taxes at once. They will not love it.'; },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
+    can: function (s) {
+      if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
+        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time.',
+          { authority: Math.round(s.council.authority) });
+      }
+      return true;
+    },
     run: function (s) { FB.demandTaxes(s); } },
   { id: 'revoke_county', label: '📜 Revoke a county…', noConsume: true,
     desc: function () { return 'Take a fief back from a vassal — by law if he bends, by force if he rises.'; },
     show: function (s) { return FB.playerVassals(s).length >= 1 && !s.player.war; },
-    run: function (s) { if (FB.ui && FB.ui.showRevoke) FB.ui.showRevoke(); } }
+    can: function (s) {
+      if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
+        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time.',
+          { authority: Math.round(s.council.authority) });
+      }
+      return true;
+    },
+    run: function (s) { if (FB.ui && FB.ui.showRevoke) FB.ui.showRevoke(); } },
+  { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
+    desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
+    show: function (s) { return s.player.tier >= 6; },
+    run: function (s) { if (FB.ui && FB.ui.showCouncil) FB.ui.showCouncil(); } }
   ];
 
   /* ================= shared helpers ================= */
@@ -681,7 +699,7 @@ window.FB = window.FB || {};
     }
     let t = demesne + vassal;
     t += FB.buildingBonus(state, 'tax');
-    t *= 1 + FB.techBonus(state, 'tax');
+    t *= 1 + FB.techBonus(state, 'tax') + (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
     if (p.liege) t *= 0.75; // liege's cut
     return Math.round(t);
   };
@@ -1241,6 +1259,7 @@ window.FB = window.FB || {};
     gold = Math.ceil(gold * steMul);
     if (gold > 0) {
       p.gold += gold;
+      if (FB.councilAuthority) FB.councilAuthority(state, 4); // the crown rules without its council — they notice
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
         '💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while.',
         { gold: gold }));
@@ -1431,7 +1450,7 @@ window.FB = window.FB || {};
   };
 
   FB.buildCost = function (state, def) {
-    let c = def.cost * (1 - FB.techBonus(state, 'build'));
+    let c = def.cost * (1 - FB.techBonus(state, 'build') - (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     if (state.player.flags.mason_visit) c *= 0.75;
     return Math.round(c);
   };

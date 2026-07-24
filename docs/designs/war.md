@@ -6,13 +6,31 @@ standing in or marching between provinces. AI sovereigns raise automatically whe
 starts (size = realm dev × `levyPerDev` × `balance.aiHostPerDev`); the player's host
 musters the moment war begins — `FB.warFooting`, which every war-start path calls,
 raises it — and the muster events that follow only decide whether it takes the field
-with hired companies (`war_mercs`, 150 men each) or a great levy (`war_mass`) behind
+with hired companies (`war_mercs`, `balance.mercCompanySize` men each) or a great levy
+(`war_mass`, swelling the levy class by `balance.massLevyMult`) behind
 it. A shattered host may muster again only after `balance.armyRearmDays`
 (`state.armyDown`). Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
 single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so the daily
 loops stay O(realms + armies) even with dozens of hosts on the map.
+
+**A host is a composition, not just a headcount.** Every host carries
+`units: { levy, arch, ret, mercs }` (with `men` always the total, so every place that only
+reads a number is untouched). The levy is the dev-driven mass — untrained foot raised for
+the campaign; the **retinue** is the professional core of men-at-arms from war buildings
+(`keep`, `barracks`), the arms techs, and a landed baron's standing household
+(`balance.baronyRetinue`); **archers** come from archery-butts buildings and tech;
+**mercs** are the hired companies. `FB.playerComposition` (world.js) computes the player's
+split — `FB.playerLevy` remains the total for callers that want a number — and AI hosts
+get a simple era-based split (`balance.aiRetinueFrac`/`aiArcherFrac`, stepping up at
+`aiEraStepYear`), since AI realms keep no buildings. Each class fights at its own quality
+(`balance.qualityLevy`/`qualityArcher`/`qualityRetinue`/`qualityMerc`, read through
+`FB.compQuality`): men-at-arms punch far above their numbers, levy below. Battle
+casualties fall levy-first and men-at-arms last (`applyLosses` in armies.js), and a
+resting host refills with fresh levy only — slain professionals are not replaced
+mid-war, so a long campaign grinds a host down toward its peasant mass. Hosts from older
+saves migrate in place (`FB.hostUnits`): their men count as levy but the hired companies.
 
 **Movement is daily and adjacency-based.** Orders set a BFS path (`FB.findPath` over
 `FB.world.adj`); every leg, the first included, costs `balance.armyMarchDays`, and the
@@ -28,7 +46,8 @@ interaction; the Land tab shows the selected host and any hosts standing in the 
 province. Since the host never moves on its own, a one-time toast at muster
 (`flags.hostHintShown`) and a Deeds-tab hint while the raised host stands idle both tell
 the player to tap it, then tap a province. A host resting on its sovereign's own land refills toward its mustered `size`
-at `balance.armyReinforceRate` per day. On the map a host stands on a disc of its realm's
+at `balance.armyReinforceRate` per day — the refill is all fresh levy; lost men-at-arms
+and archers stay lost. On the map a host stands on a disc of its realm's
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.
 
@@ -46,10 +65,13 @@ overrides either, and while active it supersedes the council's `huntPrey`.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).
-Power is men × martial factor (player mar/14 with tech/item/blessing edges, AI ruler
-mar/22) × `FB.rf(0.75, 1.25)`; the loser takes `balance.battleLoseLoss` casualties and
-routs (dispersing under 40 men), the winner loses `battleWinLoss` scaled by closeness.
-Player battles queue a `field_battle_won/lost` event and score through the existing
+Power is men × composition quality (`FB.compQuality`) × martial factor (player
+mar/`battleMarPlayer` with tech/item/blessing edges, AI ruler mar/`battleMarAI`) ×
+`FB.rf(0.75, 1.25)`; the loser takes `balance.battleLoseLoss` casualties and
+routs (dispersing under `balance.armyMinMen`), the winner loses `battleWinLoss` scaled
+by closeness.
+Player battles queue a `field_battle_won/lost` event (the `_steel` variants when the
+player's men-at-arms stood in the line) and score through the existing
 `war_win`/`war_loss` handlers (3 losses still break the campaign); AI-vs-AI results
 accumulate as `war.fw`/`war.fl` and tilt that war's yearly resolution in
 `FB.worldTick`. Three field wins no longer end an attacking war by fiat: the beaten
