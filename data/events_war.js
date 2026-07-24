@@ -17,7 +17,7 @@ FBDATA.events.push(
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to war.' } },
-    { label:'March with what you have.', effects:{ prestige:3, custom:'war_raise' } }
+    { label:'March with what you have.', desc:'Trust the spears that answered the first call.', effects:{ prestige:3, custom:'war_raise' } }
   ]},
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
   text:'{enemy} marches on your lands. Roads fill with carts and rumor; your captains stand in the yard, waiting for orders.',
@@ -26,7 +26,7 @@ FBDATA.events.push(
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the defense.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to the defense.' } },
-    { label:'Stand ready at the border.', effects:{ prestige:2, custom:'war_raise' } }
+    { label:'Stand ready at the border.', desc:'Meet them with the host you already have.', effects:{ prestige:2, custom:'war_raise' } }
   ]},
 { id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true, warStatus:true,
   text:'Maps, candle-stubs, and hard-eyed captains. The war against {enemy} must be given its next move — and the men must see you certain of it.',
@@ -66,28 +66,28 @@ FBDATA.events.push(
   trigger:{ flags:['with_liege_host'], liegeAtWar:true, chance:0.6 }, wartime:true, weight:14, cooldown:2,
   text:'The liege’s war finds its field. Your banner has its place in the line, and great men are watching how you hold it.',
   options:[
-    { label:'Fight where the press is thickest.', chance:'battle',
+    { label:'Fight where the press is thickest.', chance:'battle', desc:'Renown and ruin stand side by side in the press.',
       success:{ text:'Your part of the line holds, then breaks them. The liege marks it — and so does everyone else.',
         effects:{ prestige:10, opinionLiege:15, gold:4, skills:{mar:1}, warService:2 } },
       failure:{ text:'A mace finds your helm; your men drag you clear. You bled in the liege’s cause, and that too is remembered.',
         effects:{ health:-2, opinionLiege:8, prestige:2, addTrait:'scarred', warService:1 } } },
-    { label:'Hold your ground and spend your men carefully.', effects:{ opinionLiege:5, prestige:2, skills:{mar:1}, warService:1 } }
+    { label:'Hold your ground and spend your men carefully.', desc:'A quiet day, well held, is remembered too.', effects:{ opinionLiege:5, prestige:2, skills:{mar:1}, warService:1 } }
   ]},
 { id:'host_camp', title:'Fires of the Great Camp',
   trigger:{ flags:['with_liege_host'], liegeAtWar:true, chance:0.5 }, wartime:true, weight:8, cooldown:2,
   text:'A war camp is a court under canvas: lords trade grievances, wagers, and promises between the watch-fires.',
   options:[
-    { label:'Talk your house upward.', chance:0.6,
+    { label:'Talk your house upward.', chance:0.6, desc:'Fine words may open doors — or close them.',
       success:{ text:'The right ears, the right words. Doors will open after this war.', effects:{ prestige:6, skills:{dip:1} } },
       failure:{ text:'You misjudge a jest at a great man’s expense. Cold looks follow you to your tent.', effects:{ prestige:-3 } } },
-    { label:'Drill your men instead.', effects:{ skills:{mar:1}, opinionLiege:3 } },
-    { label:'Rest while you can.', effects:{ health:1 } }
+    { label:'Drill your men instead.', desc:'Sweat now buys blood saved later.', effects:{ skills:{mar:1}, opinionLiege:3 } },
+    { label:'Rest while you can.', desc:'The war will not wait for you to wake.', effects:{ health:1 } }
   ]},
 { id:'liege_war_ends', title:'The Host Disbands',
   trigger:{ flags:['with_liege_host'], liegeAtWar:false }, wartime:true, weight:50,
   text:'The liege’s war is done. The great camp folds tent by tent, and the banners turn for home — yours among them, with honor.',
   options:[
-    { label:'Home, to what waited.', effects:{ clearFlag:'with_liege_host', opinionLiege:10, prestige:8, gold:5, warService:2, log:'Came home from the liege’s war.' } }
+    { label:'Home, to what waited.', desc:'The road home, with honor in your saddlebags.', effects:{ clearFlag:'with_liege_host', opinionLiege:10, prestige:8, gold:5, warService:2, log:'Came home from the liege’s war.' } }
   ]},
 
 /* ---------- life on campaign (soldiers and levied men) ---------- */
@@ -95,32 +95,32 @@ FBDATA.events.push(
   trigger:{ professions:['soldier'], realmAtWar:true, chance:0.4 }, wartime:true, weight:8, cooldown:2,
   text:'The supply wagons are late again, and the host eats the countryside as it goes. A farmstead ahead has full cribs and frightened eyes.',
   options:[
-    { label:'Take what the host needs.', effects:{ gold:2, piety:-4, popularOpinion:-3 } },
-    { label:'Pay for what you take.', require:{ goldMin:2 }, effects:{ gold:-2, piety:5 } },
-    { label:'March hungry.', effects:{ health:-1, piety:2 } }
+    { label:'Take what the host needs.', desc:'Their hunger against yours — and yours is armed.', effects:{ gold:2, piety:-4, popularOpinion:-3 } },
+    { label:'Pay for what you take.', require:{ goldMin:2 }, desc:'A clear conscience, at market price.', effects:{ gold:-2, piety:5 } },
+    { label:'March hungry.', desc:'An empty belly, but a clean one.', effects:{ health:-1, piety:2 } }
   ]},
 { id:'night_sortie', title:'Volunteers for the Night',
   trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:3,
   text:'The captain wants men for a night raid on the enemy pickets — quiet feet, quick knives, and no promises about the morning.',
   options:[
-    { label:'Step forward.', chance:'battle',
+    { label:'Step forward.', chance:'battle', desc:'Loot and stories favor the bold — if the dark allows.',
       success:{ text:'Fires in the dark, cut ropes, panicked horses. You are back before dawn with loot and a story.',
         effects:{ gold:5, prestige:6, skills:{mar:1} } },
       failure:{ text:'A sentry’s cry, a running fight in the dark. You crawl back to the lines bleeding.',
         effects:{ health:-2, addTrait:'scarred', prestige:2 } } },
-    { label:'Let braver fools go.', effects:{ } }
+    { label:'Let braver fools go.', desc:'The cautious live to be levied again.', effects:{ } }
   ]},
 { id:'camp_fires', title:'The Long Wait',
   trigger:{ professions:['soldier'], realmAtWar:true, chance:0.4 }, wartime:true, weight:6, cooldown:2,
   text:'Armies are mostly waiting. Around the fires the veterans dice, wrestle, and retell battles that grow with every telling.',
   options:[
-    { label:'Dice with the veterans.', require:{ religionGroups:['christian','pagan','jewish'] }, chance:0.5,
+    { label:'Dice with the veterans.', require:{ religionGroups:['christian','pagan','jewish'] }, chance:0.5, desc:'The bones care nothing for your purse.',
       success:{ text:'The bones favor you tonight.', effects:{ gold:3, skills:{int:1} } },
       failure:{ text:'The bones do not.', effects:{ gold:-3 } } },
-    { label:'Wrestle for the camp’s honor.', chance:0.5,
+    { label:'Wrestle for the camp’s honor.', chance:0.5, desc:'Win a name, or eat the mud.',
       success:{ text:'You pin a man twice your size while the fires roar approval.', effects:{ prestige:4, skills:{mar:1} } },
       failure:{ text:'You eat mud to great applause.', effects:{ health:-1 } } },
-    { label:'Listen, and learn the old tricks.', effects:{ skills:{mar:1} } }
+    { label:'Listen, and learn the old tricks.', desc:'Old soldiers’ tales are lessons in disguise.', effects:{ skills:{mar:1} } }
   ]},
 
 /* ---------- the ruler’s camp (random wartime happenings) ---------- */
@@ -128,38 +128,38 @@ FBDATA.events.push(
   trigger:{ flags:['with_liege_host'], liegeAtWar:true, chance:0.4 }, wartime:true, weight:7, cooldown:2,
   text:'Two of your men are dragged before you with a farmwife’s silver in their packs. The camp watches to see what your banner is worth.',
   options:[
-    { label:'Hang them before the tents.', effects:{ opinionLiege:8, prestige:2, popularOpinion:-2 } },
-    { label:'Flog them and repay the woman.', effects:{ gold:-2, opinionLiege:4, piety:3 } },
-    { label:'“Spoils of war.” Look away.', effects:{ piety:-4, prestige:-2 } }
+    { label:'Hang them before the tents.', desc:'Order at the end of a rope.', effects:{ opinionLiege:8, prestige:2, popularOpinion:-2 } },
+    { label:'Flog them and repay the woman.', desc:'Justice, with mercy and a little silver.', effects:{ gold:-2, opinionLiege:4, piety:3 } },
+    { label:'“Spoils of war.” Look away.', desc:'The camp remembers what you forgive.', effects:{ piety:-4, prestige:-2 } }
   ]},
 { id:'war_deserters', title:'Empty Bedrolls',
   trigger:{ tierMin:3, atWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:2,
   text:'Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you.',
   options:[
-    { label:'Hunt them down and hang one.', effects:{ prestige:3, popularOpinion:-5 } },
+    { label:'Hunt them down and hang one.', desc:'Fear keeps ranks better than love does.', effects:{ prestige:3, popularOpinion:-5 } },
     { label:'Promise double pay at war’s end.', require:{ goldMin:8 }, desc:'The ranks steady.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'Let the faint-hearted go.', effects:{ custom:'war_thin', prestige:-2 } }
+    { label:'Let the faint-hearted go.', desc:'A thin host, but a willing one.', effects:{ custom:'war_thin', prestige:-2 } }
   ]},
 { id:'war_grain_seller', title:'Grain at Sword-Season Prices',
   trigger:{ tierMin:3, atWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:2,
   text:'A merchant with excellent timing and no shame offers grain enough to keep the host fed — at thrice the honest price.',
   options:[
     { label:'Pay him. (8 gold)', require:{ goldMin:8 }, desc:'A fed host fights better.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'“Requisition” the wagons.', chance:0.6,
+    { label:'“Requisition” the wagons.', chance:0.6, desc:'Take it by right of hunger — if his guards allow.',
       success:{ text:'The host eats; the merchant curses your name in three ports.', effects:{ custom:'war_supply', prestige:-2, piety:-3 } },
       failure:{ text:'His guards were better than his prices. Men are hurt for nothing.', effects:{ custom:'war_thin', prestige:-3 } } },
-    { label:'The men can tighten their belts.', effects:{ custom:'war_thin' } }
+    { label:'The men can tighten their belts.', desc:'Hunger is cheaper than grain this season.', effects:{ custom:'war_thin' } }
   ]},
 
 /* ---------- battles on the map (hosts meeting in a province, js/armies.js) ---------- */
 { id:'field_battle_won', title:'Battle — the Field Is Yours', trigger:{ never:true }, wartime:true,
   text:'Steel and shouting at {cname} — and when the lines part it is their banner that falls back, their dead that thicken the ground. Your host holds the field.',
   options:[
-    { label:'Tend the wounded, and count the spoils.', effects:{ prestige:8, skills:{mar:1} } }
+    { label:'Tend the wounded, and count the spoils.', desc:'Savor it; the crows already do.', effects:{ prestige:8, skills:{mar:1} } }
   ]},
 { id:'field_battle_lost', title:'Battle — the Day Is Lost', trigger:{ never:true }, wartime:true,
   text:'The line bent, then broke at {cname}. You are borne away with the remnant of your host — bloodied, beaten, but breathing.',
   options:[
-    { label:'Rally who you can in the dark.', effects:{ gold:-4, health:-1, prestige:-4 } }
+    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4 } }
   ]}
 );

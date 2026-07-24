@@ -465,6 +465,13 @@ textarea.modjson, textarea.savetext {
     border-radius: 14px 14px 0 0; border-bottom: none;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
   }
+  /* the event dialog floats just above the screen edge with its full frame
+     restored — a sheet touching the edge reads as if its bottom were cut off */
+  #eventmodal { padding: 0 10px calc(10px + env(safe-area-inset-bottom)); }
+  #eventmodal .modalcard {
+    border-bottom: 2px solid #7a6234; border-radius: 14px;
+    padding-bottom: 16px;
+  }
   /* Tall dialogs with a Close pinned to the bottom middle, so a long list
      needs no scroll to shut and no reach for the top edge to dismiss. Two
      flavours share the column layout + sticky footer below:

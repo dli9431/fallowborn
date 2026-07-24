@@ -198,7 +198,9 @@ alongside their normal triggers and serve both pools.
 
 ### Option fields
 
-`label`, optional `desc`, optional `require` (same syntax as triggers — hides the option),
+`label`, optional `desc` (a short hint shown beneath the label in the event dialog —
+every option should carry one: vague flavor pointing at the thrust of the choice,
+never exact numbers), optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot appeal_outcome vassal_comply county_petition`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
