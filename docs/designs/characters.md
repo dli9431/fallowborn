@@ -92,3 +92,26 @@ entry fee, adds vocational experience and the career skill during the yearly lif
 and becomes journeyman work at sixteen. The ordinary education focus and tutor continue
 in parallel. Household work is intentionally limited to the player, spouses, and
 unmarried dependent children; distant kin do not send invisible wages home.
+
+**Religious standing belongs to characters too.** Catholic and Muslim household members
+lazily carry `c.religiousRanks`, a map from path id to attained step. Changing occupations
+selects a different path without erasing progress on the old one. Ordinary careers use a
+lay path built around almsgiving, pilgrimage, and patronage; `monk` and `priest` select a
+vocation path. The title and next step appear beside the character's livelihood, and the
+household may sponsor advancement when that character meets its age, Learning, vocational
+experience, piety, prestige, and gold requirements.
+
+The paths are deliberately not symmetrical ordination trees. Catholic monastic standing is
+novice → professed brother/sister → prior/prioress → abbot/abbess, with a male abbot able to
+become bishop; Catholic clerical service follows clerk → acolyte → deacon → priest →
+archpriest → bishop. Muslim learned service follows student → licensed scholar → mudarris →
+mufti → qadi → chief qadi, while public mosque service follows servant → muezzin → imam →
+khatib → chief imam. Islam has no ordained church hierarchy here: the learned path represents
+recognized teaching, legal authority, and appointments. Women may become abbesses and Muslim
+scholars or muftis; Catholic episcopal and modeled judicial appointments remain male-gated.
+
+Higher vocation offices raise a dependent's `station` for marriage and household society.
+For the player, abbot/qadi still raises tier to gentry and bishop/chief qadi to baron, preserving
+the religious alternate route into the secular game. Legacy `player.flags.abbot/bishop/qadi/
+chief_qadi` self-heal the matching character rank, and new ladder promotions set those flags
+so existing titles and events remain compatible.

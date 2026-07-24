@@ -37,8 +37,9 @@ FBDATA.careers = {
   },
   priest: {
     name:'Clerical Service', icon:'🕯', skill:'lea', apprenticeAge:16, apprenticeCost:0,
-    wage:0.5, masterWage:1, piety:2, hiddenChoice:true,
-    ranks:{ apprentice:'Clerical student', journeyman:'Priest', master:'Senior cleric' },
+    wage:0.5, masterWage:1, piety:2, maleOnly:true,
+    religionGroups:['christian','muslim'],
+    ranks:{ apprentice:'Clerical student', journeyman:'Clerical servant', master:'Senior cleric' },
     desc:'Public worship, teaching, judgment, and the care of souls.'
   },
   noble: {

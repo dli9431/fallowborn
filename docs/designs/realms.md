@@ -72,6 +72,10 @@ to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
 longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
 monk/priest) but manages the manor and may petition for a barony like any gentry.
+The household religious ladder in `js/economy.js` reaches the same compatibility flags and
+tiers directly: abbot/qadi raises a player to tier 2, bishop/chief qadi to tier 3, while a
+dependent character receives the corresponding marriage/social `station` without becoming
+the landed player.
 The unsolicited `grant_of_barony` event lets gentry accept, decline for a purse, or
 decline graciously. Short of "Autoresolve everything", automation leaves every
 title-changing or independence decision to the player. Promotions above count happen

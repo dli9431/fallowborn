@@ -158,7 +158,7 @@ FBDATA.events.push(
     { label:'Bury them again with honest prayers.', desc:'No profit, but a clear conscience.', effects:{ piety:8 } }
   ]},
 { id:'made_abbot', title:'The Abbot’s Chair',
-  trigger:{ professions:['monk'], religionGroups:['christian'], pietyMin:80, leaMin:8, chance:0.3 }, weight:10, once:true,
+  trigger:{ professions:['monk'], religionGroups:['christian'], sex:'m', notFlags:['abbot','bishop'], pietyMin:80, leaMin:8, chance:0.3 }, weight:10, once:true,
   text:'The old abbot has gone to his reward. The brothers gather to choose a successor, and many eyes turn to you.',
   options:[
     { label:'Accept the burden.', desc:'The brothers may raise you — or close ranks against you.', chance:0.65,
@@ -167,7 +167,7 @@ FBDATA.events.push(
     { label:'Decline in humility.', desc:'Piety grows fastest out of office.', effects:{ piety:10, addTrait:'humble' } }
   ]},
 { id:'bishops_mitre', title:'A Mitre Within Reach',
-  trigger:{ professions:['monk','priest'], religionGroups:['christian'], flags:['abbot'], pietyMin:150, chance:0.2 }, weight:8, once:true,
+  trigger:{ professions:['monk','priest'], religionGroups:['christian'], sex:'m', flags:['abbot'], notFlags:['bishop'], pietyMin:150, chance:0.2 }, weight:8, once:true,
   text:'The bishop’s seat stands empty, and the metropolitan hints it can be yours — for merit, or for a “gift to the church” of two hundred gold.',
   options:[
     { label:'Pay the gift.', require:{ goldMin:200 }, desc:'Two hundred gold buys the seat — and {god}’s raised eyebrow.',
@@ -198,7 +198,7 @@ FBDATA.events.push(
       failure:{ text:'A blot of ink ruins a week’s work. Begin again, with patience.', effects:{ piety:1 } } }
   ]},
 { id:'made_qadi', title:'The Qadi’s Seat',
-  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], pietyMin:80, leaMin:8, chance:0.3 }, weight:10, once:true,
+  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], sex:'m', notFlags:['qadi','chief_qadi'], pietyMin:80, leaMin:8, chance:0.3 }, weight:10, once:true,
   text:'The old qadi has died, and the district needs a judge — a man of learning, piety, and patience. The notables gather, and many eyes turn to you.',
   options:[
     { label:'Accept the burden of judgment.', desc:'The seat could be yours, if the notables agree.', chance:0.65,
@@ -207,7 +207,7 @@ FBDATA.events.push(
     { label:'Decline in humility.', desc:'Piety grows fastest out of office.', effects:{ piety:10, addTrait:'humble' } }
   ]},
 { id:'chief_qadi', title:'The Emir’s Justice',
-  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], flags:['qadi'], pietyMin:150, chance:0.2 }, weight:8, once:true,
+  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], sex:'m', flags:['qadi'], notFlags:['chief_qadi'], pietyMin:150, chance:0.2 }, weight:8, once:true,
   text:'The emir requires a chief judge for the whole province, and hints the appointment can be yours — for merit, or for a “gift to the treasury” of two hundred gold.',
   options:[
     { label:'Pay the gift.', require:{ goldMin:200 }, desc:'Two hundred gold buys the seat — and {god}’s raised eyebrow.',

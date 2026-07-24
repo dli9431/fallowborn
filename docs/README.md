@@ -106,6 +106,15 @@ favor and battlefield glory earn banners; the church raises the learned; marriag
 shortcut everything. Meanwhile ~65 sovereign realms fight their own wars — and their dukes
 and counts sometimes break away — so the map redraws itself decade by decade.
 
+The household also has a **religious ladder** under **Work, training & enterprises**.
+Catholic and Muslim laypeople can become known for almsgiving, pilgrimage, and patronage;
+religious workers instead rise through historically distinct paths. Catholic monks and
+clerics move through profession, priory, ordination, and high office. Muslim students earn
+scholarly standing and may become teachers, muftis, or judges, while mosque servants may
+become muezzins, imams, and khatibs. These are not treated as one interchangeable
+priesthood: Islamic learning and judicial appointment form their own path. Every resident
+spouse and dependent child can pursue a rank, not only the player.
+
 ### The feudal ladder
 
 Every county on the map belongs to someone: a count, who answers to a duke, who answers to

@@ -6,7 +6,17 @@ reads and consumes, sells an anointing against sickness, and offers three pure-e
 spends — the clergy's good word with your lord (`opinionLiege`), masses for the family
 dead (prestige and popular opinion), and a blessing upon your house (spouse opinion)).
 The `give_alms` deed closes the loop, turning gold into piety (with a little popular
-opinion) so the temple's services stay within reach. Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
+opinion) so the temple's services stay within reach.
+
+**Piety also backs household religious standing.** The player resource is the house's pool
+of reputation and support, so it gates the advancement of the player, a spouse, or a
+dependent child; the candidate's age, Learning, and years in the vocation remain personal.
+Gold pays for alms, journeys, study, or endowment, while piety is normally a threshold rather
+than a spent currency. Every attained rank may add a small seasonal piety contribution through
+`FB.livelihoodPiety`; non-player clerical careers retain their underlying career contribution
+as well. See [characters.md](characters.md) for the Catholic and Muslim paths.
+
+Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
 focus accrue power with discovery risk, then a resolution event fires (`plot` named
 chance — for plots with a personal victim it adds the target's `opinion/500` to success;
 options end with `{custom:'plot_end'}`). The Scheming focus is the repeatable source of
