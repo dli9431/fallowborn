@@ -1,5 +1,25 @@
 # Marriage & child matches
 
+## Royal marriages
+
+Royal courtship uses the ordinary marriage rules. Ruler sheets in the player's liege
+chain show their compact family and ordered succession, and an independent player king
+or emperor may also approach an adjacent sovereign royal court. Count and duke children
+have station 3; king and emperor children station 4. A royal proposal uses the normal
+proposal formula plus that realm's opinion divided by 400 and clamps at 5-90%. Only the
+current protagonist may create a royal compact, and only one such compact may be active
+at once; adulthood, sex, kinship, doctrine, courtship, proposal, and spouse capacity
+remain the standard gates.
+
+Marriage to any listed child forms a dynastic tie, but only the visibly designated heir
+currently transmits the crown. The spouse succeeds first. Shared children form that
+spouse's branch, and if the spouse dies they retain the branch's place before royal
+siblings. A landed royal child may rule the AI realm before the player ever selects
+them; the title joins player control only when that rightful character becomes the
+protagonist. Divorce, the royal spouse's death, or the protagonist's death ends the
+marriage-based military alliance, but already-born descendants keep their succession
+position.
+
 **Marriage is station-gated.** Characters carry a social rank `station` 0–4
 (`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps
 up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up

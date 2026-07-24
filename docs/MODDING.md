@@ -1,5 +1,61 @@
 # Modding Fallowborn
 
+## Targeted plots, war causes, and alliances
+
+A plot definition may add an optional `target` selector. The engine asks the player to
+choose before the plot begins and saves the JSON-safe selection in
+`player.plot.context`; discovery and resolution events receive the same context. The
+built-in selector `"border_county_without_dejure"` produces:
+
+```json
+{ "pid": "<province id>" }
+```
+
+The core `fabricate_claim` plot uses that selector, requires tier 4, and needs 14 power.
+Its `fabricate_claim` named chance is
+`clamp(0.30 + intrigue * 0.03 + learning * 0.01 + prestige / 1000, 0.10, 0.90)`.
+For this plot, `plot_discovery` uses the same chance when the player rushes the scheme.
+The custom effects `fabricate_claim_success`, `fabricate_claim_failure`,
+`plot_discovery_success`, and `plot_discovery_failure` create the saved claim or charge
+5 prestige, then end the plot. Only one fabricated claim may exist.
+
+`FB.warCauses(state)` is the authoritative declaration API. It returns semantic records
+with this common shape:
+
+```json
+{
+  "type": "dejure | fabricated | restoration",
+  "target": "<province id>",
+  "enemy": "<sovereign realm id>",
+  "titleKind": "duchy | kingdom | empire | null",
+  "titleId": "<de jure title id or null>",
+  "titleName": "<display title or null>",
+  "blocked": "pact | alliance | null"
+}
+```
+
+Only fields relevant to the cause are present. `restoration` targets the claimant
+crown's current capital; `fabricated` refers to `player.fabricatedClaim.pid`; `dejure`
+uses the most specific title the player actually holds. Passing `true` as the second
+argument includes pact/alliance-blocked records for explanatory UI. `FB.warTargets`
+still returns province ids, and `FB.startPlayerWar` accepts either a current semantic
+record or a compatible string target. New wars persist the normalized subset as
+`player.war.casus`; missing `casus` on an old in-progress war invokes legacy capture.
+
+Defensive alliances live in `state.alliances` as canonical pairs:
+
+```json
+{
+  "a": "<realm id>", "b": "<realm id>",
+  "source": "dynastic | envoy | royal_marriage",
+  "aGen": 2, "bGen": 4
+}
+```
+
+Only one pair may involve a realm. The generation stamps expire it when either ruler
+changes. Alliances block declarations and add abstract levy to a defender; they never
+create extra war records or allied field hosts.
+
 Everything about the world is data. There are two ways to mod:
 
 1. **Edit the files in `data/`** — plain JavaScript objects, loaded before the engine.
@@ -207,7 +263,9 @@ every option should carry one: vague flavor pointing at the thrust of the choice
 never exact numbers), optional `require` (same syntax as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
-liege_grant war_battle plot appeal_outcome vassal_comply county_petition parliament_vote`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
+liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
+vassal_comply county_petition parliament_vote`) with `success` / `failure` branches
+(`{text, effects}`), and `effects`.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
 `skill_lea` benefits from Letters in the Family and the monk/priest professions. The
@@ -295,7 +353,9 @@ disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
-partnership at the given base stake) live in `js/economy.js`; mods may register their own before use).
+partnership at the given base stake) live in `js/economy.js`; targeted-plot handlers
+`fabricate_claim_success fabricate_claim_failure plot_discovery_success
+plot_discovery_failure` live in `js/actions.js`; mods may register their own before use).
 
 Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
 loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;

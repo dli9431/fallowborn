@@ -90,6 +90,23 @@ window.FB = window.FB || {};
     if (value <= -20) return FB.T('Guarded');
     return FB.T('Neutral');
   }
+  function allianceSourceText(source) {
+    if (source === 'royal_marriage') return FB.T('royal marriage');
+    if (source === 'envoy') return FB.T('envoy compact');
+    return FB.T('dynastic compact');
+  }
+  function allianceText(s, rid) {
+    const a = FB.allianceOf(s, rid);
+    if (!a) return FB.T('None');
+    const partner = a.a === rid ? a.b : a.a;
+    const r = s.realms[partner];
+    const support = FB.alliedReinforcement(s, rid);
+    return FB.T('{realm} · {source} · until either ruler changes · defensive support ~{men}', {
+      realm: r ? r.name : partner,
+      source: allianceSourceText(a.source),
+      men: menText(s, support.men)
+    });
+  }
   function foreignPolicyStanceText(s, rid) {
     const stance = FB.foreignPolicyStance(s, rid);
     const text = stance > 0 ? FB.T('Improve relations')
@@ -102,6 +119,9 @@ window.FB = window.FB || {};
   function foreignPolicyStatusText(s, rid) {
     if (s.player.war && s.player.war.enemy === rid) {
       return FB.T('At war — policy is suspended');
+    }
+    if (FB.areAllied(s, 'player', rid)) {
+      return FB.T('Defensive allies - neither realm may attack the other');
     }
     if (s.pacts && s.pacts[rid] > s.turn) {
       const year = FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360);
@@ -691,6 +711,28 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function dynasticStatusRows(s, me) {
+    let h = '';
+    const claim = FB.fabricatedClaimOf(s);
+    if (claim) {
+      const pr = FB.world.byId[claim.pid];
+      h += kv('Fabricated claim', esc(pr ? pr.name : claim.pid));
+    }
+    if (me.restorationRight) {
+      const rr = me.restorationRight;
+      h += kv('Crown-restoration right', esc(rr.titleName || FB.T('Disputed crown')));
+    }
+    const compact = FB.royalCompactOf(s);
+    if (compact) {
+      const realm = s.realms[compact.realmId];
+      h += kv('Royal marriage compact', esc(realm ? realm.name : compact.realmId));
+    }
+    if (FB.allianceOf(s, 'player')) {
+      h += kv('Defensive alliance', esc(allianceText(s, 'player')));
+    }
+    return h;
+  }
+
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
@@ -706,6 +748,7 @@ window.FB = window.FB || {};
       kv('Reputation among the folk', Math.round(s.player.pop)) +
       (s.player.liege ? kv('Liege’s favor', Math.round(s.player.liegeOp || 0)) : '') +
       titleRows(s) +
+      dynasticStatusRows(s, me) +
       panelh('Skills') + skillBars(me) +
       panelh('Traits') + traitChips(me) +
       panelh('Possessions') + itemChips(s) +
@@ -838,6 +881,18 @@ window.FB = window.FB || {};
     }
     return '<div class="ccmeta">' + crest + esc(parts.join(' · ')) + '</div>';
   }
+  function royalLineHtml(s, c) {
+    if (!c.royalLine) return '';
+    const r = s.realms[c.royalLine.realmId];
+    const succession = r && FB.ensureRealmSuccession(s, c.royalLine.realmId);
+    if (!r || !succession) return '';
+    let status = FB.T('in the succession');
+    if (succession.rulerMemberId === c.royalLine.memberId) status = FB.T('reigning ruler');
+    else if (succession.heirId === c.royalLine.memberId) status = FB.T('designated heir');
+    return '<div class="ccmeta">' + esc(FB.T('👑 Royal line of {realm} · {status}', {
+      realm: r.name, status: status
+    })) + '</div>';
+  }
 
   UI.charCardHtml = function (s, c, clickable) {
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
@@ -874,6 +929,7 @@ window.FB = window.FB || {};
         ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
         esc(religionName(s, c.religion)) + '</div>' +
         homeLineHtml(s, c) +
+        royalLineHtml(s, c) +
         '<div class="ccmeta">' + (relationText(s, c) ? esc(relationText(s, c)) + ' · ' : '') + life + '</div>' +
         '<div class="ccskills">' + esc(sk) + '</div>' +
         '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
@@ -917,6 +973,7 @@ window.FB = window.FB || {};
       ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
       esc(religionName(s, c.religion)) + '</div>' +
       homeLineHtml(s, c) +
+      royalLineHtml(s, c) +
       '<div class="ccmeta">' + (c.id === s.player.charId ? esc(FB.T('This is you')) :
         '<span class="' + FB.opClass(op) + '">' + esc(regardText) + '</span>') +
         esc(fert) + '</div>' +
@@ -1240,7 +1297,7 @@ window.FB = window.FB || {};
      the same rules checkTierPromotions promotes by. Shown only to landed
      players; a landless dreamer has no claim to weigh */
   function dejureNotes(s, dj) {
-    const indep = s.realms.player && s.realms.player.alive;
+    const indep = FB.isPlayerSovereign(s);
     let out = '';
     function note(text) { return '<div class="progressnote">' + esc(text) + '</div>'; }
     const dp = FB.duchyProgress(s, dj.duchy), dname = FBDATA.duchies[dj.duchy].name;
@@ -1320,6 +1377,14 @@ window.FB = window.FB || {};
           }, { count: u[ck[0]] }));
         }
         if (parts.length) h += '<div class="cmeta">' + esc(parts.join(', ')) + '</div>';
+        if (selA.allied && selA.allied.men) {
+          const ar = s.realms[selA.allied.ally];
+          h += '<div class="cmeta">' + esc(FB.T(
+            '🤝 {men} allied defenders from {realm}', {
+              men: menText(s, selA.allied.men),
+              realm: ar ? ar.name : selA.allied.ally
+            })) + '</div>';
+        }
       }
     }
     if (pr.wasteland) {
@@ -1331,7 +1396,8 @@ window.FB = window.FB || {};
       const rel = FB.religionOf(pr.religion), cul = FB.cultureOf(pr.culture);
       const B = FBDATA.balance;
       const myRealm = rid === 'player';
-      const realmMen = realm ? (myRealm ? FB.playerLevy(s) : Math.round(FB.realmStrength(s, rid) * B.levyPerDev * (B.aiHostPerDev || 0.3))) : 0;
+      const realmMen = realm ? (myRealm ? FB.realmDefensiveStrength(s, 'player') :
+        FB.realmDefensiveStrength(s, rid)) : 0;
       // the feudal ladder: who holds this county directly, and above them whom
       const holdId = (s.holder && s.holder[pid]) || rid;
       let chain;
@@ -1352,7 +1418,8 @@ window.FB = window.FB || {};
         h += '<div class="kv"><span>' + esc(FB.T('{title} {name}', {
           title: FB.realmRankTitle(s, cr), name: cr.ruler.name
         })) +
-          '</span><b>' + esc(cr.name) + esc(mark) + '</b></div>';
+          '</span><b><button class="linklike" data-liege="' + esc(cid) + '">' +
+          esc(cr.name) + '</button>' + esc(mark) + '</b></div>';
       }
       const dj = FB.dejureOf(pid);
       if (dj.duchy) {
@@ -1373,12 +1440,13 @@ window.FB = window.FB || {};
         (realm ? kv('Sovereign', sovereignHtml) : '') +
         (realm ? kv('Realm size', esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
         (realm ? kv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
+        (realm ? kv('Defensive alliance', esc(allianceText(s, rid))) : '') +
         kv('Culture', esc(cultureName(s, pr.culture))) +
         kv('Faith', rel.icon + ' ' + esc(religionName(s, pr.religion))) +
         kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         kv('Development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
-      if (realm && !myRealm && s.realms.player && s.realms.player.alive) {
+      if (realm && !myRealm && FB.isPlayerSovereign(s)) {
         const realmOpinion = FB.realmOpinionOf(s, rid);
         h += kv('Their opinion of you', '<span class="' + FB.opClass(realmOpinion) + '">' +
           esc(FB.T('{opinion} ({band})', {
@@ -1985,29 +2053,47 @@ window.FB = window.FB || {};
   /* ================= war target picker ================= */
   UI.showWarTargets = function () {
     const s = FB.state;
-    const targets = FB.warTargets(s);
+    const causes = FB.warCauses(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Land is taken only by siege: march your host onto the prize and keep it standing there — press the siege at each season’s war council, and after three the county is yours. Field victories bring the enemy to the table, nothing more.')) +
+      'A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
       '</p></div><div class="gm-list">';
-    for (const pid of targets) {
+    for (let ci = 0; ci < causes.length; ci++) {
+      const cause = causes[ci];
+      const pid = cause.target;
       const pr = FB.world.byId[pid];
-      const rid = s.owner[pid];
+      const rid = cause.enemy || s.owner[pid];
       const realm = s.realms[rid];
-      const enMen = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
-      h += '<button class="actionbtn" data-war="' + esc(pid) + '">⚔ ' + esc(pr.name) +
+      const enMen = FB.realmDefensiveStrength(s, rid);
+      let causeText = '';
+      if (cause.type === 'fabricated') causeText = FB.T('Fabricated county claim');
+      else if (cause.type === 'restoration') {
+        causeText = FB.T('Restore the crown of {title}', { title: cause.titleName || (realm ? realm.name : '') });
+      } else {
+        const def = cause.titleKind === 'duchy' ? FBDATA.duchies[cause.titleId]
+          : cause.titleKind === 'kingdom' ? FBDATA.kingdoms[cause.titleId]
+          : FBDATA.empires[cause.titleId];
+        causeText = FB.T('De jure right through {title}', { title: def ? def.name : cause.titleId });
+      }
+      const support = FB.alliedReinforcement(s, rid);
+      h += '<button class="actionbtn" data-war-cause="' + ci + '">⚔ ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T(
-          'Held by {realm} ({counties}) · they can field ~{theirs} against your ~{yours}', {
+          '{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}', {
+            cause: causeText,
             realm: realm ? realm.name : '?',
             counties: countyCountText(s, FB.realmProvinces(s, rid).length),
             theirs: menText(s, enMen),
-            yours: menText(s, FB.playerLevy(s))
+            yours: menText(s, FB.playerLevy(s)),
+            support: support.men && s.realms[support.ally]
+              ? FB.T(' (including ~{men} from {ally})', {
+                men: menText(s, support.men), ally: s.realms[support.ally].name
+              }) : ''
           })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Think better of it</button>';
     openModal('Choose Your Conquest', h);
-    document.querySelectorAll('[data-war]').forEach(function (b) {
+    document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
-        FB.startPlayerWar(FB.state, b.dataset.war);
+        FB.startPlayerWar(FB.state, causes[Number(b.dataset.warCause)]);
         UI.closeModal(); UI.refresh();
       });
     });
@@ -2340,37 +2426,91 @@ window.FB = window.FB || {};
     openModal('Begin a Plot', h);
     document.querySelectorAll('[data-plot]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.beginPlot(FB.state, btn.dataset.plot);
-        UI.closeModal(); UI.refresh();
+        const def = FBDATA.plots[btn.dataset.plot];
+        if (def && def.target) UI.showPlotTargets(btn.dataset.plot);
+        else {
+          FB.beginPlot(FB.state, btn.dataset.plot);
+          UI.closeModal(); UI.refresh();
+        }
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showPlotTargets = function (plotId) {
+    const s = FB.state, def = FBDATA.plots[plotId];
+    if (!def) return;
+    const targets = FB.plotTargets(s, def);
+    let h = '<p class="hint">' + esc(FB.T(
+      'Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution.')) +
+      '</p><div class="gm-list">';
+    for (const pid of targets) {
+      const pr = FB.world.byId[pid], r = s.realms[s.owner[pid]];
+      h += '<button class="actionbtn" data-plot-target="' + esc(pid) + '">📜 ' + esc(pr.name) +
+        '<span class="adesc">' + esc(FB.T('Held by {realm}', {
+          realm: r ? r.name : FB.T('another realm')
+        })) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Choose the Target'), h);
+    document.querySelectorAll('[data-plot-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        FB.beginPlot(FB.state, plotId, { pid: btn.dataset.plotTarget });
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    $('gm-back').addEventListener('click', UI.showPlots);
   };
 
   /* ================= envoy picker ================= */
   UI.showEnvoys = function () {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
-      '10 gold in gifts; a pact of peace holds two years, and your diplomacy carries the rest.')) +
+      'A peace envoy carries 10 gold in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying 25 gold; either offer uses the same envoy odds.')) +
       '</p><div class="gm-list">';
-    for (const rid of FB.envoyTargets(s)) {
+    const pactTargets = FB.envoyTargets(s);
+    const allianceTargets = FB.allianceOfferTargets(s);
+    const targetMap = {}, targets = [];
+    for (const rid of pactTargets.concat(allianceTargets)) {
+      if (!targetMap[rid]) { targetMap[rid] = 1; targets.push(rid); }
+    }
+    for (const rid of targets) {
       const r = s.realms[rid];
       const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
       const opinion = FB.realmOpinionOf(s, rid);
-      h += '<button class="actionbtn" data-envoy="' + esc(rid) + '">🕊 ' + esc(r.name) +
-        '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%', {
+      if (pactTargets.indexOf(rid) >= 0) {
+        h += '<button class="actionbtn" data-envoy="' + esc(rid) + '"' +
+          (s.player.gold < 10 ? ' disabled' : '') + '>🕊 ' + esc(FB.T('Peace pact with {realm}', { realm: r.name })) +
+          '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · opinion {opinion} · chance ~{chance}%', {
+            ruler: r.ruler.name,
+            counties: countyCountText(s, FB.realmProvinces(s, rid).length),
+            men: menText(s, men),
+            opinion: signedOpinion(opinion),
+            chance: Math.round(FB.envoyChance(s, rid) * 100)
+          })) + '</span></button>';
+      }
+      if (allianceTargets.indexOf(rid) >= 0) {
+        h += '<button class="actionbtn" data-alliance-offer="' + esc(rid) + '"' +
+          (s.player.gold < 25 ? ' disabled' : '') + '>🤝 ' + esc(FB.T('Defensive alliance with {realm}', { realm: r.name })) +
+          '<span class="adesc">' + esc(FB.T('{ruler} · opinion {opinion} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
           ruler: r.ruler.name,
-          counties: countyCountText(s, FB.realmProvinces(s, rid).length),
-          men: menText(s, men),
           opinion: signedOpinion(opinion),
-          chance: Math.round(FB.envoyChance(s, rid) * 100)
+          chance: Math.round(FB.envoyChance(s, rid) * 100),
+          men: menText(s, Math.round(Math.min(men * 0.25, FB.playerLevy(s) * 0.5)))
         })) + '</span></button>';
+      }
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Send an Envoy', h);
     document.querySelectorAll('[data-envoy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.sendEnvoy(FB.state, btn.dataset.envoy);
+        UI.closeModal(); UI.refresh();
+      });
+    });
+    document.querySelectorAll('[data-alliance-offer]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        FB.offerAlliance(FB.state, btn.dataset.allianceOffer);
         UI.closeModal(); UI.refresh();
       });
     });
@@ -2661,13 +2801,20 @@ window.FB = window.FB || {};
     const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
-    const foreignSovereign = rid !== 'player' && !r.liege &&
-      s.realms.player && s.realms.player.alive;
+    const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
+    const succession = FB.ensureRealmSuccession(s, rid);
+    const family = FB.realmFamily(s, rid);
+    const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
+    const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player.rank >= 3 &&
+      !r.liege && r.rank >= 3 && FB.realmsAdjacent(s, 'player', rid);
+    const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
     let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
       '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
         title: FB.realmRankTitle(s, r), name: r.ruler.name
       })) + '</div>' +
-      '<div class="ccmeta">' + esc(FB.T('Man of {age}', { age: r.ruler.age })) +
+      '<div class="ccmeta">' + esc(FB.T('{sex} of {age}', {
+        sex: FB.T(r.ruler.sex === 'f' ? 'Woman' : 'Man'), age: r.ruler.age
+      })) +
       ' · ' + esc(cultureName(s, r.ruler.culture)) +
       (rel ? ' · ' + rel.icon + ' ' + esc(religionName(s, cap.religion)) : '') + '</div>' +
       '<div class="ccmeta">' + esc(liege
@@ -2690,8 +2837,45 @@ window.FB = window.FB || {};
       kv('Realm', esc(r.name)) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
       kv('Realm host', '~' + esc(menText(s, men))) +
+      kv('Defensive alliance', esc(allianceText(s, rid))) +
+      (liege ? kv('Overlord',
+        '<button class="linklike" data-liege="' + esc(liege.id) + '">' +
+        esc(liege.name) + '</button>') : '') +
       (cap ? kv('Capital', esc(cap.name)) : '') +
       '</div>';
+    if (family.length) {
+      h += '<div class="panelh">' + esc(FB.T('Ruler’s family and succession')) + '</div>';
+      for (const child of family) {
+        const age = Math.max(0, s.date.year - child.born);
+        const isHeir = succession && succession.heirId === child.id;
+        const directChild = succession &&
+          (child.parentId || null) === (succession.rulerMemberId || null);
+        h += '<div class="progressnote">' + esc(FB.T('{name} · {relation}, age {age}{heir}', {
+          name: child.name,
+          relation: directChild
+            ? (child.sex === 'm' ? FB.T('son') : FB.T('daughter'))
+            : (child.sex === 'm' ? FB.T('kinsman') : FB.T('kinswoman')),
+          age: age,
+          heir: isHeir ? FB.T(' · designated heir') : ''
+        })) + '</div>';
+        const me = s.chars[s.player.charId];
+        const station = r.rank <= 2 ? 3 : 4;
+        const canTry = mayApproach && age >= 16 && child.sex !== me.sex &&
+          !FB.royalCompactOf(s) && FB.canWed(s) &&
+          !(FB.royalCloseKin && FB.royalCloseKin(s, me, {
+            royalLine: { realmId: rid, memberId: child.id }
+          })) &&
+          station - FB.playerStation(s) < 3;
+        if (canTry) {
+          h += '<button class="actionbtn" data-royal-child="' + esc(child.id) + '">🌷 ' +
+            esc(FB.T('Approach {name} for courtship', { name: child.name })) +
+            '<span class="adesc">' + esc(isHeir
+              ? FB.T('The designated heir can transmit the crown to your shared branch.')
+              : FB.T('This creates a dynastic tie, but this child does not currently transmit the crown.')) +
+            '</span></button>';
+        }
+      }
+    }
     if (foreignSovereign) {
       h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
         ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
@@ -2704,6 +2888,19 @@ window.FB = window.FB || {};
     FB.drawCrest($('liegecrest'), rid);
     if ($('gm-policy')) $('gm-policy').addEventListener('click', function () {
       UI.showForeignPolicyStance(rid);
+    });
+    document.querySelectorAll('[data-royal-child]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const c = FB.materializeRoyalChild(s, rid, btn.dataset.royalChild);
+        if (!c || !FB.canCourt(s, c)) return;
+        UI.closeModal();
+        s.player.courtingId = c.id;
+        s.player.flags.courting = 1;
+        s.player.focus = 'court_suitor';
+        FB.news(s, FB.msg('news.social.royal_courting_begins',
+          '🌷 You begin courting {name} of {realm}.', { name: FB.fullName(c), realm: r.name }));
+        FB.game.passDay({ skipFocus: true });
+      });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
@@ -4817,7 +5014,7 @@ window.FB = window.FB || {};
       '<h4>Climbing the ladder</h4>' +
       '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, your lord’s favor, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
-      '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story.</p>' +
+      '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b> and appoint a <b>tutor</b> — the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16.</p>' +
       '<h4>Rivalries</h4>' +
       '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
@@ -4828,7 +5025,7 @@ window.FB = window.FB || {};
       '<h4>Map filters</h4>' +
       '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
-      '<p>From count upward the Deeds tab offers <b>⚔ Declare war</b>. Your host musters the moment war begins — tap it on the map, then tap a province to march it (or let the ⚙ automation command it). The host does not move on its own: tap the host, then tap a province to march; tap it again to halt; <b>Esc</b> cancels. <b>Land is taken only by siege:</b> keep the host standing on the prize and press the siege at each season’s war council — after three, the county is yours. Field victories only make the enemy sue for peace: take the tribute, or press on for the walls. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. And wars bleed gold and men: past eight seasons, exhaustion ends them with nothing gained.</p>' +
+      '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war requires a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

@@ -1,5 +1,14 @@
 # Events are data
 
+Plot definitions may add a `target` selector. Beginning such a plot presents the
+selector first and stores its JSON-safe choice in `player.plot.context`; that same
+context is supplied to discovery and resolution events. The built-in
+`border_county_without_dejure` selector has shape `{pid: "<province id>"}` and powers
+`fabricate_claim`. Named chances `fabricate_claim` and `plot_discovery` keep its exact
+claim formula consistent whether the plot reaches resolution or is discovered early,
+and custom effects settle success/failure and end the plot. See `docs/MODDING.md` for
+the full authoring shape.
+
 `js/events.js` interprets declarative triggers/effects (documented exhaustively in
 docs/MODDING.md). New effect/trigger keys must be added there *and* documented in
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via

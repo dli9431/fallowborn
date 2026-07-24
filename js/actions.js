@@ -266,11 +266,29 @@ window.FB = window.FB || {};
       if (!pl) return;
       const def = FBDATA.plots[pl.id];
       if (!def) { s.player.plot = null; return; }
+      if (def.target && (!pl.context || FB.plotTargets(s, def).indexOf(pl.context.pid) < 0)) {
+        const lost = pl.context && pl.context.pid ? FB.world.byId[pl.context.pid] : null;
+        FB.news(s, FB.msg('news.action.plot_target_lost',
+          '🕸 The plot ends: {province} is no longer a valid target.',
+          { province: lost ? lost.name : FB.T('the county') }));
+        FB.fns.plot_end(s);
+        return;
+      }
       pl.power += (2 + FB.skillOf(me(s), 'int') / 3) / D;
       if (dch(0.25)) skillUp(s, 'int');
       if (pl.sprung) return;
-      if (dch(0.12)) { pl.sprung = 1; s.eventQueue.push({ id: 'plot_discovered', ctx: {} }); return; }
-      if (pl.power >= def.need) { pl.sprung = 1; s.eventQueue.push({ id: def.event, ctx: {} }); }
+      if (dch(0.12)) {
+        pl.sprung = 1;
+        const discoveredCtx = {};
+        for (const key in (pl.context || {})) discoveredCtx[key] = pl.context[key];
+        discoveredCtx.plotId = pl.id;
+        s.eventQueue.push({ id: 'plot_discovered', ctx: discoveredCtx });
+        return;
+      }
+      if (pl.power >= def.need) {
+        pl.sprung = 1;
+        s.eventQueue.push({ id: def.event, ctx: pl.context || {} });
+      }
     } },
 
   { id: 'govern', label: '🏛 Govern the demesne',
@@ -430,16 +448,20 @@ window.FB = window.FB || {};
         'Swore an oath of brotherhood.', {}));
     } },
   { id: 'send_envoy', label: '🕊 Send an envoy…', noConsume: true,
-    desc: function () { return 'Gifts and good words buy years of quiet borders. (10 gold)'; },
-    show: function (s) { return s.player.tier >= 4 && s.realms.player && s.realms.player.alive; },
+    desc: function () { return 'Offer a peace pact — or, as an independent king or emperor, one defensive alliance.'; },
+    show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
     can: function (s) {
-      if (s.player.gold < 10) return 'An envoy without gifts insults his host.';
-      return FB.envoyTargets(s).length ? true : 'No neighboring court to treat with.';
+      const peace = FB.envoyTargets(s), alliance = FB.allianceOfferTargets(s);
+      if (!peace.length && !alliance.length) return 'No neighboring court has an available offer.';
+      if (peace.length && s.player.gold >= 10) return true;
+      if (alliance.length && s.player.gold >= 25) return true;
+      return alliance.length ? 'An alliance envoy requires 25 gold in gifts.'
+        : 'An envoy without 10 gold in gifts insults his host.';
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
   { id: 'foreign_policy', label: '🕊 Foreign policy…', noConsume: true,
     desc: function () { return 'Direct your court to improve or provoke relations with neighboring sovereigns.'; },
-    show: function (s) { return s.player.tier >= 4 && s.realms.player && s.realms.player.alive; },
+    show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
     can: function (s) {
       return FB.foreignPolicyTargets(s).length ? true : 'No neighboring sovereign court lies within reach.';
     },
@@ -674,12 +696,24 @@ window.FB = window.FB || {};
       FB.fns.war_mercs(s);
     } },
   { id: 'declare_war', label: '⚔ Declare war…', noConsume: true,
-    desc: function () { return 'Choose a neighboring land to seize by force.'; },
-    show: function (s) { return s.player.tier >= 4 && !s.player.war; },
+    desc: function () { return 'Press a de jure right, a fabricated county claim, or a crown-restoration right.'; },
+    show: function (s) {
+      const me = s.chars[s.player.charId];
+      return s.player.tier >= 3 || !!(me && me.restorationRight);
+    },
     can: function (s) {
-      return FB.warTargets(s).length ? true : 'No reachable enemy lands border yours.';
+      return FB.warCauses(s).length ? true : FB.warLockedReason(s);
     },
     run: function (s) { if (FB.ui && FB.ui.showWarTargets) FB.ui.showWarTargets(); } },
+  { id: 'abandon_claim', label: '📜 Abandon fabricated claim', noConsume: true,
+    desc: function (s) {
+      const claim = FB.fabricatedClaimOf(s);
+      const pr = claim && FB.world.byId[claim.pid];
+      return pr ? FB.T('Renounce your claim to {province}; the slot becomes free for another plot.',
+        { province: pr.name }) : FB.T('Renounce the claim.');
+    },
+    show: function (s) { return !!FB.fabricatedClaimOf(s); },
+    run: function (s) { FB.abandonFabricatedClaim(s); } },
   { id: 'declare_independence', label: '⚑ Declare independence…', noConsume: true,
     desc: function (s) {
       const lg = s.realms[s.player.liege];
@@ -1099,16 +1133,27 @@ window.FB = window.FB || {};
     for (const id in FBDATA.plots) {
       const def = FBDATA.plots[id];
       if (def.trigger && !FB.checkTrigger(state, def.trigger)) continue;
+      if (def.target && !FB.plotTargets(state, def).length) continue;
       out.push({ id: id, def: def });
     }
     return out;
   };
 
-  FB.beginPlot = function (state, id) {
+  FB.plotTargets = function (state, def) {
+    if (!def || !def.target) return [];
+    if (def.target === 'border_county_without_dejure') return FB.claimCandidates(state);
+    return [];
+  };
+
+  FB.beginPlot = function (state, id, context) {
     const def = FBDATA.plots[id];
     if (!def || state.player.plot) return;
     if (def.trigger && !FB.checkTrigger(state, def.trigger)) return;
-    state.player.plot = { id: id, power: 0 };
+    if (def.target) {
+      const pid = context && context.pid;
+      if (!pid || FB.plotTargets(state, def).indexOf(pid) < 0) return;
+    }
+    state.player.plot = { id: id, power: 0, context: context || {} };
     if (state.player.focus !== 'scheming') {
       state.player.focusBack = state.player.focus;
       state.player.focus = 'scheming';
@@ -1189,20 +1234,20 @@ window.FB = window.FB || {};
       state.owner[pid] = newTop;
       state.holder[pid] = 'player';
     }
-    if (state.realms.player && state.realms.player.alive) {
-      state.realms.player.alive = false;
-      state.realms.player.war = null;
-      // the old realm's other vassals go free
-      for (const vid in state.realms) if (state.realms[vid].liege === 'player') state.realms[vid].liege = null;
-    }
     p.liege = rid;
+    if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
+    state.realms.player.liege = rid;
+    state.realms.player.war = null;
+    FB.invalidateRealmCache();
+    for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = newTop;
     FB.adjustLiegeOp(state, rid, 20);
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.fealty',
       '🤝 You swear fealty to {liege}. Your banners now fly under {realm}.',
       { liege: r.name, realm: state.realms[newTop].name }));
     if (oldTop && oldTop !== newTop && state.realms[oldTop] && state.realms[oldTop].alive && FB.chance(0.5)) {
-      p.war = { enemy: oldTop, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
+      p.war = { enemy: oldTop, target: null, wins: 0, losses: 0, seasons: 0,
+        defending: true, casus: { type: 'defection' } };
       FB.warFooting(state);
       FB.news(state, FB.msg('news.action.fealty_war',
         '🔥 {realm} names you traitor — war for your defection!',
@@ -1235,7 +1280,7 @@ window.FB = window.FB || {};
       FB.makeVassalRealm(state, { id: vid, name: 'County of ' + pr.name, capital: pid, rank: 1, liege: 'player', culture: pr.culture });
     }
     state.holder[pid] = vid;
-    state.owner[pid] = 'player';
+    state.owner[pid] = FB.playerRealmId(state) || 'player';
     FB.adjustLiegeOp(state, vid, 40);
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.county_granted',
@@ -1286,7 +1331,7 @@ window.FB = window.FB || {};
     for (const pid of cs) {
       p.provs.splice(p.provs.indexOf(pid), 1);
       state.holder[pid] = vid;
-      state.owner[pid] = 'player';
+      state.owner[pid] = FB.playerRealmId(state) || 'player';
     }
     FB.adjustLiegeOp(state, vid, 40);
     FB.invalidateRealmCache();
@@ -1411,7 +1456,7 @@ window.FB = window.FB || {};
   /* ================= envoys & pacts (the diplomacy game) ================= */
   FB.politicalAttentionCapacity = function (state) {
     const p = state.player, B = FBDATA.balance;
-    if (p.tier < 4 || !state.realms.player || !state.realms.player.alive) return 0;
+    if (p.tier < 4 || !FB.isPlayerSovereign(state)) return 0;
     if (p.tier >= 7) return B.politicalAttentionEmperor;
     if (p.tier >= 6) return B.politicalAttentionKing;
     return B.politicalAttentionCount;
@@ -1504,11 +1549,13 @@ window.FB = window.FB || {};
 
   FB.envoyTargets = function (state) {
     const out = [];
+    if (!FB.isPlayerSovereign(state)) return out;
     for (const id in state.realms) {
       const r = state.realms[id];
       if (id === 'player' || !r.alive || r.liege) continue; // sovereigns only
       if (state.player.war && state.player.war.enemy === id) continue;
       if (state.pacts && state.pacts[id] > state.turn) continue;
+      if (FB.areAllied(state, 'player', id)) continue;
       if (!FB.realmsAdjacent(state, 'player', id)) continue;
       out.push(id);
     }
@@ -1537,6 +1584,48 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.action.envoy_failure',
         '🕊 The envoy returns, gifts refused. {realm} is unmoved.', { realm: r.name }));
     }
+  };
+
+  FB.allianceOfferTargets = function (state) {
+    const out = [];
+    const mine = state.realms.player;
+    if (!FB.isPlayerSovereign(state) || !mine || mine.rank < 3 || FB.allianceOf(state, 'player')) return out;
+    for (const rid in state.realms) {
+      const r = state.realms[rid];
+      if (rid === 'player' || !r.alive || r.liege || r.rank < 3 || r.war) continue;
+      if (FB.allianceOf(state, rid) || FB.realmOpinionOf(state, rid) < 60) continue;
+      if (!FB.realmsAdjacent(state, 'player', rid)) continue;
+      out.push(rid);
+    }
+    return out;
+  };
+
+  FB.offerAlliance = function (state, rid) {
+    if (FB.allianceOfferTargets(state).indexOf(rid) < 0 || state.player.gold < 25) return false;
+    state.player.gold -= 25;
+    const r = state.realms[rid];
+    if (FB.chance(FB.envoyChance(state, rid)) && FB.formAlliance(state, 'player', rid, 'envoy')) {
+      FB.news(state, FB.msg('news.action.alliance_success',
+        '🤝 {realm} accepts your envoy: your crowns will defend one another until either ruler dies.',
+        { realm: r.name }));
+      return true;
+    }
+    FB.news(state, FB.msg('news.action.alliance_failure',
+      '🕊 {realm} receives the gifts but refuses the defensive compact.', { realm: r.name }));
+    return false;
+  };
+
+  FB.maybeRoyalMarriageAlliance = function (state, royalRealmId) {
+    const mine = state.realms.player;
+    const royal = state.realms[royalRealmId];
+    if (!FB.isPlayerSovereign(state) || !mine || mine.rank < 3 || !royal ||
+        !royal.alive || royal.liege || royal.rank < 3) return false;
+    if (!FB.realmsAdjacent(state, 'player', royalRealmId)) return false;
+    if (!FB.formAlliance(state, 'player', royalRealmId, 'royal_marriage')) return false;
+    FB.news(state, FB.msg('news.action.marriage_alliance',
+      '🤝 The marriage binds your crown and {realm} in a defensive alliance.',
+      { realm: royal.name }));
+    return true;
   };
 
   /* ================= household holdings (tall for commoners) =================
@@ -1831,36 +1920,228 @@ window.FB = window.FB || {};
     return false;
   };
 
-  FB.warTargets = function (state) {
+  function playerBorderLands(state) {
+    if (state.realms.player && state.realms.player.alive) return FB.realmTerritory(state, 'player').slice();
+    return (state.player.provs || []).slice();
+  }
+
+  function heldTitleSets(state) {
+    const p = state.player, d = {}, k = {}, e = {};
+    if (p.tier >= 5) for (const id of FB.playerDuchies(state)) d[id] = 1;
+    if (p.tier >= 6) for (const id of FB.playerKingdoms(state)) k[id] = 1;
+    if (p.tier >= 7) for (const id of FB.playerEmpires(state)) e[id] = 1;
+    return { duchy: d, kingdom: k, empire: e };
+  }
+
+  function deJureCause(state, pid, titles) {
+    const dj = FB.dejureOf(pid);
+    if (dj.duchy && titles.duchy[dj.duchy]) {
+      return { type: 'dejure', target: pid, titleKind: 'duchy', titleId: dj.duchy };
+    }
+    if (dj.kingdom && titles.kingdom[dj.kingdom]) {
+      return { type: 'dejure', target: pid, titleKind: 'kingdom', titleId: dj.kingdom };
+    }
+    if (dj.empire && titles.empire[dj.empire]) {
+      return { type: 'dejure', target: pid, titleKind: 'empire', titleId: dj.empire };
+    }
+    return null;
+  }
+
+  FB.fabricatedClaimOf = function (state) {
     const p = state.player;
-    const mine = (p.provs && p.provs.length) ? p.provs : [p.provinceId];
-    const myRealm = state.realms.player && state.realms.player.alive ? 'player'
-      : (p.liege ? FB.topRealm(state, p.liege) : null);
-    const out = [];
+    let claim = p.fabricatedClaim;
+    if (typeof claim === 'string') claim = p.fabricatedClaim = { pid: claim };
+    if (!claim) return null;
+    const pr = FB.world.byId[claim.pid];
+    const owner = state.owner[claim.pid];
+    const mySovereign = FB.playerRealmId(state);
+    const landedRealm = state.realms.player && state.realms.player.alive;
+    const territory = landedRealm
+      ? FB.realmTerritory(state, 'player') : (p.provs || []);
+    if (!pr || pr.wasteland || territory.indexOf(claim.pid) >= 0 ||
+        (state.holder && state.holder[claim.pid] === 'player') ||
+        !owner || owner === 'player' || (landedRealm && owner === mySovereign) ||
+        !state.realms[owner] || !state.realms[owner].alive) {
+      p.fabricatedClaim = null;
+      return null;
+    }
+    return claim;
+  };
+
+  function diplomacyBlocksWar(state, enemy) {
+    if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
+    if (FB.areAllied(state, 'player', enemy)) return 'alliance';
+    return null;
+  }
+
+  /* Semantic causes are the authoritative declaration surface. Passing true
+     keeps diplomatically blocked causes so the UI can explain the exact lock. */
+  FB.warCauses = function (state, includeBlocked) {
+    const p = state.player, out = [], seen = {};
+    const me = state.chars[p.charId];
+    const restoration = me && me.restorationRight;
+    if (restoration) {
+      const rr = state.realms[restoration.realmId];
+      if (!rr || !rr.alive || !rr.capital) {
+        delete me.restorationRight;
+      } else {
+        const blocked = diplomacyBlocksWar(state, rr.id);
+        if (!blocked || includeBlocked) {
+          out.push({
+            type: 'restoration',
+            target: rr.capital,
+            enemy: rr.id,
+            titleName: restoration.titleName || rr.name,
+            blocked: blocked
+          });
+        }
+      }
+    }
+    const mine = playerBorderLands(state);
+    if (!mine.length || p.tier < 4) return out;
+    const mySovereign = FB.playerRealmId(state);
+    const titles = heldTitleSets(state);
+    const claim = FB.fabricatedClaimOf(state);
     for (const pid of mine) {
       for (const nb in (FB.world.adj[pid] || {})) {
-        const own = state.owner[nb];
-        if (!own || own === myRealm || own === 'player') continue;
-        if (FB.world.byId[nb].wasteland) continue;
-        if (state.pacts && state.pacts[own] > state.turn) continue; // a sworn pact holds
-        if (out.indexOf(nb) < 0) out.push(nb);
+        if (seen[nb]) continue;
+        const pr = FB.world.byId[nb], enemy = state.owner[nb];
+        if (!pr || pr.wasteland || !enemy || enemy === mySovereign || enemy === 'player') continue;
+        let cause = deJureCause(state, nb, titles);
+        if (!cause && claim && claim.pid === nb) cause = { type: 'fabricated', target: nb };
+        if (!cause) continue;
+        cause.enemy = enemy;
+        cause.blocked = diplomacyBlocksWar(state, enemy);
+        seen[nb] = 1;
+        if (!cause.blocked || includeBlocked) out.push(cause);
       }
     }
     return out;
   };
 
-  FB.startPlayerWar = function (state, targetProv) {
-    const enemy = state.owner[targetProv];
-    if (!enemy) return;
-    state.player.war = { enemy: enemy, target: targetProv, wins: 0, losses: 0, seasons: 0, defending: false };
+  FB.warTargets = function (state) {
+    const out = [];
+    for (const cause of FB.warCauses(state)) if (out.indexOf(cause.target) < 0) out.push(cause.target);
+    return out;
+  };
+
+  FB.warLockedReason = function (state) {
+    if (state.player.war) return FB.T('You are already at war.');
+    const all = FB.warCauses(state, true);
+    for (const cause of all) {
+      if (cause.blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the only realm you have cause against.');
+      if (cause.blocked === 'pact') return FB.T('A sworn peace pact protects the only realm you have cause against.');
+    }
+    const me = state.chars[state.player.charId];
+    if (state.player.tier < 4 && !(me && me.restorationRight)) {
+      return FB.T('A baron must first hold a county before waging a foreign war.');
+    }
+    if (!playerBorderLands(state).length && !(me && me.restorationRight)) {
+      return FB.T('You hold no landed realm from which to wage war.');
+    }
+    if (FB.fabricatedClaimOf(state)) {
+      return FB.T('Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again.');
+    }
+    return FB.T('No bordering county lies within a title you hold, and you have no fabricated claim.');
+  };
+
+  FB.claimCandidates = function (state) {
+    const out = [], seen = {};
+    if (state.player.tier < 4 || FB.fabricatedClaimOf(state)) return out;
+    const mine = playerBorderLands(state), mySovereign = FB.playerRealmId(state);
+    const titles = heldTitleSets(state);
+    for (const pid of mine) {
+      for (const nb in (FB.world.adj[pid] || {})) {
+        if (seen[nb]) continue;
+        const pr = FB.world.byId[nb], enemy = state.owner[nb];
+        if (!pr || pr.wasteland || !enemy || enemy === mySovereign || enemy === 'player') continue;
+        if (deJureCause(state, nb, titles)) continue;
+        seen[nb] = 1;
+        out.push(nb);
+      }
+    }
+    return out;
+  };
+
+  FB.abandonFabricatedClaim = function (state) {
+    const claim = FB.fabricatedClaimOf(state);
+    if (!claim) return false;
+    const pr = FB.world.byId[claim.pid];
+    state.player.fabricatedClaim = null;
+    FB.news(state, FB.msg('news.action.claim_abandoned',
+      '📜 You abandon the claim to {province}.', { province: pr ? pr.name : '' }));
+    return true;
+  };
+
+  FB.fns.fabricate_claim_success = function (state, ctx) {
+    const pid = ctx && ctx.pid;
+    if (pid && FB.world.byId[pid] && !FB.fabricatedClaimOf(state) &&
+        FB.claimCandidates(state).indexOf(pid) >= 0) {
+      state.player.fabricatedClaim = { pid: pid, madeTurn: state.turn };
+      FB.news(state, FB.msg('news.action.claim_fabricated',
+        '📜 Witnesses and ink establish your claim to {province}.',
+        { province: FB.world.byId[pid].name }));
+    }
+    FB.fns.plot_end(state);
+  };
+
+  FB.fns.fabricate_claim_failure = function (state) {
+    state.player.prestige = Math.max(0, state.player.prestige - 5);
+    FB.news(state, FB.msg('news.action.claim_failed',
+      '📜 The false witnesses unravel. No claim remains, and your name suffers.', {}));
+    FB.fns.plot_end(state);
+  };
+
+  FB.fns.plot_discovery_success = function (state, ctx) {
+    if (ctx && ctx.plotId === 'fabricate_claim') FB.fns.fabricate_claim_success(state, ctx);
+    else {
+      FB.applyEffects(state, { prestige: 6, skills: { int: 2 } }, ctx || {});
+      FB.fns.plot_end(state);
+    }
+  };
+
+  FB.fns.plot_discovery_failure = function (state, ctx) {
+    if (ctx && ctx.plotId === 'fabricate_claim') FB.fns.fabricate_claim_failure(state, ctx);
+    else {
+      FB.applyEffects(state, {
+        prestige: -12,
+        popularOpinion: -5,
+        opinion: { role: 'lord', amt: -10 }
+      }, ctx || {});
+      FB.fns.plot_end(state);
+    }
+  };
+
+  FB.startPlayerWar = function (state, causeOrTarget) {
+    if (state.player.war) return false;
+    let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
+    if (!cause) {
+      const target = String(causeOrTarget || '');
+      for (const c of FB.warCauses(state)) if (c.target === target) { cause = c; break; }
+    }
+    if (!cause || !cause.target || cause.blocked) return false;
+    const enemy = cause.enemy || state.owner[cause.target];
+    if (!enemy || diplomacyBlocksWar(state, enemy)) return false;
+    state.player.war = {
+      enemy: enemy, target: cause.target, wins: 0, losses: 0, seasons: 0,
+      defending: false,
+      casus: {
+        type: cause.type,
+        target: cause.target,
+        titleKind: cause.titleKind || null,
+        titleId: cause.titleId || null,
+        titleName: cause.titleName || null
+      }
+    };
     FB.news(state, FB.msg('news.action.war_declared',
       '⚔ You declare war upon {enemy} for {province}!', {
         enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
-        province: FB.world.byId[targetProv].name
+        province: FB.world.byId[cause.target].name
       }));
     state.player.prestige += 5;
     FB.warFooting(state);
     state.eventQueue.push({ id: 'war_muster', ctx: {} });
+    return true;
   };
 
   FB.listFocuses = function (state) {

@@ -1,5 +1,24 @@
 # Piety, intrigue & diplomacy
 
+## Targeted claims and alliances
+
+Plots may carry a selected target in `player.plot.context`. The landed
+count-and-above `fabricate_claim` plot selects one bordering foreign county not already
+covered by a de jure right and stores `{pid}` through discovery and resolution. It needs
+14 plot power; its chance is
+`clamp(0.30 + intrigue*0.03 + learning*0.01 + prestige/1000, 0.10, 0.90)`.
+Success creates the player's single persistent fabricated claim. Failure creates none
+and costs 5 prestige. The claim follows the county through ownership changes, survives
+succession and failed wars, can be abandoned, and is consumed only when its county is
+successfully conquered.
+
+Defensive alliances complement pacts but do not replace them. AI crowns may form rare
+same-faith-group neighbor alliances; independent player kings and emperors may offer an
+adjacent sovereign king or emperor an alliance at opinion 60+, spending 25 gold and
+using the ordinary envoy chance. A successful neighboring sovereign royal marriage is
+the other player route. Each realm may have one ally, partners cannot attack one
+another, and a compact ends when either stamped ruler generation changes.
+
 **Piety, intrigue, and diplomacy are active systems.** Piety is spent on blessings (the
 `seek_blessing` event sets `blessed_crops`/`blessed_war`/`blessed_union` flags the engine
 reads and consumes, sells an anointing against sickness, and offers three pure-effect

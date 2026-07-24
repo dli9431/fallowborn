@@ -356,11 +356,11 @@ FBDATA.events.push(
   text:'Someone has talked. Conversations die when you approach; eyes follow you out of rooms. The plot is known — or nearly.',
   options:[
     { label:'Abandon everything. Deny everything.', desc:'Cut every thread and swear there never was a web.', effects:{ custom:'plot_end', prestige:-5 } },
-    { label:'Rush the final stroke NOW.', chance:0.35, desc:'Strike half-ready, and pray speed makes up for it.',
+    { label:'Rush the final stroke NOW.', chance:'plot_discovery', desc:'Strike half-ready, and pray speed makes up for it.',
       success:{ text:'Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent.',
-        effects:{ custom:'plot_end', prestige:6, skills:{int:2} } },
+        effects:{ custom:'plot_discovery_success' } },
       failure:{ text:'Half-ready is not ready. The whole scheme collapses on your head in daylight.',
-        effects:{ custom:'plot_end', prestige:-12, popularOpinion:-5, opinion:{role:'lord', amt:-10} } } }
+        effects:{ custom:'plot_discovery_failure' } } }
   ]},
 { id:'plot_ruin_rival', title:'The Trap Closes', trigger:{ never:true },
   text:'Every thread is in place and {rival} suspects nothing. One word from you and the web draws tight.',
@@ -381,6 +381,18 @@ FBDATA.events.push(
       failure:{ text:'The cup is knocked aside — {spouse} reads your face and knows. What lives in your house now is not a marriage but a watch.',
         effects:{ custom:'plot_end', prestige:-15, piety:-10, popularOpinion:-10, opinion:{role:'spouse', amt:-80} } } },
     { label:'Stay your hand.', desc:'Some doors, once opened, never close.', effects:{ custom:'plot_end', piety:5, log:'Abandoned a dark design.' } }
+  ]},
+{ id:'plot_fabricate_claim', title:'A Charter from the Dust', trigger:{ never:true },
+  text:'The ink is dry, the seals are warm, and three well-paid witnesses remember that {cname} belonged to your forebears. Only the final recital before the court remains.',
+  options:[
+    { label:'Present the charter.', chance:'fabricate_claim',
+      desc:'Intrigue, learning, and renown must carry a document older-looking than it is.',
+      success:{ text:'The objections tangle and fail. Your right to {cname} is entered into the rolls.',
+        effects:{ custom:'fabricate_claim_success', skills:{int:1}, log:'Fabricated a claim to {cname}.' } },
+      failure:{ text:'A witness changes his story. The seals are named false, and the charter is torn in open court.',
+        effects:{ custom:'fabricate_claim_failure' } } },
+    { label:'Burn it before anyone reads it.', desc:'Abandon the scheme without testing the lie.',
+      effects:{ custom:'plot_end' } }
   ]},
 { id:'plot_tithe_barn', title:'The Barn at Midnight', trigger:{ never:true },
   text:'The watchman is bought, the dogs are fed, and the cart waits in the alder grove. Tonight the lord’s plenty can become yours.',

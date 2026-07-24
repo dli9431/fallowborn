@@ -85,6 +85,11 @@ Time passes **day by day** (90-day seasons, 360-day years).
    both are sixteen. Left alone, grown children find their own (unremarkable) matches —
    and when the nursery is full enough, a 🛑 No more children toggle on your spouse's
    sheet stops further conceptions.
+   Realm-ruler sheets show their sons and daughters and the one designated heir. Courting
+   one materializes that royal child into the ordinary character and marriage rules. Any
+   listed child makes a dynastic tie, but only the designated heir's branch can transmit
+   the crown: the royal spouse succeeds first, shared descendants follow that branch, and
+   the realms join only when the rightful ruler becomes your protagonist.
    When death comes (it will), continue as your heir — and if
    your heir is still a child, their upbringing is yours to direct from the *Self* tab.
    From age ten onward (depending on the trade), **Work & Enterprises** on a family
@@ -138,13 +143,28 @@ political attention to neighboring sovereigns. Counts and dukes can direct two c
 kings three, and emperors four. **Improve** builds the court’s opinion of you each season;
 **Provoke** erodes it and can deliberately invite a more likely defensive war. Diplomacy
 strengthens either direction. Friendly courts receive envoys more readily and are less
-likely to attack, but only a two-year pact makes peace certain. A war suspends that court’s
-direction until peace, and succession clears the late ruler’s personal diplomatic network.
+likely to attack. A two-year pact makes peace certain. Independent kings and emperors can
+instead offer one adjacent sovereign an alliance at opinion 60+ for 25 gold, or gain one
+through a royal marriage. Allies cannot attack each other; when one is attacked, the other
+contributes an abstract defensive levy without joining the war. Alliances end when either
+ruler changes. A war suspends that court’s direction until peace, and succession clears the
+late ruler’s personal diplomatic network.
 
 ### War
 
-From **count** upward the *Deeds* tab offers **⚔ Declare war** against a neighboring
-realm. Your host musters the moment war begins — tap it on the map, then tap a
+From **baron** upward the *Deeds* tab always shows **⚔ Declare war**, with the exact lock
+reason when no lawful war is available. New county conquests require either a bordering
+**de jure** right through a duchy, kingdom, or empire you actually hold, or your single
+fabricated claim. Counts and higher fabricate one claim through a targeted plot; it survives
+succession and defeat, follows the county when ownership changes, and is consumed only when
+that county is captured. Pacts and alliances remain absolute declaration blocks.
+
+A displaced king or emperor whose intact crowned realm was handed to a usurper keeps one
+narrow restoration right. It reaches the usurper’s current capital without adjacency and,
+on victory, restores the whole realm and its vassals. Ordinary conquest and realm destruction
+create no such right.
+
+Your host musters the moment war begins — tap it on the map, then tap a
 province to march it (the ⚙ automation can also command it, defensively or
 offensively). **Land is taken only by siege:** keep your host standing on the prize
 and press the siege at each season's war council — after three seasons of works the
