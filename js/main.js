@@ -9,11 +9,8 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.39.1';
+  FB.VERSION = '1.39.0';
   FB.CHANGELOG = [
-    { v: '1.39.1', date: '2026-07-24', changes: [
-      'Added the implementation plan for future inflation, household credit, trade finance, and sovereign coinage.'
-    ] },
     { v: '1.39.0', date: '2026-07-24', changes: [
       'Raise Next keeps the county building ledger open for repeated construction, shows the exact next price, and warns that every repeat copy costs half again as much.',
       'Granaries, Bridges, Walls, Temples, Libraries, and Keeps now cost seasonal upkeep; the gold breakdown itemizes every charge.',
