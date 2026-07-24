@@ -60,8 +60,13 @@ every other branch in flight (parallel worktrees are unaware of each other):
 
 1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
    version and write the changelog line from the branch's description. See `docs/VERSIONS.md`.
-2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — regenerate once from
-   the *merged* tree. See **Internationalization (i18n)** below.
+2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — **every merge to `main`
+   must regenerate them from the *merged* tree, before the push that ships it.** Run the recipe
+   `extract → translate fr de it es → validate`; `validate` is the gate. Land them in the *same*
+   `FB.VERSION` as the merge — the catalogs cache-bust on that version, so pushing code without
+   them serves stale/English-fallback locales until the next bump. A merge with no player-facing
+   text change is a no-op `validate` confirms. Never regenerate on a branch or hand-merge these
+   files. Recipe and rationale: `docs/i18n-authoring.md`; see **Internationalization (i18n)** below.
 
 On the branch, describe the change in the commit message and route any new player-facing text
 through the i18n layer — but leave the version, changelog, and catalogs for the merge. Anything
