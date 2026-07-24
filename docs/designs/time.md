@@ -31,10 +31,11 @@ chronicle — fast-forward rolls through them. Four independent switches: `minor
 (everyday slot-day happenings), `major` (once-in-a-life and story events), `war`
 (musters, war councils, tribute envoys, battle reports — hosts still raise, march,
 and fight on the map by their own rules), and `all`, which resolves every event and
-stops only for death and the succession screen. Short of `all`, two guards keep
+stops only for death and the succession screen. Short of `all`, three guards keep
 choices human: an event whose worst outcome could drop the player to 0 health is
 always shown (`worstWound` in ui.js), and so is any event offering the naming of an
-heir (`hasHeirPick`); under `all` a `pickHeir` effect instead names the first in line
+heir (`hasHeirPick`) or a title/independence choice (`hasTitleChoice`); under `all` a
+`pickHeir` effect instead names the first in line
 silently (`UI.autoResolving`). A separate three-way host command (`G.auto.hosts`:
 manual / defensive / offensive) automates the war host's marches — see
 [war.md](war.md). Death is never delegated: the succession screen takes

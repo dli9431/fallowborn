@@ -9,7 +9,9 @@ The `give_alms` deed closes the loop, turning gold into piety (with a little pop
 opinion) so the temple's services stay within reach. Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
 focus accrue power with discovery risk, then a resolution event fires (`plot` named
 chance — for plots with a personal victim it adds the target's `opinion/500` to success;
-options end with `{custom:'plot_end'}`). Diplomacy has envoys buying
+options end with `{custom:'plot_end'}`). The Scheming focus is the repeatable source of
+Intrigue growth; the repeatable Locked Chest payout does not also train the skill that
+speeds and strengthens its next attempt. Diplomacy has envoys buying
 non-aggression pacts (`state.pacts`, honored by the AI and by `FB.warTargets`),
 oath-brotherhood, and quarrel mediation.
 

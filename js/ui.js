@@ -1377,6 +1377,20 @@ window.FB = window.FB || {};
     return false;
   }
 
+  /* Titles and independence change the player's whole mode of play. Ordinary
+     category automation may handle the surrounding story, but only the
+     explicit "everything" setting may make this irreversible choice. */
+  function hasTitleChoice(ev) {
+    function has(fx) {
+      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.declareIndependence));
+    }
+    for (const o of (ev.options || [])) {
+      if (has(o.effects) || has(o.success && o.success.effects) ||
+        has(o.failure && o.failure.effects)) return true;
+    }
+    return false;
+  }
+
   function autoWants(ev, item) {
     const a = FB.game.auto;
     if (!a) return false;
@@ -1385,6 +1399,8 @@ window.FB = window.FB || {};
     if (a.all) return true;
     /* the naming of an heir is a human choice, however automation is set */
     if (hasHeirPick(ev)) return false;
+    /* accepting a title or declaring independence is likewise shown */
+    if (hasTitleChoice(ev)) return false;
     /* an event that could drop the player to 0 health is always shown,
        however the automation is set — the killing blow is never silent */
     const s = FB.state;
@@ -1531,7 +1547,7 @@ window.FB = window.FB || {};
       'While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.')) +
       '</p></div>';
     h += cb('ar-minor', a.minor, '<b>Autoresolve minor events</b>', 'Everyday happenings — the small incidents of daily life.');
-    h += cb('ar-major', a.major, '<b>Autoresolve major events</b>', 'Once-in-a-life moments and story events — but never one that could cost you your life, and never the naming of an heir. Those are always shown.');
+    h += cb('ar-major', a.major, '<b>Autoresolve major events</b>', 'Once-in-a-life moments and story events — but never one that could cost you your life, name an heir, accept a title, or declare independence. Those are always shown.');
     h += cb('ar-war', a.war, '<b>Autoresolve war events</b>', 'Musters, war councils, tribute envoys, and battle reports. Your hosts still raise, march, and fight on the map by their own rules — this chooses your orders each season.');
     h += cb('ar-all', a.all, '<b>Autoresolve everything</b>', 'No event ever interrupts the days — even mortal danger and the naming of an heir resolve on their own. Only your death and the choice of a successor stop the flow.');
     h += '<div class="gm-body-text" style="margin-top:8px"><p>How to choose between options:</p></div>';

@@ -58,7 +58,11 @@ to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
 `FB.checkTierPromotions`), never standing "independent" nor kneeling to a lord who no
 longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
-monk/priest) but manages the manor and may petition for a barony like any gentry. Promotions above count happen in `FB.checkTierPromotions` from de jure majorities:
+monk/priest) but manages the manor and may petition for a barony like any gentry.
+The unsolicited `grant_of_barony` event lets gentry accept, decline for a purse, or
+decline graciously. Short of "Autoresolve everything", automation leaves every
+title-changing or independence decision to the player. Promotions above count happen
+in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
 The exact rules live in `FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress`
 (`js/world.js`), shared by the tier check and the UI readouts: a duchy must span ≥2 de

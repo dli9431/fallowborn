@@ -384,8 +384,8 @@ FBDATA.events.push(
   text:'The household sleeps; the dog knows you now. The chest waits where the steward believes nobody knows.',
   options:[
     { label:'Crack it.', chance:'plot', desc:'One careful hour against the dog’s memory.',
-      success:{ text:'Coin — and something better than coin, wrapped in wool at the bottom.',
-        effects:{ custom:'plot_loot', gold:8, skills:{int:1}, piety:-3 } },
+      success:{ text:'Coin — and a bundle wrapped in wool. Whether it holds anything your family lacks remains to be seen.',
+        effects:{ custom:'plot_loot', gold:8, piety:-3 } },
       failure:{ text:'The dog remembered its duty after all. You go over the wall torn, and known.',
         effects:{ custom:'plot_end', prestige:-8, popularOpinion:-6, health:-1 } } },
     { label:'Leave it be.', desc:'Some chests are best left singing.', effects:{ custom:'plot_end', piety:3 } }

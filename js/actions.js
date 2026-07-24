@@ -892,14 +892,16 @@ window.FB = window.FB || {};
     return sum;
   };
 
-  /* unowned items, weighted by rarity (or restricted to one rarity) */
-  function itemPool(state, rarity) {
+  /* Items weighted by rarity (or restricted to one rarity). Offers filter
+     owned pieces out; random loot rolls against the full table so hoarding
+     common pieces can never turn the next find into a guaranteed rarity. */
+  function itemPool(state, rarity, includeOwned) {
     const owned = FB.itemList(state);
     const W = { common: 6, fine: 3, famed: 1 };
     const pool = [];
     for (const id in FBDATA.items) {
       const def = FBDATA.items[id];
-      if (owned.indexOf(id) >= 0) continue;
+      if (!includeOwned && owned.indexOf(id) >= 0) continue;
       if (rarity && def.rarity !== rarity) continue;
       const w = W[def.rarity] || 1;
       for (let i = 0; i < w; i++) pool.push(id);
@@ -908,11 +910,16 @@ window.FB = window.FB || {};
   }
 
   FB.lootItem = function (state, rarity, source) {
-    const pool = itemPool(state, rarity);
+    const pool = itemPool(state, rarity, true);
     if (!pool.length) return null;
     const id = FB.pick(pool);
-    FB.itemList(state).push(id);
     const def = FBDATA.items[id];
+    if (FB.itemList(state).indexOf(id) >= 0) {
+      FB.news(state, FB.msg('news.item.duplicate',
+        '🎒 The find is no addition to your family’s treasures.', {}));
+      return null;
+    }
+    FB.itemList(state).push(id);
     FB.news(state, FB.msg('news.item.acquired', {
       forms: {
         select: 'value', param: 'source', cases: {

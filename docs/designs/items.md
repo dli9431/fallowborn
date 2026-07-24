@@ -10,6 +10,10 @@ spells out the `fx` and offers selling (`FB.sellItem`, `balance.itemSellRatio` o
 or gifting to any known character (`FB.giveItem` — regard by rarity via `FB.giftOpinion`,
 lord favor too); gifted items sit on the receiving char (`c.items`, chips on their card)
 and rejoin the hoard in `G.succeedTo` if that character becomes the player.
+Random loot always rolls against the complete rarity-weighted item table. If the rolled
+piece is already in the family hoard, no new item is gained; owned pieces are filtered
+out only for merchant offers. This keeps rarity odds fixed instead of making a famed
+piece inevitable when the player hoards every common one.
 
 Related: [characters.md](characters.md) for `FB.skillOf` and the skill caps,
 [ui.md](ui.md) for the item card's touch behavior.

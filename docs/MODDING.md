@@ -426,7 +426,9 @@ passed to heirs (`player.items`, mod key `items`):
 - Event hooks (`custom` effects): `offer_item` (a random unowned item goes on sale via the
   `item_offer` event), `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),
   `loot_item` (random spoils), `find_artifact` (famed only), `plot_loot` (spoils + ends the
-  plot). War victories and raids also roll for spoils. To grant one **specific** item instead
+  plot). Random loot rolls the full rarity-weighted table; if the rolled item is already
+  owned, no new item is added, so a nearly complete hoard does not force the remaining
+  rare piece. War victories and raids also roll for spoils. To grant one **specific** item instead
   of a random one, use the `giveItem: "id"` *effect* (above) rather than a custom fn.
 
 ## Plots, blessings, and pacts

@@ -273,7 +273,8 @@ FBDATA.events.push(
   text:'{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”',
   options:[
     { label:'Kneel and swear.', desc:'A tower, a banner, and a lord above you.', effects:{ tierSet:3, prestige:60, log:'Granted a barony — a lord at last!' } },
-    { label:'Ask instead for gold.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10} } }
+    { label:'Decline, but ask for gold.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10} } },
+    { label:'Decline graciously.', desc:'Remain gentry, without turning the refusal into an insult.', effects:{ } }
   ]},
 { id:'feud_gentry', title:'An Affair of Honor',
   trigger:{ tierMin:2, hasRole:'rival', roleOpinionBelow:{role:'rival', value:-40}, chance:0.2 }, weight:6, cooldown:12,

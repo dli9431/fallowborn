@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.36.0';
+  FB.VERSION = '1.37.0';
   FB.CHANGELOG = [
+    { v: '1.37.0', date: '2026-07-24', changes: [
+      'Random treasure keeps its original rarity odds however full the family hoard becomes — keeping every lesser item no longer guarantees a famed one, and repeat chest theft no longer trains its own Intrigue.',
+      'An offered barony may now be declined graciously, and ordinary automation pauses for every title or independence decision.'
+    ] },
     { v: '1.36.0', date: '2026-07-24', changes: [
       'The Royal Council: crowned Kings and Emperors now rule with five great officers of the crown — Seneschal, Constable, Treasurer, Almoner, Chamberlain — raised from your own vassals. Each office lends real strength (taxes, levies, cheaper buildings, piety, a watcher against schemes) while a loyal man holds it.',
       'Magnates have tempers now: every lord carries a personality. Flatterers bring gifts and honeyed words; the ambitious weave schemes against an unwary king — a seated Chamberlain uncovers them, without one they strike from the dark.',
