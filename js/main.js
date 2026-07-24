@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.29.0';
+FB.VERSION = '1.30.0';
   FB.CHANGELOG = [
+    { v: '1.30.0', date: '2026-07-23', changes: [
+      'Every event choice now carries a short hint beneath it, so you never choose blind.',
+      'New ways to spend piety at the temple: a good word with your lord, masses for your ancestors, a blessing on your house — and a 🕯 Give alms deed to turn coin into piety.',
+      'On mobile, the event dialog now floats above the screen edge with its full frame — no more cut-off bottom.'
+    ] },
     { v: '1.29.0', date: '2026-07-23', changes: [
       'Tap a settlement in your own county (Land tab) to see the buildings standing there and what each provides — gold, levy, piety, scholarship — with a button to raise new works.'
     ] },

@@ -328,6 +328,17 @@ window.FB = window.FB || {};
     },
     show: function (s) { return adult(s); },
     run: function (s) { s.eventQueue.push({ id: 'seek_blessing', ctx: {} }); } },
+  { id: 'give_alms', label: '🕯 Give alms', cd: 30,
+    desc: function (s) {
+      return FB.T('Bread and coin for the poor at the {temple} gate. (10 gold)',
+        { temple: FB.templeWord(me(s).religion) });
+    },
+    show: function (s) { return adult(s); },
+    can: function (s) { return s.player.gold >= 10 ? true : 'Nothing to spare.'; },
+    run: function (s) {
+      FB.applyEffects(s, { gold: -10, piety: 8, popularOpinion: 3 });
+      FB.news(s, FB.msg('news.action.alms', '🕯 Gave alms to the poor.', {}));
+    } },
   { id: 'begin_plot', label: '🕸 Begin a plot…', noConsume: true,
     desc: function () { return 'Patience, whispers, and a long knife. Occupies your focus until sprung.'; },
     show: function (s) { return adult(s) && !s.player.plot; },
