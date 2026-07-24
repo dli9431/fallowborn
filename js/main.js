@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.46.0';
+  FB.VERSION = '1.47.0';
   FB.CHANGELOG = [
+    { v: '1.47.0', date: '2026-07-24', changes: [
+      'Petitioning for a barony now needs an established gentle house — an heir must inherit your gentry standing before a lord will grant one.'
+    ] },
     { v: '1.46.0', date: '2026-07-24', changes: [
       'Freeholders now buy inherited land plot by plot, earn more from consolidated holdings, and may declare five plots in one settlement a manor.'
     ] },
@@ -595,7 +598,7 @@ window.FB = window.FB || {};
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         foreignPolicy: {},
-        warService: 0, liegeGrants: 0,
+        warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
@@ -706,7 +709,7 @@ window.FB = window.FB || {};
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
-        warService: 0, liegeGrants: 0,
+        warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [],

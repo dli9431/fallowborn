@@ -808,7 +808,7 @@ FBDATA.balance = {
   freedomCost: 100, landPlotCost: 120, landPlotYield: 0.6,
   landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
   manorPlotRequirement: 5, manorPrestige: 150,
-  baronyGold: 2500, baronyPrestige: 400,
+  baronyGold: 2500, baronyPrestige: 400, baronyOpinion: 60,
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],

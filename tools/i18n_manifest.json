@@ -26827,16 +26827,6 @@
         "text": "You do not give ground. By morning every bruise in the village belongs to your cause."
       }
     },
-    "src.19e66870": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Path: serve your lord, win renown (250+ prestige, lord’s favor 40+), and petition for a barony."
-      }
-    },
     "src.19e7d6c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35373,6 +35363,16 @@
         "text": "Lawful, yes — and he may still say no with spears."
       }
     },
+    "src.5144baae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony."
+      }
+    },
     "src.515cb682": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39902,6 +39902,16 @@
         "text": "Burn and take — weaken them before the next battle."
       }
     },
+    "src.6ce3256f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner."
+      }
+    },
     "src.6cea18bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40601,16 +40611,6 @@
       ],
       "source": {
         "text": "{name} ({role})"
-      }
-    },
-    "src.71117336": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "You need at least 250 prestige."
       }
     },
     "src.711a9f81": {
@@ -53573,16 +53573,6 @@
         "text": "Kingdom of"
       }
     },
-    "src.c1ea6654": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "The lord’s favor is not yet sufficient."
-      }
-    },
     "src.c201033a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58350,6 +58340,16 @@
         "text": "The forester catches you red-handed over the carcass."
       }
     },
+    "src.e1259ff8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
+      }
+    },
     "src.e14cb0e3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60683,6 +60683,16 @@
       ],
       "source": {
         "text": "The liege’s ear is open; his hand is another matter."
+      }
+    },
+    "src.efccb75f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You need at least {needed} favor with your lord (now {current})."
       }
     },
     "src.efd2b2c3": {
@@ -66285,6 +66295,14 @@
         "text": "Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads."
       }
     },
+    "ui:Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
+      }
+    },
     "ui:Path: save {gold} gold (or win your lord’s favor) to buy freedom.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -66293,6 +66311,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Path: save {gold} gold (or win your lord’s favor) to buy freedom."
+      }
+    },
+    "ui:Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "favor",
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony."
       }
     },
     "ui:Pay to call in light coin, restore weight, and press prices back toward stability.": {
@@ -67375,6 +67404,17 @@
         "text": "You need at least 400 prestige (now {current})."
       }
     },
+    "ui:You need at least {needed} favor with your lord (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You need at least {needed} favor with your lord (now {current})."
+      }
+    },
     "ui:You need at least {needed} gold (now {current}).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -67482,6 +67522,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your host"
+      }
+    },
+    "ui:Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner."
       }
     },
     "ui:Your liege must at least tolerate you (favor 20+, now {current}).": {

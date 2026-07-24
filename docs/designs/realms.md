@@ -71,9 +71,16 @@ to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
 `FB.checkTierPromotions`), never standing "independent" nor kneeling to a lord who no
 longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
-monk/priest) but manages the manor and may petition for a barony like any gentry.
-The unsolicited `grant_of_barony` event lets gentry accept, decline for a purse, or
-decline graciously. Short of "Autoresolve everything", automation leaves every
+monk/priest) but manages the manor like any gentry. Ordinary feudal elevation requires
+an **established gentle house**: `player.gentryGeneration` records the generation that
+first reached tier 2, and only a later generation may petition for a barony or receive
+the unsolicited offer. Both paths use `balance.baronyPrestige` and
+`balance.baronyOpinion`. Tier-2 scenarios begin with an established house, and older
+saves without the additive field are treated the same way. Battlefield knighting and
+the learned clerical paths remain exceptional personal careers: they may establish
+gentry or rise directly to tier 3 without this ordinary patronage gate. The unsolicited
+`grant_of_barony` event lets eligible gentry accept, decline for a purse, or decline
+graciously. Short of "Autoresolve everything", automation leaves every
 title-changing or independence decision to the player. Promotions above count happen
 in `FB.checkTierPromotions` from de jure majorities:
 a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.

@@ -593,8 +593,14 @@ window.FB = window.FB || {};
           prestige:FBDATA.balance.manorPrestige
         })) + '</div>';
     }
+    if (s.player.tier === 2) {
+      const text = FB.gentryEstablished(s)
+        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony.',
+          { prestige:FBDATA.balance.baronyPrestige, favor:FBDATA.balance.baronyOpinion })
+        : FB.T('Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.');
+      return '<div class="progressnote">🧭 ' + esc(text) + '</div>';
+    }
     const tips = {
-      2: 'Path: serve your lord, win renown (250+ prestige, lord’s favor 40+), and petition for a barony.',
       3: 'Path: petition your liege for a county — or declare independence and take one.',
       4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer) to be styled duke.',
       5: 'Path: hold the majority of a de jure kingdom and win independence to be crowned king.',
