@@ -52,7 +52,11 @@ work straight to `main` — do not create a branch, and do not open a PR unless 
 
 1. Create a commit on a temporary branch inside the worktree.
 2. Merge that temp branch into `main`.
-3. Delete the temp branch to clean up.
+3. Once the merge is in `main`, clean up: remove the worktree, then delete the branch —
+   `git worktree remove <path>` followed by `git branch -d <branch>` (use `-d`, not `-D`, so
+   git refuses if the branch isn't fully merged). Confirm the worktree is clean first;
+   `git worktree remove` discards any uncommitted work in it. Leaving stale branches and
+   worktrees around is what let old, already-merged branches pile up.
 
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
 touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
