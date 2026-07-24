@@ -704,6 +704,8 @@ FBDATA.items = {
     desc:'Every debt in one place — most of them owed to you.' },
   old_grammar:     { name:'Old Grammar', icon:'📕', rarity:'common', value:20, fx:{ lea:1 },
     desc:'A battered book in a dead tongue that still has things to say.' },
+  padded_jack:     { name:'Padded Jack', icon:'🧥', rarity:'common', value:25, fx:{ battle:0.03 },
+    desc:'Layered linen stuffed with tow — humble armor that has turned many a tired blade.' },
   damascene_blade: { name:'Damascene Blade', icon:'🗡', rarity:'fine', value:60, fx:{ mar:2, battle:0.03 },
     desc:'Water-patterned steel from the east. It does not forgive.' },
   signet_ring:     { name:'Signet Ring', icon:'🔏', rarity:'fine', value:60, fx:{ dip:2 },

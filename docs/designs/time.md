@@ -6,7 +6,10 @@ activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds 
 the day and use day-based cooldowns (`cd`). Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,
 household thrift into coin) and `courtly_graces` (tier ≥ 2, court favor and polish), and
-`FB.defaultFocus` maps female characters to them. War *leadership* foci and deeds
+`FB.defaultFocus` maps female characters to them. The one exception: while a woman is *afield*
+in the *Sweet Polly Oliver* disguise chain (`afield()` in actions.js — any `polly_*` flag set),
+`listFocuses`/`defaultFocus` pare her whole menu down to a soldier's day — `drill`, `rest`,
+`pray` — so `drill` trains her martial like any recruit; see [events.md](events.md). War *leadership* foci and deeds
 (`lead_host`, `muster_host`, `hire_mercs`, `declare_war`) are deliberately NOT gated —
 see [characters.md](characters.md) for the chatelaine model. Season boundaries apply upkeep/taxes, run the
 player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`); new years run

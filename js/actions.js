@@ -13,6 +13,13 @@ window.FB = window.FB || {};
   function me(state) { return state.chars[state.player.charId]; }
   function adult(state) { return FB.ageOf(me(state), state.date.year) >= 16; }
   function female(state) { return me(state).sex === 'f'; }
+  // disguised in the ranks: any live chapter of the Sweet Polly Oliver chain
+  // (events_peasant.js) means she is afield with the army, not at home — her
+  // focus options become a soldier's, not a housewife's or a market-day's
+  function afield(state) {
+    const f = state.player.flags;
+    return !!(f.polly_1 || f.polly_2 || f.polly_3 || f.polly_4 || f.polly_reunion);
+  }
   function suitorReady(state) {
     return !!(state.player.flags.courting && FB.getRole(state, 'suitor'));
   }
@@ -156,7 +163,7 @@ window.FB = window.FB || {};
 
   { id: 'drill', label: '⚔ Drill at arms',
     desc: function () { return 'The sergeant’s stick teaches quickly.'; },
-    show: function (s) { return s.player.profession === 'soldier' && !female(s); },
+    show: function (s) { return afield(s) || (s.player.profession === 'soldier' && !female(s)); },
     tick: function (s) {
       s.player.gold += 1 / D;
       if (dch(0.7)) skillUp(s, 'mar');
@@ -343,7 +350,19 @@ window.FB = window.FB || {};
       const su = FB.getRole(s, 'suitor');
       return suitorReady(s) && su && su.opinion >= 5;
     },
-    run: function (s) { s.eventQueue.push({ id: 'proposal_made', ctx: {} }); } },
+    run: function (s) {
+      const p = s.player, m = s.chars[p.charId];
+      // a woman's suit can be overtaken by the war: about a quarter of the time
+      // her intended is swept into the levy before he can answer, opening the
+      // disguise-at-war chain (events_peasant.js, docs/designs/events.md). Same
+      // female + low-station + once-per-life gate as the random opener.
+      if (m.sex === 'f' && p.tier <= 2 && FB.ageOf(m, s.date.year) <= 35 &&
+        !p.flags.polly_ever && FB.chance(0.25)) {
+        s.eventQueue.push({ id: 'polly_propose_war', ctx: {} });
+      } else {
+        s.eventQueue.push({ id: 'proposal_made', ctx: {} });
+      }
+    } },
 
   { id: 'go_to_town', label: '🏘 Go into town…', cd: 30, noConsume: true,
     desc: function () { return 'Spend a day at one of the province’s settlements — markets, pulpits, and hiring fairs, as fits your station.'; },
@@ -1583,7 +1602,14 @@ window.FB = window.FB || {};
   };
 
   FB.listFocuses = function (state) {
-    return FB.focuses.filter(function (f) { return f.show(state); });
+    const all = FB.focuses.filter(function (f) { return f.show(state); });
+    // afield in disguise, the household/market/court focuses make no sense —
+    // pare the menu down to a soldier's day: drill, mend, and prayers
+    if (afield(state)) {
+      const wl = { drill: 1, rest: 1, pray: 1 };
+      return all.filter(function (f) { return wl[f.id]; });
+    }
+    return all;
   };
 
   FB.listInstants = function (state) {
@@ -1620,6 +1646,7 @@ window.FB = window.FB || {};
   FB.defaultFocus = function (state) {
     const p = state.player;
     if (!adult(state)) return 'study';
+    if (afield(state)) return 'drill'; // disguised in the ranks — train at arms
     let want;
     if (p.profession === 'monk') want = 'copy_books';
     else if (p.profession === 'priest') want = 'serve_church';
@@ -1643,8 +1670,10 @@ window.FB = window.FB || {};
   FB.validateFocus = function (state) {
     const cur = state.player.focus;
     // daily hot path: if the current focus is still offered, skip the full
-    // listFocuses sweep (all ~27 show() callbacks) entirely
-    if (cur) {
+    // listFocuses sweep (all ~27 show() callbacks) entirely. While afield the
+    // menu is pared to a whitelist that show() alone can't see, so take the
+    // full sweep and let a now-irrelevant home focus fall through to a soldier's.
+    if (cur && !afield(state)) {
       for (const f of FB.focuses) {
         if (f.id === cur) { if (f.show(state)) return; break; }
       }

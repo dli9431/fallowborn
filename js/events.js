@@ -1274,6 +1274,14 @@ window.FB = window.FB || {};
       const hi = hl.indexOf(fx.loseHolding);
       if (hi >= 0) hl.splice(hi, 1);
     }
+    if (fx.giveItem && FBDATA.items[fx.giveItem]) {
+      // grant one specific heirloom by id (issued kit, gifts, quest rewards);
+      // random finds still go through custom:'loot_item' / FB.lootItem
+      FB.itemList(state).push(fx.giveItem);
+      const gdef = FBDATA.items[fx.giveItem];
+      FB.news(state, FB.msg('news.item.issued', '🎒 {icon} {item} is yours now.',
+        { icon: gdef.icon, item: FB.dataParam('item', fx.giveItem) }));
+    }
     if (fx.marry) FB.doMarry(state);
     if (fx.clearSuitor) {
       p.courtingId = null;
@@ -1445,6 +1453,37 @@ window.FB = window.FB || {};
         }
       }
     }, { faith: FB.religionOf(me.religion).group, name: sp.name }));
+  };
+
+  /* ---------- Sweet Polly Oliver (disguise-at-war chain, events_peasant.js) ----------
+     polly_court spawns the young soldier the heroine follows to war and seats
+     him in the {suitor} role (courtingId) so his card and name carry through
+     every chapter and the reunion can wed him with a plain marry:true. We
+     deliberately never set the `courting` flag, so none of the ordinary
+     courtship/proposal events fire over the top of the story. */
+  FB.fns.polly_court = function (state) {
+    const p = state.player;
+    const me = state.chars[p.charId];
+    const pr = FB.world.byId[p.provinceId];
+    const y = state.date.year;
+    const st = FB.clamp(FB.playerStation(state), 0, 3); // a peer — a common soldier
+    const c = FB.makeCharacter(state, {
+      sex: 'm', culture: pr.culture, religion: me.religion,
+      born: y - FB.clamp(FB.ageOf(me, y) + FB.ri(-2, 5), 16, 40),
+      role: 'suitor', opinion: FB.ri(10, 30), station: st, quality: st + FB.ri(0, 1)
+    });
+    if (SUITOR_EPITHETS[st] && SUITOR_EPITHETS[st].m) c.epithetMsg = FB.pick(SUITOR_EPITHETS[st].m);
+    p.courtingId = c.id;
+  };
+  /* the losing side of the shield-wall: the grave wound itself is the data
+     health hit (so the automation "never a silent killing blow" guard can see
+     it), and this only adds the small, martial-tempered chance the rout proves
+     mortal — most who lose still crawl away. Zeroing health lets G.afterEvents
+     record the death after the modal closes. */
+  FB.fns.polly_rout = function (state) {
+    const me = state.chars[state.player.charId];
+    const mortal = FB.clamp(0.12 - FB.skillOf(me, 'mar') * 0.004, 0.04, 0.12);
+    if (FB.chance(mortal)) me.health = 0;
   };
 
   /* ---------- widowhood & the house claim ----------

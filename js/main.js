@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.33.0';
+  FB.VERSION = '1.34.0';
   FB.CHANGELOG = [
+    { v: '1.34.0', date: '2026-07-24', changes: [
+      'A new story for women who would rather fight than be left behind: when the man an unwed woman of low station has set her heart on is swept into the war levy, she may cut her hair, take a man’s name, and follow him into the ranks. It can arrive on its own, or overtake a 💒 Propose marriage when the serjeants take her intended before he can answer. A chain of chapters across about a year — enlisting, drilling, drawing kit and pay, and a shield-wall that can win loot, leave scars, or end her — that teaches real martial skill, then a reunion she ends on her own terms: wed him, spurn him grandly, or slip away a stranger and keep the tale for herself. While she is afield her daily focus is a soldier’s — drill, rest, and prayers — not the household or the market stall. The tale is told in the local idiom, too: the amir’s muster in Muslim lands, the war-band and the shield-ring among the pagans.',
+      'New humble armor — the Padded Jack — a gambeson of layered linen that turns a tired blade.'
+    ] },
     { v: '1.33.0', date: '2026-07-24', changes: [
       'Buildings now rise settlement by settlement: each settlement of a county holds one of every work, further copies of the same work in one county cost half again as much, and tapping a settlement shows only what stands there. Works from older saves move to the head settlement.',
       'Stone Walls now aid your defense only in the home county where they stand.',

@@ -261,13 +261,17 @@ go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (scholarship points) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
+`giveItem: "id"` (grant one specific heirloom from `FBDATA.items` — issued kit, gifts, quest
+rewards; random finds use `custom: "loot_item"` instead) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
 war_hunt war_supply war_thin war_terms war_accept_tribute` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
-vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant` live in `js/events.js`;
+vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant` and the
+disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{suitor}` role) /
+`polly_rout` (the small mortal-wound roll on a lost shield-wall) live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; mods may register their own before use).
 
@@ -419,7 +423,8 @@ passed to heirs (`player.items`, mod key `items`):
 - Event hooks (`custom` effects): `offer_item` (a random unowned item goes on sale via the
   `item_offer` event), `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),
   `loot_item` (random spoils), `find_artifact` (famed only), `plot_loot` (spoils + ends the
-  plot). War victories and raids also roll for spoils.
+  plot). War victories and raids also roll for spoils. To grant one **specific** item instead
+  of a random one, use the `giveItem: "id"` *effect* (above) rather than a custom fn.
 
 ## Plots, blessings, and pacts
 

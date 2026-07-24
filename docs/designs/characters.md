@@ -33,7 +33,10 @@ leadership deeds (`lead_host`, `muster_host`, `hire_mercs`, `declare_war`), and 
 replacement foci train what girls were actually schooled in: `keep_house`
 (household management, stewardship/diplomacy) and `courtly_graces` (hawking, letters,
 patronage — liege favor and prestige). Old saves self-heal: `FB.validateFocus` drops
-a now-hidden martial focus and `FB.defaultFocus` re-maps it.
+a now-hidden martial focus and `FB.defaultFocus` re-maps it. The one road left for a woman who
+means to actually *fight* is the *Sweet Polly Oliver* event chain (events_peasant.js) — cutting
+her hair and following the war levy in disguise, which trains martial across about a year; see
+[events.md](events.md).
 
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
 `c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).

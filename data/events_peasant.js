@@ -515,5 +515,110 @@ FBDATA.events.push(
       failure:{ text:'Everyone shouts a different command until a stronger voice takes over.', effects:{ prestige:-2 } } },
     { label:'Run for more help.', desc:'Little glory, but no one drowns for your pride.', effects:{ prestige:1 } },
     { label:'Keep walking.', desc:'The river keeps its secrets; so will you.', effects:{ prestige:-2 } }
+  ]},
+
+/* =========================================================================
+   SWEET POLLY OLIVER — an unwed woman of low station, left behind when the
+   man she fancies is swept into the war levy, cuts her hair, takes a man’s
+   name, and follows him into the ranks. A stage-flag chain (polly_1 → … →
+   polly_reunion) that unfolds across ~a year of slot days: enlist, drill, kit
+   and pay, a shield-wall that can wound or kill, and a reunion she ends on her
+   own terms — wed him, spurn him, or vanish a stranger. One of the few roads
+   to martial skill open to women in the 867 world. Female, unwed, serf through
+   gentry. The soldier she follows is spawned into the {suitor} role by
+   FB.fns.polly_court (js/events.js); see docs/designs/events.md.
+   ========================================================================= */
+
+{ id:'polly_farewell', title:'The Company Marches', once:true,
+  trigger:{ sex:'f', married:false, noRole:'suitor', tierMax:2, minAge:16, maxAge:35, notFlags:['courting','polly_ever'], chance:0.12 }, weight:12,
+  text:{ default:'There is a young man of the next holding — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the lord’s serjeants are taking every unwed man who can hold a spear, and this morning he stands in the muster line with a borrowed shield on his arm and no notion that you exist. By dusk the company will be a smudge of dust on the war road, and him with it. A woman does not follow an army. Everyone knows that.',
+    muslim:'There is a young man of the next quarter — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the amir’s men are calling up every unwed youth who can level a spear, and this morning he stands in the muster with a borrowed shield on his arm and no notion that you exist. By dusk the column will be a smudge of dust on the war-road, and him with it. A woman does not ride with an army, they say — but they have not read the old tales as closely as you have.',
+    pagan:'There is a young man of the next steading — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the chief’s men are taking every unwed lad who can hold a spear, and this morning he stands in the muster with a borrowed shield on his arm and no notion that you exist. By dusk the war-band will be a smudge of dust on the road, and him with it. They will say a woman has no place in the shield-ring. The old songs, which you know by heart, say otherwise.' },
+  options:[
+    { label:'Cut your hair and follow him to war.', desc:'Bind your chest, take a man’s name, and march. Madness — or the only road left.',
+      effects:{ custom:'polly_court', setFlag:'polly_1', setFlag2:'polly_ever', prestige:2, log:'Cut off her braid and followed the muster to war.' } },
+    { label:'Watch the dust settle, and let him go.', desc:'Some things are not to be. Swallow it, and stay who you are.',
+      effects:{ } }
+  ]},
+
+/* The same chain, entered from the "💒 Propose marriage" deed: about a quarter
+   of the time (js/actions.js) a low-station woman's intended is levied before
+   he can answer. Fired with trigger:{never:true}; the suitor she is courting is
+   already in the {suitor} role, so — unlike polly_farewell — this does NOT
+   spawn one, and it clears the `courting` flag so the ordinary courtship events
+   stand down while she is afield. polly_ever gates it to once per life. */
+{ id:'polly_propose_war', title:'Answered by a War-Horn', trigger:{ never:true }, charCard:'suitor',
+  text:{ default:'You have chosen your moment and rehearsed your words; today you mean to ask {suitor} for a life together. But the war reaches your door first. Even as you square your shoulders to speak, the lord’s serjeants are working down the lane — and {suitor}’s name is among those called, every unwed man who can hold a spear. There will be no answer today: only a borrowed shield thrust into his arms, and dust on the war road by dusk.',
+    muslim:'You have chosen your moment and rehearsed your words; today you mean to ask {suitor} for a life together. But the war reaches your door first. Even as you square your shoulders to speak, the amir’s men are working down the lane — and {suitor}’s name is among those called, every unwed youth who can level a spear. There will be no answer today: only a borrowed shield thrust into his arms, and dust on the war-road by dusk.',
+    pagan:'You have chosen your moment and rehearsed your words; today you mean to ask {suitor} for a life together. But the war reaches your door first. Even as you square your shoulders to speak, the chief’s men are working down the lane — and {suitor}’s name is among those called, every unwed lad who can hold a spear. There will be no answer today: only a borrowed shield thrust into his arms, and dust on the war-road by dusk.' },
+  options:[
+    { label:'Cut your hair and follow him to war.', desc:'If he cannot be given to you, go and take your place at his side — in a man’s clothes.',
+      effects:{ clearFlag:'courting', setFlag:'polly_1', setFlag2:'polly_ever', prestige:2, log:'Cut off her braid and followed her intended to war.' } },
+    { label:'Let him march, and wait for his return.', desc:'Keep the hearth, keep the faith, and pray the war gives him back to ask again.',
+      effects:{ prestige:1, piety:3 } }
+  ]},
+
+{ id:'polly_enlist', title:'A Braid on the Barn Floor', once:true, charCard:'suitor',
+  trigger:{ flags:['polly_1'], hasRole:'suitor' }, weight:60,
+  text:'The shears bite; your braid coils on the barn floor and you are someone else. Chest bound flat under a dead brother’s shirt, voice pitched low, a man’s name ready on your tongue, you fall in at the tail of the column. Ahead in the ranks — close enough to see, too close to be safe — marches {suitor}, who does not know you from any other raw recruit.',
+  options:[
+    { label:'Learn the spear as if your life depends on it.', desc:'Because now it does. Hard drill, and no one looking too closely.',
+      effects:{ clearFlag:'polly_1', setFlag:'polly_2', skills:{mar:1}, log:'Took a man’s name in the ranks.' } },
+    { label:'Keep to the edges and copy the veterans.', desc:'Learn by watching; draw no eyes to a jaw too smooth.',
+      effects:{ clearFlag:'polly_1', setFlag:'polly_2', skills:{mar:1}, prestige:1 } }
+  ]},
+
+{ id:'polly_drill', title:'The Drill-Yard', once:true, charCard:'suitor',
+  trigger:{ flags:['polly_2'], hasRole:'suitor' }, weight:70,
+  text:{ default:'Days blur into blisters and bruises. The serjeant’s stick finds every dropped shield, and the men wash and boast and sprawl with no thought for the slight recruit who always slips off alone. Your arms harden; the spear stops feeling like a stranger in your hands. And once, across the cook-fire, {suitor} passes you the bread without a second glance — and your treacherous heart nearly betrays you where the serjeant’s eye never could.',
+    muslim:'Days blur into blisters and bruises. The drillmaster’s cane finds every dropped shield, and the men wash and boast and sprawl with no thought for the slight recruit who always slips off alone. Your arms harden; the spear stops feeling like a stranger in your hands. And once, across the cook-fire, {suitor} passes you the bread without a second glance — and your treacherous heart nearly betrays you where the drillmaster’s eye never could.',
+    pagan:'Days blur into blisters and bruises. The grizzled spearman who drills the levy finds every dropped shield, and the men wash and boast and sprawl with no thought for the slight recruit who always slips off alone. Your arms harden; the spear stops feeling like a stranger in your hands. And once, across the cook-fire, {suitor} passes you the bread without a second glance — and your treacherous heart nearly betrays you where that hard old eye never could.' },
+  options:[
+    { label:'Throw yourself into the training.', desc:'Sweat now, live later — and grow strong enough to matter.',
+      effects:{ clearFlag:'polly_2', setFlag:'polly_3', skills:{mar:2} } },
+    { label:'Guard the secret above all else.', desc:'Bathe alone, sleep in your shirt, trust no one. Caution over glory.',
+      effects:{ clearFlag:'polly_2', setFlag:'polly_3', skills:{mar:1, int:1} } },
+    { label:'Win the men with a wineskin and a song.', desc:'Comrades who love you look less closely at you.', chance:'skill_dip',
+      success:{ text:'You stand a round with your last coppers and bawl the filthy marching songs louder than any. They call you a good lad and mean it — and a good lad is never questioned.', effects:{ clearFlag:'polly_2', setFlag:'polly_3', skills:{mar:1}, gold:-2, prestige:3 } },
+      failure:{ text:'You fumble a verse every farm boy has known since the cradle, and a one-eyed veteran squints at you a beat too long before he lets it pass.', effects:{ clearFlag:'polly_2', setFlag:'polly_3', skills:{mar:1} } } }
+  ]},
+
+{ id:'polly_arms', title:'The Paymaster’s Table', once:true, charCard:'suitor',
+  trigger:{ flags:['polly_3'], hasRole:'suitor' }, weight:70,
+  text:'Before a war is fought it must be paid for. The paymaster counts thin coins into every calloused palm — your first soldier’s wage, earned as a man — and the quartermaster’s cart stands open beside him: dented iron and stiff leather for anyone who came without their own. Kit yourself now; tomorrow the column turns toward the enemy.',
+  options:[
+    { label:'Take a good fighting knife from the cart.', desc:'A keen blade close at hand is worth more than the coppers it costs.',
+      effects:{ clearFlag:'polly_3', setFlag:'polly_4', gold:4, giveItem:'keen_seax', skills:{mar:1} } },
+    { label:'Take a padded jack for your back and ribs.', desc:'It will not stop a lance, but it has turned many a tired sword.',
+      effects:{ clearFlag:'polly_3', setFlag:'polly_4', gold:6, giveItem:'padded_jack' } },
+    { label:'Pocket every coin and trust your spear.', desc:'Coin keeps; borrowed iron does not. Travel light.',
+      effects:{ clearFlag:'polly_3', setFlag:'polly_4', gold:8, skills:{mar:1} } }
+  ]},
+
+{ id:'polly_battle', title:'The Shield-Wall', once:true, charCard:'suitor',
+  trigger:{ flags:['polly_4'], hasRole:'suitor' }, weight:80,
+  text:'It is nothing like the drill-yard. The line locks shield to shield, the horns wail, and across a hundred paces of trampled barley the enemy comes on like a grey tide. Somewhere down the wall is {suitor}, white-knuckled on his spear. There is no hiding left now — only the wall, and whether you hold your span of it.',
+  options:[
+    { label:'Set your feet and hold the line.', desc:'Glory and grave both live in the shield-wall. Stand.', chance:'battle',
+      success:{ text:'The world shrinks to the man in front of you — and then he is down, and their wall breaks and runs, and you are alive, shaking, splashed to the elbow, and alive. The field and its dead lie open for the looting.', effects:{ clearFlag:'polly_4', setFlag:'polly_reunion', gold:12, prestige:8, skills:{mar:1}, addTraitOnce:'veteran', log:'Held the shield-wall and lived.' } },
+      failure:{ text:'The wall buckles where you least expect it. A blow you never see punches the wind and the sense clean out of you, and the rout washes over you like cold black water.', effects:{ clearFlag:'polly_4', setFlag:'polly_reunion', health:-4, addTrait:'scarred', custom:'polly_rout' } } },
+    { label:'Fight your way along the line to {suitor}.', desc:'If you fall, fall at his shoulder. Reckless — and human.', chance:'battle',
+      success:{ text:'You carve sideways through the press and plant yourself at his shoulder, a nameless recruit who fights like something loosed from a cage. Back to back you hold until the enemy breaks — and he stares at you as a man stares at a face he half-remembers from a dream.', effects:{ clearFlag:'polly_4', setFlag:'polly_reunion', gold:8, prestige:10, skills:{mar:2}, opinion:{role:'suitor', amt:15}, addTrait:'veteran', addTraitOnce:'brave', log:'Cut her way to her beloved’s shoulder and held.' } },
+      failure:{ text:'You never reach him. The line folds first, and a spear-butt or a boot-heel — you will never know which — drops you into the churned mud as the rout howls past overhead.', effects:{ clearFlag:'polly_4', setFlag:'polly_reunion', health:-4, addTrait:'scarred', custom:'polly_rout' } } }
+  ]},
+
+{ id:'polly_reunion', title:'After the Field', once:true, charCard:'suitor',
+  trigger:{ flags:['polly_reunion'], hasRole:'suitor' }, weight:90,
+  text:{ default:'The fighting is done and the crows have come down to their work. Battered or triumphant, you find {suitor} among the living — and when you drag the helm off your cropped head and speak in your own true voice at last, he goes white, then red, then utterly and gratifyingly speechless. A year of blisters and terror and midnight fear, all for this face gaping at you like a fish just landed.',
+    muslim:'The fighting is done and the carrion birds have come down to their work. Battered or triumphant, you find {suitor} among the living — and when you drag the helm off your cropped head and speak in your own true voice at last, he goes white, then red, then utterly and gratifyingly speechless. A year of blisters and terror and midnight fear, all for this face gaping at you like a fish just landed. Let the poets make of it what they will; they have sung of stranger women under armor.',
+    pagan:'The fighting is done and the ravens have come down to their work. Battered or triumphant, you find {suitor} among the living — and when you drag the helm off your cropped head and speak in your own true voice at last, he goes white, then red, then utterly and gratifyingly speechless. A year of blisters and terror and midnight fear, all for this face gaping at you like a fish just landed. Let them keep their talk of a woman’s place; the skalds will know where you stood.' },
+  options:[
+    { label:'Take his hand — you did not cross a war to lose him now.', desc:'Wed him, and let the whole muddy camp make of it what it will.',
+      effects:{ marry:true, prestige:10, clearFlag:'polly_reunion', log:'Wed the soldier she followed to war.' } },
+    { label:'“I crossed a war to find you — and found I like myself better.”', desc:'Spurn him grandly. You have outgrown the blushing boy from the muster line.',
+      effects:{ clearSuitor:true, prestige:6, popularOpinion:3, clearFlag:'polly_reunion', log:'Spurned her sweetheart and marched home her own woman.' } },
+    { label:'Pull the helm back on and slip away a stranger.', desc:'Let him wonder to his grave who that soldier was. Keep the tale for yourself.',
+      effects:{ clearSuitor:true, prestige:4, skills:{mar:1}, clearFlag:'polly_reunion', log:'Vanished from the field a stranger, and went home to her own life.' } }
   ]}
+
 );
