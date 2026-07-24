@@ -26,25 +26,12 @@ There is no build. **Testing is manual, by the human, in a browser.**
 > syntax validation is the accepted ceiling. After changes, ask the user to open `index.html`
 > and test manually, telling them what to look at.
 
-Deployment: zip the folder contents with `index.html` at the zip root, upload to itch.io as an
-HTML5 project ("played in the browser"), enable *Mobile friendly*. In practice the owner
-deploys with `notes/deploy.cmd` (butler push), which does the packaging automatically.
-
-**Cache-busting (why FB.VERSION matters twice):** `notes/deploy.cmd` runs `notes/stamp.ps1`,
-which appends `?v=<FB.VERSION>` to every `css/`, `js/`, `data/`, and `mods/` URL in the
-*staged* `index.html` before the itch push. That makes the version the cache key for the itch
-build, so browsers and the itch CDN fetch fresh files on each release — another reason every
-player-facing change **must** bump `FB.VERSION` (see `docs/VERSIONS.md`). A release that ships
-changed code without bumping the version will be served stale. Never add `?v=` to the
-committed `index.html`: query strings break `file://` loads, so the stamp is applied only to
-the deploy stage, never the repo.
-
-Note: `play.fallowborn.com` is served from a **separate** origin — a Coolify app (nginx behind
-Cloudflare) that auto-deploys on every push to `main`, not from itch (`deploy.cmd` does not
-touch it). Its Dockerfile build stamps `?v=<FB.VERSION>` onto the served `index.html` and serves
-the versioned `css/js/data/mods` assets **immutable**, so the same `FB.VERSION` bump busts its
-cache too. The committed `index.html` stays query-free (the `file://` rule) — the stamp is
-applied only in the build. Details in the private ops notes.
+Deployment: zip the folder (`index.html` at the zip root) to itch.io as an HTML5 project, or in
+practice the owner runs `notes/deploy.cmd` (butler push). It ships to **two independent targets** —
+itch and `play.fallowborn.com` (a separate Coolify origin that auto-deploys on every push to
+`main`) — and `FB.VERSION` is the cache-bust key for both: the itch `?v=` stamp and Coolify's
+`immutable` assets both key on it. Never add `?v=` to the committed `index.html` — query strings
+break `file://`. Both targets and the stamping mechanics: **`docs/deployment.md`**.
 
 **Hard rule — every change that lands on `main` bumps `FB.VERSION` (top of `js/main.js`), no
 exceptions.** It is the cache-bust key for *both* distribution targets: the itch `?v=` stamp and
@@ -138,67 +125,20 @@ about to touch, and update it when you change that system.**
 ## Internationalization (i18n)
 
 The game ships English plus AI **Preview** catalogs (`fr`, `de`, `it`, `es`). **Author every
-user-facing string so the localization layer can reach it — get this right as you write the
-code, not as a later cleanup pass.** Full design: `docs/designs/i18n.md`; schema in
-`docs/MODDING.md`. The simulation stays locale-neutral; **only pure-display fields (`title`,
-`text`, `label`, `desc`, `log`, `worldNews`, `name`) are ever localized** — ids, effects,
-triggers, numbers, and generated proper names never are. Nothing here breaks `file://`: catalogs
-are `.js` globals, and any new English self-heals (a lookup miss or stale source hash falls back
-to English), so an unrouted string is a bug even though the game still *runs*.
+user-facing string so the localization layer can reach it, as you write the code** — only
+pure-display fields (`title`, `text`, `label`, `desc`, `log`, `worldNews`, `name`) are localized;
+ids, numbers, and generated proper names never are. Route by where the text lives: `FB.T` /
+`FB.TC` for UI chrome, `{token}`-placeholdered display fields for event/structured data, and
+opaque `FB.msg('news.*', …)` descriptors for durable/saved messages. Never bake rendered prose
+into saved state, mutate a `FBDATA` display field, or put grammar in JS. New English self-heals to
+English, so the game still runs — but an unrouted string is a bug.
 
-**Route new text by where it lives:**
+The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integration artifacts:
+regenerate them once when a change lands on `main` (`extract → translate fr de it es → validate`),
+never on a feature branch, and never hand-merge them (see *Git workflow*).
 
-- **UI chrome (built as HTML/DOM in `js/*.js`):** wrap with `FB.T('English text', params?)`
-  (i18n.js), or `FB.TC('context', 'English text', params?)` when identical English needs
-  different meanings. Prefer the builder chokepoints that already wrap `FB.T` — `kv(label,
-  value)`, `panelh(title)`, `toast`, modal/button/tab helpers. Splice values with `{token}`
-  placeholders, never concatenation: `FB.T('You have {n} children', { n: n })`, **not**
-  `'You have ' + n + ' children'`.
-- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, items, …):**
-  keep the English in the source data — it is id-keyed and auto-extracted, including the `log:`
-  effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
-  Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}`
-  objects in the source (the renderer selects the branch, then localizes it).
-- **Durable / shared messages (chronicle, `FB.news`, `FB.fx`, anything stored in state):** emit
-  an opaque descriptor, never rendered prose. From shared sim code:
-  `FB.news(state, FB.msg('news.war.tribute', '🕊 English fallback.', params))`. The opaque key
-  (`news.*`, `fx.*`) plus semantic params re-render in the player's current language and keep
-  old saves working with no migration.
-
-**Never:** bake a localized/rendered string into `state.log`, `state.legends`, or any saved
-field; mutate a `FBDATA` display field in place (localization is shadow-lookup only); put
-grammar in JS (gender/plural ternaries, suffix splicing like `(sex==='f'?'daughter':'son')`) —
-use complete-phrase selector records (`{forms:{select:'value', param:'sex', cases:{…}}}` or a
-numeric plural selector) so the translator owns word order; or call the browser locale renderer
-from shared simulation code.
-
-**Regenerate catalogs when your change lands on `main` — once, at integration.** The tool is
-static-only — it never executes the game, so it is *outside* the "don't run the game" rule:
-
-```
-python tools/i18n_catalog.py extract               # rebuild data/lang_en.js + tools/i18n_manifest.json
-python tools/i18n_catalog.py translate fr de it es  # AI-translate new/changed records (needs API access)
-python tools/i18n_catalog.py validate               # coverage, source hashes, tokens, structure
-```
-
-`extract` and `validate` are always safe to run locally; `translate` calls a translation API.
-If you cannot run `translate`, **say so** — English fallback keeps the game correct, but the
-owner must regenerate before the Preview locales are current for release.
-
-**`data/lang_*.js` and `tools/i18n_manifest.json` are generated integration artifacts — never
-hand-edit or hand-merge them.** Working directly on `main` (the default), regenerate in the
-same commit as the text change. On a feature branch or worktree you will merge, **defer it**:
-route the strings, let English self-heal on the branch, and regenerate **once** from the merged
-tree at the merge. Regenerating on the branch does not help — two branches (or a branch and
-`main`) that both regenerate *always* collide on these files at merge, in hundreds to thousands
-of hunks, and the only fix is to regenerate again; a per-branch regeneration is therefore pure
-redundant work and a doubled `translate` bill.
-
-**Resolving a catalog conflict at a merge:** do not hand-merge the generated files. Take either
-side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`),
-`git add` them, then regenerate from the *merged source* (`extract → translate → validate`) and
-stage the result. `validate` is the gate — a change reaching `main` with new player-facing text
-but stale `data/lang_*.js`/`tools/i18n_manifest.json` leaves the other languages stale.
+**Full authoring guide + the catalog regenerate/merge recipe: `docs/i18n-authoring.md`.
+Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING.md`.**
 
 ## Where things live
 
@@ -226,8 +166,10 @@ but stale `data/lang_*.js`/`tools/i18n_manifest.json` leaves the other languages
 - `docs/MODDING.md` — full data schema reference (provinces, realms, events, triggers, effects,
   text tokens, balance). Consult it before touching event or map data, and update it when you
   add new trigger/effect keys.
+- `docs/deployment.md` — the two distribution targets and how `FB.VERSION` busts both caches.
+- `docs/i18n-authoring.md` — how to route new player-facing text; the catalog regenerate/merge recipe.
 - `docs/designs/` — per-system design decisions (index above).
-- `docs/VERSIONS.md` — version numbering (semver) and changelog rules. Current
-  version and entries live in `FB.VERSION` / `FB.CHANGELOG` at the top of
-  `js/main.js`; **bump them on every update** — `FB.VERSION` is the cache-bust key for
-  both itch and play.fallowborn.com (see Build/run/test), so skipping it serves stale assets.
+- `docs/VERSIONS.md` — version numbering (semver) and changelog rules. `FB.VERSION` / `FB.CHANGELOG`
+  live at the top of `js/main.js`; every change landing on `main` bumps them, **assigned at
+  integration** (see *Git workflow*) — `FB.VERSION` is the cache-bust key, so skipping it serves
+  stale assets.
