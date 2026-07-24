@@ -49,6 +49,30 @@ FBDATA.careers = {
   }
 };
 
+/* Childhood instruction. A child's education focus names the subject; one of
+   these arrangements names the school and its seasonal fee. Personal masters
+   remain actual characters, so their skill and traits matter. */
+FBDATA.schooling = {
+  charity: {
+    name:{
+      default:'Parish or charity school',
+      muslim:'Maktab or charity school',
+      jewish:'Synagogue or charity school'
+    },
+    icon:'🕯', cost:0.25, chance:0.35,
+    desc:'Basic lessons kept within reach of a poor household.'
+  },
+  merchant: {
+    name:'Town merchant’s school', icon:'⚖', cost:1.25, chance:0.6, devMin:2,
+    focuses:['dip','ste','int','lea'],
+    desc:'Paid lessons in letters, figures, persuasion, and practical affairs.'
+  },
+  master: {
+    name:'Personal learned master', icon:'🎓', cost:3,
+    desc:'A private teacher whose own skill sets the pace of study.'
+  }
+};
+
 FBDATA.enterprises = {
   field_strip: {
     name:'Leased Field', icon:'🌾', cost:20, profession:'farmer', yield:1.5,

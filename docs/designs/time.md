@@ -20,7 +20,9 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
-At a season boundary the household receives normal income and pays upkeep, then
+At a season boundary the household receives normal income, pays station and resident-family
+upkeep, collects livelihood wages, and pays each active school term. Unaffordable schooling
+pauses for that term. Then
 `FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
 new year `FB.financeYear` then moves the price index and revalues the remaining purse before
@@ -59,7 +61,9 @@ seasonal war tick, and [finance.md](finance.md) for contract and annual price pr
 
 Season boundaries also run `FB.livelihoodSeason`: wages from resident household members,
 profits from staffed enterprises, and learned household piety enter the same measured
-season ledger as focus income and upkeep. New years run `FB.livelihoodYearly` for
+season ledger as focus income and upkeep. `FB.educationSeason` follows it so those household
+wages can meet school fees, and records one quarter of the arrangement's annual learning
+bonus for every paid term. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
 

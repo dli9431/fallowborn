@@ -132,7 +132,7 @@ FBDATA.events.push(
   text:'{childname} turns sixteen. The years of lessons are over — schooled, drilled, and shaped by your design, a young adult of real promise now stands where the child once fidgeted.',
   options:[
     { label:'They will do the family proud.', desc:'The shaping is done; the world awaits.', effects:{ prestige:5 } },
-    { label:'Now their true education begins.', desc:'Life teaches what no tutor can.', effects:{ } }
+    { label:'Now their true education begins.', desc:'Life teaches what no schoolmaster can.', effects:{ } }
   ]},
 { id:'player_comes_of_age', title:'Coming of Age', trigger:{ never:true },
   text:'You are sixteen — grown, in the eyes of {god} and the law. No tutor shaped your years, so what has your family’s household taught you best?',
@@ -143,7 +143,7 @@ FBDATA.events.push(
     { label:'How to read people.', desc:'Know men, and you need fear few of them.', effects:{ skills:{ dip:3 } } }
   ]},
 { id:'player_educated', title:'The Lessons End', trigger:{ never:true },
-  text:'You turn sixteen. The years of lessons are over — whatever your tutors drilled into you, for good or ill, is yours to carry now.',
+  text:'You turn sixteen. The years of lessons are over — whatever your teachers drilled into you, for good or ill, is yours to carry now.',
   options:[
     { label:'I will do the family proud.', desc:'The lessons are yours to spend now.', effects:{ prestige:5 } },
     { label:'Now my true education begins.', desc:'The world is the last and hardest tutor.', effects:{ } }

@@ -3367,7 +3367,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Life teaches what no tutor can."
+        "text": "Life teaches what no schoolmaster can."
       }
     },
     "event.child_educated.options.1.label.default": {
@@ -12265,7 +12265,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "You turn sixteen. The years of lessons are over — whatever your tutors drilled into you, for good or ill, is yours to carry now."
+        "text": "You turn sixteen. The years of lessons are over — whatever your teachers drilled into you, for good or ill, is yours to carry now."
       }
     },
     "event.player_educated.title.default": {
@@ -20897,6 +20897,23 @@
         "text": "🪙 The council grants a war subsidy of {gold} gold — and notes the precedent."
       }
     },
+    "news.education.fee_missed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": "📕 The school fee for {name} cannot be met; their lessons pause for the season.",
+            "yes": "📕 You cannot meet the school fee; your lessons pause for the season."
+          },
+          "param": "self",
+          "select": "value"
+        }
+      }
+    },
     "news.education.focus": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -20936,6 +20953,23 @@
         }
       }
     },
+    "news.education.home_instruction": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": "🎓 {name} returns to instruction at home.",
+            "self": "🎓 You return to instruction at home."
+          },
+          "param": "subject",
+          "select": "value"
+        }
+      }
+    },
     "news.education.master_hired": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -20946,8 +20980,26 @@
       "source": {
         "forms": {
           "cases": {
-            "other": "🎓 {tutor}, a learned master, takes charge of {name}’s education.",
-            "self": "🎓 {tutor}, a learned master, takes charge of your education."
+            "other": "🎓 {tutor}, a learned master, takes charge of {name}’s education for a seasonal fee.",
+            "self": "🎓 {tutor}, a learned master, takes charge of your education for a seasonal fee."
+          },
+          "param": "subject",
+          "select": "value"
+        }
+      }
+    },
+    "news.education.school_chosen": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "school"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": "🎓 {name} begins lessons at {school}.",
+            "self": "🎓 You begin lessons at {school}."
           },
           "param": "subject",
           "select": "value"
@@ -20970,23 +21022,6 @@
             "player_self": "🎓 You take charge of {name}’s lessons."
           },
           "param": "case",
-          "select": "value"
-        }
-      }
-    },
-    "news.education.tutor_dismissed": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "forms": {
-          "cases": {
-            "other": "The tutor of {name} is dismissed.",
-            "self": "Your tutor is dismissed."
-          },
-          "param": "subject",
           "select": "value"
         }
       }
@@ -21853,7 +21888,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/main.js",
+      "location": "js/economy.js",
       "source": {
         "forms": {
           "cases": {
@@ -23041,6 +23076,70 @@
         "text": "Man-at-Arms"
       }
     },
+    "schooling.charity.desc.default": {
+      "context": "schooling charity, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Basic lessons kept within reach of a poor household."
+      }
+    },
+    "schooling.charity.name.default": {
+      "context": "schooling charity, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Parish or charity school"
+      }
+    },
+    "schooling.charity.name.jewish": {
+      "context": "schooling charity, name, faith branch jewish.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Synagogue or charity school"
+      }
+    },
+    "schooling.charity.name.muslim": {
+      "context": "schooling charity, name, faith branch muslim.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maktab or charity school"
+      }
+    },
+    "schooling.master.desc.default": {
+      "context": "schooling master, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "A private teacher whose own skill sets the pace of study."
+      }
+    },
+    "schooling.master.name.default": {
+      "context": "schooling master, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Personal learned master"
+      }
+    },
+    "schooling.merchant.desc.default": {
+      "context": "schooling merchant, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Paid lessons in letters, figures, persuasion, and practical affairs."
+      }
+    },
+    "schooling.merchant.name.default": {
+      "context": "schooling merchant, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Town merchant’s school"
+      }
+    },
     "settlement.city.default": {
       "context": "Structured war-status display message.",
       "glossary": [],
@@ -23668,6 +23767,16 @@
         "text": "The Pestilence"
       }
     },
+    "src.04c30784": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Instruction raises their yearly learning chance; paid lessons charge each season."
+      }
+    },
     "src.04e98ffa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23826,16 +23935,6 @@
       ],
       "source": {
         "text": "Could not store mod setting: {message}"
-      }
-    },
-    "src.05ef1d72": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "A skilled teacher shapes you faster — and leaves their mark."
       }
     },
     "src.05f7aae7": {
@@ -24421,16 +24520,6 @@
         "text": "A Feud on Your Doorstep"
       }
     },
-    "src.08e4c4f6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "no tutor"
-      }
-    },
     "src.08e6eef4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24579,6 +24668,16 @@
       ],
       "source": {
         "text": "“I do not intend to die.”"
+      }
+    },
+    "src.09c21925": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{chance}% yearly directed-learning chance."
       }
     },
     "src.09cea7ab": {
@@ -25021,16 +25120,6 @@
         "text": "a curiosity"
       }
     },
-    "src.0cd61ac8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "and appoint a"
-      }
-    },
     "src.0cf16e55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25412,6 +25501,16 @@
         "text": "Defensive alliance"
       }
     },
+    "src.0fa4514e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 You begin lessons at {school}."
+      }
+    },
     "src.0fa70fa1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25682,16 +25781,6 @@
         "text": "Take the tools you bought."
       }
     },
-    "src.11735935": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🧑‍🏫 Your tutor"
-      }
-    },
     "src.11841b70": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25760,6 +25849,16 @@
       ],
       "source": {
         "text": "Blood of the House"
+      }
+    },
+    "src.12000166": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{summary} · fee unpaid; this term is paused"
       }
     },
     "src.1213f417": {
@@ -26253,16 +26352,6 @@
         "text": "You need {plots} plots together in one settlement."
       }
     },
-    "src.148d9aa4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🎓 {tutor}, a learned master, takes charge of your education."
-      }
-    },
     "src.148f67ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26391,6 +26480,16 @@
       ],
       "source": {
         "text": "Hang them before the tents."
+      }
+    },
+    "src.150fbead": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{skill} {value} · {chance}% yearly"
       }
     },
     "src.151ec801": {
@@ -27006,16 +27105,6 @@
       ],
       "source": {
         "text": "Your saga spanned {years} years and {generations} generation."
-      }
-    },
-    "src.1916427a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The lessons end."
       }
     },
     "src.1931f241": {
@@ -28173,7 +28262,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "🕯 Your tutor has died; the lessons pause."
@@ -28810,6 +28899,16 @@
         "text": "No lender will advance more while revenues are in default."
       }
     },
+    "src.24dd9766": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly"
+      }
+    },
     "src.24fec001": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29309,16 +29408,6 @@
       ],
       "source": {
         "text": "The stories agree where it matters. A village speaking together is difficult to dismiss."
-      }
-    },
-    "src.27d7611e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🎓 Upbringing — focus: {focus} · tutor: {tutor}"
       }
     },
     "src.27e95ae3": {
@@ -29871,6 +29960,16 @@
         "text": "👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown."
       }
     },
+    "src.2c270952": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧑‍🏫 Instruction for {name}"
+      }
+    },
     "src.2c31097c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30231,6 +30330,16 @@
         "text": "He calls the repair a tenant’s duty and takes the toll besides."
       }
     },
+    "src.2df378d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧑‍🏫 Arrange schooling or a tutor…"
+      }
+    },
     "src.2e0bf99a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30521,6 +30630,16 @@
       ],
       "source": {
         "text": "Not enough gold."
+      }
+    },
+    "src.2fec4f4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧑‍🏫 Your schooling"
       }
     },
     "src.301e9611": {
@@ -31394,6 +31513,16 @@
         "text": "cycle panels ·"
       }
     },
+    "src.3560eb8c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Paid lessons in letters, figures, persuasion, and practical affairs."
+      }
+    },
     "src.3579a7ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -31722,6 +31851,16 @@
       ],
       "source": {
         "text": "Fellaha"
+      }
+    },
+    "src.37ef6e49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lessons begin at age 6."
       }
     },
     "src.37fb8d19": {
@@ -32917,6 +33056,16 @@
         "text": "Grand In-Laws"
       }
     },
+    "src.3f84c635": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Instruction raises your yearly learning chance; paid lessons charge each season."
+      }
+    },
     "src.3f8b5ef8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33025,6 +33174,16 @@
       ],
       "source": {
         "text": "A plough-share catches; a spade follows. Out of the earth comes a thing of the old times, caked in clay and glinting beneath."
+      }
+    },
+    "src.405d1b5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose an education focus first."
       }
     },
     "src.407832b5": {
@@ -33337,6 +33496,16 @@
         "text": "Swear the peace."
       }
     },
+    "src.42e5beb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "home instruction"
+      }
+    },
     "src.42e9b17b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33485,6 +33654,16 @@
       ],
       "source": {
         "text": "The hall is not with you today. The old lord’s suit fails, and you have spent favor on a losing cause."
+      }
+    },
+    "src.43b150ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Home instruction (free)"
       }
     },
     "src.43c4b6b8": {
@@ -34632,16 +34811,6 @@
         "text": "📤 Export this life"
       }
     },
-    "src.4a0b8673": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{skill} {value}"
-      }
-    },
     "src.4a0e88f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34761,6 +34930,16 @@
       ],
       "source": {
         "text": "The swarm takes offense and then takes flight."
+      }
+    },
+    "src.4aa1be4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Basic lessons kept within reach of a poor household."
       }
     },
     "src.4aa35af0": {
@@ -35212,6 +35391,16 @@
       ],
       "source": {
         "text": "— enabling or disabling reloads the game; start a new life afterwards."
+      }
+    },
+    "src.4d1380cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This school does not teach the chosen focus."
       }
     },
     "src.4d22a3bb": {
@@ -36214,16 +36403,6 @@
         "text": "A hasty repair fails inspection. They take food in place of payment."
       }
     },
-    "src.52b9e63e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🧑‍🏫 Appoint a tutor…"
-      }
-    },
     "src.52bb8b89": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36352,6 +36531,16 @@
       ],
       "source": {
         "text": "Save Game"
+      }
+    },
+    "src.53ac147d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 Hire a personal learned master ({amount} gold each season)"
       }
     },
     "src.53daec3c": {
@@ -37455,16 +37644,6 @@
         "text": "Engage him."
       }
     },
-    "src.5a7f30ae": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🧑‍🏫 Choose a tutor…"
-      }
-    },
     "src.5a80bb90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37954,6 +38133,16 @@
       ],
       "source": {
         "text": "Could not store mod: {message}"
+      }
+    },
+    "src.5d3e7a5f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 {name} returns to instruction at home."
       }
     },
     "src.5d4a0603": {
@@ -38855,7 +39044,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "🕯 {name}’s tutor has died; the lessons pause."
@@ -39421,6 +39610,16 @@
       ],
       "source": {
         "text": "Your host: ~{men} men at {condition}% condition"
+      }
+    },
+    "src.669613db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires a town or city in your home county."
       }
     },
     "src.669f4551": {
@@ -40082,6 +40281,16 @@
       ],
       "source": {
         "text": "a step down — folk will mark it"
+      }
+    },
+    "src.6a2b5d0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Personal learned master"
       }
     },
     "src.6a59f450": {
@@ -40812,6 +41021,26 @@
       ],
       "source": {
         "text": "Two families arrive at the {temple} gate with one dispute, three witnesses, and absolute certainty on both sides. They will take your word as {god}’s."
+      }
+    },
+    "src.6e90a709": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📕 You cannot meet the school fee; your lessons pause for the season."
+      }
+    },
+    "src.6e94b81f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Parish or charity school"
       }
     },
     "src.6e9fce25": {
@@ -42098,6 +42327,16 @@
         "text": "The page that might have settled it was scraped clean generations ago."
       }
     },
+    "src.75ee3ab6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "{school} — {name}"
+      }
+    },
     "src.761f5490": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42187,6 +42426,16 @@
       ],
       "source": {
         "text": "Live as though the sky is empty."
+      }
+    },
+    "src.76dc135c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{summary} · {amount} gold each season"
       }
     },
     "src.76e5fce9": {
@@ -43612,6 +43861,16 @@
         "text": "Reject his purse before witnesses."
       }
     },
+    "src.7f1906af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{skill} · {amount} gold each season"
+      }
+    },
     "src.7f273b38": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43782,16 +44041,6 @@
         "text": "Refuse: the crown funds its own wars."
       }
     },
-    "src.805b96fe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🎓 {tutor}, a learned master, takes charge of {name}’s education."
-      }
-    },
     "src.80754c3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43940,16 +44189,6 @@
       ],
       "source": {
         "text": "{have} of {total} kingdom"
-      }
-    },
-    "src.81080b42": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "✖ Dismiss the tutor"
       }
     },
     "src.810add14": {
@@ -44132,6 +44371,16 @@
         "text": "Raise it as your own."
       }
     },
+    "src.82300d7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 {tutor}, a learned master, takes charge of {name}’s education for a seasonal fee."
+      }
+    },
     "src.8232ade2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44200,6 +44449,16 @@
       ],
       "source": {
         "text": "Qirad partnership"
+      }
+    },
+    "src.828c706f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Family provisions and quarters"
       }
     },
     "src.8294759a": {
@@ -45393,16 +45652,6 @@
         "text": "Patience looks much like fear from the border."
       }
     },
-    "src.89c0d7c3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "A skilled teacher shapes them faster — and leaves their mark."
-      }
-    },
     "src.89fcef34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45581,6 +45830,16 @@
       ],
       "source": {
         "text": "Carts in the lanes, lime on the doors. Every family has a grave to dig; some have no one left to dig it."
+      }
+    },
+    "src.8ad73376": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 You return to instruction at home."
       }
     },
     "src.8ade39cc": {
@@ -47155,6 +47414,16 @@
         "text": "Guild master"
       }
     },
+    "src.94df41f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": ", then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. A Learning education grants literacy at 16."
+      }
+    },
     "src.94e2fc90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47779,6 +48048,16 @@
         "text": "A treasure warms regard as mere silver never could. (spends the day)"
       }
     },
+    "src.9860a4ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Resident spouses and unmarried children add provisions and quarters to seasonal household upkeep. Working family members can offset that cost with wages or enterprise income."
+      }
+    },
     "src.986145af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48028,6 +48307,16 @@
       ],
       "source": {
         "text": "When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor."
+      }
+    },
+    "src.99f2334d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Life teaches what no schoolmaster can."
       }
     },
     "src.9a282111": {
@@ -48540,6 +48829,16 @@
       ],
       "source": {
         "text": "You unhorse two men and yield to none. The prize purse and the glory are yours."
+      }
+    },
+    "src.9cdbcb97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧑‍🏫 Choose schooling or a tutor…"
       }
     },
     "src.9cdec9eb": {
@@ -49452,6 +49751,16 @@
         "text": "Abandoned a dark design."
       }
     },
+    "src.a1994507": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{skill} · free"
+      }
+    },
     "src.a19af56b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49650,16 +49959,6 @@
       ],
       "source": {
         "text": "Goose girl"
-      }
-    },
-    "src.a3026955": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Life teaches what no tutor can."
       }
     },
     "src.a307906e": {
@@ -50895,6 +51194,16 @@
         "text": "Liege’s favor"
       }
     },
+    "src.ab08e75a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Synagogue or charity school"
+      }
+    },
     "src.ab1c1ccc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51628,6 +51937,16 @@
         "text": "Realm host"
       }
     },
+    "src.b043fbd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} (personal master)"
+      }
+    },
     "src.b0464219": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51746,16 +52065,6 @@
       ],
       "source": {
         "text": "⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match."
-      }
-    },
-    "src.b0e32251": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "— the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16."
       }
     },
     "src.b0f290bc": {
@@ -52420,6 +52729,16 @@
         "text": "The bench remains hers, and your advance returns with grateful thanks."
       }
     },
+    "src.b4e54f17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 {name} begins lessons at {school}."
+      }
+    },
     "src.b500d721": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52538,6 +52857,16 @@
       ],
       "source": {
         "text": "Your child {childname} lies shivering, skin like a stove-stone. The old women shake their heads."
+      }
+    },
+    "src.b5a5b118": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maktab or charity school"
       }
     },
     "src.b5a9f26b": {
@@ -53220,6 +53549,16 @@
       ],
       "source": {
         "text": "None — no JSON mods applied."
+      }
+    },
+    "src.ba8e6021": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Town merchant’s school"
       }
     },
     "src.ba90f466": {
@@ -54294,16 +54633,6 @@
         "text": "Wounds and sickness prove too much. {name} does not see another season."
       }
     },
-    "src.c185a16d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "You turn sixteen. The years of lessons are over — whatever your tutors drilled into you, for good or ill, is yours to carry now."
-      }
-    },
     "src.c1938174": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54524,16 +54853,6 @@
       ],
       "source": {
         "text": "Master of the market"
-      }
-    },
-    "src.c303f847": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The tutor of {name} is dismissed."
       }
     },
     "src.c305893b": {
@@ -56790,16 +57109,6 @@
         "text": "⚔ You declare war upon {enemy} for {province}!"
       }
     },
-    "src.d266d07c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🎓 Hire a learned master (25 gold)"
-      }
-    },
     "src.d29a17d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57841,6 +58150,16 @@
         "text": "His cousin sits on the moot. The stone stays."
       }
     },
+    "src.d8fb68c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Tap a child to set their education focus and schooling."
+      }
+    },
     "src.d90ba24d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58012,6 +58331,16 @@
         "text": "See their sheet and your dealings with them"
       }
     },
+    "src.d9f7d834": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 {tutor}, a learned master, takes charge of your education for a seasonal fee."
+      }
+    },
     "src.d9fe7778": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58140,6 +58469,16 @@
       ],
       "source": {
         "text": "A patrol is stoned, an armsman killed. Now there is a martyr, and the murmurs have a name to gather around."
+      }
+    },
+    "src.daaa64d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{chance}% yearly · {amount} gold each season"
       }
     },
     "src.dad0a00a": {
@@ -59633,6 +59972,16 @@
         "text": "No gold in it, but the priests will remember."
       }
     },
+    "src.e41e8545": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📕 The school fee for {name} cannot be met; their lessons pause for the season."
+      }
+    },
     "src.e46712ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60715,16 +61064,6 @@
         "text": "🛑 No more children — open your spouse’s sheet to change this."
       }
     },
-    "src.ea49fe17": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Tap a child to set their education focus and tutor."
-      }
-    },
     "src.ea841021": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61114,6 +61453,16 @@
       ],
       "source": {
         "text": "Keep your edge regardless."
+      }
+    },
+    "src.eceae6cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "You turn sixteen. The years of lessons are over — whatever your teachers drilled into you, for good or ill, is yours to carry now."
       }
     },
     "src.ecf74850": {
@@ -61535,16 +61884,6 @@
       ],
       "source": {
         "text": "Drove bandits from {province}."
-      }
-    },
-    "src.efab7297": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🧑‍🏫 A Tutor for {name}"
       }
     },
     "src.efafe36a": {
@@ -62518,6 +62857,16 @@
         "text": "The household owns:"
       }
     },
+    "src.f53e1bcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "A private teacher whose own skill sets the pace of study."
+      }
+    },
     "src.f5568dd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62666,16 +63015,6 @@
       ],
       "source": {
         "text": "Pass the thorn uphill, and lose a little grace."
-      }
-    },
-    "src.f605cfeb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Your tutor is dismissed."
       }
     },
     "src.f6084eb9": {
@@ -66329,6 +66668,14 @@
         "text": "Chamberlain"
       }
     },
+    "ui:Choose an education focus first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose an education focus first."
+      }
+    },
     "ui:Choose the Target": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66707,6 +67054,14 @@
         "text": "Family enterprises"
       }
     },
+    "ui:Family provisions and quarters": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Family provisions and quarters"
+      }
+    },
     "ui:Favorable": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66885,6 +67240,14 @@
         "text": "Himself a vassal of {liege}"
       }
     },
+    "ui:Home instruction (free)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Home instruction (free)"
+      }
+    },
     "ui:Hostile": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -67035,6 +67398,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Leave it idle"
+      }
+    },
+    "ui:Lessons begin at age 6.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lessons begin at age 6."
       }
     },
     "ui:Liege’s cut": {
@@ -67808,6 +68179,14 @@
         "text": "Requires a coastal county."
       }
     },
+    "ui:Requires a town or city in your home county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires a town or city in your home county."
+      }
+    },
     "ui:Requires development {development}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68244,14 +68623,6 @@
         "text": "The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season."
       }
     },
-    "ui:The lessons end.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "The lessons end."
-      }
-    },
     "ui:The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -68324,6 +68695,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This is you"
+      }
+    },
+    "ui:This school does not teach the chosen focus.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This school does not teach the chosen focus."
       }
     },
     "ui:This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.": {
@@ -69036,6 +69415,14 @@
         "text": "godi"
       }
     },
+    "ui:home instruction": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "home instruction"
+      }
+    },
     "ui:idle — no worker": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -69127,14 +69514,6 @@
       "location": "js/main.js",
       "source": {
         "text": "no one, watching"
-      }
-    },
-    "ui:no tutor": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "no tutor"
       }
     },
     "ui:none chosen": {
@@ -69723,6 +70102,27 @@
         "text": "{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}"
       }
     },
+    "ui:{chance}% yearly directed-learning chance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{chance}% yearly directed-learning chance."
+      }
+    },
+    "ui:{chance}% yearly · {amount} gold each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{chance}% yearly · {amount} gold each season"
+      }
+    },
     "ui:{count} counties": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -69866,6 +70266,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{marital} · regard {regard}"
+      }
+    },
+    "ui:{name} (personal master)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} (personal master)"
       }
     },
     "ui:{name} (you)": {
@@ -70167,6 +70577,17 @@
         "text": "{scenario} in {province}"
       }
     },
+    "ui:{school} — {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name",
+        "school"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "{school} — {name}"
+      }
+    },
     "ui:{season} {day} · {year} AD": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -70236,15 +70657,37 @@
         "text": "{sex} of {age}"
       }
     },
-    "ui:{skill} {value}": {
+    "ui:{skill} {value} · {chance}% yearly": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "chance",
         "skill",
         "value"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{skill} {value}"
+        "text": "{skill} {value} · {chance}% yearly"
+      }
+    },
+    "ui:{skill} · free": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "skill"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{skill} · free"
+      }
+    },
+    "ui:{skill} · {amount} gold each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "skill"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{skill} · {amount} gold each season"
       }
     },
     "ui:{stake} gold at risk · matures {date}": {
@@ -70277,6 +70720,27 @@
       "location": "js/ui.js",
       "source": {
         "text": "{standing} standing · next in {settlement}."
+      }
+    },
+    "ui:{summary} · fee unpaid; this term is paused": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "summary"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{summary} · fee unpaid; this term is paused"
+      }
+    },
+    "ui:{summary} · {amount} gold each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "summary"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{summary} · {amount} gold each season"
       }
     },
     "ui:{title} of {place}": {
@@ -70512,14 +70976,6 @@
         "text": "⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go."
       }
     },
-    "ui:✖ Dismiss the tutor": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "✖ Dismiss the tutor"
-      }
-    },
     "ui:⭐ Prestige each season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -70596,23 +71052,26 @@
         "text": "🎓 Education of {name}"
       }
     },
-    "ui:🎓 Hire a learned master (25 gold)": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "🎓 Hire a learned master (25 gold)"
-      }
-    },
-    "ui:🎓 Upbringing — focus: {focus} · tutor: {tutor}": {
+    "ui:🎓 Hire a personal learned master ({amount} gold each season)": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "focus",
-        "tutor"
+        "amount"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "🎓 Upbringing — focus: {focus} · tutor: {tutor}"
+        "text": "🎓 Hire a personal learned master ({amount} gold each season)"
+      }
+    },
+    "ui:🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "focus",
+        "instruction"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly"
       }
     },
     "ui:🎓 Your education": {
@@ -70934,22 +71393,22 @@
         "text": "🦅 {name}: you rule {share} — {need} and independence make the emperor."
       }
     },
-    "ui:🧑‍🏫 A Tutor for {name}": {
+    "ui:🧑‍🏫 Instruction for {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "name"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "🧑‍🏫 A Tutor for {name}"
+        "text": "🧑‍🏫 Instruction for {name}"
       }
     },
-    "ui:🧑‍🏫 Your tutor": {
+    "ui:🧑‍🏫 Your schooling": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "🧑‍🏫 Your tutor"
+        "text": "🧑‍🏫 Your schooling"
       }
     },
     "ui:🧰 Work & Enterprises": {

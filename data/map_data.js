@@ -867,6 +867,11 @@ FBDATA.balance = {
   domainBase: 4, domainStewPer: 5, overDomainPenalty: 0.15,
   demandTaxSeasons: 4, demandTaxPerSte: 0.015, // extraordinary taxes: seasons squeezed + per-stewardship bonus
   enterpriseRepeatCostGrowth: 1.35, // each further family enterprise of one kind costs this much more
+  householdUpkeep: [1,1,2,4,6,9,14,20], // base seasonal cost of maintaining the player's station
+  householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
+  householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
+  educationBaseChance: 0.18, educationTutorBase: 0.3,
+  educationTutorSkillChance: 0.04, educationChanceCap: 0.9,
   /* the royal council (tier 6+, js/council.js) */
   councilConsentBelow: 35, // below this crown authority the council blocks extraordinary taxes & revocations
   councilCharterAbove: 70, // authority above this with a sour council invites the charter of liberties

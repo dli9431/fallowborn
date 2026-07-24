@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.48.0';
+  FB.VERSION = '1.49.0';
   FB.CHANGELOG = [
+    { v: '1.49.0', date: '2026-07-24', changes: [
+      'Keeping a household now costs coin — resident spouses and children add to seasonal upkeep — and children’s schooling gains paid options (home lessons, charity or merchant schools, personal tutors), each with its own fees and yearly learning odds.'
+    ] },
     { v: '1.48.0', date: '2026-07-24', changes: [
       'Dynastic alliances and casus belli: marry into a realm’s ruling house to forge ties and claims — the designated heir’s line can carry a crown to your house — and fabricate claims to justify wars of conquest.'
     ] },
@@ -795,13 +798,16 @@ window.FB = window.FB || {};
     }
 
     if (seasonBoundary) {
-      const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
+      const upkeep = FB.householdUpkeep(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
-      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep +
-        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold'));
+      /* Settle ordinary household income together; livelihoodSeason clamps the
+         combined result once, so family wages really can meet family costs. */
+      p.gold += income - upkeep - buildingUpkeep +
+        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold');
       FB.livelihoodSeason(s);
+      FB.educationSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
@@ -1108,8 +1114,8 @@ window.FB = window.FB || {};
   }
 
   /* ---------- education (yearly) ----------
-     A child aged 6-15 with an education focus gains that skill at a rate set
-     by the tutor's own ability in it; a tutor's habits can also rub off.
+     A child aged 6-15 with an education focus gains that skill at a rate built
+     by completed school/tutor terms; a named tutor's habits can also rub off.
      Covers the player's children and the player themselves when still a child. */
   function educationTick(s) {
     const me = s.chars[s.player.charId];
@@ -1121,33 +1127,19 @@ window.FB = window.FB || {};
     if (!c || c.dead || !c.edu || !c.edu.focus) return;
     const age = FB.ageOf(c, s.date.year);
     if (age < 6 || age >= 16) return;
-    let tutor = null;
-    // 'self' means the player tutoring their own child — a child player can't self-tutor
-    if (c.edu.tutorId === 'self') tutor = (c.id === me.id) ? null : me;
-    else if (c.edu.tutorId) {
-      tutor = s.chars[c.edu.tutorId];
-      if (!tutor || tutor.dead) {
-        c.edu.tutorId = null;
-        tutor = null;
-        FB.news(s, FB.msg('news.life.tutor_died', {
-          forms: {
-            select: 'value', param: 'self', cases: {
-              yes: '🕯 Your tutor has died; the lessons pause.',
-              other: '🕯 {name}’s tutor has died; the lessons pause.'
-            }
-          }
-        }, { self: c.id === me.id ? 'yes' : 'other', name: c.name }));
-      }
-    }
-    const tSkill = tutor ? FB.skillOf(tutor, c.edu.focus) : 0;
-    const p = (tutor ? 0.3 + tSkill * 0.04 : 0.18) + FB.holdingBonus(s, 'edu');
-    if (FB.chance(Math.min(0.9, p))) {
+    const tutor = FB.educationTutor(s, c, true);
+    const base = FBDATA.balance.educationBaseChance === undefined ?
+      0.18 : FBDATA.balance.educationBaseChance;
+    const lessonBoost = c.edu.lessonBoost || 0;
+    const p = base + lessonBoost + FB.holdingBonus(s, 'edu');
+    c.edu.lessonBoost = 0;
+    if (FB.chance(Math.min(FBDATA.balance.educationChanceCap || 0.9, p))) {
       FB.gainSkill(c, c.edu.focus, 1);
     }
     if (FB.chance(0.15)) {
       FB.gainSkill(c, FB.pick(FB.SKILLS), 1);
     }
-    if (tutor && tutor !== me && FB.chance(0.08)) {
+    if (tutor && tutor !== me && lessonBoost > 0 && FB.chance(0.08)) {
       const cand = tutor.traits.filter(function (t) {
         const td = FBDATA.traits[t];
         return td && td.inherit && c.traits.indexOf(t) < 0;

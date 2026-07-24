@@ -677,14 +677,28 @@ window.FB = window.FB || {};
   /* the 🎓 upbringing summary line, shared by the Self tab and character sheets */
   function upbringingNote(s, c) {
     const focusName = (c.edu && c.edu.focus) ? FB.skillName(c.edu.focus) : FB.T('none chosen');
-    let tutorName = FB.T('no tutor');
-    if (c.edu && c.edu.tutorId === 'self') tutorName = FB.T('you yourself');
+    const schoolId = FB.schoolingId(s, c);
+    let instruction = FB.T('home instruction');
+    if (schoolId && FBDATA.schooling[schoolId]) {
+      instruction = dt(s, 'schooling', schoolId, FBDATA.schooling[schoolId], 'name');
+    } else if (c.edu && c.edu.tutorId === 'self') instruction = FB.T('you yourself');
     else if (c.edu && c.edu.tutorId && s.chars[c.edu.tutorId] && !s.chars[c.edu.tutorId].dead) {
-      tutorName = s.chars[c.edu.tutorId].name;
+      instruction = s.chars[c.edu.tutorId].name;
     }
-    return '<div class="progressnote">' + esc(FB.T('🎓 Upbringing — focus: {focus} · tutor: {tutor}', {
-      focus: focusName, tutor: tutorName
-    })) + (FB.ageOf(c, s.date.year) < 6 ? ' <span class="cmeta">' +
+    const chance = Math.round(Math.min(FBDATA.balance.educationChanceCap || 0.9,
+      FB.educationInstructionChance(s, c) + FB.holdingBonus(s, 'edu')) * 100);
+    const fee = FB.schoolingCost(s, c);
+    let note = FB.T('🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly', {
+      focus:focusName, instruction:instruction, chance:chance
+    });
+    if (fee) note = FB.T('{summary} · {amount} gold each season', {
+      summary:note, amount:fee
+    });
+    if (c.edu && c.edu.schoolUnpaid) {
+      note = FB.T('{summary} · fee unpaid; this term is paused', { summary:note });
+    }
+    return '<div class="progressnote">' + esc(note) +
+      (FB.ageOf(c, s.date.year) < 6 ? ' <span class="cmeta">' +
       esc(FB.T('(lessons begin at age 6)')) + '</span>' : '') + '</div>';
   }
 
@@ -791,8 +805,8 @@ window.FB = window.FB || {};
       h += panelh('Upbringing') + upbringingNote(s, me) +
         '<button class="actionbtn" id="self-edufocus">🎓 Choose your education focus…' +
         '<span class="adesc">Direct your formative years toward one art.</span></button>' +
-        '<button class="actionbtn" id="self-tutor">🧑‍🏫 Choose a tutor…' +
-        '<span class="adesc">A skilled teacher shapes you faster — and leaves their mark.</span></button>';
+        '<button class="actionbtn" id="self-tutor">🧑‍🏫 Choose schooling or a tutor…' +
+        '<span class="adesc">Instruction raises your yearly learning chance; paid lessons charge each season.</span></button>';
     }
     $('tab-char').innerHTML = h;
     FB.localizeTree($('tab-char'));
@@ -1045,7 +1059,7 @@ window.FB = window.FB || {};
         }
         h += charRow(s, k, meta.join(' · '));
       }
-      h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and tutor.</div>';
+      h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and schooling.</div>';
     } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';
     // the wider family tree — dead kin are shown with †
     function kinSection(title, entries) {
@@ -3973,11 +3987,11 @@ window.FB = window.FB || {};
           ? 'Direct your formative years toward one art.'
           : 'Direct their formative years toward one art.')) + '</span></button>';
       h += '<button class="actionbtn" id="cm-tutor">' +
-        esc(FB.T(self ? '🧑‍🏫 Choose a tutor…' : '🧑‍🏫 Appoint a tutor…')) +
+        esc(FB.T(self ? '🧑‍🏫 Choose schooling or a tutor…' : '🧑‍🏫 Arrange schooling or a tutor…')) +
         '<span class="adesc">' +
         esc(FB.T(self
-          ? 'A skilled teacher shapes you faster — and leaves their mark.'
-          : 'A skilled teacher shapes them faster — and leaves their mark.')) +
+          ? 'Instruction raises your yearly learning chance; paid lessons charge each season.'
+          : 'Instruction raises their yearly learning chance; paid lessons charge each season.')) +
         '</span></button>';
     }
     // a parent may pledge an unwed child's hand from age twelve
@@ -4460,9 +4474,23 @@ window.FB = window.FB || {};
     const me = s.chars[s.player.charId];
     const self = c.id === me.id;
     const focus = c.edu && c.edu.focus;
+    const currentSchool = FB.schoolingId(s, c);
+    const B = FBDATA.balance;
+    function yearlyChance(chance) {
+      return Math.round(Math.min(B.educationChanceCap || 0.9,
+        chance + FB.holdingBonus(s, 'edu')) * 100);
+    }
+    function tutorChance(t) {
+      return Math.min(B.educationChanceCap || 0.9,
+        (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
+        (focus ? FB.skillOf(t, focus) : 0) *
+        (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance));
+    }
     function skillNote(t) {
-      if (focus) return FB.T('{skill} {value}',
-        { skill: FB.skillName(focus), value: FB.skillOf(t, focus) });
+      if (focus) return FB.T('{skill} {value} · {chance}% yearly', {
+        skill:FB.skillName(focus), value:FB.skillOf(t, focus),
+        chance:yearlyChance(tutorChance(t))
+      });
       let best = 'dip';
       for (const k of FB.SKILLS) if (FB.skillOf(t, k) > FB.skillOf(t, best)) best = k;
       return FB.T('best: {skill} {value}',
@@ -4504,6 +4532,13 @@ window.FB = window.FB || {};
         });
       }
     }
+    const existingTutor = FB.educationTutor(s, c, false);
+    if (currentSchool === 'master' && existingTutor) {
+      cands.unshift({
+        id:existingTutor.id, c:existingTutor,
+        name:FB.T('{name} (personal master)', { name:existingTutor.name })
+      });
+    }
     function masterDescription() {
       if (!focus) return FB.T('A stranger of real accomplishment.');
       return FB.renderMessage(FB.msg('fx.ui.hired_master_focus', {
@@ -4520,58 +4555,116 @@ window.FB = window.FB || {};
       }, { focus: focus }), { state: s, viewer: s.player.charId });
     }
     let h = '<div class="gm-list">';
+    for (const id in FBDATA.schooling) {
+      if (id === 'master') continue;
+      const def = FBDATA.schooling[id];
+      const available = focus && FB.schoolingAvailable(s, c, id);
+      const cur = currentSchool === id;
+      let reason = FB.T('{chance}% yearly · {amount} gold each season', {
+        chance:yearlyChance(def.chance), amount:def.cost || 0
+      });
+      if (!focus) reason = FB.T('Choose an education focus first.');
+      else if (def.devMin && (s.dev[s.player.provinceId] || 1) < def.devMin) {
+        reason = FB.T('Requires a town or city in your home county.');
+      } else if (def.focuses && def.focuses.indexOf(focus) < 0) {
+        reason = FB.T('This school does not teach the chosen focus.');
+      } else if (FB.ageOf(c, s.date.year) < 6) {
+        reason = FB.T('Lessons begin at age 6.');
+      }
+      h += '<button class="actionbtn" data-school="' + id + '"' +
+        (!available ? ' disabled' : '') + '>' + (cur ? '◉ ' : '○ ') +
+        def.icon + ' ' + esc(dt(s, 'schooling', id, def, 'name')) +
+        '<span class="adesc">' + esc(reason) + '</span></button>';
+    }
     for (const cd of cands) {
       const cur = c.edu && c.edu.tutorId === cd.id;
+      const detail = cd.c.role === 'tutor' ?
+        FB.T('{skill} · {amount} gold each season', {
+          skill:skillNote(cd.c), amount:FBDATA.schooling.master.cost
+        }) :
+        FB.T('{skill} · free', { skill:skillNote(cd.c) });
       h += '<button class="actionbtn" data-tutor="' + cd.id + '">' + (cur ? '◉ ' : '○ ') + esc(cd.name) +
-        '<span class="adesc">' + esc(skillNote(cd.c)) + '</span></button>';
+        '<span class="adesc">' + esc(detail) + '</span></button>';
     }
-    h += '<button class="actionbtn" data-tutor="~hire"' + (s.player.gold < 25 ? ' disabled' : '') +
-      '>' + esc(FB.T('🎓 Hire a learned master (25 gold)')) + '<span class="adesc">' +
-      esc(masterDescription()) + '</span></button>';
-    if (c.edu && c.edu.tutorId) {
-      h += '<button class="actionbtn" data-tutor="~none">' +
-        esc(FB.T('✖ Dismiss the tutor')) + '<span class="adesc">' +
-        esc(FB.T('The lessons end.')) + '</span></button>';
+    if (currentSchool !== 'master') {
+      h += '<button class="actionbtn" data-tutor="~hire"' +
+        (!focus || s.player.gold < FBDATA.schooling.master.cost ? ' disabled' : '') +
+        '>' + esc(FB.T('🎓 Hire a personal learned master ({amount} gold each season)', {
+          amount:FBDATA.schooling.master.cost
+        })) + '<span class="adesc">' + esc(masterDescription()) + '</span></button>';
     }
+    h += '<button class="actionbtn" data-tutor="~none">' +
+      (currentSchool || (c.edu && c.edu.tutorId) ? '○ ' : '◉ ') +
+      esc(FB.T('Home instruction (free)')) + '<span class="adesc">' +
+      esc(FB.T('{chance}% yearly directed-learning chance.', {
+        chance:yearlyChance(B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance)
+      })) + '</span></button>';
     h += '</div><button class="btn" id="tut-back">' + esc(FB.T('Back')) + '</button>';
-    openModal(self ? FB.T('🧑‍🏫 Your tutor') :
-      FB.T('🧑‍🏫 A Tutor for {name}', { name: c.name }), h);
+    openModal(self ? FB.T('🧑‍🏫 Your schooling') :
+      FB.T('🧑‍🏫 Instruction for {name}', { name: c.name }), h);
+    document.querySelectorAll('[data-school]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const id = b.getAttribute('data-school');
+        if (!FB.schoolingAvailable(s, c, id)) return;
+        c.edu = c.edu || {};
+        c.edu.school = id;
+        c.edu.tutorId = null;
+        delete c.edu.schoolUnpaid;
+        FB.news(s, FB.msg('news.education.school_chosen', {
+          forms: {
+            select:'value', param:'subject', cases:{
+              self:'🎓 You begin lessons at {school}.',
+              other:'🎓 {name} begins lessons at {school}.'
+            }
+          }
+        }, {
+          subject:self ? 'self' : 'other', name:c.name,
+          school:FB.dataParam('schooling', id)
+        }));
+        UI.showCharModal(cid);
+      });
+    });
     document.querySelectorAll('[data-tutor]').forEach(function (b) {
       b.addEventListener('click', function () {
         const v = b.getAttribute('data-tutor');
         c.edu = c.edu || {};
         if (v === '~none') {
           c.edu.tutorId = null;
-          FB.news(s, FB.msg('news.education.tutor_dismissed', {
+          c.edu.school = null;
+          delete c.edu.schoolUnpaid;
+          FB.news(s, FB.msg('news.education.home_instruction', {
             forms: {
               select: 'value', param: 'subject', cases: {
-                self: 'Your tutor is dismissed.',
-                other: 'The tutor of {name} is dismissed.'
+                self: '🎓 You return to instruction at home.',
+                other: '🎓 {name} returns to instruction at home.'
               }
             }
           }, { subject: self ? 'self' : 'other', name: c.name }));
         } else if (v === '~hire') {
-          if (s.player.gold < 25) return;
-          s.player.gold -= 25;
+          if (!focus || s.player.gold < FBDATA.schooling.master.cost) return;
           const pr = FB.world.byId[s.player.provinceId];
           const master = FB.makeCharacter(s, {
             culture: pr.culture, religion: pr.religion,
             born: s.date.year - FB.ri(35, 60), quality: 3, role: 'tutor'
           });
           master.epithetMsg = FB.msg('fx.epithet.hired_master', 'Hired master', {});
-          if (focus) master.skills[focus] = FB.clamp(FB.ri(11, 16), 0, FBDATA.balance.skillHardCap || 40);
+          if (focus) master.skills[focus] = FB.clamp(FB.ri(15, 18), 0, FBDATA.balance.skillHardCap || 40);
           else master.skills.lea = FB.clamp(FB.ri(11, 16), 0, FBDATA.balance.skillHardCap || 40);
           c.edu.tutorId = master.id;
+          c.edu.school = 'master';
+          delete c.edu.schoolUnpaid;
           FB.news(s, FB.msg('news.education.master_hired', {
             forms: {
               select: 'value', param: 'subject', cases: {
-                self: '🎓 {tutor}, a learned master, takes charge of your education.',
-                other: '🎓 {tutor}, a learned master, takes charge of {name}’s education.'
+                self: '🎓 {tutor}, a learned master, takes charge of your education for a seasonal fee.',
+                other:'🎓 {tutor}, a learned master, takes charge of {name}’s education for a seasonal fee.'
               }
             }
           }, { subject: self ? 'self' : 'other', tutor: master.name, name: c.name }));
         } else {
           c.edu.tutorId = v;
+          c.edu.school = s.chars[v] && s.chars[v].role === 'tutor' ? 'master' : null;
+          delete c.edu.schoolUnpaid;
           FB.news(s, FB.msg('news.education.tutor_chosen', {
             forms: {
               select: 'value', param: 'case', cases: {
@@ -5085,7 +5178,8 @@ window.FB = window.FB || {};
       '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, your lord’s favor, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
-      '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b> and appoint a <b>tutor</b> — the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16.</p>' +
+      '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. A Learning education grants literacy at 16.</p>' +
+      '<p>Resident spouses and unmarried children add provisions and quarters to seasonal household upkeep. Working family members can offset that cost with wages or enterprise income.</p>' +
       '<h4>Rivalries</h4>' +
       '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
       '<h4>De jure</h4>' +

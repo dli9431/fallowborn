@@ -42,6 +42,7 @@ STRUCTURED_DATA = {
     "buildings": "building",
     "holdings": "holding",
     "careers": "career",
+    "schooling": "schooling",
     "enterprises": "enterprise",
     "items": "item",
     "plots": "plot",
@@ -593,7 +594,7 @@ def extract_structured(inv: Inventory) -> None:
     for data_name, namespace in STRUCTURED_DATA.items():
         path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                        "cultures.js" if data_name in ("cultures", "religions") else
-                       "economy.js" if data_name in ("careers", "enterprises") else
+                       "economy.js" if data_name in ("careers", "schooling", "enterprises") else
                        "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()

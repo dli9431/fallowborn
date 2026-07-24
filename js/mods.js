@@ -165,6 +165,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
     if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];
     if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
+    if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
     if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];

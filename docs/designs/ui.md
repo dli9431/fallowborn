@@ -41,9 +41,15 @@ permanent demolition remain available from the Land-tab settlement view.
 The topbar resources (gold/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
-treasures, upkeep), tap or click opens the same rows as a small modal
+treasures, station upkeep, resident-family provisions, and school fees), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation.
+
+Minor character sheets separate the education-focus picker from the instruction picker.
+Every school/tutor row shows the projected full-year directed-learning chance and exact
+seasonal fee; unavailable town/focus/age combinations remain visible with their reason.
+The upbringing summary repeats the current arrangement, projected chance, fee, and paused
+payment state.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on

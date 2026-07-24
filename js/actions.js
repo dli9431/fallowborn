@@ -879,7 +879,7 @@ window.FB = window.FB || {};
      labels from incomeBreakdown. */
   FB.reliableGoldIncome = function (state, ignoreAssignments) {
     const p = state.player;
-    let total = -([1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1);
+    let total = -FB.householdUpkeep(state);
     if (p.tier >= 3) {
       total += FB.playerTax(state);
       total -= FB.buildingBonus(state, 'upkeep');
@@ -890,6 +890,7 @@ window.FB = window.FB || {};
     if (FB.livelihoodBreakdown) {
       for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
     }
+    if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
     const focus = FB.focusIncome(state);
     if (focus && focus.gold) total += focus.gold;
     if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
@@ -996,9 +997,20 @@ window.FB = window.FB || {};
       for (const k in fg) { if (lines[k]) add(k, flabel, fg[k]); }
     }
 
-    /* keeping a household costs coin at every station */
-    const upkeep = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
-    add('gold', FB.T('Household upkeep'), -upkeep);
+    /* station, resident family, and recurring schooling are separate lines so
+       a larger household never hides inside an unexplained flat charge */
+    const upkeep = FB.householdUpkeepParts(state);
+    add('gold', FB.T('Household upkeep'), -upkeep.base);
+    add('gold', FB.T('Family provisions and quarters'), -upkeep.family);
+    if (FB.schoolingCostBreakdown) {
+      for (const term of FB.schoolingCostBreakdown(state)) {
+        const school = FBDATA.schooling[term.id];
+        add('gold', FB.T('{school} — {name}', {
+          school:FB.dataText(state, p.charId, 'schooling', term.id, school, 'name'),
+          name:term.c.name
+        }), -term.cost);
+      }
+    }
     if (FB.financeAssignedIncomeCost) {
       add('gold', FB.T('Revenue assigned to lenders'), -FB.financeAssignedIncomeCost(state));
     }
@@ -1898,10 +1910,7 @@ window.FB = window.FB || {};
   /* ---- automation (the ⚙ Automation dialog): one purchase per season ---- */
   FB.autoBuild = function (state) {
     let best = null, bestPid = null, bestIdx = 0;
-    const p = state.player;
-    const household = [1, 1, 2, 4, 6, 9, 14, 20][p.tier] || 1;
-    const steadyGold = FB.playerTax(state) + FB.holdingBonus(state, 'gold') -
-      household - FB.buildingBonus(state, 'upkeep');
+    const steadyGold = FB.reliableGoldIncome(state);
     for (const pid of FB.demesne(state)) {
       const sts = FB.settlementsOf(state, pid);
       for (let idx = 0; idx < sts.length; idx++) {

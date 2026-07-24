@@ -85,6 +85,7 @@ A JSON mod is one object with any of these keys:
   "tech":      { "id": { ... } },
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
+  "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
   "finance":    { "pledge": { ... }, "merchant": { ... } },
   "plots":     { "id": { ... } },
@@ -520,6 +521,32 @@ character can learn and perform:
 - Owned character state lives in `character.career`; `player.profession` remains the
   broad compatibility family used by existing `professions` event triggers.
 
+## Childhood schooling
+
+`FBDATA.schooling` (in `data/economy.js`, mod key `schooling`) defines recurring
+instruction arrangements:
+
+```json
+{ "schooling": { "grammar_school": {
+  "name": "Grammar School", "icon": "📚",
+  "cost": 1, "chance": 0.5, "devMin": 2,
+  "focuses": ["dip", "ste", "lea"],
+  "desc": "Letters, figures, rhetoric, and law."
+} } }
+```
+
+- `cost` is gold charged at each 90-day season boundary.
+- `chance` is the full four-term yearly chance of gaining the directed focus skill,
+  before household education bonuses and the global cap.
+- `devMin` optionally requires that development in the home county.
+- `focuses` optionally limits the education focuses the school can teach.
+- `name`/`desc` accept the same localization tokens and faith-variant objects as
+  other structured data.
+- The built-in `master` id is special: its chance comes from the attached tutor
+  character's focused skill rather than a fixed `chance`.
+- Current instruction lives in `character.edu.school`; the accumulated value of
+  completed terms lives in `character.edu.lessonBoost`.
+
 ## Family enterprises
 
 `FBDATA.enterprises` (in `data/economy.js`, mod key `enterprises`) defines repeatable
@@ -574,6 +601,8 @@ player-originated loan families and the trade partnership:
 - Finance and price bounds, pressure, loan count, capacity, arrears, default,
   revenue-share, and coinage tunables are the `price*` and `finance*` keys under
   `FBDATA.balance`.
+- Household and education costs/chances use the `household*` and `education*`
+  balance keys.
 
 ## Settlements
 

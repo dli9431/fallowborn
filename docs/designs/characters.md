@@ -13,17 +13,32 @@ soft-cap roll; event, education, and coming-of-age gains are unaffected.
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.
 
-**Tutors are household and neighbors.** A child aged 6–15 with an education focus learns
-from a named tutor: a parent, a spouse, the priest, a friend, or a hired master. The lord
-fosters only gentle children — the tutor picker offers him only at
-`FB.playerStation(state) >= 2` (gentry and up); a serf's child is never sent to his hall.
+**Focus and instruction are separate choices.** A child aged 6–15 chooses the skill being
+studied, then learns at home, from a named household/neighbour tutor, at a religious charity
+school, at a town merchant's school, or from a personal learned master. Named tutors use
+their actual focused skill. The lord fosters only gentle children — the instruction picker
+offers him only at `FB.playerStation(state) >= 2` (gentry and up); a serf's child is never
+sent to his hall. Merchant schools require local development 2 and do not teach martial.
+Personal masters remain generated characters, so they can pass on traits or die.
+
+**Paid schooling is seasonal.** Charity schools, merchant schools, and personal masters
+charge the exact `FBDATA.schooling` fee at every 90-day boundary. An unaffordable fee pauses
+that term without cancelling the arrangement; the household retries next season. Each
+completed term saves one quarter of the difference between home instruction and the
+arrangement's full-year chance in `c.edu.lessonBoost`. The yearly education roll consumes
+and clears that saved bonus, so changing teachers just before winter cannot buy a full
+year's result. Old saves with a generated hired tutor lazily identify it as the recurring
+personal-master arrangement.
 
 **Childhood pacing.** A child's total skill income (Study focus, education tick,
 childhood events) is tuned to land only modestly above an adult's (~5/yr vs ~3–4/yr):
 Study starts from a 0.5 seasonal chance before the shared 0.75 focus-training
 multiplier — below the best adult focus's 0.7 base chance — and childhood lesson
-events carry 6–8-season cooldowns so the same lesson can't recur constantly. Keep
-new childhood content inside that envelope.
+events carry 6–8-season cooldowns so the same lesson can't recur constantly.
+Home instruction has an 18% yearly directed-learning chance, charity school 35%, merchant
+school 60%, and a named tutor or personal master `30% + 4%` per point of focused tutor
+skill, capped at 90%. The family Letters holding adds its existing 8 percentage points.
+Keep new childhood content inside that envelope.
 
 **Arms training is male; command is not.** No formal arms training for girls in the
 867+ world: the martial *training* foci (`militia`, `drill`, `stand_guard`,
@@ -92,6 +107,13 @@ instead of inheriting the dead parent's occupation.
 **Apprenticeship complements tutoring.** A child old enough for a career's
 `apprenticeAge` may be placed with that trade from their sheet. It costs the career's
 entry fee, adds vocational experience and the career skill during the yearly life tick,
-and becomes journeyman work at sixteen. The ordinary education focus and tutor continue
+and becomes journeyman work at sixteen. The ordinary education focus and instruction continue
 in parallel. Household work is intentionally limited to the player, spouses, and
 unmarried dependent children; distant kin do not send invisible wages home.
+
+**Resident family members cost coin as well as earning it.** The station-based household
+upkeep remains the cost of the player's own establishment. Every resident spouse and
+unmarried child adds a smaller age-weighted provisions-and-quarters charge, multiplied by
+the household's station standard. Married children leave this managed household. This is
+an expense model, not a room-capacity simulation: births are never blocked for lack of a
+housing slot.
