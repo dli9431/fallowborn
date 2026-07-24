@@ -50,7 +50,7 @@ FBDATA.events.push(
   options:[
     { label:'Lend at hard interest.', desc:'Good profit, poor prayers — and his mill if he fails.', chance:0.7,
       success:{ text:'Repaid in full, and handsomely.', effects:{ gold:12, piety:-3, skills:{ste:1} } },
-      failure:{ text:'He defaults — but the mill pledge makes you whole, and an enemy.', effects:{ gold:5, opinion:{role:'rival', amt:-15} } } },
+      failure:{ text:'He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market.', effects:{ gold:5, popularOpinion:-2 } } },
     { label:'Lend as a kindness.', desc:'A small loss for a warm reputation.', effects:{ gold:-2, piety:5, prestige:5 } },
     { label:'Decline.', desc:'Let some other purse take the risk.', effects:{ } }
   ]},
@@ -272,20 +272,20 @@ FBDATA.events.push(
   text:'{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”',
   options:[
     { label:'Kneel and swear.', desc:'A tower, a banner, and a lord above you.', effects:{ tierSet:3, prestige:60, custom:'record_liege_grant', log:'Granted a barony — a lord at last!' } },
-    { label:'Decline, but ask for gold.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10} } },
+    { label:'Decline, but ask for gold.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'public_refusal'} } },
     { label:'Decline graciously.', desc:'Remain gentry, without turning the refusal into an insult.', effects:{ } }
   ]},
 { id:'feud_gentry', title:'An Affair of Honor',
-  trigger:{ tierMin:2, hasRole:'rival', roleOpinionBelow:{role:'rival', value:-40}, chance:0.2 }, weight:6, cooldown:12,
+  trigger:{ tierMin:2, hasRole:'rival', roleOpinionBelow:{role:'rival', value:-40}, rivalHeatMin:40, chance:0.2 }, weight:6, cooldown:12,
   text:'{rival} insults your house before witnesses. Among the gentry, such words are answered with steel or with cunning — never with silence.',
   options:[
     { label:'Demand a duel.', desc:'Honor by steel — win loud or bleed quiet.', chance:'battle',
-      success:{ text:'Steel rings; your point finds their shoulder. Honor is satisfied, loudly.', effects:{ prestige:15, opinion:{role:'rival', amt:-10}, log:'Won a duel of honor.' } },
-      failure:{ text:'Their blade is quicker. You yield, bleeding.', effects:{ health:-2, prestige:-10, addTrait:'scarred' } } },
+      success:{ text:'Steel rings; your point finds their shoulder. Honor is satisfied, loudly.', effects:{ prestige:15, opinion:{role:'rival', amt:10}, endRivalry:true, log:'Won a duel of honor and ended a feud.' } },
+      failure:{ text:'Their blade is quicker. You yield, bleeding — and before the witnesses concede that satisfaction has been given.', effects:{ health:-2, prestige:-10, addTrait:'scarred', endRivalry:true, log:'Yielded a duel and ended a feud.' } } },
     { label:'Ruin them quietly instead.', desc:'Debts and rumors cut deeper, if the knife stays hidden.', chance:0.5,
-      success:{ text:'Debts called, rumors seeded — within a year their fortunes crumble.', effects:{ skills:{int:2}, prestige:5, opinion:{role:'rival', amt:-20} } },
-      failure:{ text:'Your scheming is uncovered and named for what it is.', effects:{ prestige:-12 } } },
-    { label:'Laugh it off.', desc:'Peace bought with a little pride.', effects:{ prestige:-5 } }
+      success:{ text:'Debts called, rumors seeded — within a year their fortunes crumble.', effects:{ skills:{int:2}, prestige:5, opinion:{role:'rival', amt:-20}, rivalHeat:20 } },
+      failure:{ text:'Your scheming is uncovered and named for what it is.', effects:{ prestige:-12, rivalHeat:15 } } },
+    { label:'Laugh it off.', desc:'Peace bought with a little pride.', effects:{ prestige:-5, rivalHeat:-15 } }
   ]},
 
 /* ================= MORE STATION LIFE ================= */

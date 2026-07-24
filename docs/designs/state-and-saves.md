@@ -49,6 +49,14 @@ version-3 saves need no migration, and invalid/dead/non-adjacent targets are dis
 the seasonal tick. The object and the player-relative `liegeOps` opinion network clear on
 succession; `state.pacts` remains state-level and survives.
 
+Personal rivalry state is additive too: `player.rivalContacts` records explicitly hostile
+contact with known character ids, `player.rivalry` stores the active feud's heat and
+provenance while `state.roles.rival` remains the canonical target, and
+`player.rivalPeace` holds temporary post-settlement protection by character id. All three
+initialize lazily. Contacts and peace records reset on succession; an active rival is
+handled by the queued inheritance choice. Older saves with an active rival receive a
+default heat on first read, so no save-version migration is required.
+
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and

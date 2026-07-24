@@ -821,6 +821,12 @@ FBDATA.balance = {
   },
   dowryByStation: [2, 5, 12, 30, 60], marryUpPrestige: 12, marryDownPrestigeLoss: 6,
   proposalStationPenalty: 0.22,
+  /* personal rivalries: an NPC may claim the player only after an explicitly
+     authored hostile interaction with that existing character */
+  rivalOpinionThreshold: -40, rivalClaimChance: 0.05, rivalContactMaxAge: 1440,
+  rivalHeatPlayerStart: 20, rivalHeatNpcStart: 30, rivalHeatLegacyStart: 25,
+  rivalHeatOldSave: 35, rivalContactHeat: 8, rivalHeatDecayDelay: 720, rivalHeatDecay: 3,
+  rivalPeaceDays: 1440,
   itemSellRatio: 0.5, // what a buyer gives against an item's value
   wivesByGroup: { muslim: 4, pagan: 3 },
   warWinsToTakeProvince: 3, aiWarChance: 0.14,

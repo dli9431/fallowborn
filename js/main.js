@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.44.0';
+  FB.VERSION = '1.45.0';
   FB.CHANGELOG = [
+    { v: '1.45.0', date: '2026-07-24', changes: [
+      'Rivals can now declare feuds after real hostile encounters; visible feud heat drives escalation, and compensation, mediation, public oaths, common cause, duels, or an heir’s clean slate can end the quarrel.'
+    ] },
     { v: '1.44.0', date: '2026-07-24', changes: [
       'Coin and prices now move: a slow yearly price index revalues your loose purse as it inflates or deflates, while lean harvests, pestilence, personal war, and a sovereign’s debasement each push prices around. Authored costs, wages, holdings, and buildings keep their familiar gold values.',
       'Credit arrives — pledged loans, merchant advances, and loans against your revenues grant gold now against fixed terms. Miss a maturity and a penalty and grace season follow; miss again and the disclosed default bites: pledged property is seized, a quarter of your revenue is garnished, and the credit market closes to your household for a year. Every default also costs prestige, and a ruler loses standing with his council or his liege.',
@@ -691,6 +694,7 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
@@ -799,6 +803,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
@@ -896,6 +901,7 @@ window.FB = window.FB || {};
       FB.playerWarTick(s);
       FB.tickForeignPolicy(s);
       FB.financeSeason(s);
+      FB.tickRivalry(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -1596,6 +1602,8 @@ window.FB = window.FB || {};
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter
+    p.rivalContacts = {};
+    p.rivalPeace = {};
     p.itemOffer = null; // the peddler moves on; carried items pass to the heir
     s.pregnant = null;
     // treasures gifted to the heir in life rejoin the family hoard
@@ -1620,6 +1628,25 @@ window.FB = window.FB || {};
     s.seasonNet = null;
     FB.syncPlayerCareer(s);
     delete s.roles.spouse; delete s.roles.suitor;
+    const inheritedRival = FB.getRole(s, 'rival', false);
+    const inheritedIsKin = inheritedRival && !!FB.kinOf(s).byId[inheritedRival.id];
+    const inheritedIsSpouse = inheritedRival && FB.spousesOf(s, heir).some(function (sp) {
+      return sp.id === inheritedRival.id;
+    });
+    if (inheritedRival && !inheritedIsKin && !inheritedIsSpouse) {
+      p.rivalry = {
+        heat: FBDATA.balance.rivalHeatLegacyStart !== undefined
+          ? FBDATA.balance.rivalHeatLegacyStart : 25,
+        startedTurn: s.turn,
+        lastMoveTurn: s.turn,
+        initiator: 'legacy',
+        cause: 'inherited'
+      };
+      s.eventQueue.push({ id: 'rival_legacy', ctx: {} });
+    } else {
+      if (inheritedRival) FB.endRivalry(s, inheritedRival.id, true);
+      else p.rivalry = null;
+    }
     p.namedHeirId = null; // the new life names its own successor
     p.focus = FB.defaultFocus(s);
 

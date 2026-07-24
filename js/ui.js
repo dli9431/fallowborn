@@ -45,6 +45,12 @@ window.FB = window.FB || {};
   function roleName(role) {
     return FB.T(ROLE_NAMES[role] || role);
   }
+  function rivalryHeatName(heat) {
+    if (heat >= 70) return FB.T('blood feud');
+    if (heat >= 40) return FB.T('open feud');
+    if (heat >= 20) return FB.T('simmering');
+    return FB.T('cooling');
+  }
   function epithetText(s, c) {
     if (c.epithetMsg) {
       return FB.renderMessage(c.epithetMsg, {
@@ -3660,14 +3666,25 @@ window.FB = window.FB || {};
           esc(FB.T('💒 No marriage possible: {reason}', { reason: why })) + '</div>';
       }
       if (!isFamily) {
+        if (s.roles.rival === c.id) {
+          const heat = FB.rivalHeat(s);
+          h += '<div class="progressnote">' + esc(FB.T(
+            '⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go.',
+            { state: rivalryHeatName(heat), heat: heat })) + '</div>';
+        } else if (s.player.rivalContacts && s.player.rivalContacts[c.id]) {
+          h += '<div class="progressnote">' + esc(FB.T(
+            '⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own.')) +
+            '</div>';
+        }
         h += '<button class="actionbtn" id="cm-insult">😤 Insult them publicly' +
           '<span class="adesc">Salt for their pride, sport for the onlookers. (spends the day)</span></button>';
         h += '<button class="actionbtn" id="cm-undermine">🕸 Undermine them quietly' +
           '<span class="adesc">Rumors, debts, misplaced letters — intrigue decides. (spends the day)</span></button>';
         if (s.roles.rival === c.id) {
-          h += '<button class="actionbtn" id="cm-feuddie">🕊 Let the feud die' +
-            '<span class="adesc">' + esc(FB.T('Put the enmity aside — {name} is no longer your rival.',
-              { name: c.name })) + '</span></button>';
+          h += '<button class="actionbtn" id="cm-settle">' + esc(FB.T('🕊 Seek a settlement…')) +
+            '<span class="adesc">' + esc(FB.T(
+              'Ask witnesses or a mediator to make a peace that binds you both. (spends the day)')) +
+            '</span></button>';
         } else if (c.opinion <= -40) {
           const rivalNow = FB.getRole(s, 'rival', false);
           if (!rivalNow || rivalNow.dead) {
@@ -3791,6 +3808,7 @@ window.FB = window.FB || {};
       s.player.courtingId = null;
       delete s.player.flags.courting;
       c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+      FB.noteRivalContact(s, c, 1, 'broken_courtship');
       FB.news(s, FB.msg('news.social.courtship_ended',
         '💔 The courtship of {name} is ended.', { name: c.name }));
       FB.validateFocus(s);
@@ -3800,6 +3818,7 @@ window.FB = window.FB || {};
     if (ins) ins.addEventListener('click', function () {
       actThen(function () {
         c.opinion = FB.clamp(c.opinion - 12, -100, 100);
+        FB.noteRivalContact(s, c, 1, 'insult');
         if (FB.chance(0.5 + FB.skillOf(me, 'dip') * 0.015)) {
           s.player.prestige += 4;
           FB.news(s, FB.msg('news.social.insult_success',
@@ -3817,6 +3836,7 @@ window.FB = window.FB || {};
       actThen(function () {
         if (FB.chance(0.35 + FB.skillOf(me, 'int') * 0.03)) {
           c.opinion = FB.clamp(c.opinion - 8, -100, 100);
+          FB.noteRivalContact(s, c, 1, 'undermined');
           s.player.prestige += 3;
           if (FB.chance(0.5)) FB.gainSkill(me, 'int', 1);
           FB.news(s, FB.msg('news.social.undermine_success',
@@ -3824,6 +3844,7 @@ window.FB = window.FB || {};
             { name: c.name }));
         } else {
           c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+          FB.noteRivalContact(s, c, 2, 'caught_scheme');
           s.player.prestige = Math.max(0, s.player.prestige - 6);
           FB.news(s, FB.msg('news.social.undermine_failure',
             'The scheme unravels — and {name} knows exactly whose hand was in it.',
@@ -3834,17 +3855,16 @@ window.FB = window.FB || {};
     const rv = $('cm-rival');
     if (rv) rv.addEventListener('click', function () {
       actThen(function () {
-        s.roles.rival = c.id;
+        FB.startRivalry(s, c, 'player', 'declared', null);
         FB.news(s, FB.msg('news.social.rival',
           '⚡ {name} now counts you an enemy.', { name: c.name }));
       });
     });
-    const fd = $('cm-feuddie');
-    if (fd) fd.addEventListener('click', function () {
-      delete s.roles.rival; // no day spent — just let it go
-      UI.toast('🕊 The feud with {name} is let to die.', { name: c.name });
-      UI.closeModal();
-      UI.showCharModal(c.id);
+    const settle = $('cm-settle');
+    if (settle) settle.addEventListener('click', function () {
+      actThen(function () {
+        s.eventQueue.push({ id: 'rival_mediation', ctx: {} });
+      });
     });
     const nc = $('cm-nochildren');
     if (nc) nc.addEventListener('click', function () {
@@ -4799,6 +4819,8 @@ window.FB = window.FB || {};
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b> and appoint a <b>tutor</b> — the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16.</p>' +
+      '<h4>Rivalries</h4>' +
+      '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
       '<h4>De jure</h4>' +
       '<p>Every county belongs by ancient right to a duchy, a kingdom, and an empire — its <b>de jure</b> titles. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>' +
       '<h4>The map</h4>' +

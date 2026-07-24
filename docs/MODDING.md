@@ -176,6 +176,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `provinceReligionGroup`, `provinceCultures`, `terrains`, `coastal` | home province checks |
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
+| `rivalHeatMin` / `rivalHeatMax` | active rivalry heat at or above/below the number (0–100) |
 | `popularOpinionBelow` | the commons' view of you |
 | `chance` | final random gate 0–1 |
 | `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`) |
@@ -204,7 +205,7 @@ alongside their normal triggers and serve both pools.
 `label`, optional `desc` (a short hint shown beneath the label in the event dialog —
 every option should carry one: vague flavor pointing at the thrust of the choice,
 never exact numbers), optional `require` (same syntax as triggers — hides the option),
-optional `chance` (0–1, or a named formula: `harvest battle proposal house_claim annulment
+optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot appeal_outcome vassal_comply county_petition parliament_vote`) with `success` / `failure` branches (`{text, effects}`), and `effects`.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
@@ -227,6 +228,9 @@ against the target holder's own standing at court (`player.petitionPid` set by t
 The final `liege_grant` and `county_petition` chances are multiplied by
 `balance.liegeGrantRepeatMult` once for every successful feudal grant the current
 character has already received.
+
+`rival_peace` weighs Diplomacy and the rival's opinion against current rivalry heat, with
+small adjustments for a kind or proud player, and clamps to 10–90%.
 
 `proposal` weighs the suitor's regard, the player's prestige and tier — and **station**:
 every character carries a social rank 0–4 (lowborn · freeholder · gentry · noble · royalty,
@@ -262,7 +266,13 @@ service in the liege's wars) · `skills: {dip|mar|ste|int|lea: n}` (positive gai
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 `addTrait / removeTrait` · `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
-`opinion: {role, amt}` · `opinionLiege`, `popularOpinion` · `tierSet` (raise rank), `tierUp`
+`opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
+`rivalContact: {role, score, cause}` (record an explicitly hostile encounter with that
+existing named role; `score` defaults to 1, `cause` is an opaque non-localized id, and
+contact with the active rival also adds `score × balance.rivalContactHeat` heat) ·
+`rivalHeat: n` (adjust the active feud, clamped 0–100) · `endRivalry: true` (clear the
+rival seat, its plot/escalation state, and begin the peace cooldown) ·
+`tierSet` (raise rank), `tierUp`
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (scholarship points) ·
@@ -604,6 +614,10 @@ The marriage-of-station knobs live there too: `dowryByStation` (gold by the spou
 0–4), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
 `proposalStationPenalty` (chance lost per step the suitor stands above the player), and
 `wivesByGroup` (wives a man of each religion group may hold; unlisted groups are monogamous).
+Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,
+`rivalContactMaxAge`, `rivalHeatPlayerStart`, `rivalHeatNpcStart`,
+`rivalHeatLegacyStart`, `rivalHeatOldSave`, `rivalContactHeat`, `rivalHeatDecayDelay`,
+`rivalHeatDecay`, and `rivalPeaceDays`; time values are game days.
 `itemSellRatio` is the fraction of an item's `value` a buyer pays when the player sells it.
 `liegeGrantRepeatMult` is the multiplier applied to grant odds for each successful barony,
 title, neighboring fief, or court-awarded escheat already received in the current lifetime.

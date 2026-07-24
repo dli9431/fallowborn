@@ -63,6 +63,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    nominal debts; holdings, buildings, items, and all familiar authored prices stay in base
    gold. Miss one loan deadline and its face grows; miss the extension and the disclosed
    pledge or revenue assignment is enforced. Debt passes to heirs.
+   Named characters remember hostile encounters: anger someone deeply enough and they may
+   declare a rivalry of their own. A feud has visible heat, can grow from insults into claims
+   and knives, or end through compensation, mediation, a witnessed oath, common cause, or
+   satisfaction by duel. Your heir chooses whether an old ruler's quarrel belongs to the house.
 3. Press **Space** (or the Play/Pause button) to set time flowing — days pass on their own
    (~3 per second) — and press it again to pause. **F** / the ▶▶ button skips straight to the
    next happening. Events pause the days while they await your choice; they land on their own
