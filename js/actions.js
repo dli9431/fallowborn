@@ -25,6 +25,10 @@ window.FB = window.FB || {};
   }
   /* daily chance equivalent to a once-per-season probability */
   function dch(seasonalProb) { return FB.chance(seasonalProb / D); }
+  function skillDch(seasonalProb) {
+    const rate = FBDATA.balance.focusSkillGainRate;
+    return dch(seasonalProb * (rate === undefined ? 1 : rate));
+  }
   function skillUp(state, key) {
     const m = me(state);
     if (!FB.gainSkill(m, key, 1)) return; // soft-capped: the point didn't land
@@ -50,13 +54,13 @@ window.FB = window.FB || {};
 
   { id: 'study', label: '📖 Study', desc: function () { return 'Learn from whoever will teach you.'; },
     show: function (s) { return !adult(s); },
-    tick: function (s) { if (dch(0.5)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
+    tick: function (s) { if (skillDch(0.5)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
   { id: 'play', label: '🪁 Play', desc: function () { return 'Childhood is short. Spend it well.'; },
     show: function (s) { return !adult(s); },
     tick: function (s) {
       me(s).health = FB.clamp(me(s).health + 0.012, 0, 10);
       // girls are schooled in conduct and letters, not at arms
-      if (dch(0.3)) skillUp(s, me(s).sex === 'f' ? 'dip' : 'mar');
+      if (skillDch(0.3)) skillUp(s, me(s).sex === 'f' ? 'dip' : 'mar');
     } },
 
   { id: 'rest', label: '🛌 Rest and mend', desc: function () { return 'Recover strength, slowly.'; },
@@ -100,7 +104,7 @@ window.FB = window.FB || {};
   { id: 'militia', label: '🛡 Drill with the levy',
     desc: function () { return 'Spear practice on the green. (+martial over time)'; },
     show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk' && !female(s); },
-    tick: function (s) { if (dch(0.6)) skillUp(s, 'mar'); } },
+    tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
   { id: 'work_land', label: '🌾 Work your land',
     desc: function () { return 'Your own soil, your own sweat.'; },
@@ -122,7 +126,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier === 1 && adult(s); },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
-      if (dch(0.35)) skillUp(s, 'ste');
+      if (skillDch(0.35)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
   { id: 'keep_house', label: '🧶 Keep the household',
@@ -130,7 +134,7 @@ window.FB = window.FB || {};
     show: function (s) { return female(s) && adult(s) && s.player.tier <= 2; },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
-      if (dch(0.4)) skillUp(s, FB.pick(['ste', 'dip']));
+      if (skillDch(0.4)) skillUp(s, FB.pick(['ste', 'dip']));
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
@@ -139,7 +143,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.profession === 'craftsman' && s.player.tier <= 2; },
     tick: function (s) {
       s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0)) / D;
-      if (dch(0.3)) skillUp(s, 'ste');
+      if (skillDch(0.3)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: 3.5 + (s.player.flags.guild_member ? 1 : 0) }; } },
   { id: 'trade_run', label: '🐫 Run trade ventures',
@@ -151,7 +155,7 @@ window.FB = window.FB || {};
       let g = c * (9 + ste / 2) - (1 - c) * 6; // expected seasonal profit
       if (s.player.gold < 10) g *= 0.3;
       s.player.gold += Math.max(0.5, g) / D;
-      if (dch(0.4)) skillUp(s, 'ste');
+      if (skillDch(0.4)) skillUp(s, 'ste');
     },
     gain: function (s) {
       const ste = FB.skillOf(me(s), 'ste');
@@ -166,7 +170,7 @@ window.FB = window.FB || {};
     show: function (s) { return afield(s) || (s.player.profession === 'soldier' && !female(s)); },
     tick: function (s) {
       s.player.gold += 1 / D;
-      if (dch(0.7)) skillUp(s, 'mar');
+      if (skillDch(0.7)) skillUp(s, 'mar');
     },
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard', label: '🏰 Stand garrison duty',
@@ -184,7 +188,8 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.profession === 'monk' || s.player.profession === 'priest'; },
     tick: function (s) {
       s.player.piety += 2 / D;
-      if (dch(0.6)) { skillUp(s, 'lea'); FB.addTrait(me(s), 'literate'); }
+      if (skillDch(0.6)) skillUp(s, 'lea');
+      if (dch(0.6)) FB.addTrait(me(s), 'literate');
     },
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church', label: '🕯 Serve the faithful',
@@ -215,7 +220,7 @@ window.FB = window.FB || {};
       const lord = FB.getRole(s, 'lord', true);
       if (lord) lord.opinion = FB.clamp(lord.opinion + 6 / D, -100, 100);
       s.player.prestige += 2 / D;
-      if (dch(0.3)) skillUp(s, 'dip');
+      if (skillDch(0.3)) skillUp(s, 'dip');
     },
     gain: function () { return { prestige: 2 }; } },
   /* the chatelaine's road: noblewomen command through the household and the
@@ -230,13 +235,13 @@ window.FB = window.FB || {};
         if (lord) lord.opinion = FB.clamp(lord.opinion + 4 / D, -100, 100);
       }
       s.player.prestige += 2 / D;
-      if (dch(0.5)) skillUp(s, 'dip');
+      if (skillDch(0.5)) skillUp(s, 'dip');
     },
     gain: function () { return { prestige: 2 }; } },
   { id: 'train_arms', label: '⚔ Train at arms',
     desc: function () { return 'A blade kept sharp.'; },
     show: function (s) { return s.player.tier >= 2 && adult(s) && !female(s); },
-    tick: function (s) { if (dch(0.6)) skillUp(s, 'mar'); } },
+    tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host', label: '🚩 Lead the host',
     desc: function (s) {
       return s.player.war ? 'Command your men in the field. (better odds at the war council)'
@@ -249,7 +254,7 @@ window.FB = window.FB || {};
     tick: function (s) {
       if (s.player.war) s.player.war.led = (s.player.war.led || 0) + 1;
       else s.player.liegeOp = FB.clamp((s.player.liegeOp || 0) + 4 / D, -100, 100);
-      if (dch(0.5)) skillUp(s, 'mar');
+      if (skillDch(0.5)) skillUp(s, 'mar');
     } },
   { id: 'scheming', label: '🕸 Advance the plot',
     desc: function (s) {
@@ -267,7 +272,7 @@ window.FB = window.FB || {};
       const def = FBDATA.plots[pl.id];
       if (!def) { s.player.plot = null; return; }
       pl.power += (2 + FB.skillOf(me(s), 'int') / 3) / D;
-      if (dch(0.25)) skillUp(s, 'int');
+      if (skillDch(0.25)) skillUp(s, 'int');
       if (pl.sprung) return;
       if (dch(0.12)) { pl.sprung = 1; s.eventQueue.push({ id: 'plot_discovered', ctx: {} }); return; }
       if (pl.power >= def.need) { pl.sprung = 1; s.eventQueue.push({ id: def.event, ctx: {} }); }
@@ -279,7 +284,7 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += FB.playerTax(s) * 0.15 / D;
       s.player.pop = FB.clamp(s.player.pop + 3 / D, -100, 100);
-      if (dch(0.25)) skillUp(s, 'ste');
+      if (skillDch(0.25)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
   { id: 'patronize', label: '📜 Patronize scholars',
@@ -291,7 +296,7 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.research = (s.player.research || 0) + (4 + FB.skillOf(me(s), 'lea') / 3) / D;
       s.player.gold = Math.max(0, s.player.gold - 2 / D);
-      if (dch(0.3)) skillUp(s, 'lea');
+      if (skillDch(0.3)) skillUp(s, 'lea');
     },
     gain: function () { return { gold: -2 }; } }
   ];
