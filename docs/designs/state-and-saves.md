@@ -38,6 +38,11 @@ time; older metadata with a frozen `title` remains readable.
 `state.seed` records the start code the life began with ([seeds.md](seeds.md)); saves
 from before it existed simply hide the seed row in the menu.
 
+Personal court standing stays on `state.player`: `warService` records service in the
+current character's liege wars and `liegeGrants` records successful feudal patronage
+in the current lifetime. Both reset on succession. Older saves need no migration;
+the grant multiplier treats a missing `liegeGrants` as zero.
+
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id }` (per-settlement
 buildings — see [development.md](development.md)). Saves old enough to hold bare id
 strings are NOT rejected: `FB.builtIn` migrates them lazily in place at first touch,

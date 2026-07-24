@@ -221,6 +221,9 @@ banked by war-council effects, walls, tech, items, and blessings on top.
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
 `county_petition` weighs the liege's favor toward the player, prestige, and war service
 against the target holder's own standing at court (`player.petitionPid` set by the picker).
+The final `liege_grant` and `county_petition` chances are multiplied by
+`balance.liegeGrantRepeatMult` once for every successful feudal grant the current
+character has already received.
 
 `proposal` weighs the suitor's regard, the player's prestige and tier — and **station**:
 every character carries a social rank 0–4 (lowborn · freeholder · gentry · noble · royalty,
@@ -269,7 +272,8 @@ handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_r
 war_hunt war_supply war_thin war_terms war_accept_tribute` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
-vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant` and the
+vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant
+record_liege_grant` and the
 disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{suitor}` role) /
 `polly_rout` (the small mortal-wound roll on a lost shield-wall) live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
@@ -500,6 +504,8 @@ The marriage-of-station knobs live there too: `dowryByStation` (gold by the spou
 `proposalStationPenalty` (chance lost per step the suitor stands above the player), and
 `wivesByGroup` (wives a man of each religion group may hold; unlisted groups are monogamous).
 `itemSellRatio` is the fraction of an item's `value` a buyer pays when the player sells it.
+`liegeGrantRepeatMult` is the multiplier applied to grant odds for each successful barony,
+title, neighboring fief, or court-awarded escheat already received in the current lifetime.
 Skills grow on a soft cap: below `skillSoftCap` (default 20) every gain lands; past it each
 point must beat a `(skillSoftCap / current)^2` roll (`FB.gainSkill`, js/model.js), so even a
 life spent on one stat diminishes hard — `skillHardCap` (default 40) is the true ceiling,

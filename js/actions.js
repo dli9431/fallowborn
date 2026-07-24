@@ -496,7 +496,9 @@ window.FB = window.FB || {};
     },
     run: function (s) {
       const lord = FB.getRole(s, 'lord', true);
-      if (FB.chance(0.15 + lord.opinion / 400 + s.player.prestige / 1200)) {
+      const chance = FB.liegeGrantChance(s,
+        0.15 + lord.opinion / 400 + s.player.prestige / 1200);
+      if (FB.chance(chance)) {
         s.eventQueue.push({ id: 'grant_of_barony', ctx: {} });
       } else {
         FB.news(s, FB.msg('news.action.barony_refused',

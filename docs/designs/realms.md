@@ -27,6 +27,15 @@ player realm and starts a defensive war against the old sovereign; a baron doing
 either seizes his home county via `FB.transferProvince` (burying the old holder if
 left landless).
 
+**Feudal patronage diminishes within a lifetime.** A successful barony, liege title
+petition, neighboring-fief petition, or court-awarded escheat increments
+`player.liegeGrants`; every prior grant multiplies the next grant's final chance by
+`balance.liegeGrantRepeatMult` (0.2 by default). The multiplier is applied after each
+path's normal chance clamp, so its minimum chance cannot erase the penalty. Failed
+petitions do not count. Buying or conquering land, settling wasteland, inheritance,
+independence, and automatic de jure promotions do not count as patronage. Succession
+resets both `liegeGrants` and the lifetime `warService` tally.
+
 **Inside a realm, counties also change hands without war.** A vassal house carries a
 `favor` standing at its liege's court (−100…100, drifting yearly in `FB.worldTick`).
 The Deeds tab offers three intra-realm paths to a neighbor's county, all following the

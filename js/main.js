@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.36.0';
+  FB.VERSION = '1.37.0';
   FB.CHANGELOG = [
+    { v: '1.37.0', date: '2026-07-24', changes: [
+      'A liege’s generosity now wanes sharply within one lifetime: after each barony, title, neighboring fief, or court-awarded escheat, the chance of another grant falls to one fifth. A new heir begins with a clean slate.'
+    ] },
     { v: '1.36.0', date: '2026-07-24', changes: [
       'The Royal Council: crowned Kings and Emperors now rule with five great officers of the crown — Seneschal, Constable, Treasurer, Almoner, Chamberlain — raised from your own vassals. Each office lends real strength (taxes, levies, cheaper buildings, piety, a watcher against schemes) while a loyal man holds it.',
       'Magnates have tempers now: every lord carries a personality. Flatterers bring gifts and honeyed words; the ambitious weave schemes against an unwary king — a seated Chamberlain uncovers them, without one they strike from the dark.',
@@ -647,6 +650,7 @@ window.FB = window.FB || {};
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
@@ -749,6 +753,7 @@ window.FB = window.FB || {};
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
@@ -1549,6 +1554,7 @@ window.FB = window.FB || {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
     p.liegeOp = 0; p.liegeOps = {};
+    p.warService = 0; p.liegeGrants = 0;
     p.pop = Math.round(p.pop * 0.5);
     // death dues and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
