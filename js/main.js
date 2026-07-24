@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.42.0';
+  FB.VERSION = '1.43.0';
   FB.CHANGELOG = [
+    { v: '1.43.0', date: '2026-07-24', changes: [
+      'Independent rulers can now direct foreign policy: assign political attention to neighboring sovereigns to steadily improve or provoke their opinion of you each season.',
+      'Political attention is a capacity, not a hoardable resource — counts and dukes hold two, kings three, emperors four, and each standing assignment spends one. Diplomacy sets how fast a relation moves, not how many courts you can work at once.',
+      'The 🕊 Foreign policy deed lists the realms within reach with their ruler, opinion band, and pact status; set each to Improve, Neutral, or Provoke. Policy is suspended while at war.'
+    ] },
     { v: '1.42.0', date: '2026-07-24', changes: [
       'Livelihoods belong to people now: choose work for yourself and your household, place children in apprenticeships from age ten onward as each trade allows, and watch them graduate at sixteen.',
       'Commoner families can own multiple productive enterprises across their home settlements — fields, orchards, presses, workshops, stalls, trading houses, and fishing boats — but each pays only while an eligible household member works it.',
@@ -677,6 +682,7 @@ window.FB = window.FB || {};
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        foreignPolicy: {},
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
@@ -877,6 +883,7 @@ window.FB = window.FB || {};
         if (G.auto.research) FB.autoResearch(s);
       }
       FB.playerWarTick(s);
+      FB.tickForeignPolicy(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -1588,7 +1595,7 @@ window.FB = window.FB || {};
     p.fired = {}; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
-    p.liegeOp = 0; p.liegeOps = {};
+    p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
     p.warService = 0; p.liegeGrants = 0;
     p.pop = Math.round(p.pop * 0.5);
     // death dues and standing cuts must not read as a season's losses

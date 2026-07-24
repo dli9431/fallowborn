@@ -841,6 +841,12 @@ FBDATA.balance = {
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
   aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI hosts: this fraction of their men are men-at-arms / archers
   aiEraStepYear: 1000, aiEraStepFrac: 0.04, // from this year AI professional fractions grow by this
+  /* independent-ruler foreign policy (js/actions.js): capacity by rank,
+     seasonal opinion pressure, and the two places foreign opinion matters */
+  politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,
+  foreignPolicyBase: 1, foreignPolicyDipCap: 1,
+  foreignOpinionEnvoyDivisor: 400,
+  foreignOpinionAttackMin: 0.25, foreignOpinionAttackMax: 2,
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
   /* domain limit: counties the player may hold DIRECTLY before overload.

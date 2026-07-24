@@ -122,6 +122,14 @@ nothing, and a duchy of a single county carries no duke's title. The de jure map
 claim; a tapped county's panel lists exactly how many of its counties you hold and how many
 the title still demands.
 
+As an **independent count or higher**, the **🕊 Foreign policy** deed assigns your limited
+political attention to neighboring sovereigns. Counts and dukes can direct two courts,
+kings three, and emperors four. **Improve** builds the court’s opinion of you each season;
+**Provoke** erodes it and can deliberately invite a more likely defensive war. Diplomacy
+strengthens either direction. Friendly courts receive envoys more readily and are less
+likely to attack, but only a two-year pact makes peace certain. A war suspends that court’s
+direction until peace, and succession clears the late ruler’s personal diplomatic network.
+
 ### War
 
 From **count** upward the *Deeds* tab offers **⚔ Declare war** against a neighboring

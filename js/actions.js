@@ -435,6 +435,13 @@ window.FB = window.FB || {};
       return FB.envoyTargets(s).length ? true : 'No neighboring court to treat with.';
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
+  { id: 'foreign_policy', label: '🕊 Foreign policy…', noConsume: true,
+    desc: function () { return 'Direct your court to improve or provoke relations with neighboring sovereigns.'; },
+    show: function (s) { return s.player.tier >= 4 && s.realms.player && s.realms.player.alive; },
+    can: function (s) {
+      return FB.foreignPolicyTargets(s).length ? true : 'No neighboring sovereign court lies within reach.';
+    },
+    run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', label: '🏠 Better the household…', noConsume: true,
     desc: function () { return 'Beasts, tools, and standing — bought once, kept for generations.'; },
@@ -1081,6 +1088,14 @@ window.FB = window.FB || {};
       p.liegeOps[rid] = FB.clamp((p.liegeOps[rid] || 0) + amt, -100, 100);
     }
   };
+  /* Clearer names for the player-relative opinion store. Keep the historical
+     liege helpers above because events, councils, and mods already call them. */
+  FB.realmOpinionOf = function (state, rid) {
+    return FB.liegeOpOf(state, rid);
+  };
+  FB.adjustRealmOpinion = function (state, rid, amt) {
+    FB.adjustLiegeOp(state, rid, amt);
+  };
 
   FB.payHomage = function (state, rid) {
     const p = state.player;
@@ -1341,6 +1356,99 @@ window.FB = window.FB || {};
   };
 
   /* ================= envoys & pacts (the diplomacy game) ================= */
+  FB.politicalAttentionCapacity = function (state) {
+    const p = state.player, B = FBDATA.balance;
+    if (p.tier < 4 || !state.realms.player || !state.realms.player.alive) return 0;
+    if (p.tier >= 7) return B.politicalAttentionEmperor;
+    if (p.tier >= 6) return B.politicalAttentionKing;
+    return B.politicalAttentionCount;
+  };
+
+  FB.foreignPolicyStore = function (state) {
+    return state.player.foreignPolicy = state.player.foreignPolicy || {};
+  };
+
+  /* Alive sovereign neighbors of the independent player's realm. War and
+     pacts deliberately do not remove a court from this list: war suspends an
+     assignment, while a pact is only the hard guarantee of peace. */
+  FB.foreignPolicyTargets = function (state) {
+    const out = [];
+    if (!FB.politicalAttentionCapacity(state)) return out;
+    for (const id in state.realms) {
+      const r = state.realms[id];
+      if (id === 'player' || !r.alive || r.liege) continue;
+      if (FB.realmsAdjacent(state, 'player', id)) out.push(id);
+    }
+    out.sort();
+    return out;
+  };
+
+  FB.isForeignPolicyTarget = function (state, rid) {
+    return FB.foreignPolicyTargets(state).indexOf(rid) >= 0;
+  };
+
+  /* Stable id order makes malformed/modded over-capacity saves deterministic.
+     The UI prevents over-assignment, but only the first capacity entries tick. */
+  FB.foreignPolicyAssignments = function (state) {
+    const policy = FB.foreignPolicyStore(state);
+    const valid = {};
+    for (const rid of FB.foreignPolicyTargets(state)) valid[rid] = 1;
+    const assigned = [];
+    for (const rid in policy) {
+      if (valid[rid] && (policy[rid] === 1 || policy[rid] === -1)) assigned.push(rid);
+    }
+    assigned.sort();
+    return assigned.slice(0, FB.politicalAttentionCapacity(state));
+  };
+
+  FB.foreignPolicyUsed = function (state) {
+    return FB.foreignPolicyAssignments(state).length;
+  };
+
+  FB.foreignPolicyStance = function (state, rid) {
+    if (FB.foreignPolicyAssignments(state).indexOf(rid) < 0) return 0;
+    return FB.foreignPolicyStore(state)[rid];
+  };
+
+  FB.setForeignPolicy = function (state, rid, stance) {
+    const policy = FB.foreignPolicyStore(state);
+    stance = stance === 1 ? 1 : (stance === -1 ? -1 : 0);
+    if (!stance) {
+      delete policy[rid];
+      return true;
+    }
+    if (!FB.isForeignPolicyTarget(state, rid)) return false;
+    const assigned = FB.foreignPolicyAssignments(state);
+    if (assigned.indexOf(rid) < 0 &&
+      assigned.length >= FB.politicalAttentionCapacity(state)) return false;
+    policy[rid] = stance;
+    return true;
+  };
+
+  FB.foreignPolicyAmount = function (state) {
+    const B = FBDATA.balance;
+    return B.foreignPolicyBase + Math.min(B.foreignPolicyDipCap,
+      FB.skillOf(state.chars[state.player.charId], 'dip') / 20);
+  };
+
+  FB.tickForeignPolicy = function (state) {
+    const policy = FB.foreignPolicyStore(state);
+    const targets = FB.foreignPolicyTargets(state);
+    const valid = {};
+    for (const rid of targets) valid[rid] = 1;
+    const ids = Object.keys(policy).sort();
+    for (const rid of ids) {
+      if (!valid[rid] || (policy[rid] !== 1 && policy[rid] !== -1)) delete policy[rid];
+    }
+    const active = FB.foreignPolicyAssignments(state);
+    const warEnemy = state.player.war && state.player.war.enemy;
+    const amount = FB.foreignPolicyAmount(state);
+    for (const rid of active) {
+      if (rid === warEnemy) continue;
+      FB.adjustRealmOpinion(state, rid, policy[rid] * amount);
+    }
+  };
+
   FB.envoyTargets = function (state) {
     const out = [];
     for (const id in state.realms) {
@@ -1354,13 +1462,19 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.envoyChance = function (state, rid) {
+    const p = state.player, m = state.chars[p.charId], B = FBDATA.balance;
+    const chance = 0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600 +
+      FB.realmOpinionOf(state, rid) / B.foreignOpinionEnvoyDivisor;
+    return FB.clamp(chance, 0.1, 0.9);
+  };
+
   FB.sendEnvoy = function (state, rid) {
     const p = state.player;
     const r = state.realms[rid];
     if (!r || !r.alive || p.gold < 10) return;
     p.gold -= 10;
-    const m = state.chars[p.charId];
-    if (FB.chance(FB.clamp(0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600, 0.1, 0.9))) {
+    if (FB.chance(FB.envoyChance(state, rid))) {
       state.pacts = state.pacts || {};
       state.pacts[rid] = state.turn + 8 * 90; // two years of peace
       FB.applyEffects(state, { prestige: 3, skills: { dip: FB.chance(0.5) ? 1 : 0 } });

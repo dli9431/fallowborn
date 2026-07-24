@@ -88,6 +88,14 @@
         "text": "💰 Demand extraordinary taxes"
       }
     },
+    "action.foreign_policy.label.default": {
+      "context": "action foreign_policy, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🕊 Foreign policy…"
+      }
+    },
     "action.give_alms.label.default": {
       "context": "action give_alms, visible label.",
       "glossary": [],
@@ -22609,6 +22617,16 @@
         "text": "Some doors are better left unknocked."
       }
     },
+    "src.03c514e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cultivate hostility at this court every season, inviting greater danger."
+      }
+    },
     "src.03f5c01a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -22727,6 +22745,16 @@
       ],
       "source": {
         "text": "You talk them around the table and out the far side of it. They leave laughing — at you, a little, but together."
+      }
+    },
+    "src.04a11b58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Warm"
       }
     },
     "src.04a1e0be": {
@@ -23480,6 +23508,16 @@
       ],
       "source": {
         "text": "ArrowUp"
+      }
+    },
+    "src.093de24f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Political attention: {used} of {capacity} assigned · current direction: {stance}."
       }
     },
     "src.095bb211": {
@@ -24854,6 +24892,16 @@
         "text": "Part ways without a wedding."
       }
     },
+    "src.13537f5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🕊 Foreign policy…"
+      }
+    },
     "src.135a1a06": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25323,6 +25371,16 @@
       ],
       "source": {
         "text": "less fertile"
+      }
+    },
+    "src.164a9046": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At war with another realm"
       }
     },
     "src.1652d2d3": {
@@ -25979,6 +26037,16 @@
         "text": "Lost a tooth to the smith’s pliers."
       }
     },
+    "src.1a682a2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Hostile"
+      }
+    },
     "src.1a724ec1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26629,6 +26697,16 @@
         "text": "Map filter: Realm (R)"
       }
     },
+    "src.205def21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Their opinion of you"
+      }
+    },
     "src.2069a4fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27030,6 +27108,16 @@
         "text": "🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day."
       }
     },
+    "src.230c6f0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Guarded"
+      }
+    },
     "src.232ec9ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -27289,6 +27377,16 @@
       ],
       "source": {
         "text": "A thin, sad yield. Winter will have teeth this year."
+      }
+    },
+    "src.2485258e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🕊 Political attention {used}/{capacity} · {assignments}"
       }
     },
     "src.24875e68": {
@@ -29395,16 +29493,6 @@
         "text": "🤝 Both sides leave angrier — at each other, and at you."
       }
     },
-    "src.3325fcfd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{counties} · fields ~{men}"
-      }
-    },
     "src.3334bdfb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30145,6 +30233,16 @@
         "text": "Your falcon vanishes over the ridge with your dignity."
       }
     },
+    "src.387dc25b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Provoke"
+      }
+    },
     "src.38a63868": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30624,6 +30722,16 @@
       ],
       "source": {
         "text": "🕸 Advance the plot"
+      }
+    },
+    "src.3bb4bbd3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season."
       }
     },
     "src.3bb7bf75": {
@@ -32683,6 +32791,16 @@
         "text": "Caught lingering behind the arras. The steward’s cuff rings your ear."
       }
     },
+    "src.49a11036": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it."
+      }
+    },
     "src.49acc182": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32872,6 +32990,16 @@
       ],
       "source": {
         "text": "{amount} {skill}"
+      }
+    },
+    "src.4ac38b52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Improve relations"
       }
     },
     "src.4ac63301": {
@@ -33285,6 +33413,16 @@
         "text": "Help him handsomely. (15 gold)"
       }
     },
+    "src.4d27f668": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Any direction chosen here remains assigned but is suspended until the war ends."
+      }
+    },
     "src.4d5a1bc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33373,6 +33511,16 @@
       ],
       "source": {
         "text": "The church annulled the marriage."
+      }
+    },
+    "src.4df62f25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{realm} {direction} {opinion}"
       }
     },
     "src.4e025fa7": {
@@ -34735,6 +34883,16 @@
         "text": "Gossip is a currency too."
       }
     },
+    "src.56a26802": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚔ martial {martial} · opinion {opinion} ({band})"
+      }
+    },
     "src.56ce17af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35133,6 +35291,16 @@
       ],
       "source": {
         "text": "hello@fallowborn.com"
+      }
+    },
+    "src.59bb2061": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Peace pact until {year} AD · at war elsewhere"
       }
     },
     "src.59c22a07": {
@@ -37321,6 +37489,16 @@
       ],
       "source": {
         "text": "Trade the workbench for the open road."
+      }
+    },
+    "src.673e4893": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Peace pact until {year} AD"
       }
     },
     "src.67492e51": {
@@ -39638,6 +39816,16 @@
         "text": "In a faded hand: pasture, fallen wood, and water, reserved to the households in perpetuity."
       }
     },
+    "src.75c0e527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "See this realm’s ruler"
+      }
+    },
     "src.75c3d604": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41122,6 +41310,16 @@
         "text": "A full belly sings no rebel songs."
       }
     },
+    "src.7f86191f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🕊 Political attention {used}/{capacity} · no assignments"
+      }
+    },
     "src.7f92e26c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41290,6 +41488,16 @@
       ],
       "source": {
         "text": "An Empty Place at the Fire"
+      }
+    },
+    "src.80da5e63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Favorable"
       }
     },
     "src.80deda16": {
@@ -42321,6 +42529,16 @@
       ],
       "source": {
         "text": "Let wiser heads weigh what yours could not."
+      }
+    },
+    "src.871d02c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At war — policy is suspended"
       }
     },
     "src.87255f4c": {
@@ -44538,6 +44756,16 @@
         "text": "Glory and scars both wait in the shield-wall."
       }
     },
+    "src.95c89406": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "All political attention is assigned. Set another court to Neutral before choosing a new direction here."
+      }
+    },
     "src.95d823f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45692,6 +45920,16 @@
         "text": "🗺 You answer to no one — no liege to show."
       }
     },
+    "src.9cbb832b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Out of reach"
+      }
+    },
     "src.9cbc3c36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46070,6 +46308,16 @@
       ],
       "source": {
         "text": "Your judgment threads the needle; both leave grumbling equally — which is to say, satisfied."
+      }
+    },
+    "src.9ee71c1d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No pact or war"
       }
     },
     "src.9efc3b29": {
@@ -48056,6 +48304,16 @@
         "text": "Dear iron, but the work goes on."
       }
     },
+    "src.abeeac03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Foreign policy"
+      }
+    },
     "src.abfa3c1b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48326,6 +48584,16 @@
         "text": "+{amount} scholarship each season"
       }
     },
+    "src.ade2b8ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Build goodwill at this court every season."
+      }
+    },
     "src.ade6e02c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48374,6 +48642,16 @@
       ],
       "source": {
         "text": "zoom ·"
+      }
+    },
+    "src.ae212978": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No neighboring sovereign court lies within reach."
       }
     },
     "src.ae245f0e": {
@@ -49006,6 +49284,16 @@
       ],
       "source": {
         "text": "🕯 Your nephew {name} has died, aged {age}."
+      }
+    },
+    "src.b2d2bfef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Set foreign policy"
       }
     },
     "src.b2e22054": {
@@ -49919,6 +50207,16 @@
       ],
       "source": {
         "text": "Cowardice, some say. Sense, say your bones."
+      }
+    },
+    "src.b94a2b89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Withdraw your court’s attention and free this assignment."
       }
     },
     "src.b94a3447": {
@@ -52117,6 +52415,16 @@
         "text": "Festival Day"
       }
     },
+    "src.c9977533": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%"
+      }
+    },
     "src.c9a0730c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52476,6 +52784,16 @@
       ],
       "source": {
         "text": "Buy him ale for the news."
+      }
+    },
+    "src.cc00f1a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{opinion} ({band})"
       }
     },
     "src.cc0eaefa": {
@@ -53119,6 +53437,16 @@
         "text": "Pay for full confirmation. (12 gold)"
       }
     },
+    "src.d0b0f40f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{stance} — suspended during war"
+      }
+    },
     "src.d0c78fae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53207,6 +53535,16 @@
       ],
       "source": {
         "text": "🕯 Give alms"
+      }
+    },
+    "src.d1c31a69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Policy toward {realm}"
       }
     },
     "src.d1d2822e": {
@@ -53628,6 +53966,16 @@
       ],
       "source": {
         "text": "No war, no drills worth the name — just walls, weather, and wages. A soldier’s enemy in peacetime is the calendar."
+      }
+    },
+    "src.d4e51728": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}"
       }
     },
     "src.d4f99acd": {
@@ -54279,6 +54627,16 @@
       ],
       "source": {
         "text": "Rival"
+      }
+    },
+    "src.d8b57123": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Foreign Policy"
       }
     },
     "src.d8c9a24c": {
@@ -56875,6 +57233,16 @@
         "text": "tundra"
       }
     },
+    "src.e9330778": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Neutral"
+      }
+    },
     "src.e9477a5c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58027,6 +58395,16 @@
         "text": "A baby, swaddled in rags, left at your doorstep in the night. It looks up at you and does not cry."
       }
     },
+    "src.f0ef0c46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Political attention: {used} of {capacity} assigned."
+      }
+    },
     "src.f0ff7994": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58465,6 +58843,16 @@
       ],
       "source": {
         "text": "Stay out of it."
+      }
+    },
+    "src.f40cb68e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Direct your court to improve or provoke relations with neighboring sovereigns."
       }
     },
     "src.f410e353": {
@@ -62017,6 +62405,14 @@
         "text": "Ailments"
       }
     },
+    "ui:All political attention is assigned. Set another court to Neutral before choosing a new direction here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "All political attention is assigned. Set another court to Neutral before choosing a new direction here."
+      }
+    },
     "ui:Allah": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62059,6 +62455,14 @@
         "text": "An idle enterprise produces no seasonal income."
       }
     },
+    "ui:Any direction chosen here remains assigned but is suspended until the war ends.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Any direction chosen here remains assigned but is suspended until the war ends."
+      }
+    },
     "ui:Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62077,6 +62481,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Ask {lord} for lands and a banner."
+      }
+    },
+    "ui:At war with another realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At war with another realm"
+      }
+    },
+    "ui:At war — policy is suspended": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At war — policy is suspended"
       }
     },
     "ui:Back": {
@@ -62181,6 +62601,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Bring your piety to the {temple} and ask for grace."
+      }
+    },
+    "ui:Build goodwill at this court every season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Build goodwill at this court every season."
       }
     },
     "ui:Building Works in {province}": {
@@ -62299,6 +62727,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Crown authority"
+      }
+    },
+    "ui:Cultivate hostility at this court every season, inviting greater danger.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cultivate hostility at this court every season, inviting greater danger."
       }
     },
     "ui:Daily focus — continues until changed": {
@@ -62431,6 +62867,14 @@
         "text": "Family enterprises"
       }
     },
+    "ui:Favorable": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Favorable"
+      }
+    },
     "ui:First copy in this county: {cost} gold.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -62439,6 +62883,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "First copy in this county: {cost} gold."
+      }
+    },
+    "ui:Foreign Policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Foreign Policy"
       }
     },
     "ui:French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors.": {
@@ -62491,6 +62943,14 @@
         "text": "Grant a single county"
       }
     },
+    "ui:Guarded": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Guarded"
+      }
+    },
     "ui:Guild standing brings commissions, enterprise access, and better profits.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62541,6 +63001,14 @@
         "text": "Himself a vassal of {liege}"
       }
     },
+    "ui:Hostile": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Hostile"
+      }
+    },
     "ui:Household upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62579,6 +63047,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ill"
+      }
+    },
+    "ui:Improve relations": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Improve relations"
       }
     },
     "ui:Innovations": {
@@ -62719,6 +63195,14 @@
         "text": "Name {name} your enemy. (spends the day)"
       }
     },
+    "ui:Neutral": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Neutral"
+      }
+    },
     "ui:No apprenticeship chosen": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62793,6 +63277,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No open settlement remains."
+      }
+    },
+    "ui:No pact or war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No pact or war"
       }
     },
     "ui:No province chosen — a random home will be found.": {
@@ -62907,6 +63399,14 @@
         "text": "Or paste mod JSON here, e.g. {example}"
       }
     },
+    "ui:Out of reach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Out of reach"
+      }
+    },
     "ui:Over your limit — your own income and levy are cut until you grant land away.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -62954,12 +63454,73 @@
         "text": "Pay {gold} gold to be struck from the serf-roll."
       }
     },
+    "ui:Peace pact until {year} AD": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Peace pact until {year} AD"
+      }
+    },
+    "ui:Peace pact until {year} AD · at war elsewhere": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Peace pact until {year} AD · at war elsewhere"
+      }
+    },
     "ui:Piety each season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Piety each season"
+      }
+    },
+    "ui:Policy toward {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Policy toward {realm}"
+      }
+    },
+    "ui:Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it."
+      }
+    },
+    "ui:Political attention: {used} of {capacity} assigned · current direction: {stance}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "stance",
+        "used"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Political attention: {used} of {capacity} assigned · current direction: {stance}."
+      }
+    },
+    "ui:Political attention: {used} of {capacity} assigned.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "used"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Political attention: {used} of {capacity} assigned."
       }
     },
     "ui:Preview": {
@@ -62976,6 +63537,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Property passes to your heirs — a household built up over generations is its own kind of greatness."
+      }
+    },
+    "ui:Provoke": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Provoke"
       }
     },
     "ui:Pursue marriage with {name}: court them daily, then propose.": {
@@ -63234,6 +63803,14 @@
         "text": "See their sheet and your dealings with them"
       }
     },
+    "ui:See this realm’s ruler": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "See this realm’s ruler"
+      }
+    },
     "ui:See your liege’s sheet": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63285,6 +63862,14 @@
       "location": "js/main.js",
       "source": {
         "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
+      }
+    },
+    "ui:Set foreign policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Set foreign policy"
       }
     },
     "ui:Sickness has taken hold.": {
@@ -63583,6 +64168,14 @@
         "text": "Vassal dues"
       }
     },
+    "ui:Warm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Warm"
+      }
+    },
     "ui:Watches for schemes against you; your own plots weave faster": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -63648,6 +64241,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Win the favor of {name}, day by day."
+      }
+    },
+    "ui:Withdraw your court’s attention and free this assignment.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Withdraw your court’s attention and free this assignment."
       }
     },
     "ui:Work of {name}": {
@@ -64618,17 +65219,6 @@
         "text": "{building} upkeep"
       }
     },
-    "ui:{counties} · fields ~{men}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "counties",
-        "men"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{counties} · fields ~{men}"
-      }
-    },
     "ui:{count} counties": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -64829,6 +65419,17 @@
         "text": "{name} — {title}, {season} {year}"
       }
     },
+    "ui:{opinion} ({band})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "band",
+        "opinion"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{opinion} ({band})"
+      }
+    },
     "ui:{owner} (~{men})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -64860,6 +65461,31 @@
       "location": "js/ui.js",
       "source": {
         "text": "{place} · {worker} · about {gold} gold/season"
+      }
+    },
+    "ui:{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "band",
+        "opinion",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season."
+      }
+    },
+    "ui:{realm} {direction} {opinion}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "direction",
+        "opinion",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{realm} {direction} {opinion}"
       }
     },
     "ui:{realm} · favor {favor}": {
@@ -64955,6 +65581,20 @@
         "text": "{ruler} · opinion {opinion}"
       }
     },
+    "ui:{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "counties",
+        "men",
+        "opinion",
+        "ruler"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%"
+      }
+    },
     "ui:{save} · 🧩 another world — its mods are not the ones active now": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65033,6 +65673,16 @@
         "text": "{skill} {value}"
       }
     },
+    "ui:{stance} — suspended during war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "stance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{stance} — suspended during war"
+      }
+    },
     "ui:{standing} standing · next in {settlement}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65076,6 +65726,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "{title} {ruler} · fields ~{men}"
+      }
+    },
+    "ui:{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "band",
+        "men",
+        "opinion",
+        "ruler",
+        "stance",
+        "status",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}"
       }
     },
     "ui:† born {year}": {
@@ -65185,6 +65851,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "⚔ martial {martial} · favor {favor}"
+      }
+    },
+    "ui:⚔ martial {martial} · opinion {opinion} ({band})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "band",
+        "martial",
+        "opinion"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚔ martial {martial} · opinion {opinion} ({band})"
       }
     },
     "ui:⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match.": {
@@ -65471,6 +66149,29 @@
       "location": "js/ui.js",
       "source": {
         "text": "🕊 A pact of peace holds until {year} AD."
+      }
+    },
+    "ui:🕊 Political attention {used}/{capacity} · no assignments": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "used"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🕊 Political attention {used}/{capacity} · no assignments"
+      }
+    },
+    "ui:🕊 Political attention {used}/{capacity} · {assignments}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "assignments",
+        "capacity",
+        "used"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🕊 Political attention {used}/{capacity} · {assignments}"
       }
     },
     "ui:🕊 Pronounce the divorce ({gold} gold)": {

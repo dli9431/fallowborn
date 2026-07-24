@@ -286,7 +286,8 @@ window.FB = window.FB || {};
       const cap = FB.world.byId[r.capital];
       state.realms[r.id] = {
         id: r.id, name: r.name, color: r.color, capital: r.capital,
-        aggression: r.aggression || 1, rank: r.rank || 3, liege: r.liege || null,
+        aggression: r.aggression !== undefined ? r.aggression : 1,
+        rank: r.rank || 3, liege: r.liege || null,
         alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish'),
         war: null, op: 0
       };
@@ -669,7 +670,8 @@ window.FB = window.FB || {};
         const cap = FB.world.byId[ev.newRealm.capital];
         state.realms[rid] = {
           id: rid, name: ev.newRealm.name, color: ev.newRealm.color,
-          capital: ev.newRealm.capital, aggression: ev.newRealm.aggression || 1,
+          capital: ev.newRealm.capital,
+          aggression: ev.newRealm.aggression !== undefined ? ev.newRealm.aggression : 1,
           rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
           alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic'), war: null, op: 0
         };
@@ -770,9 +772,14 @@ window.FB = window.FB || {};
         }
       }
       // AI may attack an independent player realm
+      const relationMult = FB.clamp(
+        1 - FB.realmOpinionOf(state, id) / 100,
+        B.foreignOpinionAttackMin,
+        B.foreignOpinionAttackMax
+      );
       if (!r.war && state.realms.player && state.realms.player.alive && !state.player.war &&
         !(state.pacts && state.pacts[id] > state.turn) &&
-        FB.chance(0.04 * r.aggression) && FB.realmsAdjacent(state, id, 'player')) {
+        FB.chance(0.04 * r.aggression * relationMult) && FB.realmsAdjacent(state, id, 'player')) {
         state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0, defending: true };
         FB.news(state, FB.msg('news.world.war_declared_on_player',
           '🔥 {realm} declares war upon YOU!', { realm: r.name }));
