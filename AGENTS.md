@@ -64,6 +64,9 @@ work straight to `main` — do not create a branch, and do not open a PR unless 
 2. Merge that temp branch into `main`.
 3. Delete the temp branch to clean up.
 
+If the branch touched player-facing text, regenerate the i18n catalogs from the *merged* tree
+as part of the merge — not on the branch. See **Internationalization (i18n)** below.
+
 Pushing is a separate step — commit when asked to commit; only push when asked to push (a push
 to `main` auto-deploys play.fallowborn.com).
 
@@ -155,8 +158,8 @@ use complete-phrase selector records (`{forms:{select:'value', param:'sex', case
 numeric plural selector) so the translator owns word order; or call the browser locale renderer
 from shared simulation code.
 
-**Regenerate catalogs whenever you touch user-facing text.** The tool is static-only — it never
-executes the game, so it is *outside* the "don't run the game" rule:
+**Regenerate catalogs when your change lands on `main` — once, at integration.** The tool is
+static-only — it never executes the game, so it is *outside* the "don't run the game" rule:
 
 ```
 python tools/i18n_catalog.py extract               # rebuild data/lang_en.js + tools/i18n_manifest.json
@@ -166,9 +169,22 @@ python tools/i18n_catalog.py validate               # coverage, source hashes, t
 
 `extract` and `validate` are always safe to run locally; `translate` calls a translation API.
 If you cannot run `translate`, **say so** — English fallback keeps the game correct, but the
-owner must regenerate before the Preview locales are current for release. A commit that adds or
-changes player-facing text without updating the catalogs (the `data/lang_*.js` files and
-`tools/i18n_manifest.json`) leaves the other languages stale.
+owner must regenerate before the Preview locales are current for release.
+
+**`data/lang_*.js` and `tools/i18n_manifest.json` are generated integration artifacts — never
+hand-edit or hand-merge them.** Working directly on `main` (the default), regenerate in the
+same commit as the text change. On a feature branch or worktree you will merge, **defer it**:
+route the strings, let English self-heal on the branch, and regenerate **once** from the merged
+tree at the merge. Regenerating on the branch does not help — two branches (or a branch and
+`main`) that both regenerate *always* collide on these files at merge, in hundreds to thousands
+of hunks, and the only fix is to regenerate again; a per-branch regeneration is therefore pure
+redundant work and a doubled `translate` bill.
+
+**Resolving a catalog conflict at a merge:** do not hand-merge the generated files. Take either
+side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`),
+`git add` them, then regenerate from the *merged source* (`extract → translate → validate`) and
+stage the result. `validate` is the gate — a change reaching `main` with new player-facing text
+but stale `data/lang_*.js`/`tools/i18n_manifest.json` leaves the other languages stale.
 
 ## Where things live
 
