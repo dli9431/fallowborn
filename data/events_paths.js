@@ -268,7 +268,7 @@ FBDATA.events.push(
       failure:{ text:'The boar takes exception. You are carried home on a litter.', effects:{ health:-2, addTrait:'scarred' } } }
   ]},
 { id:'grant_of_barony', title:'A Banner of Your Own',
-  trigger:{ tierMin:2, tierMax:2, roleOpinionAbove:{role:'lord', value:60}, prestigeMin:120, chance:0.3 }, weight:15, once:true,
+  trigger:{ tierMin:2, tierMax:2, custom:'barony_offer_eligible', chance:0.3 }, weight:15, once:true,
   text:'{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”',
   options:[
     { label:'Kneel and swear.', desc:'A tower, a banner, and a lord above you.', effects:{ tierSet:3, prestige:60, custom:'record_liege_grant', log:'Granted a barony — a lord at last!' } },

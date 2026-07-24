@@ -43,6 +43,12 @@ current character's liege wars and `liegeGrants` records successful feudal patro
 in the current lifetime. Both reset on succession. Older saves need no migration;
 the grant multiplier treats a missing `liegeGrants` as zero.
 
+`player.gentryGeneration` is additive dynasty standing: it records the generation in
+which the house first reached tier 2 and persists through succession. Ordinary barony
+patronage requires that value to be lower than `state.generation`. Tier-2+ scenarios
+start established (`0`); older saves without the field are also treated as established,
+so the balance gate never retroactively strands an existing gentle house.
+
 `player.foreignPolicy` stores the current ruler’s political-attention assignments as
 realm-id keys with `1` (Improve) or `-1` (Provoke). It is lazily initialized, so older
 version-3 saves need no migration, and invalid/dead/non-adjacent targets are discarded at

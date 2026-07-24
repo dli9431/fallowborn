@@ -1231,6 +1231,30 @@ window.FB = window.FB || {};
   };
   FB.fns = FB.fns || {}; // registry for custom trigger/effect functions (world.js war handlers register earlier; mods may add)
 
+  /* Ordinary feudal elevation rests on a house, not one remarkable career.
+     New games record the generation that first reaches gentry; an heir must
+     inherit that standing before the house may petition for a barony. Saves
+     from before this field existed are treated as already established. */
+  FB.gentryEstablished = function (state) {
+    const p = state.player;
+    if (!p || p.tier < 2) return false;
+    if (p.gentryGeneration === undefined) return true;
+    return p.gentryGeneration !== null && p.gentryGeneration < state.generation;
+  };
+  FB.markGentryRise = function (state) {
+    const p = state.player;
+    if (p.gentryGeneration === undefined || p.gentryGeneration === null) {
+      p.gentryGeneration = state.generation;
+    }
+  };
+  FB.fns.barony_offer_eligible = function (state) {
+    const B = FBDATA.balance;
+    const lord = FB.getRole(state, 'lord', true);
+    return FB.gentryEstablished(state) &&
+      state.player.prestige >= B.baronyPrestige &&
+      !!lord && lord.opinion >= B.baronyOpinion;
+  };
+
   /* ---------- daily event selection ----------
      Queued events fire at once. Random events land on 1-2 pre-rolled "slot
      days" per season (scheduled in main.js), keeping the old seasonal pacing
@@ -1494,7 +1518,9 @@ window.FB = window.FB || {};
       if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
     if (fx.tierSet !== undefined && fx.tierSet > p.tier) {
+      const oldTier = p.tier;
       p.tier = fx.tierSet;
+      if (oldTier < 2 && p.tier >= 2) FB.markGentryRise(state);
       if (p.tier >= 3 && !p.liege) {
         const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
         if (rid && rid !== 'player') p.liege = rid;
@@ -1783,6 +1809,7 @@ window.FB = window.FB || {};
     // a noble house's estate lifts a common steward into the gentry
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
       p.tier = 2;
+      FB.markGentryRise(state);
       if (p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
       if (p.profession === 'noble' && FB.setCareer) {
         FB.setCareer(state, state.chars[p.charId], 'noble', 'master');

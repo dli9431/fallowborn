@@ -503,9 +503,16 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier === 2; },
     can: function (s) {
+      const B = FBDATA.balance;
       const lord = FB.getRole(s, 'lord', true);
-      if (s.player.prestige < 250) return 'You need at least 250 prestige.';
-      if (!lord || lord.opinion < 40) return 'The lord’s favor is not yet sufficient.';
+      if (!FB.gentryEstablished(s)) return FB.T(
+        'Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner.');
+      if (s.player.prestige < B.baronyPrestige) return FB.T(
+        'You need at least {needed} prestige (now {current}).',
+        { needed: B.baronyPrestige, current: Math.round(s.player.prestige) });
+      if (!lord || lord.opinion < B.baronyOpinion) return FB.T(
+        'You need at least {needed} favor with your lord (now {current}).',
+        { needed: B.baronyOpinion, current: lord ? Math.round(lord.opinion) : 0 });
       return true;
     },
     run: function (s) {

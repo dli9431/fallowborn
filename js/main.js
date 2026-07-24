@@ -589,7 +589,7 @@ window.FB = window.FB || {};
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         foreignPolicy: {},
-        warService: 0, liegeGrants: 0,
+        warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
@@ -698,7 +698,7 @@ window.FB = window.FB || {};
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
-        warService: 0, liegeGrants: 0,
+        warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
