@@ -43,6 +43,12 @@ current character's liege wars and `liegeGrants` records successful feudal patro
 in the current lifetime. Both reset on succession. Older saves need no migration;
 the grant multiplier treats a missing `liegeGrants` as zero.
 
+`player.foreignPolicy` stores the current ruler’s political-attention assignments as
+realm-id keys with `1` (Improve) or `-1` (Provoke). It is lazily initialized, so older
+version-3 saves need no migration, and invalid/dead/non-adjacent targets are discarded at
+the seasonal tick. The object and the player-relative `liegeOps` opinion network clear on
+succession; `state.pacts` remains state-level and survives.
+
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and

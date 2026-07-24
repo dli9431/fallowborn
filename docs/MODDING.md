@@ -577,6 +577,14 @@ and traits/items can push a read skill (`FB.skillOf`) no higher than that.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
 skill (traits and carried items included), on top of the per-development base, building
 `levy` bonuses, and the `levy` tech multiplier.
+Political attention uses `politicalAttentionCount` for counts and dukes,
+`politicalAttentionKing` for kings, and `politicalAttentionEmperor` for emperors.
+`foreignPolicyBase` is the opinion moved by an assignment each season and
+`foreignPolicyDipCap` caps the additional Diplomacy contribution (Diplomacy / 20).
+Foreign opinion adds `opinion / foreignOpinionEnvoyDivisor` to envoy success.
+For AI declarations against the player it multiplies the base chance by
+`1 - opinion / 100`, clamped between `foreignOpinionAttackMin` and
+`foreignOpinionAttackMax`.
 The field-army knobs drive the hosts on the map (`js/armies.js`): `armyMarchDays` (days to
 cross one province), `armyRearmDays` (how long a shattered host must wait to muster
 again), `armyReinforceRate` (the fraction of its mustered size a host resting on home

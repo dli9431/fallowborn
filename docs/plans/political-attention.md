@@ -1,6 +1,6 @@
 # Political attention and foreign relations
 
-Status: proposed
+Status: implemented
 
 ## Goal
 
@@ -297,8 +297,8 @@ Regenerate and validate all language catalogs after adding the user-facing text.
 
 ## Release and validation
 
-This is a backward-compatible feature and should ship as the next minor version
-(currently expected to be `1.37.0` from `1.36.0`).
+This is a backward-compatible feature and should ship as the next minor version,
+assigned when the work is integrated into `main`.
 
 Permitted automated checks:
 

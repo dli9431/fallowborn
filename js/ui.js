@@ -73,6 +73,39 @@ window.FB = window.FB || {};
       }
     }, { count: count }), { state: s, viewer: s.player.charId });
   }
+  function signedOpinion(value) {
+    const rounded = Math.round(value);
+    return (rounded > 0 ? '+' : '') + rounded;
+  }
+  function opinionBand(value) {
+    if (value >= 60) return FB.T('Warm');
+    if (value >= 20) return FB.T('Favorable');
+    if (value <= -60) return FB.T('Hostile');
+    if (value <= -20) return FB.T('Guarded');
+    return FB.T('Neutral');
+  }
+  function foreignPolicyStanceText(s, rid) {
+    const stance = FB.foreignPolicyStance(s, rid);
+    const text = stance > 0 ? FB.T('Improve relations')
+      : (stance < 0 ? FB.T('Provoke') : FB.T('Neutral'));
+    if (stance && s.player.war && s.player.war.enemy === rid) {
+      return FB.T('{stance} — suspended during war', { stance: text });
+    }
+    return text;
+  }
+  function foreignPolicyStatusText(s, rid) {
+    if (s.player.war && s.player.war.enemy === rid) {
+      return FB.T('At war — policy is suspended');
+    }
+    if (s.pacts && s.pacts[rid] > s.turn) {
+      const year = FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360);
+      return FB.isRealmAtWar(s, rid)
+        ? FB.T('Peace pact until {year} AD · at war elsewhere', { year: year })
+        : FB.T('Peace pact until {year} AD', { year: year });
+    }
+    if (FB.isRealmAtWar(s, rid)) return FB.T('At war with another realm');
+    return FB.T('No pact or war');
+  }
 
   /* localization chokepoints: a labeled stat row and a panel header. Each wraps
      its (translatable) label through FB.T once, so every row/header is covered at
@@ -334,7 +367,7 @@ window.FB = window.FB || {};
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life',
     seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
-    send_envoy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
+    send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
     swear_fealty:'war'
   };
@@ -373,6 +406,25 @@ window.FB = window.FB || {};
       if (pHost && (!pHost.path || !pHost.path.length) && !pHost.goal) {
         h += '<div class="hint">' + esc(FB.T('Tap the 🚩 on the map to give march orders.')) + '</div>';
       }
+    }
+    const attentionCapacity = FB.politicalAttentionCapacity(s);
+    if (attentionCapacity) {
+      const assigned = FB.foreignPolicyAssignments(s);
+      const assignmentText = assigned.map(function (rid) {
+        const r = s.realms[rid], stance = FB.foreignPolicyStance(s, rid);
+        return FB.T('{realm} {direction} {opinion}', {
+          realm: r.name,
+          direction: stance > 0 ? '↑' : '↓',
+          opinion: signedOpinion(FB.realmOpinionOf(s, rid))
+        });
+      }).join(' · ');
+      h += '<div class="progressnote">' + esc(assignmentText
+        ? FB.T('🕊 Political attention {used}/{capacity} · {assignments}', {
+          used: assigned.length, capacity: attentionCapacity, assignments: assignmentText
+        })
+        : FB.T('🕊 Political attention {used}/{capacity} · no assignments', {
+          used: 0, capacity: attentionCapacity
+        })) + '</div>';
     }
     const hl = FB.holdingList(s);
     if (hl.length) {
@@ -1299,8 +1351,12 @@ window.FB = window.FB || {};
         // a colony settled on empty land: owned, but tied to no title
         h += kv('De jure (rightful liege)', esc(FB.T('None — this land feeds no duchy or crown.')));
       }
+      const sovereignHtml = realm
+        ? '<button class="linklike" data-liege="' + esc(rid) + '" title="' +
+          esc(FB.T('See this realm’s ruler')) + '">' + esc(realm.name) + '</button>'
+        : '';
       h +=
-        (realm ? kv('Sovereign', esc(realm.name)) : '') +
+        (realm ? kv('Sovereign', sovereignHtml) : '') +
         (realm ? kv('Realm size', esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
         (realm ? kv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
         kv('Culture', esc(cultureName(s, pr.culture))) +
@@ -1308,6 +1364,15 @@ window.FB = window.FB || {};
         kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         kv('Development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
+      if (realm && !myRealm && s.realms.player && s.realms.player.alive) {
+        const realmOpinion = FB.realmOpinionOf(s, rid);
+        h += kv('Their opinion of you', '<span class="' + FB.opClass(realmOpinion) + '">' +
+          esc(FB.T('{opinion} ({band})', {
+            opinion: signedOpinion(realmOpinion), band: opinionBand(realmOpinion)
+          })) + '</span>');
+        h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
+          ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
+      }
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
         // in your own demesne a settlement is a button: it opens the buildings
@@ -2255,10 +2320,14 @@ window.FB = window.FB || {};
     for (const rid of FB.envoyTargets(s)) {
       const r = s.realms[rid];
       const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
+      const opinion = FB.realmOpinionOf(s, rid);
       h += '<button class="actionbtn" data-envoy="' + esc(rid) + '">🕊 ' + esc(r.name) +
-        '<span class="adesc">' + esc(FB.T('{counties} · fields ~{men}', {
+        '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · opinion {opinion} · pact chance ~{chance}%', {
+          ruler: r.ruler.name,
           counties: countyCountText(s, FB.realmProvinces(s, rid).length),
-          men: menText(s, men)
+          men: menText(s, men),
+          opinion: signedOpinion(opinion),
+          chance: Math.round(FB.envoyChance(s, rid) * 100)
         })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
@@ -2270,6 +2339,100 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* ================= political attention picker ================= */
+  UI.showForeignPolicy = function () {
+    const s = FB.state;
+    const capacity = FB.politicalAttentionCapacity(s);
+    if (!capacity) return;
+    const targets = FB.foreignPolicyTargets(s);
+    const used = FB.foreignPolicyUsed(s);
+    let h = '<p class="hint">' + esc(FB.T(
+      'Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it.')) +
+      '</p><div class="progressnote">' + esc(FB.T(
+        'Political attention: {used} of {capacity} assigned.', {
+          used: used, capacity: capacity
+        })) + '</div><div class="gm-list">';
+    for (const rid of targets) {
+      const r = s.realms[rid];
+      const opinion = FB.realmOpinionOf(s, rid);
+      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev *
+        (FBDATA.balance.aiHostPerDev || 0.3));
+      h += '<button class="actionbtn" data-policy-target="' + esc(rid) + '">🕊 ' + esc(r.name) +
+        '<span class="adesc">' + esc(FB.T(
+          '{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}', {
+            title: FB.realmRankTitle(s, r),
+            ruler: r.ruler.name,
+            opinion: signedOpinion(opinion),
+            band: opinionBand(opinion),
+            men: menText(s, men),
+            stance: foreignPolicyStanceText(s, rid),
+            status: foreignPolicyStatusText(s, rid)
+          })) + '</span></button>';
+    }
+    h += '</div><button class="btn gm-footer" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
+    openModal(FB.T('Foreign Policy'), h);
+    document.querySelectorAll('[data-policy-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showForeignPolicyStance(btn.dataset.policyTarget);
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
+  };
+
+  UI.showForeignPolicyStance = function (rid) {
+    const s = FB.state;
+    const r = s.realms[rid];
+    if (!r || !FB.isForeignPolicyTarget(s, rid)) {
+      UI.showForeignPolicy();
+      return;
+    }
+    const capacity = FB.politicalAttentionCapacity(s);
+    const used = FB.foreignPolicyUsed(s);
+    const current = FB.foreignPolicyStance(s, rid);
+    const full = !current && used >= capacity;
+    const amount = Math.round(FB.foreignPolicyAmount(s) * 10) / 10;
+    const opinion = FB.realmOpinionOf(s, rid);
+    let h = '<p class="hint">' + esc(FB.T(
+      '{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season.', {
+        realm: r.name,
+        opinion: signedOpinion(opinion),
+        band: opinionBand(opinion),
+        amount: amount
+      })) + '</p>';
+    h += '<div class="progressnote">' + esc(FB.T(
+      'Political attention: {used} of {capacity} assigned · current direction: {stance}.', {
+        used: used, capacity: capacity, stance: foreignPolicyStanceText(s, rid)
+      })) + '</div><div class="gm-list">';
+    h += '<button class="actionbtn" data-policy-stance="1"' + (full ? ' disabled' : '') + '>↑ ' +
+      esc(FB.T('Improve relations')) + '<span class="adesc">' +
+      esc(FB.T('Build goodwill at this court every season.')) + '</span></button>';
+    h += '<button class="actionbtn" data-policy-stance="0">• ' +
+      esc(FB.T('Neutral')) + '<span class="adesc">' +
+      esc(FB.T('Withdraw your court’s attention and free this assignment.')) + '</span></button>';
+    h += '<button class="actionbtn" data-policy-stance="-1"' + (full ? ' disabled' : '') + '>↓ ' +
+      esc(FB.T('Provoke')) + '<span class="adesc">' +
+      esc(FB.T('Cultivate hostility at this court every season, inviting greater danger.')) + '</span></button>';
+    if (full) {
+      h += '<p class="hint">' + esc(FB.T(
+        'All political attention is assigned. Set another court to Neutral before choosing a new direction here.')) + '</p>';
+    }
+    if (s.player.war && s.player.war.enemy === rid) {
+      h += '<p class="hint">⚔ ' + esc(FB.T(
+        'Any direction chosen here remains assigned but is suspended until the war ends.')) + '</p>';
+    }
+    h += '</div><button class="btn gm-footer" id="gm-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Policy toward {realm}', { realm: r.name }), h);
+    document.querySelectorAll('[data-policy-stance]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (FB.setForeignPolicy(FB.state, rid, Number(btn.dataset.policyStance))) {
+          UI.showForeignPolicy();
+          UI.refresh();
+        }
+      });
+    });
+    $('gm-back').addEventListener('click', UI.showForeignPolicy);
   };
 
   /* ================= liege-chain pickers ================= */
@@ -2462,6 +2625,8 @@ window.FB = window.FB || {};
     const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
+    const foreignSovereign = rid !== 'player' && !r.liege &&
+      s.realms.player && s.realms.player.alive;
     let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
       '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
         title: FB.realmRankTitle(s, r), name: r.ruler.name
@@ -2473,9 +2638,13 @@ window.FB = window.FB || {};
         ? FB.T('Himself a vassal of {liege}', { liege: liege.name })
         : FB.T('Sovereign — kneels to no one')) + '</div>' +
       '<div class="ccmeta ' + FB.opClass(op) + '">' +
-      esc(FB.T('⚔ martial {martial} · favor {favor}', {
-        martial: r.ruler.mar, favor: (op > 0 ? '+' : '') + op
-      })) + '</div>' +
+      esc(foreignSovereign
+        ? FB.T('⚔ martial {martial} · opinion {opinion} ({band})', {
+          martial: r.ruler.mar, opinion: signedOpinion(op), band: opinionBand(op)
+        })
+        : FB.T('⚔ martial {martial} · favor {favor}', {
+          martial: r.ruler.mar, favor: signedOpinion(op)
+        })) + '</div>' +
       (r.ruler.trait && FBDATA.traits[r.ruler.trait]
         ? '<div class="ccmeta">' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name')) +
           ' — ' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'desc')) + '</div>'
@@ -2487,9 +2656,19 @@ window.FB = window.FB || {};
       kv('Realm host', '~' + esc(menText(s, men))) +
       (cap ? kv('Capital', esc(cap.name)) : '') +
       '</div>';
+    if (foreignSovereign) {
+      h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
+        ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
+      if (FB.isForeignPolicyTarget(s, rid)) {
+        h += '<button class="btn" id="gm-policy">' + esc(FB.T('Set foreign policy')) + '</button>';
+      }
+    }
     h += '<button class="btn" id="gm-cancel">Close</button>';
     openModal(rid === s.player.liege ? 'Your Liege' : 'Realm Ruler', h);
     FB.drawCrest($('liegecrest'), rid);
+    if ($('gm-policy')) $('gm-policy').addEventListener('click', function () {
+      UI.showForeignPolicyStance(rid);
+    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 

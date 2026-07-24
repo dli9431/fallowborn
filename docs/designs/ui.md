@@ -49,6 +49,11 @@ The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Famil
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
 with `aria-expanded`; closed actions are not rendered, so number-key selection can never
 activate an invisible deed. The current daily focus remains pinned above the groups.
+Independent counts and higher also get a compact political-attention summary above those
+groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
+Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
+bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
+both views show opinion and the current direction.
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via

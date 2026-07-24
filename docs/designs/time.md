@@ -52,3 +52,9 @@ profits from staffed enterprises, and learned household piety enter the same mea
 season ledger as focus income and upkeep. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
+
+For an independent count or higher, season boundaries also run
+`FB.tickForeignPolicy`. Saved Improve/Provoke assignments adjust neighboring sovereigns’
+opinion deterministically after the player’s war tick. On the winter boundary this happens
+before `FB.worldTick`, so the new opinion affects that year’s AI declarations; yearly
+opinion decay follows in `yearlyLife`.

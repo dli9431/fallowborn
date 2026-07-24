@@ -677,6 +677,7 @@ window.FB = window.FB || {};
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        foreignPolicy: {},
         warService: 0, liegeGrants: 0,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
@@ -877,6 +878,7 @@ window.FB = window.FB || {};
         if (G.auto.research) FB.autoResearch(s);
       }
       FB.playerWarTick(s);
+      FB.tickForeignPolicy(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -1588,7 +1590,7 @@ window.FB = window.FB || {};
     p.fired = {}; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
-    p.liegeOp = 0; p.liegeOps = {};
+    p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
     p.warService = 0; p.liegeGrants = 0;
     p.pop = Math.round(p.pop * 0.5);
     // death dues and standing cuts must not read as a season's losses
