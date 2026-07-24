@@ -84,3 +84,25 @@ FBDATA.enterprises = {
     desc:'A working boat whose catch is sold beyond the household.'
   }
 };
+
+/* Coin & Credit contracts. These are deliberately exact-term contracts, not
+   annual percentage rates: markup is fixed when the agreement is signed and
+   term is measured in 90-day seasons. Display names live in the UI so faith-
+   appropriate complete phrases can be selected without putting grammar here. */
+FBDATA.finance = {
+  pledge: {
+    maxPrincipal:40, markup:0.25, termSeasons:4, collateralRatio:0.60,
+    lender:'moneychanger', defaultKind:'collateral'
+  },
+  merchant: {
+    maxPrincipal:100, markup:0.18, termSeasons:6,
+    lender:'merchant_house', defaultKind:'revenue'
+  },
+  revenue: {
+    maxPrincipal:500, markup:0.15, termSeasons:8,
+    lender:'lombard_house', defaultKind:'revenue'
+  },
+  tradePartnership: {
+    termSeasons:4, risk:0.25, profitShare:0.45
+  }
+};

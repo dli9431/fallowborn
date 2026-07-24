@@ -682,6 +682,10 @@ window.FB = window.FB || {};
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
+      economy: {
+        price:1, lastRate:0, pressure:0, lastAdjustment:0,
+        shocks:[], loans:[], investments:[], nextId:1, defaults:0
+      },
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
     };
     FB.state = state;
@@ -864,7 +868,8 @@ window.FB = window.FB || {};
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
-      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep + FB.holdingBonus(s, 'gold'));
+      p.gold = Math.max(0, p.gold + income - upkeep - buildingUpkeep +
+        FB.holdingBonus(s, 'gold') + FB.itemBonus(s, 'gold'));
       FB.livelihoodSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
@@ -877,6 +882,7 @@ window.FB = window.FB || {};
         if (G.auto.research) FB.autoResearch(s);
       }
       FB.playerWarTick(s);
+      FB.financeSeason(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
       // beside the topbar stats. Old saves lack the mark; start one.
@@ -889,6 +895,10 @@ window.FB = window.FB || {};
       }
       s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
       scheduleSlots(s);
+      /* Annual revaluation follows the completed winter ledger. Its purse
+         adjustment is therefore measured in the next spring-to-summer net,
+         while Finance and the gold sheet show it immediately. */
+      if (newYear) FB.financeYear(s);
       if (newYear) FB.worldTick(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
@@ -1569,6 +1579,7 @@ window.FB = window.FB || {};
     p.charId = heir.id;
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
+    FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter

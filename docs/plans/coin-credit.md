@@ -1,6 +1,6 @@
 # Coin, credit, and financial contracts
 
-Status: proposed
+Status: implemented
 
 ## Goal
 

@@ -26,3 +26,12 @@ rights, equipment, and cultural capital remain unique holdings.
 Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the family
 even if it moves or rises in station; a building belongs to its county and follows
 political conquest.
+
+Eligible purchased holdings and carried items may secure a pledged loan. Event-only
+property such as Rights of Common is never offered as collateral. A pledge is reserved
+until repayment or default; a pledged treasure cannot be sold or gifted. Default removes
+the named asset in settlement, while every future obligation and pledge passes to an heir.
+Productive enterprises are not seized by the generic pledge contract. Trading Houses
+instead open larger active trade-partnership stakes in the Finance sheet.
+
+Related: [finance.md](finance.md) for credit, default, and trade partnerships.

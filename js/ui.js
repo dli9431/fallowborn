@@ -240,6 +240,12 @@ window.FB = window.FB || {};
         '<span class="bd-amt ' + (bd.total > 0 ? 'op-good' : bd.total < 0 ? 'op-bad' : '') + '">' +
         fmtAmt(bd.total) + '</span></div>';
     }
+    if (stat === 'gold' && bd.coinAdjustment !== undefined) {
+      h += '<div class="bd-row"><span>' + esc(FB.T('Coin and prices this year')) + '</span>' +
+        '<span class="bd-amt ' + (bd.coinAdjustment > 0 ? 'op-good' :
+          bd.coinAdjustment < 0 ? 'op-bad' : '') + '">' +
+        fmtAmt(bd.coinAdjustment) + '</span></div>';
+    }
     h += '<div class="bd-note">' + esc(FB.T(
       'The ± beside the stat is last season’s real change — events and deeds included.')) + '</div>';
     return h;
@@ -330,7 +336,8 @@ window.FB = window.FB || {};
     squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
     settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
-    revoke_county:'realm', royal_council:'realm',
+    revoke_county:'realm', royal_council:'realm', coin_credit:'work',
+    debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life',
     seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
@@ -482,6 +489,7 @@ window.FB = window.FB || {};
       for (const item of ga) {
         const btn = document.createElement('button');
         btn.className = 'actionbtn';
+        btn.setAttribute('data-action-id', item.a.id);
         btn.disabled = !item.can;
         const label = dt(s, 'action', item.a.id, item.a, 'label');
         btn.innerHTML = hintFor(n) +
@@ -1844,6 +1852,11 @@ window.FB = window.FB || {};
   function openModal(title, bodyHtml, opts) {
     UI._gmDismiss = !(opts && opts.dismissable === false);
     const gm = $('genmodal');
+    if (gm.classList.contains('hidden')) {
+      UI._gmReturnFocus = document.activeElement;
+      UI._gmReturnAction = UI._gmReturnFocus && UI._gmReturnFocus.dataset
+        ? UI._gmReturnFocus.dataset.actionId : null;
+    }
     gm.classList.remove('hidden');
     /* per-dialog modifier class (e.g. the changelog's even-margin sheet) —
        drop the previous one before applying this dialog's */
@@ -1877,6 +1890,23 @@ window.FB = window.FB || {};
   UI.closeModal = function () {
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
+    const back = UI._gmReturnFocus;
+    const actionId = UI._gmReturnAction;
+    UI._gmReturnFocus = null;
+    UI._gmReturnAction = null;
+    if (back && document.documentElement.contains(back)) {
+      back.focus();
+      return;
+    }
+    if (actionId) {
+      const actions = document.querySelectorAll('[data-action-id]');
+      for (const action of actions) {
+        if (action.dataset.actionId === actionId) {
+          action.focus();
+          return;
+        }
+      }
+    }
     if (FB.state && !$('game').classList.contains('hidden') &&
       $('eventmodal').classList.contains('hidden')) $('btn-endturn').focus();
   };
@@ -2709,6 +2739,388 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* ================= coin & credit ================= */
+
+  function financeAmount(value) {
+    return Math.round(value * 10) / 10;
+  }
+
+  function financeDate(season, year) {
+    return FB.T('{season} {year}', { season:FB.seasonName(season), year:year });
+  }
+
+  function financeDateAfter(s, seasons) {
+    const n = s.date.season + seasons;
+    return { season:n % 4, year:s.date.year + Math.floor(n / 4) };
+  }
+
+  function financeKindName(kind) {
+    if (kind === 'pledge') return FB.T('Pledged loan');
+    if (kind === 'merchant') return FB.T('Merchant advance');
+    if (kind === 'revenue') return FB.T('Loan against revenues');
+    return FB.T('Financial contract');
+  }
+
+  function financeAssetName(s, collateral) {
+    if (!collateral) return FB.T('None');
+    const table = collateral.kind === 'item' ? FBDATA.items : FBDATA.holdings;
+    const def = table && table[collateral.id];
+    if (!def) return collateral.id;
+    return (def.icon || '') + (def.icon ? ' ' : '') +
+      dt(s, collateral.kind, collateral.id, def, 'name');
+  }
+
+  function financeDefaultText(s, contract) {
+    if (contract.defaultKind === 'collateral' && contract.collateral) {
+      return FB.T('{asset} is taken by the lender.', {
+        asset:financeAssetName(s, contract.collateral)
+      });
+    }
+    return FB.T('One quarter of regular revenues is assigned to the lender until the debt is cleared.');
+  }
+
+  function financeOfferCountText(s, count) {
+    return FB.renderMessage(FB.msg('fx.ui.finance_offer_count', {
+      forms: {
+        select:'plural', param:'count', cases:{
+          one:'One exact offer is available.',
+          other:'{count} exact offers are available.'
+        }
+      }
+    }, { count:count }), { state:s, viewer:s.player.charId });
+  }
+
+  function financeDebtCountText(s, count, amount) {
+    return FB.renderMessage(FB.msg('fx.ui.finance_debt_count', {
+      forms: {
+        select:'plural', param:'count', cases:{
+          one:'One obligation worth {amount} gold passes with the household.',
+          other:'{count} obligations worth {amount} gold pass with the household.'
+        }
+      }
+    }, { count:count, amount:amount }), { state:s, viewer:s.player.charId });
+  }
+
+  function financeLoanCard(s, loan) {
+    const due = financeAmount(FB.financeDueNow(s, loan));
+    const nominal = loan.denomination !== 'real';
+    const canRepay = loan.status !== 'default' && s.player.gold + 0.000001 >= due;
+    let h = '<div class="progressnote' +
+      (loan.status === 'arrears' || loan.status === 'default' ? ' warnote' : '') + '">' +
+      '<b>' + esc(financeKindName(loan.kind)) + '</b> · ' +
+      esc(FB.T('{amount} gold due {date}', {
+        amount:due, date:financeDate(loan.dueSeason, loan.dueYear)
+      })) +
+      '<br><span class="hint">' +
+      esc(nominal
+        ? FB.T('Face value {face} nominal coin; its value in gold moves with prices.', {
+          face:financeAmount(loan.face)
+        })
+        : FB.T('Weight-denominated contract; price movement does not change the amount due.')) +
+      '</span>';
+    if (loan.collateral) {
+      h += '<br><span class="hint">' + esc(FB.T('Pledged: {asset}', {
+        asset:financeAssetName(s, loan.collateral)
+      })) + '</span>';
+    }
+    h += '<br><span class="hint">' + esc(FB.T(
+      'First miss: 10% face penalty and two more seasons. Default: {consequence}', {
+        consequence:financeDefaultText(s, loan)
+      })) + '</span>';
+    if (loan.status === 'arrears') {
+      h += '<br><span class="op-bad">' + esc(FB.T('In arrears — the next missed deadline defaults.')) + '</span>';
+    } else if (loan.status === 'default') {
+      h += '<br><span class="op-bad">' + esc(FB.T('In default — assigned revenues are paying this down.')) + '</span>';
+    }
+    if (loan.status !== 'default') {
+      h += '<button class="btn" data-finance-repay="' + loan.id + '"' +
+        (canRepay ? '' : ' disabled') + ' style="margin-top:8px">' +
+        esc(FB.T('Repay now ({amount} gold)', { amount:due })) + '</button>';
+    }
+    return h + '</div>';
+  }
+
+  UI.showFinance = function () {
+    const s = FB.state;
+    const e = FB.ensureEconomy(s);
+    const loans = FB.financeActiveLoans(s).slice().sort(function (a, b) {
+      return a.dueTurn - b.dueTurn || a.id - b.id;
+    });
+    const investments = FB.financeActiveInvestments(s);
+    const offers = FB.financeLoanOffers(s);
+    const stakes = FB.tradeInvestmentStakes(s);
+    let h = '';
+
+    /* Obligations lead the sheet so a narrow phone shows the urgent date
+       before background metrics or optional transactions. */
+    if (loans.length) {
+      h += panelh('Urgent obligations');
+      for (const loan of loans) h += financeLoanCard(s, loan);
+    }
+
+    h += panelh('Coin and household means') +
+      '<div class="gm-body-text">' +
+      kv('Purse', esc(FB.T('{amount} gold', { amount:financeAmount(s.player.gold) }))) +
+      kv('Price index', esc(financeAmount(e.price))) +
+      kv('Last annual movement', esc(FB.T('{rate}%', {
+        rate:(e.lastRate > 0 ? '+' : '') + financeAmount(e.lastRate * 100)
+      }))) +
+      kv('Coin and prices this year', '<span class="' +
+        (e.lastAdjustment > 0 ? 'op-good' : e.lastAdjustment < 0 ? 'op-bad' : '') + '">' +
+        esc(FB.T('{amount} gold', {
+          amount:(e.lastAdjustment > 0 ? '+' : '') + financeAmount(e.lastAdjustment)
+        })) + '</span>') +
+      kv('Reliable seasonal net', '<span class="' +
+        (FB.reliableGoldIncome(s) > 0 ? 'op-good' : 'op-bad') + '">' +
+        esc(FB.T('{amount} gold', { amount:financeAmount(FB.reliableGoldIncome(s)) })) +
+        '</span>') +
+      kv('Unsecured credit capacity', esc(FB.T('{amount} gold', {
+        amount:financeAmount(FB.financeCreditCapacity(s, null, false))
+      }))) +
+      kv('Defaults remembered', esc(e.defaults)) +
+      '<p class="hint">' + esc(FB.T(
+        'Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.')) +
+      '</p></div>';
+
+    h += panelh('Loans');
+    if (!loans.length) {
+      h += '<div class="progressnote">' + esc(FB.T('No active household obligations.')) + '</div>';
+    }
+    h += '<div class="gm-list"><button class="actionbtn" id="finance-borrow"' +
+      (offers.length ? '' : ' disabled') + '>📜 ' + esc(FB.T('Seek a loan…')) +
+      '<span class="adesc">' + esc(offers.length
+        ? financeOfferCountText(s, offers.length)
+        : (FB.financeHasDefault(s)
+          ? FB.T('No lender will advance more while revenues are in default.')
+          : FB.T('No offer fits the household’s income, collateral, or current obligations.'))) +
+      '</span></button></div>';
+
+    h += panelh('Trade partnerships');
+    if (investments.length) {
+      for (const inv of investments) {
+        h += '<div class="progressnote"><b>' + esc(FB.tradePartnershipName(s)) + '</b> · ' +
+          esc(FB.T('{stake} gold at risk · matures {date}', {
+            stake:inv.stake, date:financeDate(inv.dueSeason, inv.dueYear)
+          })) + '</div>';
+      }
+    } else {
+      h += '<div class="progressnote">' + esc(FB.T('No coin is committed to distant trade.')) + '</div>';
+    }
+    if (stakes.length) {
+      h += '<div class="gm-list">';
+      for (const stake of stakes) {
+        const can = FB.canStartTradeInvestment(s, stake);
+        h += '<button class="actionbtn" data-finance-invest="' + stake + '"' +
+          (can ? '' : ' disabled') + '>🧭 ' +
+          esc(FB.T('Commit {stake} gold…', { stake:stake })) +
+          '<span class="adesc">' + esc(FB.T(
+            'A four-season profit-sharing venture: productive risk, with no guaranteed return.')) +
+          '</span></button>';
+      }
+      h += '</div>';
+    }
+
+    if (s.player.tier >= 6 && !s.player.liege) {
+      h += panelh('The crown’s coinage') + '<div class="gm-list">' +
+        '<button class="actionbtn" id="finance-debase"' +
+        (FB.financeCanDebase(s) ? '' : ' disabled') + '>🪙 ' +
+        esc(FB.T('Debase the coinage…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Take seigniorage now; harm prices, prestige, popular trust, and future credit.')) +
+        '</span></button>' +
+        (FB.financeCanRecoin(s)
+          ? '<button class="actionbtn" id="finance-recoin">⚖ ' +
+            esc(FB.T('Restore the coinage…')) +
+            '<span class="adesc">' + esc(FB.T(
+              'Pay to call in light coin, restore weight, and press prices back toward stability.')) +
+            '</span></button>'
+          : '') + '</div>';
+    }
+
+    h += '<div class="gm-footer"><button class="btn" id="finance-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('🪙 Coin & Credit'), h, { modalClass:'fullsheet-modal' });
+    $('finance-close').addEventListener('click', UI.closeModal);
+    const borrow = $('finance-borrow');
+    if (borrow) borrow.addEventListener('click', UI.showFinanceBorrow);
+    document.querySelectorAll('[data-finance-repay]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showFinanceRepay(parseInt(button.dataset.financeRepay, 10));
+      });
+    });
+    document.querySelectorAll('[data-finance-invest]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showFinanceInvestment(parseInt(button.dataset.financeInvest, 10));
+      });
+    });
+    const debase = $('finance-debase');
+    if (debase) debase.addEventListener('click', UI.showDebasement);
+    const recoin = $('finance-recoin');
+    if (recoin) recoin.addEventListener('click', UI.showRecoinage);
+  };
+
+  UI.showFinanceBorrow = function () {
+    const s = FB.state;
+    const offers = FB.financeLoanOffers(s);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < offers.length; i++) {
+      const offer = offers[i];
+      const preview = FB.financeLoanPreview(s, offer);
+      const details = offer.collateral
+        ? FB.T('Receive {principal} gold · {due} gold due {date} · pledge {asset}', {
+          principal:offer.principal, due:financeAmount(preview.dueNow),
+          date:financeDate(preview.dueSeason, preview.dueYear),
+          asset:financeAssetName(s, offer.collateral)
+        })
+        : FB.T('Receive {principal} gold · {due} gold due {date}', {
+          principal:offer.principal, due:financeAmount(preview.dueNow),
+          date:financeDate(preview.dueSeason, preview.dueYear)
+        });
+      h += '<button class="actionbtn" data-finance-offer="' + i + '">📜 ' +
+        esc(financeKindName(offer.kind)) +
+        '<span class="adesc">' + esc(details) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="finance-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Seek a loan'), h);
+    document.querySelectorAll('[data-finance-offer]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const offer = offers[parseInt(button.dataset.financeOffer, 10)];
+        if (offer) UI.showFinanceLoanConfirm(offer.kind, offer.collateral);
+      });
+    });
+    $('finance-back').addEventListener('click', UI.showFinance);
+  };
+
+  UI.showFinanceLoanConfirm = function (kind, collateral) {
+    const s = FB.state;
+    let offer = null;
+    for (const item of FB.financeLoanOffers(s)) {
+      const a = item.collateral, b = collateral;
+      if (item.kind === kind && ((!a && !b) ||
+        (a && b && a.kind === b.kind && a.id === b.id))) { offer = item; break; }
+    }
+    if (!offer) { UI.showFinance(); return; }
+    const preview = FB.financeLoanPreview(s, offer);
+    let h = '<div class="gm-body-text">' +
+      '<p><b>' + esc(financeKindName(kind)) + '</b></p>' +
+      kv('Receive now', esc(FB.T('{amount} gold', { amount:offer.principal }))) +
+      kv('Current value due', esc(FB.T('{amount} gold', {
+        amount:financeAmount(preview.dueNow)
+      }))) +
+      kv('Due', esc(financeDate(preview.dueSeason, preview.dueYear))) +
+      kv('Pledged collateral', esc(financeAssetName(s, offer.collateral))) +
+      '<p>' + esc(preview.denomination === 'real'
+        ? FB.T('This contract is reckoned by weight: price changes do not change the gold due.')
+        : FB.T('Face value: {face} nominal coin. What that face value can buy may rise or fall with prices.', {
+          face:financeAmount(preview.face)
+        })) + '</p>' +
+      '<p><b>' + esc(FB.T('First missed payment:')) + '</b> ' +
+      esc(FB.T('10% is added to the signed face and the deadline moves two seasons.')) + '</p>' +
+      '<p><b>' + esc(FB.T('Second missed payment:')) + '</b> ' +
+      esc(financeDefaultText(s, preview)) + '</p></div>' +
+      '<div class="gm-list"><button class="actionbtn" id="finance-sign">📜 ' +
+      esc(FB.T('Sign and receive {amount} gold', { amount:offer.principal })) +
+      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Confirm the contract'), h);
+    $('finance-sign').addEventListener('click', function () {
+      if (FB.takeFinanceLoan(s, kind, collateral)) UI.showFinance();
+      else UI.showFinanceBorrow();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinanceBorrow);
+  };
+
+  UI.showFinanceRepay = function (id) {
+    const s = FB.state;
+    let loan = null;
+    for (const item of FB.financeActiveLoans(s)) if (item.id === id) loan = item;
+    if (!loan || loan.status === 'default') { UI.showFinance(); return; }
+    const due = financeAmount(FB.financeDueNow(s, loan));
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Pay {amount} gold now and clear this obligation. There is no early-payment penalty.', {
+        amount:due
+      })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="finance-pay">⚖ ' +
+      esc(FB.T('Repay {amount} gold', { amount:due })) +
+      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Repay early?'), h);
+    $('finance-pay').addEventListener('click', function () {
+      FB.repayFinanceLoan(s, id, false);
+      UI.showFinance();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinance);
+  };
+
+  UI.showFinanceInvestment = function (stake) {
+    const s = FB.state;
+    if (!FB.canStartTradeInvestment(s, stake)) { UI.showFinance(); return; }
+    const def = FBDATA.finance.tradePartnership;
+    const due = financeDateAfter(s, def.termSeasons);
+    const h = '<div class="gm-body-text">' +
+      kv('Contract', esc(FB.tradePartnershipName(s))) +
+      kv('Stake now', esc(FB.T('{amount} gold', { amount:stake }))) +
+      kv('Maturity', esc(financeDate(due.season, due.year))) +
+      kv('Risk of total loss', esc(FB.T('{amount}%', {
+        amount:Math.round(def.risk * 100)
+      }))) +
+      '<p>' + esc(FB.T(
+        'This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.')) +
+      '</p></div><div class="gm-list"><button class="actionbtn" id="finance-invest-confirm">🧭 ' +
+      esc(FB.T('Commit {amount} gold', { amount:stake })) +
+      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Confirm the partnership'), h);
+    $('finance-invest-confirm').addEventListener('click', function () {
+      FB.startTradeInvestment(s, stake, 'finance');
+      UI.showFinance();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinance);
+  };
+
+  UI.showDebasement = function () {
+    const s = FB.state;
+    if (!FB.financeCanDebase(s)) { UI.showFinance(); return; }
+    const preview = FB.financeDebasePreview(s);
+    const h = '<div class="gm-body-text">' +
+      kv('Immediate seigniorage', esc(FB.T('{amount} gold', { amount:preview.gold }))) +
+      kv('Price pressure', esc(FB.T('+{amount}% for {years} years', {
+        amount:financeAmount(preview.pressure * 100), years:preview.years
+      }))) +
+      '<p class="op-bad">' + esc(FB.T(
+        'Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design.')) +
+      '</p></div><div class="gm-list"><button class="actionbtn op-bad" id="finance-debase-confirm">🪙 ' +
+      esc(FB.T('Debase the coinage')) +
+      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Debase the coinage?'), h);
+    $('finance-debase-confirm').addEventListener('click', function () {
+      FB.debaseCoinage(s);
+      UI.showFinance();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinance);
+  };
+
+  UI.showRecoinage = function () {
+    const s = FB.state;
+    if (!FB.financeCanRecoin(s)) { UI.showFinance(); return; }
+    const preview = FB.financeRecoinPreview(s);
+    const h = '<div class="gm-body-text">' +
+      kv('Cost now', esc(FB.T('{amount} gold', { amount:preview.cost }))) +
+      kv('Price pressure', esc(FB.T('{amount}% for {years} years', {
+        amount:financeAmount(preview.pressure * 100), years:preview.years
+      }))) +
+      '<p>' + esc(FB.T(
+        'Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under.')) +
+      '</p></div><div class="gm-list"><button class="actionbtn" id="finance-recoin-confirm">⚖ ' +
+      esc(FB.T('Spend {amount} gold and restore the coin', { amount:preview.cost })) +
+      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Restore the coinage?'), h);
+    $('finance-recoin-confirm').addEventListener('click', function () {
+      FB.recoinCurrency(s);
+      UI.showFinance();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinance);
+  };
+
   /* ================= household holdings picker ================= */
   UI.showHoldings = function () {
     const s = FB.state;
@@ -3415,6 +3827,8 @@ window.FB = window.FB || {};
     if (!s || !def) return;
     const name = dt(s, 'item', id, def, 'name');
     const owned = !viewOnly && FB.itemList(s).indexOf(id) >= 0;
+    const pledged = owned && FB.financeCollateralPledged &&
+      FB.financeCollateralPledged(s, 'item', id);
     const fx = itemFxText(def);
     const sell = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
     let h = '<div class="gm-body-text">' +
@@ -3425,13 +3839,17 @@ window.FB = window.FB || {};
       (fx && !viewOnly ? '<p class="cmeta">Its powers serve whoever heads the family.</p>' : '') +
       '<p class="cmeta">' + esc(FB.T('Worth about {gold} gold.', { gold: def.value })) +
       '</p></div>';
-    if (owned) {
+    if (owned && !pledged) {
       h += '<div class="gm-list">' +
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">A treasure warms regard as mere silver never could. (spends the day)</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
         esc(FB.T('💰 Sell it ({gold} gold)', { gold: sell })) +
         '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button></div>';
+    } else if (pledged) {
+      h += '<div class="progressnote warnote">' +
+        esc(FB.T('This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.')) +
+        '</div>';
     }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
     openModal(name, h);
@@ -3450,7 +3868,8 @@ window.FB = window.FB || {};
   UI.showItemGive = function (id) {
     const s = FB.state;
     const def = FBDATA.items[id];
-    if (!s || !def || FB.itemList(s).indexOf(id) < 0) return;
+    if (!s || !def || FB.itemList(s).indexOf(id) < 0 ||
+      (FB.financeCollateralPledged && FB.financeCollateralPledged(s, 'item', id))) return;
     const me = s.chars[s.player.charId];
     const seen = {}, folk = [];
     function add(c, rel) {
@@ -3830,6 +4249,13 @@ window.FB = window.FB || {};
     const lg = s.legends && s.legends[s.legends.length - 1];
     const quip = lg && lg.id === me.id ? legendQuipText(lg, s) : '';
     if (quip) h += '<p><i>' + esc(quip) + '</i></p>';
+    const debt = FB.financeActiveLoans ? FB.financeActiveLoans(s) : [];
+    if (debt.length) {
+      let due = 0;
+      for (const loan of debt) due += FB.financeDueNow(s, loan);
+      h += '<p class="op-bad"><b>' + esc(FB.T('Inherited debt:')) + '</b> ' +
+        esc(financeDebtCountText(s, debt.length, financeAmount(due))) + '</p>';
+    }
     /* noFocus: the choice of an heir must be deliberate — a Space/Enter meant
        for the pause key must not sign the succession for the first heir */
     if (heirs.length) {
