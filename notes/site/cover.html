@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fallowborn — cover generator</title>
+<!--
+  Private dev tool (notes/ is excluded from the repo and the itch zip).
+
+  Composes a cover image (any pixel size) and a matching favicon entirely from
+  the game's OWN procedural art — no external assets, no AI imagery:
+    - land silhouette  : FBDATA.land polygons + the real Mercator projection (util.js)
+    - portraits        : FB.paintPortrait  (portrait.js), deterministic per name
+    - coat of arms     : FB.drawCrest       (util.js)
+  So the cover you export contains zero AI-generated content — Graphics stays
+  unticked in the itch AI disclosure, and the cover doubles as proof of the
+  "every face is generated from a hash" story.
+
+  Open this file directly in a browser (works from file://). Tweak, regenerate,
+  then Download PNG. Nothing here ships.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; background: #14171c; color: #cfc6b4;
+    font: 15px/1.5 Georgia, "Times New Roman", serif;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0; color: #e8dcc0; font-weight: normal; letter-spacing: 1px; }
+  .hint { color: #8b8271; font-size: 13px; max-width: 640px; text-align: center; }
+  /* the canvas is 2x internally for crisp text/art; shown at the itch 630x500 size */
+  #cover { width: 630px; height: 500px; max-width: 100%; box-shadow: 0 8px 40px #000a; border-radius: 4px; }
+  .panel {
+    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+    justify-content: center; max-width: 680px;
+    background: #1c2129; border: 1px solid #2c333d; border-radius: 8px; padding: 14px 18px;
+  }
+  label { display: inline-flex; align-items: center; gap: 6px; font-family: system-ui, sans-serif; font-size: 13px; color: #b7ad99; }
+  input[type=text] { background: #0f1216; border: 1px solid #333c47; color: #e8dcc0; border-radius: 5px; padding: 5px 8px; font: inherit; width: 180px; }
+  input[type=number] { background: #0f1216; border: 1px solid #333c47; color: #e8dcc0; border-radius: 5px; padding: 5px 6px; font: inherit; width: 66px; }
+  canvas.fav { background: #0f1216; border: 1px solid #333c47; border-radius: 4px; }
+  select { background: #0f1216; border: 1px solid #333c47; color: #e8dcc0; border-radius: 5px; padding: 5px; font-family: system-ui, sans-serif; }
+  button {
+    font-family: system-ui, sans-serif; font-size: 13px; cursor: pointer;
+    background: #2f3946; color: #e8dcc0; border: 1px solid #48566a; border-radius: 6px; padding: 7px 14px;
+  }
+  button:hover { background: #3a4757; }
+  button.primary { background: #6b5a2f; border-color: #9a833f; color: #fdf4d8; }
+  button.primary:hover { background: #7d6a38; }
+</style>
+</head>
+<body>
+  <h1>Fallowborn — cover generator</h1>
+  <div class="hint">Every pixel is drawn by the game's own code (map projection, portraits, heraldry). Nothing is AI-generated or an external asset — safe to leave Graphics unticked in the itch disclosure.</div>
+
+  <canvas id="cover" width="1260" height="1000"></canvas>
+
+  <div class="panel">
+    <label>Title <input type="text" id="title" value="FALLOWBORN"></label>
+    <label>Subtitle <input type="text" id="subtitle" value="A humble strategy dynasty saga"></label>
+    <label>Layout
+      <select id="layout">
+        <option value="centered">Centered</option>
+        <option value="sidebar">Portrait + sidebar</option>
+      </select>
+    </label>
+    <label>Palette
+      <select id="palette">
+        <option value="moody">Moody (earthen)</option>
+        <option value="parchment">Antique parchment</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="showRow" checked> Ancestry row</label>
+    <label><input type="checkbox" id="showSub" checked> Subtitle</label>
+  </div>
+
+  <div class="panel">
+    <label>Title size <input type="range" id="titleSize" min="0.06" max="0.16" step="0.005" value="0.12"> <span id="titleSizeVal"></span></label>
+    <label>Subtitle size <input type="range" id="subSize" min="0.03" max="0.09" step="0.0025" value="0.055"> <span id="subSizeVal"></span></label>
+  </div>
+
+  <div class="panel">
+    <label>Cover size
+      <input type="number" id="coverW" min="100" max="4000" step="10" value="630"> ×
+      <input type="number" id="coverH" min="100" max="4000" step="10" value="500"> px
+    </label>
+    <span class="hint" style="margin: 0;">itch cover 630 × 500 · social/OG 1200 × 630</span>
+  </div>
+
+  <div class="panel">
+    <button class="primary" id="regen">↻ Regenerate faces &amp; arms</button>
+    <label>Export
+      <select id="exportSize">
+        <option value="1">1× (exact pixels)</option>
+        <option value="2">2× (crisper)</option>
+      </select>
+    </label>
+    <button id="download">⇩ Download PNG</button>
+  </div>
+
+  <h1 style="font-size: 16px; margin-top: 6px;">Favicon</h1>
+  <div class="hint">The coat of arms on a dark tile — matches the current cover (regenerate updates both). Drop it on the site as favicon.png / apple-touch-icon.png.</div>
+  <div class="panel">
+    <canvas class="fav" id="fav16" width="16" height="16" title="16 px"></canvas>
+    <canvas class="fav" id="fav32" width="32" height="32" title="32 px"></canvas>
+    <canvas class="fav" id="fav48" width="48" height="48" title="48 px"></canvas>
+    <canvas class="fav" id="fav64" width="64" height="64" title="64 px"></canvas>
+    <button class="favdl" data-favsize="32">⇩ 32</button>
+    <button class="favdl" data-favsize="180">⇩ 180 (apple-touch)</button>
+    <button class="favdl" data-favsize="512">⇩ 512</button>
+  </div>
+
+  <!-- Real engine files. Order: data, then util (projection + drawCrest), then portrait. -->
+  <script src="../../data/map_data.js"></script>
+  <script src="../../js/util.js"></script>
+  <script src="../../js/portrait.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // portrait.js calls FB.religionOf(id).group at paint time. We only need the
+    // christian/muslim split (drives beard/turban/veil/tonsure); shim it so we
+    // don't have to boot model.js + the full data set.
+    if (!FB.religionOf) {
+      FB.religionOf = function (id) {
+        return { group: /muslim|sunni|shia|ibadi|islam/.test(String(id)) ? 'muslim' : 'christian' };
+      };
+    }
+
+    var CW = 630, CH = 500, S = 2;          // export size and internal supersample
+    var W = CW * S, H = CH * S;
+    var canvas = document.getElementById('cover');
+    var ctx = canvas.getContext('2d');
+
+    var PAL = {
+      moody:     { sea: '#222a31', land: '#6d5a37', coast: '#8f7a4c', wash: 'rgba(10,12,16,0.42)', ink: '#f0e4c6', shade: '#0c0e12' },
+      parchment: { sea: '#cdb98c', land: '#b49a67', coast: '#7c6438', wash: 'rgba(60,45,20,0.14)', ink: '#3a2c14', shade: '#efe3c2' }
+    };
+
+    // Deterministic per-run picks (seeded RNG, not game logic — cosmetic).
+    var NAMES = ['Aldwin', 'Godric', 'Edith', 'Rowena', 'Cnut', 'Alfred', 'Beatrix',
+      'Osric', 'Wulfric', 'Mathilda', 'Leofric', 'Aelfgifu', 'Halstein', 'Ragna',
+      'Tancred', 'Ysolde', 'Baldwin', 'Sibyl', 'Conrad', 'Adela'];
+    var PALE_CULTURES = ['english', 'frankish', 'gaelic', 'norse', 'german', 'slavic'];
+
+    var seed = 20867;
+
+    function makeChar(i, tier, profession) {
+      // face derives from id+name hash; vary those to vary the face
+      var name = NAMES[FB.ri(0, NAMES.length - 1)];
+      var traits = FB.chance(0.5) ? ['kind'] : (FB.chance(0.4) ? ['cruel'] : []);
+      return {
+        id: 'cover' + seed + '_' + i,
+        name: name,
+        dyn: 'Fallowborn',
+        sex: FB.chance(0.55) ? 'm' : 'f',
+        culture: FB.pick(PALE_CULTURES),
+        religion: 'catholic',
+        born: 840,
+        traits: traits,
+        _tier: tier,
+        _prof: profession
+      };
+    }
+
+    // Draw a portrait to an offscreen canvas at the given design-accurate size.
+    function portraitCanvas(c, px) {
+      var off = document.createElement('canvas');
+      off.width = Math.round(px);
+      off.height = Math.round(px * 72 / 64); // portrait design space is 64x72
+      FB.paintPortrait(off, c, 867, { profession: c._prof, tier: c._tier });
+      return off;
+    }
+
+    // A round "coin" medallion holding a portrait, with a gold ring.
+    function medallion(c, cx, cy, r, pal) {
+      var off = portraitCanvas(c, r * 2.05);
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath();
+      // drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = r * 0.35; ctx.shadowOffsetY = r * 0.08;
+      ctx.fillStyle = pal.shade; ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.clip();
+      // center the bust: the head sits near y=34/72 of the portrait, so lift it
+      var dw = off.width, dh = off.height;
+      ctx.drawImage(off, cx - dw / 2, cy - dh * 0.42);
+      ctx.restore();
+      // gold ring
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d8b24a'; ctx.lineWidth = Math.max(2, r * 0.06); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, r * 1.02, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = Math.max(1, r * 0.02); ctx.stroke();
+    }
+
+    function drawMap(pal) {
+      // Fit the whole real map across the width; centre vertically, cropping the
+      // extreme north/south so Europe + the Mediterranean fill the frame.
+      FB.initProjection(W);
+      var offY = (FB.proj.H - H) / 2;
+      function poly(arr, first) {
+        for (var i = 0; i < arr.length; i += 2) {
+          var x = FB.lonToX(arr[i]), y = FB.latToY(arr[i + 1]) - offY;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+      }
+      // land
+      ctx.beginPath();
+      for (var a = 0; a < FBDATA.land.length; a++) poly(FBDATA.land[a]);
+      ctx.fillStyle = pal.land; ctx.fill();
+      ctx.strokeStyle = pal.coast; ctx.lineWidth = 1.2 * S; ctx.stroke();
+      // inland seas carved back out (Caspian, etc.)
+      if (FBDATA.seas) {
+        ctx.beginPath();
+        for (var b = 0; b < FBDATA.seas.length; b++) poly(FBDATA.seas[b]);
+        ctx.fillStyle = pal.sea; ctx.fill();
+      }
+    }
+
+    function ancestryRow(pal) {
+      // Serf -> Emperor, rendered by the portraits' tier-based clothing colours.
+      var tiers = [0, 1, 3, 4, 6, 7];
+      var n = tiers.length;
+      var r = H * 0.045;
+      var y = H * 0.9;
+      var x0 = W * 0.12, x1 = W * 0.88;
+      var gap = (x1 - x0) / (n - 1);
+      // connecting thread
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y);
+      ctx.strokeStyle = 'rgba(216,178,74,0.5)'; ctx.lineWidth = 1.5 * S; ctx.stroke();
+      for (var i = 0; i < n; i++) {
+        var cx = x0 + gap * i;
+        var c = makeChar(100 + i, tiers[i], tiers[i] >= 2 ? 'noble' : 'farmer');
+        medallion(c, cx, y, r, pal);
+        // a small cross under all but the last — "one funeral at a time"
+        if (i < n - 1) {
+          ctx.fillStyle = 'rgba(232,220,198,0.55)';
+          ctx.font = (r * 0.9) + 'px Georgia, serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('†', cx, y + r + r * 0.7);
+        }
+      }
+    }
+
+    // Shrink the font until the text fits maxW, so the title can never collide
+    // with the portrait or run off the frame. `spec` uses % as the size slot.
+    function fitFont(text, maxW, startPx, spec) {
+      var fs = startPx;
+      ctx.font = spec.replace('%', fs);
+      while (fs > 12 && ctx.measureText(text).width > maxW) { fs -= 2; ctx.font = spec.replace('%', fs); }
+      return fs;
+    }
+
+    // Coat of arms centered on cx, its top at topY, drawn h tall.
+    function drawCrestAt(cx, topY, h) {
+      var w = h / 1.12; // drawCrest expects a shield taller than wide
+      var coff = document.createElement('canvas');
+      coff.width = Math.round(w); coff.height = Math.round(h);
+      FB.drawCrest(coff, 'Fallowborn-' + seed);
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = w * 0.2; ctx.shadowOffsetY = w * 0.05;
+      ctx.drawImage(coff, cx - w / 2, topY);
+      ctx.restore();
+    }
+
+    // Title + rule + subtitle, all centered on cx. The title auto-fits maxW; the
+    // Title size / Subtitle size sliders set target heights (as a fraction of the
+    // canvas height), each still shrinking to fit the width if it would overflow.
+    function drawTitleAt(cx, baselineY, maxW, pal) {
+      var title = document.getElementById('title').value || '';
+      var sub = document.getElementById('subtitle').value || '';
+      var showSub = document.getElementById('showSub').checked;
+      var titleFrac = parseFloat(document.getElementById('titleSize').value) || 0.12;
+      var subFrac = parseFloat(document.getElementById('subSize').value) || 0.055;
+      var vt = document.getElementById('titleSizeVal'); if (vt) vt.textContent = (Math.round(titleFrac * 1000) / 10) + '%';
+      var vs = document.getElementById('subSizeVal'); if (vs) vs.textContent = (Math.round(subFrac * 1000) / 10) + '%';
+
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+      if ('letterSpacing' in ctx) ctx.letterSpacing = (H * 0.004) + 'px';
+      var fs = fitFont(title, maxW, H * titleFrac, '700 %px Georgia, "Times New Roman", serif');
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = fs * 0.12;
+      ctx.strokeText(title, cx, baselineY);
+      ctx.fillStyle = pal.ink; ctx.fillText(title, cx, baselineY);
+      var titleW = ctx.measureText(title).width;
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+      // thin gold rule the width of the title
+      var ruleY = baselineY + fs * 0.30;
+      var rw = Math.min(maxW, titleW * 0.94);
+      ctx.beginPath(); ctx.moveTo(cx - rw / 2, ruleY); ctx.lineTo(cx + rw / 2, ruleY);
+      ctx.strokeStyle = 'rgba(216,178,74,0.8)'; ctx.lineWidth = 1.5 * S; ctx.stroke();
+
+      if (showSub && sub) {
+        var ss = fitFont(sub, maxW, H * subFrac, 'italic %px Georgia, serif');
+        var sy = ruleY + ss * 1.6;
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = ss * 0.14;
+        ctx.strokeText(sub, cx, sy);
+        ctx.fillStyle = 'rgba(232,220,198,0.92)'; ctx.fillText(sub, cx, sy);
+      }
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+      r = Math.min(r, w / 2, h / 2);
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r);
+      c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r);
+      c.closePath();
+    }
+
+    // Read the pixel-size inputs and resize the canvas. All layout math is in
+    // fractions of W/H, so any size or aspect ratio just works.
+    function syncSize() {
+      var w = parseInt(document.getElementById('coverW').value, 10);
+      var h = parseInt(document.getElementById('coverH').value, 10);
+      if (!w || w < 100) w = 630;
+      if (!h || h < 100) h = 500;
+      CW = Math.min(w, 4000); CH = Math.min(h, 4000);
+      W = CW * S; H = CH * S;
+      canvas.width = W; canvas.height = H;               // note: this also clears the canvas
+      canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    }
+
+    // Favicon: the coat of arms on a dark rounded tile. Same seed as the cover,
+    // so the two stay visually matched (regenerate updates both).
+    function drawFavicon(cnv, size) {
+      var c = cnv.getContext('2d');
+      c.clearRect(0, 0, size, size);
+      roundRect(c, 0, 0, size, size, size * 0.18);
+      var g = c.createLinearGradient(0, 0, 0, size);
+      g.addColorStop(0, '#232b34'); g.addColorStop(1, '#14171c');
+      c.fillStyle = g; c.fill();
+      var cs = Math.round(size * 0.86);
+      var off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(cs / 1.12)); off.height = cs; // shield taller than wide
+      FB.drawCrest(off, 'Fallowborn-' + seed);
+      c.drawImage(off, (size - off.width) / 2, (size - off.height) / 2);
+    }
+
+    function renderFaviconPreviews() {
+      ['fav16', 'fav32', 'fav48', 'fav64'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) drawFavicon(el, el.width);
+      });
+    }
+
+    function downloadFavicon(size) {
+      var cnv = document.createElement('canvas');
+      cnv.width = size; cnv.height = size;
+      drawFavicon(cnv, size);
+      cnv.toBlob(function (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (size === 180 ? 'apple-touch-icon' : 'favicon-' + size) + '.png';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }, 'image/png');
+    }
+
+    function draw() {
+      syncSize();
+      var mode = document.getElementById('palette').value;
+      var pal = PAL[mode], moody = mode === 'moody';
+      var layout = document.getElementById('layout').value;
+      FB.seedRng(seed);
+
+      // sea backdrop + map + wash + vignette
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = pal.sea; ctx.fillRect(0, 0, W, H);
+      drawMap(pal);
+      ctx.fillStyle = pal.wash; ctx.fillRect(0, 0, W, H);
+      var vg = ctx.createRadialGradient(W * 0.5, H * 0.42, H * 0.2, W * 0.5, H * 0.5, H * 0.85);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, moody ? 'rgba(0,0,0,0.55)' : 'rgba(40,28,10,0.35)');
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+      var hero = makeChar(0, 0, 'farmer'); // a serf — where everyone starts
+
+      if (layout === 'sidebar') {
+        // portrait on the left; crest + title + subtitle stacked and centered
+        // in the right column. Title fits the column, so no overlap with the face.
+        var xR = W * 0.68, colW = W * 0.46;
+        medallion(hero, W * 0.27, H * 0.44, H * 0.185, pal);
+        drawCrestAt(xR, H * 0.12, H * 0.20);
+        drawTitleAt(xR, H * 0.55, colW, pal);
+      } else {
+        // centered vertical hierarchy: arms → the founder → the name → the saga
+        drawCrestAt(W * 0.5, H * 0.045, H * 0.155);
+        medallion(hero, W * 0.5, H * 0.37, H * 0.15, pal);
+        drawTitleAt(W * 0.5, H * 0.66, W * 0.86, pal);
+      }
+
+      if (document.getElementById('showRow').checked) ancestryRow(pal);
+
+      renderFaviconPreviews();
+    }
+
+    function download() {
+      var mult = parseInt(document.getElementById('exportSize').value, 10);
+      var out = canvas, w = W, h = H;
+      if (mult === 1) { // downscale the 2x internal buffer to the exact pixel size
+        out = document.createElement('canvas'); out.width = CW; out.height = CH;
+        out.getContext('2d').drawImage(canvas, 0, 0, CW, CH);
+        w = CW; h = CH;
+      }
+      out.toBlob(function (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'fallowborn-cover-' + w + 'x' + h + '.png';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }, 'image/png');
+    }
+
+    document.getElementById('regen').addEventListener('click', function () { seed = (seed + 1013904223) | 0; seed = seed >>> 0; draw(); });
+    document.getElementById('download').addEventListener('click', download);
+    ['title', 'subtitle', 'titleSize', 'subSize', 'coverW', 'coverH', 'layout', 'palette', 'showRow', 'showSub'].forEach(function (id) {
+      var el = document.getElementById(id);
+      el.addEventListener('input', draw);
+      el.addEventListener('change', draw);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.favdl'), function (btn) {
+      btn.addEventListener('click', function () { downloadFavicon(parseInt(btn.getAttribute('data-favsize'), 10)); });
+    });
+
+    draw();
+  })();
+  </script>
+</body>
+</html>

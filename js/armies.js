@@ -14,7 +14,7 @@ window.FB = window.FB || {};
 
   /* ---------- state ----------
      state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
-       mercs, at, from, moveLeft, path[], goal, broken, huntPrey, manual,
+       units, at, from, moveLeft, path[], goal, broken, huntPrey, manual,
        holdManual }]
        `at` is the province the host stands in; `from` the one it left. While
        moveLeft > 0 the host is on the road toward path[0] and `at` advances
@@ -24,11 +24,50 @@ window.FB = window.FB || {};
        manual / holdManual (player host only) mark a hand-tapped route still
        playing out and a hand-given halt — the automated stances never touch
        either.
+       units: { levy, arch, ret, mercs } — the host's composition (men is
+       always the total). Each class fights at its own quality
+       (balance.qualityLevy/Archer/Retinue/Merc); battle casualties fall
+       levy-first and men-at-arms last, and a resting host refills with fresh
+       levy only — the slain professionals are not replaced mid-war.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays. */
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
+  };
+
+  /* a host's composition, migrating hosts from before levy tiers (their men
+     were all levy but the hired companies) */
+  FB.hostUnits = function (army) {
+    if (!army.units) {
+      const mercs = army.mercs || 0;
+      army.units = { levy: Math.max(0, army.men - mercs), arch: 0, ret: 0, mercs: mercs };
+    }
+    return army.units;
+  };
+
+  /* weighted battle quality of a composition: the average punch of one man */
+  FB.compQuality = function (units, men) {
+    if (!units || !men) return 1;
+    const bal = B();
+    return (units.levy * (bal.qualityLevy || 1) + units.arch * (bal.qualityArcher || 1) +
+      units.ret * (bal.qualityRetinue || 1) + (units.mercs || 0) * (bal.qualityMerc || 1)) / men;
+  };
+
+  /* AI realms keep no buildings: their professional core is a simple
+     fraction of the host, growing once the era turns (balance knobs) */
+  function aiFracs(state) {
+    const bal = B();
+    let r = bal.aiRetinueFrac || 0, a = bal.aiArcherFrac || 0;
+    if (state.date.year >= (bal.aiEraStepYear || 1e9)) {
+      r += bal.aiEraStepFrac || 0; a += bal.aiEraStepFrac || 0;
+    }
+    return { ret: r, arch: a };
+  }
+  FB.aiHostQuality = function (state) {
+    const bal = B(), f = aiFracs(state);
+    return (1 - f.ret - f.arch) * (bal.qualityLevy || 1) +
+      f.arch * (bal.qualityArcher || 1) + f.ret * (bal.qualityRetinue || 1);
   };
 
   function B() { return FBDATA.balance; }
@@ -109,11 +148,15 @@ window.FB = window.FB || {};
     if (existing) return existing;
     const down = state.armyDown['player'];
     if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
-    let men = FB.playerLevy(state) + (w.mercCos || 0) * 150;
-    if (w.mass) men = Math.round(men * 1.35); // the great levy
-    men = Math.max(40, Math.round(men));
+    const cs = B().mercCompanySize || 150;
+    const comp = FB.playerComposition(state);
+    const units = { levy: comp.levy, arch: comp.arch, ret: comp.ret, mercs: (w.mercCos || 0) * cs };
+    if (w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
+    let men = units.levy + units.arch + units.ret + units.mercs;
+    const floor = B().armyMinMen || 40;
+    if (men < floor) { units.levy += floor - men; men = floor; }
     const home = playerHome(state);
-    const host = { id: FB.uid(), realm: 'player', men: men, size: men, mercs: (w.mercCos || 0) * 150,
+    const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
     FB.news(state, FB.msg('news.army.player_musters',
@@ -131,7 +174,10 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
     const men = Math.max(60, Math.round(FB.realmStrength(state, rid) * B().levyPerDev * (B().aiHostPerDev || 0.3)));
-    const host = { id: FB.uid(), realm: rid, men: men, size: men, mercs: 0,
+    const f = aiFracs(state);
+    const units = { ret: Math.round(men * f.ret), arch: Math.round(men * f.arch), levy: 0, mercs: 0 };
+    units.levy = men - units.ret - units.arch;
+    const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     state.armies.push(host);
     if (state.player.war && state.player.war.enemy === rid) {
@@ -265,17 +311,32 @@ window.FB = window.FB || {};
 
   function battlePower(state, army) {
     let pw;
+    const q = FB.compQuality(army.units, army.men); // 1 for hosts from before levy tiers
     if (army.realm === 'player') {
       const me = state.chars[state.player.charId];
-      pw = army.men * (1 + (me ? FB.skillOf(me, 'mar') : 5) / 14);
+      pw = army.men * q * (1 + (me ? FB.skillOf(me, 'mar') : 5) / (B().battleMarPlayer || 14));
       // the same edges the war council grants carry onto the field
       pw *= 1 + FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
         FB.itemBonus(state, 'battle') + (state.player.flags.blessed_war ? 0.06 : 0);
     } else {
       const r = state.realms[army.realm];
-      pw = army.men * (1 + (r && r.ruler ? r.ruler.mar : 5) / 22);
+      pw = army.men * q * (1 + (r && r.ruler ? r.ruler.mar : 5) / (B().battleMarAI || 22));
     }
     return pw;
+  }
+
+  /* battle losses: the levy wall takes the brunt, the paid and armored core
+     dies last (ret > mercs > archers > levy in stubbornness) */
+  function applyLosses(army, lost) {
+    army.men = Math.max(0, army.men - lost);
+    if (!army.units) return;
+    let rem = lost;
+    const order = ['levy', 'arch', 'mercs', 'ret'];
+    for (const k of order) {
+      if (rem <= 0) break;
+      const d = Math.min(army.units[k] || 0, rem);
+      army.units[k] -= d; rem -= d;
+    }
   }
 
   /* a field win/loss in an AI-vs-AI war tilts that war's yearly resolution */
@@ -292,11 +353,12 @@ window.FB = window.FB || {};
     const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const ratio = FB.clamp(sl / sw, 0.3, 1); // a close fight costs the winner too
-    winner.men = Math.max(1, winner.men - Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio));
-    loser.men -= Math.round(loser.men * (B().battleLoseLoss || 0.62));
+    applyLosses(winner, Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio));
+    if (winner.men < 1) winner.men = 1;
+    applyLosses(loser, Math.round(loser.men * (B().battleLoseLoss || 0.62)));
     const pInvolved = winner.realm === 'player' || loser.realm === 'player';
     // the beaten host routs for home — or disperses entirely
-    if (loser.men < 40) {
+    if (loser.men < (B().armyMinMen || 40)) {
       disband(state, loser);
       state.armyDown[loser.realm] = state.turn;
     } else {
@@ -306,7 +368,8 @@ window.FB = window.FB || {};
     }
     if (pInvolved) {
       const won = winner.realm === 'player';
-      state.eventQueue.push({ id: won ? 'field_battle_won' : 'field_battle_lost', ctx: { pid: pid } });
+      const steel = FB.hostUnits(winner.realm === 'player' ? winner : loser).ret > 0;
+      state.eventQueue.push({ id: (won ? 'field_battle_won' : 'field_battle_lost') + (steel ? '_steel' : ''), ctx: { pid: pid } });
       if (won) FB.fns.war_win(state); else FB.fns.war_loss(state);
     } else {
       trackAIWar(state, winner.realm, loser.realm);
@@ -389,14 +452,20 @@ window.FB = window.FB || {};
     }
     if (state.armies.length && FB.map) FB.map.request(); // hosts on the road redraw daily
 
-    // levies trickle back while a host rests on its sovereign's own land
+    // levies trickle back while a host rests on its sovereign's own land —
+    // fresh peasants from the fields; the slain men-at-arms are not replaced
     for (const a of state.armies) {
       if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
+      FB.hostUnits(a); // hosts from before levy tiers
       if (a.men >= a.size || a.moveLeft > 0) continue;
       const own = a.realm === 'player'
         ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
         : state.owner[a.at] === a.realm;
-      if (own) a.men = Math.min(a.size, a.men + Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
+      if (own) {
+        const add = Math.min(a.size - a.men, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
+        a.units.levy += add;
+        a.men += add;
+      }
     }
 
     // battles: hostile hosts sharing a province (one clash per province per day)

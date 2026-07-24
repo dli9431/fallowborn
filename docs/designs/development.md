@@ -11,10 +11,12 @@ Tapping a settlement in your own demesne (Land tab) opens `UI.showSettlement`: o
 buildings standing in THAT settlement, with what each provides, plus a raise button.
 
 **Bonuses stay demesne-wide; prices climb per county.** Ongoing bonuses flow through
-`FB.buildingBonus` (tax, levy, piety), which sums every entry in the demesne — copies in
-different settlements stack. To soften the multiplier, each further copy of the same
-building in the same county costs `cost × balance.buildingRepeatCostGrowth^(copies
-standing)` (`FB.buildCost`). County gates (`devMin`, `coastal`, `terrains`) are unchanged.
+`FB.buildingBonus` (tax, levy, piety, and the war keys `retinue`/`archers` — flat men
+added to the host's composition at muster, see [war.md](war.md)), which sums every entry
+in the demesne — copies in different settlements stack. To soften the multiplier, each
+further copy of the same building in the same county costs `cost ×
+balance.buildingRepeatCostGrowth^(copies standing)` (`FB.buildCost`). County gates
+(`devMin`, `coastal`, `terrains`) are unchanged.
 Walls are the exception to demesne-wide reading: they strengthen defense in `war_battle`
 only when they stand in the home county (`FB.hasBuildingIn`), guarding where they stand.
 Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.hasBuilding`).

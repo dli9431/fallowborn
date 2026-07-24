@@ -76,9 +76,9 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`,
-  `data/traits.js`, then six event packs (`events_common/peasant/paths/noble/world/war.js`).
+  `data/traits.js`, then seven event packs (`events_common/peasant/paths/noble/world/war/council.js`).
 - Engine second, all writing to `window.FB`: `util → model → portrait → world → armies →
-  mapview → events → actions → ui → keys → save → mods → main`.
+  mapview → events → actions → council → ui → keys → save → mods → main`.
 
 ## Design decisions
 
@@ -99,6 +99,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/holdings.md` — commoner family property.
 - `docs/designs/tech.md` — innovations and research.
 - `docs/designs/piety-intrigue-diplomacy.md` — blessings, plots, pacts.
+- `docs/designs/council.md` — the royal council: great officers, crown authority, schemers and sycophants.
 - `docs/designs/mods.md` — runtime + bundled mods, save stamping.
 - `docs/designs/ui.md` — keyboard support requirements, mobile layout.
 - `docs/designs/i18n.md` — localization catalogs, message descriptors, locale lifecycle.
@@ -177,6 +178,7 @@ changes player-facing text without updating the catalogs (the `data/lang_*.js` f
 - `js/mapview.js` — canvas map rendering, pan/zoom, input.
 - `js/events.js` — event trigger/effect interpreter.
 - `js/actions.js` — focuses and one-shot deeds (the Deeds tab).
+- `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
 - `js/ui.js` — panels, modals, toasts, topbar (largest file).
 - `js/model.js` — characters, dynasties, traits, titles.
 - `js/portrait.js` — procedural portraits/heraldry.

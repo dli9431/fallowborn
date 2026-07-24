@@ -1156,6 +1156,24 @@ window.FB = window.FB || {};
           men: menText(s, selA.men), place: selPr ? selPr.name : '?'
         });
       h += '<div class="progressnote">' + esc(hostText) + '</div>';
+      // what the host is made of (the same breakdown the war status shows)
+      if (selA.units) {
+        const u = selA.units;
+        const compKeys = [
+          ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
+          ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
+          ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
+          ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
+        ];
+        const parts = [];
+        for (const ck of compKeys) {
+          if (!u[ck[0]]) continue;
+          parts.push(FB.renderKey(ck[1], {
+            forms: { select: 'plural', param: 'count', cases: ck[2] }
+          }, { count: u[ck[0]] }));
+        }
+        if (parts.length) h += '<div class="cmeta">' + esc(parts.join(', ')) + '</div>';
+      }
     }
     if (pr.wasteland) {
       h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here — it feeds no duchy or crown.',
@@ -2245,7 +2263,12 @@ window.FB = window.FB || {};
       '<div class="ccmeta ' + FB.opClass(op) + '">' +
       esc(FB.T('⚔ martial {martial} · favor {favor}', {
         martial: r.ruler.mar, favor: (op > 0 ? '+' : '') + op
-      })) + '</div></div></div>' +
+      })) + '</div>' +
+      (r.ruler.trait && FBDATA.traits[r.ruler.trait]
+        ? '<div class="ccmeta">' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name')) +
+          ' — ' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'desc')) + '</div>'
+        : '') +
+      '</div></div>' +
       '<div style="margin-top:10px">' +
       kv('Realm', esc(r.name)) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
@@ -2297,6 +2320,104 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* the Royal Council (tier 6+): the great officers of the crown — seats,
+     holders, tempers, and crown authority. Gifts and dismissals act at once;
+     appointing from a vacant seat lists the available vassals inline. */
+  UI.showCouncil = function () {
+    const s = FB.state;
+    const c = FB.councilEnsure(s);
+    if (!c) return;
+    const B = FBDATA.balance;
+    function seatName(id) {
+      return id === 'seneschal' ? FB.T('Seneschal')
+        : id === 'constable' ? FB.T('Constable')
+        : id === 'treasurer' ? FB.T('Treasurer')
+        : id === 'almoner' ? FB.T('Almoner')
+        : FB.T('Chamberlain');
+    }
+    function seatDesc(id) {
+      return id === 'seneschal' ? FB.T('+10% taxes while he serves')
+        : id === 'constable' ? FB.T('+10% levy while he serves')
+        : id === 'treasurer' ? FB.T('Buildings cost 15% less while he serves')
+        : id === 'almoner' ? FB.T('+1 piety a season while he serves')
+        : FB.T('Watches for schemes against you; your own plots weave faster');
+    }
+    let h = '<p class="hint">' + esc(FB.T(
+      'The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.')) + '</p>';
+    h += '<div class="kv"><span>' + esc(FB.T('Crown authority')) + '</span><b>' +
+      Math.round(c.authority) + '/100</b></div>';
+    if (FB.councilNeedsConsent(s)) {
+      h += '<p class="hint">⚠ ' + esc(FB.T(
+        'The council now outweighs the crown: extraordinary taxes and revocations are beyond you until authority mends (below {limit}).',
+        { limit: B.councilConsentBelow || 35 })) + '</p>';
+    } else {
+      h += '<p class="hint">' + esc(FB.T(
+        'High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.')) + '</p>';
+    }
+    const seated = {};
+    for (const seat of FB.councilSeats()) if (c.seats[seat.id]) seated[c.seats[seat.id]] = 1;
+    for (const seat of FB.councilSeats()) {
+      const rid = c.seats[seat.id];
+      const r = rid ? s.realms[rid] : null;
+      h += '<div class="panelh">' + seat.icon + ' ' + esc(seatName(seat.id)) + '</div>';
+      h += '<div class="cmeta">' + esc(seatDesc(seat.id)) + '</div>';
+      if (r) {
+        const op = FB.liegeOpOf(s, rid);
+        const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
+          ? dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name') : '';
+        h += '<div class="charcard"><canvas class="pface" width="56" height="64" id="crest_' + esc(seat.id) + '"></canvas>' +
+          '<div><div class="ccname">' + esc(r.ruler.name) + '</div>' +
+          '<div class="ccmeta">' + esc(r.name) + (trait ? ' · ' + esc(trait) : '') + '</div>' +
+          '<div class="ccmeta ' + FB.opClass(op) + '">' +
+          esc(FB.T('favor {favor}', { favor: (op > 0 ? '+' : '') + Math.round(op) })) + '</div>' +
+          '<div style="margin-top:6px">' +
+          '<button class="btn" data-gift="' + esc(rid) + '"' + (s.player.gold < (B.councilGiftCost || 25) ? ' disabled' : '') + '>🎁 ' +
+          esc(FB.T('Send a gift ({cost} gold)', { cost: B.councilGiftCost || 25 })) + '</button> ' +
+          '<button class="btn" data-dismiss="' + esc(seat.id) + '">' + esc(FB.T('Dismiss')) + '</button>' +
+          '</div></div></div>';
+      } else {
+        h += '<div class="cmeta">' + esc(FB.T('Vacant.')) + '</div>';
+        const cand = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
+        if (cand.length) {
+          for (const vid of cand) {
+            const vr = s.realms[vid];
+            h += '<button class="actionbtn" data-appoint="' + esc(seat.id) + '|' + esc(vid) + '">🏛 ' + esc(vr.ruler.name) +
+              '<span class="adesc">' + esc(FB.T('{realm} · favor {favor}', {
+                realm: vr.name, favor: FB.liegeOpOf(s, vid)
+              })) + '</span></button>';
+          }
+        } else {
+          h += '<div class="cmeta">' + esc(FB.T('No unseated vassal remains to raise — grant land to loyal men, and offices will follow.')) + '</div>';
+        }
+      }
+    }
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('The Royal Council'), h);
+    for (const seat of FB.councilSeats()) {
+      const cv = $('crest_' + seat.id);
+      if (cv && c.seats[seat.id]) FB.drawCrest(cv, c.seats[seat.id]);
+    }
+    document.querySelectorAll('[data-gift]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (FB.councilGift(FB.state, btn.dataset.gift)) UI.showCouncil(); // redraw in place
+      });
+    });
+    document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        FB.councilDismiss(FB.state, btn.dataset.dismiss);
+        UI.showCouncil();
+      });
+    });
+    document.querySelectorAll('[data-appoint]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const parts = btn.dataset.appoint.split('|');
+        FB.councilAppoint(FB.state, parts[0], parts[1]);
+        UI.showCouncil();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
   };
 
   /* demand a fief back from a vassal */
