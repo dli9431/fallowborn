@@ -52,11 +52,19 @@ routs (dispersing under 40 men), the winner loses `battleWinLoss` scaled by clos
 Player battles queue a `field_battle_won/lost` event and score through the existing
 `war_win`/`war_loss` handlers (3 losses still break the campaign); AI-vs-AI results
 accumulate as `war.fw`/`war.fl` and tilt that war's yearly resolution in
-`FB.worldTick`. Three field wins no longer end an attacking war by fiat: the beaten
+`FB.worldTick`. A beaten host carries a `broken` stamp (`state.turn`) and enjoys a
+**rout grace**: the pair scan skips any hostile pair where either host was broken
+less than `balance.armyRoutDays` ago. Without it, a host beaten while standing on
+its own capital could never flee — ordering home is a halt — and the same battle
+would re-fire (and re-score `war_win`/`war_loss`) every day. Three field wins no
+longer end an attacking war by fiat: the beaten
 defender sues for peace and the `war_tribute_offer` event lets the player choose —
 take the tribute (`war_accept_tribute`, the old forced payout) or press on for the
 siege of the target. The offer re-queues on each further win, one waiting at a time,
 and a stale offer is dropped when the queue is drawn if the war has already ended.
+Declining is remembered: `war_press_on` sets `war.tributeDeclined`, and `FB.warOutcome`
+stops re-queueing the offer for the rest of that war — the choice to press on is made
+once per war, not after every battle.
 
 **The seasonal layer remains, now grounded in the field.** `FB.playerWarTick` still
 charges upkeep and queues the `war_council`, whose options act through the `war_*` fns —

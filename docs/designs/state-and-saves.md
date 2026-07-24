@@ -38,6 +38,12 @@ time; older metadata with a frozen `title` remains readable.
 `state.seed` records the start code the life began with ([seeds.md](seeds.md)); saves
 from before it existed simply hide the seed row in the menu.
 
+`state.buildings[pid]` entries are shaped `{ s: settlementIndex, id }` (per-settlement
+buildings — see [development.md](development.md)). Saves old enough to hold bare id
+strings are NOT rejected: `FB.builtIn` migrates them lazily in place at first touch,
+landing the old buildings in the head settlement (`s: 0`) — the same no-version-bump
+pattern as the other lazy inits.
+
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set, and
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries.
 

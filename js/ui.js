@@ -373,19 +373,24 @@ window.FB = window.FB || {};
       for (const bp of FB.demesne(s)) {
         const blt = FB.builtIn(s, bp);
         if (blt.length) {
-          parts.push(esc(FB.world.byId[bp].name) + ' ' + blt.map(function (id) {
-            const d = FBDATA.buildings[id];
+          parts.push(esc(FB.world.byId[bp].name) + ' ' + blt.map(function (e) {
+            const d = FBDATA.buildings[e.id];
             return d ? d.icon : '?';
           }).join(''));
         }
       }
       if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
       const tk = FB.techList(s);
+      const tkRanks = {}, tkOrder = []; // collapse repeatable capstones: icon ×rank
+      for (const tid of tk) {
+        if (tkRanks[tid] === undefined) { tkRanks[tid] = 0; tkOrder.push(tid); }
+        tkRanks[tid]++;
+      }
       h += '<div class="progressnote">' + esc(FB.T('📜 Scholarship {amount}',
         { amount: Math.floor(s.player.research || 0) })) +
-        (tk.length ? ' · ' + tk.map(function (id) {
+        (tkOrder.length ? ' · ' + tkOrder.map(function (id) {
           const d = FBDATA.tech[id];
-          return d ? d.icon : '?';
+          return (d ? d.icon : '?') + (tkRanks[id] > 1 ? '×' + tkRanks[id] : '');
         }).join('') : '') + '</div>';
     }
     h += nextStepHint(s);
@@ -1207,17 +1212,17 @@ window.FB = window.FB || {};
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
         // in your own demesne a settlement is a button: it opens the buildings
-        // standing in the province and what each provides (UI.showSettlement)
+        // standing in THAT settlement and what each provides (UI.showSettlement)
         const own = FB.demesne(s).indexOf(pid) >= 0;
         h += kv('Settlements', setts.map(function (st, si) {
           const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
           return own
             ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
-              esc(FB.T('See the buildings of {province}', { province: pr.name })) + '">' + label + '</button>'
+              esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
             : label;
         }).join(' · '));
         if (own) {
-          h += '<div class="hint">' + esc(FB.T('Tap a settlement to see its buildings and what they provide.')) + '</div>';
+          h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
         }
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
@@ -1825,16 +1830,19 @@ window.FB = window.FB || {};
   };
 
   /* ================= building picker =================
-     With one province it opens directly; with more, a province list comes
-     first and the building list's cancel button goes back to it. */
-  UI.showBuildings = function (pid) {
+     Buildings rise in a SETTLEMENT (one of each per settlement): with more
+     than one province a province list comes first, then the province's
+     settlements, then what that one settlement can still raise. */
+  UI.showBuildings = function (pid, idx) {
     const s = FB.state;
     const provs = FB.demesne(s);
     if (!pid && provs.length > 1) {
       let h = '<div class="gm-list">';
       for (const id of provs) {
         const pr = FB.world.byId[id];
-        const open = FB.buildable(s, id).length;
+        let open = 0;
+        const sts = FB.settlementsOf(s, id);
+        for (let ix = 0; ix < sts.length; ix++) open += FB.buildable(s, id, ix).length;
         h += '<button class="actionbtn" data-bprov="' + esc(id) + '"' + (open ? '' : ' disabled') + '>🏘 ' + esc(pr.name) +
           '<span class="adesc">' + esc(FB.T(
             'development {development} · {built} built · {remaining}', {
@@ -1855,9 +1863,35 @@ window.FB = window.FB || {};
     }
     pid = pid || provs[0];
     const pr = FB.world.byId[pid];
-    const done = FB.builtIn(s, pid);
+    const sts = FB.settlementsOf(s, pid);
+    if (idx === undefined || idx === null) {
+      /* the settlement step: every province holds 2-4 stable settlements,
+         each with its own one-of-each building slots */
+      let h = '<div class="gm-list">';
+      for (let i = 0; i < sts.length; i++) {
+        const open = FB.buildable(s, pid, i).length;
+        h += '<button class="actionbtn" data-bsett="' + i + '"' + (open ? '' : ' disabled') + '>' +
+          SETT_ICON[sts[i].kind] + ' ' + esc(sts[i].name) +
+          '<span class="adesc">' + esc(open
+            ? FB.T('{count} possible', { count: open })
+            : FB.T('nothing more to raise')) + '</span></button>';
+      }
+      h += '</div><button class="btn" id="gm-cancel">' +
+        esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
+      openModal(FB.T('Build Where in {province}?', { province: pr.name }), h);
+      document.querySelectorAll('[data-bsett]').forEach(function (btn) {
+        btn.addEventListener('click', function () { UI.showBuildings(pid, parseInt(btn.dataset.bsett, 10)); });
+      });
+      $('gm-cancel').addEventListener('click', provs.length > 1
+        ? function () { UI.showBuildings(); } : UI.closeModal);
+      return;
+    }
+    const st = sts[idx];
+    if (!st) return;
+    const done = [];
+    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e.id);
     let h = '<div class="gm-list">';
-    for (const b of FB.buildable(s, pid)) {
+    for (const b of FB.buildable(s, pid, idx)) {
       const short = s.player.gold < b.cost;
       h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
         esc(FB.T('{icon} {name} — {cost} gold', {
@@ -1867,23 +1901,21 @@ window.FB = window.FB || {};
     }
     h += '</div>';
     if (done.length) {
-      h += '<p class="hint">' + esc(FB.T('Already standing in {province}:',
-        { province: pr.name })) + ' ' + done.map(function (id) {
+      h += '<p class="hint">' + esc(FB.T('Already standing in {settlement}:',
+        { settlement: st.name })) + ' ' + done.map(function (id) {
         const d = FBDATA.buildings[id];
         return d ? d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) : esc(id);
       }).join(' · ') + '</p>';
     }
-    h += '<button class="btn" id="gm-cancel">' +
-      esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
-    openModal(FB.T('Raise a Building in {province}', { province: pr.name }), h);
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Raise a Building in {settlement}', { settlement: st.name }), h);
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.build(FB.state, pid, btn.dataset.build);
+        FB.build(FB.state, pid, idx, btn.dataset.build);
         UI.closeModal(); UI.refresh();
       });
     });
-    $('gm-cancel').addEventListener('click', provs.length > 1
-      ? function () { UI.showBuildings(); } : UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () { UI.showBuildings(pid); });
   };
 
   /* ================= settlement picker ================= */
@@ -1915,16 +1947,17 @@ window.FB = window.FB || {};
 
   /* ================= settlement view =================
      Tapping a settlement in your own demesne (Land tab) opens what stands
-     there: every building raised in the province, with what it provides.
-     Buildings are province-wide (state.buildings[pid]) — the settlement is
-     the doorway; a "raise" button hands over to the building picker. */
+     THERE: buildings are per-settlement ({ s: idx, id } entries), so the
+     list filters to this settlement, and the "raise" button opens the
+     building picker straight at this settlement's list. */
   UI.showSettlement = function (pid, idx) {
     const s = FB.state;
     const pr = FB.world.byId[pid];
     if (!s || !pr) return;
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
-    const done = FB.builtIn(s, pid);
+    const done = [];
+    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e.id);
     let h = '';
     if (done.length) {
       for (const id of done) {
@@ -1943,10 +1976,11 @@ window.FB = window.FB || {};
           '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>';
       }
     } else {
-      h += '<p class="hint">' + esc(FB.T('No buildings stand here yet.')) + '</p>';
+      h += '<p class="hint">' + esc(FB.T('No buildings stand in {settlement} yet.',
+        { settlement: st.name })) + '</p>';
     }
     const canRaise = FB.demesne(s).indexOf(pid) >= 0 && s.player.tier >= 3 &&
-      FB.buildable(s, pid).length > 0;
+      FB.buildable(s, pid, idx).length > 0;
     if (canRaise) {
       h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
@@ -1954,7 +1988,7 @@ window.FB = window.FB || {};
     h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
     openModal(SETT_ICON[st.kind] + ' ' + st.name, h);
     if (canRaise) {
-      $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid); });
+      $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
@@ -2326,23 +2360,39 @@ window.FB = window.FB || {};
   UI.showTech = function () {
     const s = FB.state;
     const pts = Math.floor(s.player.research || 0);
+    const done = FB.techList(s);
     let h = '<p class="hint">' + esc(FB.T(
       'Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations.',
       { amount: pts })) + '</p><div class="gm-list">';
     for (const t of FB.techAvailable(s)) {
-      const short = pts < t.def.cost;
+      const short = pts < t.cost;
+      let rank = 0; // ranks of a repeatable capstone already held
+      if (t.def.repeat) for (const id of done) if (id === t.id) rank++;
+      const label = rank > 0
+        ? FB.T('{icon} {name} ×{rank} — {cost} scholarship', {
+          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), rank: rank, cost: t.cost })
+        : FB.T('{icon} {name} — {cost} scholarship', {
+          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), cost: t.cost });
       h += '<button class="actionbtn" data-tech="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {cost} scholarship', {
-          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), cost: t.def.cost
-        })) + '<span class="adesc">' + esc(dt(s, 'tech', t.id, t.def, 'desc')) +
+        esc(label) + '<span class="adesc">' + esc(dt(s, 'tech', t.id, t.def, 'desc')) +
         (short ? ' ' + esc(FB.T('(not enough scholarship)')) : '') + '</span></button>';
     }
     h += '</div>';
-    const done = FB.techList(s);
     if (done.length) {
-      h += '<p class="hint">' + esc(FB.T('Already adopted:')) + ' ' + done.map(function (id) {
+      /* repeatable capstones can appear several times in state.tech — collapse
+         them into one name with a rank badge */
+      const ranks = {}, order = [];
+      for (const id of done) {
+        if (ranks[id] === undefined) { ranks[id] = 0; order.push(id); }
+        ranks[id]++;
+      }
+      h += '<p class="hint">' + esc(FB.T('Already adopted:')) + ' ' + order.map(function (id) {
         const d = FBDATA.tech[id];
-        return d ? d.icon + ' ' + esc(dt(s, 'tech', id, d, 'name')) : esc(id);
+        if (!d) return esc(id);
+        return ranks[id] > 1
+          ? esc(FB.T('{icon} {name} ×{rank}', {
+            icon: d.icon, name: dt(s, 'tech', id, d, 'name'), rank: ranks[id] }))
+          : d.icon + ' ' + esc(dt(s, 'tech', id, d, 'name'));
       }).join(' · ') + '</p>';
     }
     h += '<button class="btn" id="gm-cancel">Not now</button>';

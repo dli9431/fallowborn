@@ -879,6 +879,15 @@ window.FB = window.FB || {};
     }
     w.seasons++;
     p.gold = Math.max(0, p.gold - (2 + (p.provs ? p.provs.length : 0) + (w.mercCos || 0) * 4));
+    /* attacking a target that has slipped out of the enemy's hands (revolt
+       settled elsewhere, province lost to a third party): the war has no
+       object left — end it gracefully rather than dragging to exhaustion */
+    if (!w.defending && w.target && state.owner[w.target] !== w.enemy) {
+      FB.news(state, FB.msg('news.war.target_lost',
+        '🕊 {province} is no longer the enemy’s to lose — the war ends with nothing gained.',
+        { province: FB.world.byId[w.target] ? FB.world.byId[w.target].name : '' }));
+      FB.endPlayerWar(state); return;
+    }
     if (w.seasons > 8) {
       FB.news(state, FB.msg('news.war.exhausted',
         '🕊 Exhaustion ends the war with nothing gained.', {}));
@@ -1081,12 +1090,13 @@ window.FB = window.FB || {};
         // the beaten defender sues for peace — but the choice is the
         // player's: tribute now, or press on for the prize. One offer waits
         // at a time; a stale one is dropped when the queue is drawn
-        // (pickDailyEvents).
+        // (pickDailyEvents). Once declined (war_press_on), the envoys do
+        // not return for the rest of this war.
         let queued = false;
         for (const q of state.eventQueue) {
           if (q.id === 'war_tribute_offer') { queued = true; break; }
         }
-        if (!queued) state.eventQueue.push({ id: 'war_tribute_offer', ctx: {} });
+        if (!queued && !w.tributeDeclined) state.eventQueue.push({ id: 'war_tribute_offer', ctx: {} });
       }
     }
   };
@@ -1248,6 +1258,14 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.war.tribute',
       '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));
     FB.endPlayerWar(state);
+  };
+  /* tribute refused: remember it for the rest of THIS war, so the envoys
+     do not ride back under their white flag after every further battle
+     (warOutcome checks w.tributeDeclined). Prestige and the log line stay
+     declarative on the war_tribute_offer option itself. */
+  FB.fns.war_press_on = function (state) {
+    const w = state.player.war; if (!w) return;
+    w.tributeDeclined = 1;
   };
   FB.fns.war_terms = function (state) {
     const p = state.player;

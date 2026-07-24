@@ -12,6 +12,7 @@ window.FB = window.FB || {};
 
   function me(state) { return state.chars[state.player.charId]; }
   function adult(state) { return FB.ageOf(me(state), state.date.year) >= 16; }
+  function female(state) { return me(state).sex === 'f'; }
   function suitorReady(state) {
     return !!(state.player.flags.courting && FB.getRole(state, 'suitor'));
   }
@@ -47,7 +48,8 @@ window.FB = window.FB || {};
     show: function (s) { return !adult(s); },
     tick: function (s) {
       me(s).health = FB.clamp(me(s).health + 0.012, 0, 10);
-      if (dch(0.3)) skillUp(s, 'mar');
+      // girls are schooled in conduct and letters, not at arms
+      if (dch(0.3)) skillUp(s, me(s).sex === 'f' ? 'dip' : 'mar');
     } },
 
   { id: 'rest', label: '🛌 Rest and mend', desc: function () { return 'Recover strength, slowly.'; },
@@ -90,7 +92,7 @@ window.FB = window.FB || {};
     } },
   { id: 'militia', label: '🛡 Drill with the levy',
     desc: function () { return 'Spear practice on the green. (+martial over time)'; },
-    show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk'; },
+    show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk' && !female(s); },
     tick: function (s) { if (dch(0.6)) skillUp(s, 'mar'); } },
 
   { id: 'work_land', label: '🌾 Work your land',
@@ -114,6 +116,14 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
       if (dch(0.35)) skillUp(s, 'ste');
+    },
+    gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
+  { id: 'keep_house', label: '🧶 Keep the household',
+    desc: function () { return 'Keys, stores, and spinning — a well-run house turns thrift into coin. (stewardship pays)'; },
+    show: function (s) { return female(s) && adult(s) && s.player.tier <= 2; },
+    tick: function (s) {
+      s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
+      if (dch(0.4)) skillUp(s, FB.pick(['ste', 'dip']));
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
@@ -146,7 +156,7 @@ window.FB = window.FB || {};
 
   { id: 'drill', label: '⚔ Drill at arms',
     desc: function () { return 'The sergeant’s stick teaches quickly.'; },
-    show: function (s) { return s.player.profession === 'soldier'; },
+    show: function (s) { return s.player.profession === 'soldier' && !female(s); },
     tick: function (s) {
       s.player.gold += 1 / D;
       if (dch(0.7)) skillUp(s, 'mar');
@@ -154,7 +164,7 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard', label: '🏰 Stand garrison duty',
     desc: function () { return 'Dull, cold, and paid.'; },
-    show: function (s) { return s.player.profession === 'soldier'; },
+    show: function (s) { return s.player.profession === 'soldier' && !female(s); },
     tick: function (s) {
       s.player.gold += 2 / D;
       const lord = FB.getRole(s, 'lord', false);
@@ -201,9 +211,24 @@ window.FB = window.FB || {};
       if (dch(0.3)) skillUp(s, 'dip');
     },
     gain: function () { return { prestige: 2 }; } },
+  /* the chatelaine's road: noblewomen command through the household and the
+     court, not the drill yard — favor and polish instead of swordplay */
+  { id: 'courtly_graces', label: '🕊 Cultivate the court',
+    desc: function () { return 'Hawking, letters, and patronage — favor is won in hall and garden. (+liege’s favor, +prestige)'; },
+    show: function (s) { return female(s) && adult(s) && s.player.tier >= 2; },
+    tick: function (s) {
+      if (s.player.liege) FB.adjustLiegeOp(s, s.player.liege, 4 / D);
+      else {
+        const lord = FB.getRole(s, 'lord', true);
+        if (lord) lord.opinion = FB.clamp(lord.opinion + 4 / D, -100, 100);
+      }
+      s.player.prestige += 2 / D;
+      if (dch(0.5)) skillUp(s, 'dip');
+    },
+    gain: function () { return { prestige: 2 }; } },
   { id: 'train_arms', label: '⚔ Train at arms',
     desc: function () { return 'A blade kept sharp.'; },
-    show: function (s) { return s.player.tier >= 2 && adult(s); },
+    show: function (s) { return s.player.tier >= 2 && adult(s) && !female(s); },
     tick: function (s) { if (dch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host', label: '🚩 Lead the host',
     desc: function (s) {
@@ -475,7 +500,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) {
-      for (const pid of FB.demesne(s)) if (FB.buildable(s, pid).length) return true;
+      for (const pid of FB.demesne(s)) if (FB.anyBuildable(s, pid)) return true;
       return 'Nothing more can be raised in your lands.';
     },
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
@@ -734,9 +759,9 @@ window.FB = window.FB || {};
     function addBuildings(stat, key) {
       const count = {};
       for (const pid of FB.demesne(state)) {
-        for (const bid of FB.builtIn(state, pid)) {
-          const def = FBDATA.buildings[bid];
-          if (def && def[key]) count[bid] = (count[bid] || 0) + 1;
+        for (const e of FB.builtIn(state, pid)) {
+          const def = FBDATA.buildings[e.id];
+          if (def && def[key]) count[e.id] = (count[e.id] || 0) + 1;
         }
       }
       let sum = 0;
@@ -1336,6 +1361,18 @@ window.FB = window.FB || {};
     return sum;
   };
 
+  /* the price of adopting an innovation NOW: repeatable capstones cost
+     cost × techRepeatCostGrowth per rank already held, so each further
+     rank of the same bonus comes dearer (diminishing returns) */
+  FB.techCost = function (state, id) {
+    const def = FBDATA.tech[id];
+    if (!def) return 0;
+    if (!def.repeat) return def.cost;
+    let n = 0;
+    for (const t of FB.techList(state)) if (t === id) n++;
+    return Math.round(def.cost * Math.pow(FBDATA.balance.techRepeatCostGrowth || 1.6, n));
+  };
+
   /* development ceiling: tech raises it for the player's own lands */
   FB.devCap = function (state, pid) {
     let cap = 10;
@@ -1348,51 +1385,56 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in FBDATA.tech) {
       const def = FBDATA.tech[id];
-      if (done.indexOf(id) >= 0) continue;
+      if (!def.repeat && done.indexOf(id) >= 0) continue; // repeatables stay on offer
       if (def.yearMin && state.date.year < def.yearMin) continue;
       if (def.req && done.indexOf(def.req) < 0) continue;
-      out.push({ id: id, def: def });
+      out.push({ id: id, def: def, cost: FB.techCost(state, id) });
     }
     return out;
   };
 
   /* ---- automation (the ⚙ Automation dialog): one purchase per season ---- */
   FB.autoBuild = function (state) {
-    let best = null, bestPid = null;
+    let best = null, bestPid = null, bestIdx = 0;
     for (const pid of FB.demesne(state)) {
-      for (const b of FB.buildable(state, pid)) {
-        if (!best || b.cost < best.cost) { best = b; bestPid = pid; }
+      const sts = FB.settlementsOf(state, pid);
+      for (let idx = 0; idx < sts.length; idx++) {
+        for (const b of FB.buildable(state, pid, idx)) {
+          if (!best || b.cost < best.cost) { best = b; bestPid = pid; bestIdx = idx; }
+        }
       }
     }
     // keep a prudent reserve so upkeep and events never find an empty chest
-    if (best && state.player.gold >= best.cost + 25) FB.build(state, bestPid, best.id);
+    if (best && state.player.gold >= best.cost + 25) FB.build(state, bestPid, bestIdx, best.id);
   };
 
   FB.autoResearch = function (state) {
     let best = null;
     for (const t of FB.techAvailable(state)) {
-      if (!best || t.def.cost < best.def.cost) best = t;
+      if (!best || t.cost < best.cost) best = t;
     }
-    if (best && (state.player.research || 0) >= best.def.cost) FB.adoptTech(state, best.id);
+    if (best && (state.player.research || 0) >= best.cost) FB.adoptTech(state, best.id);
   };
 
   FB.adoptTech = function (state, id) {
     const def = FBDATA.tech[id];
     const done = FB.techList(state);
-    if (!def || done.indexOf(id) >= 0) return;
+    if (!def || (!def.repeat && done.indexOf(id) >= 0)) return;
     if (def.yearMin && state.date.year < def.yearMin) return;
     if (def.req && done.indexOf(def.req) < 0) return;
-    if ((state.player.research || 0) < def.cost) return;
-    state.player.research -= def.cost;
+    const cost = FB.techCost(state, id);
+    if ((state.player.research || 0) < cost) return;
+    state.player.research -= cost;
     done.push(id);
     FB.news(state, FB.msg('news.action.tech_adopted',
       '💡 {innovation} takes root in your lands.', { innovation: FB.dataParam('tech', id) }));
   };
 
   /* ================= demesne buildings =================
-     One of each per province, raisable in ANY province the player holds.
-     state.buildings maps province id -> [building ids], so conquest takes
-     them with the land. */
+     One of each PER SETTLEMENT of a province (settlements are derived and
+     stable — FB.settlementsOf), raisable in ANY province the player holds.
+     state.buildings maps province id -> [{ s: settlement index, id }], so
+     conquest takes them with the land. Bonuses keep summing demesne-wide. */
   FB.demesne = function (state) {
     const p = state.player;
     return (p.provs && p.provs.length) ? p.provs : [p.provinceId];
@@ -1404,67 +1446,104 @@ window.FB = window.FB || {};
 
   FB.builtIn = function (state, pid) {
     state.buildings = state.buildings || {}; // lazy init for older saves
-    return state.buildings[pid] = state.buildings[pid] || [];
+    const list = state.buildings[pid] = state.buildings[pid] || [];
+    /* old saves hold bare id strings: migrate lazily in place — those
+       buildings land in the head settlement (s: 0) */
+    for (let i = 0; i < list.length; i++) {
+      if (typeof list[i] === 'string') list[i] = { s: 0, id: list[i] };
+    }
+    return list;
   };
 
   /* built anywhere in the demesne (the reading used by event triggers) */
   FB.hasBuilding = function (state, id) {
     for (const pid of FB.demesne(state)) {
-      if (FB.builtIn(state, pid).indexOf(id) >= 0) return true;
+      const done = FB.builtIn(state, pid);
+      for (const e of done) if (e.id === id) return true;
     }
+    return false;
+  };
+
+  /* built in ONE province (walls guard the county they stand in) */
+  FB.hasBuildingIn = function (state, pid, id) {
+    const done = FB.builtIn(state, pid);
+    for (const e of done) if (e.id === id) return true;
     return false;
   };
 
   FB.buildingBonus = function (state, key) {
     let sum = 0;
     for (const pid of FB.demesne(state)) {
-      for (const bid of FB.builtIn(state, pid)) {
-        const def = FBDATA.buildings[bid];
+      for (const e of FB.builtIn(state, pid)) {
+        const def = FBDATA.buildings[e.id];
         if (def && def[key]) sum += def[key];
       }
     }
     return sum;
   };
 
-  FB.buildCost = function (state, def) {
-    let c = def.cost * (1 - FB.techBonus(state, 'build'));
+  /* copies of the same building beyond the first in the same county cost
+     cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
+     instead of the bonus shrinking */
+  FB.buildCost = function (state, pid, id) {
+    const def = FBDATA.buildings[id];
+    let copies = 0;
+    for (const e of FB.builtIn(state, pid)) if (e.id === id) copies++;
+    let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
+      (1 - FB.techBonus(state, 'build'));
     if (state.player.flags.mason_visit) c *= 0.75;
     return Math.round(c);
   };
 
-  FB.buildable = function (state, pid) {
+  /* what one settlement can still raise: one of each building per
+     settlement; the county gates (devMin, coastal, terrains) are unchanged */
+  FB.buildable = function (state, pid, idx) {
     const pr = FB.world.byId[pid];
     const done = FB.builtIn(state, pid);
     const out = [];
     for (const id in FBDATA.buildings) {
       const def = FBDATA.buildings[id];
-      if (done.indexOf(id) >= 0) continue;
+      let here = false;
+      for (const e of done) if (e.id === id && e.s === idx) { here = true; break; }
+      if (here) continue;
       if (def.devMin && (state.dev[pid] || 1) < def.devMin) continue;
       if (def.coastal && (!pr || !pr.coastal)) continue;
       if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) continue;
-      out.push({ id: id, def: def, cost: FB.buildCost(state, def) });
+      out.push({ id: id, def: def, cost: FB.buildCost(state, pid, id) });
     }
     return out;
   };
 
-  FB.build = function (state, pid, id) {
+  /* anything raisable in any settlement of the county (deed/picker gates) */
+  FB.anyBuildable = function (state, pid) {
+    const sts = FB.settlementsOf(state, pid);
+    for (let idx = 0; idx < sts.length; idx++) {
+      if (FB.buildable(state, pid, idx).length) return true;
+    }
+    return false;
+  };
+
+  FB.build = function (state, pid, idx, id) {
     const def = FBDATA.buildings[id];
     if (!def || FB.demesne(state).indexOf(pid) < 0) return;
     const done = FB.builtIn(state, pid);
-    if (done.indexOf(id) >= 0) return;
-    const cost = FB.buildCost(state, def);
+    for (const e of done) if (e.id === id && e.s === idx) return; // one of each per settlement
+    const cost = FB.buildCost(state, pid, id);
     if (state.player.gold < cost) return;
     state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
-    done.push(id);
+    done.push({ s: idx, id: id });
     if (def.dev) state.dev[pid] = FB.clamp((state.dev[pid] || 1) + def.dev, 1, FB.devCap(state, pid));
     const fx = {};
     if (def.pop) fx.popularOpinion = def.pop;
     if (def.prestige) fx.prestige = def.prestige;
     FB.applyEffects(state, fx, {});
+    const st = FB.settlementsOf ? FB.settlementsOf(state, pid)[idx] : null;
     FB.news(state, FB.msg('news.action.building_raised',
-      '🏗 {building} rises in {province}.',
-      { building: FB.dataParam('building', id), province: FB.world.byId[pid].name }));
+      '🏗 {building} rises in {settlement}, {province}.',
+      { building: FB.dataParam('building', id),
+        settlement: st ? st.name : FB.world.byId[pid].name,
+        province: FB.world.byId[pid].name }));
   };
 
   FB.warTargets = function (state) {
@@ -1545,6 +1624,12 @@ window.FB = window.FB || {};
     else {
       want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
         merchant: 'trade_run', soldier: 'drill', noble: 'train_arms' })[p.profession];
+      /* martial training is gated male: women are steered to the household or
+         the court instead of drill/train_arms (validateFocus self-heals saves
+         where a female heir still holds a now-hidden martial focus) */
+      if (female(state) && (want === 'drill' || want === 'train_arms')) {
+        want = p.tier >= 2 ? 'courtly_graces' : 'keep_house';
+      }
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === want) return want;

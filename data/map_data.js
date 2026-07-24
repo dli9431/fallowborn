@@ -613,12 +613,15 @@ FBDATA.titles = {
   jewish: ['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan']
 };
 
-/* Demesne buildings (tier 3+; one of each per province, raised in the home
-   province via the "Raise a building…" deed) — modders welcome.
-   cost: gold (a visiting master mason discounts it) · siting: devMin,
-   coastal, terrains · ongoing: tax & piety per season, levy men ·
-   one-time on completion: dev, pop (popular opinion), prestige.
-   The 'walls' id is special: it strengthens the ruler when defending. */
+/* Demesne buildings (tier 3+; one of each PER SETTLEMENT of a province,
+   raised via the "Raise a building…" deed) — modders welcome.
+   cost: gold (a visiting master mason discounts it; each further copy of the
+   same building in the same county costs ×balance.buildingRepeatCostGrowth) ·
+   siting: devMin, coastal, terrains (county gates) · ongoing: tax & piety per
+   season, levy men · one-time on completion: dev, pop (popular opinion),
+   prestige. state.buildings[pid] holds { s: settlement index, id } entries.
+   The 'walls' id is special: it strengthens the ruler when defending the
+   home county it stands in. */
 FBDATA.buildings = {
   mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2,
     desc:'Grinds the valley’s grain for a fee.' },
@@ -749,6 +752,7 @@ FBDATA.plots = {
    innovation…" deed) — modders welcome. Adopted innovations live in
    state.tech and PERSIST across generations: the tall ruler's legacy.
    cost: scholarship · yearMin: era gate · req: prerequisite tech id ·
+   repeat: may be adopted repeatedly, the cost growing per rank (FB.techCost) ·
    fx keys (summed by FB.techBonus): tax/levy (fractional multipliers),
    battle (added to war odds), build (fractional building discount),
    devCap (+demesne development ceiling), health (lower yearly mortality),
@@ -774,7 +778,16 @@ FBDATA.tech = {
   physicians:    { name:'Court Physicians', icon:'🌿', cost:60, yearMin:920, req:'scriptoria',
     desc:'Learned men against fevers and wounds. (you live longer)', fx:{ health:0.012 } },
   guild_charters:{ name:'Guild Charters', icon:'📯', cost:100, yearMin:980, req:'physicians',
-    desc:'Chartered crafts and honest weights. (+10% tax, buildings cost 20% less)', fx:{ tax:0.10, build:0.20 } }
+    desc:'Chartered crafts and honest weights. (+10% tax, buildings cost 20% less)', fx:{ tax:0.10, build:0.20 } },
+  /* repeatable capstones (repeat:true): each may be adopted again and again,
+     the cost multiplying by balance.techRepeatCostGrowth per rank already
+     held (FB.techCost) — per-rank fx sized under its tree's total */
+  improved_husbandry: { name:'Improved Husbandry', icon:'🐂', cost:100, yearMin:980, req:'horse_collar', repeat:true,
+    desc:'Better breeds, better folds, fuller barns. (+5% tax per rank)', fx:{ tax:0.05 } },
+  martial_drill: { name:'Martial Drill', icon:'⚔', cost:100, yearMin:980, req:'mail_hauberks', repeat:true,
+    desc:'Shield-wall practice through the winter months. (+3% battle odds per rank)', fx:{ battle:0.03 } },
+  royal_catalogue: { name:'Royal Catalogue', icon:'📚', cost:100, yearMin:980, req:'guild_charters', repeat:true,
+    desc:'Every charter and cartulary copied, counted, and kept. (+0.1 scholarship per season, per rank)', fx:{ research:0.10 } }
 };
 
 /* Game balance knobs — modders welcome */
@@ -802,6 +815,7 @@ FBDATA.balance = {
   /* field armies (js/armies.js): hosts on the map */
   armyMarchDays: 6, // days for a host to cross one province
   armyRearmDays: 60, // a shattered host may muster again after this long
+  armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
@@ -817,6 +831,8 @@ FBDATA.balance = {
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,
   buyCountyBase: 400, buyCountyPerDev: 120, settleGold: 250, settlePrestige: 50,
+  techRepeatCostGrowth: 1.6, // a repeatable innovation's cost multiplies by this per rank already held
+  buildingRepeatCostGrowth: 1.5, // a building's 2nd/3rd/… copy in the same county costs cost × this^(copies standing)
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
   skillHardCap: 40  // the true ceiling no stat can pass
 };
