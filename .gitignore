@@ -15,6 +15,10 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
+# Python bytecode (from the i18n tooling: tools/i18n_catalog.py)
+__pycache__/
+*.pyc
+
 # Secrets
 .env
 .env.*
