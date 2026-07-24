@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.40.0';
+  FB.VERSION = '1.40.1';
   FB.CHANGELOG = [
+    { v: '1.40.1', date: '2026-07-24', changes: [
+      'Italia now contains the kingdoms of Italy and Sicily, making its imperial crown attainable.'
+    ] },
     { v: '1.40.0', date: '2026-07-24', changes: [
       'Barracks and Archery Butts now cost seasonal upkeep too — a barracks’ paid men-at-arms are the dearest of all to keep.'
     ] },
