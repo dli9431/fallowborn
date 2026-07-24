@@ -339,6 +339,10 @@ window.FB = window.FB || {};
         odds: Math.round(FB.namedChance(s, 'war_battle') * 100)
       });
       h += '<div class="progressnote warnote">' + esc(warSummary) + '</div>';
+      const pHost = FB.playerHost ? FB.playerHost(s) : null;
+      if (pHost && (!pHost.path || !pHost.path.length) && !pHost.goal) {
+        h += '<div class="hint">' + esc(FB.T('Tap the 🚩 on the map to give march orders.')) + '</div>';
+      }
     }
     const hl = FB.holdingList(s);
     if (hl.length) {
@@ -781,6 +785,10 @@ window.FB = window.FB || {};
       for (const sp of sps) {
         h += charRow(s, sp, FB.T('Age {age}', { age: FB.ageOf(sp, s.date.year) }));
       }
+      if (s.player.flags.noChildren) {
+        h += '<div class="hint" style="margin:2px 0 0">' + esc(FB.T(
+          '🛑 No more children — open your spouse’s sheet to change this.')) + '</div>';
+      }
     } else h += '<div class="cmeta" style="font-size:13px">Unwed. A dynasty needs heirs — seek a match.</div>';
     const su = s.player.courtingId ? s.chars[s.player.courtingId] : null;
     if (su) {
@@ -1181,11 +1189,11 @@ window.FB = window.FB || {};
         const parts = [FBDATA.duchies[dj.duchy].name];
         if (dj.kingdom) parts.push(FBDATA.kingdoms[dj.kingdom].name);
         if (dj.empire) parts.push(FBDATA.empires[dj.empire].name);
-        h += kv('De jure', esc(parts.join(' › ')));
+        h += kv('De jure (rightful liege)', esc(parts.join(' › ')));
         if (s.player.provs && s.player.provs.length) h += dejureNotes(s, dj);
       } else {
         // a colony settled on empty land: owned, but tied to no title
-        h += kv('De jure', esc(FB.T('None — this land feeds no duchy or crown.')));
+        h += kv('De jure (rightful liege)', esc(FB.T('None — this land feeds no duchy or crown.')));
       }
       h +=
         (realm ? kv('Sovereign', esc(realm.name)) : '') +
@@ -2401,6 +2409,12 @@ window.FB = window.FB || {};
             '<span class="adesc">' + (cdAn ? 'The church will not hear the plea again so soon.' :
               'Some flaw in the vows, some closeness of blood — the church may be persuaded the marriage never was.') + '</span></button>';
         }
+        h += '<button class="actionbtn" id="cm-nochildren">' +
+          esc(FB.T(s.player.flags.noChildren ? '🌱 Try for children' : '🛑 No more children')) +
+          '<span class="adesc">' + esc(FB.T(s.player.flags.noChildren
+            ? 'Open your house to new life once more.'
+            : 'Your house is full enough — no new conceptions. A child already on the way will still be born.')) +
+          '</span></button>';
       }
       if (FB.canCourt(s, c)) {
         const switching = s.player.courtingId && s.player.courtingId !== c.id;
@@ -2437,6 +2451,18 @@ window.FB = window.FB || {};
           '<span class="adesc">Salt for their pride, sport for the onlookers. (spends the day)</span></button>';
         h += '<button class="actionbtn" id="cm-undermine">🕸 Undermine them quietly' +
           '<span class="adesc">Rumors, debts, misplaced letters — intrigue decides. (spends the day)</span></button>';
+        if (s.roles.rival === c.id) {
+          h += '<button class="actionbtn" id="cm-feuddie">🕊 Let the feud die' +
+            '<span class="adesc">' + esc(FB.T('Put the enmity aside — {name} is no longer your rival.',
+              { name: c.name })) + '</span></button>';
+        } else if (c.opinion <= -40) {
+          const rivalNow = FB.getRole(s, 'rival', false);
+          if (!rivalNow || rivalNow.dead) {
+            h += '<button class="actionbtn" id="cm-rival">⚡ Declare rival' +
+              '<span class="adesc">' + esc(FB.T('Name {name} your enemy. (spends the day)',
+                { name: c.name })) + '</span></button>';
+          }
+        }
       }
     }
     const isYoungChild = (me.childrenIds.indexOf(c.id) >= 0 || c.id === me.id) && FB.ageOf(c, s.date.year) < 16;
@@ -2479,16 +2505,6 @@ window.FB = window.FB || {};
       UI.closeModal();
       fn();
       FB.game.passDay({ skipFocus: true });
-    }
-    function maybeRival() {
-      if (c.opinion <= -40 && s.roles.rival !== c.id) {
-        const existing = FB.getRole(s, 'rival', false);
-        if (!existing || existing.dead) {
-          s.roles.rival = c.id;
-          FB.news(s, FB.msg('news.social.rival',
-            '⚡ {name} now counts you an enemy.', { name: c.name }));
-        }
-      }
     }
     const bf = $('cm-befriend');
     if (bf) bf.addEventListener('click', function () {
@@ -2581,7 +2597,6 @@ window.FB = window.FB || {};
             'The insult falls flat. {name} answers better, and the laughter is theirs.',
             { name: c.name }));
         }
-        maybeRival();
       });
     });
     const und = $('cm-undermine');
@@ -2601,8 +2616,35 @@ window.FB = window.FB || {};
             'The scheme unravels — and {name} knows exactly whose hand was in it.',
             { name: c.name }));
         }
-        maybeRival();
       });
+    });
+    const rv = $('cm-rival');
+    if (rv) rv.addEventListener('click', function () {
+      actThen(function () {
+        s.roles.rival = c.id;
+        FB.news(s, FB.msg('news.social.rival',
+          '⚡ {name} now counts you an enemy.', { name: c.name }));
+      });
+    });
+    const fd = $('cm-feuddie');
+    if (fd) fd.addEventListener('click', function () {
+      delete s.roles.rival; // no day spent — just let it go
+      UI.toast('🕊 The feud with {name} is let to die.', { name: c.name });
+      UI.closeModal();
+      UI.showCharModal(c.id);
+    });
+    const nc = $('cm-nochildren');
+    if (nc) nc.addEventListener('click', function () {
+      if (s.player.flags.noChildren) {
+        delete s.player.flags.noChildren;
+        UI.toast('🌱 You will try for children again.');
+      } else {
+        s.player.flags.noChildren = 1;
+        UI.toast('🛑 No more children — a pregnancy already begun will still come to term.');
+      }
+      UI.closeModal();
+      UI.showCharModal(c.id);
+      UI.refresh();
     });
     const ef = $('cm-edufocus');
     if (ef) ef.addEventListener('click', function () { UI.showEduFocus(c.id); });
@@ -3474,10 +3516,14 @@ window.FB = window.FB || {};
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b> and appoint a <b>tutor</b> — the tutor’s own skill sets how fast the child learns between ages 6 and 16, and their habits can rub off. A Learning education grants literacy at 16.</p>' +
+      '<h4>De jure</h4>' +
+      '<p>Every county belongs by ancient right to a duchy, a kingdom, and an empire — its <b>de jure</b> titles. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>' +
       '<h4>The map</h4>' +
-      '<p>Drag to pan, pinch or scroll to zoom, tap a province for details. Realms wage their own wars; borders shift with the decades.</p>' +
+      '<p>Drag to pan; scroll, pinch, or <b>PgUp</b>/<b>PgDn</b> to zoom; tap a province for details. County names appear as you zoom in. Realms wage their own wars; borders shift with the decades.</p>' +
+      '<h4>Map filters</h4>' +
+      '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
-      '<p>From count upward the Deeds tab offers <b>⚔ Declare war</b>. Your host musters the moment war begins — tap it on the map, then tap a province to march it (or let the ⚙ automation command it). <b>Land is taken only by siege:</b> keep the host standing on the prize and press the siege at each season’s war council — after three, the county is yours. Field victories only make the enemy sue for peace: take the tribute, or press on for the walls. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. And wars bleed gold and men: past eight seasons, exhaustion ends them with nothing gained.</p>' +
+      '<p>From count upward the Deeds tab offers <b>⚔ Declare war</b>. Your host musters the moment war begins — tap it on the map, then tap a province to march it (or let the ⚙ automation command it). The host does not move on its own: tap the host, then tap a province to march; tap it again to halt; <b>Esc</b> cancels. <b>Land is taken only by siege:</b> keep the host standing on the prize and press the siege at each season’s war council — after three, the county is yours. Field victories only make the enemy sue for peace: take the tribute, or press on for the walls. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. And wars bleed gold and men: past eight seasons, exhaustion ends them with nothing gained.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

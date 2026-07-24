@@ -8,7 +8,8 @@ manors, baronies, and — if fortune and cunning allow — crowns.
 
 Open `index.html` in any modern browser. That's it — no build step, no server, no dependencies.
 
-- **Desktop (mouse):** drag to pan the map, scroll to zoom, click provinces for details.
+- **Desktop (mouse):** drag to pan the map, scroll to zoom (county names appear as you zoom
+  in — small counties name themselves only close up), click provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —
   arrows pan · Shift+arrows hop between neighboring provinces · `PgUp`/`PgDn` zoom · `H` center
   home · `Enter` selects the province at screen center · `D` `S` `K` `L` `C` open the
@@ -70,7 +71,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    skill (and habits) shape them. From age twelve you can also arrange a child's match from
    their sheet: three families stand ready to hear an offer — a daughter's dowry is paid when
    the pledge is sealed, a son's bride brings hers to the wedding, and the vows follow once
-   both are sixteen. Left alone, grown children find their own (unremarkable) matches.
+   both are sixteen. Left alone, grown children find their own (unremarkable) matches —
+   and when the nursery is full enough, a 🛑 No more children toggle on your spouse's
+   sheet stops further conceptions.
    When death comes (it will), continue as your heir — and if
    your heir is still a child, their upbringing is yours to direct from the *Self* tab.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
@@ -90,8 +93,8 @@ and counts sometimes break away — so the map redraws itself decade by decade.
 ### The feudal ladder
 
 Every county on the map belongs to someone: a count, who answers to a duke, who answers to
-a king, who may answer to an emperor (the Land tab shows the whole chain, and the de jure
-duchy/kingdom/empire each county belongs to). Once you hold land of your own you play that
+a king, who may answer to an emperor (the Land tab shows the whole chain, and the de jure —
+"by ancient right" — duchy/kingdom/empire each county belongs to). Once you hold land of your own you play that
 game in both directions. As a **vassal** you can petition your liege for land (you will need
 his favor — 65 or more — and real standing of your own, 400+ prestige, and each grant costs
 both), pay homage at

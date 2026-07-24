@@ -13,7 +13,10 @@ Faith sets doctrine (`FB.marriageDoctrine` in model.js): muslim/pagan/jewish pla
 divorce from the spouse's char sheet (costs scale off `dowryByStation`), Christians
 petition via the `annulment_plea` event (`annulment` named chance, yearly cooldown), and
 `balance.wivesByGroup` grants polygyny (`FB.spousesOf`/`FB.canWed`/`FB.promoteSpouse`;
-every wife can conceive, the first holds the spouse role). The `widow_veil` plot
+every wife can conceive, the first holds the spouse role). The spouse sheet carries a
+🛑 No more children toggle (`player.flags.noChildren`) that skips the conception rolls in
+`birthTick` — a pregnancy already begun still comes to term, and kin households are
+unaffected. The `widow_veil` plot
 (map_data.js → `plot_spouse_end`) murders the current spouse.
 
 Parents arrange child matches: from age 12 an unwed child's sheet offers three

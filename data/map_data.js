@@ -785,8 +785,8 @@ FBDATA.balance = {
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
-  childChance: 0.16, mortalityBase: 0.012,
-  kinMarryChance: 0.22, kinChildChance: 0.12,
+  childChance: 0.13, mortalityBase: 0.012,
+  kinMarryChance: 0.22, kinChildChance: 0.10,
   /* age → conception multiplier, [age, mult] points read by FB.ageFert:
      flat before the first point, linear between, flat past the last.
      Women past 45 cannot conceive at all regardless of this curve. */

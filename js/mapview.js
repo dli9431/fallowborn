@@ -15,7 +15,7 @@ window.FB = window.FB || {};
     canvas: null, ctx: null,
     base: null, baseCtx: null,
     hilite: null, hiliteCtx: null,
-    viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 9,
+    viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 20,
     ownerOf: null, colorOf: null,
     selected: null, playerProv: null, capitals: [],
     onTap: null, dirty: true,
@@ -239,10 +239,10 @@ window.FB = window.FB || {};
     const z = M.zoom;
     function toScreen(wx, wy) { return [(wx - sx) * z, (wy - sy) * z]; }
 
-    if (z >= 1.1 * M.dpr * 0.75) {
+    if (z >= 1.1 * 0.75) {
       ctx.textAlign = 'center';
       for (const pr of FB.world.provs) {
-        if (pr.area * z * z < 3500 * M.dpr) continue;
+        if (pr.area * z * z < 1200 * M.dpr) continue;
         const s = toScreen(pr.cx, pr.cy);
         if (s[0] < -80 || s[1] < -20 || s[0] > el.width + 80 || s[1] > el.height + 20) continue;
         const fs = Math.round(10 * M.dpr + Math.min(4, z));

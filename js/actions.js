@@ -285,7 +285,8 @@ window.FB = window.FB || {};
     run: function (s) {
       const r = FB.getRole(s, 'rival');
       const inn = FB.skillOf(me(s), 'int');
-      if (FB.chance(0.35 + inn * 0.03)) {
+      // a rival who trusts you never sees the knife coming
+      if (FB.chance(0.35 + inn * 0.03 + (r ? r.opinion : 0) / 500)) {
         FB.applyEffects(s, { prestige: 4, skills: { int: FB.chance(0.5) ? 1 : 0 } });
         r.opinion = FB.clamp(r.opinion - 10, -100, 100);
         FB.news(s, FB.msg('news.action.scheme_rival_success',

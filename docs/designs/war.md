@@ -25,7 +25,9 @@ select it, taps a province to march — which lets go of the host again so furth
 browse the map — and taps the selected host again to halt; Enter/Shift+arrows do the
 same by keyboard. `FB.armyTap` (called from `FB.map.onTap` in ui.js) owns that
 interaction; the Land tab shows the selected host and any hosts standing in the viewed
-province. A host resting on its sovereign's own land refills toward its mustered `size`
+province. Since the host never moves on its own, a one-time toast at muster
+(`flags.hostHintShown`) and a Deeds-tab hint while the raised host stands idle both tell
+the player to tap it, then tap a province. A host resting on its sovereign's own land refills toward its mustered `size`
 at `balance.armyReinforceRate` per day. On the map a host stands on a disc of its realm's
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.

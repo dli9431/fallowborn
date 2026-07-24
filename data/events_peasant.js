@@ -76,6 +76,16 @@ FBDATA.events.push(
       success:{ text:'The collector sighs and moves on.', effects:{ } },
       failure:{ text:'He takes your goods in lieu of coin.', effects:{ gold:-4 } } }
   ]},
+{ id:'lord_squeezes', title:'A Tally With Your Name On It',
+  trigger:{ tierMax:2, roleOpinionBelow:{role:'lord', value:-40}, chance:0.25 }, weight:7, cooldown:8,
+  text:'The reeve arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger.',
+  options:[
+    { label:'Pay without a word. (4 gold)', require:{ goldMin:4 }, effects:{ gold:-4 } },
+    { label:'Work the extra days instead.', effects:{ health:-1 } },
+    { label:'Appeal to the old custom.', chance:0.4,
+      success:{ text:'You name the custom and the witnesses to it. The reeve scratches out the line, scowling.', effects:{ prestige:3, skills:{lea:1} } },
+      failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, opinion:{role:'lord', amt:-5} } } }
+  ]},
 { id:'lords_notice', title:'The Lord’s Eye',
   trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.4 }, weight:10, once:true,
   text:'{lord} reins in beside your strip of field. “You. You’re the one who works like two men. What is it you want in this life?”',

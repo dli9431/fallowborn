@@ -865,7 +865,13 @@ window.FB = window.FB || {};
         return FB.clamp(c2, 0.05, 0.95);
       }
       case 'plot': {
-        return FB.clamp(0.30 + FB.skillOf(me, 'int') * 0.04, 0.15, 0.9);
+        let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
+        // a trusting victim is easier to ensnare — when the plot in motion has
+        // a personal target, their opinion of the player counts too
+        const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
+        const tgt = trole ? FB.getRole(state, trole) : null;
+        if (tgt) c += tgt.opinion / 500;
+        return FB.clamp(c, 0.15, 0.9);
       }
       default: return 0.5;
     }
@@ -1182,7 +1188,10 @@ window.FB = window.FB || {};
     }
     if (fx.opinion) {
       const c = FB.getRole(state, fx.opinion.role, true);
-      if (c) c.opinion = FB.clamp(c.opinion + fx.opinion.amt, -100, 100);
+      // a likeable name speeds the warming: trait opinion scales gains (never losses)
+      let amt = fx.opinion.amt;
+      if (amt > 0) amt = Math.max(1, Math.round(amt * (1 + FB.traitAgg(me).opinion / 200)));
+      if (c) c.opinion = FB.clamp(c.opinion + amt, -100, 100);
     }
     if (fx.opinionLiege) p.liegeOp = FB.clamp((p.liegeOp || 0) + fx.opinionLiege, -100, 100);
     if (fx.popularOpinion) p.pop = FB.clamp(p.pop + fx.popularOpinion, -100, 100);
@@ -1228,9 +1237,8 @@ window.FB = window.FB || {};
     if (fx.adoptChild) {
       const baby = FB.makeCharacter(state, {
         culture: me.culture, religion: me.religion, born: state.date.year,
-        traitsN: 0, fatherId: null, motherId: null
+        traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn
       });
-      baby.dyn = me.dyn;
       me.childrenIds.push(baby.id);
     }
     if (fx.killChild) {

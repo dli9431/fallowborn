@@ -119,6 +119,10 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.army.player_musters',
       '🚩 The host musters at {province} — {men} men take the field.',
       { province: provName(home), men: men }));
+    if (!p.flags.hostHintShown) {
+      p.flags.hostHintShown = 1; // once per save: the host waits for hand-tapped orders
+      if (FB.ui) FB.ui.toast('🚩 Your host has mustered — tap it on the map, then tap a province to march.');
+    }
     if (FB.map) FB.map.request();
     return host;
   };

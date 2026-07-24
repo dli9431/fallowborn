@@ -9,8 +9,18 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.29.0';
+FB.VERSION = '1.30.0';
   FB.CHANGELOG = [
+    { v: '1.30.0', date: '2026-07-23', changes: [
+      'Twice as many given names for every culture, and newborns no longer take the name of a living kinsman of the same house.',
+      'Rivals are now your choice: insults no longer make an enemy of someone on their own — when someone’s regard falls low enough, a ⚡ Declare rival button appears on their sheet (and 🕊 Let the feud die ends it).',
+      'Regard now cuts both ways: likeable traits make folk warm to you faster, plots and schemes succeed more easily against someone who trusts you, and new events reward a devoted friend — or punish a lord who despises you.',
+      'The map zooms much further in, and county names appear at lower zoom — small counties can always be named now. A first-game hint and a fuller How to Play explain panning, zooming, and the five map filters.',
+      'War guidance: when your host musters you are told to tap it, then tap a province to march; How to Play and the Deeds tab now spell out that the host never moves on its own.',
+      '“De jure” is explained in How to Play and glossed as “rightful liege” on every province panel.',
+      'Resting at the ale-house now costs 2 gold for its +1 health, like the other houses of healing.',
+      'Children come a little less often, and a new 🛑 No more children toggle on your spouse’s sheet stops further conceptions (a pregnancy already begun still comes to term).'
+    ] },
     { v: '1.29.0', date: '2026-07-23', changes: [
       'Tap a settlement in your own county (Land tab) to see the buildings standing there and what each provides — gold, levy, piety, scholarship — with a button to raise new works.'
     ] },
@@ -612,13 +622,12 @@ FB.VERSION = '1.29.0';
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
       sex: 'm', culture: pr.culture, religion: pr.religion,
-      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1
+      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn
     });
     const mom = FB.makeCharacter(state, {
       sex: 'f', culture: pr.culture, religion: pr.religion,
       born: me.born - FB.ri(20, 34), role: 'parent'
     });
-    dad.dyn = me.dyn;
     dad.health = 8; mom.health = 8;
     dad.spouseId = mom.id; mom.spouseId = dad.id;
     dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
@@ -630,9 +639,8 @@ FB.VERSION = '1.29.0';
       const sib = FB.makeCharacter(state, {
         culture: pr.culture, religion: pr.religion,
         born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
-        role: 'sibling'
+        role: 'sibling', dyn: me.dyn
       });
-      sib.dyn = me.dyn;
       sib.health = 8;
       sib.fatherId = dad.id; sib.motherId = mom.id;
       dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
@@ -651,6 +659,10 @@ FB.VERSION = '1.29.0';
     FB.ui.showGame();
     FB.map.centerOn(provId, 2.0);
     FB.ui.refresh();
+    if (!state.player.flags.mapHintShown) {
+      state.player.flags.mapHintShown = 1; // once per save: how to work the map
+      FB.ui.toast('Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names.');
+    }
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
       { dynasty: me.dyn, province: pr.name, year: state.date.year }));
@@ -1195,10 +1207,10 @@ FB.VERSION = '1.29.0';
         const baby = FB.makeCharacter(s, {
           culture: k.culture, religion: k.religion, born: year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
-          fatherId: father.id, motherId: mother.id
+          fatherId: father.id, motherId: mother.id,
+          dyn: k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null
         });
         baby.health = 7;
-        baby.dyn = k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null;
         k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
         if (close) {
           FB.news(s, FB.msg('news.life.close_kin_birth', {
@@ -1236,9 +1248,9 @@ FB.VERSION = '1.29.0';
           const baby = FB.makeCharacter(s, {
             culture: me.culture, religion: me.religion, born: s.date.year,
             traits: FB.inheritTraits(father, mother), traitsN: 0,
-            fatherId: father ? father.id : null, motherId: mother.id
+            fatherId: father ? father.id : null, motherId: mother.id,
+            dyn: me.dyn
           });
-          baby.dyn = me.dyn;
           baby.health = 7;
           me.childrenIds.push(baby.id);
           s.eventQueue.push({ id: 'child_born_flavor', ctx: { childId: baby.id } });
@@ -1246,6 +1258,7 @@ FB.VERSION = '1.29.0';
       }
       return;
     }
+    if (p.flags.noChildren) return; // the house is full enough — no new conceptions
     // every wife of the household may conceive (one pregnancy at a time) —
     // the all-characters spousesOf scan runs only under polygynous doctrine
     const mates = me.sex === 'f' || FB.marriageDoctrine(me.religion).wives <= 1

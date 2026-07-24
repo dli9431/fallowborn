@@ -246,6 +246,22 @@ FBDATA.events.push(
     { label:'Take it, and remember.', effects:{ gold:6, opinion:{role:'friend', amt:5} } },
     { label:'Refuse, with thanks.', effects:{ prestige:3, opinion:{role:'friend', amt:10} } }
   ]},
+{ id:'devoted_friend', title:'A Friend’s Warning',
+  trigger:{ hasRole:'friend', roleOpinionAbove:{role:'friend', value:60}, chance:0.2 }, weight:6, cooldown:12,
+  text:'{friend} catches you alone at dusk, glancing over a shoulder. “You have enemies, and I hear things. Watch your back — and take this. You would do the same for me.”',
+  options:[
+    { label:'Take the gift, and the warning.', effects:{ gold:4, opinion:{role:'friend', amt:5} } },
+    { label:'“I want nothing I cannot repay.”', effects:{ prestige:3, opinion:{role:'friend', amt:10} } }
+  ]},
+{ id:'friend_vouch', title:'Standing Surety',
+  trigger:{ hasRole:'friend', roleOpinionAbove:{role:'friend', value:20}, chance:0.15 }, weight:5, cooldown:12,
+  text:'{friend} stands before the manor court accused of short-measuring grain. One respected voice swearing to their honesty could settle it — and they are looking at you.',
+  options:[
+    { label:'Swear to their honesty.', chance:0.6,
+      success:{ text:'Your word carries. The charge is dropped, and {friend} will not forget it.', effects:{ opinion:{role:'friend', amt:20}, prestige:2 } },
+      failure:{ text:'The measures prove short. Your word carries less than it did yesterday.', effects:{ opinion:{role:'friend', amt:10}, prestige:-5 } } },
+    { label:'Stay out of it.', effects:{ opinion:{role:'friend', amt:-10} } }
+  ]},
 
 /* ---------- plots (resolutions; queued by the Scheming focus) ---------- */
 { id:'plot_discovered', title:'The Web Trembles', trigger:{ never:true },
@@ -374,8 +390,8 @@ FBDATA.events.push(
     { label:'Share news at the well.', effects:{ skills:{dip:1}, worldNews:true } },
     { label:'Preach to the villagers.', require:{ professions:['monk','priest'] }, effects:{ piety:4, popularOpinion:2 } },
     { label:'Hear the villagers’ grievances.', require:{ tierMin:3 }, effects:{ popularOpinion:4, prestige:1 } },
-    { label:'Rest at the ale-house.', require:{ religionGroups:['christian','pagan','jewish'] }, effects:{ health:1 } },
-    { label:'Rest at the way-house.', require:{ religionGroups:['muslim'] }, effects:{ health:1 } }
+    { label:'Rest at the ale-house. (2 gold)', require:{ religionGroups:['christian','pagan','jewish'], goldMin:2 }, effects:{ health:1, gold:-2 } },
+    { label:'Rest at the way-house. (2 gold)', require:{ religionGroups:['muslim'], goldMin:2 }, effects:{ health:1, gold:-2 } }
   ]},
 { id:'visit_town', title:'{settlement}', trigger:{ never:true },
   text:'Market stalls, a smithy’s clangor, and strangers enough that no one stares. {settlement} has walls of a sort, laws of a sort, and coin for those who know their trade.',

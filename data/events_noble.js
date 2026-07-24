@@ -275,7 +275,7 @@ FBDATA.events.push(
     { label:'Let them shout.', effects:{ setFlag:'df_claim2' } }
   ]},
 { id:'df_usurp', title:'The Usurper’s Banners',
-  trigger:{ flags:['df_claim2'], chance:0.3 }, weight:10, cooldown:2, wartime:true,
+  trigger:{ flags:['df_claim2'], hasRole:'rival', chance:0.3 }, weight:10, cooldown:2, wartime:true,
   text:'{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender.',
   options:[
     { label:'Meet them in the field.', chance:'battle',

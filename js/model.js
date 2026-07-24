@@ -15,9 +15,31 @@ window.FB = window.FB || {};
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
   FB.religionOf = function (id) { return FBDATA.religions[id] || FBDATA.religions.catholic; };
 
-  FB.randomName = function (cultureId, sex) {
+  /* avoid (optional): a plain object used as a set of lowercase names,
+     e.g. { louis: true } — when provided, re-rolls up to 8 times to dodge
+     a collision, then accepts the last roll regardless */
+  FB.randomName = function (cultureId, sex, avoid) {
     const c = FB.cultureOf(cultureId);
-    return FB.pick(sex === 'f' ? c.female : c.male);
+    const pool = sex === 'f' ? c.female : c.male;
+    let name = FB.pick(pool);
+    if (avoid) {
+      for (let tries = 0; tries < 8 && avoid[name.toLowerCase()]; tries++) {
+        name = FB.pick(pool);
+      }
+    }
+    return name;
+  };
+
+  /* lowercase name set of a dynasty's living members — feeds randomName's
+     avoid so siblings and cousins stop sharing a first name */
+  FB.dynastyNameSet = function (state, dyn) {
+    const set = {};
+    if (!state || !dyn) return set;
+    for (const id in state.chars) {
+      const k = state.chars[id];
+      if (!k.dead && k.dyn === dyn) set[k.name.toLowerCase()] = true;
+    }
+    return set;
   };
 
   FB.dynastyName = function (cultureId, founderName, provinceName) {
@@ -39,7 +61,8 @@ window.FB = window.FB || {};
     const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f');
     const c = {
       id: FB.uid(),
-      name: opts.name || FB.randomName(opts.culture, sex),
+      name: opts.name || FB.randomName(opts.culture, sex,
+        opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null),
       sex: sex,
       culture: opts.culture,
       religion: opts.religion,

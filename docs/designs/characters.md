@@ -34,5 +34,16 @@ is back at 7+ and the character is not ill; sicknesses clear only with
 (`opts.ill` covers pre-ailment saves), so marks come and go with the condition;
 `scarred` and `one_eyed` trait marks are drawn for every character, NPCs included.
 
+**Regard earns its keep.** Every character carries one `opinion` of the player (−100…100).
+It gates deeds and events (courtship, petitions, `roleOpinionAbove/Below` triggers), and
+three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggregate now
+scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
+and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
+add the target's `opinion/500` to success — a trusting victim is easier to undo. The rival
+seat (`state.roles.rival`) is **player-declared**: nothing assigns it automatically — a
+⚡ Declare rival button appears on a non-family character's sheet at opinion ≤ −40, and
+🕊 Let the feud die clears it; events that speak of `{rival}` are all gated behind
+`hasRole:'rival'` so the interpreter's lazy role creation can no longer invent one.
+
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.
