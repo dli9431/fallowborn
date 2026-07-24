@@ -2709,6 +2709,60 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () { UI.showCharModal(cid); });
   };
 
+  /* ================= suitor picker =================
+     Seeking a match sounds out three families at once — an established house,
+     a peer, and a young one (FB.spawnSuitor) — so age never decides the match
+     by itself. The same three wait until one is chosen; the usual
+     meet-and-court flow follows from there. */
+  UI.showSuitorPicker = function () {
+    const s = FB.state;
+    if (!s || UI.eventsBusy()) return;
+    const cands = FB.spawnSuitor(s).slice().sort(function (a, b) {
+      return (a.suitorProfile || 0) - (b.suitorProfile || 0);
+    });
+    if (!cands.length) return;
+    const ps = FB.playerStation(s);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Kin and gossips name three who would hear your suit:')) +
+      '</p></div><div class="gm-list">';
+    for (const m of cands) {
+      const st = FB.stationOf(m);
+      const gap = st - ps;
+      const age = FB.ageOf(m, s.date.year);
+      const details = [
+        FB.stationName(st),
+        FB.T('age {age}', { age: age })
+      ];
+      const dowry = Math.round(FBDATA.balance.dowryByStation[st] || 0);
+      if (dowry) {
+        details.push(FB.T('would bring a dowry of about {gold} gold', { gold: dowry }));
+      }
+      details.push((m.sex === 'f' && age > 45) ? FB.T('🌱 past childbearing')
+        : FB.T('🌱 fertility {percent}%', {
+          percent: Math.round((m.fertility || 1) * FB.traitAgg(m).fert *
+            FB.ageFert(m.sex, age) * 100)
+        }));
+      if (gap > 0) details.push(FB.T('a step up — a harder suit'));
+      else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
+      h += '<button class="actionbtn" data-suitor="' + m.id + '">💍 ' +
+        esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
+        '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Decide nothing today')) + '</button>';
+    openModal(FB.T('Seeking a Match'), h);
+    document.querySelectorAll('[data-suitor]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const m = s.chars[b.dataset.suitor];
+        if (!m) return;
+        UI.closeModal();
+        FB.pickSuitor(s, m.id);
+        s.eventQueue.push({ id: 'meet_suitor', ctx: {} });
+        FB.game.passDay({ skipFocus: true });
+      });
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= item card =================
      Every treasure chip opens this card: its story, its powers in plain
      words, and — for the player's own — the ways to part with it. viewOnly

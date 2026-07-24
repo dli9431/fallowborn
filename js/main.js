@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.31.0';
+FB.VERSION = '1.32.0';
   FB.CHANGELOG = [
+    { v: '1.32.0', date: '2026-07-24', changes: [
+      '💍 Seek a match now sounds out three families: an established house (older, a step up — richer dowry, harder suit), a peer your own age, and a young match (a step down, but many childbearing years ahead). Older characters are no longer offered only suitors past childbearing.',
+      'The three prospects wait until you choose — declining to decide today no longer reshuffles them.'
+    ] },
     { v: '1.31.0', date: '2026-07-23', changes: [
       'Every event choice now carries a short hint beneath it, so you never choose blind.',
       'New ways to spend piety at the temple: a good word with your lord, masses for your ancestors, a blessing on your house — and a 🕯 Give alms deed to turn coin into piety.',
@@ -604,7 +608,7 @@ FB.VERSION = '1.31.0';
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
-        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
@@ -706,7 +710,7 @@ FB.VERSION = '1.31.0';
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
-        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
@@ -1485,6 +1489,7 @@ FB.VERSION = '1.31.0';
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
     p.courtingId = null;
+    p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.plot = null; // plots die with their plotter
     p.itemOffer = null; // the peddler moves on; carried items pass to the heir
     s.pregnant = null;

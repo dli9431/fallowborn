@@ -233,9 +233,9 @@ window.FB = window.FB || {};
     return alive;
   };
 
-  /* Matchmaking finds folk from the player's own walk of life — mostly equals,
-     sometimes a step down, rarely a step up. Whom the player pursues on their
-     own (character sheets) is gated separately in FB.canCourt. */
+  /* Matchmaking finds folk from the player's own walk of life. Whom the
+     player pursues on their own (character sheets) is gated separately in
+     FB.canCourt. */
   const SUITOR_EPITHETS = [
     { m: [
       FB.msg('fx.epithet.suitor.0.m.0', 'Plowman’s son', {}),
@@ -280,23 +280,64 @@ window.FB = window.FB || {};
       FB.msg('fx.epithet.suitor.3.f.2', 'Of an old noble house', {})
     ] }
   ];
+  /* Seeking a match sounds out three families at once, so age never decides
+     the match by itself: an established house (older, a step up — fatter
+     dowry and more prestige, a harder suit, fewer childbearing years), a peer
+     (same years, same station), and a young one (a step down, but fertile
+     years ahead). The three persist on the player as suitorIds until one is
+     chosen (FB.pickSuitor); the picker lives in ui.js. */
+  const SUITOR_PROFILES = [
+    { dSt: 1, age: function (a) { return a + FB.ri(0, 8); }, min: 18, max: 45 },  // established
+    { dSt: 0, age: function (a) { return a + FB.ri(-5, 5); }, min: 16, max: 40 }, // peer
+    { dSt: -1, age: function (a) { return a - FB.ri(8, 18); }, min: 16, max: 30 } // young
+  ];
   FB.spawnSuitor = function (state) {
     const me = state.chars[state.player.charId];
     const pr = FB.world.byId[state.player.provinceId];
     const myAge = FB.ageOf(me, state.date.year);
     const ps = FB.playerStation(state);
-    const r = FB.rng();
-    const st = FB.clamp(ps + (r < 0.2 ? -1 : r < 0.85 ? 0 : 1), 0, 3);
-    const c = FB.makeCharacter(state, {
-      sex: me.sex === 'm' ? 'f' : 'm',
-      culture: pr.culture, religion: me.religion,
-      born: state.date.year - FB.clamp(myAge + FB.ri(-6, 4), 16, 45),
-      role: 'suitor', opinion: FB.ri(-10, 25),
-      station: st, quality: st + FB.ri(0, 1)
-    });
-    c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
-    state.player.courtingId = c.id;
-    return c;
+    const y = state.date.year;
+    const out = [];
+    if (state.player.suitorIds) {
+      for (const id of state.player.suitorIds) {
+        const m = state.chars[id];
+        if (m && !m.dead && !m.spouseId) out.push(m);
+        // a candidate lost to death or another match thins the list: forget
+        // them like any passed-over family, and sound out a replacement below
+        else if (m && m.role === 'suitor' && state.player.courtingId !== id) delete state.chars[id];
+      }
+    }
+    state.player.suitorIds = [];
+    for (const m of out) state.player.suitorIds.push(m.id);
+    for (let i = 0; i < SUITOR_PROFILES.length; i++) {
+      if (out.some(function (m) { return m.suitorProfile === i; })) continue;
+      const prof = SUITOR_PROFILES[i];
+      const st = FB.clamp(ps + prof.dSt, 0, 3);
+      const c = FB.makeCharacter(state, {
+        sex: me.sex === 'm' ? 'f' : 'm',
+        culture: pr.culture, religion: me.religion,
+        born: y - FB.clamp(prof.age(myAge), prof.min, prof.max),
+        role: 'suitor', opinion: FB.ri(-10, 25),
+        station: st, quality: st + FB.ri(0, 1)
+      });
+      c.suitorProfile = i;
+      c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
+      out.push(c);
+      state.player.suitorIds.push(c.id);
+    }
+    return out;
+  };
+
+  /* the families not chosen are told no and forgotten */
+  FB.pickSuitor = function (state, id) {
+    state.player.courtingId = id;
+    if (state.player.suitorIds) {
+      for (const sid of state.player.suitorIds) {
+        const m = state.chars[sid];
+        if (m && sid !== id && m.role === 'suitor') delete state.chars[sid];
+      }
+    }
+    state.player.suitorIds = null;
   };
 
   /* ---------- arranged matches for the player's children ----------
