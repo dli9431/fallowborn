@@ -46,12 +46,15 @@ the versioned `css/js/data/mods` assets **immutable**, so the same `FB.VERSION` 
 cache too. The committed `index.html` stays query-free (the `file://` rule) — the stamp is
 applied only in the build. Details in the private ops notes.
 
-**Hard rule — bump `FB.VERSION` (top of `js/main.js`) on every update, no exceptions.** It is
-the cache-bust key for *both* distribution targets: the itch `?v=` stamp and play.fallowborn.com's
-immutable asset caching both key on it. Ship changed files without bumping it and returning
-players are served **stale** `js`/`css`/`data` — and on play.fallowborn.com the `immutable`
-cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG` together (see
-`docs/VERSIONS.md`).
+**Hard rule — every change that lands on `main` bumps `FB.VERSION` (top of `js/main.js`), no
+exceptions.** It is the cache-bust key for *both* distribution targets: the itch `?v=` stamp and
+play.fallowborn.com's immutable asset caching both key on it. Ship changed files without bumping
+it and returning players are served **stale** `js`/`css`/`data` — and on play.fallowborn.com the
+`immutable` cache keeps them stale until the next bump. Bump `FB.VERSION` and `FB.CHANGELOG`
+together (see `docs/VERSIONS.md`). The bump is an **integration** step: do it in your commit when
+working directly on `main`, but leave `FB.VERSION`/`FB.CHANGELOG` untouched on a feature branch
+and let the merge assign them (see *Git workflow*) — otherwise parallel branches all grab the
+same number and collide.
 
 ## Git workflow
 
@@ -64,8 +67,19 @@ work straight to `main` — do not create a branch, and do not open a PR unless 
 2. Merge that temp branch into `main`.
 3. Delete the temp branch to clean up.
 
-If the branch touched player-facing text, regenerate the i18n catalogs from the *merged* tree
-as part of the merge — not on the branch. See **Internationalization (i18n)** below.
+**Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
+touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
+every other branch in flight (parallel worktrees are unaware of each other):
+
+1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
+   version and write the changelog line from the branch's description. See `docs/VERSIONS.md`.
+2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — regenerate once from
+   the *merged* tree. See **Internationalization (i18n)** below.
+
+On the branch, describe the change in the commit message and route any new player-facing text
+through the i18n layer — but leave the version, changelog, and catalogs for the merge. Anything
+else that conflicts is genuine overlapping content (same code or design doc edited twice); that
+needs real merge judgment, not a workflow rule.
 
 Pushing is a separate step — commit when asked to commit; only push when asked to push (a push
 to `main` auto-deploys play.fallowborn.com).

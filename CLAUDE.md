@@ -2,9 +2,12 @@
 
 All repository guidance lives in [AGENTS.md](AGENTS.md) — read and follow it.
 
-**Critical, easy to forget:** bump `FB.VERSION` at the top of `js/main.js` on **every update**.
-It is the cache-bust key for both itch and play.fallowborn.com (which serves assets `immutable`,
-keyed on it) — skip it and returning players get stale JS/CSS. Full context in AGENTS.md.
+**Critical, easy to forget:** every change that lands on `main` must bump `FB.VERSION` at the top
+of `js/main.js`. It is the cache-bust key for both itch and play.fallowborn.com (which serves
+assets `immutable`, keyed on it) — skip it and returning players get stale JS/CSS. Assign it at
+**integration**: bump in your commit on `main`, but on a feature branch/worktree leave
+`FB.VERSION`, `FB.CHANGELOG`, and the i18n catalogs untouched and let the merge assign them —
+parallel branches otherwise all collide on the same version. Full context in AGENTS.md.
 
 **Also easy to forget:** any player-facing text you add or change must go through the i18n
 layer from the start — `FB.T`/`FB.TC` for UI, `{token}`-placeholdered display fields for
