@@ -645,9 +645,9 @@ FBDATA.buildings = {
     desc:'Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)' },
   keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10,
     desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
-  barracks:{ name:'Barracks', icon:'🛡', cost:120, devMin:6, retinue:40,
+  barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40,
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
-  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, archers:50,
+  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50,
     desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' }
 };
 
