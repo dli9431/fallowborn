@@ -291,6 +291,9 @@ window.FB = window.FB || {};
     const def = FBDATA.enterprises[e.type];
     const worker = e.workerId && state.chars[e.workerId];
     if (!def || !worker || worker.dead) return 0;
+    /* A traveler cannot operate a home enterprise from the road. Other
+       assigned household workers and every unconnected contract continue. */
+    if (state.player.travel && worker.id === state.player.charId) return 0;
     let eligible = false;
     for (const c of FB.enterpriseWorkers(state, e.type)) if (c.id === worker.id) eligible = true;
     if (!eligible) return 0;

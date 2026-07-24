@@ -240,7 +240,8 @@ window.FBDATA = window.FBDATA || {};
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
-          career: FBDATA.careers, enterprise: FBDATA.enterprises
+          career: FBDATA.careers, enterprise: FBDATA.enterprises,
+          travelPurpose: FBDATA.travelPurposes
         };
         const def = tables[value.$data] && tables[value.$data][value.id];
         out[key] = def && state

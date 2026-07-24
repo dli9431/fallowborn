@@ -57,6 +57,15 @@ initialize lazily. Contacts and peace records reset on succession; an active riv
 handled by the queued inheritance choice. Older saves with an active rival receive a
 default heat on first read, so no save-version migration is required.
 
+Overland travel is additive and save-safe. `player.travel` is `null` or the
+JSON-only journey record described in [travel.md](travel.md): purpose,
+home/destination/current county, phase, routes and leg clock, departure turn,
+encounter counters, and seen cultures/events. `player.travelHistory` stores
+completed purpose/destination pairs for the current character. Both initialize
+lazily without changing the save version. Succession cancels an active journey and
+clears the new character’s lifetime history; the household home remains
+`player.provinceId` unless a completed journey explicitly settles there.
+
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and

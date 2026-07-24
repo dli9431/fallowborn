@@ -142,6 +142,7 @@ window.FB = window.FB || {};
 
   /* ================= screens ================= */
   UI.showScreen = function (id) {
+    if (id !== null && travelPicker) UI.cancelTravelPicker();
     for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
       const el = $(sid);
       el.classList.toggle('hidden', sid !== id);
@@ -159,6 +160,7 @@ window.FB = window.FB || {};
   };
 
   UI.showGame = function () {
+    if (travelPicker) UI.cancelTravelPicker();
     UI.showScreen(null);
     portraitKey = ''; // a new life or loaded save must never keep the old face
     logRenderedTail = null; logRenderedLen = -1;
@@ -378,7 +380,7 @@ window.FB = window.FB || {};
     revoke_county:'realm', royal_council:'realm', coin_credit:'work',
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
-    scheme_rival:'life', begin_plot:'life',
+    scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
     seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
     send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
@@ -404,6 +406,27 @@ window.FB = window.FB || {};
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
     let h = '';
+    const travel = s.player.travel;
+    if (travel) {
+      const here = FB.world.byId[travel.currentId];
+      const destination = FB.world.byId[travel.destinationId];
+      const def = FBDATA.travelPurposes[travel.purpose];
+      const purposeName = def
+        ? dt(s, 'travelPurpose', travel.purpose, def, 'name') : travel.purpose;
+      const phase = travel.phase === 'outbound' ? FB.T('outbound')
+        : (travel.phase === 'return' ? FB.T('returning home') : FB.T('at the destination'));
+      const days = travel.remainingRoute && travel.remainingRoute.length
+        ? travel.legDaysLeft + Math.max(0, travel.remainingRoute.length - 1) * travel.legDays
+        : 0;
+      h += '<div class="progressnote">🧭 ' + esc(FB.T(
+        '{purpose} · {phase} · now in {location} · destination {destination}', {
+          purpose:purposeName,
+          phase:phase,
+          location:here ? here.name : '?',
+          destination:destination ? destination.name : '?'
+        })) + (days ? ' · ' + esc(FB.T('{days} travel days remain', {days:days})) : '') +
+        '</div>';
+    }
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -491,7 +514,7 @@ window.FB = window.FB || {};
     h += nextStepHint(s);
     let currentFocus = null;
     for (const focus of FB.focuses) if (focus.id === s.player.focus) currentFocus = focus;
-    if (currentFocus) {
+    if (currentFocus && !travel) {
       h += '<div class="progressnote">' + esc(FB.T('◉ Current focus: {focus}', {
         focus:dt(s, 'focus', currentFocus.id, currentFocus, 'label')
       })) + '</div>';
@@ -1507,6 +1530,9 @@ window.FB = window.FB || {};
   /* ================= autoresolve ================= */
   /* Which category does an event fall into for the autoresolve settings? */
   function autoCategory(ev, item) {
+    if (ev.travel && (ev.travel.kind === 'road' || ev.travel.kind === 'culture')) {
+      return 'everyday';
+    }
     if (ev.trigger && ev.trigger.never) return ev.wartime ? 'war' : 'major'; // queued decisions
     if (ev.once) return 'major';
     return item.rnd ? 'everyday' : 'major';
@@ -1542,7 +1568,8 @@ window.FB = window.FB || {};
      explicit "everything" setting may make this irreversible choice. */
   function hasTitleChoice(ev) {
     function has(fx) {
-      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.declareIndependence));
+      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.declareIndependence ||
+        fx.travelSettle));
     }
     for (const o of (ev.options || [])) {
       if (has(o.effects) || has(o.success && o.success.effects) ||
@@ -1751,6 +1778,9 @@ window.FB = window.FB || {};
     pendingEvents = pendingEvents.concat(list);
     if (!eventOpen) return nextEvent();
     return true;
+  };
+  UI.cancelTravelEvents = function () {
+    pendingEvents = pendingEvents.filter(function (item) { return !item.travel; });
   };
 
   function nextEvent() {
@@ -1980,6 +2010,186 @@ window.FB = window.FB || {};
     }
     if (FB.state && !$('game').classList.contains('hidden') &&
       $('eventmodal').classList.contains('hidden')) $('btn-endturn').focus();
+  };
+
+  /* ================= overland travel picker ================= */
+  let travelPicker = null;
+
+  function travelPurposeText(s, id, path) {
+    const def = FBDATA.travelPurposes[id];
+    return def ? FB.dataText(s, s.player.charId, 'travelPurpose', id, def, path, {}) : id;
+  }
+
+  UI.showTravelPurposes = function () {
+    const s = FB.state;
+    const eligible = FB.travelEligible(s);
+    if (eligible !== true) { UI.toast(eligible); return; }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map.')) +
+      '</p></div><div class="gm-list">';
+    for (const id in FBDATA.travelPurposes) {
+      const def = FBDATA.travelPurposes[id];
+      const destinations = FB.travelDestinations(s, id);
+      const affordable = destinations.some(function (item) { return item.cost <= s.player.gold; });
+      h += '<button class="actionbtn" data-travel-purpose="' + esc(id) + '"' +
+        (destinations.length && affordable ? '' : ' disabled') + '>' +
+        esc((def.icon || '🧭') + ' ' + travelPurposeText(s, id, 'name')) +
+        '<span class="adesc">' + esc(travelPurposeText(s, id, 'desc')) + ' ' +
+        esc(destinations.length
+          ? FB.T('{count} destinations in reach.', {count:destinations.length})
+          : FB.T('No qualifying destination can be reached.')) + '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="travel-purpose-cancel">' +
+      esc(FB.T('Cancel')) + '</button></div>';
+    openModal('🧭 Take to the road…', h);
+    document.querySelectorAll('[data-travel-purpose]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.closeModal();
+        UI.showTravelDestinations(button.getAttribute('data-travel-purpose'));
+      });
+    });
+    $('travel-purpose-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showTravelDestinations = function (purposeId) {
+    const s = FB.state;
+    const choices = FB.travelDestinations(s, purposeId);
+    if (!choices.length) {
+      UI.toast(FB.T('No qualifying destination can be reached.'));
+      return;
+    }
+    FB.game.setPaused(true);
+    travelPicker = {purpose:purposeId, choices:choices, selected:null};
+    document.body.classList.add('travel-picking');
+    $('travel-picker').classList.remove('hidden');
+    $('travel-picker-title').textContent = FB.T('Choose a destination for {purpose}', {
+      purpose:travelPurposeText(s, purposeId, 'name')
+    });
+    const list = $('travel-destination-list');
+    let h = '';
+    for (let i = 0; i < choices.length; i++) {
+      const item = choices[i];
+      const pr = FB.world.byId[item.destinationId];
+      const short = item.cost > s.player.gold;
+      h += '<button class="travel-destination" data-travel-destination="' +
+        esc(item.destinationId) + '" data-choice-index="' + i + '">' +
+        esc(pr ? pr.name : item.destinationId) +
+        '<span class="adesc">' + esc(FB.T(
+          '{legs} county legs · {days} days each way · {cost} gold', {
+            legs:item.legs, days:item.days, cost:item.cost
+          })) + (short ? ' · ' + esc(FB.T('not enough gold')) : '') +
+        '</span></button>';
+    }
+    list.innerHTML = h;
+    FB.map.travelTargets = choices.map(function (item) { return item.destinationId; });
+    FB.map.travelSelected = null;
+    FB.map.travelPreview = null;
+    FB.map.select(null);
+    FB.map.request();
+    $('travel-picker-summary').textContent = FB.T(
+      'Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
+    $('travel-picker-continue').disabled = true;
+    document.querySelectorAll('[data-travel-destination]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.travelPickProvince(button.getAttribute('data-travel-destination'), true);
+      });
+    });
+    setTimeout(function () {
+      const first = list.querySelector('button');
+      if (first) first.focus();
+    }, 0);
+  };
+
+  UI.travelPickerOpen = function () {
+    return !!travelPicker && !$('travel-picker').classList.contains('hidden');
+  };
+
+  UI.travelPickProvince = function (pid, center) {
+    if (!travelPicker) return false;
+    let item = null;
+    for (let i = 0; i < travelPicker.choices.length; i++) {
+      if (travelPicker.choices[i].destinationId === pid) {
+        item = travelPicker.choices[i];
+        break;
+      }
+    }
+    if (!item) {
+      UI.toast(FB.T('That county does not qualify for this journey.'));
+      return false;
+    }
+    travelPicker.selected = item;
+    FB.map.travelSelected = pid;
+    FB.map.travelPreview = [FB.state.player.provinceId].concat(item.route);
+    FB.map.select(pid, function (id) { return id; });
+    if (center) FB.map.centerOn(pid, FB.map.zoom);
+    let selectedButton = null;
+    document.querySelectorAll('[data-travel-destination]').forEach(function (button) {
+      const selected = button.getAttribute('data-travel-destination') === pid;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      if (selected) selectedButton = button;
+    });
+    if (selectedButton && !center) selectedButton.scrollIntoView({block:'nearest'});
+    const pr = FB.world.byId[pid];
+    const affordable = item.cost <= FB.state.player.gold;
+    $('travel-picker-summary').textContent = affordable
+      ? FB.T('{destination}: {legs} legs, {days} days each way, {cost} gold.', {
+          destination:pr.name, legs:item.legs, days:item.days, cost:item.cost
+        })
+      : FB.T('{destination} costs {cost} gold; you have {gold}.', {
+          destination:pr.name, cost:item.cost, gold:Math.floor(FB.state.player.gold)
+        });
+    $('travel-picker-continue').disabled = !affordable;
+    FB.map.request();
+    return true;
+  };
+
+  function reviewTravelChoice() {
+    if (!travelPicker || !travelPicker.selected) return;
+    const item = travelPicker.selected;
+    const s = FB.state;
+    const def = FBDATA.travelPurposes[travelPicker.purpose];
+    const pr = FB.world.byId[item.destinationId];
+    const legDays = FBDATA.balance.travelLegDays || 3;
+    let h = '<div class="gm-body-text">' +
+      '<p><b>' + esc((def.icon || '🧭') + ' ' +
+        travelPurposeText(s, travelPicker.purpose, 'name')) + '</b></p>' +
+      '<p>' + esc(FB.T(
+        '{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions.', {
+          destination:pr.name,
+          legs:item.legs,
+          outbound:item.legs * legDays,
+          returnDays:item.legs * legDays
+        })) + '</p>' +
+      '<p><b>' + esc(FB.T('Exact upfront cost: {cost} gold.', {cost:item.cost})) +
+      '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
+      '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
+      esc(FB.T('Depart for {destination}', {destination:pr.name})) +
+      '</button><button class="actionbtn" id="travel-review-back">' +
+      esc(FB.T('Back to destinations')) + '</button></div>';
+    openModal('Review journey', h, {dismissable:false});
+    $('travel-depart').addEventListener('click', function () {
+      if (FB.travelStart(s, travelPicker.purpose, item.destinationId, item.destinationRealm)) {
+        UI.cancelTravelPicker();
+        UI.closeModal();
+      }
+    });
+    $('travel-review-back').addEventListener('click', function () {
+      UI.closeModal();
+      const selected = document.querySelector('.travel-destination.selected');
+      if (selected) selected.focus();
+    });
+  }
+
+  UI.cancelTravelPicker = function () {
+    travelPicker = null;
+    document.body.classList.remove('travel-picking');
+    $('travel-picker').classList.add('hidden');
+    FB.map.travelTargets = null;
+    FB.map.travelSelected = null;
+    FB.map.travelPreview = null;
+    FB.map.select(null);
+    FB.map.request();
   };
 
   /* ================= war target picker ================= */
@@ -4959,8 +5169,14 @@ window.FB = window.FB || {};
       else FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
+    $('travel-picker-cancel').addEventListener('click', UI.cancelTravelPicker);
+    $('travel-picker-continue').addEventListener('click', reviewTravelChoice);
     FB.map.onTap = function (pr, wx, wy) {
       if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }
+      if (UI.travelPickerOpen()) {
+        if (pr) UI.travelPickProvince(pr.id, false);
+        return;
+      }
       const s = FB.state;
       // armies first: select your host, or march the selected host somewhere
       if (s && FB.armyTap && FB.armyTap(s, pr, wx, wy)) return;

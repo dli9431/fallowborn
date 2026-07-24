@@ -199,6 +199,33 @@ button.stat:active { filter: brightness(1.35); } /* press feedback on touch */
 #mapwrap { order: 1; }
 #side { order: 2; }
 #mapwrap { flex: 1 1 auto; position: relative; min-width: 0; background: #23405e; }
+.travel-picker {
+  position: absolute; z-index: 32; left: 12px; bottom: 12px;
+  width: min(390px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; overflow: hidden;
+  color: #eadcb8; background: rgba(31, 25, 17, .96);
+  border: 2px solid #7a6234; border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.55);
+}
+.travel-picker.hidden { display: none; }
+.travel-picker h3 { color: #e0c060; margin: 0; font-size: 17px; }
+.travel-destination-list {
+  overflow-y: auto; display: flex; flex-direction: column; gap: 5px;
+  min-height: 0;
+}
+.travel-destination {
+  width: 100%; text-align: left; border: 1px solid #5f5137;
+  border-radius: 7px; padding: 8px 9px; color: #eadcb8;
+  background: #2a2218; cursor: pointer; font-family: inherit;
+}
+.travel-destination:hover, .travel-destination.selected {
+  border-color: #d0ad50; background: #382e1c;
+}
+.travel-destination:disabled { opacity: .48; cursor: default; }
+.travel-destination .adesc { display: block; color: #a99a78; font-size: 12px; margin-top: 2px; }
+.travel-picker-actions { display: flex; gap: 8px; justify-content: flex-end; }
+body.travel-picking #timebtns { visibility: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; }
@@ -454,6 +481,15 @@ textarea.modjson, textarea.savetext {
   #btn-skip, #btn-auto { flex: 0 0 72px; }
   #sidebody, #leftbody { padding-bottom: 78px; } /* clear the fixed bar */
   body.picking #timebtns { display: none; } /* not while choosing a birthplace */
+  .travel-picker {
+    position: fixed; z-index: 41; left: 0; right: 0; bottom: 0;
+    width: 100%; max-height: 55vh; max-height: 55dvh;
+    border-radius: 14px 14px 0 0; border-width: 2px 0 0;
+    padding: 14px max(14px, env(safe-area-inset-right))
+      max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  }
+  .travel-destination { min-height: 48px; font-size: 15px; }
+  .travel-picker-actions .btn { flex: 1 1 0; }
   /* Self/Kin lives in a full-screen drawer opened by tapping the portrait;
      it covers the topbar too */
   #left {

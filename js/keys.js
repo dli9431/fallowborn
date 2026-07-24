@@ -18,6 +18,9 @@ window.FB = window.FB || {};
   function gameVisible() { return !$('game').classList.contains('hidden'); }
   function eventOpen() { return !$('eventmodal').classList.contains('hidden'); }
   function genOpen() { return !$('genmodal').classList.contains('hidden'); }
+  function travelOpen() {
+    return FB.ui && FB.ui.travelPickerOpen && FB.ui.travelPickerOpen();
+  }
 
   function clickNth(sel, n) {
     const btns = document.querySelectorAll(sel);
@@ -104,6 +107,19 @@ window.FB = window.FB || {};
         else if (!$('chargen').classList.contains('hidden')) $('btn-cg-back').click();
       }
       return;
+    }
+
+    if (travelOpen()) {
+      if (k === 'Escape') {
+        e.preventDefault();
+        FB.ui.cancelTravelPicker();
+        return;
+      }
+      if (digit) {
+        e.preventDefault();
+        clickNth('#travel-destination-list .travel-destination', slot);
+        return;
+      }
     }
 
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }

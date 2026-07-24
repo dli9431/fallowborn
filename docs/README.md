@@ -63,6 +63,11 @@ Time passes **day by day** (90-day seasons, 360-day years).
    nominal debts; holdings, buildings, items, and all familiar authored prices stay in base
    gold. Miss one loan deadline and its face grows; miss the extension and the disclosed
    pledge or revenue assignment is enforced. Debt passes to heirs.
+   Adult freeholders and gentry can **🧭 Take to the road…** for pilgrimage, trade,
+   study, or paid service. Choose a marked county from the map/list, then let days
+   pass as the traveler crosses each county; their focus and personally staffed
+   enterprise pause while the household continues at home. At the destination,
+   finish the purpose and choose whether to return or settle the household there.
    Named characters remember hostile encounters: anger someone deeply enough and they may
    declare a rivalry of their own. A feud has visible heat, can grow from insults into claims
    and knives, or end through compensation, mediation, a witnessed oath, common cause, or

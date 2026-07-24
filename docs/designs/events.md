@@ -8,6 +8,14 @@ docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queue
 Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 [time.md](time.md)).
 
+Road content in `data/events_travel.js` is still ordinary declarative event data,
+but carries top-level `travel:{kind}` metadata. `kind` is `culture`, `road`,
+`capstone`, or `decision`; a capstone may also name its `purpose`. The travel
+driver chooses unseen culture/road events at county arrivals and code-queues
+capstones with `trigger:{never:true}`. While traveling, already queued events
+remain valid, but the random home-event picker does not add a slot event. The
+shared destination decision uses the `travelReturn` / `travelSettle` effects.
+
 ## Localized display
 
 English event data remains authoritative and moddable. Localization is a shadow catalog:

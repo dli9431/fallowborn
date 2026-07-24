@@ -61,6 +61,14 @@ season ledger as focus income and upkeep. New years run `FB.livelihoodYearly` fo
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
 
+An active overland journey (`player.travel`, [travel.md](travel.md)) replaces the
+player’s daily focus tick with `FB.travelTick`. County legs take three days by
+default. The enterprise specifically staffed by the traveling player produces
+nothing, while other household work, enterprises, contracts, pregnancy, aging,
+armies, and world simulation continue. Travel arrivals queue their own encounters;
+ordinary random home slot events are consumed but suppressed until the traveler is
+home or settled.
+
 For an independent count or higher, season boundaries also run
 `FB.tickForeignPolicy`. Saved Improve/Provoke assignments adjust neighboring sovereigns’
 opinion deterministically after the player’s war tick. On the winter boundary this happens

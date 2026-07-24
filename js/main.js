@@ -750,7 +750,7 @@ window.FB = window.FB || {};
     if (FB.ui.eventsBusy()) return undefined;
     const p = s.player;
 
-    if (!G.observe) {
+    if (!G.observe && !p.travel) {
       if (!(opts && opts.skipFocus)) FB.tickFocus(s);
       else FB.validateFocus(s);
     }
@@ -825,6 +825,7 @@ window.FB = window.FB || {};
 
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
+    if (FB.travelTick) FB.travelTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
@@ -1342,6 +1343,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const p = s.player;
     const me = s.chars[p.charId];
+    if (FB.travelCancel) FB.travelCancel(s, '', true);
     const causeMsg = cause && typeof cause === 'object' && typeof cause.key === 'string'
       ? FB.message(cause.key, cause.params) : null;
     const causeText = causeMsg
@@ -1480,6 +1482,7 @@ window.FB = window.FB || {};
     const old = s.chars[p.charId];
     const heir = s.chars[heirId];
     if (!heir) { FB.ui.gameOver(); return; }
+    if (FB.travelCancel) FB.travelCancel(s, '', true);
 
     s.generation++;
     heir.dyn = old.dyn;
@@ -1519,6 +1522,7 @@ window.FB = window.FB || {};
     p.piety = Math.round(p.piety * 0.5);
     p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
     p.warService = 0; p.liegeGrants = 0;
+    p.travelHistory = [];
     p.pop = Math.round(p.pop * 0.5);
     // death dues and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
@@ -1586,6 +1590,8 @@ window.FB = window.FB || {};
     }
     FB.save.restore(data);
     FB.syncPlayerCareer(FB.state);
+    if (FB.travelEnsure) FB.travelEnsure(FB.state);
+    if (FB.travelValidate) FB.travelValidate(FB.state);
     G.observe = false;
     document.body.classList.remove('observing');
     G.pickMode = false;
@@ -1593,7 +1599,8 @@ window.FB = window.FB || {};
     FB.ui.mapDirty();
     FB.map.playerProv = FB.state.player.provinceId;
     FB.ui.showGame();
-    FB.map.centerOn(FB.state.player.provinceId, 2.0);
+    const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
+    FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
     FB.map.select(null);
     FB.ui.refresh();
     FB.ui.toast('The chronicle resumes — {season} {year} AD.', {

@@ -172,14 +172,6 @@ FBDATA.events.push(
   ]},
 
 /* ---------- faith ---------- */
-{ id:'pilgrimage_call', title:'The Long Road Calls',
-  trigger:{ minAge:18, chance:0.12, goldMin:15, notFlags:['on_campaign','in_prison'] }, weight:5, once:true,
-  text:'Pilgrims pass through {province}, footsore and shining-eyed, bound for the holy places. Something in you stirs to follow.',
-  options:[
-    { label:'Take up the staff and go.', desc:'A long road, worn shoes, and a cleaner soul.', effects:{ gold:-15, piety:30, addTrait:'pilgrim', health:-1, prestige:10, log:'Went on pilgrimage.' } },
-    { label:'Give alms instead.', desc:'Holiness by proxy, at a kinder price.', effects:{ gold:-5, piety:8 } },
-    { label:'The road is for dreamers.', desc:'The holy places will manage without you.', effects:{ } }
-  ]},
 { id:'sermon', title:'Words That Linger',
   trigger:{ chance:0.2, religionGroup:'christian' }, weight:4, cooldown:12,
   text:'{priest} preaches with unusual fire — of the rich man, the camel, and the needle’s eye.',
