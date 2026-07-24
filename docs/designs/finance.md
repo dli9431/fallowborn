@@ -13,9 +13,11 @@ season net.
 default, and stable-id state. Old version-3 saves therefore begin at a price
 index of 1 on their next annual tick; no past inflation is reconstructed.
 `FB.addPricePressure(state, amount, years, source)` adds deterministic saved
-shocks. Ordinary variation and investment outcomes use the saved `FB.rng`
-stream only. `lastYear` and stored investment resolutions prevent reloads from
-applying or rolling an outcome twice.
+shocks. Lean harvests and pestilence add scarcity/disruption pressure, plague
+recovery eases it, personal war adds annual pressure, and sovereign coinage
+adds explicit monetary shocks. Ordinary variation and investment outcomes use
+the saved `FB.rng` stream only. `lastYear` and stored investment resolutions
+prevent reloads from applying or rolling an outcome twice.
 
 **Contracts state exact terms.** Pledged loans, merchant advances, and loans
 against revenues grant base gold now and record a fixed face value. A nominal
