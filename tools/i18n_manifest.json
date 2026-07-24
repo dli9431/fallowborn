@@ -6098,12 +6098,20 @@
         "text": "Honor by steel — win loud or bleed quiet."
       }
     },
+    "event.feud_gentry.options.0.failure.effects.log.default": {
+      "context": "Durable event log for feud_gentry, authored option 0, failure.effects.",
+      "glossary": [],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Yielded a duel and ended a feud."
+      }
+    },
     "event.feud_gentry.options.0.failure.text.default": {
       "context": "Event feud_gentry, authored option 0, failure text, branch default.",
       "glossary": [],
       "location": "data/events_paths.js",
       "source": {
-        "text": "Their blade is quicker. You yield, bleeding."
+        "text": "Their blade is quicker. You yield, bleeding — and before the witnesses concede that satisfaction has been given."
       }
     },
     "event.feud_gentry.options.0.label.default": {
@@ -6119,7 +6127,7 @@
       "glossary": [],
       "location": "data/events_paths.js",
       "source": {
-        "text": "Won a duel of honor."
+        "text": "Won a duel of honor and ended a feud."
       }
     },
     "event.feud_gentry.options.0.success.text.default": {
@@ -9272,7 +9280,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Starve a quarrel and it dies quietly."
+        "text": "Acknowledge the injury and put silver behind the apology."
       }
     },
     "event.make_rival.options.0.label.default": {
@@ -9280,7 +9288,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Ignore the fool."
+        "text": "Offer amends before witnesses. (5 gold)"
       }
     },
     "event.make_rival.options.1.desc.default": {
@@ -9288,7 +9296,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Give as good as you get, publicly."
+        "text": "Neither pride nor anger gets the final word."
       }
     },
     "event.make_rival.options.1.label.default": {
@@ -9296,7 +9304,23 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Answer insult with insult."
+        "text": "Call for a mediator."
+      }
+    },
+    "event.make_rival.options.2.desc.default": {
+      "context": "Event make_rival, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let every witness know that you will give as good as you get."
+      }
+    },
+    "event.make_rival.options.2.label.default": {
+      "context": "Event make_rival, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Answer enmity with defiance."
       }
     },
     "event.make_rival.text.default": {
@@ -9306,7 +9330,7 @@
       ],
       "location": "data/events_common.js",
       "source": {
-        "text": "{rival} has taken against you — a slight, a dispute over a boundary stone, a look held too long. It festers."
+        "text": "The old injury has found a name. Before neighbors and kin, {rival} declares that no friendship stands between your houses and that every slight will be answered."
       }
     },
     "event.make_rival.title.default": {
@@ -10123,7 +10147,7 @@
       "glossary": [],
       "location": "data/events_paths.js",
       "source": {
-        "text": "He defaults — but the mill pledge makes you whole, and an enemy."
+        "text": "He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market."
       }
     },
     "event.moneylending.options.0.label.default": {
@@ -13973,6 +13997,525 @@
       "location": "data/events_peasant.js",
       "source": {
         "text": "The Retinue at the Door"
+      }
+    },
+    "event.rival_common_cause.options.0.desc.default": {
+      "context": "Event rival_common_cause, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Shared labor may do what argument could not."
+      }
+    },
+    "event.rival_common_cause.options.0.failure.text.default": {
+      "context": "Event rival_common_cause, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Every shouted order becomes an argument. The roof is saved, but neither of you credits the other."
+      }
+    },
+    "event.rival_common_cause.options.0.label.default": {
+      "context": "Event rival_common_cause, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Work beside them until the fire is beaten."
+      }
+    },
+    "event.rival_common_cause.options.0.success.text.default": {
+      "context": "Event rival_common_cause, authored option 0, success text, branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "At dawn the house still stands. {rival} meets your eye across the smoking yard and, for once, nods without mockery."
+      }
+    },
+    "event.rival_common_cause.options.1.desc.default": {
+      "context": "Event rival_common_cause, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The feud has already taught you where mercy leads."
+      }
+    },
+    "event.rival_common_cause.options.1.label.default": {
+      "context": "Event rival_common_cause, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Save your own people and leave theirs struggling."
+      }
+    },
+    "event.rival_common_cause.options.2.desc.default": {
+      "context": "Event rival_common_cause, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Make common work the first witness to reconciliation."
+      }
+    },
+    "event.rival_common_cause.options.2.failure.text.default": {
+      "context": "Event rival_common_cause, authored option 2, failure text, branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} pulls away. “Put out the fire first.” By dawn the moment has gone."
+      }
+    },
+    "event.rival_common_cause.options.2.label.default": {
+      "context": "Event rival_common_cause, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Propose peace while both crews are watching."
+      }
+    },
+    "event.rival_common_cause.options.2.success.effects.log.default": {
+      "context": "Durable event log for rival_common_cause, authored option 2, success.effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Ended a rivalry after facing a common danger."
+      }
+    },
+    "event.rival_common_cause.options.2.success.text.default": {
+      "context": "Event rival_common_cause, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Exhaustion strips the pride from both of you. Hands are clasped in the smoking street, and the feud ends before witnesses."
+      }
+    },
+    "event.rival_common_cause.text.default": {
+      "context": "Event rival_common_cause, text, faith branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Fire takes a neighbor’s roof in a hard wind. You and {rival} arrive from opposite lanes, each with people and ladders, and find yourselves holding the same sagging beam while sparks fall around you."
+      }
+    },
+    "event.rival_common_cause.title.default": {
+      "context": "Event rival_common_cause, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Under One Roof"
+      }
+    },
+    "event.rival_legacy.options.0.desc.default": {
+      "context": "Event rival_legacy, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Give the next generation a clean beginning."
+      }
+    },
+    "event.rival_legacy.options.0.effects.log.default": {
+      "context": "Durable event log for rival_legacy, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Buried an inherited feud."
+      }
+    },
+    "event.rival_legacy.options.0.label.default": {
+      "context": "Event rival_legacy, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "“That quarrel was not mine.”"
+      }
+    },
+    "event.rival_legacy.options.1.desc.default": {
+      "context": "Event rival_legacy, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Take up the feud and the obligations of the dead."
+      }
+    },
+    "event.rival_legacy.options.1.effects.log.default": {
+      "context": "Durable event log for rival_legacy, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Inherited a family feud."
+      }
+    },
+    "event.rival_legacy.options.1.label.default": {
+      "context": "Event rival_legacy, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "“An injury to this house is mine.”"
+      }
+    },
+    "event.rival_legacy.options.2.desc.default": {
+      "context": "Event rival_legacy, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A new heir can say what the dead could not."
+      }
+    },
+    "event.rival_legacy.options.2.failure.text.default": {
+      "context": "Event rival_legacy, authored option 2, failure text, branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} has not forgotten enough. The old quarrel finds a new name in you."
+      }
+    },
+    "event.rival_legacy.options.2.label.default": {
+      "context": "Event rival_legacy, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Offer peace, if they will take it."
+      }
+    },
+    "event.rival_legacy.options.2.success.text.default": {
+      "context": "Event rival_legacy, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The clean beginning is accepted. Old accusations are withdrawn, and both houses step back from the edge."
+      }
+    },
+    "event.rival_legacy.text.default": {
+      "context": "Event rival_legacy, text, faith branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} was the enemy of the one whose place you have taken. Kin wait to hear whether the old injury belongs to the whole house now — or whether it will be buried with the dead."
+      }
+    },
+    "event.rival_legacy.title.default": {
+      "context": "Event rival_legacy, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "An Inherited Quarrel"
+      }
+    },
+    "event.rival_mediation.options.0.desc.default": {
+      "context": "Event rival_mediation, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Silver admits that an injury was done without making you crawl."
+      }
+    },
+    "event.rival_mediation.options.0.failure.text.default": {
+      "context": "Event rival_mediation, authored option 0, failure text, branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} pushes the purse back. “Silver cannot buy what was taken.” The go-between has no peace to witness."
+      }
+    },
+    "event.rival_mediation.options.0.label.default": {
+      "context": "Event rival_mediation, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Offer fair amends. (10 gold)"
+      }
+    },
+    "event.rival_mediation.options.0.success.effects.log.default": {
+      "context": "Durable event log for rival_mediation, authored option 0, success.effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Made peace with a rival through compensation."
+      }
+    },
+    "event.rival_mediation.options.0.success.text.default": {
+      "context": "Event rival_mediation, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The purse changes hands. Your enemy names the injury answered, and the witnesses bind you both to peace."
+      }
+    },
+    "event.rival_mediation.options.1.desc.default": {
+      "context": "Event rival_mediation, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Put pride aside and accept an outsider’s terms."
+      }
+    },
+    "event.rival_mediation.options.1.failure.text.default": {
+      "context": "Event rival_mediation, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Every term becomes another argument. At last the mediator rises and leaves you to your anger."
+      }
+    },
+    "event.rival_mediation.options.1.label.default": {
+      "context": "Event rival_mediation, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Ask judgment of the mediator."
+      }
+    },
+    "event.rival_mediation.options.1.success.effects.log.default": {
+      "context": "Durable event log for rival_mediation, authored option 1, success.effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Accepted a mediated peace with a rival."
+      }
+    },
+    "event.rival_mediation.options.1.success.text.default": {
+      "context": "Event rival_mediation, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The judgment leaves neither side wholly pleased, which is how the witnesses know it is fair. Both sides swear to let the matter rest."
+      }
+    },
+    "event.rival_mediation.options.2.desc.default": {
+      "context": "Event rival_mediation, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Peace is welcome, but not at the price of surrendering your claim."
+      }
+    },
+    "event.rival_mediation.options.2.failure.text.default": {
+      "context": "Event rival_mediation, authored option 2, failure text, branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} laughs at the demand. The mediator’s table has merely given the quarrel a new insult."
+      }
+    },
+    "event.rival_mediation.options.2.label.default": {
+      "context": "Event rival_mediation, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Demand that they pay you."
+      }
+    },
+    "event.rival_mediation.options.2.success.effects.log.default": {
+      "context": "Durable event log for rival_mediation, authored option 2, success.effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Took compensation to end a rivalry."
+      }
+    },
+    "event.rival_mediation.options.2.success.text.default": {
+      "context": "Event rival_mediation, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Rather than feed the feud another year, your enemy pays a smaller purse and names the matter closed."
+      }
+    },
+    "event.rival_mediation.options.3.desc.default": {
+      "context": "Event rival_mediation, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Leave with every grievance intact."
+      }
+    },
+    "event.rival_mediation.options.3.label.default": {
+      "context": "Event rival_mediation, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "There will be no bargain."
+      }
+    },
+    "event.rival_mediation.text.default": {
+      "context": "Event rival_mediation, text, faith branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A respected go-between seats you and {rival} beneath the same roof. The terms are old and plain: amends for the injury, witnesses to the promise, and an end to every private revenge."
+      }
+    },
+    "event.rival_mediation.text.jewish": {
+      "context": "Event rival_mediation, text, faith branch jewish.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A respected elder seats you and {rival} before witnesses. The terms are plain: restitution for the injury and a sworn end to the quarrel."
+      }
+    },
+    "event.rival_mediation.text.muslim": {
+      "context": "Event rival_mediation, text, faith branch muslim.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A respected go-between seats you and {rival} beneath the same roof and urges ṣulḥ: fair amends, named witnesses, and a binding end to the quarrel."
+      }
+    },
+    "event.rival_mediation.text.pagan": {
+      "context": "Event rival_mediation, text, faith branch pagan.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "An elder seats you and {rival} before the assembly. The terms are old and plain: compensation for the injury, hands clasped before witnesses, and no private revenge."
+      }
+    },
+    "event.rival_mediation.title.default": {
+      "context": "Event rival_mediation, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Go-Between"
+      }
+    },
+    "event.rival_peace_oath.options.0.desc.default": {
+      "context": "Event rival_peace_oath, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A public oath closes doors that private anger keeps opening."
+      }
+    },
+    "event.rival_peace_oath.options.0.effects.log.default": {
+      "context": "Durable event log for rival_peace_oath, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Swore a public peace with a rival."
+      }
+    },
+    "event.rival_peace_oath.options.0.label.default": {
+      "context": "Event rival_peace_oath, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Swear the peace."
+      }
+    },
+    "event.rival_peace_oath.options.1.desc.default": {
+      "context": "Event rival_peace_oath, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let a small concession prove that the words have weight."
+      }
+    },
+    "event.rival_peace_oath.options.1.failure.text.default": {
+      "context": "Event rival_peace_oath, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The token becomes a price, the price an insult. The witnesses go home without hearing an oath."
+      }
+    },
+    "event.rival_peace_oath.options.1.label.default": {
+      "context": "Event rival_peace_oath, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Ask one token of good faith."
+      }
+    },
+    "event.rival_peace_oath.options.1.success.text.default": {
+      "context": "Event rival_peace_oath, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The token is yielded without haggling. The witnesses murmur approval, and the oath is made."
+      }
+    },
+    "event.rival_peace_oath.options.2.desc.default": {
+      "context": "Event rival_peace_oath, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Some injuries deserve a longer memory."
+      }
+    },
+    "event.rival_peace_oath.options.2.label.default": {
+      "context": "Event rival_peace_oath, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Refuse their hand."
+      }
+    },
+    "event.rival_peace_oath.text.default": {
+      "context": "Event rival_peace_oath, text, faith branch default.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} comes with witnesses and a careful proposal: speak the injuries aloud, renounce revenge, and seal the peace before the altar with an oath and the kiss of peace."
+      }
+    },
+    "event.rival_peace_oath.text.jewish": {
+      "context": "Event rival_peace_oath, text, faith branch jewish.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} comes with elders and a careful proposal: speak the injuries plainly, make restitution where it is owed, and swear before witnesses that the quarrel is ended."
+      }
+    },
+    "event.rival_peace_oath.text.muslim": {
+      "context": "Event rival_peace_oath, text, faith branch muslim.",
+      "glossary": [
+        "god",
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} comes with witnesses and a careful proposal of ṣulḥ: speak the claims plainly, settle them fairly, and swear before {god} that the quarrel is ended."
+      }
+    },
+    "event.rival_peace_oath.text.pagan": {
+      "context": "Event rival_peace_oath, text, faith branch pagan.",
+      "glossary": [
+        "rival"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{rival} comes before the assembly with a careful proposal: speak the injuries aloud, renounce revenge, and clasp hands over an oath of peace."
+      }
+    },
+    "event.rival_peace_oath.title.default": {
+      "context": "Event rival_peace_oath, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Peace Before Witnesses"
       }
     },
     "event.rival_scheme.options.0.desc.default": {
@@ -23220,6 +23763,16 @@
         "text": "Uncle"
       }
     },
+    "src.06b0b078": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Answer enmity with defiance."
+      }
+    },
     "src.06bc9a4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -23338,6 +23891,16 @@
       ],
       "source": {
         "text": "A slow market day. You barely cover the road."
+      }
+    },
+    "src.076020b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "blood feud"
       }
     },
     "src.0764d5a3": {
@@ -24303,6 +24866,16 @@
         "text": "A warning to repent."
       }
     },
+    "src.0d958a1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} comes before the assembly with a careful proposal: speak the injuries aloud, renounce revenge, and clasp hands over an oath of peace."
+      }
+    },
     "src.0da76274": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25165,6 +25738,16 @@
         "text": "Risk of total loss"
       }
     },
+    "src.138b4b08": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Put pride aside and accept an outsider’s terms."
+      }
+    },
     "src.13978df1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25213,6 +25796,16 @@
       ],
       "source": {
         "text": "No neighboring sovereign would take your oath."
+      }
+    },
+    "src.13dd2d49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Under One Roof"
       }
     },
     "src.13e9a378": {
@@ -25596,6 +26189,16 @@
         "text": "The last debasement is still remembered. Five years must pass."
       }
     },
+    "src.15e1b09e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Acknowledge the injury and put silver behind the apology."
+      }
+    },
     "src.15fc60a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25624,6 +26227,16 @@
       ],
       "source": {
         "text": "Spend a day at one of the province’s settlements — markets, pulpits, and hiring fairs, as fits your station."
+      }
+    },
+    "src.160a1804": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Leave with every grievance intact."
       }
     },
     "src.16161e01": {
@@ -26080,6 +26693,16 @@
         "text": "A dead master’s debts are not yours."
       }
     },
+    "src.193e78ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rivalries"
+      }
+    },
     "src.194c533d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26400,6 +27023,16 @@
         "text": "He blusters, bows, and yields. The hall takes note."
       }
     },
+    "src.1baa4378": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Demand that they pay you."
+      }
+    },
     "src.1bb1ae1b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26520,6 +27153,16 @@
         "text": "🕊 Seek a blessing"
       }
     },
+    "src.1c7d0bb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Fire takes a neighbor’s roof in a hard wind. You and {rival} arrive from opposite lanes, each with people and ladders, and find yourselves holding the same sagging beam while sparks fall around you."
+      }
+    },
     "src.1cb85199": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26598,6 +27241,16 @@
       ],
       "source": {
         "text": "🏠 {holding} now belongs to the household."
+      }
+    },
+    "src.1d83b6ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} pulls away. “Put out the fire first.” By dawn the moment has gone."
       }
     },
     "src.1d83dfd4": {
@@ -26888,6 +27541,16 @@
       ],
       "source": {
         "text": "Quick of wit, and quicker to mention it."
+      }
+    },
+    "src.1f936902": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "An elder seats you and {rival} before the assembly. The terms are old and plain: compensation for the injury, hands clasped before witnesses, and no private revenge."
       }
     },
     "src.1fa0de66": {
@@ -27181,24 +27844,14 @@
         "text": "Converted to the local faith."
       }
     },
-    "src.212d0aa8": {
+    "src.2134d002": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
         "data/events_common.js"
       ],
       "source": {
-        "text": "Give as good as you get, publicly."
-      }
-    },
-    "src.213c4b8a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🕊 Let the feud die"
+        "text": "A public oath closes doors that private anger keeps opening."
       }
     },
     "src.213ea6d7": {
@@ -27319,6 +27972,16 @@
       ],
       "source": {
         "text": "Yield and beg terms."
+      }
+    },
+    "src.2236c5a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Save your own people and leave theirs struggling."
       }
     },
     "src.22464686": {
@@ -28383,6 +29046,16 @@
         "text": "Confront them before witnesses."
       }
     },
+    "src.28aed65c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Offer peace, if they will take it."
+      }
+    },
     "src.28b9bd99": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28693,16 +29366,6 @@
         "text": "Paste a start code or world seed first."
       }
     },
-    "src.2b653341": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Starve a quarrel and it dies quietly."
-      }
-    },
     "src.2b81e976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28771,6 +29434,16 @@
       ],
       "source": {
         "text": "🚩 The host marches on {province}."
+      }
+    },
+    "src.2be372fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let a small concession prove that the words have weight."
       }
     },
     "src.2be93448": {
@@ -28851,6 +29524,16 @@
       ],
       "source": {
         "text": "Not now"
+      }
+    },
+    "src.2c49efe7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Buried an inherited feud."
       }
     },
     "src.2c55e9cd": {
@@ -29121,6 +29804,16 @@
       ],
       "source": {
         "text": "The Harvest"
+      }
+    },
+    "src.2d746e4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Peace Before Witnesses"
       }
     },
     "src.2d8ee837": {
@@ -29503,6 +30196,16 @@
       ],
       "source": {
         "text": "Their riders were waiting at the ford. Your raiders return fewer, poorer, and ashamed."
+      }
+    },
+    "src.306b51e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Took compensation to end a rivalry."
       }
     },
     "src.308626c0": {
@@ -30326,6 +31029,16 @@
         "text": "A Knife in the Dark Market"
       }
     },
+    "src.35c25438": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Propose peace while both crews are watching."
+      }
+    },
     "src.35c9d70f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30406,6 +31119,16 @@
         "text": "🎓 {name} is left to their own devices."
       }
     },
+    "src.3682ecb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let every witness know that you will give as good as you get."
+      }
+    },
     "src.36997b23": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30464,16 +31187,6 @@
       ],
       "source": {
         "text": "Mail Hauberks"
-      }
-    },
-    "src.36f1ad4d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "Their blade is quicker. You yield, bleeding."
       }
     },
     "src.36f7288c": {
@@ -31438,6 +32151,16 @@
         "text": "(pointer: coarse)"
       }
     },
+    "src.3d9fcbdf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The old injury has found a name. Before neighbors and kin, {rival} declares that no friendship stands between your houses and that every slight will be answered."
+      }
+    },
     "src.3da23686": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32009,6 +32732,16 @@
         "text": "Climb. Jump."
       }
     },
+    "src.415e42bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "There will be no bargain."
+      }
+    },
     "src.416156d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32149,6 +32882,16 @@
         "text": "Bad coin travels fast — and so do reputations."
       }
     },
+    "src.42d92902": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Swear the peace."
+      }
+    },
     "src.42e9b17b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32257,6 +33000,16 @@
       ],
       "source": {
         "text": "Listen more than you pour."
+      }
+    },
+    "src.435ab877": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Take up the feud and the obligations of the dead."
       }
     },
     "src.438a9bdf": {
@@ -32952,6 +33705,26 @@
         "text": "Humility pleases the powerful, and asks for nothing."
       }
     },
+    "src.473f1468": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel."
+      }
+    },
+    "src.4746c78b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Exhaustion strips the pride from both of you. Hands are clasped in the smoking street, and the feud ends before witnesses."
+      }
+    },
     "src.47698f3a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33262,6 +34035,16 @@
       ],
       "source": {
         "text": "{sex} of {age}"
+      }
+    },
+    "src.494732b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} pushes the purse back. “Silver cannot buy what was taken.” The go-between has no peace to witness."
       }
     },
     "src.49569c1a": {
@@ -34246,6 +35029,16 @@
         "text": "Name {name} your enemy. (spends the day)"
       }
     },
+    "src.4f1fc0fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Ask one token of good faith."
+      }
+    },
     "src.4f292a60": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34756,6 +35549,16 @@
         "text": "Coin keeps; borrowed iron does not. Travel light."
       }
     },
+    "src.52341e24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} has not forgotten enough. The old quarrel finds a new name in you."
+      }
+    },
     "src.52402728": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35056,6 +35859,16 @@
         "text": "Requires a coastal county."
       }
     },
+    "src.5432a508": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Peace is welcome, but not at the price of surrendering your claim."
+      }
+    },
     "src.54639028": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35144,6 +35957,16 @@
       ],
       "source": {
         "text": "the county"
+      }
+    },
+    "src.54e5dd8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Yielded a duel and ended a feud."
       }
     },
     "src.54ec5e72": {
@@ -35544,6 +36367,16 @@
       ],
       "source": {
         "text": "A stranger of real accomplishment in learning."
+      }
+    },
+    "src.574a2403": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The judgment leaves neither side wholly pleased, which is how the witnesses know it is fair. Both sides swear to let the matter rest."
       }
     },
     "src.574a68fc": {
@@ -35996,6 +36829,16 @@
         "text": "A small lord with empty coffers will sell his birthright. The liege tolerates it — barely."
       }
     },
+    "src.5a4ac0c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A respected go-between seats you and {rival} beneath the same roof and urges ṣulḥ: fair amends, named witnesses, and a binding end to the quarrel."
+      }
+    },
     "src.5a505f56": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36124,16 +36967,6 @@
       ],
       "source": {
         "text": "Qadi"
-      }
-    },
-    "src.5ad42115": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Put the enmity aside — {name} is no longer your rival."
       }
     },
     "src.5ad48d8a": {
@@ -37112,16 +37945,6 @@
         "text": "Pay a clerk for a clean copy. (8 gold)"
       }
     },
-    "src.6088c3fe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "He defaults — but the mill pledge makes you whole, and an enemy."
-      }
-    },
     "src.608bd625": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37360,6 +38183,16 @@
       ],
       "source": {
         "text": "Others’ regard"
+      }
+    },
+    "src.61e1e8c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Their blade is quicker. You yield, bleeding — and before the witnesses concede that satisfaction has been given."
       }
     },
     "src.61eab8a1": {
@@ -37632,16 +38465,6 @@
         "text": "menu / back / close ·"
       }
     },
-    "src.63e361ae": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Ignore the fool."
-      }
-    },
     "src.63f48b23": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37822,16 +38645,6 @@
       ],
       "source": {
         "text": "Bishop"
-      }
-    },
-    "src.652a72b9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Answer insult with insult."
       }
     },
     "src.654edbe9": {
@@ -38224,16 +39037,6 @@
         "text": "Turn him away."
       }
     },
-    "src.67c60054": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🕊 The feud with {name} is let to die."
-      }
-    },
     "src.67c978e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38623,6 +39426,16 @@
       ],
       "source": {
         "text": "Your counselors raise it delicately: you will not live forever, and unsettled successions drown realms in blood."
+      }
+    },
+    "src.69bbb625": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Every shouted order becomes an argument. The roof is saved, but neither of you credits the other."
       }
     },
     "src.69bc66f8": {
@@ -39225,6 +40038,16 @@
         "text": "Walk away from luck that glances over its shoulder."
       }
     },
+    "src.6d938c43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The token becomes a price, the price an insult. The witnesses go home without hearing an oath."
+      }
+    },
     "src.6d9542b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39243,6 +40066,16 @@
       ],
       "source": {
         "text": "The liege’s war finds its field. Your banner has its place in the line, and great men are watching how you hold it."
+      }
+    },
+    "src.6da2fef4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Call for a mediator."
       }
     },
     "src.6dc9eab6": {
@@ -39746,6 +40579,16 @@
         "text": "No enterprise yet. Open one in a settlement below."
       }
     },
+    "src.70d69826": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🕊 Seek a settlement…"
+      }
+    },
     "src.70e74f12": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40095,6 +40938,16 @@
       ],
       "source": {
         "text": "Water the wine."
+      }
+    },
+    "src.73314d4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Ended a rivalry after facing a common danger."
       }
     },
     "src.733153da": {
@@ -40730,6 +41583,16 @@
         "text": "🐞 Bug — something went wrong"
       }
     },
+    "src.771b1d94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "“That quarrel was not mine.”"
+      }
+    },
     "src.771dd8e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40838,6 +41701,16 @@
       ],
       "source": {
         "text": "Crack it."
+      }
+    },
+    "src.77c78bfc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} comes with witnesses and a careful proposal of ṣulḥ: speak the claims plainly, settle them fairly, and swear before {god} that the quarrel is ended."
       }
     },
     "src.77e3740b": {
@@ -41221,6 +42094,16 @@
         "text": "Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under."
       }
     },
+    "src.79ea0ad1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Ask judgment of the mediator."
+      }
+    },
     "src.79ee13ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41249,6 +42132,16 @@
       ],
       "source": {
         "text": "But a house is more than one life. Who carries the name onward?"
+      }
+    },
+    "src.7a3ea8de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ask witnesses or a mediator to make a peace that binds you both. (spends the day)"
       }
     },
     "src.7a4c3a1e": {
@@ -41953,6 +42846,16 @@
         "text": "Honest plunder, if plunder can be honest."
       }
     },
+    "src.7ea0c05d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A respected go-between seats you and {rival} beneath the same roof. The terms are old and plain: amends for the injury, witnesses to the promise, and an end to every private revenge."
+      }
+    },
     "src.7ea67ad1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42401,6 +43304,16 @@
       ],
       "source": {
         "text": "Peace bought with a little pride."
+      }
+    },
+    "src.814abf14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Made peace with a rival through compensation."
       }
     },
     "src.815084e7": {
@@ -43214,6 +44127,16 @@
         "text": "you are already wed to {name}."
       }
     },
+    "src.860c8275": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Silver admits that an injury was done without making you crawl."
+      }
+    },
     "src.860db2f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43724,6 +44647,16 @@
         "text": "Words, charm, and the ways of court."
       }
     },
+    "src.8963f527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "open feud"
+      }
+    },
     "src.8968aa54": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44142,6 +45075,16 @@
       ],
       "source": {
         "text": "Right may be on your side — the ledger is on his."
+      }
+    },
+    "src.8c1be1a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Shared labor may do what argument could not."
       }
     },
     "src.8c23689b": {
@@ -45396,6 +46339,16 @@
         "text": "Land is taken only by siege:"
       }
     },
+    "src.93d03fe5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "At dawn the house still stands. {rival} meets your eye across the smoking yard and, for once, nods without mockery."
+      }
+    },
     "src.93e1e40c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45414,6 +46367,16 @@
       ],
       "source": {
         "text": "Joy and hunger arrive together."
+      }
+    },
+    "src.940a8d72": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} laughs at the demand. The mediator’s table has merely given the quarrel a new insult."
       }
     },
     "src.94243dda": {
@@ -45948,6 +46911,16 @@
       ],
       "source": {
         "text": "you yourself"
+      }
+    },
+    "src.97de5894": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A respected elder seats you and {rival} before witnesses. The terms are plain: restitution for the injury and a sworn end to the quarrel."
       }
     },
     "src.97e8db9c": {
@@ -46903,6 +47876,16 @@
         "text": "Quick"
       }
     },
+    "src.9d11a81d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Accepted a mediated peace with a rival."
+      }
+    },
     "src.9d182261": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47151,6 +48134,16 @@
       ],
       "source": {
         "text": "Oblige them handsomely."
+      }
+    },
+    "src.9e76d65c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Every term becomes another argument. At last the mediator rises and leaves you to your anger."
       }
     },
     "src.9e7844e2": {
@@ -47973,6 +48966,16 @@
         "text": "Zoom in"
       }
     },
+    "src.a37cbef8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The token is yielded without haggling. The witnesses murmur approval, and the oath is made."
+      }
+    },
     "src.a3a06f0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48725,6 +49728,16 @@
         "text": "Terrain"
       }
     },
+    "src.a843d268": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own."
+      }
+    },
     "src.a8532270": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49146,6 +50159,16 @@
         "text": "Trade information only."
       }
     },
+    "src.aaf7ed0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Offer amends before witnesses. (5 gold)"
+      }
+    },
     "src.aafce8bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49164,6 +50187,16 @@
       ],
       "source": {
         "text": "Not this one."
+      }
+    },
+    "src.ab24b757": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Go-Between"
       }
     },
     "src.ab43d664": {
@@ -49217,16 +50250,6 @@
         "text": "Knew everything except how to stay."
       }
     },
-    "src.ab9e4345": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "{rival} has taken against you — a slight, a dispute over a boundary stone, a look held too long. It festers."
-      }
-    },
     "src.abba5bf1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49235,6 +50258,16 @@
       ],
       "source": {
         "text": "Lord by lord, the benches shake their heads. The steward folds his tally. The demand dies in the hall — and the liege marks who led the “no.”"
+      }
+    },
+    "src.abc1b448": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} comes with witnesses and a careful proposal: speak the injuries aloud, renounce revenge, and seal the peace before the altar with an oath and the kiss of peace."
       }
     },
     "src.abcdf354": {
@@ -49565,6 +50598,16 @@
       ],
       "source": {
         "text": "Pass the quarrel to a higher bench."
+      }
+    },
+    "src.adf517a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Make common work the first witness to reconciliation."
       }
     },
     "src.adff4511": {
@@ -50027,6 +51070,16 @@
       ],
       "source": {
         "text": "Petition at the great houses."
+      }
+    },
+    "src.b1202542": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Neither pride nor anger gets the final word."
       }
     },
     "src.b126d5e9": {
@@ -51152,6 +52205,16 @@
         "text": "A few coins, and the dawn knock is not for you."
       }
     },
+    "src.b814e6fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "cooling"
+      }
+    },
     "src.b824312a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51300,6 +52363,16 @@
       ],
       "source": {
         "text": "The bench is yours now, for better or worse."
+      }
+    },
+    "src.b9c02930": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go."
       }
     },
     "src.b9e57883": {
@@ -51814,6 +52887,16 @@
         "text": "A prayer for children. (25 piety)"
       }
     },
+    "src.bdb55eaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The feud has already taught you where mercy leads."
+      }
+    },
     "src.bdb99533": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51902,6 +52985,16 @@
       ],
       "source": {
         "text": "Old ink, old phrasing, an old seal impressed again. It may be enough."
+      }
+    },
+    "src.be14c269": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The clean beginning is accepted. Old accusations are withdrawn, and both houses step back from the edge."
       }
     },
     "src.be221292": {
@@ -52142,6 +53235,16 @@
       ],
       "source": {
         "text": "A fat purse, and a colder look from {lord}."
+      }
+    },
+    "src.c05fbacd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} was the enemy of the one whose place you have taken. Kin wait to hear whether the old injury belongs to the whole house now — or whether it will be buried with the dead."
       }
     },
     "src.c06e265e": {
@@ -53008,6 +54111,16 @@
         "text": "Coin and prices this year"
       }
     },
+    "src.c5b0ae5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Inherited a family feud."
+      }
+    },
     "src.c5b1ed93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53348,6 +54461,16 @@
         "text": "🎓 {name} will be schooled in stewardship."
       }
     },
+    "src.c80e7b70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "simmering"
+      }
+    },
     "src.c821df28": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53599,6 +54722,16 @@
         "text": "Carry your suit to a higher lord: escape a harsh liege, or rise under a greater one."
       }
     },
+    "src.ca069e1c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A new heir can say what the dead could not."
+      }
+    },
     "src.ca30bec7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53687,6 +54820,16 @@
       ],
       "source": {
         "text": "wards off sickness and death"
+      }
+    },
+    "src.cadfb6f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "An Inherited Quarrel"
       }
     },
     "src.cafc702e": {
@@ -54410,16 +55553,6 @@
         "text": "A strip of land is cheaper than a feud."
       }
     },
-    "src.cf7dfcbf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "Won a duel of honor."
-      }
-    },
     "src.cf7efb41": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54458,6 +55591,16 @@
       ],
       "source": {
         "text": "The townsfolk mutter that the council needs a man of sense — your name comes up more than once."
+      }
+    },
+    "src.d013bb6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The purse changes hands. Your enemy names the injury answered, and the witnesses bind you both to peace."
       }
     },
     "src.d02b533f": {
@@ -54769,6 +55912,16 @@
       ],
       "source": {
         "text": "Final wealth"
+      }
+    },
+    "src.d2276427": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Won a duel of honor and ended a feud."
       }
     },
     "src.d2284816": {
@@ -55832,6 +56985,16 @@
         "text": "The raiders, laden elsewhere, pass the church by. A miracle, plainly."
       }
     },
+    "src.d8f1cbdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Offer fair amends. (10 gold)"
+      }
+    },
     "src.d8f41a6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55971,6 +57134,16 @@
       ],
       "source": {
         "text": "📂 Load game"
+      }
+    },
+    "src.d9b59766": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Swore a public peace with a rival."
       }
     },
     "src.d9d8f6b5": {
@@ -56151,6 +57324,16 @@
       ],
       "source": {
         "text": "{scenario} in {province}"
+      }
+    },
+    "src.db0b633c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Refuse their hand."
       }
     },
     "src.db26a475": {
@@ -56931,6 +58114,16 @@
       ],
       "source": {
         "text": "Serve in your liege’s host. (+liege’s favor)"
+      }
+    },
+    "src.dfec3bb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{rival} comes with elders and a careful proposal: speak the injuries plainly, make restitution where it is owed, and swear before witnesses that the quarrel is ended."
       }
     },
     "src.e0060376": {
@@ -58416,6 +59609,16 @@
         "text": "From wrappings of oiled cloth comes {item}. The price is {itemprice} gold — and worth it twice over, says the seller, to the right person."
       }
     },
+    "src.e8d623cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market."
+      }
+    },
     "src.e8f33d5f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58424,6 +59627,16 @@
       ],
       "source": {
         "text": "Rest at the ale-house. (2 gold)"
+      }
+    },
+    "src.e911331b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Give the next generation a clean beginning."
       }
     },
     "src.e9132a83": {
@@ -58564,6 +59777,16 @@
       ],
       "source": {
         "text": "Almoner"
+      }
+    },
+    "src.ea35fb49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Some injuries deserve a longer memory."
       }
     },
     "src.ea449564": {
@@ -59516,6 +60739,16 @@
       ],
       "source": {
         "text": "🧭 The household commits {stake} gold to a distant trade partnership."
+      }
+    },
+    "src.f02e06d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Work beside them until the fire is beaten."
       }
     },
     "src.f039952b": {
@@ -60990,6 +62223,16 @@
         "text": "Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for."
       }
     },
+    "src.f982a04a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Rather than feed the feud another year, your enemy pays a smaller purse and names the matter closed."
+      }
+    },
     "src.f9964642": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61538,6 +62781,16 @@
       ],
       "source": {
         "text": "Take a fief back from a vassal — by law if he bends, by force if he rises."
+      }
+    },
+    "src.fd2b4172": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "“An injury to this house is mine.”"
       }
     },
     "src.fd32335c": {
@@ -63773,6 +65026,14 @@
         "text": "Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}."
       }
     },
+    "ui:Ask witnesses or a mediator to make a peace that binds you both. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ask witnesses or a mediator to make a peace that binds you both. (spends the day)"
+      }
+    },
     "ui:Ask {lord} for lands and a banner.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -65151,16 +66412,6 @@
         "text": "Put it to a vote: the liege’s aid down one step, if the hall backs you."
       }
     },
-    "ui:Put the enmity aside — {name} is no longer your rival.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Put the enmity aside — {name} is no longer your rival."
-      }
-    },
     "ui:Qadi": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66325,6 +67576,14 @@
         "text": "best: {skill} {value}"
       }
     },
+    "ui:blood feud": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "blood feud"
+      }
+    },
     "ui:church": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -66339,6 +67598,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "coastal"
+      }
+    },
+    "ui:cooling": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "cooling"
       }
     },
     "ui:courting": {
@@ -66519,6 +67786,14 @@
         "text": "once your story begins, the ☰ menu holds the full start code to share."
       }
     },
+    "ui:open feud": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "open feud"
+      }
+    },
     "ui:overextended — your income & levy cut {pct}%": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -66571,6 +67846,14 @@
       "location": "js/model.js",
       "source": {
         "text": "shrine"
+      }
+    },
+    "ui:simmering": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "simmering"
       }
     },
     "ui:someone": {
@@ -67737,6 +69020,25 @@
         "text": "⚜ {name}: you hold {held} — {need} make the duke."
       }
     },
+    "ui:⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own."
+      }
+    },
+    "ui:⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "heat",
+        "state"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go."
+      }
+    },
     "ui:✖ Dismiss the tutor": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -68011,6 +69313,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "🕊 Pronounce the divorce ({gold} gold)"
+      }
+    },
+    "ui:🕊 Seek a settlement…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🕊 Seek a settlement…"
       }
     },
     "ui:🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt.": {
