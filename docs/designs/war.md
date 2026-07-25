@@ -131,6 +131,19 @@ Declining is remembered: `war_press_on` sets `war.tributeDeclined`, and `FB.warO
 stops re-queueing the offer for the rest of that war — the choice to press on is made
 once per war, not after every battle.
 
+**Equipment participates at the point of battle, not merely by ownership.** Only battle
+effects worn by the current head enter `FB.itemBonus('battle')`; a sword or armor lying
+in the family armory contributes nothing. Existing field-victory, harrying, raid, and
+event-spoils paths now resolve through the exact item APIs, creating a repeatable gear
+instance or granting an unowned unique heirloom when their normal loot roll succeeds.
+
+Lethal field-battle, host-battle, war-council battle, and shield-wall rout effects carry
+`deathProvenance`. `FB.applyEffects` materializes the event, province, and enemy ids only
+when that resolution actually leaves health at zero. `G.die` freezes those semantic ids
+and the exact final loadout into the legend before succession. The death sheet can
+therefore say where and against whom the character fell without saving rendered prose.
+No battlefield loss or looting of the dead character's equipment occurs in this release.
+
 **The seasonal layer remains, now grounded in the field.** `FB.playerWarTick` still
 charges upkeep and queues the `war_council`, whose options act through the `war_*` fns —
 but the enemy-advance clock (`war.enemySiege`) ticks only while a hostile host stands in

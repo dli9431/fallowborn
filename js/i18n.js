@@ -428,7 +428,16 @@ window.FBDATA = window.FBDATA || {};
     for (const key in (params || {})) {
       if (!own(params, key)) continue;
       const value = params[key];
-      if (value && typeof value === 'object' && value.$data && value.id) {
+      if (value && typeof value === 'object' && value.$item &&
+        value.$item.defId && FB.itemNameFromSnapshot) {
+        out[key] = state
+          ? FB.itemNameFromSnapshot(state, viewer, value.$item)
+          : value.$item.defId;
+        const idef = FBDATA.items && FBDATA.items[value.$item.defId];
+        if (idef && value.icon) {
+          out[key] = (idef.icon || '') + (idef.icon ? ' ' : '') + out[key];
+        }
+      } else if (value && typeof value === 'object' && value.$data && value.id) {
         const tables = {
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,

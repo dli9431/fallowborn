@@ -1379,7 +1379,7 @@ window.FB = window.FB || {};
       comp.ret += FB.buildingBonus(state, 'retinue') + FB.techBonus(state, 'retinue');
       comp.arch += FB.buildingBonus(state, 'archers') + FB.techBonus(state, 'archers');
       // the lord raises the levy in person: martial skill sways how many
-      // answer the call — traits and carried items count through skillOf;
+      // answer the call — traits and equipped gear count through skillOf;
       // the professionals are already sworn and paid
       const me = state.chars[p.charId];
       comp.levy *= (1 + FB.techBonus(state, 'levy') + (FB.councilBonus ? FB.councilBonus(state, 'levy') : 0)) *

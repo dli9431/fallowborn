@@ -500,7 +500,7 @@ FBDATA.events.push(
       failure:{ text:'No one is hiring swords this season.', effects:{ } } },
     { label:'Hear the {holy} preach at the {temple}.', desc:'An hour of good words costs nothing.', effects:{ piety:3 } },
     { label:'Court the town’s notables.', require:{ tierMin:2 }, desc:'Useful names are learned over wine.', effects:{ prestige:3, skills:{dip:1} } },
-    { label:'Ask after rare goods.', require:{ goldMin:15 }, desc:'Where coin gathers, curious things follow.', effects:{ custom:'offer_item' } }
+    { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A town market keeps ordinary gear within reach.', effects:{ custom:'offer_gear' } }
   ]},
 { id:'visit_city', title:'{settlement}', trigger:{ never:true },
   text:'Gates like cliffs, streets like rivers. In {settlement} a fortune is made or lost every day, and nobody asks where you were born — only what you carry.',
@@ -516,7 +516,7 @@ FBDATA.events.push(
       success:{ text:'Three nights guarding a nervous silk merchant. The pay is very good.', effects:{ gold:6, prestige:2 } },
       failure:{ text:'The work went to harder men — after one of them rearranged your face.', effects:{ health:-1 } } },
     { label:'Marvel at the great {temple}.', desc:'Stone raised to heaven lifts the heart with it.', effects:{ piety:4 } },
-    { label:'Browse the dealers in rare goods.', require:{ goldMin:15 }, desc:'The strange and precious gather where money does.', effects:{ custom:'offer_item' } },
+    { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A city market always has serviceable gear for sale.', effects:{ custom:'offer_gear' } },
     { label:'Wander the pleasure quarter.', require:{ religionGroups:['christian','pagan','jewish'] }, desc:'Wine, music, and thinner pockets by morning.',
       effects:{ health:1, gold:-2, piety:-3 } },
     { label:'Linger in the bath-houses.', require:{ religionGroups:['muslim'] }, desc:'Steam soaks the road out of tired bones.',

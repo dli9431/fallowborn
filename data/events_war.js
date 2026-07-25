@@ -36,7 +36,8 @@ FBDATA.events.push(
       success:{ text:'The lines meet with a sound like a falling forest — and it is theirs that breaks. The field is yours.',
         effects:{ custom:'war_win', prestige:8, skills:{mar:1} } },
       failure:{ text:'The day goes against you. You are carried back with the remnant of your host — alive, and little else.',
-        effects:{ custom:'war_loss', gold:-4, health:-1, prestige:-4 } } },
+        effects:{ custom:'war_loss', gold:-4, health:-1, prestige:-4,
+          deathProvenance:{ kind:'battle', enemy:'war' } } } },
     { label:'Hunt down their field host.', require:{ custom:'war_can_hunt' },
       desc:'March on their army in the field — battle joins when you catch it.',
       effects:{ custom:'war_hunt' } },
@@ -70,7 +71,8 @@ FBDATA.events.push(
       success:{ text:'Your part of the line holds, then breaks them. The liege marks it — and so does everyone else.',
         effects:{ prestige:10, opinionLiege:15, gold:4, skills:{mar:1}, warService:2 } },
       failure:{ text:'A mace finds your helm; your men drag you clear. You bled in the liege’s cause, and that too is remembered.',
-        effects:{ health:-2, opinionLiege:8, prestige:2, addTrait:'scarred', warService:1 } } },
+        effects:{ health:-2, opinionLiege:8, prestige:2, addTrait:'scarred', warService:1,
+          deathProvenance:{ kind:'battle', enemy:'liegeWar' } } } },
     { label:'Hold your ground and spend your men carefully.', desc:'A quiet day, well held, is remembered too.', effects:{ opinionLiege:5, prestige:2, skills:{mar:1}, warService:1 } }
   ]},
 { id:'host_camp', title:'Fires of the Great Camp',
@@ -160,7 +162,8 @@ FBDATA.events.push(
 { id:'field_battle_lost', title:'Battle — the Day Is Lost', trigger:{ never:true }, wartime:true,
   text:'The line bent, then broke at {cname}. You are borne away with the remnant of your host — bloodied, beaten, but breathing.',
   options:[
-    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4 } }
+    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4,
+      deathProvenance:{ kind:'battle', province:'context', enemy:'war' } } }
   ]},
 /* variants for a host with men-at-arms: the hard core earns a mention */
 { id:'field_battle_won_steel', title:'Battle — the Field Is Yours', trigger:{ never:true }, wartime:true,
@@ -171,6 +174,7 @@ FBDATA.events.push(
 { id:'field_battle_lost_steel', title:'Battle — the Day Is Lost', trigger:{ never:true }, wartime:true,
   text:'The levy broke first at {cname}, as levy will. Your men-at-arms sold their ground dearly and formed the rearguard that bore you off — bloodied, beaten, but breathing.',
   options:[
-    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4 } }
+    { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4,
+      deathProvenance:{ kind:'battle', province:'context', enemy:'war' } } }
   ]}
 );

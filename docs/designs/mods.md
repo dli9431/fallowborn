@@ -43,4 +43,12 @@ supplied. A full currency definition always takes precedence. Display strings ar
 escaped at the DOM boundary, and active mod text remains covered by the existing
 save fingerprint.
 
+Item definitions remain backwards compatible. A mod item without equipment metadata is
+treated as a unique, one-handed object with generic deterministic art; its definition id
+is its stable reference in old and new saves. Mods may opt into repeatable generated gear
+with `unique:false`, add `slot`, `grip`, `ageMin`, `qualityFx`, and procedural `art`
+ranges, but should use the exact-instance APIs in `js/items.js` rather than mutating
+`player.items` or `c.items`. Mod effects may grant a definition through `giveItem`; the
+subsystem creates an instance automatically when that definition is repeatable.
+
 Related: `docs/MODDING.md` is the full mod authoring reference.

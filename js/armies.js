@@ -400,7 +400,14 @@ window.FB = window.FB || {};
     if (pInvolved) {
       const won = winner.realm === 'player';
       const steel = FB.hostUnits(winner.realm === 'player' ? winner : loser).ret > 0;
-      state.eventQueue.push({ id: (won ? 'field_battle_won' : 'field_battle_lost') + (steel ? '_steel' : ''), ctx: { pid: pid } });
+      /* The outcome handler may end the war immediately. Freeze the opposing
+         realm on the queued battlefield event before that state disappears. */
+      const enemyId = state.player.war && state.player.war.enemy ||
+        (won ? loser.realm : winner.realm);
+      state.eventQueue.push({
+        id:(won ? 'field_battle_won' : 'field_battle_lost') + (steel ? '_steel' : ''),
+        ctx:{ pid:pid, enemyId:enemyId }
+      });
       if (won) FB.fns.war_win(state); else FB.fns.war_loss(state);
     } else {
       trackAIWar(state, winner.realm, loser.realm);

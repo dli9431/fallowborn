@@ -479,8 +479,11 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `travelReturn: true` (begin the saved route home) · `travelSettle: true` (move the
 household to the completed destination without converting culture/faith) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
-`giveItem: "id"` (grant one specific heirloom from `FBDATA.items` — issued kit, gifts, quest
-rewards; random finds use `custom: "loot_item"` instead) ·
+`giveItem: "id"` (grant one definition from `FBDATA.items`; repeatable definitions create
+a fresh exact instance, while random finds use `custom: "loot_item"`) ·
+`deathProvenance: {kind:"battle|event", province:"context", enemy:"war|liegeWar|realmWar"}`
+(optional semantic origin for a lethal effect; ids are materialized only if the resolved
+effect leaves the player at zero health) ·
 `pricePressure: n` with optional `pricePressureYears: n` and
 `pricePressureSource: "stable_id"` (a saved annual price-index shock; positive raises
 pressure, negative lowers it) ·
@@ -814,33 +817,52 @@ offers.
 
 ## Items
 
-`FBDATA.items` (in `data/map_data.js`) are personal treasures carried by the player and
-passed to heirs (`player.items`, mod key `items`):
+`FBDATA.items` (in `data/map_data.js`, mod key `items`) define objects that can live in
+the shared family armory and be equipped by the current head, spouses, or resident
+unmarried children:
 
 ```json
 { "items": { "ivory_chesspiece": {
   "name": "Ivory King", "icon": "♟", "rarity": "fine", "value": 45,
-  "fx": { "int": 1 }, "desc": "A gift between rulers, long ago." } } }
+  "slot": "hand", "ageMin": 6,
+  "fx": { "int": 1 },
+  "art": { "kind": "generic" },
+  "desc": "A gift between rulers, long ago."
+} } }
 ```
 
 - `rarity` — `common` / `fine` / `famed` weights random draws (famed pieces mostly arrive
   as war spoils and finds); `value` is the purchase price.
-- `fx`, summed by `FB.itemBonus`: `mar/dip/ste/int/lea` add to the **player's skills**
-  (through `FB.skillOf`, so every formula in the game feels them), `battle` adds to battle
-  odds, `prestige`/`piety` accrue per season, `health` lowers yearly mortality.
-- Every item chip opens an **item card** (hover shows the same summary on desktop) listing
-  its powers and worth. From it the player can **sell** the item for
-  `balance.itemSellRatio` of its value (default half) or **give** it to anyone they know
-  for regard scaled by rarity (`FB.giftOpinion`: common +15, fine +25, famed +40; the
-  lord's favor rises by the same). Given items live on the receiving character (`c.items`,
-  shown on their card) and rejoin `player.items` if that character later succeeds.
-- Event hooks (`custom` effects): `offer_item` (a random unowned item goes on sale via the
-  `item_offer` event), `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),
+- `slot` is `head`, `neck`, `body`, `waist`, `feet`, `hand`, or `ring`. `grip:2` on a
+  hand item reserves both hands. `ageMin` is the minimum equip age.
+- Definitions are unique by default. `unique:false` makes a repeatable template: each
+  acquisition creates a saved exact instance with `quality` and `visualSeed`. Quality is
+  Plain/Well-made/Masterwork at 70/25/5%, multiplies value by 1/2/4, and adds
+  `qualityFx` zero/one/two times to the base `fx`.
+- `art.kind` selects procedural art (`generic`, `seax`, `sword`, `spear`, `shield`,
+  `book`, `jack`, `helm`, `crown`, `ring`, `pendant`, `relic`, `belt`, `boots`,
+  `chest`, or `picks`). The kind accepts the color arrays demonstrated by core items:
+  `metals`, `grips`, `woods`, `cloths`, `threads`, `leathers`, `gems`, `trims`,
+  `cords`, `covers`, `pages`, and `wraps`. Missing art uses `generic`. Drawing depends
+  only on the saved seed; do not put gameplay randomness in an art recipe.
+- `fx` is active only while equipped. `mar/dip/ste/int/lea` and `health` affect the
+  wearer; `battle`, `gold`, `prestige`, and `piety` count only on the current head.
+  Unequipped armory objects have no mechanical effect.
+- `player.items` stores exact references, not necessarily definition ids.
+  `state.itemInstances` resolves generated references and `player.loadouts` assigns them.
+  Never push/splice those arrays from a mod custom function. Use `FB.grantItem`,
+  `FB.transferItem`, `FB.equipItem`, `FB.unequipItem`, `FB.pledgeItem`,
+  `FB.sellItem`, `FB.giveItem`, and `FB.destroyItem`.
+- Item cards list actual quality-adjusted powers, value, wearer, and valid actions.
+  Ordinary gifts grant +8/+15/+25 regard by quality; unique common/fine/famed items grant
+  +15/+25/+40. An equipped item must be removed before gift, sale, or pledge.
+- Event hooks (`custom` effects): `offer_item` (the full eligible table) and
+  `offer_gear` (ordinary gear only) put an exact object on sale through `item_offer`;
+  `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),
   `loot_item` (random spoils), `find_artifact` (famed only), `plot_loot` (spoils + ends the
-  plot). Random loot rolls the full rarity-weighted table; if the rolled item is already
-  owned, no new item is added, so a nearly complete hoard does not force the remaining
-  rare piece. War victories and raids also roll for spoils. To grant one **specific** item instead
-  of a random one, use the `giveItem: "id"` *effect* (above) rather than a custom fn.
+  plot). Owned unique objects are excluded while repeatable templates may recur. War
+  victories and raids also issue exact spoils. To grant one **specific definition**, use
+  the `giveItem: "id"` effect; it creates a new instance when that definition is repeatable.
 
 ## Plots, blessings, and pacts
 

@@ -392,6 +392,58 @@ textarea.modjson, textarea.savetext {
 .ccmeta .crest { vertical-align: -3px; margin-right: 4px; }
 #selfportrait { display: block; margin: 0 auto 8px; }
 
+/* household paper dolls and exact equipment slots */
+.paper-sheet {
+  display: grid; grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
+  gap: 12px; align-items: start; margin: 4px 0 12px;
+}
+.paperdoll {
+  display: block; width: 100%; height: auto; max-width: 180px; margin: 0 auto;
+  border: 1px solid #66522f; border-radius: 8px; background: #211b14;
+}
+.equip-panel { min-width: 0; }
+.equip-heading { color: #d8b24a; font-size: 14px; margin-bottom: 6px; }
+.equip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.equip-slot {
+  min-height: 44px; min-width: 0; padding: 5px 7px; cursor: pointer;
+  border: 1px solid #5b4a30; border-radius: 7px;
+  background: #292116; color: #e0d0a8; font: inherit; text-align: left;
+}
+.equip-slot:hover:not(:disabled) { border-color: #c9a24a; background: #33291b; }
+.equip-slot:disabled { opacity: .48; cursor: default; }
+.equip-slot span {
+  display: block; color: #9f8e6d; font-size: 11px; line-height: 1.2;
+}
+.equip-slot b {
+  display: block; overflow: hidden; color: #ead8a8; font-size: 12px;
+  font-weight: normal; line-height: 1.25; text-overflow: ellipsis;
+}
+.equip-note { color: #918163; font-size: 11px; line-height: 1.35; margin-top: 7px; }
+#tab-char .paper-sheet { grid-template-columns: 1fr; }
+#tab-char .paperdoll { width: 170px; }
+.item-card { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 10px; }
+.itemart {
+  display: block; flex: 0 0 auto; border: 1px solid #66522f;
+  border-radius: 7px; background: #211b14;
+}
+.item-card .itemart { width: 144px; height: 144px; }
+.item-card-copy { flex: 1 1 auto; min-width: 0; }
+.equip-choice { display: flex; align-items: center; gap: 10px; }
+.equip-choice > span { min-width: 0; }
+.equip-choice .itemart { width: 54px; height: 54px; }
+.death-paper {
+  display: grid; grid-template-columns: minmax(135px, 170px) minmax(0, 1fr);
+  gap: 12px; align-items: start; margin: 12px 0;
+}
+.death-paper .paperdoll { max-width: 170px; }
+.death-worn h4 { color: #d8b24a; margin: 0 0 6px; }
+.death-worn-row {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 4px 0; border-bottom: 1px dotted #4a3b27; font-size: 12px;
+}
+.death-worn-row span { color: #9f8e6d; }
+.death-worn-row b { color: #ead8a8; font-weight: normal; text-align: right; }
+
 /* ---------- family tree modal ----------
    Couples share a box; broods hang beneath their parents on drawn blood
    lines. Wide trees scroll sideways inside .ftwrap; min-width:max-content
@@ -559,6 +611,17 @@ textarea.modjson, textarea.savetext {
   .changelog-modal .gm-footer .btn { min-width: 180px; text-align: center; }
   /* the full-screen sheets get a chunkier, thumb-friendly Close */
   .fullsheet-modal .gm-footer .btn { min-width: 200px; min-height: 52px; font-size: 16px; text-align: center; }
+}
+
+@media (max-width: 600px) {
+  .paper-sheet, .death-paper { grid-template-columns: 1fr; }
+  .paper-sheet .paperdoll, .death-paper .paperdoll { width: 150px; }
+  .item-card .itemart { width: 112px; height: 112px; }
+}
+
+@media (max-width: 380px) {
+  .item-card { align-items: center; flex-direction: column; }
+  .item-card .itemart { width: 128px; height: 128px; }
 }
 
 /* portrait: map on top, the Deeds/Land/Chronicle panel full-width beneath */

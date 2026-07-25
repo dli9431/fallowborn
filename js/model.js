@@ -176,8 +176,9 @@ window.FB = window.FB || {};
 
   FB.skillOf = function (c, key) {
     let v = (c.skills[key] || 0) + (FB.traitAgg(c)[key] || 0);
-    // the player's carried items sharpen their skills (FB.itemBonus loads later)
-    if (FB.state && FB.itemBonus && c.id === FB.state.player.charId) v += FB.itemBonus(FB.state, key);
+    // Equipped household gear sharpens its wearer (FB.itemBonus loads later).
+    if (FB.state && FB.itemBonus && FB.state.chars &&
+      FB.state.chars[c.id] === c) v += FB.itemBonus(FB.state, key, c.id);
     return FB.clamp(v, 0, FBDATA.balance.skillHardCap || 40);
   };
 

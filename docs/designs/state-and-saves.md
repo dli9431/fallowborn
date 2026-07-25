@@ -33,11 +33,28 @@ player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mo
 and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
 `state.legends` records each player character at death (`js/main.js` `recordLegend`):
-id, name, born/died years, a semantic `titleData` snapshot, and locale-neutral `causeMsg`
-and `quipMsg` descriptors. The quip choice is rolled once from traits, stats, and cause of
-death, but its text is rendered in the currently selected locale. The end screen
+id, name, born/died years, a semantic `titleData` snapshot, locale-neutral `causeMsg`
+and `quipMsg` descriptors, an exact frozen equipment `loadout`, and optional semantic
+`deathProvenance` (`kind`, event, province, and enemy ids). The quip choice is rolled once
+from traits, stats, and cause of death, but its text is rendered in the currently selected locale. The end screen
 (`UI.gameOver`) also accepts legacy rendered `title`, `cause`, and `quip` fields, so no save
 migration is required.
+
+Item/equipment state is additive and keeps save format 3. Repeatable objects live in
+`state.itemInstances[ref] = {defId,quality,visualSeed,motif?}`; `player.items` is the
+shared armory's exact-reference list and `player.loadouts[characterId]` maps the eight
+equipment slots to those references. `FB.ensureItems` runs on restore. It treats bare
+legacy ids as stable implicit instances, converts the five former ordinary heirlooms to
+Plain without changing their old value/effect, moves current-household `c.items` into the
+armory, validates old/new assignments, and auto-equips the current head in inventory
+order (right hand before left). Existing collateral ids remain valid. This repair uses
+stable hashes for legacy appearance and consumes no saved RNG.
+
+Generated-item Chronicle parameters store a `$item` snapshot rather than a rendered
+name. The display layer combines its frozen definition/quality identity with the active
+locale, so sale, gift, default, succession, and later catalog changes do not strand
+English prose in saved history. Generated instance records are retained after ownership
+ends for the same reason.
 
 `state.log` chronicle entries are dual-form. A legacy entry carries a pre-rendered
 string (`t`); a structured entry carries a nested durable message descriptor

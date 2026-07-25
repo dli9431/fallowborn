@@ -999,11 +999,13 @@ window.FB = window.FB || {};
       add('gold', FB.T('Fields at {settlement}', { settlement: land.settlementName }),
         land.amount);
     }
-    for (const iid of FB.itemList(state)) {
-      const def = FBDATA.items[iid];
-      if (!def || !def.fx) continue;
+    for (const ref of FB.equippedItemRefs(state, p.charId)) {
+      const item = FB.resolveItem(state, ref);
+      if (!item) continue;
       for (const k in lines) {
-        if (def.fx[k]) add(k, dataName('item', iid, def), def.fx[k]);
+        if (item.fx[k]) {
+          add(k, item.def.icon + ' ' + FB.itemName(state, ref, p.charId), item.fx[k]);
+        }
       }
     }
 
@@ -1053,143 +1055,6 @@ window.FB = window.FB || {};
     out.gold.total = FB.reliableGoldIncome(state);
     if (FB.ensureEconomy) out.gold.coinAdjustment = FB.ensureEconomy(state).lastAdjustment;
     return out;
-  };
-
-  /* ================= items (personal treasures) =================
-     Carried by the player, added to their skills via FB.skillOf, and
-     passed to heirs. Acquired from peddlers, markets, war, plots, finds. */
-  FB.itemList = function (state) {
-    return state.player.items = state.player.items || []; // lazy init for older saves
-  };
-
-  FB.itemBonus = function (state, key) {
-    let sum = 0;
-    for (const id of FB.itemList(state)) {
-      const def = FBDATA.items[id];
-      if (def && def.fx && def.fx[key]) sum += def.fx[key];
-    }
-    return sum;
-  };
-
-  /* Items weighted by rarity (or restricted to one rarity). Offers filter
-     owned pieces out; random loot rolls against the full table so hoarding
-     common pieces can never turn the next find into a guaranteed rarity. */
-  function itemPool(state, rarity, includeOwned) {
-    const owned = FB.itemList(state);
-    const W = { common: 6, fine: 3, famed: 1 };
-    const pool = [];
-    for (const id in FBDATA.items) {
-      const def = FBDATA.items[id];
-      if (!includeOwned && owned.indexOf(id) >= 0) continue;
-      if (rarity && def.rarity !== rarity) continue;
-      const w = W[def.rarity] || 1;
-      for (let i = 0; i < w; i++) pool.push(id);
-    }
-    return pool;
-  }
-
-  FB.lootItem = function (state, rarity, source) {
-    const pool = itemPool(state, rarity, true);
-    if (!pool.length) return null;
-    const id = FB.pick(pool);
-    const def = FBDATA.items[id];
-    if (FB.itemList(state).indexOf(id) >= 0) {
-      FB.news(state, FB.msg('news.item.duplicate',
-        '🎒 The find is no addition to your family’s treasures.', {}));
-      return null;
-    }
-    FB.itemList(state).push(id);
-    FB.news(state, FB.msg('news.item.acquired', {
-      forms: {
-        select: 'value', param: 'source', cases: {
-          plunder: '🎒 Plunder: {icon} {item}.',
-          spoils: '⚔ Among the spoils: {icon} {item}.',
-          raid: '⚔ Taken in the raid: {icon} {item}.',
-          earth: '✨ Out of the earth: {icon} {item}.',
-          chest: '🎒 From the chest: {icon} {item}.',
-          other: '🎒 Yours now: {icon} {item}.'
-        }
-      }
-    }, { source: source || 'other', icon: def.icon, item: FB.dataParam('item', id) }));
-    return id;
-  };
-
-  /* parting with a treasure: sold against its value, or given away for the
-     regard such largesse buys (scaled by rarity; the lord's favor rises too).
-     Given items sit on the receiving character (c.items) — worn as chips on
-     their card, and rejoining the family hoard if that character succeeds. */
-  FB.sellItem = function (state, id) {
-    const list = FB.itemList(state);
-    const i = list.indexOf(id);
-    const def = FBDATA.items[id];
-    if (i < 0 || !def || (FB.financeCollateralPledged &&
-      FB.financeCollateralPledged(state, 'item', id))) return false;
-    list.splice(i, 1);
-    const gold = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
-    state.player.gold += gold;
-    FB.news(state, FB.msg('news.item.sold',
-      '💰 Sold: {icon} {item} for {money:gold}.',
-      { icon: def.icon, item: FB.dataParam('item', id), gold: gold }));
-    return true;
-  };
-
-  FB.giftOpinion = function (def) {
-    return { common: 15, fine: 25, famed: 40 }[def.rarity] || 15;
-  };
-  FB.giveItem = function (state, id, cid) {
-    const list = FB.itemList(state);
-    const i = list.indexOf(id);
-    const c = state.chars[cid];
-    const def = FBDATA.items[id];
-    if (i < 0 || !c || c.dead || !def || (FB.financeCollateralPledged &&
-      FB.financeCollateralPledged(state, 'item', id))) return false;
-    list.splice(i, 1);
-    c.items = c.items || [];
-    if (c.items.indexOf(id) < 0) c.items.push(id);
-    const boost = FB.giftOpinion(def);
-    c.opinion = FB.clamp(c.opinion + boost, -100, 100);
-    if (state.roles.lord === cid) state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) + boost, -100, 100);
-    FB.news(state, FB.msg('news.item.given',
-      '🎁 You give {icon} {item} to {name}. (regard {regard})', {
-        icon: def.icon, item: FB.dataParam('item', id), name: c.name,
-        regard: Math.round(c.opinion)
-      }));
-    return true;
-  };
-
-  FB.offerItem = function (state) {
-    const pool = itemPool(state, null);
-    if (!pool.length) {
-      FB.news(state, FB.msg('news.item.nothing_new',
-        '🎒 Nothing is offered that you do not already own.', {}));
-      return;
-    }
-    const id = FB.pick(pool);
-    state.player.itemOffer = { id: id, price: FBDATA.items[id].value };
-    state.eventQueue.push({ id: 'item_offer', ctx: {} });
-  };
-
-  FB.fns.offer_item = function (state) { FB.offerItem(state); };
-  FB.fns.can_afford_item = function (state) {
-    const o = state.player.itemOffer;
-    return !!o && state.player.gold >= o.price;
-  };
-  FB.fns.buy_item = function (state) {
-    const o = state.player.itemOffer;
-    if (!o || state.player.gold < o.price) return;
-    state.player.gold -= o.price;
-    state.player.itemOffer = null;
-    const def = FBDATA.items[o.id];
-    FB.itemList(state).push(o.id);
-    FB.news(state, FB.msg('news.item.bought', '🎒 Bought: {icon} {item}.',
-      { icon: def.icon, item: FB.dataParam('item', o.id) }));
-  };
-  FB.fns.clear_item_offer = function (state) { state.player.itemOffer = null; };
-  FB.fns.loot_item = function (state) { FB.lootItem(state, null, 'plunder'); };
-  FB.fns.find_artifact = function (state) { FB.lootItem(state, 'famed', 'earth'); };
-  FB.fns.plot_loot = function (state) {
-    FB.lootItem(state, null, 'chest');
-    FB.fns.plot_end(state);
   };
 
   /* ================= plots (the intrigue game) ================= */

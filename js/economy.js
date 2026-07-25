@@ -950,10 +950,11 @@ window.FB = window.FB || {};
     const out = [];
     if (!FB.itemList || !FB.holdingList) return out;
     for (const id of FB.itemList(state)) {
-      const def = FBDATA.items[id];
+      const item = FB.resolveItem ? FB.resolveItem(state, id) : null;
       const collateral = { kind:'item', id:id };
-      if (def && def.value > 0 && !collateralPledged(state, collateral)) {
-        out.push({ collateral:collateral, value:def.value });
+      if (item && item.value > 0 && !collateralPledged(state, collateral) &&
+        (!FB.itemAssignment || !FB.itemAssignment(state, id))) {
+        out.push({ collateral:collateral, value:item.value });
       }
     }
     for (const id of FB.holdingList(state)) {
@@ -1109,6 +1110,10 @@ window.FB = window.FB || {};
     const offer = findOffer(state, kind, collateral);
     const def = FBDATA.finance && FBDATA.finance[kind];
     if (!offer || !def) return null;
+    /* A pledge must be unassigned before the contract exists. The exact
+       reference remains in the armory but cannot be worn, sold, or gifted. */
+    if (offer.collateral && offer.collateral.kind === 'item' &&
+      (!FB.pledgeItem || !FB.pledgeItem(state, offer.collateral.id))) return null;
     const e = FB.ensureEconomy(state);
     const preview = FB.financeLoanPreview(state, offer);
     const loan = {
@@ -1149,8 +1154,10 @@ window.FB = window.FB || {};
 
   function loseCollateral(state, collateral) {
     if (!collateral) return false;
+    if (collateral.kind === 'item' && FB.destroyItem) {
+      return FB.destroyItem(state, collateral.id, { force:true });
+    }
     let list = null;
-    if (collateral.kind === 'item' && FB.itemList) list = FB.itemList(state);
     if (collateral.kind === 'holding' && FB.holdingList) list = FB.holdingList(state);
     if (!list) return false;
     const at = list.indexOf(collateral.id);
@@ -1177,13 +1184,16 @@ window.FB = window.FB || {};
       state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) - 5, -100, 100);
     }
     if (loan.defaultKind === 'collateral') {
+      const asset = loan.collateral && loan.collateral.kind === 'item' && FB.itemParam
+        ? FB.itemParam(state, loan.collateral.id)
+        : FB.dataParam(loan.collateral.kind, loan.collateral.id);
       const lost = loseCollateral(state, loan.collateral);
       loan.status = 'defaulted';
       loan.defaultTurn = state.turn;
       if (lost) {
         FB.news(state, FB.msg('news.finance.collateral_lost',
           '⚠ The household defaults; the lender takes {asset} in settlement.',
-          { asset:FB.dataParam(loan.collateral.kind, loan.collateral.id) }));
+          { asset:asset }));
       } else {
         FB.news(state, FB.msg('news.finance.default_unsecured',
           '⚠ The household defaults. Its name is struck from the lenders’ good books.',

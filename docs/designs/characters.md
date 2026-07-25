@@ -9,6 +9,13 @@ Never write `c.skills[k]++` directly outside it. Daily focus training applies
 `balance.focusSkillGainRate` (0.75) to its authored seasonal chance before this
 soft-cap roll; event, education, and coming-of-age gains are unaffected.
 
+**Equipment bonuses belong to the wearer.** `FB.skillOf` adds skill effects from that
+character's household loadout, not from every object the dynasty owns. Equipped health
+protection likewise lowers that wearer's yearly mortality, including spouses and resident
+children. Battle odds and seasonal gold/prestige/piety remain head-of-household effects
+and count only the current protagonist's outfit. AI rulers, strangers, siblings, and
+married-away children do not simulate equipment. See [items.md](items.md).
+
 **Children are players too.** When a minor heir succeeds (age < 16), the daily picker
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.

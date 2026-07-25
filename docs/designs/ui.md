@@ -50,6 +50,22 @@ changing the underlying `player.gold`. The deprecated
 `FBDATA.balance.coinageSymbol` changes only the default icon when no full currency
 definition is active.
 
+**Managed household sheets use full-body paper dolls.** The Self sheet and the sheets for
+living spouses and resident unmarried children pair one deterministic figure with eight
+native slot buttons in a two-column grid. Every button is at least 44 px high, participates
+in ordinary Tab/Enter/Space navigation, and opens a numbered compatible-armory list; no
+drag-and-drop path is required. Two-handed and replacement moves receive a confirmation
+that names every displaced hand object and prior wearer. Equipment controls disable during
+travel or an unresolved event. On narrow portrait and landscape phones the figure stacks
+above the same two-column grid inside the scrolling drawer/bottom sheet.
+
+The item card reuses the isolated procedural object renderer and reports exact quality,
+quality-adjusted effects, value, current wearer, pledge state, and valid equip/unequip,
+gift, and sale actions. Family/event/topbar cards retain compact bust portraits, with only
+readable equipment cues such as a helmet, pendant, crown, or armor edge. The succession
+modal is the other full-body surface: it paints the frozen final loadout beside the
+“Worn at death” list before any heir may be selected.
+
 Minor character sheets separate the education-focus picker from the instruction picker.
 Every school/tutor row shows the projected full-year directed-learning chance and exact
 seasonal fee; unavailable town/focus/age combinations remain visible with their reason.

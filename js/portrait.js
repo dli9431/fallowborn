@@ -37,18 +37,226 @@ window.FB = window.FB || {};
   }
 
   /* opts: { profession, tier, ill } — only meaningful for the player character */
+  function pickArt(item, keys, fallback, salt) {
+    const art = item && item.art || {};
+    let list = null;
+    for (let i = 0; i < keys.length; i++) {
+      if (art[keys[i]]) { list = art[keys[i]]; break; }
+    }
+    if (!Array.isArray(list)) list = list ? [list] : [fallback];
+    return list[byte(item ? item.visualSeed : 0, salt || 0) % list.length];
+  }
+
+  function itemFromLoadout(state, loadout, slot) {
+    const value = loadout && loadout[slot];
+    if (!value) return null;
+    if (typeof value === 'object' && value.defId && FB.resolveItemSnapshot) {
+      return FB.resolveItemSnapshot(value);
+    }
+    return state && FB.resolveItem ? FB.resolveItem(state, value) : null;
+  }
+
+  /* Every item picture goes through this saved-seed renderer. Its local
+     design space is roughly -50..50 and it never consumes gameplay RNG. */
+  function drawItemArt(ctx, item, x, y, scale, angle, mirror) {
+    if (!ctx || !item) return;
+    const kind = item.art && item.art.kind || 'generic';
+    const metal = pickArt(item, ['metals'], '#afb5b3', 1);
+    const base = pickArt(item,
+      ['cloths', 'leathers', 'woods', 'covers', 'grips', 'cords', 'wraps'],
+      '#5b402b', 2);
+    const accent = pickArt(item,
+      ['gems', 'threads', 'trims', 'pages'], '#c5a454', 3);
+    const polish = item.quality === 'masterwork' ? '#f5e4a4' :
+      (item.quality === 'well' ? '#ddd8bd' : '#928878');
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle || 0);
+    ctx.scale((mirror ? -1 : 1) * scale, scale);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#241d18';
+    ctx.lineWidth = 2.2;
+
+    if (kind === 'sword' || kind === 'seax') {
+      const short = kind === 'seax';
+      const top = short ? -31 : -45;
+      ctx.fillStyle = metal;
+      ctx.beginPath();
+      ctx.moveTo(0, top);
+      ctx.lineTo(short ? 6 : 7, 14);
+      ctx.lineTo(0, 19);
+      ctx.lineTo(short ? -3 : -7, 14);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, top + 5); ctx.lineTo(1, 12); ctx.stroke();
+      ctx.strokeStyle = '#241d18'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-11, 18); ctx.lineTo(11, 18); ctx.stroke();
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, 20); ctx.lineTo(0, 37); ctx.stroke();
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.arc(0, 40, item.art && item.art.gems ? 4 : 3, 0, Math.PI * 2); ctx.fill();
+      if (item.art && (item.art.runes || item.art.pattern)) {
+        ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
+        for (let r = -20; r < 9; r += 8) {
+          ctx.beginPath(); ctx.moveTo(-2, r); ctx.lineTo(3, r + 4); ctx.stroke();
+        }
+      }
+    } else if (kind === 'spear') {
+      ctx.strokeStyle = base; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(0, -34); ctx.lineTo(0, 49); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#292521'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -55); ctx.lineTo(8, -35); ctx.lineTo(0, -30);
+      ctx.lineTo(-8, -35); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, -51); ctx.lineTo(1, -36); ctx.stroke();
+    } else if (kind === 'shield') {
+      ctx.fillStyle = base; ctx.strokeStyle = metal; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, 31, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-27, 0); ctx.lineTo(27, 0);
+      ctx.moveTo(0, -27); ctx.lineTo(0, 27); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#2b2925'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    } else if (kind === 'book') {
+      ctx.fillStyle = base;
+      ctx.fillRect(-26, -32, 52, 64); ctx.strokeRect(-26, -32, 52, 64);
+      ctx.fillStyle = accent; ctx.fillRect(-20, -27, 40, 54);
+      ctx.fillStyle = base; ctx.fillRect(-17, -26, 3, 52);
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.5;
+      ctx.strokeRect(-20, -27, 40, 54);
+    } else if (kind === 'jack') {
+      ctx.fillStyle = base;
+      ctx.beginPath();
+      ctx.moveTo(-31, -25); ctx.lineTo(-18, -38); ctx.lineTo(-8, -31);
+      ctx.lineTo(8, -31); ctx.lineTo(18, -38); ctx.lineTo(31, -25);
+      ctx.lineTo(23, 35); ctx.lineTo(-23, 35); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = accent; ctx.lineWidth = 1.4;
+      for (let q = -14; q <= 28; q += 10) {
+        ctx.beginPath(); ctx.moveTo(-21, q); ctx.lineTo(21, q); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, 34); ctx.stroke();
+    } else if (kind === 'helm') {
+      ctx.fillStyle = metal;
+      ctx.beginPath(); ctx.arc(0, 0, 25, Math.PI, 0); ctx.lineTo(23, 12);
+      ctx.lineTo(-23, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillRect(-4, -1, 8, 29);
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(0, 0, 20, Math.PI, 0); ctx.stroke();
+    } else if (kind === 'crown') {
+      ctx.fillStyle = metal;
+      ctx.beginPath();
+      ctx.moveTo(-28, 12); ctx.lineTo(-28, -8); ctx.lineTo(-16, 2);
+      ctx.lineTo(-8, -17); ctx.lineTo(0, 0); ctx.lineTo(9, -19);
+      ctx.lineTo(17, 2); ctx.lineTo(28, -10); ctx.lineTo(28, 12);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = accent;
+      for (let g = -16; g <= 16; g += 16) {
+        ctx.beginPath(); ctx.arc(g, 7, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (kind === 'ring') {
+      ctx.strokeStyle = metal; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.arc(0, 4, 20, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = accent; ctx.strokeStyle = '#30271f'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-7, -14); ctx.lineTo(0, -23);
+      ctx.lineTo(8, -14); ctx.lineTo(5, -6); ctx.lineTo(-5, -6);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (kind === 'pendant' || kind === 'relic') {
+      ctx.strokeStyle = base; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, -9, 25, Math.PI * 0.12, Math.PI * 0.88); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#30271f'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 16, kind === 'relic' ? 12 : 9, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(0, 24);
+      ctx.moveTo(-6, 15); ctx.lineTo(6, 15); ctx.stroke();
+    } else if (kind === 'belt') {
+      ctx.fillStyle = base; ctx.strokeStyle = '#2d211a'; ctx.lineWidth = 2;
+      ctx.fillRect(-43, -8, 86, 16); ctx.strokeRect(-43, -8, 86, 16);
+      ctx.strokeStyle = metal; ctx.lineWidth = 4; ctx.strokeRect(-10, -11, 20, 22);
+      if (item.art && item.art.gems) {
+        ctx.fillStyle = accent;
+        ctx.beginPath(); ctx.arc(-28, 0, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(28, 0, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (kind === 'boots') {
+      ctx.fillStyle = base;
+      for (let b = -1; b <= 1; b += 2) {
+        ctx.beginPath();
+        ctx.moveTo(b * 8, -31); ctx.lineTo(b * 25, -31);
+        ctx.lineTo(b * 25, 16); ctx.lineTo(b * 34, 28);
+        ctx.lineTo(b * 32, 35); ctx.lineTo(b * 7, 33);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    } else if (kind === 'chest') {
+      ctx.fillStyle = base; ctx.fillRect(-30, -24, 60, 48); ctx.strokeRect(-30, -24, 60, 48);
+      ctx.strokeStyle = metal; ctx.lineWidth = 4; ctx.strokeRect(-25, -19, 50, 38);
+      ctx.fillStyle = metal; ctx.fillRect(-5, -3, 10, 13);
+      if (item.art && item.art.mark) {
+        ctx.strokeStyle = accent; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 12);
+        ctx.moveTo(-9, -4); ctx.lineTo(9, -4); ctx.stroke();
+      }
+    } else if (kind === 'picks') {
+      ctx.strokeStyle = metal; ctx.lineWidth = 3;
+      for (let p = -9; p <= 9; p += 9) {
+        ctx.beginPath(); ctx.moveTo(p, 35); ctx.lineTo(p, -30); ctx.lineTo(p + 10, -36); ctx.stroke();
+      }
+      ctx.strokeStyle = base; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.moveTo(-16, 25); ctx.lineTo(17, 25); ctx.stroke();
+    } else {
+      ctx.fillStyle = base; ctx.strokeStyle = metal; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 27, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = accent; ctx.font = 'bold 28px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', 0, 1);
+    }
+    ctx.restore();
+  }
+
+  FB.characterLook = function (c, year, state, opts) {
+    opts = opts || {};
+    const age = Math.max(0, year - c.born);
+    /* Rendering is pure: an established career may color the outfit, but
+       looking at a stranger never creates career state. */
+    const career = c.career || null;
+    const profession = opts.profession || (career && career.profession) || c.role || '';
+    const tier = opts.tier !== undefined ? opts.tier :
+      (state && c.id === state.player.charId ? state.player.tier :
+        (FB.stationOf ? FB.stationOf(c) : (c.station || 0)));
+    const seed = hashOf(c.id + '|' + c.name);
+    const hue = hashOf(c.dyn || c.name) % 360;
+    const cultureHue = hashOf(c.culture || 'fallow') % 360;
+    let cloth = tier >= 6 ? '#783f87' : tier >= 4 ? '#873d42' :
+      tier >= 3 ? '#3b5d82' : tier === 2 ? '#506443' : '#5b4935';
+    if (profession === 'monk' || profession === 'priest') cloth = '#493e31';
+    else if (profession === 'soldier') cloth = '#59605d';
+    else if (profession === 'merchant') cloth = '#4b665d';
+    return {
+      seed:seed, age:age, child:age < 13, female:c.sex === 'f',
+      profession:profession, tier:tier, hue:hue, cloth:cloth,
+      cultureAccent:'hsl(' + cultureHue + ',30%,55%)',
+      faith:FB.religionOf(c.religion).group
+    };
+  };
+
   FB.paintPortrait = function (canvas, c, year, opts) {
     if (!canvas || !c) return;
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     const u = W / 64, v = H / 72; // design space 64x72
     const h = hashOf(c.id + '|' + c.name);
-    const age = Math.max(0, year - c.born);
+    const look = FB.characterLook(c, year, opts && opts.state, opts);
+    const age = look.age;
     const child = age < 13;
     const female = c.sex === 'f';
     const relGroup = FB.religionOf(c.religion).group;
-    const prof = opts && opts.profession;
-    const tier = opts ? (opts.tier || 0) : 0;
+    const prof = look.profession;
+    const tier = look.tier;
+    const loadout = opts && opts.loadout ||
+      (opts && opts.state && FB.loadoutOf ? FB.loadoutOf(opts.state, c.id) : null);
+    const headItem = itemFromLoadout(opts && opts.state, loadout, 'head');
 
     // condition: health and named ailments shape the face (NPCs default to hale)
     const hp = c.health === undefined ? 8 : c.health;
@@ -73,14 +281,16 @@ window.FB = window.FB || {};
     else if (age >= 55) hair = '#98918a';
     const beard = !female && !child && (relGroup === 'muslim' ? byte(h, 2) > 40 : byte(h, 2) > 120);
     const tonsure = prof === 'monk' && relGroup === 'christian';
-    const turban = !female && !child && relGroup === 'muslim' && prof !== 'monk';
-    const veil = female && !child && (relGroup === 'muslim' || byte(h, 3) > 150);
+    const turban = !headItem && !female && !child && relGroup === 'muslim' && prof !== 'monk';
+    const veil = !headItem && female && !child && (relGroup === 'muslim' || byte(h, 3) > 150);
 
     ctx.clearRect(0, 0, W, H);
     // backdrop tinted by dynasty
     const bgHue = hashOf(c.dyn || c.name) % 360;
-    ctx.fillStyle = 'hsl(' + bgHue + ',22%,20%)';
-    ctx.fillRect(0, 0, W, H);
+    if (!(opts && opts.transparent)) {
+      ctx.fillStyle = 'hsl(' + bgHue + ',22%,20%)';
+      ctx.fillRect(0, 0, W, H);
+    }
 
     // shoulders / clothing by rank
     const cloth = tier >= 6 ? '#7c3f8f' : tier >= 4 ? '#8f3a3a' : tier >= 3 ? '#3d5f8a' :
@@ -94,7 +304,7 @@ window.FB = window.FB || {};
       ctx.beginPath(); ctx.ellipse(32 * u, 78 * v, 20 * u, 16 * v, 0, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
     }
     // monk's robe hood
-    if (tonsure || (prof === 'monk' && relGroup !== 'christian')) {
+    if (!headItem && (tonsure || (prof === 'monk' && relGroup !== 'christian'))) {
       ctx.fillStyle = '#4a3d2e';
       ctx.beginPath(); ctx.ellipse(32 * u, 76 * v, 26 * u, 24 * v, 0, Math.PI, 0); ctx.fill();
     }
@@ -275,7 +485,7 @@ window.FB = window.FB || {};
     }
 
     // crown / circlet
-    if (tier >= 6) {
+    if (!headItem && tier >= 6) {
       ctx.fillStyle = '#e8c455';
       const ty = (cy - headR - 1) * v;
       ctx.fillRect((32 - headR + 3) * u, ty, (2 * headR - 6) * u, 3.5 * v);
@@ -285,7 +495,7 @@ window.FB = window.FB || {};
         ctx.moveTo(px - 2.5 * u, ty); ctx.lineTo(px, ty - 5 * v); ctx.lineTo(px + 2.5 * u, ty);
         ctx.fill();
       }
-    } else if (tier >= 4 && !turban) {
+    } else if (!headItem && tier >= 4 && !turban) {
       ctx.strokeStyle = '#e8c455'; ctx.lineWidth = 2 * v;
       ctx.beginPath();
       ctx.moveTo((32 - headR + 3) * u, (cy - headR + 3) * v);
@@ -293,23 +503,196 @@ window.FB = window.FB || {};
       ctx.stroke();
     }
 
+    if (opts && opts.state && !opts.suppressEquipment) {
+      const bodyItem = itemFromLoadout(opts.state, loadout, 'body');
+      const neckItem = itemFromLoadout(opts.state, loadout, 'neck');
+      if (bodyItem) {
+        ctx.strokeStyle = pickArt(bodyItem, ['cloths', 'leathers'], '#687069', 2);
+        ctx.lineWidth = 4 * u;
+        ctx.beginPath(); ctx.moveTo(12 * u, 68 * v); ctx.lineTo(52 * u, 68 * v); ctx.stroke();
+      }
+      if (neckItem) drawItemArt(ctx, neckItem, 32 * u, 58 * v, 0.22 * u, 0, false);
+      if (headItem) drawItemArt(ctx, headItem, 32 * u, 21 * v, 0.52 * u, 0, false);
+    }
+
     // frame
-    ctx.strokeStyle = 'rgba(200,170,90,0.35)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+    if (!(opts && opts.transparent)) {
+      ctx.strokeStyle = 'rgba(200,170,90,0.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+    }
   };
 
-  /* Paint every <canvas class="pface" data-cid="..."> inside root. The player's
-     own face gets profession/tier context (headgear, crowns). */
+  FB.paintItem = function (canvas, state, value) {
+    if (!canvas || !value) return;
+    const item = typeof value === 'object' && value.defId
+      ? (FB.resolveItemSnapshot ? FB.resolveItemSnapshot(value) : null)
+      : (state && FB.resolveItem ? FB.resolveItem(state, value) : null);
+    if (!item) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const hue = byte(item.visualSeed, 8) % 360;
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.42, 2, W * 0.5, H * 0.5, W * 0.7);
+    grad.addColorStop(0, 'hsl(' + hue + ',18%,27%)');
+    grad.addColorStop(1, '#171612');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    let artScale = Math.min(W, H) / 125;
+    if (item.art && (item.art.kind === 'shield' || item.art.kind === 'book' ||
+      item.art.kind === 'chest' || item.art.kind === 'jack')) artScale *= 0.9;
+    drawItemArt(ctx, item, W / 2, H / 2, artScale, 0, false);
+    ctx.strokeStyle = item.quality === 'masterwork' ? 'rgba(235,201,102,0.85)' :
+      'rgba(200,170,90,0.35)';
+    ctx.lineWidth = Math.max(1, W / 90);
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+  };
+
+  /* A household-only full figure. Base dress is cosmetic; exact armory
+     objects are layered over it from the saved loadout or a frozen snapshot. */
+  FB.paintPaperDoll = function (canvas, c, state, opts) {
+    if (!canvas || !c || !state) return;
+    opts = opts || {};
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const look = FB.characterLook(c, state.date.year, state, opts);
+    const loadout = opts.loadout || (FB.loadoutOf ? FB.loadoutOf(state, c.id) : {});
+    const head = itemFromLoadout(state, loadout, 'head');
+    const neck = itemFromLoadout(state, loadout, 'neck');
+    const body = itemFromLoadout(state, loadout, 'body');
+    const waist = itemFromLoadout(state, loadout, 'waist');
+    const feet = itemFromLoadout(state, loadout, 'feet');
+    const ring = itemFromLoadout(state, loadout, 'ring');
+    const left = itemFromLoadout(state, loadout, 'leftHand');
+    const right = itemFromLoadout(state, loadout, 'rightHand');
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.scale(W / 160, H / 300);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, 300);
+    bg.addColorStop(0, 'hsl(' + look.hue + ',20%,22%)');
+    bg.addColorStop(1, '#171612');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, 160, 300);
+    ctx.fillStyle = 'rgba(217,188,116,0.08)';
+    ctx.beginPath(); ctx.arc(80, 87, 69, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.beginPath(); ctx.ellipse(80, 273, 51, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+    const bodyScale = look.child ? 0.78 : (look.age < 16 ? 0.9 : 1);
+    ctx.save();
+    ctx.translate(80, 276);
+    ctx.scale(bodyScale, bodyScale);
+    ctx.translate(-80, -276);
+
+    // legs and simple hose
+    const hose = look.tier >= 3 ? '#363b43' : '#40382f';
+    ctx.strokeStyle = hose; ctx.lineWidth = 16; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(68, 190); ctx.lineTo(64, 250);
+    ctx.moveTo(92, 190); ctx.lineTo(96, 250); ctx.stroke();
+    ctx.strokeStyle = '#2b211b'; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(59, 257); ctx.lineTo(70, 257);
+    ctx.moveTo(90, 257); ctx.lineTo(101, 257); ctx.stroke();
+    if (feet) drawItemArt(ctx, feet, 80, 248, 0.66, 0, false);
+
+    // rank/profession/culture clothing, independent of equipment
+    const robe = look.faith === 'muslim' || look.profession === 'monk' ||
+      look.profession === 'priest';
+    ctx.fillStyle = look.cloth; ctx.strokeStyle = '#29221c'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(55, 113); ctx.quadraticCurveTo(80, 99, 105, 113);
+    ctx.lineTo(robe ? 112 : 103, robe ? 222 : 194);
+    ctx.lineTo(57, robe ? 222 : 194); ctx.lineTo(48, robe ? 222 : 194);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (look.tier >= 4) {
+      ctx.strokeStyle = '#caa34b'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(58, 120); ctx.quadraticCurveTo(80, 135, 102, 120); ctx.stroke();
+    } else if (look.profession === 'merchant') {
+      ctx.strokeStyle = '#9c875b'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(62, 133); ctx.lineTo(98, 133); ctx.stroke();
+    } else {
+      /* A narrow culture-colored facing differentiates otherwise humble
+         base dress without turning cosmetic clothing into an item slot. */
+      ctx.strokeStyle = look.cultureAccent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(61, 132); ctx.lineTo(99, 132); ctx.stroke();
+    }
+
+    // sleeves, arms, and hands
+    ctx.strokeStyle = look.cloth; ctx.lineWidth = 15; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(55, 121); ctx.lineTo(38, 198);
+    ctx.moveTo(105, 121); ctx.lineTo(122, 198); ctx.stroke();
+    ctx.fillStyle = SKIN[PALE.indexOf(c.culture) >= 0 ? 0 :
+      (BROWN.indexOf(c.culture) >= 0 ? 2 : (c.culture === 'nubian' ? 3 : 1))][0];
+    ctx.beginPath(); ctx.arc(37, 204, 8, 0, Math.PI * 2);
+    ctx.arc(123, 204, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.lineCap = 'butt';
+
+    if (body) drawItemArt(ctx, body, 80, 151, 1.04, 0, false);
+    if (waist) drawItemArt(ctx, waist, 80, 187, 0.63, 0, false);
+
+    // Reuse the compact face layer without its backdrop or item overlays.
+    const face = document.createElement('canvas');
+    face.width = 128; face.height = 144;
+    FB.paintPortrait(face, c, state.date.year, {
+      state:state,
+      loadout:loadout,
+      profession:look.profession,
+      tier:look.tier,
+      ill:c.id === state.player.charId && !!state.player.flags.ill,
+      transparent:true,
+      suppressEquipment:true
+    });
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(80, 65, 34, 43, 0, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(face, 22, 8, 84, 118, 47, 20, 66, 93);
+    ctx.restore();
+
+    if (neck) drawItemArt(ctx, neck, 80, 111, 0.45, 0, false);
+    if (head) drawItemArt(ctx, head, 80, 48, 1.02, 0, false);
+
+    // The character's right hand is viewer-left; art is mirrored there.
+    if (right && left && right.ref === left.ref && right.grip === 2) {
+      drawItemArt(ctx, right, 80, 170, 1.34, -0.06, false);
+    } else {
+      if (right) {
+        const rs = right.art && right.art.kind === 'shield' ? 0.92 : 0.72;
+        drawItemArt(ctx, right, 36, 174, rs, -0.12, true);
+      }
+      if (left) {
+        const ls = left.art && left.art.kind === 'shield' ? 0.92 : 0.72;
+        drawItemArt(ctx, left, 124, 174, ls, 0.12, false);
+      }
+    }
+    if (ring) drawItemArt(ctx, ring, 124, 205, 0.17, 0, false);
+
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(200,170,90,0.45)';
+    ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, 159, 299);
+    ctx.restore();
+  };
+
+  /* Paint procedural canvases after a DOM render. Compact faces stay cheap;
+     full figures and isolated object art appear only where explicitly asked. */
   FB.paintFaces = function (root, state) {
     if (!root || !state) return;
     const list = root.querySelectorAll('canvas.pface[data-cid]');
     for (let i = 0; i < list.length; i++) {
       const c = state.chars[list[i].getAttribute('data-cid')];
       if (!c) continue;
-      const opts = c.id === state.player.charId ?
-        { profession: state.player.profession, tier: state.player.tier, ill: !!state.player.flags.ill } : null;
+      const opts = {
+        state:state,
+        profession:c.id === state.player.charId ? state.player.profession : null,
+        tier:c.id === state.player.charId ? state.player.tier : (c.station || 0),
+        ill:c.id === state.player.charId && !!state.player.flags.ill
+      };
       FB.paintPortrait(list[i], c, state.date.year, opts);
+    }
+    const dolls = root.querySelectorAll('canvas.paperdoll[data-cid]');
+    for (let d = 0; d < dolls.length; d++) {
+      const dc = state.chars[dolls[d].getAttribute('data-cid')];
+      if (dc) FB.paintPaperDoll(dolls[d], dc, state);
+    }
+    const items = root.querySelectorAll('canvas.itemart[data-item]');
+    for (let a = 0; a < items.length; a++) {
+      FB.paintItem(items[a], state, items[a].getAttribute('data-item'));
     }
     FB.paintCrests(root); // util.js loads first; crests ride along with faces
   };

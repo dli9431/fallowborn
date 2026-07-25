@@ -622,6 +622,7 @@ window.FB = window.FB || {};
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
       player: {
@@ -633,6 +634,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
+        items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
         landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null, research: 0
       },
@@ -657,6 +659,20 @@ window.FB = window.FB || {};
     if (sc.mar) me.skills.mar = FB.clamp(me.skills.mar + sc.mar, 0, FBDATA.balance.skillHardCap || 40);
     state.player.charId = me.id;
     FB.setCareer(state, me, sc.profession, 'journeyman');
+
+    /* Issued kit is ordinary gear, not an immortal named artifact. Its
+       quality is authored by the start and its appearance is saved normally. */
+    if (sc.id === 'soldier') {
+      const spear = FB.grantItem(state, 'ash_spear', { quality:'plain' });
+      const jack = FB.grantItem(state, 'padded_jack', { quality:'plain' });
+      if (spear) FB.equipItem(state, me.id, 'rightHand', spear);
+      if (jack) FB.equipItem(state, me.id, 'body', jack);
+    } else if (sc.id === 'knight') {
+      const sword = FB.grantItem(state, 'broad_sword', { quality:'well' });
+      const shield = FB.grantItem(state, 'round_shield', { quality:'plain' });
+      if (sword) FB.equipItem(state, me.id, 'rightHand', sword);
+      if (shield) FB.equipItem(state, me.id, 'leftHand', shield);
+    }
 
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
@@ -735,6 +751,7 @@ window.FB = window.FB || {};
       date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
       player: {
@@ -745,6 +762,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [],
+        items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null, research: 0
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
@@ -972,9 +990,11 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return;
     const me = s.chars[s.player.charId];
     if (me.health <= 0) {
+      const provenance = s.player.pendingDeathProvenance || null;
+      delete s.player.pendingDeathProvenance;
       G.die(FB.msg('legend.death.wounds',
         'Wounds and sickness prove too much. {name} does not see another season.',
-        { name: me.name }));
+        { name: me.name }), provenance);
       return;
     }
     FB.checkTierPromotions(s);
@@ -1069,7 +1089,7 @@ window.FB = window.FB || {};
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
       if (p.flags.plague_here) cq += 0.05;
-      cq -= FB.traitAgg(c).health;
+      cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
         const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;
         const wasChild = me.childrenIds.indexOf(c.id) >= 0;
@@ -1232,6 +1252,10 @@ window.FB = window.FB || {};
           role: 'kinspouse'
         });
         sp.health = 8;
+        /* A close child establishing a household through the unscripted
+           yearly match leaves their equipped outfit in the family armory,
+           just as a pledged wedding does through FB.doKinWedding. */
+        if (FB.clearLoadout) FB.clearLoadout(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
         if (close) FB.news(s, FB.msg('news.life.close_kin_wedding', {
           forms: {
@@ -1376,7 +1400,7 @@ window.FB = window.FB || {};
     return heirs;
   };
 
-  G.die = function (cause) {
+  G.die = function (cause, provenance) {
     G.setPaused(true); // refresh now, while the topbar still repaints behind the death modal
     const s = FB.state;
     const p = s.player;
@@ -1393,7 +1417,7 @@ window.FB = window.FB || {};
     if (FB.breakAlliance) FB.breakAlliance(s, 'player');
     if (FB.royalCharDied) FB.royalCharDied(s, me);
     p.dead = true;
-    recordLegend(s, me, causeMsg, causeText);
+    recordLegend(s, me, causeMsg, causeText, provenance);
     if (causeMsg) {
       FB.news(s, FB.msg('news.life.death', '☠ {cause}',
         { cause: FB.messageParam(causeMsg) }));
@@ -1407,7 +1431,7 @@ window.FB = window.FB || {};
   /* the chronicle keeps one entry per life the player lived; the end screen
      reads this roll. Saves from before the roll existed grow it at the
      first death after they load. */
-  function recordLegend(s, me, causeMsg, causeText) {
+  function recordLegend(s, me, causeMsg, causeText, provenance) {
     if (!s.legends) s.legends = [];
     const legend = {
       id: me.id,
@@ -1415,7 +1439,14 @@ window.FB = window.FB || {};
       born: me.born,
       died: s.date.year,
       titleData: FB.titleSnapshot(s),
-      quipMsg: legendQuip(s, me, causeMsg, causeText)
+      quipMsg: legendQuip(s, me, causeMsg, causeText),
+      loadout:FB.snapshotLoadout ? FB.snapshotLoadout(s, me.id) : {}
+    };
+    if (provenance) legend.deathProvenance = {
+      kind:provenance.kind || 'event',
+      eventId:provenance.eventId || null,
+      provinceId:provenance.provinceId || null,
+      enemyId:provenance.enemyId || null
     };
     if (causeMsg) legend.causeMsg = causeMsg;
     else legend.cause = causeText;
@@ -1546,14 +1577,16 @@ window.FB = window.FB || {};
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};
     p.rivalPeace = {};
-    p.itemOffer = null; // the peddler moves on; carried items pass to the heir
+    if (FB.clearItemOffer) FB.clearItemOffer(s); // the peddler moves on
+    else p.itemOffer = null;
     s.pregnant = null;
-    // treasures gifted to the heir in life rejoin the family hoard
-    if (heir.items && heir.items.length) {
-      const hoard = FB.itemList(s);
-      for (const iid of heir.items) if (hoard.indexOf(iid) < 0) hoard.push(iid);
-      heir.items = null;
-    }
+    /* The dead head's final equipment stayed in place for the death sheet.
+       Succession returns every assignment outside the new household to the
+       armory, while an heir who owned gifts outside it brings those exact
+       objects home. */
+    if (FB.reclaimCharacterItems) FB.reclaimCharacterItems(s, heir.id);
+    if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(s);
+    else if (FB.clearLoadout) FB.clearLoadout(s, old.id);
 
     // only property passes; personal standing must be rebuilt somewhat
     FB.landPlots(s); // normalize a legacy farm before its old flag is discarded

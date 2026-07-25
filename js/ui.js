@@ -340,10 +340,17 @@ window.FB = window.FB || {};
     // the topbar portrait and crest change rarely; repaint only when
     // something they draw from has moved
     const pk = me.id + '|' + (me.dyn || me.name) + '|' + s.date.year + '|' +
-      s.player.profession + '|' + s.player.tier + '|' + me.traits.join(',');
+      s.player.profession + '|' + s.player.tier + '|' + me.health + '|' +
+      me.traits.join(',') + '|' +
+      (me.ailments || []).map(function (ail) {
+        return typeof ail === 'string' ? ail : (ail && (ail.id || ail.kind) || '');
+      }).join(',') + '|' +
+      (FB.loadoutVisualKey ? FB.loadoutVisualKey(s, me.id) : '');
     if (pk !== portraitKey) {
       portraitKey = pk;
-      FB.paintPortrait($('tb-portrait'), me, s.date.year, { profession: s.player.profession, tier: s.player.tier });
+      FB.paintPortrait($('tb-portrait'), me, s.date.year, {
+        state:s, profession:s.player.profession, tier:s.player.tier
+      });
       FB.drawCrest($('crest'), me.dyn || me.name);
     }
     const pr = FB.world.byId[s.player.provinceId];
@@ -752,19 +759,89 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function itemSlotLabel(slot) {
+    if (slot === 'head') return FB.T('Head');
+    if (slot === 'neck') return FB.T('Neck');
+    if (slot === 'body') return FB.T('Body');
+    if (slot === 'waist') return FB.T('Waist');
+    if (slot === 'feet') return FB.T('Feet');
+    if (slot === 'leftHand') return FB.T('Left hand');
+    if (slot === 'rightHand') return FB.T('Right hand');
+    if (slot === 'ring') return FB.T('Ring');
+    return slot;
+  }
+  function itemWearerText(s, ref) {
+    const at = FB.itemAssignment && FB.itemAssignment(s, ref);
+    if (!at) return FB.T('In the armory');
+    const c = s.chars[at.cid];
+    return c ? FB.T('Worn by {name}', { name:FB.fullName(c) }) : FB.T('Equipped');
+  }
+  function equipmentBlockedText(reason) {
+    if (reason === 'travel') {
+      return FB.T('Equipment cannot be changed while the household is traveling.');
+    }
+    if (reason === 'event') {
+      return FB.T('Resolve the current event before changing equipment.');
+    }
+    return '';
+  }
+  function equipmentSheetHtml(s, c) {
+    const loadout = FB.loadoutOf(s, c.id);
+    const blocked = FB.equipmentBlockedReason ? FB.equipmentBlockedReason(s) : null;
+    let h = '<div class="paper-sheet"><canvas class="paperdoll" data-cid="' + c.id +
+      '" width="240" height="450" role="img" aria-label="' +
+      esc(FB.T('Full figure of {name}', { name:FB.fullName(c) })) + '"></canvas>' +
+      '<div class="equip-panel"><div class="equip-heading">' + esc(FB.T('Equipment')) +
+      '</div><div class="equip-grid">';
+    for (const slot of FB.ITEM_SLOTS) {
+      const ref = loadout[slot];
+      const item = ref && FB.resolveItem(s, ref);
+      let value = item ? item.def.icon + ' ' + FB.itemName(s, ref) : FB.T('Empty');
+      if (item && item.grip === 2) value += ' - ' + FB.T('two-handed');
+      const aria = FB.T('{slot}: {item}', {
+        slot:itemSlotLabel(slot),
+        item:item ? FB.itemName(s, ref) : FB.T('Empty')
+      });
+      h += '<button type="button" class="equip-slot" data-equip-cid="' + c.id +
+        '" data-equip-slot="' + slot + '" aria-label="' + esc(aria) + '"' +
+        (blocked ? ' disabled' : '') + '><span>' + esc(itemSlotLabel(slot)) +
+        '</span><b>' + esc(value) + '</b></button>';
+    }
+    h += '</div>' + (blocked ? '<div class="progressnote warnote">' +
+      esc(equipmentBlockedText(blocked)) + '</div>' :
+      '<div class="equip-note">' + esc(FB.T(
+        'Choose a slot, then choose an exact object from the family armory. Changes cost no day.')) +
+      '</div>') + '</div></div>';
+    return h;
+  }
+  function wireEquipmentButtons(root) {
+    if (!root) return;
+    const buttons = root.querySelectorAll('[data-equip-cid][data-equip-slot]');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showEquipSlot(buttons[i].getAttribute('data-equip-cid'),
+          buttons[i].getAttribute('data-equip-slot'));
+      });
+    }
+  }
+
   function itemChips(s) {
     const ids = FB.itemList(s);
     if (!ids.length) return '<span class="cmeta">' + esc(FB.T('Nothing of note.')) + '</span>';
     let h = '';
-    for (const id of ids) {
-      const it = FBDATA.items[id];
-      if (it) {
-        h += '<span class="traitchip" data-item="' + esc(id) + '">' +
-          it.icon + ' ' + esc(dt(s, 'item', id, it, 'name')) + '</span>';
+    for (const ref of ids) {
+      const item = FB.resolveItem(s, ref);
+      if (item) {
+        const pledged = FB.financeCollateralPledged &&
+          FB.financeCollateralPledged(s, 'item', ref);
+        h += '<span class="traitchip" data-item="' + esc(ref) + '" title="' +
+          esc(pledged ? FB.T('Pledged to a lender') : itemWearerText(s, ref)) + '">' +
+          item.def.icon + ' ' + esc(FB.itemName(s, ref)) +
+          (pledged ? ' - ' + esc(FB.T('pledged')) : '') + '</span>';
       }
     }
     return h + '<div class="cmeta" style="font-size:12px;margin-top:2px">' +
-      esc(FB.T('Tap a treasure to see its powers — or to sell or gift it.')) + '</div>';
+      esc(FB.T('The armory is shared. Only equipped objects grant their powers.')) + '</div>';
   }
 
   /* the player's held titles (tier 3+): high dignities as rows, counties compact */
@@ -815,7 +892,7 @@ window.FB = window.FB || {};
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
     let h =
-      '<canvas id="selfportrait" class="pface" data-cid="' + me.id + '" width="72" height="82"></canvas>' +
+      equipmentSheetHtml(s, me) +
       '<div class="panelh">' + esc(FB.fullName(me)) + '</div>' +
       kv('Rank', esc(FB.styledTitle(s))) +
       kv('Age', FB.ageOf(me, s.date.year)) +
@@ -850,6 +927,7 @@ window.FB = window.FB || {};
     $('tab-char').innerHTML = h;
     FB.localizeTree($('tab-char'));
     FB.paintFaces($('tab-char'), s);
+    wireEquipmentButtons($('tab-char'));
     const sef = $('self-edufocus');
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
     const stu = $('self-tutor');
@@ -987,10 +1065,12 @@ window.FB = window.FB || {};
     // treasures the player has gifted them, worn where callers can see
     let itc = '';
     if (c.items && c.items.length && c.id !== s.player.charId) {
-      for (const iid of c.items) {
-        const idf = FBDATA.items[iid];
-        if (idf) itc += '<span class="traitchip" data-itemview="' + esc(iid) + '">' + idf.icon + ' ' +
-          esc(dt(s, 'item', iid, idf, 'name')) + '</span>';
+      for (const ref of c.items) {
+        const item = FB.resolveItem(s, ref);
+        if (item) {
+          itc += '<span class="traitchip" data-itemview="' + esc(ref) + '">' +
+            item.def.icon + ' ' + esc(FB.itemName(s, ref)) + '</span>';
+        }
       }
     }
     // the dead are remembered, not met: dates and deeds, no dealings
@@ -1791,10 +1871,10 @@ window.FB = window.FB || {};
       const p = typeof pick.chance === 'string' ? FB.namedChance(s, pick.chance) : pick.chance;
       const ok = FB.chance(p);
       if (pick.chance === 'battle' || pick.chance === 'war_battle') delete s.player.flags.blessed_war;
-      if (pick.effects) FB.applyEffects(s, pick.effects, ctx);
+      if (pick.effects) FB.applyEffects(s, pick.effects, ctx, ev);
       const branch = ok ? pick.success : pick.failure;
       if (branch) {
-        if (branch.effects) FB.applyEffects(s, branch.effects, ctx);
+        if (branch.effects) FB.applyEffects(s, branch.effects, ctx, ev);
         if (branch.text && authoredIndex >= 0) {
           outcomePath = 'options.' + authoredIndex + '.' +
             (ok ? 'success' : 'failure') + '.text';
@@ -1805,7 +1885,7 @@ window.FB = window.FB || {};
         }
       }
     } else if (pick.effects) {
-      FB.applyEffects(s, pick.effects, ctx);
+      FB.applyEffects(s, pick.effects, ctx, ev);
     }
     /* Match the old simulation order while keeping rendering pure: effects
        resolve first, then any outcome roles, title roles, and choice roles. */
@@ -2037,9 +2117,9 @@ window.FB = window.FB || {};
       // a blessed sword is spent on the battle it blesses, won or lost
       if (opt.chance === 'battle' || opt.chance === 'war_battle') delete s.player.flags.blessed_war;
       const branch = ok ? opt.success : opt.failure;
-      if (opt.effects) FB.applyEffects(s, opt.effects, ctx);
+      if (opt.effects) FB.applyEffects(s, opt.effects, ctx, ev);
       if (branch) {
-        if (branch.effects) FB.applyEffects(s, branch.effects, ctx);
+        if (branch.effects) FB.applyEffects(s, branch.effects, ctx, ev);
         const oi = ev.options ? ev.options.indexOf(opt) : -1;
         const outcomePath = oi >= 0
           ? 'options.' + oi + '.' + (ok ? 'success' : 'failure') + '.text'
@@ -2052,7 +2132,7 @@ window.FB = window.FB || {};
         return;
       }
     } else if (opt.effects) {
-      FB.applyEffects(s, opt.effects, ctx);
+      FB.applyEffects(s, opt.effects, ctx, ev);
     }
     nextEvent();
   }
@@ -3422,6 +3502,10 @@ window.FB = window.FB || {};
 
   function financeAssetName(s, collateral) {
     if (!collateral) return FB.T('None');
+    if (collateral.kind === 'item' && FB.resolveItem) {
+      const item = FB.resolveItem(s, collateral.id);
+      return item ? item.def.icon + ' ' + FB.itemName(s, collateral.id) : collateral.id;
+    }
     const table = collateral.kind === 'item' ? FBDATA.items : FBDATA.holdings;
     const def = table && table[collateral.id];
     if (!def) return collateral.id;
@@ -4137,7 +4221,9 @@ window.FB = window.FB || {};
     const c = s.chars[cid];
     if (!c) return;
     const me = s.chars[s.player.charId];
-    let h = UI.charCardHtml(s, c);
+    const showEquipment = !c.dead && FB.isHouseholdCharacter &&
+      FB.isHouseholdCharacter(s, c.id);
+    let h = (showEquipment ? equipmentSheetHtml(s, c) : '') + UI.charCardHtml(s, c);
     // the dead get a sheet for remembrance — their dates, skills, traits — but no dealings
     if (c.dead) {
       h += '<button class="btn" id="cm-close" style="margin-top:10px">Close</button>';
@@ -4150,7 +4236,7 @@ window.FB = window.FB || {};
     const isFamily = FB.spousesOf(s, me).some(function (sp) { return sp.id === c.id; }) ||
       me.childrenIds.indexOf(c.id) >= 0 ||
       (c.role === 'sibling' && c.dyn === me.dyn);
-    const isHousehold = FB.householdMembers(s).some(function (member) { return member.id === c.id; });
+    const isHousehold = showEquipment;
     if (isHousehold && FB.ageOf(c, s.date.year) >= 10) {
       h += livelihoodNote(s, c);
       h += '<button class="actionbtn" id="cm-career">🧰 Choose work or training…' +
@@ -4294,6 +4380,7 @@ window.FB = window.FB || {};
     h += '</div><button class="btn" id="cm-close">Close</button>';
     openModal(FB.fullName(c), h);
     FB.paintFaces($('gm-body'), s);
+    wireEquipmentButtons($('gm-body'));
     function actThen(fn) {
       UI.closeModal();
       fn();
@@ -4579,35 +4666,68 @@ window.FB = window.FB || {};
       { amount: (fx.prestige > 0 ? '+' : '') + fx.prestige }));
     if (fx.piety) parts.push(FB.T('{amount} piety a season',
       { amount: (fx.piety > 0 ? '+' : '') + fx.piety }));
-    if (fx.health) parts.push(FB.T('wards off sickness and death'));
+    if (fx.gold) parts.push(FB.T('{amount} gold a season',
+      { amount:(fx.gold > 0 ? '+' : '') + fx.gold }));
+    if (fx.health) parts.push(FB.T('{amount}% health protection', {
+      amount:(fx.health > 0 ? '+' : '') + Math.round(fx.health * 10000) / 100
+    }));
     return parts.join(' · ');
   }
 
   UI.showItemModal = function (id, viewOnly) {
     const s = FB.state;
-    const def = FBDATA.items[id];
-    if (!s || !def) return;
-    const name = dt(s, 'item', id, def, 'name');
+    const item = s && FB.resolveItem(s, id);
+    if (!s || !item) return;
+    const def = item.def;
+    const name = FB.itemName(s, id);
     const owned = !viewOnly && FB.itemList(s).indexOf(id) >= 0;
     const pledged = owned && FB.financeCollateralPledged &&
       FB.financeCollateralPledged(s, 'item', id);
-    const fx = itemFxText(def);
-    const sell = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
-    let h = '<div class="gm-body-text">' +
+    const assigned = owned && FB.itemAssignment(s, id);
+    const blocked = owned && FB.equipmentBlockedReason(s);
+    const fx = itemFxText(item);
+    const sell = Math.round(item.value * (FBDATA.balance.itemSellRatio || 0.5));
+    const quality = item.ordinary ? FB.itemQualityName(item.quality) : rarityName(def.rarity);
+    const slot = item.grip === 2 ? FB.T('Both hands') :
+      (item.slot === 'hand' ? FB.T('Either hand') : itemSlotLabel(item.slot));
+    const equipLabel = assigned ? FB.T('Change equipment…') : FB.T('Equip…');
+    let h = '<div class="item-card"><canvas class="itemart" data-item="' + esc(id) +
+      '" width="144" height="144" role="img" aria-label="' + esc(name) + '"></canvas>' +
+      '<div class="gm-body-text item-card-copy">' +
       '<p style="font-size:16px"><b>' + def.icon + ' ' + esc(name) +
-      '</b> · <span class="cmeta">' + esc(rarityName(def.rarity)) + '</span></p>' +
-      '<p><i>' + esc(dt(s, 'item', id, def, 'desc')) + '</i></p>' +
+      '</b> - <span class="cmeta">' + esc(quality) + '</span></p>' +
+      '<p><i>' + esc(dt(s, 'item', item.defId, def, 'desc')) + '</i></p>' +
       (fx ? '<p>⚜ ' + esc(fx) + '</p>' : '<p class="cmeta">No power but its worth.</p>') +
-      (fx && !viewOnly ? '<p class="cmeta">Its powers serve whoever heads the family.</p>' : '') +
-      '<p class="cmeta">' + esc(FB.T('Worth about {money:gold}.', { gold: def.value })) +
-      '</p></div>';
+      '<p class="cmeta">' + esc(FB.T('Slot: {slot}. Worth about {money:gold}.', {
+        slot:slot, gold:item.value
+      })) + '</p>' +
+      (fx ? '<p class="cmeta">' + esc(FB.T(
+        'Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.')) +
+        '</p>' : '') +
+      (assigned ? '<p class="cmeta">' + esc(itemWearerText(s, id)) + '</p>' :
+        (owned ? '<p class="cmeta">' + esc(FB.T('In the family armory.')) + '</p>' : '')) +
+      '</div></div>';
     if (owned && !pledged) {
       h += '<div class="gm-list">' +
+        '<button class="actionbtn" id="im-equip"' + (blocked ? ' disabled' : '') + '>🧍 ' +
+        esc(equipLabel) +
+        '<span class="adesc">' + esc(FB.T(
+          'Choose a household wearer and compatible slot. This costs no day.')) +
+        '</span></button>' +
+        (assigned ? '<button class="actionbtn" id="im-unequip"' + (blocked ? ' disabled' : '') + '>' +
+          esc(FB.T('Return it to the armory')) +
+          '<span class="adesc">' + esc(FB.T(
+            'Unequip it before selling, gifting, or pledging it.')) + '</span></button>' : '') +
+        (assigned ? '' :
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">A treasure warms regard as mere silver never could. (spends the day)</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
         esc(FB.T('💰 Sell it ({money:gold})', { gold: sell })) +
-        '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button></div>';
+        '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button>') +
+        '</div>';
+      if (blocked) {
+        h += '<div class="progressnote warnote">' + esc(equipmentBlockedText(blocked)) + '</div>';
+      }
     } else if (pledged) {
       h += '<div class="progressnote warnote">' +
         esc(FB.T('This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.')) +
@@ -4615,13 +4735,24 @@ window.FB = window.FB || {};
     }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
     openModal(name, h);
+    FB.paintFaces($('gm-body'), s);
+    const eq = $('im-equip');
+    if (eq) eq.addEventListener('click', function () { UI.showItemEquip(id); });
+    const un = $('im-unequip');
+    if (un) un.addEventListener('click', function () {
+      const at = FB.itemAssignment(s, id);
+      if (at) FB.unequipItem(s, at.cid, at.slots[0]);
+      UI.refresh();
+      UI.showItemModal(id);
+    });
     const gv = $('im-give');
     if (gv) gv.addEventListener('click', function () { UI.showItemGive(id); });
     const sl = $('im-sell');
     if (sl) sl.addEventListener('click', function () {
-      UI.closeModal();
-      FB.sellItem(s, id);
-      FB.game.passDay({ skipFocus: true });
+      if (FB.sellItem(s, id)) {
+        UI.closeModal();
+        FB.game.passDay({ skipFocus: true });
+      }
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
@@ -4629,17 +4760,19 @@ window.FB = window.FB || {};
   /* who to honor with it — everyone the player knows by name */
   UI.showItemGive = function (id) {
     const s = FB.state;
-    const def = FBDATA.items[id];
-    if (!s || !def || FB.itemList(s).indexOf(id) < 0 ||
+    const item = s && FB.resolveItem(s, id);
+    if (!s || !item || FB.itemList(s).indexOf(id) < 0 ||
+      FB.itemAssignment(s, id) ||
       (FB.financeCollateralPledged && FB.financeCollateralPledged(s, 'item', id))) return;
+    const def = item.def;
     const me = s.chars[s.player.charId];
     const seen = {}, folk = [];
     function add(c, rel) {
-      if (!c || c.dead || c.id === me.id || seen[c.id]) return;
+      if (!c || c.dead || c.id === me.id || seen[c.id] ||
+        (FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, c.id))) return;
       seen[c.id] = 1;
       folk.push({ c: c, rel: rel });
     }
-    for (const sp of FB.spousesOf(s, me)) add(sp, FB.T('your spouse'));
     if (s.player.courtingId) add(s.chars[s.player.courtingId], FB.T('courting'));
     const kin = FB.kinOf(s);
     for (const g of ['children', 'parents', 'siblings', 'grandchildren',
@@ -4656,10 +4789,10 @@ window.FB = window.FB || {};
       UI.toast('You know no one to honor with it.');
       return;
     }
-    const boost = FB.giftOpinion(def);
+    const boost = FB.giftOpinion(item);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Whom to honor with {icon} {item}? Such largesse is worth +{regard} regard.', {
-        icon: def.icon, item: dt(s, 'item', id, def, 'name'), regard: boost
+        icon: def.icon, item: FB.itemName(s, id), regard: boost
       })) + '</p></div><div class="gm-list">';
     for (const e of folk) {
       const op = Math.round(e.c.opinion);
@@ -4677,12 +4810,204 @@ window.FB = window.FB || {};
     openModal('A Gift Worth Giving', h);
     document.querySelectorAll('[data-give]').forEach(function (b) {
       b.addEventListener('click', function () {
-        UI.closeModal();
-        FB.giveItem(s, id, b.dataset.give);
-        FB.game.passDay({ skipFocus: true });
+        if (FB.giveItem(s, id, b.dataset.give)) {
+          UI.closeModal();
+          FB.game.passDay({ skipFocus: true });
+        }
       });
     });
     $('gm-cancel').addEventListener('click', function () { UI.showItemModal(id); });
+  };
+
+  function equipCheckText(check) {
+    if (!check || check.ok) return '';
+    if (check.code === 'age') {
+      return FB.T('Minimum age {age}', { age:check.ageMin });
+    }
+    if (check.code === 'pledged') return FB.T('Pledged to a lender');
+    if (check.code === 'travel') return FB.T('Unavailable while traveling');
+    if (check.code === 'event') return FB.T('Unavailable during an unresolved event');
+    if (check.code === 'household') return FB.T('Not in the household');
+    return FB.T('Cannot use this slot');
+  }
+
+  function finishEquipment(cid, ref, returnMode) {
+    UI.refresh();
+    if (returnMode === 'character') UI.showCharModal(cid);
+    else if (returnMode === 'item') UI.showItemModal(ref);
+    else UI.closeModal();
+  }
+
+  function confirmEquip(cid, slot, ref, returnMode) {
+    const s = FB.state;
+    const preview = FB.equipPreview(s, cid, slot, ref);
+    if (!preview.ok) {
+      UI.toast(equipCheckText(preview));
+      return;
+    }
+    const item = preview.item;
+    const changes = [];
+    if (item.grip === 2) changes.push(FB.T('{item} will occupy both hands.', {
+      item:FB.itemName(s, ref)
+    }));
+    for (const removed of preview.removed) {
+      const wearer = s.chars[removed.cid];
+      if (removed.ref === ref) {
+        if (removed.cid !== cid) {
+          changes.push(FB.T('{item} moves from {name}.', {
+            item:FB.itemName(s, ref),
+            name:wearer ? FB.fullName(wearer) : removed.cid
+          }));
+        }
+        continue;
+      }
+      changes.push(FB.T('{item} returns to the armory from {name}.', {
+        item:FB.itemName(s, removed.ref),
+        name:wearer ? FB.fullName(wearer) : removed.cid
+      }));
+    }
+    if (!changes.length) {
+      FB.equipItem(s, cid, slot, ref);
+      finishEquipment(cid, ref, returnMode);
+      return;
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'This equipment change will make the following moves:')) + '</p><ul>';
+    for (const change of changes) h += '<li>' + esc(change) + '</li>';
+    h += '</ul></div><div class="gm-list">' +
+      '<button class="actionbtn" id="equip-confirm">' + esc(FB.T('Confirm equipment change')) +
+      '</button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Go back')) + '</button>';
+    openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h);
+    $('equip-confirm').addEventListener('click', function () {
+      const result = FB.equipItem(s, cid, slot, ref);
+      if (result.ok) finishEquipment(cid, ref, returnMode);
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      UI.showEquipSlot(cid, slot, returnMode);
+    });
+  }
+
+  UI.showEquipSlot = function (cid, slot, returnMode) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!s || !c || !FB.isHouseholdCharacter(s, cid)) return;
+    if (!returnMode) {
+      returnMode = $('genmodal').classList.contains('hidden') ? 'close' : 'character';
+    }
+    const blocked = FB.equipmentBlockedReason(s);
+    const loadout = FB.loadoutOf(s, cid);
+    const current = loadout[slot];
+    const refs = FB.itemList(s).filter(function (ref) {
+      return FB.itemFitsSlot(s, ref, slot);
+    }).sort(function (a, b) {
+      return FB.itemName(s, a).localeCompare(FB.itemName(s, b));
+    });
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose {name}’s {slot} equipment from the shared family armory.', {
+        name:c.name, slot:itemSlotLabel(slot)
+      })) + '</p></div>';
+    if (blocked) {
+      h += '<div class="progressnote warnote">' + esc(equipmentBlockedText(blocked)) + '</div>';
+    }
+    h += '<div class="gm-list equip-pick-list">';
+    if (current) {
+      const cur = FB.resolveItem(s, current);
+      h += '<button class="actionbtn" id="equip-empty"' + (blocked ? ' disabled' : '') + '>' +
+        esc(FB.T('Leave this slot empty')) + '<span class="adesc">' +
+        esc(FB.T('{item} returns to the armory.', {
+          item:cur ? FB.itemName(s, current) : current
+        })) + '</span></button>';
+    }
+    for (const ref of refs) {
+      const item = FB.resolveItem(s, ref);
+      const check = FB.canEquipItem(s, cid, slot, ref);
+      const at = FB.itemAssignment(s, ref);
+      const here = current === ref;
+      const detail = [
+        itemFxText(item) || FB.T('No mechanical effect'),
+        at ? itemWearerText(s, ref) : FB.T('In the armory'),
+        check.ok ? '' : equipCheckText(check)
+      ].filter(function (value) { return !!value; }).join(' - ');
+      h += '<button class="actionbtn equip-choice" data-equip-ref="' + esc(ref) + '"' +
+        (!check.ok || here ? ' disabled' : '') + '>' +
+        '<canvas class="itemart" data-item="' + esc(ref) + '" width="54" height="54"></canvas>' +
+        '<span><b>' + item.def.icon + ' ' + esc(FB.itemName(s, ref)) + '</b>' +
+        '<span class="adesc">' + esc(here ? FB.T('Worn here') : detail) +
+        '</span></span></button>';
+    }
+    if (!refs.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'There is no compatible object in the armory.')) + '</div>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    openModal(FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) }), h);
+    FB.paintFaces($('gm-body'), s);
+    const empty = $('equip-empty');
+    if (empty) empty.addEventListener('click', function () {
+      FB.unequipItem(s, cid, slot);
+      finishEquipment(cid, current, returnMode);
+    });
+    const choices = $('gm-body').querySelectorAll('[data-equip-ref]');
+    for (let i = 0; i < choices.length; i++) {
+      choices[i].addEventListener('click', function () {
+        confirmEquip(cid, slot, choices[i].getAttribute('data-equip-ref'), returnMode);
+      });
+    }
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnMode === 'character') UI.showCharModal(cid);
+      else UI.closeModal();
+    });
+  };
+
+  UI.showItemEquip = function (ref) {
+    const s = FB.state;
+    const item = s && FB.resolveItem(s, ref);
+    if (!s || !item || FB.itemList(s).indexOf(ref) < 0) return;
+    const blocked = FB.equipmentBlockedReason(s);
+    const slots = item.slot === 'hand' ? ['rightHand', 'leftHand'] : [item.slot];
+    const current = FB.itemAssignment(s, ref);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer.', {
+        item:FB.itemName(s, ref)
+      })) + '</p></div>';
+    if (blocked) {
+      h += '<div class="progressnote warnote">' + esc(equipmentBlockedText(blocked)) + '</div>';
+    }
+    h += '<div class="gm-list">';
+    if (current) {
+      h += '<button class="actionbtn" id="item-unequip"' + (blocked ? ' disabled' : '') + '>' +
+        esc(FB.T('Return it to the armory')) + '<span class="adesc">' +
+        esc(itemWearerText(s, ref)) + '</span></button>';
+    }
+    for (const cid of FB.householdCharacterIds(s)) {
+      const c = s.chars[cid];
+      for (const slot of slots) {
+        const check = FB.canEquipItem(s, cid, slot, ref);
+        const here = current && current.cid === cid && current.slots.indexOf(slot) >= 0;
+        h += '<button class="actionbtn" data-item-equip-cid="' + cid +
+          '" data-item-equip-slot="' + slot + '"' +
+          (!check.ok || here ? ' disabled' : '') + '>' +
+          esc(FB.T('{name} - {slot}', { name:FB.fullName(c), slot:itemSlotLabel(slot) })) +
+          '<span class="adesc">' + esc(here ? FB.T('Worn here') :
+            (check.ok ? FB.T('Available') : equipCheckText(check))) + '</span></button>';
+      }
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back to item')) + '</button>';
+    openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h);
+    const un = $('item-unequip');
+    if (un) un.addEventListener('click', function () {
+      const at = FB.itemAssignment(s, ref);
+      if (at) FB.unequipItem(s, at.cid, at.slots[0]);
+      finishEquipment(at ? at.cid : s.player.charId, ref, 'item');
+    });
+    const choices = $('gm-body').querySelectorAll('[data-item-equip-cid]');
+    for (let i = 0; i < choices.length; i++) {
+      choices[i].addEventListener('click', function () {
+        confirmEquip(choices[i].getAttribute('data-item-equip-cid'),
+          choices[i].getAttribute('data-item-equip-slot'), ref, 'item');
+      });
+    }
+    $('gm-cancel').addEventListener('click', function () { UI.showItemModal(ref); });
   };
 
   /* ---------- education: focus picker ---------- */
@@ -5082,6 +5407,52 @@ window.FB = window.FB || {};
     return legend.title ? FB.L(legend.title) : '';
   }
 
+  function deathProvenanceText(s, legend) {
+    const prov = legend && legend.deathProvenance;
+    if (!prov) return '';
+    const province = prov.provinceId && FB.world.byId[prov.provinceId];
+    const enemy = prov.enemyId && s.realms[prov.enemyId];
+    if (prov.kind === 'battle' && province && enemy) {
+      return FB.T('Fell in battle at {province} against {enemy}.', {
+        province:province.name, enemy:enemy.name
+      });
+    }
+    if (prov.kind === 'battle' && province) {
+      return FB.T('Fell in battle at {province}.', { province:province.name });
+    }
+    if (prov.kind === 'battle' && enemy) {
+      return FB.T('Fell in battle against {enemy}.', { enemy:enemy.name });
+    }
+    return province ? FB.T('The fatal event unfolded at {province}.', {
+      province:province.name
+    }) : '';
+  }
+
+  function wornAtDeathHtml(s, legend) {
+    const loadout = legend && legend.loadout || {};
+    const seen = {};
+    let list = '';
+    for (const slot of FB.ITEM_SLOTS) {
+      const snap = loadout[slot];
+      if (!snap || seen[snap.ref || snap.defId]) continue;
+      seen[snap.ref || snap.defId] = 1;
+      const item = FB.resolveItemSnapshot(snap);
+      if (!item) continue;
+      const slots = item.grip === 2 ? FB.T('Both hands') : itemSlotLabel(slot);
+      list += '<div class="death-worn-row"><span>' + esc(slots) + '</span><b>' +
+        item.def.icon + ' ' + esc(FB.itemNameFromSnapshot(s, s.player.charId, snap)) +
+        '</b></div>';
+    }
+    if (!list) list = '<div class="cmeta">' + esc(FB.T('Nothing was worn.')) + '</div>';
+    return '<div class="death-paper"><canvas id="death-paperdoll" class="paperdoll" ' +
+      'width="240" height="450" role="img" aria-label="' +
+      esc(FB.T('Final equipment worn by the deceased')) + '"></canvas>' +
+      '<div class="death-worn"><h4>' + esc(FB.T('Worn at death')) + '</h4>' + list +
+      '<p class="cmeta">' + esc(FB.T(
+        'No object is lost. The outfit returns to the family armory at succession.')) +
+      '</p></div></div>';
+  }
+
   UI.showDeath = function (heirs, causeText) {
     const s = FB.state;
     const me = s.chars[s.player.charId];
@@ -5090,6 +5461,9 @@ window.FB = window.FB || {};
     const lg = s.legends && s.legends[s.legends.length - 1];
     const quip = lg && lg.id === me.id ? legendQuipText(lg, s) : '';
     if (quip) h += '<p><i>' + esc(quip) + '</i></p>';
+    const provenance = lg && lg.id === me.id ? deathProvenanceText(s, lg) : '';
+    if (provenance) h += '<p class="cmeta">' + esc(provenance) + '</p>';
+    if (lg && lg.id === me.id) h += wornAtDeathHtml(s, lg);
     const debt = FB.financeActiveLoans ? FB.financeActiveLoans(s) : [];
     if (debt.length) {
       let due = 0;
@@ -5116,6 +5490,10 @@ window.FB = window.FB || {};
       openModal(FB.T('☠ {name} is Dead', { name: me.name }), h,
         { dismissable: false, noFocus: true });
       FB.paintFaces($('gm-body'), s);
+      const deathDoll = $('death-paperdoll');
+      if (deathDoll && lg && lg.loadout) {
+        FB.paintPaperDoll(deathDoll, me, s, { loadout:lg.loadout });
+      }
       document.querySelectorAll('[data-heir]').forEach(function (b) {
         b.addEventListener('click', function () {
           UI.closeModal();
@@ -5128,6 +5506,10 @@ window.FB = window.FB || {};
           { dynasty: me.dyn || me.name })) + '</p></div>';
       openModal('☠ The Line is Ended', h + '<button class="btn primary" id="gm-gameover">' +
         esc(FB.T('See the chronicle')) + '</button>', { dismissable: false, noFocus: true });
+      const deathDoll = $('death-paperdoll');
+      if (deathDoll && lg && lg.loadout) {
+        FB.paintPaperDoll(deathDoll, me, s, { loadout:lg.loadout });
+      }
       $('gm-gameover').addEventListener('click', function () {
         UI.closeModal(); UI.gameOver();
       });
@@ -5643,11 +6025,11 @@ window.FB = window.FB || {};
       const ichip = e.target.closest('.traitchip[data-item], .traitchip[data-itemview]');
       if (ichip && FB.state) {
         const iid = ichip.getAttribute('data-item') || ichip.getAttribute('data-itemview');
-        const d = FBDATA.items[iid];
-        if (d && UI.eventsBusy()) {
-          UI.toastMessage(null, d.icon + ' ' + dt(FB.state, 'item', iid, d, 'name') + ' — ' +
-            dt(FB.state, 'item', iid, d, 'desc'));
-        } else if (d) {
+        const item = FB.resolveItem(FB.state, iid);
+        if (item && UI.eventsBusy()) {
+          UI.toastMessage(null, item.def.icon + ' ' + FB.itemName(FB.state, iid) + ' — ' +
+            dt(FB.state, 'item', item.defId, item.def, 'desc'));
+        } else if (item) {
           UI.showItemModal(iid, !ichip.hasAttribute('data-item'));
         }
         return;
@@ -5694,14 +6076,15 @@ window.FB = window.FB || {};
             '</b><br>' + esc(dt(FB.state, 'trait', tid, t, 'desc')) +
             (fx ? '<br><i>' + esc(fx) + '</i>' : '');
         } else {
-          const d = FBDATA.items[chip.getAttribute('data-item') || chip.getAttribute('data-itemview')];
-          if (!d || !FB.state) return;
-          const ifx = itemFxText(d);
           const iid = chip.getAttribute('data-item') || chip.getAttribute('data-itemview');
-          tip.innerHTML = '<b>' + d.icon + ' ' + esc(dt(FB.state, 'item', iid, d, 'name')) + '</b> · ' +
-            esc(rarityName(d.rarity)) + '<br>' + esc(dt(FB.state, 'item', iid, d, 'desc')) +
+          const item = FB.state && FB.resolveItem(FB.state, iid);
+          if (!item) return;
+          const ifx = itemFxText(item);
+          const quality = item.ordinary ? FB.itemQualityName(item.quality) : rarityName(item.def.rarity);
+          tip.innerHTML = '<b>' + item.def.icon + ' ' + esc(FB.itemName(FB.state, iid)) + '</b> · ' +
+            esc(quality) + '<br>' + esc(dt(FB.state, 'item', item.defId, item.def, 'desc')) +
             (ifx ? '<br><i>' + esc(ifx) + '</i>' : '') +
-            '<br><i>' + esc(FB.T('worth ~{money:gold}', { gold: d.value })) + '</i>';
+            '<br><i>' + esc(FB.T('worth ~{money:gold}', { gold: item.value })) + '</i>';
         }
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();

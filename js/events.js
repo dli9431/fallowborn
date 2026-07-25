@@ -260,6 +260,7 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const sp = state.chars[spId];
     if (!sp) return;
+    if (FB.clearLoadout) FB.clearLoadout(state, sp.id);
     FB.endRoyalCompact(state, sp);
     if (me.spouseId === sp.id) me.spouseId = null;
     if (sp.spouseId === me.id) sp.spouseId = null;
@@ -276,6 +277,7 @@ window.FB = window.FB || {};
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
     const me = state.chars[state.player.charId];
+    if (c.id !== state.player.charId && FB.clearLoadout) FB.clearLoadout(state, c.id);
     if (me && (me.spouseId === c.id || c.spouseId === me.id)) FB.endRoyalCompact(state, c);
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     c.dead = true;
@@ -616,6 +618,9 @@ window.FB = window.FB || {};
      yearly kin tick; settles the bride's dowry and the standing of the match */
   FB.doKinWedding = function (state, k, sp) {
     const B = FBDATA.balance, p = state.player;
+    /* A child establishing another household leaves their outfit in the
+       shared family armory. The current head's own pledged wedding is exempt. */
+    if (k.id !== p.charId && FB.clearLoadout) FB.clearLoadout(state, k.id);
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';
@@ -758,10 +763,14 @@ window.FB = window.FB || {};
         }
         case 'item': {
           const offer = state.player.itemOffer;
-          const def = offer && FBDATA.items[offer.id];
+          const ref = offer && (offer.ref || offer.id);
+          const item = ref && FB.resolveItem ? FB.resolveItem(state, ref) : null;
+          const def = item ? item.def : (offer && FBDATA.items[offer.id]);
           out[k] = def
-            ? (semantic ? { $data: 'item', id: offer.id, path: 'name', icon: true } :
-              def.icon + ' ' + FB.dataText(state, viewer, 'item', offer.id, def, 'name', {}))
+            ? (semantic && FB.itemParam ? FB.itemParam(state, ref, true) :
+              def.icon + ' ' + (FB.itemName
+                ? FB.itemName(state, ref, viewer)
+                : FB.dataText(state, viewer, 'item', offer.id, def, 'name', {})))
             : (semantic ? neutralParam('fx.param.a_curiosity') : FB.T('a curiosity'));
           break;
         }
@@ -1494,10 +1503,53 @@ window.FB = window.FB || {};
   };
 
   /* ---------- effects ---------- */
-  FB.applyEffects = function (state, fx, ctx) {
+  function realmWarEnemy(state, rid) {
+    if (!rid || !state.realms) return null;
+    const top = FB.topRealm ? FB.topRealm(state, rid) : rid;
+    const realm = state.realms[top];
+    if (realm && realm.war) return realm.war.enemy;
+    for (const id in state.realms) {
+      const other = state.realms[id];
+      if (other && other.alive && other.war &&
+        (!FB.topRealm || FB.topRealm(state, other.war.enemy) === top)) return id;
+    }
+    return null;
+  }
+
+  function deathProvenance(state, spec, ctx, ev) {
+    spec = spec || {};
+    ctx = ctx || {};
+    const p = state.player;
+    const loc = FB.travelLocation ? FB.travelLocation(state) : null;
+    let provinceId = spec.provinceId || null;
+    if (spec.province === 'context') {
+      provinceId = ctx.pid || ctx.provinceId || ctx.locationId || null;
+    }
+    if (!provinceId) provinceId = loc ? loc.id : p.provinceId;
+    let enemyId = spec.enemyId || null;
+    if (spec.enemy === 'war') enemyId = p.war && p.war.enemy;
+    else if (spec.enemy === 'liegeWar') enemyId = realmWarEnemy(state, p.liege);
+    else if (spec.enemy === 'realmWar') {
+      enemyId = realmWarEnemy(state, state.owner[provinceId] || state.owner[p.provinceId]);
+    }
+    if (!enemyId) enemyId = ctx.enemyId || ctx.enemyRealmId || null;
+    return {
+      kind:spec.kind || 'event',
+      eventId:spec.eventId || (ev && ev.id) || null,
+      provinceId:provinceId || null,
+      enemyId:enemyId || null
+    };
+  }
+
+  FB.applyEffects = function (state, fx, ctx, ev) {
     if (!fx) return;
     const p = state.player;
     const me = state.chars[p.charId];
+    /* Freeze semantic context before a custom outcome can end a war, move
+       the household, or otherwise erase the identifiers behind the blow.
+       It is committed below only when this resolution actually kills. */
+    const lethalProvenance = fx.deathProvenance
+      ? deathProvenance(state, fx.deathProvenance, ctx, ev) : null;
     ctx = ctx || {};
 
     if (fx.gold !== undefined) {
@@ -1617,12 +1669,9 @@ window.FB = window.FB || {};
       if (hi >= 0) hl.splice(hi, 1);
     }
     if (fx.giveItem && FBDATA.items[fx.giveItem]) {
-      // grant one specific heirloom by id (issued kit, gifts, quest rewards);
-      // random finds still go through custom:'loot_item' / FB.lootItem
-      FB.itemList(state).push(fx.giveItem);
-      const gdef = FBDATA.items[fx.giveItem];
-      FB.news(state, FB.msg('news.item.issued', '🎒 {icon} {item} is yours now.',
-        { icon: gdef.icon, item: FB.dataParam('item', fx.giveItem) }));
+      /* One specific definition: a repeatable template creates a fresh
+         instance, while an authored unique remains a single heirloom. */
+      if (FB.issueItem) FB.issueItem(state, fx.giveItem);
     }
     if (fx.marry) FB.doMarry(state);
     if (fx.clearSuitor) {
@@ -1691,6 +1740,13 @@ window.FB = window.FB || {};
     if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));
     if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
     if (FB.travelValidate) FB.travelValidate(state);
+    /* Lethal effects may freeze where and against whom the blow fell. The
+       marker is short-lived unless this exact resolution proves mortal. */
+    if (me.health <= 0 && lethalProvenance) {
+      p.pendingDeathProvenance = lethalProvenance;
+    } else if (me.health > 0) {
+      delete p.pendingDeathProvenance;
+    }
 
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
@@ -1728,6 +1784,10 @@ window.FB = window.FB || {};
         }
       }, { order: order, name: s.name }));
     }
+    /* An object given during courtship was external character property.
+       Once its owner enters the household, move that exact object into the
+       shared armory so the household ownership invariant continues to hold. */
+    if (FB.reclaimCharacterItems) FB.reclaimCharacterItems(state, s.id);
     if (FB.receiveMarriageLivelihood) FB.receiveMarriageLivelihood(state, s);
     s.role = 'spouse';
     // a spouse cannot stay your lord, priest, friend, or rival — those seats

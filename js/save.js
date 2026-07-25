@@ -158,6 +158,9 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     backfillParents(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    /* Save format 3 is deliberately stable. The equipment subsystem repairs
+       old inventories and grows exact instances/loadouts additively here. */
+    if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.repairWars) FB.repairWars(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
     return FB.state;
