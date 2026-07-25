@@ -161,6 +161,20 @@ the banner call (`with_liege_host`) fight through the `host_*` events; those and
 war's end pay into the lifetime `player.warService` tally, which gates the
 intra-realm petition deed and the escheat scramble (see [realms.md](realms.md)).
 
+**One computed levy ledger is authoritative.** `FB.playerCompositionBreakdown` returns
+the levy, archers, and retinue together with ordered source entries for direct counties,
+buildings, technology, Royal Constable, ruler Martial, domain penalty, each vassal,
+standing barony troops, and position or retainer contributions.
+`FB.playerComposition` and `FB.playerLevy` derive from that object; no second army total
+is stored. The Network Realm section renders the same entries, preserving the existing
+calculation order in which percentages and the domain penalty affect direct levy before
+vassal contributions are added.
+
+A loyal vassal at opinion 40+ may supply one bounded exceptional levy favor. Spending
+15 favor records a one-year `player.vassalLevyFavors[realmId]` modifier and raises that
+specific vassal's normal levy share by `balance.vassalLevyFavorRate`. It is itemized in
+the same ledger and is separate from Royal Council authority or officer management.
+
 Related: [events.md](events.md) for the interpreter, [time.md](time.md) for the seasonal
 tick, [realms.md](realms.md) for who can target whom, [provinces.md](provinces.md) for
 the map the hosts march on.

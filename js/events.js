@@ -5,6 +5,94 @@ window.FB = window.FB || {};
   'use strict';
 
   /* ---------- supporting cast (roles) ---------- */
+  FB.friendContacts = function (state) {
+    const p = state.player;
+    if (!p.friendContacts || typeof p.friendContacts !== 'object' ||
+      Array.isArray(p.friendContacts)) p.friendContacts = {};
+    for (const id in p.friendContacts) {
+      const c = state.chars[id];
+      if (!c || c.dead || id === p.charId) delete p.friendContacts[id];
+    }
+    return p.friendContacts;
+  };
+
+  function friendEligible(state, c) {
+    if (!c || c.dead || c.id === state.player.charId ||
+        state.roles.rival === c.id || FB.ageOf(c, state.date.year) < 16) return false;
+    const me = state.chars[state.player.charId];
+    if (!me) return false;
+    if (me.spouseId === c.id || c.spouseId === me.id ||
+        me.fatherId === c.id || me.motherId === c.id ||
+        (me.childrenIds || []).indexOf(c.id) >= 0) return false;
+    const kin = FB.kinOf ? FB.kinOf(state).byId : {};
+    return !kin[c.id];
+  }
+
+  FB.noteFriendContact = function (state, c) {
+    if (!friendEligible(state, c)) return false;
+    const contacts = FB.friendContacts(state);
+    const old = contacts[c.id];
+    const record = old && typeof old === 'object'
+      ? old : { startedTurn:state.turn };
+    record.lastTurn = state.turn;
+    contacts[c.id] = record;
+    return true;
+  };
+
+  FB.friendCandidate = function (state, anyWarmContact) {
+    const threshold = anyWarmContact ? 0 :
+      (FBDATA.balance.friendOpinionThreshold === undefined
+        ? 40 : FBDATA.balance.friendOpinionThreshold);
+    const contacts = FB.friendContacts(state);
+    const out = [];
+    for (const id in contacts) {
+      const c = state.chars[id];
+      if (friendEligible(state, c) && c.opinion >= threshold) out.push(c);
+    }
+    out.sort(function (a, b) {
+      const ad = contacts[a.id], bd = contacts[b.id];
+      return b.opinion - a.opinion ||
+        (bd.lastTurn || 0) - (ad.lastTurn || 0) ||
+        String(a.id).localeCompare(String(b.id));
+    });
+    return out[0] || null;
+  };
+
+  FB.canNameFriend = function (state, c) {
+    const contacts = FB.friendContacts(state);
+    const threshold = FBDATA.balance.friendOpinionThreshold === undefined
+      ? 40 : FBDATA.balance.friendOpinionThreshold;
+    return !!(friendEligible(state, c) && contacts[c.id] && c.opinion >= threshold &&
+      state.roles.friend !== c.id);
+  };
+
+  FB.nameFriend = function (state, c) {
+    if (!FB.canNameFriend(state, c)) return false;
+    const formerId = state.roles.friend;
+    if (formerId && formerId !== c.id) delete state.player.flags.sworn_friend;
+    state.roles.friend = c.id;
+    FB.news(state, FB.msg('news.social.friend_named',
+      '🤝 You and {name} now call one another friend.', { name:c.name }));
+    return true;
+  };
+
+  FB.clearFriendship = function (state, clearContacts) {
+    delete state.roles.friend;
+    delete state.player.flags.sworn_friend;
+    if (clearContacts) state.player.friendContacts = {};
+  };
+
+  FB.friendConnections = function (state) {
+    const contacts = FB.friendContacts(state);
+    const out = [];
+    for (const id in contacts) {
+      const c = state.chars[id];
+      if (friendEligible(state, c)) out.push(c);
+    }
+    out.sort(function (a, b) { return b.opinion - a.opinion; });
+    return out;
+  };
+
   FB.getRole = function (state, role, create) {
     if (role === 'spouse') {
       return FB.spouseOf(state, state.chars[state.player.charId]);
@@ -15,6 +103,16 @@ window.FB = window.FB || {};
     const id = state.roles[role];
     if (id && state.chars[id] && !state.chars[id].dead) return state.chars[id];
     if (!create) return null;
+    if (role === 'friend') {
+      if (id) delete state.player.flags.sworn_friend;
+      /* A friendship story can deepen any cultivated warm connection;
+         explicit player naming still requires the configured threshold. */
+      const known = FB.friendCandidate(state, true);
+      if (known) {
+        state.roles.friend = known.id;
+        return known;
+      }
+    }
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
     let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
@@ -27,6 +125,7 @@ window.FB = window.FB || {};
     }
     const c = FB.makeCharacter(state, opts);
     state.roles[role] = c.id;
+    if (role === 'friend') FB.noteFriendContact(state, c);
     return c;
   };
 
@@ -277,6 +376,10 @@ window.FB = window.FB || {};
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
     const me = state.chars[state.player.charId];
+    if (state.roles.friend === c.id) FB.clearFriendship(state, false);
+    if (FB.removeRetainer && FB.retainerRecord && FB.retainerRecord(state, c.id)) {
+      FB.removeRetainer(state, c.id, 'death');
+    }
     if (c.id !== state.player.charId && FB.clearLoadout) FB.clearLoadout(state, c.id);
     if (me && (me.spouseId === c.id || c.spouseId === me.id)) FB.endRoyalCompact(state, c);
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
@@ -1648,8 +1751,7 @@ window.FB = window.FB || {};
         const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
         if (rid && rid !== 'player') p.liege = rid;
       }
-      if (p.tier >= 2 && p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
-      if (p.tier >= 2 && FB.setCareer && p.profession === 'noble') FB.setCareer(state, me, 'noble', 'master');
+      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
     if (fx.tierUp) {
       FB.grantByLiege(state);
@@ -1756,6 +1858,11 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    /* Marriage makes a retainer resident family: end the paid office before
+       the ordinary spouse livelihood and household rules take over. */
+    if (FB.retainerRecord && FB.retainerRecord(state, s.id) && FB.removeRetainer) {
+      FB.removeRetainer(state, s.id, 'marriage');
+    }
     const others = FB.spousesOf(state, me); // wives already in the household
     // wedding another sets aside any pledge made for the player in childhood
     if (me.betrothedId) {
@@ -1792,6 +1899,10 @@ window.FB = window.FB || {};
     s.role = 'spouse';
     // a spouse cannot stay your lord, priest, friend, or rival — those seats
     // empty and are lazily refilled where the game next needs them
+    if (state.roles.friend === s.id && FB.clearFriendship) {
+      FB.clearFriendship(state, false);
+    }
+    if (state.player.friendContacts) delete state.player.friendContacts[s.id];
     for (const r in state.roles) {
       if (r !== 'spouse' && state.roles[r] === s.id) delete state.roles[r];
     }
@@ -1962,10 +2073,7 @@ window.FB = window.FB || {};
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
       p.tier = 2;
       FB.markGentryRise(state);
-      if (p.profession !== 'monk' && p.profession !== 'priest') p.profession = 'noble';
-      if (p.profession === 'noble' && FB.setCareer) {
-        FB.setCareer(state, state.chars[p.charId], 'noble', 'master');
-      }
+      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
       FB.news(state, FB.msg('news.event.inheritance_raises_station',
         '🏛 Stewarding a noble inheritance raises you into the gentry.', {}));
     }

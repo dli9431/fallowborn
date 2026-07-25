@@ -1366,38 +1366,120 @@ window.FB = window.FB || {};
      standing household contribute a hard core of men-at-arms (ret) and
      bowmen (arch). FB.playerLevy stays the total headcount for every caller
      that only wants a number. */
-  FB.playerComposition = function (state) {
+  FB.playerCompositionBreakdown = function (state) {
     const B = FBDATA.balance;
     const p = state.player;
-    const comp = { levy: 0, arch: 0, ret: 0 };
-    if (p.provs && p.provs.length) {
-      for (const pid of p.provs) comp.levy += (state.dev[pid] || 1) * B.levyPerDev;
-    } else if (p.tier >= 3) {
-      comp.ret = B.baronyRetinue || 120; // the barony's standing men-at-arms
+    const comp = { levy:0, arch:0, ret:0 };
+    const entries = [];
+    function add(unit, kind, amount, data) {
+      if (!amount) return;
+      comp[unit] += amount;
+      const entry = { unit:unit, kind:kind, amount:amount };
+      if (data) for (const key in data) entry[key] = data[key];
+      entries.push(entry);
     }
-    if (p.tier >= 3) {
-      comp.levy += FB.buildingBonus(state, 'levy');
-      comp.ret += FB.buildingBonus(state, 'retinue') + FB.techBonus(state, 'retinue');
-      comp.arch += FB.buildingBonus(state, 'archers') + FB.techBonus(state, 'archers');
-      // the lord raises the levy in person: martial skill sways how many
-      // answer the call — traits and equipped gear count through skillOf;
-      // the professionals are already sworn and paid
-      const me = state.chars[p.charId];
-      comp.levy *= (1 + FB.techBonus(state, 'levy') + (FB.councilBonus ? FB.councilBonus(state, 'levy') : 0)) *
-        (1 + (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0));
-      comp.levy *= FB.domainPenalty(state); // too much land in hand — the muster falters
-      // vassals answer the summons with a fraction of their own levies
-      const vr = B.vassalLevyRate || 0;
-      if (vr) {
-        for (const vid of FB.playerVassals(state)) {
-          for (const pid of FB.realmHeldCounties(state, vid)) comp.levy += (state.dev[pid] || 1) * B.levyPerDev * vr;
+    function buildingEntries(key, unit) {
+      const count = {};
+      for (const pid of FB.demesne(state)) {
+        for (const built of FB.builtIn(state, pid)) {
+          const def = FBDATA.buildings[built.id];
+          if (!built.ruined && def && def[key]) {
+            count[built.id] = (count[built.id] || 0) + 1;
+          }
         }
       }
-      comp.levy = Math.round(comp.levy);
-      comp.ret = Math.round(comp.ret);
-      comp.arch = Math.round(comp.arch);
+      for (const id in count) {
+        add(unit, 'building', FBDATA.buildings[id][key] * count[id], {
+          buildingId:id, count:count[id]
+        });
+      }
     }
-    return comp;
+
+    if (p.provs && p.provs.length) {
+      for (const pid of p.provs) {
+        add('levy', 'county', (state.dev[pid] || 1) * B.levyPerDev, { pid:pid });
+      }
+    } else if (p.tier >= 3) {
+      add('ret', 'barony_retinue', B.baronyRetinue || 120);
+    }
+
+    if (p.tier >= 3) {
+      buildingEntries('levy', 'levy');
+      buildingEntries('retinue', 'ret');
+      buildingEntries('archers', 'arch');
+      const techRet = FB.techBonus(state, 'retinue');
+      const techArch = FB.techBonus(state, 'archers');
+      if (techRet) add('ret', 'technology_flat', techRet, { key:'retinue' });
+      if (techArch) add('arch', 'technology_flat', techArch, { key:'archers' });
+
+      /* Technology and Council percentages share one multiplier in the
+         historical calculation. Itemizing both against the same base keeps
+         that arithmetic exact. */
+      const ownBase = comp.levy;
+      const techRate = FB.techBonus(state, 'levy');
+      const councilRate = FB.councilBonus ? FB.councilBonus(state, 'levy') : 0;
+      if (techRate) add('levy', 'technology_rate', ownBase * techRate, { rate:techRate });
+      if (councilRate) add('levy', 'council_rate', ownBase * councilRate, {
+        rate:councilRate, seatId:'constable'
+      });
+
+      const me = state.chars[p.charId];
+      const martialRate = (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0);
+      if (martialRate) {
+        const beforeMartial = comp.levy;
+        add('levy', 'martial_rate', beforeMartial * martialRate, { rate:martialRate });
+      }
+
+      const domain = FB.domainPenalty(state);
+      if (domain !== 1) {
+        const beforeDomain = comp.levy;
+        add('levy', 'domain_penalty', beforeDomain * (domain - 1), { rate:domain - 1 });
+      }
+
+      /* Vassal men arrive after own-domain modifiers. A called favor raises
+         only that named vassal's contribution and stays visible here. */
+      for (const vid of FB.playerVassals(state)) {
+        const rate = FB.vassalLevyRate
+          ? FB.vassalLevyRate(state, vid) : (B.vassalLevyRate || 0);
+        let amount = 0;
+        for (const pid of FB.realmHeldCounties(state, vid)) {
+          amount += (state.dev[pid] || 1) * B.levyPerDev * rate;
+        }
+        add('levy', 'vassal', amount, {
+          rid:vid, rate:rate,
+          favored:!!(FB.vassalLevyFavor && FB.vassalLevyFavor(state, vid))
+        });
+      }
+    }
+
+    /* Earned posts and paid household offices add named professionals. They
+       are outside the levy percentages because they are already sworn. */
+    if (FB.positionContributions) {
+      for (const source of FB.positionContributions(state, 'retinue')) {
+        add('ret', source.kind, source.amount, {
+          positionId:source.id, charId:source.charId || null
+        });
+      }
+    }
+
+    for (const unit of ['levy', 'arch', 'ret']) {
+      const rounded = Math.round(comp[unit]);
+      const adjustment = rounded - comp[unit];
+      if (Math.abs(adjustment) > 0.0001) {
+        entries.push({ unit:unit, kind:'rounding', amount:adjustment });
+      }
+      comp[unit] = rounded;
+    }
+    return {
+      units:comp,
+      entries:entries,
+      total:comp.levy + comp.arch + comp.ret
+    };
+  };
+
+  FB.playerComposition = function (state) {
+    const c = FB.playerCompositionBreakdown(state).units;
+    return { levy:c.levy, arch:c.arch, ret:c.ret };
   };
 
   FB.playerLevy = function (state) {

@@ -12,8 +12,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   in — small counties name themselves only close up), click provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —
   arrows pan · Shift+arrows hop between neighboring provinces · `PgUp`/`PgDn` zoom · `H` center
-  home · `Enter` selects the province at screen center · `D` `S` `K` `L` `C` open the
-  Deeds/Self/Kin/Land/Chronicle panels (hotkey letter underlined in-game) · `1–9` pick focuses,
+  home · `Enter` selects the province at screen center · `D` `S` `K` `L` `N` `C` open the
+  Deeds/Self/Kin/Land/Network/Chronicle panels (hotkey letter underlined in-game) · `1–9` pick focuses,
   deeds, event options, and dialog items, and `Shift+1–9` reaches items 10–18 (badges show
   the numbers; the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
@@ -22,7 +22,7 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   `[` `]` cycle panels · `Esc` menu/back/close ·
   `Tab` moves between buttons.
 - **Mobile / touch:** drag to pan, pinch to zoom, tap provinces. In portrait the map sits
-  above a full-width Deeds/Land/Chronicle panel with the time controls fixed at the bottom
+  above a full-width Deeds/Land/Network/Chronicle panel with the time controls fixed at the bottom
   in thumb reach; **tap your portrait in the top bar** to open the Self/Kin sheet. Dialogs
   open as bottom sheets, and tapping an item chip opens its exact card — appearance,
   quality, powers, worth, wearer, and valid actions. The speed of days lives in
@@ -76,7 +76,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    finish the purpose, stay at least three months, and keep taking local work for
    as long as you wish. After a year of building a life there, you may make that
    county the household’s permanent home—but each character can relocate only once.
-   Named characters remember hostile encounters: anger someone deeply enough and they may
+   Named characters remember personal encounters. Cultivate a contact to sufficient regard
+   and you may explicitly name them as your friend; events that call for a friend use that
+   canonical relationship. Friendship belongs to the current life rather than the dynasty.
+   Anger someone deeply enough and they may
    declare a rivalry of their own. A feud has visible heat, can grow from insults into claims
    and knives, or end through compensation, mediation, a witnessed oath, common cause, or
    satisfaction by duel. Your heir chooses whether an old ruler's quarrel belongs to the house.
@@ -112,7 +115,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
    bring wages home or staff family fields, workshops, stalls, and other enterprises; a
    business left idle earns nothing. Resident spouses and children also add provisions and
    quarters to seasonal household upkeep. Craft and merchant careers can climb the guild from
-   ordinary membership to guildmaster.
+   ordinary membership to guildmaster, and landing does not erase a person's learned
+   occupation.
+   The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
+   Established households can hire a limited number of paid retainers as stewards, factors,
+   captains, or tutors. Their seasonal contracts pass to an heir, but their personal loyalties
+   may not. The same tab shows every source and modifier behind the current levy instead of
+   storing a separate army total.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
    The **🌳 See the family tree** button at the top of that tab draws the whole house as a
    tree — couples share a box, each brood hangs beneath its parents, † marks the dead.

@@ -442,7 +442,7 @@ window.FBDATA = window.FBDATA || {};
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
-          career: FBDATA.careers, schooling: FBDATA.schooling,
+          career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
           enterprise: FBDATA.enterprises, travelPurpose: FBDATA.travelPurposes
         };
         const def = tables[value.$data] && tables[value.$data][value.id];

@@ -39,6 +39,12 @@ and the levers — send a gift (`balance.councilGiftCost` gold → favor), dismi
 to vacant seats. Opinion itself is the existing `player.liegeOps` store, so every older
 mechanism that moves vassal opinion (grants, demands, revolts) feeds the council for free.
 
+The Network Realm section is a summary and route into this interface, not another Council
+screen. It names occupied seats, active bonuses, vacancies, and the Constable contribution
+in the shared levy ledger, then opens `UI.showCouncil` for appointments, dismissal,
+gifts, and authority. Household steward, factor, captain, and tutor offices never fill a
+great office of the crown; personal service remains below and beside realm government.
+
 **Saves**: `state.council` is optional and self-heals (`FB.councilEnsure` runs in the
 season tick) — no save-version bump; kings in old saves find their council formed on the
 next season. Only the player monarch has a council; AI realms are not simulated this deep.

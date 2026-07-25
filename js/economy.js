@@ -118,6 +118,13 @@ window.FB = window.FB || {};
     if (c.career.experience === undefined) c.career.experience = 0;
     if (c.career.guildStanding === undefined) c.career.guildStanding = 0;
     if (c.career.chosen === undefined) c.career.chosen = c.career.rank !== 'unassigned';
+    if (state.player && c.id === state.player.charId && state.player.flags.guild_member) {
+      const careerDef = FBDATA.careers[c.career.profession];
+      if (careerDef && careerDef.guild && c.career.guildRank === 'none') {
+        c.career.guildRank = 'member';
+        c.career.guildStanding = Math.max(20, c.career.guildStanding || 0);
+      }
+    }
     return c.career;
   };
 
@@ -126,9 +133,9 @@ window.FB = window.FB || {};
     const career = FB.careerOf(state, c);
     if (!career) return;
     if (state.player.professionBack) return; // temporary levy service keeps the civilian career
-    state.player.profession = state.player.tier >= 3 &&
-      career.profession !== 'monk' && career.profession !== 'priest'
-      ? 'noble' : career.profession;
+    /* Station and occupation are independent. Acquiring land changes title,
+       not the career that built this character's skills and connections. */
+    state.player.profession = career.profession;
     if (career.guildRank !== 'none') state.player.flags.guild_member = 1;
     else delete state.player.flags.guild_member;
   };
@@ -147,6 +154,9 @@ window.FB = window.FB || {};
     if (!def.guild || changedProfession) {
       career.guildRank = 'none';
       career.guildStanding = 0;
+      if (changedProfession && c.id === state.player.charId) {
+        delete state.player.flags.guild_member;
+      }
     }
     if (c.id === state.player.charId) FB.syncPlayerCareer(state);
     return true;
@@ -174,6 +184,60 @@ window.FB = window.FB || {};
     return FB.T(names[(career && career.guildRank) || 'none']);
   };
 
+  FB.positionDef = function (id) {
+    return (FBDATA.positions && FBDATA.positions[id]) || null;
+  };
+
+  FB.playerPositionIds = function (state) {
+    const out = [];
+    const flags = state.player.flags || {};
+    for (const id in FBDATA.positions) {
+      const def = FBDATA.positions[id];
+      if (def.kind === 'earned' && flags[id]) out.push(id);
+    }
+    return out;
+  };
+
+  /* Position effects are always computed from the earned flags and current
+     paid roster. No derived total is stored in the save. */
+  FB.positionContributions = function (state, key) {
+    const out = [];
+    for (const id of FB.playerPositionIds(state)) {
+      const def = FB.positionDef(id);
+      if (def && def.fx && def.fx[key]) {
+        out.push({ kind:'position', id:id, amount:def.fx[key] });
+      }
+    }
+    if (FB.retainerRecords) {
+      for (const record of FB.retainerRecords(state)) {
+        const c = state.chars[record.charId];
+        if (!c || c.opinion <= -40) continue;
+        const def = FB.positionDef(record.office);
+        if (def && def.fx && def.fx[key]) {
+          out.push({
+            kind:'retainer', id:record.office, charId:record.charId,
+            amount:def.fx[key]
+          });
+        }
+      }
+    }
+    return out;
+  };
+
+  FB.positionBonus = function (state, key) {
+    let total = 0;
+    for (const source of FB.positionContributions(state, key)) total += source.amount;
+    return total;
+  };
+
+  FB.guildIncomeMultiplier = function (career) {
+    if (!career) return 1;
+    if (career.guildRank === 'master') return 1.1;
+    if (career.guildRank === 'officer') return 1.15;
+    if (career.guildRank === 'guildmaster') return 1.25;
+    return 1;
+  };
+
   FB.careerChoices = function (state, c) {
     const age = FB.ageOf(c, state.date.year);
     const religionGroup = FB.religionOf(c.religion).group;
@@ -190,8 +254,6 @@ window.FB = window.FB || {};
       if (def.religionGroups && def.religionGroups.indexOf(religionGroup) < 0) continue;
       if (age < 16 && age < (def.apprenticeAge || 10)) continue;
       if (playerClericalOffice && id !== current.profession) continue;
-      if (!playerClericalOffice && c.id === state.player.charId &&
-        state.player.tier >= 3 && id !== 'noble') continue;
       out.push({ id:id, def:def, cost:age < 16 ? (def.apprenticeCost || 0) : 0 });
     }
     return out;
@@ -367,6 +429,240 @@ window.FB = window.FB || {};
       if (c && !c.dead && (!FB.spouseOf(state, c) || c.id === state.player.charId)) add(c);
     }
     return out;
+  };
+
+  FB.retainerCapacity = function (state) {
+    const scale = FBDATA.balance.retainerCapacity || [0,1,2,2,3,3,4,5];
+    const tier = FB.clamp(state.player.tier || 0, 0, scale.length - 1);
+    return Math.max(0, scale[tier] || 0);
+  };
+
+  /* Retainers are inherited household contracts, not family members. Records
+     stay compact and point at normal characters for every human quality. */
+  FB.retainerRecords = function (state) {
+    const p = state.player;
+    if (!Array.isArray(p.retainers)) p.retainers = [];
+    const out = [], seen = {}, seenOffice = {};
+    for (const record of p.retainers) {
+      const c = record && state.chars[record.charId];
+      const def = record && FB.positionDef(record.office);
+      if (!record || !c || c.dead || !def || def.kind !== 'retainer' ||
+          seen[record.charId] || seenOffice[record.office]) continue;
+      seen[record.charId] = 1;
+      seenOffice[record.office] = 1;
+      if (!isFinite(Number(record.pay)) || Number(record.pay) < 0) record.pay = def.pay || 0;
+      else record.pay = Number(record.pay);
+      if (!isFinite(Number(record.startedTurn))) record.startedTurn = state.turn;
+      else record.startedTurn = Number(record.startedTurn);
+      if (!isFinite(Number(record.unpaid)) || Number(record.unpaid) < 0) record.unpaid = 0;
+      else record.unpaid = Math.floor(Number(record.unpaid));
+      out.push(record);
+    }
+    if (out.length !== p.retainers.length) p.retainers = out;
+    return p.retainers;
+  };
+
+  FB.retainerRecord = function (state, cid) {
+    for (const record of FB.retainerRecords(state)) {
+      if (record.charId === cid) return record;
+    }
+    return null;
+  };
+
+  FB.retainerOfficeRecord = function (state, office) {
+    for (const record of FB.retainerRecords(state)) {
+      if (record.office === office) return record;
+    }
+    return null;
+  };
+
+  FB.retainerCharacters = function (state) {
+    const out = [];
+    for (const record of FB.retainerRecords(state)) {
+      const c = state.chars[record.charId];
+      if (c && !c.dead) out.push(c);
+    }
+    return out;
+  };
+
+  FB.householdWorkers = function (state) {
+    const out = [], seen = {};
+    function add(c) {
+      if (!c || c.dead || seen[c.id]) return;
+      seen[c.id] = 1;
+      out.push(c);
+    }
+    for (const c of FB.householdMembers(state)) add(c);
+    for (const c of FB.retainerCharacters(state)) add(c);
+    return out;
+  };
+
+  FB.retainerSeasonCost = function (state) {
+    let total = 0;
+    for (const record of FB.retainerRecords(state)) total += record.pay || 0;
+    return total;
+  };
+
+  function retainerCandidateIds(state) {
+    const ids = [], seen = {};
+    function add(id) {
+      const c = id && state.chars[id];
+      if (!c || c.dead || c.id === state.player.charId || seen[id] ||
+          FB.retainerRecord(state, id)) return;
+      seen[id] = 1;
+      ids.push(id);
+    }
+    const contacts = state.player.friendContacts || {};
+    for (const id in contacts) add(id);
+    for (const role of ['friend', 'priest', 'notable']) add(state.roles[role]);
+    return ids;
+  }
+
+  FB.retainerCandidates = function (state, office) {
+    const def = FB.positionDef(office);
+    const out = [];
+    if (!def || def.kind !== 'retainer') return out;
+    const family = {};
+    for (const c of FB.householdMembers(state)) family[c.id] = 1;
+    for (const id of retainerCandidateIds(state)) {
+      const c = state.chars[id];
+      if (family[id] || FB.ageOf(c, state.date.year) < 16 ||
+          c.opinion <= -40 || (def.maleOnly && c.sex !== 'm')) continue;
+      const career = FB.careerOf(state, c);
+      if (career && career.profession === def.profession) out.push(c);
+    }
+    out.sort(function (a, b) {
+      return b.opinion - a.opinion || FB.skillOf(b, 'ste') - FB.skillOf(a, 'ste');
+    });
+    return out;
+  };
+
+  FB.canHireRetainer = function (state, office, cid) {
+    const def = FB.positionDef(office);
+    if (!def || def.kind !== 'retainer' || state.player.tier < (def.minTier || 0)) return false;
+    if (FB.retainerRecords(state).length >= FB.retainerCapacity(state)) return false;
+    if (FB.retainerOfficeRecord(state, office)) return false;
+    if (state.player.gold < (def.pay || 0)) return false;
+    if (!cid) return true;
+    for (const c of FB.retainerCandidates(state, office)) if (c.id === cid) return true;
+    return false;
+  };
+
+  FB.hireRetainer = function (state, office, cid) {
+    const def = FB.positionDef(office);
+    if (!FB.canHireRetainer(state, office, cid)) return false;
+    let c = cid ? state.chars[cid] : null;
+    if (!c) {
+      const pr = FB.world.byId[state.player.provinceId];
+      c = FB.makeCharacter(state, {
+        culture:pr.culture, religion:pr.religion,
+        born:state.date.year - FB.ri(22, 48),
+        sex:def.maleOnly ? 'm' : undefined,
+        role:'retainer', station:Math.min(2, state.player.tier),
+        quality:def.quality || 2
+      });
+      FB.setCareer(state, c, def.profession, (def.quality || 0) >= 3 ? 'master' : 'journeyman');
+    } else if (c.role !== 'friend' && c.role !== 'priest' && c.role !== 'notable') {
+      c.role = 'retainer';
+    }
+    state.player.gold -= def.pay || 0; // the first season is paid on entry
+    FB.retainerRecords(state).push({
+      charId:c.id, office:office, pay:def.pay || 0,
+      startedTurn:state.turn, unpaid:0
+    });
+    c.opinion = FB.clamp(c.opinion + 10, -100, 100);
+    FB.news(state, FB.msg('news.retainer.hired',
+      '🗝 {name} enters the household as {office}; the first season’s pay is settled.',
+      { name:c.name, office:FB.dataParam('position', office) }));
+    return true;
+  };
+
+  FB.removeRetainer = function (state, cid, reason) {
+    const records = FB.retainerRecords(state);
+    let record = null;
+    for (let i = records.length - 1; i >= 0; i--) {
+      if (records[i].charId === cid) {
+        record = records[i];
+        records.splice(i, 1);
+      }
+    }
+    if (!record) return false;
+    for (const e of FB.enterpriseList(state)) {
+      if (e.workerId === cid) e.workerId = null;
+    }
+    for (const sid in state.chars) {
+      const student = state.chars[sid];
+      if (student.edu && student.edu.tutorId === cid) {
+        student.edu.tutorId = null;
+        if (student.edu.school === 'master') student.edu.school = null;
+      }
+    }
+    if (FB.clearLoadout) FB.clearLoadout(state, cid);
+    const c = state.chars[cid];
+    if (c && c.role === 'retainer') c.role = null;
+    if (reason === 'dismissed' && c) {
+      c.opinion = FB.clamp(c.opinion - 15, -100, 100);
+      FB.news(state, FB.msg('news.retainer.dismissed',
+        '🗝 {name} is dismissed from household service.', { name:c.name }));
+    } else if (reason === 'unpaid' && c) {
+      c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+      FB.news(state, FB.msg('news.retainer.left_unpaid',
+        '🪙 Two seasons without pay drive {name} from the household.', { name:c.name }));
+    } else if (reason === 'disloyal' && c) {
+      FB.news(state, FB.msg('news.retainer.left_disloyal',
+        '🗝 {name} no longer bears the household enough goodwill to remain in service.',
+        { name:c.name }));
+    } else if (reason === 'death' && c) {
+      FB.news(state, FB.msg('news.retainer.died',
+        '🕯 {name}, long in household service, has died.', { name:c.name }));
+    } else if (reason === 'capacity' && c) {
+      FB.news(state, FB.msg('news.retainer.capacity_lost',
+        '🗝 The diminished household can no longer maintain {name} in service.',
+        { name:c.name }));
+    }
+    return true;
+  };
+
+  FB.retainerSeason = function (state) {
+    const active = FB.retainerRecords(state);
+    while (active.length > FB.retainerCapacity(state)) {
+      FB.removeRetainer(state, active[active.length - 1].charId, 'capacity');
+    }
+    const records = FB.retainerRecords(state).slice();
+    for (const record of records) {
+      const c = state.chars[record.charId];
+      if (c && c.opinion <= -40) {
+        FB.removeRetainer(state, record.charId, 'disloyal');
+        continue;
+      }
+      const pay = record.pay || 0;
+      if (state.player.gold + 0.0001 >= pay) {
+        state.player.gold -= pay;
+        record.unpaid = 0;
+        continue;
+      }
+      record.unpaid = (record.unpaid || 0) + 1;
+      if (c) c.opinion = FB.clamp(c.opinion - 10, -100, 100);
+      if (record.unpaid >= 2) {
+        FB.removeRetainer(state, record.charId, 'unpaid');
+      } else if (c) {
+        FB.news(state, FB.msg('news.retainer.pay_missed',
+          '🪙 The household cannot pay {name}; another missed season will end the service.',
+          { name:c.name }));
+      }
+    }
+  };
+
+  FB.retainerSuccession = function (state) {
+    const records = FB.retainerRecords(state);
+    if (!records.length) return;
+    for (const record of records) {
+      const c = state.chars[record.charId];
+      if (c) c.opinion = FB.clamp(c.opinion - 15, -100, 100);
+    }
+    FB.news(state, FB.msg('news.retainer.succession',
+      '🗝 The inherited household servants renew their service to the new head.',
+      {}));
   };
 
   /* The old station-only upkeep remains the base cost. Extra resident family
@@ -588,7 +884,7 @@ window.FB = window.FB || {};
     const def = FBDATA.enterprises[type];
     const out = [];
     if (!def) return out;
-    for (const c of FB.householdMembers(state)) {
+    for (const c of FB.householdWorkers(state)) {
       const age = FB.ageOf(c, state.date.year);
       const career = FB.careerOf(state, c);
       if (age < 16 || !career || career.profession !== def.profession) continue;
@@ -677,9 +973,8 @@ window.FB = window.FB || {};
     let amount = def.yield * (0.75 + FB.skillOf(worker, skill) / 20);
     const dev = state.dev[e.provinceId] || 1;
     amount *= 0.9 + Math.min(10, dev) * 0.02;
-    if (career.guildRank === 'master') amount *= 1.1;
-    else if (career.guildRank === 'officer') amount *= 1.15;
-    else if (career.guildRank === 'guildmaster') amount *= 1.25;
+    amount *= FB.guildIncomeMultiplier(career);
+    amount *= 1 + FB.positionBonus(state, 'enterprise');
     return amount;
   };
 
@@ -738,7 +1033,7 @@ window.FB = window.FB || {};
   };
 
   FB.livelihoodYearly = function (state) {
-    for (const c of FB.householdMembers(state)) {
+    for (const c of FB.householdWorkers(state)) {
       const career = FB.careerOf(state, c);
       const def = career && FBDATA.careers[career.profession];
       if (!def) continue;
@@ -813,6 +1108,42 @@ window.FB = window.FB || {};
         }
       }
     }, { name:c.name, rank:step.to }));
+    return true;
+  };
+
+  FB.guildFavor = function (state, c) {
+    c = c || playerChar(state);
+    const career = FB.careerOf(state, c);
+    const def = career && FBDATA.careers[career.profession];
+    if (!def || !def.guild || career.guildRank === 'none') return null;
+    const p = state.player;
+    if (!p.guildFavorTurns || typeof p.guildFavorTurns !== 'object' ||
+      Array.isArray(p.guildFavorTurns)) p.guildFavorTurns = {};
+    const key = c.id;
+    const cost = FBDATA.balance.guildFavorStandingCost || 20;
+    const cooldown = FBDATA.balance.guildFavorCooldown || 360;
+    const ready = !p.guildFavorTurns[key] || state.turn - p.guildFavorTurns[key] >= cooldown;
+    const rankValue = GUILD_ORDER[career.guildRank] || 1;
+    return {
+      cost:cost,
+      amount:4 + rankValue * 2,
+      ready:ready && career.guildStanding >= cost,
+      cooldownReady:ready,
+      standing:career.guildStanding
+    };
+  };
+
+  FB.callGuildFavor = function (state, cid) {
+    const c = state.chars[cid];
+    const favor = c && FB.guildFavor(state, c);
+    if (!favor || !favor.ready) return false;
+    const career = FB.careerOf(state, c);
+    career.guildStanding -= favor.cost;
+    state.player.guildFavorTurns[c.id] = state.turn;
+    state.player.gold += favor.amount;
+    FB.news(state, FB.msg('news.guild.favor_called',
+      '🏅 {name} calls in guild commissions worth {money:amount}.',
+      { name:c.name, amount:favor.amount }));
     return true;
   };
 

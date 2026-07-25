@@ -149,6 +149,22 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
+Network state is additive and lazily validated. `player.friendContacts` maps known
+character ids to current-life contact timestamps; the canonical friend remains
+`state.roles.friend` for events and mods. `player.retainers` stores compact
+`{charId,office,pay,startedTurn,unpaid}` contracts, while every personal attribute
+remains on the referenced character. `player.guildFavorTurns` bounds guild calls by
+character and `player.vassalLevyFavors` maps realm ids to expiry turns. Succession clears
+friendship, cultivated contacts, and exceptional vassal favors, but retains paid service
+contracts with a loyalty penalty. All missing or invalid fields self-heal without a
+save-version migration.
+
+Position definitions and the levy ledger are derived data. Earned offices continue to
+read compatibility flags, retainer contributions read live contracts, and
+`FB.playerCompositionBreakdown` calculates troop sources from counties, buildings,
+technology, Council, ruler, domain penalty, vassals, and positions. No displayed levy
+total or ledger prose is serialized.
+
 Freehold-land state is additive too. Repeatable plots live in `player.landPlots` as plain
 `{provinceId, settlement}` records and a declared site lives in `player.manor`. Both pass
 with the household across succession. `player.landPlotMigration` lazily turns the legacy

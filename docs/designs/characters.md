@@ -109,19 +109,42 @@ Related: [marriage.md](marriage.md) for spouses and child matches,
 `c.career = {profession,rank,experience,startedYear,guildRank,guildStanding,chosen}` through
 `FB.careerOf` (`js/economy.js`). `player.profession` remains a compatibility mirror for
 existing events, portraits, titles, and mods; succession mirrors the heir's own career
-instead of inheriting the dead parent's occupation.
+instead of inheriting the dead parent's occupation. That mirror now remains the head's
+actual career at every station: acquiring a landed title does not silently replace a
+merchant, craft, clerical, or military occupation with `noble`.
 
 **Guild standing is separate from career rank.** Guild careers display their standing as
 Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the
 character's vocational `rank` from journeyman to master.
 
+**Friendship requires an intentional relationship.** `player.friendContacts` records
+living, non-family characters whose company the current head has cultivated.
+At `balance.friendOpinionThreshold` regard the character sheet offers **Call friend**;
+accepting installs that exact character in the compatibility role
+`state.roles.friend`. If an event first needs `{friend}`, `FB.getRole` prefers the
+best eligible cultivated contact before generating a local peer. Naming a replacement
+is explicit and clears sworn-friend state. Friendship and its contacts clear on
+succession or permanent relocation; neither is inherited by the next head.
+
+**Paid retainers are managed people, not family members.** `player.retainers` stores
+compact contracts pointing to ordinary characters. The office is additive to the
+character's career: a merchant may serve as factor, a soldier as captain, and a monk as
+tutor. Retainers may staff enterprises, teach children, and use household equipment, but
+do not bring family wages or piety and do not add resident-family upkeep. Capacity follows
+station through `balance.retainerCapacity`; seasonal pay, arrears, dismissal, death, and
+succession are handled by the shared retainer APIs in `js/economy.js`. Contracts pass to
+an heir with a regard penalty, keeping inherited service distinct from inherited
+friendship. Each office has one holder; two unpaid seasons or regard at −40 ends service,
+and marriage replaces a paid contract with ordinary spouse membership.
+
 **Apprenticeship complements tutoring.** A child old enough for a career's
 `apprenticeAge` may be placed with that trade from their sheet. It costs the career's
 entry fee, adds vocational experience and the career skill during the yearly life tick,
 and becomes journeyman work at sixteen. The ordinary education focus and instruction continue
-in parallel. Household work is intentionally limited to the player, spouses, and
-unmarried dependent children; distant kin do not send invisible wages home.
+in parallel. Family wage contributions remain limited to the player, spouses, and
+unmarried dependent children; distant kin and paid retainers do not send invisible wages
+home.
 
 **Resident family members cost coin as well as earning it.** The station-based household
 upkeep remains the cost of the player's own establishment. Every resident spouse and

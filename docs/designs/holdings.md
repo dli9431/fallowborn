@@ -33,10 +33,17 @@ live in `player.enterprises` as `{uid,type,provinceId,settlement,workerId}` and 
 heirs. One copy of a type may stand in each derived settlement, so a family may own
 several workshops or stalls; further copies grow dearer by
 `balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing while idle.
-`FB.enterpriseWorkers` limits staffing to resident household members in the matching
-career (and, where required, guild rank). Legacy Orchard, Press, Shop, Stall, and
+`FB.enterpriseWorkers` limits staffing to resident family or a paid retainer in the
+matching career (and, where required, guild rank). A retained factor or steward is still
+paid through the household contract ledger; staffing an enterprise does not turn that
+person into family or grant a second wage. Legacy Orchard, Press, Shop, Stall, and
 Trading House holdings migrate lazily to equivalent enterprise instances; household
 rights, equipment, and cultural capital remain unique holdings.
+
+Enterprise yield consumes the shared computed benefits shown in Network: guild rank,
+the legacy guild-member work benefit, and position/retainer enterprise modifiers. These
+are not copied into enterprise instances, so a lost office, departed retainer, or changed
+guild rank affects the next calculation without migrating property state.
 
 Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the family
 even if it moves or rises in station; a building belongs to its county and follows

@@ -122,6 +122,7 @@ A JSON mod is one object with any of these keys:
   "tech":      { "id": { ... } },
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
+  "positions": { "id": { ... } },
   "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
   "travelPurposes": { "id": { ... } },
@@ -681,14 +682,52 @@ character can learn and perform:
 - `piety` is a seasonal piety contribution from clerical careers (monk, priest).
 - `hiddenChoice: true` keeps a career out of the player's chooser — it is entered only
   through an event or a marriage/background — though the household still works it.
-- Owned character state lives in `character.career`; `player.profession` remains the
-  broad compatibility family used by existing `professions` event triggers.
+- Owned character state lives in `character.career`; `player.profession` mirrors the
+  current head's exact occupation for existing `professions` event triggers. Feudal station
+  is separate: gaining land or a title does not erase a merchant, clerical, or military
+  occupation.
 
 Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
 career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
 faiths simply receive no core ladder. Formal religious offices may raise `character.station`,
 and the player's abbot/qadi/bishop/chief-qadi milestones also preserve the legacy tier and flag
 effects used by events and titles.
+
+## Positions and household retainers
+
+`FBDATA.positions` (in `data/economy.js`, mod key `positions`) defines an office held
+alongside a character's occupation. Core positions are either earned appointments, such
+as councilman and sergeant, or paid household service:
+
+```json
+{ "positions": { "reeve": {
+  "name": "Reeve", "icon": "📜", "kind": "retainer",
+  "profession": "merchant", "minTier": 2,
+  "pay": 2, "quality": 2,
+  "fx": { "gold": 0.5, "enterprise": 0.05 },
+  "desc": "Keeps the household's rents and accounts."
+} } }
+```
+
+- `kind` is `earned` or `retainer`. An earned position is active while its matching
+  `player.flags` id is true; a retainer position is active while a paid contract exists.
+- `profession` optionally determines the career of a newly generated retainer.
+  `minTier` and `maleOnly` gate hiring.
+- `pay` is charged every season per retained character; `quality` weights generated
+  candidates and defaults to 1.
+- Supported `fx` keys are `gold` (seasonal household income), `enterprise` (fractional
+  multiplier), `retinue` (flat levy retinue), and `tax` (fractional personal-tax
+  multiplier).
+- Retainers live in `player.retainers` as compact
+  `{charId,office,pay,startedTurn,unpaid}` records. They can staff enterprises, serve as
+  paid tutors, and use household equipment, but they are not family: they bring no
+  family wage or piety, add no resident-family upkeep, and do not enter succession.
+- Each household office has one holder. A retainer leaves after two unpaid seasons or
+  when regard falls to −40; marrying the head ends the paid contract and moves the
+  character into the ordinary spouse household.
+- Capacity and the default contract economy are controlled by `retainerCapacity` and
+  the `pay` values in the position definitions. Contracts pass to the next head, but
+  personal friendship does not.
 
 ## Childhood schooling
 
@@ -730,7 +769,8 @@ productive property:
 } } }
 ```
 
-- `profession` identifies eligible workers; `guildRank` optionally sets the minimum
+- `profession` identifies eligible workers; resident family and paid retainers with
+  that career may staff the enterprise. `guildRank` optionally sets the minimum
   guild standing.
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `yield` is the base seasonal gold before worker skill, local development, and guild
@@ -811,7 +851,9 @@ player-originated loan families and the trade partnership:
   revenue-share, and coinage tunables are the `price*` and `finance*` keys under
   `FBDATA.balance`.
 - Household and education costs/chances use the `household*` and `education*`
-  balance keys.
+  balance keys. Network tunables include `friendOpinionThreshold`,
+  `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
+  `vassalLevyFavorRate`, and `vassalLevyFavorDays`.
 
 ## Settlements
 
