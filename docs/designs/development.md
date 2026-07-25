@@ -1,5 +1,14 @@
 # Development & buildings
 
+Starting development is an ordinal measure of a whole county's productive,
+fiscal, and manpower capacity in 867, not a city-population estimate or a
+ranking of later fame. The 1–10 scale reads: 1–2 sparse frontier; 3 ordinary
+established county; 4 productive or significant center; 5–6 major regional
+center; 7–9 exceptional metropolis or irrigated core; and 10 world-leading
+center. The authored `dev` in `FBDATA.provinces` initializes `state.dev` only
+for a fresh game. Loaded saves keep their stored `state.dev` values, including
+development gained or lost during play.
+
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent

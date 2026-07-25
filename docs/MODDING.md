@@ -270,7 +270,13 @@ province objects; mods merge full objects as before:
 - `duchy` — id into `FBDATA.duchies`; the de jure kingdom and empire follow from it.
 - `realm` — the realm holding the county at the 867 start.
 - `terrain` — `farmland forest hills mountains desert steppe marsh tundra`.
-- `dev` — 1..10 development (wealth, levy size).
+- `dev` — ordinal countywide productive, fiscal, and manpower capacity at the
+  867 start: 1–2 is sparse frontier, 3 an ordinary established county, 4 a
+  productive or significant center, 5–6 a major regional center, 7–9 an
+  exceptional metropolis or irrigated core, and 10 a world-leading center.
+  It is a relative scale, not an exact population estimate. Authored values
+  initialize fresh games only; an existing save's `state.dev` values remain
+  authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
 - Adjacency is computed automatically from the generated shapes. For connections across
   water, add a `straits` pair.
