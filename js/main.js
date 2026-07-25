@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.6';
+  FB.VERSION = '1.54.7';
   FB.CHANGELOG = [
+    { v: '1.54.7', date: '2026-07-25', changes: [
+      'Starting county development now reflects the economic landscape of 867, with stronger Abbasid and Nile heartlands and less later-era weight on famous western cities.'
+    ] },
     { v: '1.54.6', date: '2026-07-25', changes: [
       'The Work & Enterprises guild ladder now distinguishes Master from Guildmaster.'
     ] },

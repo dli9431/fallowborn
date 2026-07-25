@@ -13,7 +13,11 @@
    - culture/religion: ids into FBDATA.cultures / FBDATA.religions
              (data/cultures.js)
    - terrain: farmland forest hills mountains desert steppe marsh tundra
-   - dev:    1 (wilderness) .. 10 (Constantinople, Baghdad)
+   - dev:    ordinal countywide productive, fiscal, and manpower capacity:
+             1-2 sparse frontier; 3 ordinary established county;
+             4 productive/significant center; 5-6 major regional center;
+             7-9 exceptional metropolis or irrigated core;
+             10 world-leading center (Constantinople, Baghdad)
    - realm:  id of the realm holding the county at the 867 start
              (FBDATA.realms in map_data.js)
 
@@ -47,8 +51,8 @@ const COUNTIES = [
 ['logrono','Logroño',-2.45,42.45,'d_navarra','iberian','catholic','hills',2,'navarra'],
 ['aragon','Aragon',-0.55,42.55,'d_navarra','iberian','catholic','mountains',1,'navarra'],
 /* Córdoba */
-['sevilla','Sevilla',-5.99,37.39,'d_sevilla','andalusi','sunni','farmland',6,'cordoba'],
-['cordoba','Córdoba',-4.78,37.88,'d_sevilla','andalusi','sunni','farmland',9,'cordoba'],
+['sevilla','Sevilla',-5.99,37.39,'d_sevilla','andalusi','sunni','farmland',5,'cordoba'],
+['cordoba','Córdoba',-4.78,37.88,'d_sevilla','andalusi','sunni','farmland',7,'cordoba'],
 ['ecija','Écija',-5.08,37.54,'d_sevilla','andalusi','sunni','farmland',3,'cordoba'],
 ['niebla','Niebla',-6.68,37.36,'d_sevilla','andalusi','sunni','hills',2,'cordoba'],
 ['granada','Granada',-3.6,37.18,'d_granada','andalusi','sunni','mountains',4,'cordoba'],
@@ -66,7 +70,7 @@ const COUNTIES = [
 ['coimbra','Coimbra',-8.42,40.2,'d_lisboa','andalusi','sunni','hills',2,'cordoba'],
 ['silves','Silves',-8.44,37.19,'d_algarve','andalusi','sunni','hills',3,'cordoba'],
 ['beja','Beja',-7.86,38.01,'d_algarve','andalusi','sunni','farmland',2,'cordoba'],
-['valencia','Valencia',-0.38,39.47,'d_valencia','andalusi','sunni','farmland',5,'cordoba'],
+['valencia','Valencia',-0.38,39.47,'d_valencia','andalusi','sunni','farmland',4,'cordoba'],
 ['murcia','Murcia',-1.13,37.98,'d_valencia','andalusi','sunni','farmland',3,'cordoba'],
 ['denia','Denia',0.1,38.84,'d_valencia','andalusi','sunni','hills',2,'cordoba'],
 ['albacete','Albacete',-1.85,38.99,'d_valencia','andalusi','sunni','steppe',1,'cordoba'],
@@ -83,7 +87,7 @@ const COUNTIES = [
 ['urgell','Urgell',1.45,42.36,'d_barcelona','iberian','catholic','mountains',1,'west_francia'],
 
 /* ---------- WEST FRANCIA ---------- */
-['paris','Paris',2.35,48.85,'d_ile','frankish','catholic','farmland',7,'west_francia'],
+['paris','Paris',2.35,48.85,'d_ile','frankish','catholic','farmland',5,'west_francia'],
 ['chartres','Chartres',1.49,48.44,'d_ile','frankish','catholic','farmland',3,'west_francia'],
 ['sens','Sens',3.28,48.2,'d_ile','frankish','catholic','farmland',3,'west_francia'],
 ['orleans','Orléans',1.9,47.9,'d_ile','frankish','catholic','farmland',4,'west_francia'],
@@ -92,7 +96,7 @@ const COUNTIES = [
 ['evreux','Évreux',1.15,49.02,'d_normandy','frankish','catholic','farmland',2,'west_francia'],
 ['bayeux','Bayeux',-0.7,49.28,'d_normandy','frankish','catholic','farmland',2,'west_francia'],
 ['angers','Angers',-0.55,47.47,'d_anjou','frankish','catholic','farmland',3,'west_francia'],
-['tours','Tours',0.68,47.39,'d_anjou','frankish','catholic','farmland',3,'west_francia'],
+['tours','Tours',0.68,47.39,'d_anjou','frankish','catholic','farmland',4,'west_francia'],
 ['le_mans','Le Mans',0.2,48.0,'d_anjou','frankish','catholic','farmland',2,'west_francia'],
 ['blois','Blois',1.33,47.59,'d_blois','frankish','catholic','farmland',2,'west_francia'],
 ['bourges','Bourges',2.4,47.08,'d_blois','frankish','catholic','farmland',3,'west_francia'],
@@ -145,7 +149,7 @@ const COUNTIES = [
 ['chambery','Chambéry',5.92,45.57,'d_savoy','frankish','catholic','mountains',2,'burgundy'],
 ['grenoble','Grenoble',5.72,45.19,'d_savoy','frankish','catholic','mountains',2,'burgundy'],
 /* Lotharingia */
-['metz','Metz',6.18,49.12,'d_lorraine','frankish','catholic','farmland',3,'lotharingia'],
+['metz','Metz',6.18,49.12,'d_lorraine','frankish','catholic','farmland',4,'lotharingia'],
 ['verdun','Verdun',5.38,49.16,'d_lorraine','frankish','catholic','farmland',2,'lotharingia'],
 ['nancy','Nancy',6.18,48.69,'d_lorraine','frankish','catholic','farmland',2,'lotharingia'],
 ['strasbourg','Straßburg',7.75,48.58,'d_alsace','frankish','catholic','farmland',3,'lotharingia'],
@@ -164,7 +168,7 @@ const COUNTIES = [
 ['nurnberg','Nürnberg',11.08,49.45,'d_franconia','german','catholic','farmland',3,'east_francia'],
 ['bamberg','Bamberg',10.89,49.89,'d_franconia','german','catholic','farmland',2,'east_francia'],
 ['frankfurt','Frankfurt',8.68,50.11,'d_franconia','german','catholic','farmland',3,'east_francia'],
-['mainz','Mainz',8.27,50.0,'d_rhineland','german','catholic','farmland',3,'east_francia'],
+['mainz','Mainz',8.27,50.0,'d_rhineland','german','catholic','farmland',4,'east_francia'],
 ['worms','Worms',8.35,49.63,'d_rhineland','german','catholic','farmland',3,'east_francia'],
 ['koblenz','Koblenz',7.6,50.36,'d_rhineland','german','catholic','farmland',2,'east_francia'],
 ['augsburg','Augsburg',10.9,48.37,'d_swabia','german','catholic','farmland',3,'east_francia'],
@@ -198,21 +202,21 @@ const COUNTIES = [
 ['verona','Verona',10.99,45.44,'d_verona','italian','catholic','farmland',3,'italy'],
 ['trento','Trento',11.12,46.07,'d_verona','italian','catholic','mountains',2,'italy'],
 ['padova','Padova',11.88,45.41,'d_verona','italian','catholic','farmland',3,'italy'],
-['venezia','Venezia',12.34,45.44,'d_veneto','italian','catholic','marsh',6,'venice'],
+['venezia','Venezia',12.34,45.44,'d_veneto','italian','catholic','marsh',5,'venice'],
 ['aquileia','Aquileia',13.37,45.77,'d_friuli','italian','catholic','farmland',2,'italy'],
 ['friuli','Friuli',13.43,46.09,'d_friuli','italian','catholic','hills',2,'italy'],
 ['parma','Parma',10.33,44.8,'d_emilia','italian','catholic','farmland',3,'italy'],
 ['modena','Modena',10.92,44.65,'d_emilia','italian','catholic','farmland',3,'italy'],
 ['bologna','Bologna',11.34,44.49,'d_emilia','italian','catholic','farmland',3,'italy'],
 ['ravenna','Ravenna',12.2,44.42,'d_emilia','italian','catholic','farmland',4,'italy'],
-['firenze','Firenze',11.25,43.77,'d_tuscany','italian','catholic','farmland',4,'italy'],
-['pisa','Pisa',10.4,43.72,'d_tuscany','italian','catholic','farmland',4,'italy'],
+['firenze','Firenze',11.25,43.77,'d_tuscany','italian','catholic','farmland',3,'italy'],
+['pisa','Pisa',10.4,43.72,'d_tuscany','italian','catholic','farmland',3,'italy'],
 ['siena','Siena',11.33,43.32,'d_tuscany','italian','catholic','hills',3,'italy'],
-['lucca','Lucca',10.5,43.84,'d_tuscany','italian','catholic','hills',2,'italy'],
+['lucca','Lucca',10.5,43.84,'d_tuscany','italian','catholic','hills',4,'italy'],
 ['spoleto','Spoleto',12.74,42.74,'d_spoleto','italian','catholic','hills',3,'italy'],
 ['perugia','Perugia',12.39,43.11,'d_spoleto','italian','catholic','hills',2,'italy'],
 ['ancona','Ancona',13.52,43.62,'d_spoleto','italian','catholic','hills',2,'italy'],
-['roma','Roma',12.5,41.89,'d_roma','italian','catholic','farmland',7,'papacy'],
+['roma','Roma',12.5,41.89,'d_roma','italian','catholic','farmland',5,'papacy'],
 ['viterbo','Viterbo',12.11,42.42,'d_roma','italian','catholic','hills',2,'papacy'],
 ['benevento','Benevento',14.78,41.13,'d_benevento','italian','catholic','hills',4,'benevento'],
 ['capua','Capua',14.21,41.11,'d_benevento','italian','catholic','farmland',3,'benevento'],
@@ -240,7 +244,7 @@ const COUNTIES = [
 ['rochester','Rochester',0.5,51.39,'d_kent','english','catholic','farmland',2,'wessex'],
 ['chichester','Chichester',-0.78,50.84,'d_sussex','english','catholic','farmland',2,'wessex'],
 ['lewes','Lewes',0.01,50.87,'d_sussex','english','catholic','farmland',2,'wessex'],
-['london','London',-0.09,51.51,'d_essex','english','catholic','farmland',5,'mercia'],
+['london','London',-0.09,51.51,'d_essex','english','catholic','farmland',3,'mercia'],
 ['colchester','Colchester',0.9,51.89,'d_essex','english','catholic','farmland',2,'mercia'],
 ['tamworth','Tamworth',-1.69,52.63,'d_mercia','english','catholic','farmland',3,'mercia'],
 ['derby','Derby',-1.47,52.92,'d_mercia','english','catholic','farmland',2,'mercia'],
@@ -307,7 +311,7 @@ const COUNTIES = [
 ['trondheim','Trondheim',10.4,63.43,'d_trondelag','norse','norse_pagan','forest',2,'trondelag'],
 ['halogaland','Hålogaland',14.0,65.5,'d_trondelag','norse','norse_pagan','tundra',1,'trondelag'],
 ['uppsala','Uppsala',17.64,59.86,'d_svealand','norse','norse_pagan','forest',3,'sweden'],
-['birka','Birka',17.55,59.33,'d_svealand','norse','norse_pagan','forest',2,'sweden'],
+['birka','Birka',17.55,59.33,'d_svealand','norse','norse_pagan','forest',3,'sweden'],
 ['skara','Skara',13.44,58.39,'d_gotaland','norse','norse_pagan','forest',2,'geats'],
 ['vaxjo','Växjö',14.81,56.88,'d_smaland','norse','norse_pagan','forest',1,'geats'],
 ['kalmar','Kalmar',16.36,56.66,'d_smaland','norse','norse_pagan','forest',1,'geats'],
@@ -346,14 +350,14 @@ const COUNTIES = [
 ['cluj','Cluj',23.6,46.77,'d_transylvania','slavic','slavic_pagan','hills',1,'bulgaria'],
 
 /* ---------- RUS', THE BALTIC & THE STEPPE ---------- */
-['novgorod','Novgorod',31.28,58.52,'d_novgorod','slavic','slavic_pagan','forest',3,'rus_novgorod'],
-['ladoga','Ladoga',32.29,59.99,'d_novgorod','slavic','slavic_pagan','forest',2,'rus_novgorod'],
+['novgorod','Novgorod',31.28,58.52,'d_novgorod','slavic','slavic_pagan','forest',2,'rus_novgorod'],
+['ladoga','Ladoga',32.29,59.99,'d_novgorod','slavic','slavic_pagan','forest',3,'rus_novgorod'],
 ['pskov','Pskov',28.33,57.82,'d_novgorod','slavic','slavic_pagan','forest',2,'rus_novgorod'],
 ['rostov','Rostov',39.42,57.19,'d_rostov','slavic','slavic_pagan','forest',2,'rus_novgorod'],
 ['suzdal','Suzdal',40.45,56.42,'d_rostov','slavic','slavic_pagan','forest',2,'rus_novgorod'],
 ['beloozero','Beloozero',37.78,60.03,'d_beloozero','slavic','slavic_pagan','forest',1,'rus_novgorod'],
 ['smolensk','Smolensk',32.05,54.78,'d_smolensk','slavic','slavic_pagan','forest',2,'rus_novgorod'],
-['kiev','Kiev',30.52,50.45,'d_kiev','slavic','slavic_pagan','farmland',4,'rus_kiev'],
+['kiev','Kiev',30.52,50.45,'d_kiev','slavic','slavic_pagan','farmland',2,'rus_kiev'],
 ['pereyaslavl','Pereyaslavl',31.47,50.07,'d_kiev','slavic','slavic_pagan','farmland',2,'rus_kiev'],
 ['chernigov','Chernigov',31.28,51.5,'d_chernigov','slavic','slavic_pagan','forest',2,'chernigov'],
 ['kursk','Kursk',36.19,51.73,'d_chernigov','slavic','slavic_pagan','forest',1,'chernigov'],
@@ -390,7 +394,7 @@ const COUNTIES = [
 ['thessaloniki','Thessalonica',22.94,40.64,'d_macedonia','greek','orthodox','farmland',6,'byzantium'],
 ['serres','Serres',23.55,41.09,'d_macedonia','greek','orthodox','farmland',2,'byzantium'],
 ['larissa','Larissa',22.42,39.64,'d_thessaly','greek','orthodox','farmland',3,'byzantium'],
-['athens','Athens',23.7,38.0,'d_hellas','greek','orthodox','farmland',4,'byzantium'],
+['athens','Athens',23.7,38.0,'d_hellas','greek','orthodox','farmland',3,'byzantium'],
 ['thebes','Thebes',23.32,38.32,'d_hellas','greek','orthodox','farmland',3,'byzantium'],
 ['korinth','Corinth',22.93,37.91,'d_peloponnese','greek','orthodox','farmland',3,'byzantium'],
 ['sparta','Sparta',22.43,37.08,'d_peloponnese','greek','orthodox','hills',2,'byzantium'],
@@ -456,12 +460,12 @@ const COUNTIES = [
 ['sale','Salé',-6.8,34.03,'d_sous','berber','sunni','farmland',2,'barghawata'],
 ['sijilmasa','Sijilmasa',-4.28,31.28,'d_sijilmasa','berber','sunni','desert',4,'sijilmasa'],
 /* ---------- EGYPT ---------- */
-['alexandria','Alexandria',29.92,31.2,'d_delta','arabic','sunni','farmland',6,'abbasid'],
-['rosetta','Rosetta',30.42,31.3,'d_delta','arabic','sunni','farmland',2,'abbasid'],
+['alexandria','Alexandria',29.92,31.2,'d_delta','arabic','sunni','farmland',7,'abbasid'],
+['rosetta','Rosetta',30.42,31.3,'d_delta','arabic','sunni','farmland',4,'abbasid'],
 ['fustat','Fustat',31.23,30.0,'d_cairo','arabic','sunni','farmland',8,'abbasid'],
-['fayyum','Fayyum',30.84,29.31,'d_fayyum','arabic','sunni','farmland',3,'abbasid'],
-['asyut','Asyut',31.18,27.18,'d_upper_egypt','arabic','sunni','farmland',3,'abbasid'],
-['luxor','Luxor',32.64,25.69,'d_upper_egypt','arabic','sunni','farmland',3,'abbasid'],
+['fayyum','Fayyum',30.84,29.31,'d_fayyum','arabic','sunni','farmland',4,'abbasid'],
+['asyut','Asyut',31.18,27.18,'d_upper_egypt','arabic','sunni','farmland',4,'abbasid'],
+['luxor','Luxor',32.64,25.69,'d_upper_egypt','arabic','sunni','farmland',4,'abbasid'],
 ['aswan','Aswan',32.9,24.09,'d_upper_egypt','arabic','sunni','desert',3,'abbasid'],
 /* ---------- SYRIA & JAZIRA ---------- */
 ['damascus','Damascus',36.29,33.51,'d_damascus','arabic','sunni','farmland',6,'abbasid'],
@@ -480,10 +484,10 @@ const COUNTIES = [
 ['raqqa','Raqqa',39.01,35.95,'d_edessa','arabic','sunni','farmland',3,'abbasid'],
 /* ---------- IRAQ ---------- */
 ['baghdad','Baghdad',44.36,33.32,'d_baghdad','arabic','sunni','farmland',10,'abbasid'],
-['samarra','Samarra',43.87,34.2,'d_baghdad','arabic','sunni','farmland',4,'abbasid'],
-['kufa','Kufa',44.4,32.03,'d_kufa','arabic','sunni','farmland',3,'abbasid'],
-['basra','Basra',47.82,30.51,'d_basra','arabic','sunni','marsh',6,'abbasid'],
-['wasit','Wasit',46.3,32.2,'d_basra','arabic','sunni','farmland',3,'abbasid'],
+['samarra','Samarra',43.87,34.2,'d_baghdad','arabic','sunni','farmland',9,'abbasid'],
+['kufa','Kufa',44.4,32.03,'d_kufa','arabic','sunni','farmland',6,'abbasid'],
+['basra','Basra',47.82,30.51,'d_basra','arabic','sunni','marsh',7,'abbasid'],
+['wasit','Wasit',46.3,32.2,'d_basra','arabic','sunni','farmland',6,'abbasid'],
 /* ---------- ARABIA ---------- */
 ['mecca','Mecca',39.83,21.42,'d_hejaz','arabic','sunni','desert',5,'abbasid'],
 ['medina','Medina',39.61,24.47,'d_hejaz','arabic','sunni','desert',4,'abbasid'],
