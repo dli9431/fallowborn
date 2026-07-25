@@ -59,17 +59,28 @@ python tools/i18n_catalog.py translate fr de it es  # AI-translate new/changed r
 python tools/i18n_catalog.py validate               # coverage, source hashes, tokens, structure
 ```
 
-`extract` and `validate` are always safe to run locally; `translate` calls a translation API. If
-you cannot run `translate`, **say so** — English fallback keeps the game correct, but the owner
-must regenerate before the Preview locales are current for release.
+`extract` and `validate` are network-free, while `translate` calls a translation API; all three
+still obey the integration-only timing rule below. If you cannot run `translate` during an
+authorized integration, **say so** — English fallback keeps the game correct, but the owner must
+regenerate before the Preview locales are current for release.
 
-**When to run it.** Working directly on `main` (the default), regenerate in the same commit as the
-text change. On a feature branch or worktree you will merge, **defer it**: route the strings, let
-English self-heal on the branch, and regenerate **once** from the merged tree at the merge.
-Regenerating on the branch only guarantees a catalog conflict against every other branch that also
-regenerated — in hundreds to thousands of hunks — and the only fix is to regenerate again, so it
-is redundant work and a doubled `translate` bill. (`FB.VERSION` / `FB.CHANGELOG` are
-integration-owned the same way — see *Git workflow* in [../AGENTS.md](../AGENTS.md).)
+**When to run it — authorization and timing are strict.** Do not run `extract`, `translate`, or
+`validate` during ordinary implementation, review, diagnostics, or other uncommitted work merely
+because the checkout is `main`. An edit or test request is not authorization to regenerate the
+catalogs. Run the recipe only after the owner explicitly asks for one of these integrations:
+
+- **Commit directly to `main`:** finalize the source changes first, then run the recipe as the
+  last integration step immediately before the requested commit so the generated files land in it.
+- **Merge a branch into `main`:** never regenerate on the branch. During the requested merge,
+  assemble the merged tree without finalizing the merge commit, run the recipe from that merged
+  tree, then finalize the integration.
+
+Routing new strings remains part of implementation; English self-heals until integration.
+Regenerating early only creates noisy working-tree changes and, on a branch, guarantees a catalog
+conflict against every other branch that also regenerated. The only valid resolution is to
+regenerate again from the merged tree, wasting work and a second `translate` bill.
+(`FB.VERSION` / `FB.CHANGELOG` are integration-owned the same way — see *Git workflow* in
+[../AGENTS.md](../AGENTS.md).)
 
 **Resolving a catalog conflict at a merge.** Do not hand-merge the generated files. Take either
 side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`),

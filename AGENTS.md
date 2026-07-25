@@ -73,13 +73,20 @@ every other branch in flight (parallel worktrees are unaware of each other):
    feature and hint where the player runs into it, not the full mechanics. Players read it in
    the in-game changelog modal; they want a pointer to the new thing, not a spec. See
    `docs/VERSIONS.md`.
-2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — **every merge to `main`
-   must regenerate them from the *merged* tree, before the push that ships it.** Run the recipe
-   `extract → translate fr de it es → validate`; `validate` is the gate. Land them in the *same*
-   `FB.VERSION` as the merge — the catalogs cache-bust on that version, so pushing code without
-   them serves stale/English-fallback locales until the next bump. A merge with no player-facing
-   text change is a no-op `validate` confirms. Never regenerate on a branch or hand-merge these
-   files. Recipe and rationale: `docs/i18n-authoring.md`; see **Internationalization (i18n)** below.
+2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — these are prepared
+   **only when the owner explicitly asks to commit work directly to `main` or merge a branch
+   into `main`.** Do not run `extract`, `translate`, or `validate` during ordinary implementation,
+   review, or other uncommitted work, even when the current checkout is already `main`; an edit
+   or test request is not authorization to regenerate catalogs. For a direct commit to `main`,
+   run `extract → translate fr de it es → validate` as the final integration step immediately
+   before the requested commit. For a requested branch merge, assemble the merged tree without
+   finalizing the merge commit, then run the same recipe from that merged tree immediately before
+   finalizing the integration. `validate` is the gate. Land the catalogs in the *same*
+   `FB.VERSION` as the integration — they cache-bust on that version, so pushing code without
+   them serves stale/English-fallback locales until the next bump. An integration with no
+   player-facing text change is a no-op `validate` confirms. Never regenerate on a feature branch
+   or hand-merge these files. Recipe and rationale: `docs/i18n-authoring.md`; see
+   **Internationalization (i18n)** below.
 
 On the branch, describe the change in the commit message and route any new player-facing text
 through the i18n layer — but leave the version, changelog, and catalogs for the merge. Anything
@@ -154,9 +161,11 @@ opaque `FB.msg('news.*', …)` descriptors for durable/saved messages. Never bak
 into saved state, mutate a `FBDATA` display field, or put grammar in JS. New English self-heals to
 English, so the game still runs — but an unrouted string is a bug.
 
-The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integration artifacts:
-regenerate them once when a change lands on `main` (`extract → translate fr de it es → validate`),
-never on a feature branch, and never hand-merge them (see *Git workflow*).
+The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integration artifacts.
+Do not run any catalog command during uncommitted implementation or review. Regenerate only as
+the final step of an owner-requested direct commit to `main` or branch merge into `main`
+(`extract → translate fr de it es → validate`), never on a feature branch, and never hand-merge
+them (see *Git workflow*).
 
 **Full authoring guide + the catalog regenerate/merge recipe: `docs/i18n-authoring.md`.
 Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING.md`.**

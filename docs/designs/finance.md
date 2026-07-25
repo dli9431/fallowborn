@@ -69,7 +69,8 @@ Tunables live in `FBDATA.balance`; contract terms live in `FBDATA.finance`
 a no-day-cost deed and keeps the nearest deadline at the top on narrow screens.
 Routine checks remain silent; signing, repayment, arrears, default, inheritance,
 investment resolution, material price movement, debasement, and recoinage use
-durable Chronicle message descriptors.
+durable Chronicle message descriptors. Finance actions and notices use the broadly
+supported money-bag icon rather than the unsupported coin glyph.
 
 Related: [time.md](time.md) for tick order, [state-and-saves.md](state-and-saves.md)
 for persistence, [holdings.md](holdings.md) for pledged property, and

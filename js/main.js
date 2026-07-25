@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.0';
+  FB.VERSION = '1.54.1';
   FB.CHANGELOG = [
+    { v: '1.54.1', date: '2026-07-25', changes: [
+      'Settlement names in province Land tabs now stay on one line and wrap cleanly between places.',
+      'Finance, council, and estates displays now use the broadly supported money icon.'
+    ] },
     { v: '1.54.0', date: '2026-07-25', changes: [
       'Journeys now include destination stays with local work, a three-month return gate, and one permanent household move per character life.',
       'A succeeding heir now equips the strongest usable items from the family armory.'
@@ -38,9 +42,6 @@ window.FB = window.FB || {};
     ] },
     { v: '1.51.2', date: '2026-07-24', changes: [
       'Wars now keep every sovereign to one conflict, travel selection stays paused, titles render reliably, and army markers redraw only when their visible state changes.'
-    ] },
-    { v: '1.51.1', date: '2026-07-24', changes: [
-      'An importable Pound Sterling mod can show the household purse with a £ sign.'
     ] },
     { v: '1.51.0', date: '2026-07-24', changes: [
       'A new 🧭 Take to the road deed lets freeholders and gentry set out on a journey — pilgrimage, trade, study, or paid service — traveling county by county across the map over game time, meeting events on the road, before turning back home or settling where they arrive.'

@@ -37,7 +37,8 @@ The building deed's county ledger stays open after **Raise Next**, so repeated c
 does not traverse province and settlement dialogs for every work. Its nine building rows
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
 repeat copies in one county become 50% dearer each time. Exact settlement placement and
-permanent demolition remain available from the Land-tab settlement view.
+permanent demolition remain available from the Land-tab settlement view. Province settlement
+lists wrap between places, never inside a settlement name, so each link stays readable.
 The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,

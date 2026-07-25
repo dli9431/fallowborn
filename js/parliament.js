@@ -138,7 +138,7 @@ window.FB = window.FB || {};
     p.gold -= gold;
     FB.adjustLiegeOp(state, state.player.liege, 12);
     FB.news(state, FB.msg('news.parliament.subsidy',
-      '🪙 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
+      '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
       { liege: state.realms[state.player.liege].name, gold: gold }));
   };
 })();

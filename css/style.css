@@ -296,6 +296,15 @@ a.actionbtn { text-decoration: none; }
 .actionsubhead { color:#ad9870; font-size:12px; margin:7px 3px 5px; }
 .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
 .kv b { color: #ecd9a0; font-weight: normal; }
+.settblock {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start;
+  gap: 0 10px; font-size: 13px; padding: 2px 0;
+}
+.settlist {
+  display: flex; flex-wrap: wrap; justify-content: flex-end;
+  gap: 2px 12px; min-width: 0;
+}
+.settlist > * { white-space: nowrap; }
 .traitchip {
   display: inline-block; background: #2c2418; border: 1px solid #55452a; border-radius: 12px;
   padding: 2px 9px; margin: 2px 3px 2px 0; font-size: 12px; cursor: help;
@@ -526,6 +535,7 @@ textarea.modjson, textarea.savetext {
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }
   .kv { font-size: 14px; padding: 4px 0; }
+  .settblock { font-size: 14px; padding: 4px 0; }
   .charrow { font-size: 14px; padding: 8px; }
   .traitchip { font-size: 13px; padding: 4px 11px; }
   .logentry { font-size: 14px; padding: 6px 0; }

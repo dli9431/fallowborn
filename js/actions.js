@@ -850,7 +850,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return adult(s); },
     run: function () { if (FB.ui && FB.ui.showFinance) FB.ui.showFinance(); } },
-  { id: 'debase_coinage', label: '🪙 Debase the coinage…', noConsume: true,
+  { id: 'debase_coinage', label: '💰 Debase the coinage…', noConsume: true,
     desc: function () {
       return 'Emergency silver for an independent crown — at the price of confidence, standing, and rising prices.';
     },

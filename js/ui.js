@@ -1644,13 +1644,14 @@ window.FB = window.FB || {};
         // in your own demesne a settlement is a button: it opens the buildings
         // standing in THAT settlement and what each provides (UI.showSettlement)
         const own = FB.demesne(s).indexOf(pid) >= 0;
-        h += kv('Settlements', setts.map(function (st, si) {
-          const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
-          return own
-            ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
-              esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
-            : label;
-        }).join(' · '));
+        h += '<div class="settblock"><span>' + esc(FB.T('Settlements')) + '</span>' +
+          '<div class="settlist">' + setts.map(function (st, si) {
+            const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
+            return own
+              ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
+                esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
+              : '<span>' + label + '</span>';
+          }).join('') + '</div></div>';
         if (own) {
           h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
         }
@@ -3732,7 +3733,7 @@ window.FB = window.FB || {};
     if (s.player.tier >= 6 && !s.player.liege) {
       h += panelh('The crown’s coinage') + '<div class="gm-list">' +
         '<button class="actionbtn" id="finance-debase"' +
-        (FB.financeCanDebase(s) ? '' : ' disabled') + '>🪙 ' +
+        (FB.financeCanDebase(s) ? '' : ' disabled') + '>💰 ' +
         esc(FB.T('Debase the coinage…')) +
         '<span class="adesc">' + esc(FB.T(
           'Take seigniorage now; harm prices, prestige, popular trust, and future credit.')) +
@@ -3897,7 +3898,7 @@ window.FB = window.FB || {};
       }))) +
       '<p class="op-bad">' + esc(FB.T(
         'Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design.')) +
-      '</p></div><div class="gm-list"><button class="actionbtn op-bad" id="finance-debase-confirm">🪙 ' +
+      '</p></div><div class="gm-list"><button class="actionbtn op-bad" id="finance-debase-confirm">💰 ' +
       esc(FB.T('Debase the coinage')) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Debase the coinage?'), h);

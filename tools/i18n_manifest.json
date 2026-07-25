@@ -85,7 +85,7 @@
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "🪙 Debase the coinage…"
+        "text": "💰 Debase the coinage…"
       }
     },
     "action.declare_independence.label.default": {
@@ -22348,7 +22348,7 @@
       ],
       "location": "js/council.js",
       "source": {
-        "text": "🪙 The council grants a war subsidy of {money:gold} — and notes the precedent."
+        "text": "💰 The council grants a war subsidy of {money:gold} — and notes the precedent."
       }
     },
     "news.education.fee_missed": {
@@ -22866,7 +22866,7 @@
       ],
       "location": "js/economy.js",
       "source": {
-        "text": "🪙 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
+        "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
       }
     },
     "news.finance.default_unsecured": {
@@ -22956,11 +22956,11 @@
       "source": {
         "forms": {
           "cases": {
-            "deflation": "🪙 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power.",
-            "deflation_empty": "🪙 Prices fall {rate}% this year; circulating coin buys more.",
-            "inflation": "🪙 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power.",
-            "inflation_empty": "🪙 Prices rise {rate}% this year; circulating coin buys less.",
-            "other": "🪙 The value of coin changes this year."
+            "deflation": "💰 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power.",
+            "deflation_empty": "💰 Prices fall {rate}% this year; circulating coin buys more.",
+            "inflation": "💰 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power.",
+            "inflation_empty": "💰 Prices rise {rate}% this year; circulating coin buys less.",
+            "other": "💰 The value of coin changes this year."
           },
           "param": "direction",
           "select": "value"
@@ -23408,7 +23408,7 @@
       ],
       "location": "js/parliament.js",
       "source": {
-        "text": "🪙 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
+        "text": "💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
       }
     },
     "news.religion.advanced": {
@@ -26440,16 +26440,6 @@
         "text": "{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}"
       }
     },
-    "src.0a60363a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 The value of coin changes this year."
-      }
-    },
     "src.0a6d6e23": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28222,6 +28212,16 @@
         "text": "+{amount}% for {years} years"
       }
     },
+    "src.144018fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
+      }
+    },
     "src.14708a68": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28834,6 +28834,16 @@
       ],
       "source": {
         "text": "Realm"
+      }
+    },
+    "src.17f38fb5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💰 Debase the coinage…"
       }
     },
     "src.17f7f40a": {
@@ -30149,16 +30159,6 @@
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
       }
     },
-    "src.209d04c9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/parliament.js"
-      ],
-      "source": {
-        "text": "🪙 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
-      }
-    },
     "src.20a7a96b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30247,16 +30247,6 @@
       ],
       "source": {
         "text": "💰 You settle a dowry of {money:gold} on the match."
-      }
-    },
-    "src.210bce95": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🪙 Debase the coinage…"
       }
     },
     "src.2117cad7": {
@@ -30669,16 +30659,6 @@
         "text": "Father"
       }
     },
-    "src.236bc77e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power."
-      }
-    },
     "src.236d6558": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30998,6 +30978,16 @@
       ],
       "source": {
         "text": "🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly"
+      }
+    },
+    "src.24ea689e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power."
       }
     },
     "src.24fec001": {
@@ -31691,6 +31681,16 @@
         "text": "Grind secretly and deny the toll."
       }
     },
+    "src.29a20e5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 The value of coin changes this year."
+      }
+    },
     "src.29afae2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -31839,6 +31839,16 @@
       ],
       "source": {
         "text": "Equip {item}"
+      }
+    },
+    "src.2a590e5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 Prices fall {rate}% this year; circulating coin buys more."
       }
     },
     "src.2a70b752": {
@@ -43491,16 +43501,6 @@
       ],
       "source": {
         "text": "Read the mint and ruler on the face."
-      }
-    },
-    "src.6bbea03e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 Prices rise {rate}% this year; circulating coin buys less."
       }
     },
     "src.6bc683fa": {
@@ -56350,16 +56350,6 @@
         "text": "row on any province, and the 🗺 map filters ("
       }
     },
-    "src.b328a03e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 Prices fall {rate}% this year; circulating coin buys more."
-      }
-    },
     "src.b32b1d4f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57563,16 +57553,6 @@
         "text": "⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go."
       }
     },
-    "src.b9e1f21b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
-      }
-    },
     "src.b9e57883": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58143,6 +58123,16 @@
       ],
       "source": {
         "text": "A prayer for children. (25 piety)"
+      }
+    },
+    "src.bd982f13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/council.js"
+      ],
+      "source": {
+        "text": "💰 The council grants a war subsidy of {money:gold} — and notes the precedent."
       }
     },
     "src.bdb55eaa": {
@@ -60059,16 +60049,6 @@
         "text": "Festival Day"
       }
     },
-    "src.c9982ba8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🪙 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power."
-      }
-    },
     "src.c9a0730c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60388,16 +60368,6 @@
       ],
       "source": {
         "text": "House of Wisdom"
-      }
-    },
-    "src.cb9891b3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/council.js"
-      ],
-      "source": {
-        "text": "🪙 The council grants a war subsidy of {money:gold} — and notes the precedent."
       }
     },
     "src.cb9c759a": {
@@ -62553,6 +62523,16 @@
         "text": "Hired mercenaries for the war."
       }
     },
+    "src.d84c4c29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
+      }
+    },
     "src.d853a2bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64224,6 +64204,16 @@
         "text": "🕯 {name}, whom you courted, has died before any wedding."
       }
     },
+    "src.e1bb2ac8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power."
+      }
+    },
     "src.e1c34007": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64583,6 +64573,16 @@
       ],
       "source": {
         "text": "Dull roads, and pay that mostly arrives."
+      }
+    },
+    "src.e4701cde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💰 Prices rise {rate}% this year; circulating coin buys less."
       }
     },
     "src.e47c2319": {
@@ -74385,6 +74385,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Settle permanently in {destination}?"
+      }
+    },
+    "ui:Settlements": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Settlements"
       }
     },
     "ui:Sickness has taken hold.": {

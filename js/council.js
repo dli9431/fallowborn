@@ -17,7 +17,7 @@ window.FB = window.FB || {};
   var SEATS = [
     { id: 'seneschal', icon: '⚖', bonusKey: 'tax', bonusAmt: 0.10 },
     { id: 'constable', icon: '🗡', bonusKey: 'levy', bonusAmt: 0.10 },
-    { id: 'treasurer', icon: '🪙', bonusKey: 'build', bonusAmt: 0.15 },
+    { id: 'treasurer', icon: '💰', bonusKey: 'build', bonusAmt: 0.15 },
     { id: 'almoner', icon: '🕯', bonusKey: 'piety', bonusAmt: 1 },
     { id: 'chamberlain', icon: '🗝', bonusKey: 'plot', bonusAmt: 0.08 }
   ];
@@ -358,6 +358,6 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, -6);
     for (const m of ms) FB.adjustLiegeOp(state, m.rid, -5);
     FB.news(state, FB.msg('news.council.war_chest',
-      '🪙 The council grants a war subsidy of {money:gold} — and notes the precedent.', { gold: gold }));
+      '💰 The council grants a war subsidy of {money:gold} — and notes the precedent.', { gold: gold }));
   };
 })();

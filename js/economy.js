@@ -1390,11 +1390,11 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.finance.prices', {
         forms: {
           select:'value', param:'direction', cases:{
-            inflation:'🪙 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power.',
-            deflation:'🪙 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power.',
-            inflation_empty:'🪙 Prices rise {rate}% this year; circulating coin buys less.',
-            deflation_empty:'🪙 Prices fall {rate}% this year; circulating coin buys more.',
-            other:'🪙 The value of coin changes this year.'
+            inflation:'💰 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power.',
+            deflation:'💰 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power.',
+            inflation_empty:'💰 Prices rise {rate}% this year; circulating coin buys less.',
+            deflation_empty:'💰 Prices fall {rate}% this year; circulating coin buys more.',
+            other:'💰 The value of coin changes this year.'
           }
         }
       }, {
@@ -1440,7 +1440,7 @@ window.FB = window.FB || {};
       for (const member of FB.councilMembers(state)) FB.adjustLiegeOp(state, member.rid, -8);
     }
     FB.news(state, FB.msg('news.finance.debasement',
-      '🪙 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer.',
+      '💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer.',
       { gold:preview.gold }));
     return true;
   };
