@@ -9,7 +9,16 @@ window.FBDATA = window.FBDATA || {};
   const CATALOG_SCHEMA = 1;
   const HASH_SCHEMA = 1;
   const LANG_KEY = 'fb_lang';
-  const TOKEN_RX = /\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+  const TOKEN_RX = /\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[A-Za-z_][A-Za-z0-9_]*))\}/g;
+  const MONEY_LITERAL_RX = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
+  const CURRENCY_DEF_FIELDS = {
+    id: 1, label: 1, icon: 1, smallestPerGold: 1, units: 1,
+    showZeroMinor: 1, maxUnits: 1
+  };
+  const CURRENCY_UNIT_FIELDS = {
+    id: 1, value: 1, symbol: 1, singular: 1, plural: 1,
+    position: 1, space: 1
+  };
   const LOCALES = [
     { code: 'en', name: 'English', dir: 'ltr', status: 'supported', file: null },
     { code: 'fr', name: 'Français', dir: 'ltr', status: 'preview', file: 'data/lang_fr.js' },
@@ -34,6 +43,7 @@ window.FBDATA = window.FBDATA || {};
   let activeCatalog = null;
   let pendingCatalog = null;
   let lastKey = '';
+  let activeCurrency = null;
 
   FBDATA.lang = FBDATA.lang || {};
   FB.locale = 'en';
@@ -42,6 +52,189 @@ window.FBDATA = window.FBDATA || {};
   FB.I18N_HASH_SCHEMA = HASH_SCHEMA;
 
   function own(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
+  function plainObject(value) {
+    if (!value || Object.prototype.toString.call(value) !== '[object Object]') return false;
+    const proto = Object.getPrototypeOf ? Object.getPrototypeOf(value) : Object.prototype;
+    return proto === Object.prototype || proto === null;
+  }
+  function integer(value) {
+    return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
+  }
+  function safeInteger(value) {
+    return integer(value) && Math.abs(value) <= 9007199254740991;
+  }
+  function onlyFields(obj, allowed) {
+    for (const key in obj) if (own(obj, key) && !own(allowed, key)) return false;
+    return true;
+  }
+  function currencyText(value, max, allowEmpty) {
+    if (typeof value !== 'string' || value.length > max ||
+      (!allowEmpty && !value.trim()) || /[<>\u0000-\u001f\u007f]/.test(value) ||
+      /(?:javascript|vbscript|data):/i.test(value)) return null;
+    return value;
+  }
+  function normalizeCurrency(raw) {
+    if (!plainObject(raw) || !onlyFields(raw, CURRENCY_DEF_FIELDS)) return null;
+    const id = currencyText(raw.id, 48, false);
+    const label = currencyText(raw.label, 80, false);
+    const icon = currencyText(raw.icon, 16, false);
+    if (!id || !/^[A-Za-z0-9_.-]+$/.test(id) || !label || !icon ||
+      !safeInteger(raw.smallestPerGold) || raw.smallestPerGold <= 0 ||
+      !Array.isArray(raw.units) || raw.units.length < 1 || raw.units.length > 4) return null;
+    const units = [];
+    const ids = {};
+    const values = {};
+    let previous = Infinity;
+    for (let i = 0; i < raw.units.length; i++) {
+      const source = raw.units[i];
+      if (!plainObject(source) || !onlyFields(source, CURRENCY_UNIT_FIELDS)) return null;
+      const unitId = currencyText(source.id, 48, false);
+      const symbol = currencyText(source.symbol, 24, true);
+      const singular = currencyText(source.singular, 80, false);
+      const plural = currencyText(source.plural, 80, false);
+      if (!unitId || !/^[A-Za-z0-9_.-]+$/.test(unitId) || own(ids, unitId) ||
+        !safeInteger(source.value) || source.value <= 0 ||
+        own(values, String(source.value)) || source.value >= previous ||
+        symbol === null || !singular || !plural ||
+        (source.position !== 'before' && source.position !== 'after') ||
+        typeof source.space !== 'boolean') return null;
+      ids[unitId] = 1;
+      values[String(source.value)] = 1;
+      previous = source.value;
+      units.push({
+        id: unitId,
+        value: source.value,
+        symbol: symbol,
+        singular: singular,
+        plural: plural,
+        position: source.position,
+        space: source.space
+      });
+    }
+    if (units[units.length - 1].value !== 1 ||
+      (raw.showZeroMinor !== undefined && typeof raw.showZeroMinor !== 'boolean') ||
+      (raw.maxUnits !== undefined && (!integer(raw.maxUnits) || raw.maxUnits <= 0))) {
+      return null;
+    }
+    return {
+      id: id,
+      label: label,
+      icon: icon,
+      smallestPerGold: raw.smallestPerGold,
+      units: units,
+      showZeroMinor: raw.showZeroMinor === true,
+      maxUnits: Math.min(units.length,
+        raw.maxUnits === undefined ? units.length : raw.maxUnits)
+    };
+  }
+  function copyCurrency(def) {
+    const out = {
+      id: def.id,
+      label: def.label,
+      icon: def.icon,
+      smallestPerGold: def.smallestPerGold,
+      units: [],
+      showZeroMinor: def.showZeroMinor,
+      maxUnits: def.maxUnits
+    };
+    for (let i = 0; i < def.units.length; i++) {
+      const unit = def.units[i];
+      out.units.push({
+        id: unit.id,
+        value: unit.value,
+        symbol: unit.symbol,
+        singular: unit.singular,
+        plural: unit.plural,
+        position: unit.position,
+        space: unit.space
+      });
+    }
+    return out;
+  }
+  const DEFAULT_CURRENCY = normalizeCurrency(FBDATA.currency);
+  activeCurrency = copyCurrency(DEFAULT_CURRENCY);
+  FBDATA.currency = copyCurrency(activeCurrency);
+
+  FB.configureCurrency = function (raw, supplied, legacyIcon) {
+    const normalized = supplied ? normalizeCurrency(raw) : copyCurrency(DEFAULT_CURRENCY);
+    const valid = !!normalized;
+    activeCurrency = normalized || copyCurrency(DEFAULT_CURRENCY);
+    if (!supplied && typeof legacyIcon === 'string' && legacyIcon) {
+      activeCurrency.icon = legacyIcon;
+    }
+    FBDATA.currency = copyCurrency(activeCurrency);
+    return valid;
+  };
+  FB.currencyDef = function () { return copyCurrency(activeCurrency); };
+  FB.currencyLabel = function () { return FB.L(activeCurrency.label); };
+  function moneyStyle(opts) {
+    if (typeof opts === 'string') return opts;
+    return opts && opts.style ? opts.style : 'compact';
+  }
+  function compactUnit(number, unit, omitSymbol) {
+    if (omitSymbol || !unit.symbol) return String(number);
+    const gap = unit.space ? ' ' : '';
+    return unit.position === 'before'
+      ? unit.symbol + gap + number
+      : number + gap + unit.symbol;
+  }
+  FB.money = function (amount, opts) {
+    const style = moneyStyle(opts);
+    if (style === 'icon') return activeCurrency.icon;
+    if (typeof amount !== 'number' || !isFinite(amount)) return '—';
+    const total = Math.round(Math.abs(amount) * activeCurrency.smallestPerGold);
+    if (!isFinite(total) || total > 9007199254740991) return '—';
+    let terms = [];
+    let remainder = total;
+    let started = false;
+    for (let i = 0; i < activeCurrency.units.length; i++) {
+      const unit = activeCurrency.units[i];
+      const count = Math.floor(remainder / unit.value);
+      remainder -= count * unit.value;
+      const largestZero = total === 0 && i === 0;
+      const zeroMinor = activeCurrency.showZeroMinor && started;
+      if (!count && !largestZero && !zeroMinor) continue;
+      started = started || count > 0 || largestZero;
+      terms.push({ index:i, count:count });
+    }
+    if (!terms.length) {
+      terms.push({ index:activeCurrency.units.length - 1, count:0 });
+    }
+    if (terms.length > activeCurrency.maxUnits) {
+      let represented = 0;
+      for (let i = 0; i < activeCurrency.maxUnits; i++) {
+        represented += terms[i].count * activeCurrency.units[terms[i].index].value;
+      }
+      if (represented === total) {
+        terms = terms.slice(0, activeCurrency.maxUnits);
+      } else {
+        const exact = terms.slice(0, activeCurrency.maxUnits - 1);
+        let consumed = 0;
+        for (let i = 0; i < exact.length; i++) {
+          consumed += exact[i].count * activeCurrency.units[exact[i].index].value;
+        }
+        exact.push({
+          index:activeCurrency.units.length - 1,
+          count:total - consumed
+        });
+        terms = exact;
+      }
+    }
+    const parts = [];
+    for (let i = 0; i < terms.length; i++) {
+      const term = terms[i];
+      const unit = activeCurrency.units[term.index];
+      const count = term.count;
+      if (style === 'long') {
+        const name = FB.L(count === 1 ? unit.singular : unit.plural);
+        parts.push(count + ' ' + name);
+      } else {
+        const omitPrimary = !!(opts && opts.omitPrimarySymbol && term.index === 0);
+        parts.push(compactUnit(count, unit, omitPrimary));
+      }
+    }
+    return (amount < 0 && total ? '−' : '') + parts.join(' ');
+  };
   function localeDef(code) {
     for (let i = 0; i < LOCALES.length; i++) if (LOCALES[i].code === code) return LOCALES[i];
     return null;
@@ -287,7 +480,7 @@ window.FBDATA = window.FBDATA || {};
       j: 'ĵ', k: 'ķ', l: 'ŀ', m: 'm', n: 'ñ', o: 'ö', p: 'þ', q: 'q', r: 'ŕ',
       s: 'š', t: 'ŧ', u: 'ü', v: 'v', w: 'ŵ', x: 'x', y: 'ÿ', z: 'ž'
     };
-    const chunks = String(text).split(/(\{[A-Za-z_][A-Za-z0-9_]*\})/g);
+    const chunks = String(text).split(/(\{(?:(?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[A-Za-z_][A-Za-z0-9_]*))\})/g);
     for (let i = 0; i < chunks.length; i += 2) {
       chunks[i] = chunks[i].replace(/[A-Za-z]/g, function (c) { return map[c] || c; });
     }
@@ -380,8 +573,15 @@ window.FBDATA = window.FBDATA || {};
     return pluralCategory(cat, n);
   };
   FB.tsub = function (text, params) {
-    if (typeof text !== 'string' || !params || text.indexOf('{') < 0) return text;
+    if (typeof text !== 'string' || text.indexOf('{') < 0) return text;
+    params = params || {};
     return text.replace(TOKEN_RX, function (whole, key) {
+      if (key.indexOf('money:') === 0) {
+        const source = key.slice(6);
+        if (MONEY_LITERAL_RX.test(source)) return FB.money(Number(source));
+        if (!own(params, source)) return whole;
+        return FB.money(params[source]);
+      }
       const value = params[key];
       return value === undefined || value === null ? whole : String(value);
     });

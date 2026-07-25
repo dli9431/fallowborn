@@ -77,7 +77,7 @@ FBDATA.events.push(
   travel:{kind:'road'},
   text:'At {location}, one bed remains beneath a sound roof. The price rises while you stand in the doorway.',
   options:[
-    { label:'Pay for the bed. (2 gold)', desc:'Warmth, straw, and a barred door.',
+    { label:'Pay for the bed. ({money:2})', desc:'Warmth, straw, and a barred door.',
       effects:{gold:-2, health:1} },
     { label:'Sleep beneath your cloak.', desc:'The ditch asks no coin.',
       effects:{} }
@@ -86,7 +86,7 @@ FBDATA.events.push(
   travel:{kind:'road'},
   text:'Men with a painted board have stretched a rope across the road near {location}. They call the demand an ancient toll.',
   options:[
-    { label:'Pay and pass. (2 gold)', desc:'Some arguments cost more than the answer.',
+    { label:'Pay and pass. ({money:2})', desc:'Some arguments cost more than the answer.',
       effects:{gold:-2} },
     { label:'Question how ancient it is.', desc:'Accounts and confidence against cudgels.',
       chance:'skill_ste',

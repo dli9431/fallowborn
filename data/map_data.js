@@ -805,6 +805,29 @@ FBDATA.tech = {
     desc:'Every charter and cartulary copied, counted, and kept. (+0.1 scholarship per season, per rank)', fx:{ research:0.10 } }
 };
 
+/* Currency presentation only. All authored and saved economic values remain
+   game gold; js/i18n.js validates and formats this display definition after
+   runtime mods have applied. */
+FBDATA.currency = {
+  id: 'gold',
+  label: 'Gold',
+  icon: '💰',
+  smallestPerGold: 1,
+  units: [
+    {
+      id: 'gold',
+      value: 1,
+      symbol: 'gold',
+      singular: 'gold',
+      plural: 'gold',
+      position: 'after',
+      space: true
+    }
+  ],
+  showZeroMinor: false,
+  maxUnits: 1
+};
+
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,

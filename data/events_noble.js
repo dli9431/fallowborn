@@ -79,7 +79,7 @@ FBDATA.events.push(
   trigger:{ tierMin:3, chance:0.15 }, weight:5, cooldown:8,
   text:'A traveling scholar — threadbare, sharp-eyed, trailing manuscripts — asks leave to work beneath your roof for a season.',
   options:[
-    { label:'Fund his work. (10 gold)', require:{ goldMin:10 }, desc:'Coin for ink may come back as wisdom.', effects:{ gold:-10, research:15, skills:{lea:1}, prestige:2 } },
+    { label:'Fund his work. ({money:10})', require:{ goldMin:10 }, desc:'Coin for ink may come back as wisdom.', effects:{ gold:-10, research:15, skills:{lea:1}, prestige:2 } },
     { label:'A meal and a bed for the night.', require:{ goldMin:1 }, desc:'Small charity, small return.', effects:{ gold:-1, research:3 } },
     { label:'Turn him away.', desc:'Books find other roofs.', effects:{ } }
   ]},
@@ -89,7 +89,7 @@ FBDATA.events.push(
   options:[
     { label:'Open the granary reserves.', desc:'Full barns were built for days like this.', require:{ buildings:['granary'] },
       effects:{ popularOpinion:25, piety:10, prestige:10, log:'The granary fed {province} through the famine.' } },
-    { label:'Buy grain to give out. (20 gold)', require:{ goldMin:20 }, desc:'Bread bought dear is loyalty bought cheap.',
+    { label:'Buy grain to give out. ({money:20})', require:{ goldMin:20 }, desc:'Bread bought dear is loyalty bought cheap.',
       effects:{ gold:-20, popularOpinion:25, piety:10, prestige:10, log:'Fed the hungry in famine.' } },
     { label:'Sell grain at famine prices.', desc:'Hunger pays well, and remembers longer.', effects:{ gold:25, popularOpinion:-25, piety:-10 } },
     { label:'Guard the stores and wait.', desc:'Spears on the granary door say enough.', effects:{ popularOpinion:-10 } }
@@ -125,8 +125,8 @@ FBDATA.events.push(
   options:[
     { label:'Ride to the muster.', desc:'Join the liege’s host for the length of the war.',
       effects:{ setFlag:'with_liege_host', focusSet:'lead_host', opinionLiege:10, prestige:4, log:'Rode to the liege’s war.' } },
-    { label:'Send gold in your stead.', require:{ goldMin:20 }, desc:'Silver marches for you, and is noted.', effects:{ gold:-20, opinionLiege:-5 } },
-    { label:'Pay scutage, by the estates’ charter. (8 gold)', require:{ goldMin:8, custom:'parliament_has_scutage' }, desc:'The estates voted silver for service — the liege must take the coin.', effects:{ gold:-8, opinionLiege:-2 } },
+    { label:'Send coin in your stead.', require:{ goldMin:20 }, desc:'Silver marches for you, and is noted.', effects:{ gold:-20, opinionLiege:-5 } },
+    { label:'Pay scutage, by the estates’ charter. ({money:8})', require:{ goldMin:8, custom:'parliament_has_scutage' }, desc:'The estates voted silver for service — the liege must take the coin.', effects:{ gold:-8, opinionLiege:-2 } },
     { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8 } }
   ]},
 { id:'title_request', title:'A Word With the Liege',
@@ -165,7 +165,7 @@ FBDATA.events.push(
   trigger:{ tierMin:4, isVassal:true, chance:0.2 }, weight:8, cooldown:8,
   text:'Collectors arrive from {liege} with tallies and wax: the lord calls an extraordinary aid upon all his vassals — your chest included.',
   options:[
-    { label:'Pay without a murmur. (12 gold)', require:{ goldMin:12 }, desc:'Coin spent now buys quiet favor later.', effects:{ gold:-12, opinionLiege:8 } },
+    { label:'Pay without a murmur. ({money:12})', require:{ goldMin:12 }, desc:'Coin spent now buys quiet favor later.', effects:{ gold:-12, opinionLiege:8 } },
     { label:'Send a third, with apologies.', require:{ goldMin:4 }, desc:'A short purse, politely explained.', effects:{ gold:-4, opinionLiege:-5 } },
     { label:'Refuse outright.', desc:'Defiance is cheap until the tally comes due.', effects:{ opinionLiege:-20, prestige:-3 } }
   ]},
@@ -182,7 +182,7 @@ FBDATA.events.push(
   trigger:{ isLiege:true, chance:0.15 }, weight:6, cooldown:8,
   text:'One of your sworn men kneels at your gate: debts press him hard, and only your generosity stands between his family and ruin.',
   options:[
-    { label:'Help him handsomely. (15 gold)', require:{ goldMin:15 }, desc:'Generosity now is a shield later.', effects:{ gold:-15, custom:'vassal_favor', prestige:3 } },
+    { label:'Help him handsomely. ({money:15})', require:{ goldMin:15 }, desc:'Generosity now is a shield later.', effects:{ gold:-15, custom:'vassal_favor', prestige:3 } },
     { label:'Good words, empty hands.', desc:'Comfort costs nothing and is valued as such.', effects:{ custom:'vassal_snub' } }
   ]},
 { id:'vassal_feud', title:'Knives Between Vassals',
@@ -225,7 +225,7 @@ FBDATA.events.push(
   trigger:{ tierMin:4, popularOpinionBelow:-15, notFlags:['df_unrest'], chance:0.12 }, weight:6, cooldown:10,
   text:'The reeves report it carefully, eyes down: the villages are sullen, the tax carts need armed escorts, and an old song about kinder lords is sung again in the taverns of {province}.',
   options:[
-    { label:'Feast and gift the worst parishes. (15 gold)', require:{ goldMin:15 }, desc:'A full belly sings no rebel songs.', effects:{ gold:-15, popularOpinion:15 } },
+    { label:'Feast and gift the worst parishes. ({money:15})', require:{ goldMin:15 }, desc:'A full belly sings no rebel songs.', effects:{ gold:-15, popularOpinion:15 } },
     { label:'A show of force on the roads.', desc:'Patrols may quiet the songs — or give them a martyr.', chance:0.6,
       success:{ text:'Patrols at every ford and fair. The songs quiet — for now.', effects:{ prestige:4 } },
       failure:{ text:'A patrol is stoned, an armsman killed. Now there is a martyr, and the murmurs have a name to gather around.', effects:{ setFlag:'df_unrest', popularOpinion:-5 } } },
@@ -235,7 +235,7 @@ FBDATA.events.push(
   trigger:{ tierMin:4, flags:['df_unrest'], popularOpinionBelow:-10, chance:0.25 }, weight:8, cooldown:4, wartime:true,
   text:'It is no longer songs. Headmen from a dozen villages meet in barns, and a disgraced captain drills them at night. Your bailiff names it plainly: a league, sworn against your house.',
   options:[
-    { label:'Buy the ringleaders, one by one. (25 gold)', require:{ goldMin:25 }, desc:'Silver unmakes oaths faster than steel.',
+    { label:'Buy the ringleaders, one by one. ({money:25})', require:{ goldMin:25 }, desc:'Silver unmakes oaths faster than steel.',
       effects:{ gold:-25, clearFlag:'df_unrest', popularOpinion:10, log:'Bought off a rising against the house.' } },
     { label:'Cow them before they march.', desc:'Strike the night-drill before it becomes an army.', chance:'battle',
       success:{ text:'Your men descend on the night-drill. The league scatters into the dark, leaderless and done.', effects:{ clearFlag:'df_unrest', prestige:6 } },
@@ -251,14 +251,14 @@ FBDATA.events.push(
       failure:{ text:'Your line breaks — and when it breaks, everything breaks. You ride from the field with a dozen men and the clothes you stand in.', effects:{ custom:'df_fall', log:'Cast down by a rising of the commons.' } } },
     { label:'Abdicate and slip away.', desc:'Yield the lands and flee abroad with what you can carry.',
       effects:{ custom:'df_fall_flee', log:'Fled a rising of the commons.' } },
-    { label:'Beg your liege’s aid. (20 gold)', require:{ isVassal:true, goldMin:20 }, desc:'His swords end it — and his price follows.',
+    { label:'Beg your liege’s aid. ({money:20})', require:{ isVassal:true, goldMin:20 }, desc:'His swords end it — and his price follows.',
       effects:{ gold:-20, opinionLiege:-10, clearFlag:'df_unrest', clearFlag2:'df_league', log:'The liege’s host put down the rising — at a price.' } }
   ]},
 { id:'df_claim_whispers', title:'A Rival’s Quiet Work',
   trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-40 }, rivalHeatMin:70, notFlags:['df_claim'], chance:0.12 }, weight:5, cooldown:12,
   text:'{rival} dines your neighbors, remembers their sons’ names, and asks — always lightly — whether the land might not be better served. A spy in their household brings worse: parchments are being drawn up.',
   options:[
-    { label:'Buy off the waverers. (20 gold)', require:{ goldMin:20 }, desc:'Loyalty, like cattle, can be purchased by the head.', effects:{ gold:-20, log:'Spent freely to keep the fence-sitters loyal.' } },
+    { label:'Buy off the waverers. ({money:20})', require:{ goldMin:20 }, desc:'Loyalty, like cattle, can be purchased by the head.', effects:{ gold:-20, log:'Spent freely to keep the fence-sitters loyal.' } },
     { label:'Unmask the scheme at court.', desc:'Accuse {rival} openly, and hope the court believes.', chance:'plot',
       success:{ text:'You name names before the assembled court, and watch {rival}’s friends find urgent business elsewhere.', effects:{ prestige:6, opinion:{ role:'rival', amt:-10 } } },
       failure:{ text:'Your accusation rings hollow — half the court had already dined at {rival}’s table. They smile, and work faster.', effects:{ setFlag:'df_claim', prestige:-4 } } },
@@ -266,9 +266,9 @@ FBDATA.events.push(
   ]},
 { id:'df_claim_declared', title:'The Claim Declared',
   trigger:{ flags:['df_claim'], hasRole:'rival', chance:0.25 }, weight:7, cooldown:4, wartime:true,
-  text:'It is done openly now: {rival} publishes a claim to everything you hold — a worm-eaten genealogy, a bought witness, and promises to every malcontent in the county, with foreign gold behind all of it. Men begin choosing which side to kneel to.',
+  text:'It is done openly now: {rival} publishes a claim to everything you hold — a worm-eaten genealogy, a bought witness, and promises to every malcontent in the county, with foreign coin behind all of it. Men begin choosing which side to kneel to.',
   options:[
-    { label:'Settle: gold for a renunciation. (30 gold)', require:{ goldMin:30 }, desc:'A heavy purse buys back a quiet name.',
+    { label:'Settle: coin for a renunciation. ({money:30})', require:{ goldMin:30 }, desc:'A heavy purse buys back a quiet name.',
       effects:{ gold:-30, prestige:-5, clearFlag:'df_claim', rivalHeat:-20, log:'Bought off a rival’s claim.' } },
     { label:'Answer with a counter-plot.', desc:'Unravel their witnesses before yours unravel.', chance:'plot',
       success:{ text:'Their bought witness recants, loudly, in the wrong company. The claim collapses into laughter.', effects:{ clearFlag:'df_claim', prestige:8, rivalHeat:-15, log:'Unraveled a rival’s claim.' } },
@@ -289,7 +289,7 @@ FBDATA.events.push(
   trigger:{ tierMin:3, hasRole:'rival', roleOpinionBelow:{ role:'rival', value:-50 }, rivalHeatMin:80, notFlags:['df_marked'], chance:0.1 }, weight:5, cooldown:16,
   text:'A dead dog at your threshold, its throat cut. A serving girl who knew your habits, gone in the night. Your spymaster — you pay him well — says the pattern points one way: {rival} is done waiting for you to die naturally.',
   options:[
-    { label:'Double the guard, reward the loyal. (15 gold)', require:{ goldMin:15 }, desc:'Watched doors sleep better at night.', effects:{ gold:-15 } },
+    { label:'Double the guard, reward the loyal. ({money:15})', require:{ goldMin:15 }, desc:'Watched doors sleep better at night.', effects:{ gold:-15 } },
     { label:'Set a trap for their agent.', desc:'Catch the poisoner — or teach him your defenses.', chance:'plot',
       success:{ text:'The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know.', effects:{ prestige:6, skills:{int:1}, rivalHeat:-15 } },
       failure:{ text:'Your trap catches a scullion — innocent, probably. The real agent reports your defenses in detail.', effects:{ setFlag:'df_marked' } } },
@@ -302,7 +302,7 @@ FBDATA.events.push(
     { label:'Purge the household.', desc:'Terror may find the knife — or blind your friends.', chance:'plot',
       success:{ text:'Three servants taken in the night; one talks. The paid knife flees your hall ahead of the rope, and the silence lifts.', effects:{ clearFlag:'df_marked', prestige:-5, piety:-3, log:'Purged a murderous conspiracy.' } },
       failure:{ text:'You seize the wrong people, and the true conspirators use the fear — half your servants flee, and the rest dare not warn you now.', effects:{ setFlag:'df_doom', prestige:-8 } } },
-    { label:'Lie low at a kinsman’s hall. (10 gold)', require:{ goldMin:10 }, desc:'A season away cools even hot blood.',
+    { label:'Lie low at a kinsman’s hall. ({money:10})', require:{ goldMin:10 }, desc:'A season away cools even hot blood.',
       effects:{ gold:-10, prestige:-5, clearFlag:'df_marked', rivalHeat:-10 } },
     { label:'Trust your stars.', desc:'The stars have never yet held a shield.', effects:{ setFlag:'df_doom' } }
   ]},

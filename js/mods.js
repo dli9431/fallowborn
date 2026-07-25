@@ -13,6 +13,12 @@ window.FBMODS = window.FBMODS || [];
   FB.mods = M;
   const KEY = 'fb_mods';
   const BKEY = 'fb_mods_bundled';
+  let currencySupplied = false;
+  let currencyInvalid = false;
+
+  function own(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
 
   function readAll() {
     try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
@@ -41,6 +47,7 @@ window.FBMODS = window.FBMODS || [];
   };
 
   M.count = function () { return readAll().length + readEnabled().length; };
+  M.currencyInvalid = function () { return currencyInvalid; };
 
   /* the stored mods as {name, kb} for display — a mod may carry an
      optional cosmetic "name" field (ignored by the merge) */
@@ -175,6 +182,10 @@ window.FBMODS = window.FBMODS || [];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
     if (mod.titles) for (const k in mod.titles) FBDATA.titles[k] = mod.titles[k];
+    if (own(mod, 'currency')) {
+      FBDATA.currency = mod.currency;
+      currencySupplied = true;
+    }
     if (mod.balance) for (const k in mod.balance) FBDATA.balance[k] = mod.balance[k];
     if (mod.bounds) FBDATA.bounds = mod.bounds;
     if (mod.land) FBDATA.land = mod.land;
@@ -183,6 +194,8 @@ window.FBMODS = window.FBMODS || [];
   };
 
   M.applyStored = function () {
+    currencySupplied = false;
+    currencyInvalid = false;
     const on = readEnabled();
     for (const mod of M.bundled()) {
       if (on.indexOf(mod.id) === -1) continue;
@@ -193,6 +206,13 @@ window.FBMODS = window.FBMODS || [];
     for (const text of all) {
       try { M.apply(JSON.parse(text)); }
       catch (e) { /* skip broken mod */ }
+    }
+    if (FB.configureCurrency) {
+      currencyInvalid = !FB.configureCurrency(
+        currencySupplied ? FBDATA.currency : null,
+        currencySupplied,
+        FBDATA.balance && FBDATA.balance.coinageSymbol
+      );
     }
   };
 })();

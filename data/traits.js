@@ -12,7 +12,7 @@ brave:      { name:'Brave', icon:'🦁', desc:'Runs toward the fray.', mar:2, di
 craven:     { name:'Craven', icon:'🐀', desc:'Runs from the fray.', mar:-2, opinion:-8, opposite:'brave', inherit:0.12 },
 ambitious:  { name:'Ambitious', icon:'🔥', desc:'Wants more. Always more.', dip:1, mar:1, ste:1, int:1, lea:1, opinion:-5, opposite:'content' },
 content:    { name:'Content', icon:'🍵', desc:'At peace with their lot.', int:-1, opinion:5, opposite:'ambitious' },
-greedy:     { name:'Greedy', icon:'💰', desc:'Gold first, honor second.', ste:2, dip:-1, opinion:-5, opposite:'generous' },
+greedy:     { name:'Greedy', icon:'💰', desc:'Money first, honor second.', ste:2, dip:-1, opinion:-5, opposite:'generous' },
 generous:   { name:'Generous', icon:'🎁', desc:'An open hand wins hearts.', ste:-1, dip:2, opinion:8, opposite:'greedy' },
 cruel:      { name:'Cruel', icon:'🗡', desc:'Feared, not loved.', int:1, opinion:-12, opposite:'kind' },
 kind:       { name:'Kind', icon:'🕊', desc:'Loved, not feared.', dip:2, int:-1, opinion:10, opposite:'cruel', inherit:0.1 },

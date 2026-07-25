@@ -270,22 +270,19 @@ window.FB = window.FB || {};
 
   /* last season's measured net change, as a small ± beside a topbar stat;
      tiny drifts keep one decimal so a slow trickle does not read as +0 */
-  function netBadge(v) {
+  function netBadge(v, money) {
     if (v === undefined || v === null) return '';
     const r = Math.abs(v) < 10 ? Math.round(v * 10) / 10 : Math.round(v);
     if (!r) return '';
-    return ' <span class="net ' + (r > 0 ? 'op-good' : 'op-bad') + '">' + (r > 0 ? '+' : '') + r + '</span>';
+    const value = money ? FB.money(r, { omitPrimarySymbol:true }) : String(r);
+    return ' <span class="net ' + (r > 0 ? 'op-good' : 'op-bad') + '">' +
+      (r > 0 ? '+' : '') + esc(value) + '</span>';
   }
 
   /* a source amount in the breakdown: same rounding as the net badge */
-  function fmtAmt(v) {
+  function fmtAmt(v, money) {
     const r = Math.abs(v) < 10 ? Math.round(v * 10) / 10 : Math.round(v);
-    return (r > 0 ? '+' : '') + r;
-  }
-
-  function coinageSymbol() {
-    const symbol = FBDATA.balance.coinageSymbol;
-    return typeof symbol === 'string' && symbol ? symbol : null;
+    return (r > 0 ? '+' : '') + (money ? FB.money(r) : r);
   }
 
   /* the topbar stat breakdown (hover on desktop, tap for the modal): what
@@ -297,7 +294,7 @@ window.FB = window.FB || {};
     for (const ln of bd.lines) {
       h += '<div class="bd-row"><span>' + esc(ln.label) + '</span>' +
         '<span class="bd-amt ' + (ln.amount > 0 ? 'op-good' : 'op-bad') + '">' +
-        fmtAmt(ln.amount) + '</span></div>';
+        esc(fmtAmt(ln.amount, stat === 'gold')) + '</span></div>';
     }
     if (!bd.lines.length) {
       h += '<div class="bd-note">' +
@@ -305,13 +302,13 @@ window.FB = window.FB || {};
     } else {
       h += '<div class="bd-row bd-total"><span>' + esc(FB.T('Each season')) + '</span>' +
         '<span class="bd-amt ' + (bd.total > 0 ? 'op-good' : bd.total < 0 ? 'op-bad' : '') + '">' +
-        fmtAmt(bd.total) + '</span></div>';
+        esc(fmtAmt(bd.total, stat === 'gold')) + '</span></div>';
     }
     if (stat === 'gold' && bd.coinAdjustment !== undefined) {
       h += '<div class="bd-row"><span>' + esc(FB.T('Coin and prices this year')) + '</span>' +
         '<span class="bd-amt ' + (bd.coinAdjustment > 0 ? 'op-good' :
           bd.coinAdjustment < 0 ? 'op-bad' : '') + '">' +
-        fmtAmt(bd.coinAdjustment) + '</span></div>';
+        esc(fmtAmt(bd.coinAdjustment, true)) + '</span></div>';
     }
     h += '<div class="bd-note">' + esc(FB.T(
       'The ± beside the stat is last season’s real change — events and deeds included.')) + '</div>';
@@ -355,9 +352,13 @@ window.FB = window.FB || {};
       season: FB.seasonName(s.date.season), day: dd, year: s.date.year
     });
     const net = s.seasonNet || {};
-    const coinSymbol = coinageSymbol();
-    $('tb-gold').innerHTML = esc(coinSymbol || '💰') + (coinSymbol ? '' : ' ') + '<span class="mono">' +
-      Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
+    const coinIcon = FB.money(0, { style:'icon' });
+    $('tb-gold').innerHTML = esc(coinIcon) + (coinIcon === '💰' ? ' ' : '') + '<span class="mono">' +
+      esc(FB.money(s.player.gold, { omitPrimarySymbol:true })) + '</span>' +
+      netBadge(net.gold, true);
+    $('tb-gold').setAttribute('aria-label', FB.T('{label}: {amount}', {
+      label:FB.currencyLabel(), amount:FB.money(s.player.gold, { style:'long' })
+    }));
     $('tb-prestige').innerHTML = '⭐ <span class="mono">' + Math.floor(s.player.prestige) + '</span>' + netBadge(net.prestige);
     $('tb-piety').innerHTML = FB.religionOf(me.religion).icon + ' <span class="mono">' + Math.floor(s.player.piety) + '</span>' + netBadge(net.piety);
     $('tb-health').innerHTML = '❤️ <span class="mono">' + Math.round(me.health) + '</span>';
@@ -497,14 +498,14 @@ window.FB = window.FB || {};
       h += '<div class="progressnote">🏠 ' + hl.map(function (id) {
         const d = FBDATA.holdings[id];
         return d ? d.icon : '?';
-      }).join('') + (hg ? ' · ' + esc(FB.T('+{amount} gold/season',
+      }).join('') + (hg ? ' · ' + esc(FB.T('+{money:amount}/season',
         { amount: Math.round(hg * 10) / 10 })) : '') + '</div>';
     }
     const land = FB.landPlots(s);
     if (land.length) {
       const cluster = FB.largestLandCluster(s);
       h += '<div class="progressnote">' + esc(FB.T(
-        '🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{gold} gold/season',
+        '🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season',
         {
           plots:land.length,
           cluster:cluster ? cluster.count : 0,
@@ -515,7 +516,7 @@ window.FB = window.FB || {};
     }
     if (s.player.tier >= 3) {
       const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
-      h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{gold} gold · 🛡 levy ~{men} men', {
+      h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men', {
         gold: FB.playerTax(s), men: FB.playerLevy(s)
       })) + (lg ? ' · ' + esc(FB.T('vassal of')) +
         ' <span class="linklike" data-liege="' + esc(s.player.liege) +
@@ -631,7 +632,7 @@ window.FB = window.FB || {};
   function nextStepHint(s) {
     if (s.player.tier === 0) {
       return '<div class="progressnote">🧭 ' + esc(FB.T(
-        'Path: save {gold} gold (or win your lord’s favor) to buy freedom.',
+        'Path: save {money:gold} (or win your lord’s favor) to buy freedom.',
         { gold: FBDATA.balance.freedomCost })) + '</div>';
     }
     if (s.player.tier === 1) {
@@ -722,7 +723,7 @@ window.FB = window.FB || {};
     let note = FB.T('🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly', {
       focus:focusName, instruction:instruction, chance:chance
     });
-    if (fee) note = FB.T('{summary} · {amount} gold each season', {
+    if (fee) note = FB.T('{summary} · {money:amount} each season', {
       summary:note, amount:fee
     });
     if (c.edu && c.edu.schoolUnpaid) {
@@ -2203,9 +2204,9 @@ window.FB = window.FB || {};
         esc(item.destinationId) + '" data-choice-index="' + i + '">' +
         esc(pr ? pr.name : item.destinationId) +
         '<span class="adesc">' + esc(FB.T(
-          '{legs} county legs · {days} days each way · {cost} gold', {
+          '{legs} county legs · {days} days each way · {money:cost}', {
             legs:item.legs, days:item.days, cost:item.cost
-          })) + (short ? ' · ' + esc(FB.T('not enough gold')) : '') +
+          })) + (short ? ' · ' + esc(FB.T('not enough money')) : '') +
         '</span></button>';
     }
     list.innerHTML = h;
@@ -2261,10 +2262,10 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[pid];
     const affordable = item.cost <= FB.state.player.gold;
     $('travel-picker-summary').textContent = affordable
-      ? FB.T('{destination}: {legs} legs, {days} days each way, {cost} gold.', {
+      ? FB.T('{destination}: {legs} legs, {days} days each way, {money:cost}.', {
           destination:pr.name, legs:item.legs, days:item.days, cost:item.cost
         })
-      : FB.T('{destination} costs {cost} gold; you have {gold}.', {
+      : FB.T('{destination} costs {money:cost}; you have {money:gold}.', {
           destination:pr.name, cost:item.cost, gold:Math.floor(FB.state.player.gold)
         });
     $('travel-picker-continue').disabled = !affordable;
@@ -2289,7 +2290,7 @@ window.FB = window.FB || {};
           outbound:item.legs * legDays,
           returnDays:item.legs * legDays
         })) + '</p>' +
-      '<p><b>' + esc(FB.T('Exact upfront cost: {cost} gold.', {cost:item.cost})) +
+      '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {cost:item.cost})) +
       '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
       '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
       esc(FB.T('Depart for {destination}', {destination:pr.name})) +
@@ -2413,11 +2414,11 @@ window.FB = window.FB || {};
      path still passes idx for exact placement. */
   function buildingEffects(d) {
     const fx = [];
-    if (d.tax) fx.push(FB.T('+{amount} gold each season', { amount: d.tax }));
+    if (d.tax) fx.push(FB.T('+{money:amount} each season', { amount: d.tax }));
     if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
     if (d.research) fx.push(FB.T('+{amount} scholarship each season', { amount: d.research }));
     if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
-    if (d.upkeep) fx.push(FB.T('−{amount} gold upkeep each season', { amount: d.upkeep }));
+    if (d.upkeep) fx.push(FB.T('−{money:amount} upkeep each season', { amount: d.upkeep }));
     if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
     if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
     if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
@@ -2491,17 +2492,17 @@ window.FB = window.FB || {};
         if (slots.length) {
           const short = s.player.gold < cost;
           const repeat = copies
-            ? FB.T('Repeat copy {number}: its price has risen to {cost} gold.',
+            ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
               { number: copies + 1, cost: cost })
-            : FB.T('First copy in this county: {cost} gold.', { cost: cost });
+            : FB.T('First copy in this county: {money:cost}.', { cost: cost });
           h += '<button class="actionbtn" data-bquick="' + esc(id) + '"' + (short ? ' disabled' : '') + '>' +
-            esc(FB.T('{icon} {name} — Raise Next for {cost} gold', {
+            esc(FB.T('{icon} {name} — Raise Next for {money:cost}', {
               icon: d.icon, name: dt(s, 'building', id, d, 'name'), cost: cost
             })) + '<span class="adesc">' +
             esc(FB.T('{standing} standing · next in {settlement}.', {
               standing: standing, settlement: sts[slots[0]].name
             })) + ' ' + esc(repeat) + (effects ? ' ' + esc(effects) : '') +
-            (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
+            (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
         } else {
           h += '<button class="actionbtn" disabled>' + d.icon + ' ' +
             esc(dt(s, 'building', id, d, 'name')) + '<span class="adesc">' +
@@ -2549,15 +2550,15 @@ window.FB = window.FB || {};
       const short = s.player.gold < b.cost;
       const copies = FB.buildingCountIn(s, pid, b.id, true);
       const repeat = copies
-        ? FB.T('Repeat copy {number}: its price has risen to {cost} gold.',
+        ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
           { number: copies + 1, cost: b.cost })
-        : FB.T('First copy in this county: {cost} gold.', { cost: b.cost });
+        : FB.T('First copy in this county: {money:cost}.', { cost: b.cost });
       h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {cost} gold', {
+        esc(FB.T('{icon} {name} — {money:cost}', {
           icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name'), cost: b.cost
         })) + '<span class="adesc">' + esc(dt(s, 'building', b.id, b.def, 'desc')) +
         ' ' + esc(repeat) + ' ' + esc(buildingEffects(b.def).join(' · ')) +
-        (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
+        (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
     }
     h += '</div>';
     if (done.length) {
@@ -2742,7 +2743,7 @@ window.FB = window.FB || {};
   UI.showEnvoys = function () {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
-      'A peace envoy carries 10 gold in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying 25 gold; either offer uses the same envoy odds.')) +
+      'A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying {money:25}; either offer uses the same envoy odds.')) +
       '</p><div class="gm-list">';
     const pactTargets = FB.envoyTargets(s);
     const allianceTargets = FB.allianceOfferTargets(s);
@@ -2997,7 +2998,7 @@ window.FB = window.FB || {};
       const hr = s.realms[c.holder];
       h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">💰 ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T(
-          '{ruler} · dev {development} · {price} gold', {
+          '{ruler} · dev {development} · {money:price}', {
             ruler: hr.ruler.name, development: s.dev[c.pid] || 1, price: c.price
           })) + '</span></button>';
     }
@@ -3006,7 +3007,7 @@ window.FB = window.FB || {};
     openModal('Buy Out a Neighbor', h);
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (!FB.buyCounty(FB.state, btn.dataset.pid)) { UI.toast('Not enough gold.'); return; }
+        if (!FB.buyCounty(FB.state, btn.dataset.pid)) { UI.toast('Not enough money.'); return; }
         UI.closeModal(); UI.refresh();
       });
     });
@@ -3021,7 +3022,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
-      '{gold} gold and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.',
+      '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.',
       { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
     for (const pid of FB.wastelandCandidates(s)) {
       const pr = FB.world.byId[pid];
@@ -3274,7 +3275,7 @@ window.FB = window.FB || {};
           esc(FB.T('favor {favor}', { favor: (op > 0 ? '+' : '') + Math.round(op) })) + '</div>' +
           '<div style="margin-top:6px">' +
           '<button class="btn" data-gift="' + esc(rid) + '"' + (s.player.gold < (B.councilGiftCost || 25) ? ' disabled' : '') + '>🎁 ' +
-          esc(FB.T('Send a gift ({cost} gold)', { cost: B.councilGiftCost || 25 })) + '</button> ' +
+          esc(FB.T('Send a gift ({money:cost})', { cost: B.councilGiftCost || 25 })) + '</button> ' +
           '<button class="btn" data-dismiss="' + esc(seat.id) + '">' + esc(FB.T('Dismiss')) + '</button>' +
           '</div></div></div>';
       } else {
@@ -3344,7 +3345,7 @@ window.FB = window.FB || {};
     h += '<div class="kv"><span>' + esc(FB.T('Your voice in the hall')) + '</span><b>' +
       Math.round(FB.parliamentVoteChance(s) * 100) + '%</b></div>';
     h += '<p class="hint">' + esc(FB.T(
-      'Between sittings you can put a motion of your own before the estates — it costs {cost} gold in gifts and promises, and the lords will hear but one motion a year.',
+      'Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year.',
       { cost: cost })) + '</p>';
     if (moved) {
       h += '<p class="hint">' + esc(FB.T('The estates have heard your motion this year; they will take another come the new year.')) + '</p>';
@@ -3352,11 +3353,11 @@ window.FB = window.FB || {};
     h += '<div class="gm-list">';
     h += '<button class="actionbtn" data-motion="redress"' +
       (moved || s.player.gold < cost || obl.aid <= aidMin + 0.001 ? ' disabled' : '') + '>⚖ ' +
-      esc(FB.T('Move for redress of grievances ({cost} gold)', { cost: cost })) +
+      esc(FB.T('Move for redress of grievances ({money:cost})', { cost: cost })) +
       '<span class="adesc">' + esc(FB.T('Put it to a vote: the liege’s aid down one step, if the hall backs you.')) + '</span></button>';
     h += '<button class="actionbtn" data-motion="scutage"' +
       (moved || s.player.gold < cost || obl.scutage ? ' disabled' : '') + '>🛡 ' +
-      esc(FB.T('Move for scutage ({cost} gold)', { cost: cost })) +
+      esc(FB.T('Move for scutage ({money:cost})', { cost: cost })) +
       '<span class="adesc">' + esc(FB.T('Put it to a vote: silver for banner service — the aid creeps up in exchange.')) + '</span></button>';
     h += '</div>';
     h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
@@ -3452,8 +3453,8 @@ window.FB = window.FB || {};
     return FB.renderMessage(FB.msg('fx.ui.finance_debt_count', {
       forms: {
         select:'plural', param:'count', cases:{
-          one:'One obligation worth {amount} gold passes with the household.',
-          other:'{count} obligations worth {amount} gold pass with the household.'
+          one:'One obligation worth {money:amount} passes with the household.',
+          other:'{count} obligations worth {money:amount} pass with the household.'
         }
       }
     }, { count:count, amount:amount }), { state:s, viewer:s.player.charId });
@@ -3466,12 +3467,12 @@ window.FB = window.FB || {};
     let h = '<div class="progressnote' +
       (loan.status === 'arrears' || loan.status === 'default' ? ' warnote' : '') + '">' +
       '<b>' + esc(financeKindName(loan.kind)) + '</b> · ' +
-      esc(FB.T('{amount} gold due {date}', {
+      esc(FB.T('{money:amount} due {date}', {
         amount:due, date:financeDate(loan.dueSeason, loan.dueYear)
       })) +
       '<br><span class="hint">' +
       esc(nominal
-        ? FB.T('Face value {face} nominal coin; its value in gold moves with prices.', {
+        ? FB.T('Face value {money:face} in nominal coin; its purchasing value moves with prices.', {
           face:financeAmount(loan.face)
         })
         : FB.T('Weight-denominated contract; price movement does not change the amount due.')) +
@@ -3493,7 +3494,7 @@ window.FB = window.FB || {};
     if (loan.status !== 'default') {
       h += '<button class="btn" data-finance-repay="' + loan.id + '"' +
         (canRepay ? '' : ' disabled') + ' style="margin-top:8px">' +
-        esc(FB.T('Repay now ({amount} gold)', { amount:due })) + '</button>';
+        esc(FB.T('Repay now ({money:amount})', { amount:due })) + '</button>';
     }
     return h + '</div>';
   }
@@ -3518,21 +3519,19 @@ window.FB = window.FB || {};
 
     h += panelh('Coin and household means') +
       '<div class="gm-body-text">' +
-      kv('Purse', esc(FB.T('{amount} gold', { amount:financeAmount(s.player.gold) }))) +
+      kv('Purse', esc(FB.T('{money:amount}', { amount:financeAmount(s.player.gold) }))) +
       kv('Price index', esc(financeAmount(e.price))) +
       kv('Last annual movement', esc(FB.T('{rate}%', {
         rate:(e.lastRate > 0 ? '+' : '') + financeAmount(e.lastRate * 100)
       }))) +
       kv('Coin and prices this year', '<span class="' +
         (e.lastAdjustment > 0 ? 'op-good' : e.lastAdjustment < 0 ? 'op-bad' : '') + '">' +
-        esc(FB.T('{amount} gold', {
-          amount:(e.lastAdjustment > 0 ? '+' : '') + financeAmount(e.lastAdjustment)
-        })) + '</span>') +
+        esc(FB.T('{money:amount}', { amount:financeAmount(e.lastAdjustment) })) + '</span>') +
       kv('Reliable seasonal net', '<span class="' +
         (FB.reliableGoldIncome(s) > 0 ? 'op-good' : 'op-bad') + '">' +
-        esc(FB.T('{amount} gold', { amount:financeAmount(FB.reliableGoldIncome(s)) })) +
+        esc(FB.T('{money:amount}', { amount:financeAmount(FB.reliableGoldIncome(s)) })) +
         '</span>') +
-      kv('Unsecured credit capacity', esc(FB.T('{amount} gold', {
+      kv('Unsecured credit capacity', esc(FB.T('{money:amount}', {
         amount:financeAmount(FB.financeCreditCapacity(s, null, false))
       }))) +
       kv('Defaults remembered', esc(e.defaults)) +
@@ -3557,7 +3556,7 @@ window.FB = window.FB || {};
     if (investments.length) {
       for (const inv of investments) {
         h += '<div class="progressnote"><b>' + esc(FB.tradePartnershipName(s)) + '</b> · ' +
-          esc(FB.T('{stake} gold at risk · matures {date}', {
+          esc(FB.T('{money:stake} at risk · matures {date}', {
             stake:inv.stake, date:financeDate(inv.dueSeason, inv.dueYear)
           })) + '</div>';
       }
@@ -3570,7 +3569,7 @@ window.FB = window.FB || {};
         const can = FB.canStartTradeInvestment(s, stake);
         h += '<button class="actionbtn" data-finance-invest="' + stake + '"' +
           (can ? '' : ' disabled') + '>🧭 ' +
-          esc(FB.T('Commit {stake} gold…', { stake:stake })) +
+          esc(FB.T('Commit {money:stake}…', { stake:stake })) +
           '<span class="adesc">' + esc(FB.T(
             'A four-season profit-sharing venture: productive risk, with no guaranteed return.')) +
           '</span></button>';
@@ -3627,12 +3626,12 @@ window.FB = window.FB || {};
       const offer = offers[i];
       const preview = FB.financeLoanPreview(s, offer);
       const details = offer.collateral
-        ? FB.T('Receive {principal} gold · {due} gold due {date} · pledge {asset}', {
+        ? FB.T('Receive {money:principal} · {money:due} due {date} · pledge {asset}', {
           principal:offer.principal, due:financeAmount(preview.dueNow),
           date:financeDate(preview.dueSeason, preview.dueYear),
           asset:financeAssetName(s, offer.collateral)
         })
-        : FB.T('Receive {principal} gold · {due} gold due {date}', {
+        : FB.T('Receive {money:principal} · {money:due} due {date}', {
           principal:offer.principal, due:financeAmount(preview.dueNow),
           date:financeDate(preview.dueSeason, preview.dueYear)
         });
@@ -3663,15 +3662,15 @@ window.FB = window.FB || {};
     const preview = FB.financeLoanPreview(s, offer);
     let h = '<div class="gm-body-text">' +
       '<p><b>' + esc(financeKindName(kind)) + '</b></p>' +
-      kv('Receive now', esc(FB.T('{amount} gold', { amount:offer.principal }))) +
-      kv('Current value due', esc(FB.T('{amount} gold', {
+      kv('Receive now', esc(FB.T('{money:amount}', { amount:offer.principal }))) +
+      kv('Current value due', esc(FB.T('{money:amount}', {
         amount:financeAmount(preview.dueNow)
       }))) +
       kv('Due', esc(financeDate(preview.dueSeason, preview.dueYear))) +
       kv('Pledged collateral', esc(financeAssetName(s, offer.collateral))) +
       '<p>' + esc(preview.denomination === 'real'
-        ? FB.T('This contract is reckoned by weight: price changes do not change the gold due.')
-        : FB.T('Face value: {face} nominal coin. What that face value can buy may rise or fall with prices.', {
+        ? FB.T('This contract is reckoned by weight: price changes do not change the amount due.')
+        : FB.T('Face value: {money:face} in nominal coin. What that face value can buy may rise or fall with prices.', {
           face:financeAmount(preview.face)
         })) + '</p>' +
       '<p><b>' + esc(FB.T('First missed payment:')) + '</b> ' +
@@ -3679,7 +3678,7 @@ window.FB = window.FB || {};
       '<p><b>' + esc(FB.T('Second missed payment:')) + '</b> ' +
       esc(financeDefaultText(s, preview)) + '</p></div>' +
       '<div class="gm-list"><button class="actionbtn" id="finance-sign">📜 ' +
-      esc(FB.T('Sign and receive {amount} gold', { amount:offer.principal })) +
+      esc(FB.T('Sign and receive {money:amount}', { amount:offer.principal })) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Confirm the contract'), h);
     $('finance-sign').addEventListener('click', function () {
@@ -3696,11 +3695,11 @@ window.FB = window.FB || {};
     if (!loan || loan.status === 'default') { UI.showFinance(); return; }
     const due = financeAmount(FB.financeDueNow(s, loan));
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Pay {amount} gold now and clear this obligation. There is no early-payment penalty.', {
+      'Pay {money:amount} now and clear this obligation. There is no early-payment penalty.', {
         amount:due
       })) + '</p></div><div class="gm-list">' +
       '<button class="actionbtn" id="finance-pay">⚖ ' +
-      esc(FB.T('Repay {amount} gold', { amount:due })) +
+      esc(FB.T('Repay {money:amount}', { amount:due })) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Repay early?'), h);
     $('finance-pay').addEventListener('click', function () {
@@ -3717,7 +3716,7 @@ window.FB = window.FB || {};
     const due = financeDateAfter(s, def.termSeasons);
     const h = '<div class="gm-body-text">' +
       kv('Contract', esc(FB.tradePartnershipName(s))) +
-      kv('Stake now', esc(FB.T('{amount} gold', { amount:stake }))) +
+      kv('Stake now', esc(FB.T('{money:amount}', { amount:stake }))) +
       kv('Maturity', esc(financeDate(due.season, due.year))) +
       kv('Risk of total loss', esc(FB.T('{amount}%', {
         amount:Math.round(def.risk * 100)
@@ -3725,7 +3724,7 @@ window.FB = window.FB || {};
       '<p>' + esc(FB.T(
         'This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.')) +
       '</p></div><div class="gm-list"><button class="actionbtn" id="finance-invest-confirm">🧭 ' +
-      esc(FB.T('Commit {amount} gold', { amount:stake })) +
+      esc(FB.T('Commit {money:amount}', { amount:stake })) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Confirm the partnership'), h);
     $('finance-invest-confirm').addEventListener('click', function () {
@@ -3740,7 +3739,7 @@ window.FB = window.FB || {};
     if (!FB.financeCanDebase(s)) { UI.showFinance(); return; }
     const preview = FB.financeDebasePreview(s);
     const h = '<div class="gm-body-text">' +
-      kv('Immediate seigniorage', esc(FB.T('{amount} gold', { amount:preview.gold }))) +
+      kv('Immediate seigniorage', esc(FB.T('{money:amount}', { amount:preview.gold }))) +
       kv('Price pressure', esc(FB.T('+{amount}% for {years} years', {
         amount:financeAmount(preview.pressure * 100), years:preview.years
       }))) +
@@ -3762,14 +3761,14 @@ window.FB = window.FB || {};
     if (!FB.financeCanRecoin(s)) { UI.showFinance(); return; }
     const preview = FB.financeRecoinPreview(s);
     const h = '<div class="gm-body-text">' +
-      kv('Cost now', esc(FB.T('{amount} gold', { amount:preview.cost }))) +
+      kv('Cost now', esc(FB.T('{money:amount}', { amount:preview.cost }))) +
       kv('Price pressure', esc(FB.T('{amount}% for {years} years', {
         amount:financeAmount(preview.pressure * 100), years:preview.years
       }))) +
       '<p>' + esc(FB.T(
         'Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under.')) +
       '</p></div><div class="gm-list"><button class="actionbtn" id="finance-recoin-confirm">⚖ ' +
-      esc(FB.T('Spend {amount} gold and restore the coin', { amount:preview.cost })) +
+      esc(FB.T('Spend {money:amount} and restore the coin', { amount:preview.cost })) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Restore the coinage?'), h);
     $('finance-recoin-confirm').addEventListener('click', function () {
@@ -3788,10 +3787,10 @@ window.FB = window.FB || {};
     for (const t of FB.holdingAvailable(s)) {
       const short = s.player.gold < t.def.cost;
       h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {cost} gold', {
+        esc(FB.T('{icon} {name} — {money:cost}', {
           icon: t.def.icon, name: dt(s, 'holding', t.id, t.def, 'name'), cost: t.def.cost
         })) + '<span class="adesc">' + esc(dt(s, 'holding', t.id, t.def, 'desc')) +
-        (short ? ' ' + esc(FB.T('(not enough gold)')) : '') + '</span></button>';
+        (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
     }
     h += '</div>';
     const done = FB.holdingList(s);
@@ -3840,9 +3839,9 @@ window.FB = window.FB || {};
         })) + '<span class="adesc">' +
         (full
           ? esc(FB.T('A manor-sized holding is assembled here.'))
-          : esc(FB.T('Buy the next plot for {cost} gold · seasonal yield {before} → {after}.', {
+          : esc(FB.T('Buy the next plot for {money:cost} · seasonal yield {money:before} → {money:after}.', {
             cost:cost, before:before, after:after
-          })) + (short ? ' ' + esc(FB.T('(not enough gold)')) : '')) +
+          })) + (short ? ' ' + esc(FB.T('(not enough money)')) : '')) +
         '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
@@ -3889,7 +3888,7 @@ window.FB = window.FB || {};
       const place = sts[e.settlement] ? sts[e.settlement].name : (pr ? pr.name : '?');
       h += '<button class="actionbtn" data-enterprise="' + esc(e.uid) + '">' +
         esc(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name')) +
-        '<span class="adesc">' + esc(FB.T('{place} · {worker} · about {gold} gold/season', {
+        '<span class="adesc">' + esc(FB.T('{place} · {worker} · about {money:gold}/season', {
           place:place,
           worker:worker ? FB.T('worked by {name}', { name:worker.name }) : FB.T('idle — no worker'),
           gold:Math.round(FB.enterpriseYield(s, e) * 10) / 10
@@ -3937,16 +3936,16 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-career-choice="' + item.id + '"' +
         (same || short ? ' disabled' : '') + '>' +
         esc(item.def.icon + ' ' + dt(s, 'career', item.id, item.def, 'name') +
-          (item.cost ? FB.T(' — {gold} gold', { gold:item.cost }) : '')) +
+          (item.cost ? FB.T(' — {money:gold}', { gold:item.cost }) : '')) +
         '<span class="adesc">' + esc(dt(s, 'career', item.id, item.def, 'desc')) +
-        (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough gold)')) : '') +
+        (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough money)')) : '') +
         '</span></button>';
     }
     const step = FB.guildAdvance(s, c);
     if (step) {
       const blocked = step.blocked || s.player.gold < step.cost;
       h += '<button class="actionbtn" id="career-guild"' + (blocked ? ' disabled' : '') + '>🏅 ' +
-        esc(FB.T('Seek the next guild rank — {rank} ({gold} gold)', {
+        esc(FB.T('Seek the next guild rank — {rank} ({money:gold})', {
           rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
         })) + '<span class="adesc">' +
         esc(step.blocked
@@ -3972,17 +3971,17 @@ window.FB = window.FB || {};
         h += '<button class="actionbtn" id="career-religious"' +
           (religiousAdvance.blocked ? ' disabled' : '') + '>🛐 ' +
           esc(faithStep.gold
-            ? FB.T('Seek the next religious rank — {rank} ({gold} gold)', {
+            ? FB.T('Seek the next religious rank — {rank} ({money:gold})', {
               rank:faithTitle, gold:faithStep.gold
             })
             : FB.T('Seek the next religious rank — {rank}', { rank:faithTitle })) +
           '<span class="adesc">' +
           esc(religiousAdvance.path.id.indexOf('_lay') >= 0
-            ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {gold} gold from the household.', {
+            ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
               age:faithStep.age || 0, piety:faithStep.piety || 0,
               prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
             })
-            : FB.T('Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {gold} gold from the household.', {
+            : FB.T('Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
               age:faithStep.age || 0, learning:faithStep.learning || 0,
               years:faithStep.years || 0, piety:faithStep.piety || 0,
               prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
@@ -4032,7 +4031,7 @@ window.FB = window.FB || {};
       const short = s.player.gold < item.cost;
       h += '<button class="actionbtn" data-enterprise-buy="' + item.id + '"' +
         (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {gold} gold', {
+        esc(FB.T('{icon} {name} — {money:gold}', {
           icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name'), gold:item.cost
         })) + '<span class="adesc">' + esc(dt(s, 'enterprise', item.id, item.def, 'desc')) +
         ' ' + esc(item.workers.length
@@ -4160,7 +4159,8 @@ window.FB = window.FB || {};
     if (c.id !== me.id) {
       h += '<button class="actionbtn" id="cm-befriend">🤝 Spend the day in their company' +
         '<span class="adesc">Warm their regard for you. (spends the day)</span></button>';
-      h += '<button class="actionbtn" id="cm-gift"' + (s.player.gold < 5 ? ' disabled' : '') + '>🎁 Send a gift (5 gold)' +
+      h += '<button class="actionbtn" id="cm-gift"' + (s.player.gold < 5 ? ' disabled' : '') + '>' +
+        esc(FB.T('🎁 Send a gift ({money:5})')) +
         '<span class="adesc">Silver speaks warmly. (spends the day)</span></button>';
       const isMySpouse = c.spouseId === me.id || c.id === me.spouseId;
       if (isMySpouse) {
@@ -4169,13 +4169,13 @@ window.FB = window.FB || {};
           const divCost = doc.divorce === 'sunder' ? 0 : (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0);
           if (doc.divorce === 'talaq') {
             h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>' + esc(FB.T('🕊 Pronounce the divorce ({gold} gold)', { gold: divCost })) +
+              '>' + esc(FB.T('🕊 Pronounce the divorce ({money:gold})', { gold: divCost })) +
               '<span class="adesc">' + esc(FB.T(
                 'Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)',
                 { name: c.name })) + '</span></button>';
           } else if (doc.divorce === 'get') {
             h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>' + esc(FB.T('📜 Grant a get ({gold} gold)', { gold: divCost })) +
+              '>' + esc(FB.T('📜 Grant a get ({money:gold})', { gold: divCost })) +
               '<span class="adesc">' + esc(FB.T(
                 'A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)',
                 { name: c.name })) + '</span></button>';
@@ -4186,8 +4186,8 @@ window.FB = window.FB || {};
         } else {
           const cdAn = s.player.cooldowns.annul !== undefined && s.turn - s.player.cooldowns.annul < 360;
           const canAn = s.player.gold >= 15 && s.player.piety >= 20 && !cdAn;
-          h += '<button class="actionbtn" id="cm-annul"' + (canAn ? '' : ' disabled') +
-            '>⛪ Petition to annul the marriage (15 gold, 20 piety)' +
+          h += '<button class="actionbtn" id="cm-annul"' + (canAn ? '' : ' disabled') + '>' +
+            esc(FB.T('⛪ Petition to annul the marriage ({money:15}, 20 piety)')) +
             '<span class="adesc">' + (cdAn ? 'The church will not hear the plea again so soon.' :
               'Some flaw in the vows, some closeness of blood — the church may be persuaded the marriage never was.') + '</span></button>';
         }
@@ -4347,8 +4347,8 @@ window.FB = window.FB || {};
         FB.news(s, FB.msg('news.social.divorce', {
           forms: {
             select: 'value', param: 'kind', cases: {
-              talaq: '🕊 You pronounce the divorce from {name}; the mahr of {cost} gold is paid.',
-              get: '📜 A get is written and witnessed; {name} departs with the ketubah of {cost} gold.',
+              talaq: '🕊 You pronounce the divorce from {name}; the mahr of {money:cost} is paid.',
+              get: '📜 A get is written and witnessed; {name} departs with the ketubah of {money:cost}.',
               other: '💔 Before witnesses, the marriage to {name} is declared sundered.'
             }
           }
@@ -4479,9 +4479,9 @@ window.FB = window.FB || {};
         FB.stationName(FB.stationOf(m)),
         FB.T('age {age}', { age: FB.ageOf(m, s.date.year) })
       ];
-      if (ask) details.push(FB.T('their kin ask a dowry of {gold} gold', { gold: ask }));
+      if (ask) details.push(FB.T('their kin ask a dowry of {money:gold}', { gold: ask }));
       if (m.dowryDue) {
-        details.push(FB.T('she would bring a dowry of {gold} gold', { gold: m.dowryDue }));
+        details.push(FB.T('she would bring a dowry of {money:gold}', { gold: m.dowryDue }));
       }
       if (need) {
         details.push(s.player.prestige >= need
@@ -4533,7 +4533,7 @@ window.FB = window.FB || {};
       ];
       const dowry = Math.round(FBDATA.balance.dowryByStation[st] || 0);
       if (dowry) {
-        details.push(FB.T('would bring a dowry of about {gold} gold', { gold: dowry }));
+        details.push(FB.T('would bring a dowry of about {money:gold}', { gold: dowry }));
       }
       details.push((m.sex === 'f' && age > 45) ? FB.T('🌱 past childbearing')
         : FB.T('🌱 fertility {percent}%', {
@@ -4599,14 +4599,14 @@ window.FB = window.FB || {};
       '<p><i>' + esc(dt(s, 'item', id, def, 'desc')) + '</i></p>' +
       (fx ? '<p>⚜ ' + esc(fx) + '</p>' : '<p class="cmeta">No power but its worth.</p>') +
       (fx && !viewOnly ? '<p class="cmeta">Its powers serve whoever heads the family.</p>' : '') +
-      '<p class="cmeta">' + esc(FB.T('Worth about {gold} gold.', { gold: def.value })) +
+      '<p class="cmeta">' + esc(FB.T('Worth about {money:gold}.', { gold: def.value })) +
       '</p></div>';
     if (owned && !pledged) {
       h += '<div class="gm-list">' +
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">A treasure warms regard as mere silver never could. (spends the day)</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
-        esc(FB.T('💰 Sell it ({gold} gold)', { gold: sell })) +
+        esc(FB.T('💰 Sell it ({money:gold})', { gold: sell })) +
         '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button></div>';
     } else if (pledged) {
       h += '<div class="progressnote warnote">' +
@@ -4842,7 +4842,7 @@ window.FB = window.FB || {};
       const def = FBDATA.schooling[id];
       const available = focus && FB.schoolingAvailable(s, c, id);
       const cur = currentSchool === id;
-      let reason = FB.T('{chance}% yearly · {amount} gold each season', {
+      let reason = FB.T('{chance}% yearly · {money:amount} each season', {
         chance:yearlyChance(def.chance), amount:def.cost || 0
       });
       if (!focus) reason = FB.T('Choose an education focus first.');
@@ -4861,7 +4861,7 @@ window.FB = window.FB || {};
     for (const cd of cands) {
       const cur = c.edu && c.edu.tutorId === cd.id;
       const detail = cd.c.role === 'tutor' ?
-        FB.T('{skill} · {amount} gold each season', {
+        FB.T('{skill} · {money:amount} each season', {
           skill:skillNote(cd.c), amount:FBDATA.schooling.master.cost
         }) :
         FB.T('{skill} · free', { skill:skillNote(cd.c) });
@@ -4871,7 +4871,7 @@ window.FB = window.FB || {};
     if (currentSchool !== 'master') {
       h += '<button class="actionbtn" data-tutor="~hire"' +
         (!focus || s.player.gold < FBDATA.schooling.master.cost ? ' disabled' : '') +
-        '>' + esc(FB.T('🎓 Hire a personal learned master ({amount} gold each season)', {
+        '>' + esc(FB.T('🎓 Hire a personal learned master ({money:amount} each season)', {
           amount:FBDATA.schooling.master.cost
         })) + '<span class="adesc">' + esc(masterDescription()) + '</span></button>';
     }
@@ -5057,7 +5057,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !s.player || s.player.dead) return;
     const me = s.chars[s.player.charId];
-    const title = stat === 'gold' ? FB.T('💰 Gold each season') :
+    const title = stat === 'gold' ? FB.T('💰 Money each season') :
       stat === 'prestige' ? FB.T('⭐ Prestige each season') :
       FB.religionOf(me.religion).icon + ' ' + FB.T('Piety each season');
     openModal(title, statBreakdownHtml(stat) +
@@ -5152,7 +5152,7 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text">' +
       '<p>' + esc(summary) + '</p>' +
       kv('Highest rank attained', esc(peakTitle)) +
-      kv('Final wealth', esc(FB.T('{amount} gold', { amount: Math.floor(s.player.gold) }))) +
+      kv('Final wealth', esc(FB.T('{money:amount}', { amount: s.player.gold }))) +
       kv('Prestige', Math.floor(s.player.prestige)) +
       kv('Piety', Math.floor(s.player.piety));
     if (s.legends && s.legends.length) {
@@ -5508,8 +5508,13 @@ window.FB = window.FB || {};
       });
     }
     h += '<div class="gm-body-text">' +
-      '<p>Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, balance). See <b>docs/MODDING.md</b> in the game folder for the format. You can also edit the files in <b>data/</b> directly.</p>' +
+      '<p>Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, currency, balance). See <b>docs/MODDING.md</b> in the game folder for the format. You can also edit the files in <b>data/</b> directly.</p>' +
       '<p>Mods stay on until removed, and saves remember their world — a life begun with a mod continues only while that mod is active.</p></div>' +
+      (FB.mods.currencyInvalid && FB.mods.currencyInvalid()
+        ? '<div class="progressnote warnote">' +
+          esc(FB.T('An active mod has an invalid currency definition. The default currency is being used.')) +
+          '</div>'
+        : '') +
       panelh('Active mods');
     if (mods.length) {
       for (let i = 0; i < mods.length; i++) {
@@ -5696,7 +5701,7 @@ window.FB = window.FB || {};
           tip.innerHTML = '<b>' + d.icon + ' ' + esc(dt(FB.state, 'item', iid, d, 'name')) + '</b> · ' +
             esc(rarityName(d.rarity)) + '<br>' + esc(dt(FB.state, 'item', iid, d, 'desc')) +
             (ifx ? '<br><i>' + esc(ifx) + '</i>' : '') +
-            '<br><i>' + esc(FB.T('worth ~{gold} gold', { gold: d.value })) + '</i>';
+            '<br><i>' + esc(FB.T('worth ~{money:gold}', { gold: d.value })) + '</i>';
         }
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();

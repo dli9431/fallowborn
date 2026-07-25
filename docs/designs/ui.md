@@ -38,13 +38,17 @@ does not traverse province and settlement dialogs for every work. Its nine build
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
 repeat copies in one county become 50% dearer each time. Exact settlement placement and
 permanent demolition remain available from the Land-tab settlement view.
-The topbar resources (gold/prestige/piety) are real buttons: hover shows the
+The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
 treasures, station upkeep, resident-family provisions, and school fees), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
-activation. The gold button uses `FBDATA.balance.coinageSymbol` when a mod supplies
-one, falling back to the default money-bag symbol; this is display-only.
+activation. The money button uses `FB.money`: compact formatting for its visible
+balance, the configured `icon` for the mark, and localized long denomination names
+for its accessible label. Compound amounts may therefore use multiple units without
+changing the underlying `player.gold`. The deprecated
+`FBDATA.balance.coinageSymbol` changes only the default icon when no full currency
+definition is active.
 
 Minor character sheets separate the education-focus picker from the instruction picker.
 Every school/tutor row shows the projected full-year directed-learning chance and exact
@@ -58,7 +62,7 @@ a narrow phone. The sheet shows purse, price index, last movement and purse adju
 reliable net income, credit capacity and defaults, exact loan faces/current values/dates,
 pledges, and investment maturities. Borrowing, investment, debasement, and recoinage use a
 final confirmation whose first action receives focus; every term and default consequence is
-visible above the buttons. The gold source sheet also carries a non-recurring **Coin and
+visible above the buttons. The money source sheet also carries a non-recurring **Coin and
 prices this year** line.
 
 The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Family,

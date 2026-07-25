@@ -13,7 +13,7 @@ FBDATA.events.push(
   text:{ default:'The masters of the craft drink together, set prices together, and bury each other’s dead. A seat at their bench costs silver — and buys a future.',
     muslim:'The masters of the craft eat together, set prices together, and bury each other’s dead. A seat at their bench costs silver — and buys a future.' },
   options:[
-    { label:'Pay the entry fee. (15 gold)', require:{ goldMin:15 }, desc:'Silver buys a name the craft will honor.', effects:{ gold:-15, setFlag:'guild_member', prestige:8, log:'Joined the craft guild.' } },
+    { label:'Pay the entry fee. ({money:15})', require:{ goldMin:15 }, desc:'Silver buys a name the craft will honor.', effects:{ gold:-15, setFlag:'guild_member', prestige:8, log:'Joined the craft guild.' } },
     { label:'Work outside the guild.', desc:'Freedom, and no friends at the bench.', effects:{ } }
   ]},
 { id:'masterwork', title:'The Masterwork',
@@ -29,9 +29,9 @@ FBDATA.events.push(
     custom:'finance_can_invest' }, weight:10, cooldown:6,
   text:'A caravan is forming for the long route — spice, cloth, and salt. Shares are open to any with silver and a strong stomach for risk.',
   options:[
-    { label:'Stake 20 gold.', desc:'The stake leaves now; the partnership returns in four seasons, if it returns at all.',
+    { label:'Stake {money:20}.', desc:'The stake leaves now; the partnership returns in four seasons, if it returns at all.',
       effects:{ custom:'finance_trade_20' } },
-    { label:'Stake 50 gold.', require:{ goldMin:50 }, desc:'A larger four-season partnership risks more coin on the same distant roads.',
+    { label:'Stake {money:50}.', require:{ goldMin:50 }, desc:'A larger four-season partnership risks more coin on the same distant roads.',
       effects:{ custom:'finance_trade_50' } },
     { label:'Keep your coin at home.', desc:'No risk, no profit, no stories.', effects:{ } }
   ]},
@@ -111,7 +111,7 @@ FBDATA.events.push(
   options:[
     { label:'Take your share of houses — not the {temple}.', desc:'Honest plunder, if plunder can be honest.', effects:{ gold:10, piety:-2 } },
     { label:'Strip the {temple} too.', desc:'Rich pickings, with {god} watching.', effects:{ gold:25, piety:-15, prestige:-5, custom:'loot_item' } },
-    { label:'Guard the {temple} door.', desc:'No gold in it, but the priests will remember.', effects:{ piety:12, prestige:6, opinion:{role:'priest', amt:10} } }
+    { label:'Guard the {temple} door.', desc:'No coin in it, but the priests will remember.', effects:{ piety:12, prestige:6, opinion:{role:'priest', amt:10} } }
   ]},
 { id:'wardeath_friend', title:'An Empty Place at the Fire',
   trigger:{ professions:['soldier'], flags:['seen_battle'], hasRole:'friend', chance:0.15 }, wartime:true, weight:5, once:true,
@@ -168,9 +168,9 @@ FBDATA.events.push(
   ]},
 { id:'bishops_mitre', title:'A Mitre Within Reach',
   trigger:{ professions:['monk','priest'], religionGroups:['christian'], sex:'m', flags:['abbot'], notFlags:['bishop'], pietyMin:150, chance:0.2 }, weight:8, once:true,
-  text:'The bishop’s seat stands empty, and the metropolitan hints it can be yours — for merit, or for a “gift to the church” of two hundred gold.',
+  text:'The bishop’s seat stands empty, and the metropolitan hints it can be yours — for merit, or for a “gift to the church” of {money:200}.',
   options:[
-    { label:'Pay the gift.', require:{ goldMin:200 }, desc:'Two hundred gold buys the seat — and {god}’s raised eyebrow.',
+    { label:'Pay the gift.', require:{ goldMin:200 }, desc:'{money:200} buys the seat — and {god}’s raised eyebrow.',
       effects:{ gold:-200, tierSet:3, prestige:50, piety:-10, setFlag:'bishop', log:'Bought the bishop’s mitre.' } },
     { label:'Trust to merit alone.', desc:'Merit against money; money usually wins.', chance:0.35,
       success:{ text:'Against all cynics, holiness prevails. The mitre is yours.', effects:{ tierSet:3, prestige:60, piety:20, setFlag:'bishop', log:'Elevated to bishop!' } },
@@ -208,9 +208,9 @@ FBDATA.events.push(
   ]},
 { id:'chief_qadi', title:'The Emir’s Justice',
   trigger:{ professions:['monk','priest'], religionGroups:['muslim'], sex:'m', flags:['qadi'], notFlags:['chief_qadi'], pietyMin:150, chance:0.2 }, weight:8, once:true,
-  text:'The emir requires a chief judge for the whole province, and hints the appointment can be yours — for merit, or for a “gift to the treasury” of two hundred gold.',
+  text:'The emir requires a chief judge for the whole province, and hints the appointment can be yours — for merit, or for a “gift to the treasury” of {money:200}.',
   options:[
-    { label:'Pay the gift.', require:{ goldMin:200 }, desc:'Two hundred gold buys the seat — and {god}’s raised eyebrow.',
+    { label:'Pay the gift.', require:{ goldMin:200 }, desc:'{money:200} buys the seat — and {god}’s raised eyebrow.',
       effects:{ gold:-200, tierSet:3, prestige:50, piety:-10, setFlag:'chief_qadi', log:'Bought the chief judgeship.' } },
     { label:'Trust to merit alone.', desc:'Merit against money; money usually wins.', chance:0.35,
       success:{ text:'Against all cynics, learning prevails. The judgeship is yours.', effects:{ tierSet:3, prestige:60, piety:20, setFlag:'chief_qadi', log:'Raised to Grand Qadi!' } },
@@ -254,7 +254,7 @@ FBDATA.events.push(
     { label:'Fight in the melee.', desc:'Prize and glory for the winner; bruises for the rest.', chance:'battle',
       success:{ text:'You unhorse two men and yield to none. The prize purse and the glory are yours.', effects:{ gold:12, prestige:15, skills:{mar:1}, opinion:{role:'lord', amt:8} } },
       failure:{ text:'A mace you never saw ends your day early.', effects:{ health:-2, prestige:2 } } },
-    { label:'Wager on the champion.', require:{ goldMin:5 }, desc:'Five gold says another man bleeds for you.', chance:0.5,
+    { label:'Wager on the champion.', require:{ goldMin:5 }, desc:'{money:5} says another man bleeds for you.', chance:0.5,
       success:{ text:'Your man carries the field.', effects:{ gold:8 } },
       failure:{ text:'Your man eats mud in the first pass.', effects:{ gold:-5 } } }
   ]},
@@ -272,7 +272,7 @@ FBDATA.events.push(
   text:'{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”',
   options:[
     { label:'Kneel and swear.', desc:'A tower, a banner, and a lord above you.', effects:{ tierSet:3, prestige:60, custom:'record_liege_grant', log:'Granted a barony — a lord at last!' } },
-    { label:'Decline, but ask for gold.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'public_refusal'} } },
+    { label:'Decline, but ask for coin.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'public_refusal'} } },
     { label:'Decline graciously.', desc:'Remain gentry, without turning the refusal into an insult.', effects:{ } }
   ]},
 { id:'feud_gentry', title:'An Affair of Honor',
@@ -311,7 +311,7 @@ FBDATA.events.push(
   trigger:{ professions:['merchant'], goldMin:15, chance:0.15 }, weight:5, cooldown:12,
   text:'A foreign merchant — silk cuffs, careful eyes — proposes a joint venture: your local knowledge, his distant markets.',
   options:[
-    { label:'Shake on it. (risk 15 gold)', desc:'His markets could pay richly — or swallow your stake.', chance:0.6,
+    { label:'Shake on it. (risk {money:15})', desc:'His markets could pay richly — or swallow your stake.', chance:0.6,
       success:{ text:'His letters prove good as gold. The partnership pays handsomely.', effects:{ gold:12, skills:{dip:1, ste:1} } },
       failure:{ text:'The letters stop coming. So does the money.', effects:{ gold:-15 } } },
     { label:'Trade information only.', desc:'No coin risked; knowledge travels both ways.', effects:{ skills:{ste:1}, worldNews:true } },
@@ -321,7 +321,7 @@ FBDATA.events.push(
   trigger:{ professions:['merchant'], goldMin:8, chance:0.15 }, weight:5, cooldown:10,
   text:'A storm-broken cargo goes under the hammer, sight unseen: sodden bales that might be ruined wool — or sea-stained silk.',
   options:[
-    { label:'Bid on the lot. (8 gold)', desc:'Silk or rotten wool — the hammer decides.', chance:0.5,
+    { label:'Bid on the lot. ({money:8})', desc:'Silk or rotten wool — the hammer decides.', chance:0.5,
       success:{ text:'Under the ruined top layer: silk, barely touched.', effects:{ gold:10, skills:{ste:1} } },
       failure:{ text:'Wool. Rotten. All of it.', effects:{ gold:-8 } } },
     { label:'Watch others gamble.', desc:'Learn what a wreck is worth at no cost.', effects:{ skills:{ste:1} } }
@@ -330,7 +330,7 @@ FBDATA.events.push(
   trigger:{ professions:['soldier'], chance:0.2 }, weight:6, cooldown:8,
   text:'A grizzled sergeant taps your shoulder with a practice blade: “Young ones always think it’s about strength. Care to learn otherwise, for a wager?”',
   options:[
-    { label:'Take the wager. (2 gold)', require:{ goldMin:2 }, desc:'Two gold says youth beats cunning.', chance:'battle',
+    { label:'Take the wager. ({money:2})', require:{ goldMin:2 }, desc:'{money:2} says youth beats cunning.', chance:'battle',
       success:{ text:'You catch him older and slower than his stories. The garrison hoots; he pays with a grin.', effects:{ gold:2, prestige:2, skills:{mar:1} } },
       failure:{ text:'It is not about strength. You pay up, aching in new places — and wiser.', effects:{ gold:-2, skills:{mar:1} } } },
     { label:'Watch him school someone else.', desc:'Free lessons from the safe side of the yard.', effects:{ skills:{mar:1} } }

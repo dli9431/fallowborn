@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.51.5';
+  FB.VERSION = '1.52.0';
   FB.CHANGELOG = [
+    { v: '1.52.0', date: '2026-07-24', changes: [
+      'Currency mods can now define single or compound denominations used throughout prices, events, ledgers, and the household purse.'
+    ] },
     { v: '1.51.5', date: '2026-07-24', changes: [
       'On touch, event choices accept deliberate taps sooner while still rejecting instant repeated taps.'
     ] },
@@ -1427,7 +1430,7 @@ window.FB = window.FB || {};
       craven: FB.msg('legend.trait.craven', 'Attended every battle from the safety of the rear.', {}),
       ambitious: FB.msg('legend.trait.ambitious', 'Wanted more. Got a grave, which is technically more.', {}),
       content: FB.msg('legend.trait.content', 'Wanted nothing, received exactly that, and was pleased.', {}),
-      greedy: FB.msg('legend.trait.greedy', 'Left instructions about the gold. Nobody can find them.', {}),
+      greedy: FB.msg('legend.trait.greedy', 'Left instructions about the money. Nobody can find them.', {}),
       generous: FB.msg('legend.trait.generous', 'Gave away everything except the debts.', {}),
       cruel: FB.msg('legend.trait.cruel', 'Feared in life; the mourning is largely procedural.', {}),
       kind: FB.msg('legend.trait.kind', 'Genuinely mourned, which surprised no one more than them.', {}),

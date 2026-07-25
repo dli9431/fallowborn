@@ -51,7 +51,10 @@ STRUCTURED_DATA = {
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text")
-TOKEN_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
+TOKEN_RE = re.compile(
+    r"\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))"
+    r"|(?:[A-Za-z_][A-Za-z0-9_]*))\}"
+)
 EMOJI_BASE = "[\u2600-\u27bf\U0001f000-\U0001faff]"
 EMOJI_RE = re.compile(
     f"(?:{EMOJI_BASE})(?:[\ufe0e\ufe0f\U0001f3fb-\U0001f3ff]|"
@@ -623,6 +626,32 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]),
                         )
 
+    currency = node_object(
+        find_assignment(DATA / "map_data.js", "FBDATA", "currency")
+    ) or {}
+    currency_id = node_string(currency.get("id")) or "default"
+    for field in ("label",):
+        for branch, record, line in branch_records(currency.get(field)):
+            inv.add(
+                f"currency.{currency_id}.{field}.{branch}",
+                record,
+                f"data/map_data.js:{line}",
+                f"Built-in currency {currency_id}, {field}.",
+                TOKEN_RE.findall(record["text"]),
+            )
+    for index, unit_node in enumerate(node_array(currency.get("units")) or []):
+        unit = node_object(unit_node) or {}
+        unit_id = node_string(unit.get("id")) or str(index)
+        for field in ("singular", "plural"):
+            for branch, record, line in branch_records(unit.get(field)):
+                inv.add(
+                    f"currency.{currency_id}.units.{unit_id}.{field}.{branch}",
+                    record,
+                    f"data/map_data.js:{line}",
+                    f"Built-in currency {currency_id}, unit {unit_id}, {field}.",
+                    TOKEN_RE.findall(record["text"]),
+                )
+
     titles = node_object(find_assignment(DATA / "map_data.js", "FBDATA", "titles")) or {}
     for group, values_node in titles.items():
         for index, value in enumerate(node_array(values_node) or []):
@@ -1055,7 +1084,7 @@ def restore(text: str, saved: dict[str, str]) -> str:
 
 
 PROTECTED_RE = re.compile(
-    rf"(?:\{{[A-Za-z_][A-Za-z0-9_]*\}}|{EMOJI_RE.pattern})"
+    rf"(?:{TOKEN_RE.pattern}|{EMOJI_RE.pattern})"
 )
 
 

@@ -1,6 +1,6 @@
 # Mod-configurable currency presentation
 
-Status: proposed
+Status: implemented
 
 ## Goal
 

@@ -134,6 +134,7 @@ A JSON mod is one object with any of these keys:
   "items":     { "id": { ... } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."] },
+  "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
   "balance":   { "freedomCost": 30, "coinageSymbol": "£" },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
 }
@@ -147,6 +148,102 @@ second one.
 > a life from waking up on the wrong map, every save is stamped with a fingerprint of the
 > active mod set — loading it under a different mod set is refused with a message saying
 > which world it needs (the load dialog marks such slots too).
+
+## Currency presentation
+
+The optional top-level `currency` object changes how every monetary amount is
+displayed. It does not change the economy: `player.gold`, event `gold` effects,
+`goldMin` gates, prices, loans, and balance values remain numbers in internal game
+gold. One game gold is converted only while text is rendered, and formatted strings
+are never stored in a save.
+
+A full pounds/shillings/pence definition is:
+
+```json
+{
+  "name": "Sterling Currency",
+  "currency": {
+    "id": "sterling",
+    "label": "Sterling",
+    "icon": "£",
+    "smallestPerGold": 240,
+    "units": [
+      {
+        "id": "pound",
+        "value": 240,
+        "symbol": "£",
+        "singular": "pound",
+        "plural": "pounds",
+        "position": "before",
+        "space": false
+      },
+      {
+        "id": "shilling",
+        "value": 12,
+        "symbol": "s",
+        "singular": "shilling",
+        "plural": "shillings",
+        "position": "after",
+        "space": false
+      },
+      {
+        "id": "penny",
+        "value": 1,
+        "symbol": "d",
+        "singular": "penny",
+        "plural": "pence",
+        "position": "after",
+        "space": false
+      }
+    ],
+    "showZeroMinor": false,
+    "maxUnits": 3
+  }
+}
+```
+
+`smallestPerGold` is the number of smallest display units represented by one
+internal game gold. Each unit's `value` uses that same scale. The example renders
+`12.525` game gold as `£12 10s 6d` without changing the stored `12.525`.
+
+Schema rules:
+
+- `id`, `label`, and `icon` are nonempty plain-text strings.
+- `smallestPerGold` is a positive integer.
+- `units` has one to four entries, in strictly descending `value` order.
+- Unit ids and positive integer values are unique; the final value must be `1`.
+- Every unit supplies plain-text `symbol`, `singular`, and `plural`, a `position`
+  of `before` or `after`, and a Boolean `space`.
+- `showZeroMinor` defaults to `false`.
+- `maxUnits` defaults to the denomination count and is clamped to that count.
+
+The final enabled or pasted mod that supplies `currency` wins as one atomic
+definition; denomination arrays are not merged. An invalid definition falls back
+to the complete built-in currency while the rest of the mod still loads.
+
+A decimal currency changes the scale and units in the same way:
+
+```json
+{
+  "currency": {
+    "id": "dollars",
+    "label": "Dollars",
+    "icon": "$",
+    "smallestPerGold": 100,
+    "units": [
+      { "id": "dollar", "value": 100, "symbol": "$", "singular": "dollar",
+        "plural": "dollars", "position": "before", "space": false },
+      { "id": "cent", "value": 1, "symbol": "¢", "singular": "cent",
+        "plural": "cents", "position": "after", "space": false }
+    ]
+  }
+}
+```
+
+A single-unit currency uses `smallestPerGold: 1` and one unit with `value: 1`.
+The older `balance.coinageSymbol` option remains a deprecated compatibility alias:
+when no full `currency` is supplied it changes only the topbar icon. A full
+`currency` definition takes precedence.
 
 ## The map
 
@@ -429,6 +526,12 @@ appeal/revoke pickers and vassal events); `{cname}` is the county named by `ctx.
 `{god}`/`{holy}`/`{temple}` adapt to the player's faith (God/priest/church,
 Allah/imam/mosque, the gods/godi/shrine…) — prefer them over hard-coded religious words so
 events read correctly for every culture.
+
+Use `{money:parameter}` wherever a numeric context value is money, for example
+`"The price is {money:itemprice}."`. Declarative text may use a numeric literal,
+such as `"Pay and pass. ({money:2})"`. The renderer formats the fragment using the
+active currency; do not write a symbol or the word "gold" beside it. Translations
+must preserve the complete typed token exactly.
 
 ### Tailoring events to faith and culture
 
@@ -794,8 +897,9 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 
 See `data/cultures.js` and `data/traits.js` for the exact shapes — they are self-describing.
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
-`balance.coinageSymbol` is a display-only string for the topbar purse icon; omit it to keep
-the default money bag. It does not rename gold or alter resource amounts, costs, or contracts.
+The top-level `currency` presentation schema is documented above. The deprecated
+`balance.coinageSymbol` alias changes only the topbar purse icon when no full currency
+definition is active; it never renames internal gold or alters amounts, costs, or contracts.
 `mortalityBase` scales the whole yearly mortality curve for player and kin alike
 (0.012 is the as-authored baseline; halve it for longer lives, raise it for a crueler age).
 That includes the wider-family simulation: `kinMarryChance` and `kinChildChance` are the

@@ -61,7 +61,7 @@ FBDATA.events.push(
   trigger:{ never:true }, /* queued by FB.parliamentYearly while the liege fights */
   text:'War has emptied {liege}’s coffers, and the estates are summoned to refill them: a subsidy, voted lord by lord, “for the defense of the realm.” The steward’s clerk has already written your name on the roll, with a space beside it for a number.',
   options:[
-    { label:'Vote the subsidy, and give generously. (20 gold)', require:{ goldMin:20 }, desc:'The crown’s gratitude, on the record.', effects:{ custom:'parliament_subsidy_pay', prestige:2 } },
+    { label:'Vote the subsidy, and give generously. ({money:20})', require:{ goldMin:20 }, desc:'The crown’s gratitude, on the record.', effects:{ custom:'parliament_subsidy_pay', prestige:2 } },
     { label:'Speak against it.', desc:'Wars are the lord’s affair — let the lord’s treasure pay for them.', effects:{ opinionLiege:-8, prestige:2 } }
   ]},
 

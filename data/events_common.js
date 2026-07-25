@@ -94,7 +94,7 @@ FBDATA.events.push(
   trigger:{ never:true }, /* fired from the spouse's character sheet (Christians only) */
   text:'You lay your case before the church: some closeness of blood overlooked, some defect in the vows. The marriage to {spouse}, you argue, never truly was. Learned men stroke their beards; a donation changes hands.',
   options:[
-    { label:'Press the plea.', desc:'15 gold and 20 piety ride on the church’s judgment.',
+    { label:'Press the plea.', desc:'{money:15} and 20 piety ride on the church’s judgment.',
       require:{ goldMin:15, pietyMin:20 }, chance:'annulment',
       success:{ text:'The judgment comes down: null and void from the first day. {spouse} returns to their kin, and you stand free before {god}.',
         effects:{ gold:-15, piety:-20, custom:'annul_granted', log:'The church annulled the marriage.' } },
@@ -220,7 +220,7 @@ FBDATA.events.push(
   trigger:{ never:true },
   text:'The old injury has found a name. Before neighbors and kin, {rival} declares that no friendship stands between your houses and that every slight will be answered.',
   options:[
-    { label:'Offer amends before witnesses. (5 gold)', require:{ goldMin:5 },
+    { label:'Offer amends before witnesses. ({money:5})', require:{ goldMin:5 },
       desc:'Acknowledge the injury and put silver behind the apology.',
       effects:{ gold:-5, opinion:{role:'rival', amt:20}, rivalHeat:-20 } },
     { label:'Call for a mediator.', desc:'Neither pride nor anger gets the final word.',
@@ -243,7 +243,7 @@ FBDATA.events.push(
     pagan:'An elder seats you and {rival} before the assembly. The terms are old and plain: compensation for the injury, hands clasped before witnesses, and no private revenge.',
     jewish:'A respected elder seats you and {rival} before witnesses. The terms are plain: restitution for the injury and a sworn end to the quarrel.' },
   options:[
-    { label:'Offer fair amends. (10 gold)', require:{ goldMin:10 },
+    { label:'Offer fair amends. ({money:10})', require:{ goldMin:10 },
       desc:'Silver admits that an injury was done without making you crawl.', chance:'rival_peace',
       effects:{ gold:-10, opinion:{role:'rival', amt:15}, rivalHeat:-15 },
       success:{ text:'The purse changes hands. Your enemy names the injury answered, and the witnesses bind you both to peace.',
@@ -315,7 +315,7 @@ FBDATA.events.push(
   trigger:{ chance:0.15, hasRole:'friend', goldMin:5 }, weight:5, cooldown:12,
   text:'{friend} comes to you at dusk, shame-faced. A debt is due, and the collector is not a patient man.',
   options:[
-    { label:'Pay it. (5 gold)', desc:'A debt forgotten is a friend kept.', effects:{ gold:-5, opinion:{role:'friend', amt:25}, prestige:3 } },
+    { label:'Pay it. ({money:5})', desc:'A debt forgotten is a friend kept.', effects:{ gold:-5, opinion:{role:'friend', amt:25}, prestige:3 } },
     { label:'Offer sympathy only.', desc:'Kind words pay no collectors.', effects:{ opinion:{role:'friend', amt:-15}, rivalContact:{role:'friend', score:1, cause:'refused_aid'} } }
   ]},
 
@@ -450,9 +450,9 @@ FBDATA.events.push(
     { label:'Send him on his way.', desc:'Curiosity is cheap; its prizes are not.', effects:{ } }
   ]},
 { id:'item_offer', title:'An Unusual Offer', trigger:{ never:true },
-  text:'From wrappings of oiled cloth comes {item}. The price is {itemprice} gold — and worth it twice over, says the seller, to the right person.',
+  text:'From wrappings of oiled cloth comes {item}. The price is {money:itemprice} — and worth it twice over, says the seller, to the right person.',
   options:[
-    { label:'Buy it. ({itemprice} gold)', require:{ custom:'can_afford_item' }, desc:'Heavy coin for a thing that may outlast you.', effects:{ custom:'buy_item' } },
+    { label:'Buy it. ({money:itemprice})', require:{ custom:'can_afford_item' }, desc:'Heavy coin for a thing that may outlast you.', effects:{ custom:'buy_item' } },
     { label:'Too rich for you.', desc:'Let some other purse be lightened.', effects:{ custom:'clear_item_offer' } }
   ]},
 { id:'artifact_found', title:'Out of the Earth',
@@ -482,8 +482,8 @@ FBDATA.events.push(
     { label:'Share news at the well.', desc:'Gossip is a currency too.', effects:{ skills:{dip:1}, worldNews:true } },
     { label:'Preach to the villagers.', require:{ professions:['monk','priest'] }, desc:'A ready ear is a small congregation.', effects:{ piety:4, popularOpinion:2 } },
     { label:'Hear the villagers’ grievances.', require:{ tierMin:3 }, desc:'The smallfolk remember who listened.', effects:{ popularOpinion:4, prestige:1 } },
-    { label:'Rest at the ale-house. (2 gold)', require:{ religionGroups:['christian','pagan','jewish'], goldMin:2 }, desc:'A bench, a cup, an hour’s peace.', effects:{ health:1, gold:-2 } },
-    { label:'Rest at the way-house. (2 gold)', require:{ religionGroups:['muslim'], goldMin:2 }, desc:'A quiet corner and a full cup.', effects:{ health:1, gold:-2 } }
+    { label:'Rest at the ale-house. ({money:2})', require:{ religionGroups:['christian','pagan','jewish'], goldMin:2 }, desc:'A bench, a cup, an hour’s peace.', effects:{ health:1, gold:-2 } },
+    { label:'Rest at the way-house. ({money:2})', require:{ religionGroups:['muslim'], goldMin:2 }, desc:'A quiet corner and a full cup.', effects:{ health:1, gold:-2 } }
   ]},
 { id:'visit_town', title:'{settlement}', trigger:{ never:true },
   text:'Market stalls, a smithy’s clangor, and strangers enough that no one stares. {settlement} has walls of a sort, laws of a sort, and coin for those who know their trade.',
