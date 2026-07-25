@@ -5,6 +5,208 @@ window.FB = window.FB || {};
   'use strict';
 
   FB.world = null;
+  FB.activeBookmark = null;
+  FB.activeBookmarkId = null;
+
+  var worldCache = {};
+  var WORLD_FIELDS = ['provinces','realms','duchies','kingdoms','empires','straits','scripted'];
+
+  function bookmarkDefinition(id) {
+    var bookmarks = FBDATA.bookmarks || {};
+    return bookmarks[id] || null;
+  }
+
+  FB.bookmark = function (id) {
+    return bookmarkDefinition(String(id || FBDATA.defaultBookmark || '867'));
+  };
+
+  FB.bookmarks = function (includeHidden) {
+    var out = [], bookmarks = FBDATA.bookmarks || {};
+    for (var id in bookmarks) {
+      if (!Object.prototype.hasOwnProperty.call(bookmarks, id)) continue;
+      if (!bookmarks[id] || !bookmarks[id].id || !bookmarks[id].date) continue;
+      if (!includeHidden && FB.mods && FB.mods.bookmarkAvailable &&
+          !FB.mods.bookmarkAvailable(id)) continue;
+      out.push(bookmarks[id]);
+    }
+    out.sort(function (a, b) {
+      return (a.date.year - b.date.year) || (a.date.season - b.date.season) ||
+        (a.date.day - b.date.day);
+    });
+    return out;
+  };
+
+  function topDefinitionRealm(realms, rid) {
+    var cur = rid, seen = {};
+    while (cur && realms[cur] && realms[cur].liege) {
+      if (seen[cur]) return null;
+      seen[cur] = 1;
+      cur = realms[cur].liege;
+    }
+    return cur;
+  }
+
+  function validRulerProfile(ruler) {
+    return !!ruler && !!ruler.name && (ruler.sex === 'm' || ruler.sex === 'f') &&
+      !!FBDATA.cultures[ruler.culture] && isFinite(ruler.born) &&
+      isFinite(ruler.mar) && !!FBDATA.traits[ruler.trait];
+  }
+
+  /* Activation is also the runtime schema gate for base and mod-provided
+     bookmarks. Returning all faults together makes a broken atomic world much
+     easier for a mod author to repair than failing at its first bad county. */
+  FB.validateBookmark = function (definition) {
+    var errors = [];
+    var label = definition && definition.id ? definition.id : '?';
+    function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
+    if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
+    var date = definition.date || {};
+    if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
+        date.day < 1 || date.day > 90) fault('invalid start date.');
+    for (var wf = 0; wf < WORLD_FIELDS.length; wf++) {
+      var worldField = WORLD_FIELDS[wf];
+      if (definition[worldField] === undefined || definition[worldField] === null) {
+        fault('missing ' + worldField + '.');
+      }
+    }
+
+    var provinces = Array.isArray(definition.provinces) ? definition.provinces : [];
+    var realmsList = Array.isArray(definition.realms) ? definition.realms : [];
+    var duchies = definition.duchies || {}, kingdoms = definition.kingdoms || {};
+    var empires = definition.empires || {}, provinceIds = {}, realms = {};
+    for (var pi = 0; pi < provinces.length; pi++) {
+      var province = provinces[pi];
+      if (!province || !province.id) { fault('province at index ' + pi + ' has no id.'); continue; }
+      if (provinceIds[province.id]) fault('duplicate province id ' + province.id + '.');
+      provinceIds[province.id] = province;
+    }
+    for (var ri = 0; ri < realmsList.length; ri++) {
+      var realm = realmsList[ri];
+      if (!realm || !realm.id) { fault('realm at index ' + ri + ' has no id.'); continue; }
+      if (realms[realm.id]) fault('duplicate realm id ' + realm.id + '.');
+      realms[realm.id] = realm;
+    }
+
+    for (var rid in realms) {
+      if (!Object.prototype.hasOwnProperty.call(realms, rid)) continue;
+      var realmDef = realms[rid];
+      if (realmDef.liege && !realms[realmDef.liege]) {
+        fault('realm ' + rid + ' has missing liege ' + realmDef.liege + '.');
+      }
+      if (topDefinitionRealm(realms, rid) === null) fault('realm ' + rid + ' has a liege cycle.');
+      var capital = provinceIds[realmDef.capital];
+      if (!capital || capital.wasteland) fault('realm ' + rid + ' has invalid capital ' + realmDef.capital + '.');
+      if (capital && !capital.wasteland && capital.realm !== rid) {
+        fault('realm ' + rid + ' does not own its capital.');
+      }
+      if (realmDef.ruler) {
+        if (!validRulerProfile(realmDef.ruler)) {
+          fault('realm ' + rid + ' has an invalid ruler profile.');
+        }
+      }
+    }
+
+    for (var pvi = 0; pvi < provinces.length; pvi++) {
+      var pr = provinces[pvi];
+      if (!pr || !pr.id || pr.wasteland) continue;
+      if (!realms[pr.realm]) fault('province ' + pr.id + ' has invalid realm ' + pr.realm + '.');
+      if (!pr.duchy || !duchies[pr.duchy]) fault('province ' + pr.id + ' has invalid duchy ' + pr.duchy + '.');
+      if (!FBDATA.cultures[pr.culture]) fault('province ' + pr.id + ' has invalid culture ' + pr.culture + '.');
+      if (!FBDATA.religions[pr.religion]) fault('province ' + pr.id + ' has invalid faith ' + pr.religion + '.');
+      if (!isFinite(pr.dev) || pr.dev < 1 || pr.dev > 10) {
+        fault('province ' + pr.id + ' has development outside 1–10.');
+      }
+    }
+    for (var did in duchies) {
+      if (!Object.prototype.hasOwnProperty.call(duchies, did)) continue;
+      if (!duchies[did].kingdom || !kingdoms[duchies[did].kingdom]) {
+        fault('duchy ' + did + ' has invalid kingdom ' + duchies[did].kingdom + '.');
+      }
+    }
+    for (var kid in kingdoms) {
+      if (!Object.prototype.hasOwnProperty.call(kingdoms, kid)) continue;
+      if (!kingdoms[kid].empire || !empires[kingdoms[kid].empire]) {
+        fault('kingdom ' + kid + ' has invalid empire ' + kingdoms[kid].empire + '.');
+      }
+    }
+
+    var straits = Array.isArray(definition.straits) ? definition.straits : [];
+    var straitKeys = {};
+    for (var si = 0; si < straits.length; si++) {
+      var strait = straits[si];
+      if (!Array.isArray(strait) || strait.length !== 2 ||
+          !provinceIds[strait[0]] || !provinceIds[strait[1]] || strait[0] === strait[1]) {
+        fault('broken strait at index ' + si + '.');
+        continue;
+      }
+      if (provinceIds[strait[0]].wasteland || provinceIds[strait[1]].wasteland) {
+        fault('strait at index ' + si + ' ends in wasteland.');
+      }
+      var skey = strait[0] < strait[1] ? strait[0] + '|' + strait[1] : strait[1] + '|' + strait[0];
+      if (straitKeys[skey]) fault('duplicate strait ' + skey + '.');
+      straitKeys[skey] = 1;
+    }
+
+    var scripts = Array.isArray(definition.scripted) ? definition.scripted : [];
+    var scriptIds = {};
+    for (var ei = 0; ei < scripts.length; ei++) {
+      var event = scripts[ei] || {};
+      var season = event.season === undefined ? 0 : event.season;
+      var day = event.day === undefined ? 1 : event.day;
+      if (!isFinite(event.year) || season < 0 || season > 3 || day < 1 || day > 90) {
+        fault('scripted event at index ' + ei + ' has an invalid date.');
+      }
+      if ((event.season !== undefined || event.day !== undefined) && !event.id) {
+        fault('precise scripted event at index ' + ei + ' requires a stable id.');
+      }
+      if (event.id) {
+        if (!/^[a-z0-9_-]+$/i.test(event.id) || scriptIds[event.id]) {
+          fault('invalid or duplicate scripted id ' + event.id + '.');
+        }
+        scriptIds[event.id] = 1;
+      }
+      if (event.realm && !realms[event.realm]) {
+        fault('scripted event at index ' + ei + ' has invalid realm ' + event.realm + '.');
+      }
+      if (!event.newRealm && !event.realm) {
+        fault('scripted event at index ' + ei + ' has no acting realm.');
+      }
+      if (event.newRealm) {
+        if (!event.newRealm.id || !/^[a-z0-9_]+$/i.test(event.newRealm.id) ||
+            realms[event.newRealm.id] || !provinceIds[event.newRealm.capital] ||
+            provinceIds[event.newRealm.capital].wasteland ||
+            (event.newRealm.liege && !realms[event.newRealm.liege]) ||
+            (event.newRealm.ruler && !validRulerProfile(event.newRealm.ruler))) {
+          fault('scripted event at index ' + ei + ' has an invalid new realm.');
+        }
+      }
+      var targets = Array.isArray(event.targets) ? event.targets : [];
+      if (!targets.length) fault('scripted event at index ' + ei + ' has no targets.');
+      for (var ti = 0; ti < targets.length; ti++) {
+        if (!provinceIds[targets[ti]]) {
+          fault('scripted event at index ' + ei + ' targets missing province ' + targets[ti] + '.');
+        }
+      }
+    }
+    return errors;
+  };
+
+  function installDefinition(definition) {
+    for (var i = 0; i < WORLD_FIELDS.length; i++) {
+      FBDATA[WORLD_FIELDS[i]] = definition[WORLD_FIELDS[i]];
+    }
+    FB.activeBookmark = definition;
+    FB.activeBookmarkId = definition.id;
+    if (FB.resetWorldDataCaches) FB.resetWorldDataCaches();
+    if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+    if (FB.indexEventMessages) FB.indexEventMessages();
+  }
+
+  function bindWorld(world) {
+    FB.world = world;
+    if (FB.map && FB.map.canvas && FB.map.useWorld) FB.map.useWorld();
+  }
 
   /* ================= MAP GENERATION ================= */
 
@@ -36,8 +238,8 @@ window.FB = window.FB || {};
     return out;
   }
 
-  /* Async world build. progress(frac, msg), done() */
-  FB.generateWorld = function (progress, done) {
+  /* Async world build. progress(frac, msg), done(world) */
+  function buildWorld(progress, done) {
     const gridW = 1100;
     FB.initProjection(gridW);
     const W = FB.proj.W, H = FB.proj.H;
@@ -175,9 +377,48 @@ window.FB = window.FB || {};
         if (si < steps.length) { setTimeout(step, 0); return; }
       }
       progress(1, 'The world is made.');
-      done();
+       done(FB.world);
+     }
+     setTimeout(step, 0);
+  }
+
+  /* The one callback-based switcher used by boot, new-game previews, and save
+     restoration. Raster results are cached per atomic bookmark for the rest of
+     the page session; map input remains wired to the same visible canvas. */
+  FB.activateBookmark = function (id, progress, done) {
+    var definition = bookmarkDefinition(String(id || FBDATA.defaultBookmark || '867'));
+    progress = progress || function () {};
+    done = done || function () {};
+    if (!definition) {
+      setTimeout(function () { done(new Error('Unknown bookmark: ' + id)); }, 0);
+      return;
     }
-    setTimeout(step, 0);
+    var errors = FB.validateBookmark(definition);
+    if (errors.length) {
+      setTimeout(function () { done(new Error(errors.join('\n'))); }, 0);
+      return;
+    }
+    installDefinition(definition);
+    if (worldCache[definition.id]) {
+      bindWorld(worldCache[definition.id]);
+      progress(1, 'The world is made.');
+      setTimeout(function () { done(null, definition); }, 0);
+      return;
+    }
+    buildWorld(progress, function (world) {
+      worldCache[definition.id] = world;
+      bindWorld(world);
+      done(null, definition);
+    });
+  };
+
+  /* Compatibility for old callers and mods: generate the public/default 867
+     world. New core code calls FB.activateBookmark directly. */
+  FB.generateWorld = function (progress, done) {
+    FB.activateBookmark(FBDATA.defaultBookmark || '867', progress, function (error) {
+      if (error) throw error;
+      if (done) done();
+    });
   };
 
   FB.provinceAtGrid = function (gx, gy) {
@@ -279,6 +520,12 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.resetWorldDataCaches = function () {
+    dejureCounties = null;
+    kingdomCountyLists = {};
+    rc = { turn: -1, dirty: true, provs: null, strength: null, held: null };
+  };
+
   FB.initPolitics = function (state) {
     state.owner = {}; state.dev = {}; state.realms = {}; state.holder = {};
     // authored realms (kings, emperors, independent dukes, authored vassals)
@@ -288,7 +535,7 @@ window.FB = window.FB || {};
         id: r.id, name: r.name, color: r.color, capital: r.capital,
         aggression: r.aggression !== undefined ? r.aggression : 1,
         rank: r.rank || 3, liege: r.liege || null,
-        alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish'),
+        alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish', r.ruler, state.date.year),
         war: null, op: 0
       };
     }
@@ -353,7 +600,8 @@ window.FB = window.FB || {};
       id: opts.id, name: opts.name,
       color: shade(state.realms[top] ? state.realms[top].color : '#888888', opts.id),
       capital: opts.capital, aggression: 0, rank: opts.rank || 1, liege: opts.liege,
-      alive: true, ruler: makeRuler(opts.culture || 'frankish'), war: null,
+      alive: true, ruler: makeRuler(opts.culture || 'frankish', null,
+        state.date && state.date.year), war: null,
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
@@ -376,12 +624,26 @@ window.FB = window.FB || {};
   FB.RULER_TRAITS = ['ambitious', 'content', 'greedy', 'generous', 'cruel', 'kind',
     'deceitful', 'honest', 'proud', 'humble', 'zealous', 'cynical', 'wrathful', 'patient'];
 
-  function makeRuler(culture) {
+  function makeRuler(culture, authored, year) {
+    if (authored) {
+      return {
+        name: authored.name,
+        sex: authored.sex,
+        culture: authored.culture,
+        born: authored.born,
+        age: Math.max(0, (year || (FB.activeBookmark && FB.activeBookmark.date.year) || 867) - authored.born),
+        mar: authored.mar,
+        trait: authored.trait,
+        generation: 1
+      };
+    }
+    const age = FB.ri(20, 55);
     return {
       name: FB.randomName(culture, 'm'),
       sex: 'm',
       culture: culture,
-      age: FB.ri(20, 55),
+      born: year === undefined ? undefined : year - age,
+      age: age,
       mar: FB.ri(2, 14),
       trait: FB.pick(FB.RULER_TRAITS),
       generation: 1
@@ -470,7 +732,7 @@ window.FB = window.FB || {};
     if (!r || !r.alive || rid === 'player') return null;
     if (!r.ruler) {
       const cap = FB.world.byId[r.capital];
-      r.ruler = makeRuler(cap ? cap.culture : 'frankish');
+      r.ruler = makeRuler(cap ? cap.culture : 'frankish', null, state.date && state.date.year);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
     if (!r.succession || !r.succession.members) {
@@ -683,6 +945,7 @@ window.FB = window.FB || {};
       name: c ? c.name : heir.name,
       sex: c ? c.sex : heir.sex,
       culture: c ? c.culture : r.ruler.culture,
+      born: c ? c.born : heir.born,
       age: c ? FB.ageOf(c, state.date.year) : Math.max(0, state.date.year - heir.born),
       mar: c ? FB.skillOf(c, 'mar') : FB.ri(2, 14),
       trait: c && c.traits && c.traits.length ? c.traits[0] : FB.pick(FB.RULER_TRAITS),
@@ -1113,37 +1376,64 @@ window.FB = window.FB || {};
 
   /* ================= YEARLY WORLD TICK ================= */
 
-  FB.worldTick = function (state) {
-    const B = FBDATA.balance;
-    FB.ensureDynasticState(state);
-    // scripted history
-    const scripted = FBDATA.scripted || [];
-    for (let scriptedIndex = 0; scriptedIndex < scripted.length; scriptedIndex++) {
-      const ev = scripted[scriptedIndex];
-      if (ev.year !== state.date.year || state.flags['scripted_' + ev.year + '_' + (ev.newRealm ? ev.newRealm.id : ev.realm)]) continue;
-      state.flags['scripted_' + ev.year + '_' + (ev.newRealm ? ev.newRealm.id : ev.realm)] = 1;
-      let rid = ev.realm;
+  function dateNumber(date) {
+    return date.year * 360 + date.season * 90 + (date.day - 1);
+  }
+
+  function scriptedFlag(event) {
+    var subject = event.newRealm ? event.newRealm.id : event.realm;
+    if (!event.id && event.season === undefined && event.day === undefined) {
+      // Exact compatibility with the flags already present in old 867 saves.
+      return 'scripted_' + event.year + '_' + subject;
+    }
+    return 'scripted_' + (FB.activeBookmarkId || '867') + '_' +
+      (event.id || (event.year + '_' + subject));
+  }
+
+  /* Scripted history is checked after every calendar advance. Legacy entries
+     mean Spring day 1 and retain their old flag/message identities; precise
+     entries carry stable bookmark/event ids and may land on any campaign day. */
+  FB.scriptedTick = function (state) {
+    var scripted = FBDATA.scripted || [];
+    for (var scriptedIndex = 0; scriptedIndex < scripted.length; scriptedIndex++) {
+      var ev = scripted[scriptedIndex];
+      var due = {
+        year:ev.year,
+        season:ev.season === undefined ? 0 : ev.season,
+        day:ev.day === undefined ? 1 : ev.day
+      };
+      var flag = scriptedFlag(ev);
+      if (dateNumber(state.date) < dateNumber(due) || state.flags[flag]) continue;
+      state.flags[flag] = 1;
+      var rid = ev.realm;
       if (ev.newRealm) {
         rid = ev.newRealm.id;
-        const cap = FB.world.byId[ev.newRealm.capital];
+        var cap = FB.world.byId[ev.newRealm.capital];
         state.realms[rid] = {
           id: rid, name: ev.newRealm.name, color: ev.newRealm.color,
           capital: ev.newRealm.capital,
           aggression: ev.newRealm.aggression !== undefined ? ev.newRealm.aggression : 1,
           rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
-          alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic'), war: null, op: 0
+          alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic',
+            ev.newRealm.ruler, state.date.year), war: null, op: 0
         };
         FB.ensureRealmSuccession(state, rid);
       }
       if (state.realms[rid] && state.realms[rid].alive) {
-        for (const pid of ev.targets) {
+        for (var targetIndex = 0; targetIndex < ev.targets.length; targetIndex++) {
+          var pid = ev.targets[targetIndex];
           if (state.owner[pid] !== undefined && state.owner[pid] !== 'player') FB.transferProvince(state, pid, rid);
         }
       }
-      const scriptedKey = FB.scriptedMessageKey(ev);
+      var scriptedKey = FB.scriptedMessageKey(ev);
       FB.registerMessage(scriptedKey, { text: '📜 ' + ev.news });
       FB.news(state, FB.message(scriptedKey, {}));
     }
+  };
+
+  FB.worldTick = function (state) {
+    const B = FBDATA.balance;
+    FB.ensureDynasticState(state);
 
     // realm AI
     for (const id in state.realms) {

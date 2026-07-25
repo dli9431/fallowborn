@@ -50,3 +50,9 @@ when it was raised are not reversed.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
 walls in battle.
+
+**Initial development belongs to the bookmark.** On a new campaign,
+`state.dev[provinceId]` is copied from the active bookmark's county definition. Thus
+the 867 and 1066 snapshots can value the same enduring county differently without
+pre-building holdings, granting technologies, or changing the building rules.
+After initialization, development lives only in state and advances normally.

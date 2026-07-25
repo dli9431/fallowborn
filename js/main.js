@@ -343,40 +343,58 @@ window.FB = window.FB || {};
      string before initPolitics and character generation draw on it — see
      docs/designs/seeds.md. Two shareable forms:
      - world seed: any text normalized to A-Z0-9 (fresh ones are base36)
-     - start code: SEED-SCENARIO-PROVINCE-SEX-NAME (the menu shows this one) */
+     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME
+       (legacy five-part codes imply bookmark 867) */
 
   // a fresh seed is one-time seed initialization — the legitimate Math.random use
   function freshSeed() {
     return ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0).toString(36).toUpperCase();
   }
 
-  function seedCode(seed, scenId, provId, sex, name) {
+  function seedCode(seed, bookmarkId, scenId, provId, sex, name) {
     const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
-    return seed + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
+    return seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
   }
 
   /* parse what a player pasted: a full start code, a bare world seed, or an
-     error to show inline. A 5-part shape must validate as a code — silently
-     falling back to a bare seed would hand them a different world than the
-     one their friend shared. */
+     error to show inline. Five- and six-part shapes must validate as codes —
+     silently falling back to a bare seed would hand them another world. */
   function parseSeedInput(raw) {
     const txt = (raw || '').trim();
     if (!txt) return { error: 'Paste a start code or world seed first.' };
     const parts = txt.split('-');
     if (parts.length >= 5) {
       const bad = 'That start code doesn’t parse — check it was copied whole.';
-      if (parts.length !== 5) return { error: bad };
+      if (parts.length !== 5 && parts.length !== 6) return { error: bad };
       const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const scen = G.SCENARIOS.filter(function (s) { return s.id === parts[1].toLowerCase(); })[0];
-      const prov = FB.world.byId[parts[2].toLowerCase()];
-      const sex = parts[3].toLowerCase();
-      const name = parts[4].replace(/_/g, ' ').trim();
+      const legacy = parts.length === 5;
+      const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
+      const bookmark = FB.bookmark(bookmarkId);
+      if (bookmark && FB.mods && FB.mods.bookmarkAvailable &&
+          !FB.mods.bookmarkAvailable(bookmarkId)) {
+        return { error: FB.mods.bookmarkWarning() };
+      }
+      const scenarioPart = legacy ? 1 : 2;
+      const provincePart = legacy ? 2 : 3;
+      const sexPart = legacy ? 3 : 4;
+      const namePart = legacy ? 4 : 5;
+      const scen = G.SCENARIOS.filter(function (s) {
+        return s.id === parts[scenarioPart].toLowerCase();
+      })[0];
+      const prov = bookmark && bookmark.provinces.filter(function (p) {
+        return p.id === parts[provincePart].toLowerCase();
+      })[0];
+      const sex = parts[sexPart].toLowerCase();
+      const name = parts[namePart].replace(/_/g, ' ').trim();
       if (!seed || !scen || !prov || prov.wasteland || (sex !== 'm' && sex !== 'f') ||
         !name || name.length > 20) return { error: bad };
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
       }
-      return { seed: seed, scenario: scen, provinceId: prov.id, sex: sex, name: name };
+      return {
+        seed:seed, bookmarkId:bookmarkId, scenario:scen,
+        provinceId:prov.id, sex:sex, name:name
+      };
     }
     const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!bare) return { error: 'That seed has no usable letters or digits.' };
@@ -395,12 +413,16 @@ window.FB = window.FB || {};
       FB.mods.applyStored();
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
-      FB.generateWorld(
+      FB.activateBookmark(FBDATA.defaultBookmark || '867',
         function (frac, msg) {
           $('loadbar').style.width = Math.round(frac * 100) + '%';
           $('loadmsg').textContent = FB.T(msg);
         },
-        function () {
+        function (error) {
+          if (error) {
+            $('loadmsg').textContent = error.message;
+            return;
+          }
           FB.map.init($('map'));
           FB.ui.wire();
           wireMenus();
@@ -441,7 +463,8 @@ window.FB = window.FB || {};
     $('btn-settings').addEventListener('click', function () { FB.ui.showSettings(); });
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
     $('btn-changelog').addEventListener('click', function () { FB.ui.showChangelog(); });
-    $('btn-ng-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
+    $('btn-bm-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
+    $('btn-ng-back').addEventListener('click', function () { showBookmarks(); });
     $('btn-pick-back').addEventListener('click', function () {
       G.pickMode = false;
       document.body.classList.remove('picking');
@@ -478,10 +501,10 @@ window.FB = window.FB || {};
   function showNewGame() {
     let h = '<div class="gm-list">' +
       '<button class="actionbtn" id="ng-fresh">🌱 Fresh start' +
-      '<span class="adesc">A new seed is rolled — your own 867 to shape.</span></button>' +
+      '<span class="adesc">A new seed is rolled — choose which age will be yours to shape.</span></button>' +
       '</div>' +
       '<div class="gm-body-text" style="margin-top:10px"><p>…or play a start someone shared:</p></div>' +
-      '<input id="ng-seed" type="text" maxlength="60" placeholder="' +
+      '<input id="ng-seed" type="text" maxlength="96" placeholder="' +
       FB.esc(FB.T('Paste a start code or world seed')) + '">' +
       '<div id="ng-seed-err" class="hint"></div>' +
       '<div class="gm-list">' +
@@ -492,7 +515,7 @@ window.FB = window.FB || {};
     $('ng-fresh').addEventListener('click', function () {
       FB.ui.closeModal();
       G.pending = { seed: freshSeed() };
-      showScenarios();
+      showBookmarks();
     });
     $('ng-cancel').addEventListener('click', FB.ui.closeModal);
     function useSeed() {
@@ -500,13 +523,19 @@ window.FB = window.FB || {};
       if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); return; }
       FB.ui.closeModal();
       if (r.scenario) { // a full start code: straight to the pre-filled details
-        const pr = FB.world.byId[r.provinceId];
-        G.pending = { seed: r.seed, scenario: r.scenario, provinceId: r.provinceId,
-          culture: pr.culture, religion: pr.religion, sex: r.sex, name: r.name };
-        showChargen();
+        G.pending = {
+          seed:r.seed, bookmarkId:r.bookmarkId, scenario:r.scenario,
+          provinceId:r.provinceId, sex:r.sex, name:r.name
+        };
+        activatePendingBookmark(r.bookmarkId, function () {
+          const pr = FB.world.byId[r.provinceId];
+          G.pending.culture = pr.culture;
+          G.pending.religion = pr.religion;
+          showChargen();
+        });
       } else {
         G.pending = { seed: r.seed };
-        showScenarios();
+        showBookmarks();
       }
     }
     $('ng-seed-go').addEventListener('click', useSeed);
@@ -515,7 +544,58 @@ window.FB = window.FB || {};
     });
   }
 
+  function activatePendingBookmark(id, next) {
+    FB.ui.showScreen('loading');
+    $('loadbar').style.width = '0%';
+    $('loadmsg').textContent = FB.T('Drawing the known world…');
+    FB.activateBookmark(id, function (frac, msg) {
+      $('loadbar').style.width = Math.round(frac * 100) + '%';
+      $('loadmsg').textContent = FB.T(msg);
+    }, function (error, bookmark) {
+      if (error) {
+        FB.ui.showScreen('title');
+        FB.ui.openModal('Bookmark unavailable',
+          '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>' +
+          '<button class="btn primary" id="gm-go">' + FB.esc(FB.T('Close')) + '</button>');
+        $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
+        return;
+      }
+      G.pending = G.pending || {};
+      G.pending.bookmarkId = bookmark.id;
+      next();
+    });
+  }
+
+  function showBookmarks() {
+    const box = $('bookmarklist');
+    box.innerHTML = '';
+    const bookmarks = FB.bookmarks(false);
+    for (const bookmark of bookmarks) {
+      const el = document.createElement('button');
+      el.className = 'scencard';
+      el.innerHTML = '<h3>' + FB.esc(FB.T('{season} {year} — {name}', {
+        season:FB.seasonName(bookmark.date.season),
+        year:bookmark.date.year, name:FB.L(bookmark.name || bookmark.id)
+      })) + '</h3><p>' + FB.esc(FB.L(bookmark.desc || '')) + '</p>';
+      (function (selected) {
+        el.addEventListener('click', function () {
+          activatePendingBookmark(selected.id, showScenarios);
+        });
+      })(bookmark);
+      box.appendChild(el);
+    }
+    const note = $('bookmark-note');
+    const warning = FB.mods && FB.mods.bookmarkWarning ? FB.mods.bookmarkWarning() : '';
+    note.textContent = warning ? FB.T(warning) : '';
+    note.classList.toggle('hidden', !warning);
+    FB.ui.showScreen('bookmarks');
+  }
+
   function showScenarios() {
+    const bookmark = FB.activeBookmark;
+    $('ng-heading').textContent = FB.T('Choose Your Beginning — Anno Domini {year}', {
+      year:bookmark.date.year
+    });
     const box = $('scenariolist');
     box.innerHTML = '';
     for (const sc of G.SCENARIOS) {
@@ -525,7 +605,12 @@ window.FB = window.FB || {};
         FB.esc(FB.L(sc.diff)) + '</div><p>' + FB.esc(FB.L(sc.desc)) + '</p>';
       (function (scenario) {
         el.addEventListener('click', function () {
-          G.pending = { seed: G.pending && G.pending.seed, scenario: scenario, provinceId: null };
+          G.pending = {
+            seed:G.pending && G.pending.seed,
+            bookmarkId:bookmark.id,
+            scenario:scenario,
+            provinceId:null
+          };
           showPickProv();
         });
       })(sc);
@@ -549,7 +634,7 @@ window.FB = window.FB || {};
     $('game').classList.remove('hidden');
     G.pickMode = true;
     document.body.classList.add('picking'); // mobile: hides the fixed time bar
-    // paint the 867 map from static data (no game state yet)
+    // paint the selected bookmark from static data (no game state yet)
     const realmById = {};
     for (const r of FBDATA.realms) realmById[r.id] = r;
     function topOf(rid) { // resolve authored vassal realms to their sovereign
@@ -593,8 +678,8 @@ window.FB = window.FB || {};
     const realm = FBDATA.realms.filter(function (r) { return r.id === pr.realm0; })[0];
     const culture = FB.cultureOf(pr.culture);
     const religion = FB.religionOf(pr.religion);
-    el.innerHTML = '<b>' + FB.esc(pr.name) + '</b> — ' +
-      FB.esc(realm ? realm.name : FB.T('independent')) + ' · ' +
+    el.innerHTML = '<b>' + FB.esc(FB.L(pr.name)) + '</b> — ' +
+      FB.esc(realm ? FB.L(realm.name) : FB.T('independent')) + ' · ' +
       FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
         { text: culture.name }, {})) + ' · ' +
       FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
@@ -602,6 +687,7 @@ window.FB = window.FB || {};
   }
 
   function showChargen() {
+    const bookmark = FB.activeBookmark;
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
@@ -618,15 +704,18 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[G.pending.provinceId];
     const culture = FB.cultureOf(pr.culture);
     const religion = FB.religionOf(pr.religion);
+    $('cg-era-hint').textContent = FB.T(
+      'Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance.',
+      { year:bookmark.date.year });
     $('cg-summary').innerHTML = '<b>' + FB.esc(FB.T('{scenario} in {province}', {
-      scenario: FB.L(G.pending.scenario.name), province: pr.name
+      scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
     })) + '</b><br>' +
       FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
         { text: culture.name }, {})) + ' · ' +
       FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
         { text: religion.name }, {})) + ' · ' +
       FB.esc(FB.T('beginning in {year} AD, aged {age}.', {
-        year: FBDATA.balance.startYear, age: FBDATA.balance.startAge
+        year: bookmark.date.year, age: FBDATA.balance.startAge
       })) + '<br>' + FB.esc(FB.T('🔑 World seed:')) + ' <b>' +
       FB.esc(G.pending.seed || '') + '</b> — ' +
       FB.esc(FB.T('once your story begins, the ☰ menu holds the full start code to share.'));
@@ -641,6 +730,11 @@ window.FB = window.FB || {};
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
     FB.seedRng(FB.hashSeed(seedStr));
+    const bookmark = FB.activeBookmark;
+    const start = {
+      id:bookmark.id, year:bookmark.date.year,
+      season:bookmark.date.season, day:bookmark.date.day
+    };
     const sc = G.pending.scenario;
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
@@ -650,8 +744,9 @@ window.FB = window.FB || {};
 
     const state = {
       v: 2,
-      seed: seedCode(seedStr, sc.id, provId, sex, name), // the start actually taken, edits included
-      date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
+      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name),
+      start: start,
+      date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
       itemInstances: {}, itemNextId: 1,
@@ -679,11 +774,12 @@ window.FB = window.FB || {};
     };
     FB.state = state;
     FB.initPolitics(state);
+    FB.scriptedTick(state);
     scheduleSlots(state);
 
     const me = FB.makeCharacter(state, {
       name: name, sex: sex, culture: pr.culture, religion: pr.religion,
-      born: FBDATA.balance.startYear - FBDATA.balance.startAge,
+      born: start.year - FBDATA.balance.startAge,
       quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
     });
     me.health = 8;
@@ -776,11 +872,17 @@ window.FB = window.FB || {};
     // watchers share worlds too: a bare seed re-seeds the home pick and politics
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
     FB.seedRng(FB.hashSeed(seedStr));
+    const bookmark = FB.activeBookmark;
+    const start = {
+      id:bookmark.id, year:bookmark.date.year,
+      season:bookmark.date.season, day:bookmark.date.day
+    };
     const home = FB.pick(FB.world.provs.filter(function (p) { return !p.wasteland; }));
     const state = {
       v: 2,
       seed: seedStr,
-      date: { year: FBDATA.balance.startYear, season: FBDATA.balance.startSeason, day: 1 },
+      start:start,
+      date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
       itemInstances: {}, itemNextId: 1,
@@ -802,11 +904,12 @@ window.FB = window.FB || {};
     };
     FB.state = state;
     FB.initPolitics(state);
+    FB.scriptedTick(state);
     // a placeholder soul, never shown — some panels dereference it blindly
     const me = FB.makeCharacter(state, {
       name: FB.randomName(home.culture, 'm'), sex: 'm',
       culture: home.culture, religion: home.religion,
-      born: FBDATA.balance.startYear - 30, quality: 0, traitsN: 0
+      born: start.year - 30, quality: 0, traitsN: 0
     });
     state.player.charId = me.id;
 
@@ -860,6 +963,7 @@ window.FB = window.FB || {};
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
+    FB.scriptedTick(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1705,7 +1809,7 @@ window.FB = window.FB || {};
 
   /* shared wake-up for a save read from a slot or pasted as export text;
      false when the life belongs to another mod world */
-  G.loadData = function (data) {
+  G.loadData = function (data, afterLoad) {
     // a life cannot wake up in the wrong world: the map ids would not fit
     if (FB.save.otherWorld(data)) {
       FB.ui.toast(data.mods ?
@@ -1713,26 +1817,44 @@ window.FB = window.FB || {};
         '🧩 That life was lived in the unmodded world. Remove all mods (Mods menu) to continue it.');
       return false;
     }
-    FB.save.restore(data);
-    FB.syncPlayerCareer(FB.state);
-    if (FB.travelEnsure) FB.travelEnsure(FB.state);
-    if (FB.travelValidate) FB.travelValidate(FB.state);
-    G.observe = false;
-    document.body.classList.remove('observing');
-    G.pickMode = false;
-    G.paused = true;
-    FB.ui.mapDirty();
-    FB.map.playerProv = FB.state.player.provinceId;
-    FB.ui.showGame();
-    const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
-    FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
-    FB.map.select(null);
-    FB.ui.refresh();
-    FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
-      season: FB.seasonName(FB.state.date.season),
-      year: FB.state.date.year
+    const bookmarkId = FB.save.bookmarkOf(data);
+    if (!FB.bookmark(bookmarkId)) {
+      FB.ui.toast('That life uses a starting date this game does not know.');
+      return false;
+    }
+    FB.ui.showScreen('loading');
+    $('loadbar').style.width = '0%';
+    FB.activateBookmark(bookmarkId, function (frac, msg) {
+      $('loadbar').style.width = Math.round(frac * 100) + '%';
+      $('loadmsg').textContent = FB.T(msg);
+    }, function (error) {
+      if (error) {
+        FB.ui.showScreen('title');
+        FB.ui.toast('That life’s world could not be activated.');
+        return;
+      }
+      FB.save.restore(data);
+      FB.syncPlayerCareer(FB.state);
+      if (FB.travelEnsure) FB.travelEnsure(FB.state);
+      if (FB.travelValidate) FB.travelValidate(FB.state);
+      G.observe = false;
+      document.body.classList.remove('observing');
+      G.pickMode = false;
+      G.paused = true;
+      FB.ui.mapDirty();
+      FB.map.playerProv = FB.state.player.provinceId;
+      FB.ui.showGame();
+      const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
+      FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
+      FB.map.select(null);
+      FB.ui.refresh();
+      FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
+        season: FB.seasonName(FB.state.date.season),
+        year: FB.state.date.year
+      });
+      FB.save.warnIfBlocked();
+      if (afterLoad) afterLoad();
     });
-    FB.save.warnIfBlocked();
     return true;
   };
 

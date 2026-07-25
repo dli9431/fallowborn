@@ -1423,6 +1423,10 @@ window.FB = window.FB || {};
       .replace(/[^A-Za-z0-9_-]/g, '_');
   }
   FB.scriptedMessageKey = function (item) {
+    if (item && item.id) {
+      return 'news.world.scripted.' + scriptedPart(FB.activeBookmarkId || '867') + '.' +
+        scriptedPart(item.id);
+    }
     const subject = item && item.newRealm && item.newRealm.id
       ? item.newRealm.id
       : (item && item.realm);

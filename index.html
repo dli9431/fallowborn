@@ -38,9 +38,19 @@
     <p class="credits"><span data-i18n="A one-file-folder game for the browser">A one-file-folder game for the browser</span> &middot; <span data-i18n="all art procedural">all art procedural</span> &middot; <span data-i18n="moddable">moddable</span> &middot; <span id="title-version"></span></p>
   </div>
 
+  <!-- ======== NEW GAME: BOOKMARK ======== -->
+  <div id="bookmarks" class="screen hidden">
+    <h2 data-i18n="Choose a Starting Date">Choose a Starting Date</h2>
+    <div id="bookmarklist"></div>
+    <p id="bookmark-note" class="hint hidden"></p>
+    <div class="row gap">
+      <button id="btn-bm-back" class="btn" data-i18n="Back">Back</button>
+    </div>
+  </div>
+
   <!-- ======== NEW GAME: SCENARIO ======== -->
   <div id="newgame" class="screen hidden">
-    <h2 data-i18n="Choose Your Beginning — Anno Domini 867">Choose Your Beginning &mdash; Anno Domini 867</h2>
+    <h2 id="ng-heading" data-i18n="Choose Your Beginning">Choose Your Beginning</h2>
     <div id="scenariolist"></div>
     <div class="row gap">
       <button id="btn-ng-back" class="btn" data-i18n="Back">Back</button>
@@ -69,7 +79,7 @@
         <label class="radio"><input type="radio" name="cg-sex" value="m" checked> <span data-i18n="Man">Man</span></label>
         <label class="radio"><input type="radio" name="cg-sex" value="f"> <span data-i18n="Woman">Woman</span></label>
       </div>
-      <p class="hint" data-i18n="Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.">Playing a woman in 867 is a harder road: some doors open only by marriage, others only by defiance.</p>
+      <p id="cg-era-hint" class="hint">Playing a woman is a harder road: some doors open only by marriage, others only by defiance.</p>
       <div id="cg-summary" class="pickinfo"></div>
     </div>
     <div class="row gap">
@@ -93,7 +103,7 @@
         <button type="button" class="stat" id="tb-piety" data-stat="piety" aria-label="Piety" data-i18n-aria-label="Piety">&#128591; 0</button>
         <span class="stat" id="tb-health" title="Health" data-i18n-title="Health">&#10084;&#65039; 10</span>
       </div>
-      <div id="tb-date">Spring 867</div>
+      <div id="tb-date">&mdash;</div>
       <button id="btn-menu" class="btn small" title="Menu" aria-label="Menu"
         data-i18n-title="Menu" data-i18n-aria-label="Menu">&#9776;</button>
     </div>
@@ -188,6 +198,7 @@
 <script src="data/map_data.js"></script>
 <script src="data/counties.js"></script>
 <script src="data/cultures.js"></script>
+<script src="data/bookmarks.js"></script>
 <script src="data/traits.js"></script>
 <script src="data/economy.js"></script>
 <script src="data/travel.js"></script>

@@ -26,6 +26,7 @@ JS = ROOT / "js"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
+BOOKMARK_FILE = DATA / "bookmarks.js"
 SOURCE_FILES = [
     ROOT / "index.html",
     *[
@@ -625,6 +626,70 @@ def extract_structured(inv: Inventory) -> None:
                             f"{namespace} {item_id}, rank {rank_id}, faith branch {branch}.",
                             TOKEN_RE.findall(record["text"]),
                         )
+
+    # World names are display data, but ruler profiles are proper names. The
+    # compact county rows and realm(...) bookmark helper calls need a narrow
+    # static extractor so historical ruler names never enter the catalogs.
+    counties_text = (DATA / "counties.js").read_text(encoding="utf-8")
+    for match in re.finditer(
+        r"\['([^']+)','([^']*)',-?[\d.]+,-?[\d.]+,(?:'d_[^']+'|null)",
+        counties_text,
+    ):
+        province_id, name = match.group(1), match.group(2)
+        line = counties_text.count("\n", 0, match.start()) + 1
+        inv.add(
+            f"province.{province_id}.name.default",
+            {"text": name},
+            f"data/counties.js:{line}",
+            f"Province {province_id}, display name.",
+            (),
+        )
+
+    realms_867 = node_array(
+        find_assignment(DATA / "map_data.js", "FBDATA", "realms")
+    ) or []
+    for index, realm_node in enumerate(realms_867):
+        realm = node_object(realm_node) or {}
+        realm_id = node_string(realm.get("id")) or str(index)
+        for branch, record, line in branch_records(realm.get("name")):
+            inv.add(
+                f"realm.867.{realm_id}.name.{branch}",
+                record,
+                f"data/map_data.js:{line}",
+                f"867 realm {realm_id}, display name.",
+                (),
+            )
+
+    bookmark_text = BOOKMARK_FILE.read_text(encoding="utf-8")
+    for match in re.finditer(
+        r"realm\('([^']+)','([^']*)','[^']*','[^']*',",
+        bookmark_text,
+    ):
+        realm_id, name = match.group(1), match.group(2)
+        line = bookmark_text.count("\n", 0, match.start()) + 1
+        inv.add(
+            f"realm.1066.{realm_id}.name.default",
+            {"text": name},
+            f"data/bookmarks.js:{line}",
+            f"1066 realm {realm_id}, display name.",
+            (),
+        )
+    for match in re.finditer(
+        r"var bookmark\w+\s*=\s*\{.*?id:'([^']+)'.*?"
+        r"name:'([^']*)'.*?desc:'([^']*)'",
+        bookmark_text,
+        flags=re.S,
+    ):
+        bookmark_id, name, desc = match.group(1), match.group(2), match.group(3)
+        line = bookmark_text.count("\n", 0, match.start()) + 1
+        for field, value in (("name", name), ("desc", desc)):
+            inv.add(
+                f"bookmark.{bookmark_id}.{field}.default",
+                {"text": value},
+                f"data/bookmarks.js:{line}",
+                f"Start bookmark {bookmark_id}, {field}.",
+                (),
+            )
 
     currency = node_object(
         find_assignment(DATA / "map_data.js", "FBDATA", "currency")

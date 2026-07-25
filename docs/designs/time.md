@@ -20,6 +20,20 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
+The campaign's origin is saved as
+`state.start:{id,year,season,day}` and its current calendar remains
+`state.date:{year,season,day}`. New lives copy both from the selected bookmark; old
+version-3 saves without `state.start` are interpreted as Spring day 1, 867. Duration
+and start-relative display use this origin. Turn-based future dates such as pact
+expiry are converted relative to the current saved date, rather than assuming turn
+zero was 867.
+
+Bookmark scripted history is checked after every calendar advance in both play and
+Observe mode. A legacy `{year,...}` entry is due on Spring day 1 and retains its
+existing flag and durable-message keys. Entries with `season` or `day` must also
+have a stable `id`; their once-only flag and message identity combine that id with
+the bookmark id, allowing exact dates without array-position identities.
+
 At a season boundary the household receives normal income, pays station and resident-family
 upkeep, collects livelihood wages, and pays each active school term. Unaffordable schooling
 pauses for that term. Then

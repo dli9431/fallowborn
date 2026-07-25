@@ -18,7 +18,13 @@ save/export/import cannot silently retarget a plot in progress.
 **Game state is one serializable object** (`FB.state`), created in `js/main.js`. Political
 ownership lives in `state.owner` / `state.holder` / `state.dev` / `state.realms`, not in
 world data. `js/save.js` snapshots `FB.state` + RNG state + uid counter to localStorage;
-the raster is rebuilt deterministically at boot, so saves only reference ids. Saves are
+the raster is rebuilt deterministically at boot, so saves only reference ids.
+`state.start:{id,year,season,day}` identifies the bookmark and campaign origin. Loading
+first inspects that field, activates the matching complete world, and only then restores
+state and RNG. A missing field means the legacy 867 bookmark, preserving every old
+version-3 slot and export. A bookmark hidden from new-game choices by an incompatible
+legacy map mod remains addressable for a matching stamped save.
+Saves are
 version 3; older saves are rejected. Raising that save-format version rejects every existing
 life, so it is a deliberate, owner-reviewed decision — never a routine bump, and separate
 from the displayed `FB.VERSION` (see [../VERSIONS.md](../VERSIONS.md)). The additive-migration

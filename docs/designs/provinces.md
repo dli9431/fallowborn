@@ -17,6 +17,21 @@ The go-into-town deed queues `visit_*` events (events_common.js) with the name i
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
 
+## Start bookmarks
+
+`FBDATA.bookmarks` holds complete, atomic world definitions. The 867 entry retains the
+legacy `FBDATA.provinces` array as its public source, while 1066 has an independent
+province snapshot in `data/bookmarks.js`. Province ids endure across bookmarks wherever
+the county seed represents the same place; an id is never reassigned to a different
+place. Each definition also owns its terrain, culture, faith, development, de jure
+duchy, owner, straits, realms, hierarchy, and scripted history.
+
+The authored coastline, inland seas, rivers, and projection bounds are shared because
+the physical map window is the same. `FB.activateBookmark` validates the complete
+definition, installs it in the legacy top-level fields, and lazily caches one raster per
+bookmark id. Switching dates replaces `FB.world` and the map's backing canvases but
+does not install a second set of pointer or keyboard listeners.
+
 **Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) lights
 up every province sharing the clicked one's group key (strong tint + golden outer border).
 `groupOf` comes from `mapGroupOf` in ui.js and follows the map filter (`R` key / 🗺 HUD

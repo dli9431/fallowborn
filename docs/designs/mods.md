@@ -12,6 +12,19 @@ therefore stamped with `FB.mods.sig()` (the `mods` field in save.js, covering st
 and enabled bundled mods alike) and `G.loadSlot` refuses to load a save whose mod set
 differs from the active one.
 
+**Bookmarks are atomic world definitions.** A mod may provide `bookmarks` keyed by
+bookmark id; each value replaces that entire bookmark and must include its date,
+provinces, realms, de jure hierarchy, straits, and scripted history. It is validated
+only when activated, after all enabled mods have applied. The existing top-level
+`provinces`/`realms`/hierarchy/straits/scripted fields remain the public 867 merge API.
+
+A legacy mod that changes any world-shaping top-level field—provinces, realms,
+hierarchy, straits, scripted history, coastline, seas, or bounds—without also providing
+its own complete `1066` bookmark makes 1066 unavailable for new games. The picker
+explains the restriction; 867 still works. Non-world mods leave both bookmarks
+available. Hidden bookmarks are not deleted, so an existing matching mod-stamped save
+can still load its recorded bookmark.
+
 **Bundled mods** (`mods/*.js`) register
 `{id, name, desc, data}` into `window.FBMODS` via a script tag after the data files; the
 Mods dialog toggles them, and enabled ids persist in localStorage (`fb_mods_bundled`) and

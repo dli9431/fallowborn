@@ -108,6 +108,11 @@ window.FB = window.FB || {};
 
   S.hasAuto = function () { return !!S.read('auto'); };
 
+  S.bookmarkOf = function (data) {
+    const start = data && data.state && data.state.start;
+    return start && start.id ? String(start.id) : '867';
+  };
+
   /* was this save made under a different mod set than the one now stored?
      (saves from before the stamp carry no `mods` field — let them through) */
   S.otherWorld = function (d) {
@@ -154,6 +159,9 @@ window.FB = window.FB || {};
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
     FB.state = data.state;
+    if (!FB.state.start) {
+      FB.state.start = { id:'867', year:867, season:0, day:1 };
+    }
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
     backfillParents(FB.state);
