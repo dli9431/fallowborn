@@ -29,6 +29,10 @@ The departure cooldown begins when `FB.travelStart` actually spends the cost, no
 when the purpose or destination picker opens. Pilgrimage is once per character
 (the legacy Pilgrim trait also counts); every other purpose may repeat except at a
 destination already completed by that character. Succession clears the history.
+The destination picker remembers whether time was already paused: canceling it or
+confirming departure restores a running clock, while a game that was paused before
+the picker remains paused. Leaving the current game closes the picker without
+resuming its clock.
 
 ## Saved state and ticking
 

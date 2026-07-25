@@ -162,7 +162,7 @@ window.FB = window.FB || {};
 
   /* ================= screens ================= */
   UI.showScreen = function (id) {
-    if (id !== null && travelPicker) UI.cancelTravelPicker();
+    if (id !== null && travelPicker) closeTravelPicker(false);
     for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
       const el = $(sid);
       el.classList.toggle('hidden', sid !== id);
@@ -180,7 +180,7 @@ window.FB = window.FB || {};
   };
 
   UI.showGame = function () {
-    if (travelPicker) UI.cancelTravelPicker();
+    if (travelPicker) closeTravelPicker(false);
     UI.showScreen(null);
     portraitKey = ''; // a new life or loaded save must never keep the old face
     logRenderedTail = null; logRenderedLen = -1;
@@ -2179,8 +2179,14 @@ window.FB = window.FB || {};
       UI.toast(FB.T('No qualifying destination can be reached.'));
       return;
     }
+    const wasPaused = FB.game.paused;
     FB.game.setPaused(true);
-    travelPicker = {purpose:purposeId, choices:choices, selected:null};
+    travelPicker = {
+      purpose:purposeId,
+      choices:choices,
+      selected:null,
+      wasPaused:wasPaused
+    };
     document.body.classList.add('travel-picking');
     $('travel-picker').classList.remove('hidden');
     $('travel-picker-title').textContent = FB.T('Choose a destination for {purpose}', {
@@ -2302,7 +2308,8 @@ window.FB = window.FB || {};
     });
   }
 
-  UI.cancelTravelPicker = function () {
+  function closeTravelPicker(restorePause) {
+    const wasPaused = travelPicker ? travelPicker.wasPaused : true;
     travelPicker = null;
     document.body.classList.remove('travel-picking');
     $('travel-picker').classList.add('hidden');
@@ -2311,6 +2318,11 @@ window.FB = window.FB || {};
     FB.map.travelPreview = null;
     FB.map.select(null);
     FB.map.request();
+    if (restorePause && !wasPaused) FB.game.setPaused(false);
+  }
+
+  UI.cancelTravelPicker = function () {
+    closeTravelPicker(true);
   };
 
   /* ================= war target picker ================= */

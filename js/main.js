@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.51.2';
+  FB.VERSION = '1.51.3';
   FB.CHANGELOG = [
+    { v: '1.51.3', date: '2026-07-24', changes: [
+      'Journey departure and cancellation now restore a clock that was running before destination selection.'
+    ] },
     { v: '1.51.2', date: '2026-07-24', changes: [
       'Wars now keep every sovereign to one conflict, travel selection stays paused, titles render reliably, and army markers redraw only when their visible state changes.'
     ] },
