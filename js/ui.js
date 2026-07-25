@@ -814,13 +814,13 @@ window.FB = window.FB || {};
       '</div>') + '</div></div>';
     return h;
   }
-  function wireEquipmentButtons(root) {
+  function wireEquipmentButtons(root, returnMode) {
     if (!root) return;
     const buttons = root.querySelectorAll('[data-equip-cid][data-equip-slot]');
     for (let i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {
         UI.showEquipSlot(buttons[i].getAttribute('data-equip-cid'),
-          buttons[i].getAttribute('data-equip-slot'));
+          buttons[i].getAttribute('data-equip-slot'), returnMode);
       });
     }
   }
@@ -892,7 +892,10 @@ window.FB = window.FB || {};
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
     let h =
-      equipmentSheetHtml(s, me) +
+      '<canvas id="selfportrait" class="pface" data-cid="' + me.id +
+      '" width="72" height="82"></canvas>' +
+      '<button type="button" class="btn portrait-equip" id="self-equipment" ' +
+      'data-action-id="self-equipment">' + esc(FB.T('Equip items…')) + '</button>' +
       '<div class="panelh">' + esc(FB.fullName(me)) + '</div>' +
       kv('Rank', esc(FB.styledTitle(s))) +
       kv('Age', FB.ageOf(me, s.date.year)) +
@@ -927,7 +930,10 @@ window.FB = window.FB || {};
     $('tab-char').innerHTML = h;
     FB.localizeTree($('tab-char'));
     FB.paintFaces($('tab-char'), s);
-    wireEquipmentButtons($('tab-char'));
+    const seq = $('self-equipment');
+    if (seq) seq.addEventListener('click', function () {
+      UI.showEquipmentModal(me.id, 'close');
+    });
     const sef = $('self-edufocus');
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
     const stu = $('self-tutor');
@@ -2182,7 +2188,8 @@ window.FB = window.FB || {};
        activate the first button (used where the choice must be deliberate) */
     if (!(opts && opts.noFocus)) {
       setTimeout(function () {
-        const b = $('gm-body').querySelector('button, input, textarea');
+        const b = $('gm-body').querySelector(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]');
         // preventScroll: focusing a long dialog's lone Close button must not
         // drag the view to the bottom (Changelog, How to Play)
         if (b) b.focus({ preventScroll: true });
@@ -4221,9 +4228,9 @@ window.FB = window.FB || {};
     const c = s.chars[cid];
     if (!c) return;
     const me = s.chars[s.player.charId];
-    const showEquipment = !c.dead && FB.isHouseholdCharacter &&
+    const isHousehold = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
-    let h = (showEquipment ? equipmentSheetHtml(s, c) : '') + UI.charCardHtml(s, c);
+    let h = UI.charCardHtml(s, c);
     // the dead get a sheet for remembrance — their dates, skills, traits — but no dealings
     if (c.dead) {
       h += '<button class="btn" id="cm-close" style="margin-top:10px">Close</button>';
@@ -4236,7 +4243,12 @@ window.FB = window.FB || {};
     const isFamily = FB.spousesOf(s, me).some(function (sp) { return sp.id === c.id; }) ||
       me.childrenIds.indexOf(c.id) >= 0 ||
       (c.role === 'sibling' && c.dyn === me.dyn);
-    const isHousehold = showEquipment;
+    if (isHousehold) {
+      h += '<button class="actionbtn" id="cm-equipment">' +
+        esc(FB.T('Equip items…')) + '<span class="adesc">' +
+        esc(FB.T('Open the full figure and choose equipment from the family armory.')) +
+        '</span></button>';
+    }
     if (isHousehold && FB.ageOf(c, s.date.year) >= 10) {
       h += livelihoodNote(s, c);
       h += '<button class="actionbtn" id="cm-career">🧰 Choose work or training…' +
@@ -4380,7 +4392,6 @@ window.FB = window.FB || {};
     h += '</div><button class="btn" id="cm-close">Close</button>';
     openModal(FB.fullName(c), h);
     FB.paintFaces($('gm-body'), s);
-    wireEquipmentButtons($('gm-body'));
     function actThen(fn) {
       UI.closeModal();
       fn();
@@ -4535,9 +4546,33 @@ window.FB = window.FB || {};
     if (tu) tu.addEventListener('click', function () { UI.showTutorPick(c.id); });
     const cr = $('cm-career');
     if (cr) cr.addEventListener('click', function () { UI.showCareerPicker(c.id); });
+    const ceq = $('cm-equipment');
+    if (ceq) ceq.addEventListener('click', function () {
+      UI.showEquipmentModal(c.id, 'character');
+    });
     const mt = $('cm-match');
     if (mt) mt.addEventListener('click', function () { UI.showMatchPicker(c.id); });
     $('cm-close').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showEquipmentModal = function (cid, exitMode) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
+    exitMode = exitMode === 'character' ? 'character' : 'close';
+    const returnMode = 'equipment:' + exitMode;
+    const closeLabel = exitMode === 'character' ? FB.T('Back to character') : FB.T('Close');
+    const h = equipmentSheetHtml(s, c) +
+      '<div class="gm-footer"><button type="button" class="btn" id="equipment-close">' +
+      esc(closeLabel) + '</button></div>';
+    openModal(FB.T('Equipment for {name}', { name:FB.fullName(c) }), h,
+      { modalClass:'fullsheet-modal' });
+    FB.paintFaces($('gm-body'), s);
+    wireEquipmentButtons($('gm-body'), returnMode);
+    $('equipment-close').addEventListener('click', function () {
+      if (exitMode === 'character') UI.showCharModal(cid);
+      else UI.closeModal();
+    });
   };
 
   /* ================= arranged match picker =================
@@ -4831,9 +4866,17 @@ window.FB = window.FB || {};
     return FB.T('Cannot use this slot');
   }
 
+  function equipmentExitMode(returnMode) {
+    const prefix = 'equipment:';
+    return returnMode && returnMode.indexOf(prefix) === 0
+      ? returnMode.slice(prefix.length) : null;
+  }
+
   function finishEquipment(cid, ref, returnMode) {
     UI.refresh();
-    if (returnMode === 'character') UI.showCharModal(cid);
+    const exitMode = equipmentExitMode(returnMode);
+    if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
+    else if (returnMode === 'character') UI.showCharModal(cid);
     else if (returnMode === 'item') UI.showItemModal(ref);
     else UI.closeModal();
   }
@@ -4902,6 +4945,10 @@ window.FB = window.FB || {};
     }).sort(function (a, b) {
       return FB.itemName(s, a).localeCompare(FB.itemName(s, b));
     });
+    if (!current && !refs.length) {
+      UI.toast(FB.T('There is no compatible object in the armory.'));
+      return;
+    }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose {name}’s {slot} equipment from the shared family armory.', {
         name:c.name, slot:itemSlotLabel(slot)
@@ -4939,7 +4986,10 @@ window.FB = window.FB || {};
       h += '<div class="progressnote">' + esc(FB.T(
         'There is no compatible object in the armory.')) + '</div>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    const equipmentExit = equipmentExitMode(returnMode);
+    const cancelLabel = equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close');
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(cancelLabel) + '</button>';
     openModal(FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) }), h);
     FB.paintFaces($('gm-body'), s);
     const empty = $('equip-empty');
@@ -4954,7 +5004,8 @@ window.FB = window.FB || {};
       });
     }
     $('gm-cancel').addEventListener('click', function () {
-      if (returnMode === 'character') UI.showCharModal(cid);
+      if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
+      else if (returnMode === 'character') UI.showCharModal(cid);
       else UI.closeModal();
     });
   };

@@ -27,11 +27,11 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   open as bottom sheets, and tapping an item chip opens its exact card — appearance,
   quality, powers, worth, wearer, and valid actions. The speed of days lives in
   **☰ → Settings**.
-- **Equip the household from character sheets.** The current head, spouses, and resident
-  unmarried children each have a full-body figure and eight keyboard/touch-friendly slots.
-  Choose a slot, then an object from the shared armory. Two-handed weapons reserve both
-  hands; changing an outfit costs no day, but cannot be done while traveling or resolving
-  an event. Only worn objects grant bonuses.
+- **Equip the household from character sheets.** Use **Equip items…** beneath the current
+  head’s portrait or on a household character’s sheet to open their full figure and eight
+  keyboard/touch-friendly slots. Choose a slot, then an object from the shared armory.
+  Two-handed weapons reserve both hands; changing an outfit costs no day, but cannot be
+  done while traveling or resolving an event. Only worn objects grant bonuses.
 - **Hover or tap your gold, prestige, or piety** in the top bar for a source-by-source
   breakdown of what each brings in every season — focus, rents, dues, buildings,
   household improvements, resident-family costs, school fees, treasures, and upkeep.

@@ -50,14 +50,16 @@ changing the underlying `player.gold`. The deprecated
 `FBDATA.balance.coinageSymbol` changes only the default icon when no full currency
 definition is active.
 
-**Managed household sheets use full-body paper dolls.** The Self sheet and the sheets for
-living spouses and resident unmarried children pair one deterministic figure with eight
-native slot buttons in a two-column grid. Every button is at least 44 px high, participates
-in ordinary Tab/Enter/Space navigation, and opens a numbered compatible-armory list; no
-drag-and-drop path is required. Two-handed and replacement moves receive a confirmation
-that names every displaced hand object and prior wearer. Equipment controls disable during
-travel or an unresolved event. On narrow portrait and landscape phones the figure stacks
-above the same two-column grid inside the scrolling drawer/bottom sheet.
+**Managed household sheets keep compact bust portraits and open equipment separately.**
+The Self sheet and the sheets for living spouses and resident unmarried children each offer
+an **Equip items…** button. It opens a dedicated modal with one deterministic full-body
+figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
+and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
+Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
+navigation, and opens a numbered compatible-armory list; no drag-and-drop path is required.
+Two-handed and replacement moves receive a confirmation that names every displaced hand
+object and prior wearer. Equipment controls disable during travel or an unresolved event.
+On narrow phones the figure stacks above the same two-column grid.
 
 The item card reuses the isolated procedural object renderer and reports exact quality,
 quality-adjusted effects, value, current wearer, pledge state, and valid equip/unequip,
