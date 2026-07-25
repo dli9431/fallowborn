@@ -53,6 +53,13 @@ part of `FB.state`, a save slot, a start seed, RNG state, or deterministic simul
 Save metadata stores `titleData` and renders its slot label in the locale active at display
 time; older metadata with a frozen `title` remains readable.
 
+Currency presentation follows the same boundary. `FBDATA.currency` belongs to the
+active data/mod set, not `FB.state`; `player.gold` and financial contract values
+remain ordinary numbers. Durable messages store numeric money parameters and call
+the active formatter when displayed. Consequently currency support keeps save
+version 3, adds no migration or succession rule, and relies on the existing mod
+fingerprint to require the same currency mod when a life is loaded.
+
 `state.seed` records the start code the life began with ([seeds.md](seeds.md)); saves
 from before it existed simply hide the seed row in the menu.
 

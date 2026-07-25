@@ -29,8 +29,18 @@ merge into `FBDATA` by id before a new campaign begins. Their `name` and `desc` 
 career rank names, use the same structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
-Cosmetic currency mods may set `balance.coinageSymbol`. The UI escapes and displays that
-string in place of the default money-bag symbol on the topbar; the resource remains gold and
-no saved values, prices, or localized prose change.
+Currency presentation is a top-level atomic mod value. `M.apply` lets each
+`mod.currency` replace `FBDATA.currency`; after every enabled bundled and pasted mod
+has applied, `FB.configureCurrency` validates and caches the final definition. The
+last supplied definition wins, denomination arrays are never deep-merged, and one
+invalid field falls back to the complete built-in definition without blocking the
+rest of that mod. The Mods dialog reports that fallback.
+
+The resource remains internal game gold: no saved value, cost, contract, or balance
+number is converted. `balance.coinageSymbol` remains a deprecated compatibility
+alias that changes only the default topbar icon when no full `currency` object was
+supplied. A full currency definition always takes precedence. Display strings are
+escaped at the DOM boundary, and active mod text remains covered by the existing
+save fingerprint.
 
 Related: `docs/MODDING.md` is the full mod authoring reference.

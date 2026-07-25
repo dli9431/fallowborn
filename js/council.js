@@ -358,6 +358,6 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, -6);
     for (const m of ms) FB.adjustLiegeOp(state, m.rid, -5);
     FB.news(state, FB.msg('news.council.war_chest',
-      '🪙 The council grants a war subsidy of {gold} gold — and notes the precedent.', { gold: gold }));
+      '🪙 The council grants a war subsidy of {money:gold} — and notes the precedent.', { gold: gold }));
   };
 })();

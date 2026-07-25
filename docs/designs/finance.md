@@ -9,6 +9,12 @@ revaluation runs after the completed winter ledger, so it appears immediately
 as **Coin and prices this year** and is included in the following measured
 season net.
 
+Currency mods change only this system's presentation boundary. Faces, stakes,
+payouts, purse adjustments, credit limits, and price-index calculations stay
+numeric in game gold; the Finance sheet and durable messages pass those numbers to
+`FB.money` at display time. `smallestPerGold` rounding is never written back to the
+purse or a contract, so affordability and settlement use the original values.
+
 `FB.ensureEconomy` lazily creates JSON-safe price, shock, loan, investment,
 default, and stable-id state. Old version-3 saves therefore begin at a price
 index of 1 on their next annual tick; no past inflation is reconstructed.

@@ -1123,7 +1123,7 @@ window.FB = window.FB || {};
     e.loans.push(loan);
     state.player.gold += offer.principal;
     FB.news(state, FB.msg('news.finance.loan_taken',
-      '📜 A lender advances {principal} gold to the household; the signed obligation is worth {due} gold today.',
+      '📜 A lender advances {money:principal} to the household; the signed obligation is worth {money:due} today.',
       { principal:offer.principal, due:Math.round(FB.financeDueNow(state, loan) * 10) / 10 }));
     return loan;
   };
@@ -1142,7 +1142,7 @@ window.FB = window.FB || {};
     loan.status = 'repaid';
     loan.repaidTurn = state.turn;
     FB.news(state, FB.msg('news.finance.loan_repaid',
-      '⚖ The household repays {amount} gold and clears its obligation.',
+      '⚖ The household repays {money:amount} and clears its obligation.',
       { amount:Math.round(due * 10) / 10, automatic:automatic ? 'yes' : 'no' }));
     return true;
   };
@@ -1295,7 +1295,7 @@ window.FB = window.FB || {};
     e.investments.push(inv);
     state.player.gold -= stake;
     FB.news(state, FB.msg('news.finance.investment_started',
-      '🧭 The household commits {stake} gold to a distant trade partnership.',
+      '🧭 The household commits {money:stake} to a distant trade partnership.',
       { stake:stake }));
     return inv;
   };
@@ -1327,9 +1327,9 @@ window.FB = window.FB || {};
       forms: {
         select:'value', param:'outcome', cases:{
           loss:'🌊 The trade partnership is lost with every coin committed.',
-          partial:'🧭 The trade partnership limps home; {payout} gold is salvaged.',
-          profit:'🧭 The trade partnership prospers and returns {payout} gold.',
-          exceptional:'✨ The trade partnership returns a remarkable {payout} gold.',
+          partial:'🧭 The trade partnership limps home; {money:payout} is salvaged.',
+          profit:'🧭 The trade partnership prospers and returns {money:payout}.',
+          exceptional:'✨ The trade partnership returns a remarkable {money:payout}.',
           other:'🧭 The trade partnership is resolved.'
         }
       }
@@ -1380,8 +1380,8 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.finance.prices', {
         forms: {
           select:'value', param:'direction', cases:{
-            inflation:'🪙 Prices rise {rate}% this year; the purse loses {amount} gold of purchasing power.',
-            deflation:'🪙 Prices fall {rate}% this year; the purse gains {amount} gold of purchasing power.',
+            inflation:'🪙 Prices rise {rate}% this year; the purse loses {money:amount} of purchasing power.',
+            deflation:'🪙 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power.',
             inflation_empty:'🪙 Prices rise {rate}% this year; circulating coin buys less.',
             deflation_empty:'🪙 Prices fall {rate}% this year; circulating coin buys more.',
             other:'🪙 The value of coin changes this year.'
@@ -1430,7 +1430,7 @@ window.FB = window.FB || {};
       for (const member of FB.councilMembers(state)) FB.adjustLiegeOp(state, member.rid, -8);
     }
     FB.news(state, FB.msg('news.finance.debasement',
-      '🪙 The crown debases the coinage and takes {gold} gold in seigniorage. Prices and confidence suffer.',
+      '🪙 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer.',
       { gold:preview.gold }));
     return true;
   };
@@ -1461,7 +1461,7 @@ window.FB = window.FB || {};
     FB.addPricePressure(state, preview.pressure, preview.years, 'recoinage');
     if (FB.councilAuthority) FB.councilAuthority(state, -3);
     FB.news(state, FB.msg('news.finance.recoinage',
-      '⚖ The crown calls in the light coin and restores its weight at a cost of {cost} gold.',
+      '⚖ The crown calls in the light coin and restores its weight at a cost of {money:cost}.',
       { cost:preview.cost }));
     return true;
   };
@@ -1476,8 +1476,8 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.finance.inherited', {
       forms: {
         select:'plural', param:'count', cases:{
-          one:'📜 The successor inherits one active obligation, now worth {amount} gold.',
-          other:'📜 The successor inherits {count} active obligations, now worth {amount} gold.'
+          one:'📜 The successor inherits one active obligation, now worth {money:amount}.',
+          other:'📜 The successor inherits {count} active obligations, now worth {money:amount}.'
         }
       }
     }, { count:inherited.length, amount:Math.round(total * 10) / 10 }));

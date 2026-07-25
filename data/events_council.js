@@ -28,7 +28,7 @@ FBDATA.events.push(
   trigger:{ tierMin:6, custom:'council_has_members', chance:0.13 }, weight:6, cooldown:6,
   text:'One of the great officers lingers after the business is done: his roof timbers are rotten, his second son needs a company of spears, his cousin’s widow — it hardly matters. Office, he hints, should carry some profit.',
   options:[
-    { label:'Open the purse. (20 gold)', require:{ goldMin:20 }, desc:'A bought friend is still a friend.', effects:{ gold:-20, custom:'council_pet_grant' } },
+    { label:'Open the purse. ({money:20})', require:{ goldMin:20 }, desc:'A bought friend is still a friend.', effects:{ gold:-20, custom:'council_pet_grant' } },
     { label:'Sympathy, and nothing else.', desc:'The treasury is not a tit for officers.', effects:{ custom:'council_pet_deny' } }
   ]},
 { id:'council_demand_office', title:'The Empty Chair',
@@ -82,7 +82,7 @@ FBDATA.events.push(
   trigger:{ tierMin:6, atWar:true, custom:'council_has_members', chance:0.3 }, wartime:true, weight:7, cooldown:3,
   text:'The great officers sit in council on the war: the realm bleeds, they say, and the realm’s silver should bleed with it. They offer a subsidy from their own coffers — for the duration, and not, they make clear, as a precedent. It is absolutely a precedent.',
   options:[
-    { label:'Take the subsidy gratefully.', desc:'Their gold, their strings — but the war needs both.', effects:{ custom:'council_war_chest' } },
+    { label:'Take the subsidy gratefully.', desc:'Their coin, their strings — but the war needs both.', effects:{ custom:'council_war_chest' } },
     { label:'Refuse: the crown funds its own wars.', desc:'Independence is bought one refusal at a time.', effects:{ prestige:3 } }
   ]},
 { id:'council_wise_counsel', title:'Good Counsel',

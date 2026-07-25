@@ -425,7 +425,7 @@ window.FB = window.FB || {};
     run: function (s) { s.eventQueue.push({ id: 'seek_blessing', ctx: {} }); } },
   { id: 'give_alms', label: '🕯 Give alms', cd: 30,
     desc: function (s) {
-      return FB.T('Bread and coin for the poor at the {temple} gate. (10 gold)',
+      return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
         { temple: FB.templeWord(me(s).religion) });
     },
     show: function (s) { return adult(s); },
@@ -481,8 +481,8 @@ window.FB = window.FB || {};
       if (!peace.length && !alliance.length) return 'No neighboring court has an available offer.';
       if (peace.length && s.player.gold >= 10) return true;
       if (alliance.length && s.player.gold >= 25) return true;
-      return alliance.length ? 'An alliance envoy requires 25 gold in gifts.'
-        : 'An envoy without 10 gold in gifts insults his host.';
+      return alliance.length ? FB.T('An alliance envoy requires {money:25} in gifts.')
+        : FB.T('An envoy without {money:10} in gifts insults his host.');
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
   { id: 'foreign_policy', label: '🕊 Foreign policy…', noConsume: true,
@@ -508,12 +508,12 @@ window.FB = window.FB || {};
 
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
     desc: function () {
-      return FB.T('Pay {gold} gold to be struck from the serf-roll.',
+      return FB.T('Pay {money:gold} to be struck from the serf-roll.',
         { gold: FBDATA.balance.freedomCost });
     },
     show: function (s) { return s.player.tier === 0 && adult(s); },
     can: function (s) {
-      if (s.player.gold < FBDATA.balance.freedomCost) return 'Not enough gold.';
+      if (s.player.gold < FBDATA.balance.freedomCost) return FB.T('Not enough money.');
       const lord = FB.getRole(s, 'lord', true);
       if (lord && lord.opinion < -20) return 'The lord despises you and refuses.';
       return true;
@@ -528,13 +528,13 @@ window.FB = window.FB || {};
     } },
   { id: 'buy_land', label: '🌾 Buy a plot of land…', noConsume: true,
     desc: function () {
-      return FB.T('{gold} gold per plot. Land held together in one settlement is more productive.',
+      return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
         { gold: FB.landPlotCost() });
     },
     show: function (s) { return s.player.tier === 1 && adult(s); },
     can: function (s) {
       if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
-      if (s.player.gold < FB.landPlotCost()) return 'Not enough gold.';
+      if (s.player.gold < FB.landPlotCost()) return FB.T('Not enough money.');
       return true;
     },
     run: function () {
@@ -670,7 +670,7 @@ window.FB = window.FB || {};
     },
     run: function (s) { if (FB.ui && FB.ui.showPetitionCounty) FB.ui.showPetitionCounty(); } },
   { id: 'buy_county', label: '💰 Buy out a weak neighbor…', cd: 720, noConsume: true,
-    desc: function () { return 'Gold talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
+    desc: function () { return 'Money talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
       if (FB.liegeOpOf(s, s.player.liege) < 20) {
@@ -680,7 +680,7 @@ window.FB = window.FB || {};
       const c = FB.buyCountyCandidates(s);
       if (!c.length) return 'No weak neighbor holds land beside yours.';
       if (s.player.gold < c[0].price) return FB.T(
-        'You need at least {needed} gold (now {current}).',
+        'You need at least {money:needed} (now {money:current}).',
         { needed: c[0].price, current: Math.floor(s.player.gold) });
       return true;
     },
@@ -692,7 +692,7 @@ window.FB = window.FB || {};
       const B = FBDATA.balance;
       if (!FB.wastelandCandidates(s).length) return 'No empty land borders your demesne.';
       if (s.player.gold < B.settleGold) return FB.T(
-        'You need at least {needed} gold (now {current}).',
+        'You need at least {money:needed} (now {money:current}).',
         { needed: B.settleGold, current: Math.floor(s.player.gold) });
       if (s.player.prestige < B.settlePrestige) return FB.T(
         'You need at least {needed} prestige (now {current}).',
@@ -720,21 +720,21 @@ window.FB = window.FB || {};
       return FB.renderMessage(FB.msg('fx.action.mercenary_desc', {
         forms: {
           select: 'value', param: 'hasCompanies', cases: {
-            none: '~150 spears: 15 gold now, 4 a season while the war lasts.',
+            none: '~150 spears: {money:15} now, {money:4} a season while the war lasts.',
             some: {
               select: 'plural', param: 'count', cases: {
-                one: '~150 spears: 15 gold now, 4 a season while the war lasts. ({count} company under your banner)',
-                other: '~150 spears: 15 gold now, 4 a season while the war lasts. ({count} companies under your banner)'
+                one: '~150 spears: {money:15} now, {money:4} a season while the war lasts. ({count} company under your banner)',
+                other: '~150 spears: {money:15} now, {money:4} a season while the war lasts. ({count} companies under your banner)'
               }
             },
-            other: '~150 spears: 15 gold now, 4 a season while the war lasts.'
+            other: '~150 spears: {money:15} now, {money:4} a season while the war lasts.'
           }
         }
       }, { hasCompanies: n ? 'some' : 'none', count: n }),
       { state: s, viewer: s.player.charId });
     },
     show: function (s) { return !!s.player.war; },
-    can: function (s) { return s.player.gold >= 15 ? true : 'Costs 15 gold.'; },
+    can: function (s) { return s.player.gold >= 15 ? true : FB.T('Costs {money:15}.'); },
     run: function (s) {
       const w = s.player.war;
       if (!w || s.player.gold < 15) return;
@@ -1128,7 +1128,7 @@ window.FB = window.FB || {};
     const gold = Math.round(def.value * (FBDATA.balance.itemSellRatio || 0.5));
     state.player.gold += gold;
     FB.news(state, FB.msg('news.item.sold',
-      '💰 Sold: {icon} {item} for {gold} gold.',
+      '💰 Sold: {icon} {item} for {money:gold}.',
       { icon: def.icon, item: FB.dataParam('item', id), gold: gold }));
     return true;
   };
@@ -1494,7 +1494,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.action.county_purchase_record',
       'Bought {province} from its struggling lord.', { province: pr.name }));
     FB.news(state, FB.msg('news.action.county_bought',
-      '💰 {province} is yours for {gold} gold — its old lord retires fat and forgotten. The court frowns on bought land.',
+      '💰 {province} is yours for {money:gold} — its old lord retires fat and forgotten. The court frowns on bought land.',
       { province: pr.name, gold: pick.price }));
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
@@ -1520,7 +1520,7 @@ window.FB = window.FB || {};
       p.gold += gold;
       if (FB.councilAuthority) FB.councilAuthority(state, 4); // the crown rules without its council — they notice
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
-        '💰 Your vassals render {gold} gold in extraordinary taxes — grumbling all the while.',
+        '💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while.',
         { gold: gold }));
     }
   };

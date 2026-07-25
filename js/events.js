@@ -602,7 +602,7 @@ window.FB = window.FB || {};
     if (cand.dowryAsk) {
       p.gold = Math.max(0, p.gold - cand.dowryAsk);
       FB.news(state, FB.msg('news.event.match_dowry_paid',
-        '💰 You settle a dowry of {gold} gold on the match.', { gold: cand.dowryAsk }));
+        '💰 You settle a dowry of {money:gold} on the match.', { gold: cand.dowryAsk }));
     }
     FB.news(state, FB.msg('news.event.child_betrothed',
       '🤝 {child} is betrothed to {match}.', { child: child.name, match: cand.name }));
@@ -634,7 +634,7 @@ window.FB = window.FB || {};
     if (sp.dowryDue) {
       p.gold += sp.dowryDue;
       FB.news(state, FB.msg('news.event.bride_dowry',
-        '💰 The bride brings a dowry of {gold} gold to the house.', { gold: sp.dowryDue }));
+        '💰 The bride brings a dowry of {money:gold} to the house.', { gold: sp.dowryDue }));
       delete sp.dowryDue;
     }
     delete sp.dowryAsk; // settled at the pledge; nothing owed back once wed
@@ -713,9 +713,10 @@ window.FB = window.FB || {};
     }
     const text = textParts.join(' ');
     let match;
-    const rx = /\{(\w+)\}/g;
+    const rx = /\{(?:(money):)?([A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+))\}/g;
     while ((match = rx.exec(text))) {
-      const k = match[1];
+      const k = match[2];
+      if (match[1] && /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(k)) continue;
       switch (k) {
         case 'name': out[k] = me.name; break;
         case 'dyn': out[k] = me.dyn || ''; break;
@@ -766,7 +767,7 @@ window.FB = window.FB || {};
         }
         case 'itemprice': {
           const offer2 = state.player.itemOffer;
-          out[k] = offer2 ? String(offer2.price) : '?';
+          out[k] = offer2 ? offer2.price : null;
           break;
         }
         case 'enemy': {
@@ -1762,7 +1763,7 @@ window.FB = window.FB || {};
     if (dowry > 0) {
       p.gold += dowry;
       FB.news(state, FB.msg('news.event.marriage_dowry',
-        '💰 The kin of {name} settle a dowry of {gold} gold on the match.',
+        '💰 The kin of {name} settle a dowry of {money:gold} on the match.',
         { name: s.name, gold: dowry }));
     }
     if (gap > 0) {
@@ -1881,14 +1882,14 @@ window.FB = window.FB || {};
     const g = lateDowry(ctx, 0.6);
     state.player.gold += g;
     FB.news(state, FB.msg('news.event.widow_settlement',
-      '💰 The house of {house} settles {gold} gold on you.',
+      '💰 The house of {house} settles {money:gold} on you.',
       { house: lateName(ctx), gold: g }));
   };
   FB.fns.dower_take_full = function (state, ctx) {
     const g = lateDowry(ctx, 1.1);
     state.player.gold += g;
     FB.news(state, FB.msg('news.event.widow_full_settlement',
-      '💰 The house of {house} pays the full portion: {gold} gold.',
+      '💰 The house of {house} pays the full portion: {money:gold}.',
       { house: lateName(ctx), gold: g }));
   };
   FB.fns.claim_won = function (state, ctx) {
@@ -1896,7 +1897,7 @@ window.FB = window.FB || {};
     const g = lateDowry(ctx, 1.5);
     p.gold += g;
     FB.news(state, FB.msg('news.event.inheritance_settled',
-      '💰 The inheritance settles {gold} gold under your stewardship.', { gold: g }));
+      '💰 The inheritance settles {money:gold} under your stewardship.', { gold: g }));
     // a noble house's estate lifts a common steward into the gentry
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
       p.tier = 2;
@@ -1913,13 +1914,13 @@ window.FB = window.FB || {};
     const g = lateDowry(ctx, 0.3);
     state.player.gold += g;
     FB.news(state, FB.msg('news.event.grudging_inheritance',
-      '💰 A grudging purse of {gold} gold — and nothing more.', { gold: g }));
+      '💰 A grudging purse of {money:gold} — and nothing more.', { gold: g }));
   };
   FB.fns.claim_sold = function (state, ctx) {
     const g = lateDowry(ctx, 1.0);
     state.player.gold += g;
     FB.news(state, FB.msg('news.event.claim_sold',
-      '💰 The house of {house} buys back the claim for {gold} gold.',
+      '💰 The house of {house} buys back the claim for {money:gold}.',
       { house: lateName(ctx), gold: g }));
   };
   FB.fns.record_liege_grant = function (state) {
@@ -2195,7 +2196,7 @@ window.FB = window.FB || {};
     state.player.gold += g;
     FB.adjustLiegeOp(state, worst, -20);
     FB.news(state, FB.msg('news.event.vassal_tax_paid',
-      '💰 {realm} pays {gold} gold under protest.',
+      '💰 {realm} pays {money:gold} under protest.',
       { realm: state.realms[worst].name, gold: g }));
     if (FB.liegeOpOf(state, worst) <= -50) state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: worst } });
   };

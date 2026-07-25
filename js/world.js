@@ -1897,8 +1897,8 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.war.peace_bought', {
         forms: {
           select: 'value', param: 'named', cases: {
-            yes: '🕊 Peace is bought from {enemy} for {cost} gold.',
-            other: '🕊 Peace is bought from the enemy for {cost} gold.'
+            yes: '🕊 Peace is bought from {enemy} for {money:cost}.',
+            other: '🕊 Peace is bought from the enemy for {money:cost}.'
           }
         }
       }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '', cost: cost }));

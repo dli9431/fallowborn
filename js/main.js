@@ -1427,7 +1427,7 @@ window.FB = window.FB || {};
       craven: FB.msg('legend.trait.craven', 'Attended every battle from the safety of the rear.', {}),
       ambitious: FB.msg('legend.trait.ambitious', 'Wanted more. Got a grave, which is technically more.', {}),
       content: FB.msg('legend.trait.content', 'Wanted nothing, received exactly that, and was pleased.', {}),
-      greedy: FB.msg('legend.trait.greedy', 'Left instructions about the gold. Nobody can find them.', {}),
+      greedy: FB.msg('legend.trait.greedy', 'Left instructions about the money. Nobody can find them.', {}),
       generous: FB.msg('legend.trait.generous', 'Gave away everything except the debts.', {}),
       cruel: FB.msg('legend.trait.cruel', 'Feared in life; the mourning is largely procedural.', {}),
       kind: FB.msg('legend.trait.kind', 'Genuinely mourned, which surprised no one more than them.', {}),

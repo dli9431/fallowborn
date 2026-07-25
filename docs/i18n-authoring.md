@@ -31,6 +31,13 @@ though the game still *runs*.
   plus semantic params re-render in the player's current language and keep old saves working with
   no migration.
 
+Money is the one typed display placeholder: use `{money:amount}` with a numeric
+parameter, for example `FB.T('Costs {money:cost}.', { cost: 15 })`. Structured data
+may use a numeric literal such as `{money:2}`. Never add a currency symbol or the
+word "gold" beside the token, and never put an `FB.money` result in a durable
+message parameter; store the number so the active locale and currency mod format it
+when displayed.
+
 ## Never
 
 - Bake a localized/rendered string into `state.log`, `state.legends`, or any saved field.
