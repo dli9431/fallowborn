@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.52.0';
+  FB.VERSION = '1.53.0';
   FB.CHANGELOG = [
+    { v: '1.53.0', date: '2026-07-24', changes: [
+      'Household members now wear procedural full-body equipment from a shared family armory, with repeatable quality gear and wearer-specific powers. Death sheets remember the final outfit and battlefield provenance.'
+    ] },
     { v: '1.52.0', date: '2026-07-24', changes: [
       'Currency mods can now define single or compound denominations used throughout prices, events, ledgers, and the household purse.'
     ] },

@@ -17793,7 +17793,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "The strange and precious gather where money does."
+        "text": "A city market always has serviceable gear for sale."
       }
     },
     "event.visit_city.options.5.label.default": {
@@ -17801,7 +17801,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Browse the dealers in rare goods."
+        "text": "Browse arms and useful goods."
       }
     },
     "event.visit_city.options.6.desc.default": {
@@ -18008,7 +18008,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Where coin gathers, curious things follow."
+        "text": "A town market keeps ordinary gear within reach."
       }
     },
     "event.visit_town.options.6.label.default": {
@@ -18016,7 +18016,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Ask after rare goods."
+        "text": "Browse arms and useful goods."
       }
     },
     "event.visit_town.text.default": {
@@ -20783,6 +20783,38 @@
         "text": "A Shop of Your Own"
       }
     },
+    "item.ash_spear.desc.default": {
+      "context": "item ash_spear, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A long ash shaft, an iron leaf, and room enough to keep death back."
+      }
+    },
+    "item.ash_spear.name.default": {
+      "context": "item ash_spear, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Ash Spear"
+      }
+    },
+    "item.broad_sword.desc.default": {
+      "context": "item broad_sword, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A double-edged sword made for the close press of a shield wall."
+      }
+    },
+    "item.broad_sword.name.default": {
+      "context": "item broad_sword, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Broad Sword"
+      }
+    },
     "item.crown_of_old.desc.default": {
       "context": "item crown_of_old, desc, faith branch default.",
       "glossary": [],
@@ -20813,6 +20845,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Damascene Blade"
+      }
+    },
+    "item.devotional_pendant.desc.default": {
+      "context": "item devotional_pendant, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A small holy sign worn close to the heart."
+      }
+    },
+    "item.devotional_pendant.name.default": {
+      "context": "item devotional_pendant, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Devotional Pendant"
       }
     },
     "item.hero_sword.desc.default": {
@@ -20879,6 +20927,22 @@
         "text": "Keen Seax"
       }
     },
+    "item.leather_belt.desc.default": {
+      "context": "item leather_belt, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Stout leather, an honest buckle, and somewhere for every little necessity."
+      }
+    },
+    "item.leather_belt.name.default": {
+      "context": "item leather_belt, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Leather Belt"
+      }
+    },
     "item.lockpicks.desc.default": {
       "context": "item lockpicks, desc, faith branch default.",
       "glossary": [],
@@ -20909,6 +20973,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Merchant’s Ledger"
+      }
+    },
+    "item.nasal_helm.desc.default": {
+      "context": "item nasal_helm, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "An iron cap and a long guard over the nose."
+      }
+    },
+    "item.nasal_helm.name.default": {
+      "context": "item nasal_helm, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Nasal Helm"
       }
     },
     "item.old_grammar.desc.default": {
@@ -20959,6 +21039,22 @@
         "text": "Physician’s Chest"
       }
     },
+    "item.round_shield.desc.default": {
+      "context": "item round_shield, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Boards, hide, and an iron boss between the bearer and harm."
+      }
+    },
+    "item.round_shield.name.default": {
+      "context": "item round_shield, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Round Shield"
+      }
+    },
     "item.signet_ring.desc.default": {
       "context": "item signet_ring, desc, faith branch default.",
       "glossary": [],
@@ -20989,6 +21085,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Silver Ring"
+      }
+    },
+    "item.turnshoe_boots.desc.default": {
+      "context": "item turnshoe_boots, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Soft leather turned seam-inward, kind to feet that know long roads."
+      }
+    },
+    "item.turnshoe_boots.name.default": {
+      "context": "item turnshoe_boots, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Turnshoe Boots"
       }
     },
     "legend.condition.default": {
@@ -22644,19 +22756,18 @@
     "news.item.acquired": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
-        "icon",
         "item"
       ],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
         "forms": {
           "cases": {
-            "chest": "🎒 From the chest: {icon} {item}.",
-            "earth": "✨ Out of the earth: {icon} {item}.",
-            "other": "🎒 Yours now: {icon} {item}.",
-            "plunder": "🎒 Plunder: {icon} {item}.",
-            "raid": "⚔ Taken in the raid: {icon} {item}.",
-            "spoils": "⚔ Among the spoils: {icon} {item}."
+            "chest": "🎒 From the chest: {item}.",
+            "earth": "✨ Out of the earth: {item}.",
+            "other": "🎒 Yours now: {item}.",
+            "plunder": "🎒 Plunder: {item}.",
+            "raid": "⚔ Taken in the raid: {item}.",
+            "spoils": "⚔ Among the spoils: {item}."
           },
           "param": "source",
           "select": "value"
@@ -22666,18 +22777,17 @@
     "news.item.bought": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
-        "icon",
         "item"
       ],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
-        "text": "🎒 Bought: {icon} {item}."
+        "text": "🎒 Bought: {item}."
       }
     },
     "news.item.duplicate": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
       }
@@ -22685,31 +22795,29 @@
     "news.item.given": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
-        "icon",
         "item",
         "name",
         "regard"
       ],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
-        "text": "🎁 You give {icon} {item} to {name}. (regard {regard})"
+        "text": "🎁 You give {item} to {name}. (regard {regard})"
       }
     },
     "news.item.issued": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
-        "icon",
         "item"
       ],
-      "location": "js/events.js",
+      "location": "js/items.js",
       "source": {
-        "text": "🎒 {icon} {item} is yours now."
+        "text": "🎒 {item} is yours now."
       }
     },
     "news.item.nothing_new": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
         "text": "🎒 Nothing is offered that you do not already own."
       }
@@ -22717,13 +22825,12 @@
     "news.item.sold": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
-        "icon",
         "item",
         "money:gold"
       ],
-      "location": "js/actions.js",
+      "location": "js/items.js",
       "source": {
-        "text": "💰 Sold: {icon} {item} for {money:gold}."
+        "text": "💰 Sold: {item} for {money:gold}."
       }
     },
     "news.life.betrothed_died": {
@@ -24579,6 +24686,16 @@
         "text": "⚙ Settings"
       }
     },
+    "src.0233cbc3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Worn here"
+      }
+    },
     "src.024fa913": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -24900,6 +25017,16 @@
         "text": "Elevated to bishop!"
       }
     },
+    "src.048f6403": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} moves from {name}."
+      }
+    },
     "src.0499b0c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -25218,6 +25345,16 @@
       ],
       "source": {
         "text": "Patience teaches what confidence cannot."
+      }
+    },
+    "src.06895d5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎒 From the chest: {item}."
       }
     },
     "src.0692ca4d": {
@@ -25661,6 +25798,16 @@
       ],
       "source": {
         "text": "No province chosen — a random home will be found."
+      }
+    },
+    "src.08b3ecce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Masterwork"
       }
     },
     "src.08bb60b1": {
@@ -26303,6 +26450,16 @@
         "text": "Flour dust and gossip travel equally well. The miller knows."
       }
     },
+    "src.0c0f6e4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cannot use this slot"
+      }
+    },
     "src.0c226eac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26734,6 +26891,16 @@
         "text": "Great things, then."
       }
     },
+    "src.0f463192": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Worn at death"
+      }
+    },
     "src.0f543212": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -26872,16 +27039,6 @@
       ],
       "source": {
         "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
-      }
-    },
-    "src.10103c50": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Worth about {money:gold}."
       }
     },
     "src.10182c06": {
@@ -27573,6 +27730,26 @@
       ],
       "source": {
         "text": "It is nothing like the drill-yard. The line locks shield to shield, the horns wail, and across a hundred paces of trampled barley the enemy comes on like a grey tide. Somewhere down the wall is {suitor}, white-knuckled on his spear. There is no hiding left now — only the wall, and whether you hold your span of it."
+      }
+    },
+    "src.13a91fad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} - {slot}"
+      }
+    },
+    "src.13a981b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Slot: {slot}. Worth about {money:gold}."
       }
     },
     "src.13aace9f": {
@@ -28511,6 +28688,16 @@
         "text": "Your saga spanned {years} years and {generations} generation."
       }
     },
+    "src.1906976e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Soft leather turned seam-inward, kind to feet that know long roads."
+      }
+    },
     "src.1931f241": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28709,6 +28896,16 @@
       ],
       "source": {
         "text": "Coin spent now buys quiet favor later."
+      }
+    },
+    "src.1a05f182": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎒 {item} is yours now."
       }
     },
     "src.1a074ceb": {
@@ -29421,14 +29618,14 @@
         "text": "An elder seats you and {rival} before the assembly. The terms are old and plain: compensation for the injury, hands clasped before witnesses, and no private revenge."
       }
     },
-    "src.1fa0de66": {
+    "src.1f9735b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
         "js/ui.js"
       ],
       "source": {
-        "text": "Tap a treasure to see its powers — or to sell or gift it."
+        "text": "{slot}: {item}"
       }
     },
     "src.1fbe32eb": {
@@ -29766,7 +29963,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/items.js"
       ],
       "source": {
         "text": "🎒 Nothing is offered that you do not already own."
@@ -30052,6 +30249,16 @@
         "text": "○ No directed study"
       }
     },
+    "src.23376c7c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unavailable during an unresolved event"
+      }
+    },
     "src.23394ec0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30162,6 +30369,16 @@
         "text": "Barracks"
       }
     },
+    "src.23ad101c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "pledged"
+      }
+    },
     "src.23b63bc7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30261,6 +30478,16 @@
       ],
       "source": {
         "text": "No weak neighbor holds land beside yours."
+      }
+    },
+    "src.242aba60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Return it to the armory"
       }
     },
     "src.242faa23": {
@@ -30584,16 +30811,6 @@
         "text": "The seat could be yours, if the notables agree."
       }
     },
-    "src.26166779": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Browse the dealers in rare goods."
-      }
-    },
     "src.26325dab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30862,6 +31079,16 @@
       ],
       "source": {
         "text": "Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything."
+      }
+    },
+    "src.2799ca9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family."
       }
     },
     "src.27abd740": {
@@ -31222,6 +31449,16 @@
       ],
       "source": {
         "text": "Hospitality in {location} comes with obligations left artfully unspoken. Your host waits to see whether you understand."
+      }
+    },
+    "src.2a4ebfb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equip {item}"
       }
     },
     "src.2a70b752": {
@@ -31664,6 +31901,16 @@
         "text": "🕊 {realm} swears a pact of peace — two years of quiet borders."
       }
     },
+    "src.2c9998b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎒 Bought: {item}."
+      }
+    },
     "src.2ca38ff2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32014,6 +32261,16 @@
         "text": "Grinds the valley’s grain for a fee."
       }
     },
+    "src.2ef713a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Left hand"
+      }
+    },
     "src.2f0f97da": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32173,6 +32430,16 @@
       ],
       "source": {
         "text": "Judge it yourself, fairly."
+      }
+    },
+    "src.2fcd457f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Resolve the current event before changing equipment."
       }
     },
     "src.2fde9433": {
@@ -32896,6 +33163,16 @@
         "text": "Burn the evidence, keep your skin."
       }
     },
+    "src.340bf1e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unavailable while traveling"
+      }
+    },
     "src.3431f4a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33599,6 +33876,16 @@
         "text": "Import Save"
       }
     },
+    "src.38edd39d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Change equipment…"
+      }
+    },
     "src.38f3b7b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33999,6 +34286,26 @@
         "text": "The Company Marches"
       }
     },
+    "src.3b38b19b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Masterwork {item}"
+      }
+    },
+    "src.3b3ad5e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Stout leather, an honest buckle, and somewhere for every little necessity."
+      }
+    },
     "src.3b441251": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34027,6 +34334,16 @@
       ],
       "source": {
         "text": "🌾 Buy a plot of land…"
+      }
+    },
+    "src.3b61cb75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Feet"
       }
     },
     "src.3b6ac60b": {
@@ -34682,6 +34999,16 @@
         "text": "Debase the coinage"
       }
     },
+    "src.3f5e6d6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The armory is shared. Only equipped objects grant their powers."
+      }
+    },
     "src.3f63901f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35171,6 +35498,16 @@
       ],
       "source": {
         "text": "A dying householder names who should receive the best beast, the tools, the household goods, and a final gift to the {temple}. There is no clerk — only breath, witnesses, and very little time."
+      }
+    },
+    "src.428a1095": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Body"
       }
     },
     "src.4291df29": {
@@ -35865,6 +36202,16 @@
       ],
       "source": {
         "text": "{money:gold} per plot. Land held together in one settlement is more productive."
+      }
+    },
+    "src.45dc3ad7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Leather Belt"
       }
     },
     "src.45f7c617": {
@@ -36612,6 +36959,16 @@
         "text": "📤 Export this life"
       }
     },
+    "src.49fe5809": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Worn by {name}"
+      }
+    },
     "src.4a0e88f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36911,6 +37268,16 @@
       ],
       "source": {
         "text": "End the war now, at a price."
+      }
+    },
+    "src.4b90d9ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "💰 Sold: {item} for {money:gold}."
       }
     },
     "src.4b9407da": {
@@ -37534,6 +37901,16 @@
         "text": "Name {name} your enemy. (spends the day)"
       }
     },
+    "src.4effc33c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} will occupy both hands."
+      }
+    },
     "src.4f1fc0fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37762,6 +38139,16 @@
       ],
       "source": {
         "text": "A weak constitution."
+      }
+    },
+    "src.50b26a86": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The fatal event unfolded at {province}."
       }
     },
     "src.50b842f4": {
@@ -38294,6 +38681,16 @@
         "text": "Rents, reeves, and repairs."
       }
     },
+    "src.533fe57a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to item"
+      }
+    },
     "src.534dc5f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38695,6 +39092,16 @@
         "text": "Stones are quietest movers after dark."
       }
     },
+    "src.5623a5b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A long ash shaft, an iron leaf, and room enough to keep death back."
+      }
+    },
     "src.562785ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38793,6 +39200,16 @@
       ],
       "source": {
         "text": "Stay. This is home, chains and all."
+      }
+    },
+    "src.5662faa3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Waist"
       }
     },
     "src.5670d1b6": {
@@ -39283,6 +39700,16 @@
       ],
       "source": {
         "text": "Pay for what you take."
+      }
+    },
+    "src.59a7629f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} returns to the armory."
       }
     },
     "src.59b255be": {
@@ -39847,6 +40274,16 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
+    "src.5c80e555": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Confirm equipment change"
+      }
+    },
     "src.5c9085c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39945,6 +40382,16 @@
       ],
       "source": {
         "text": "A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this."
+      }
+    },
+    "src.5d0f6a17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount} gold a season"
       }
     },
     "src.5d199cff": {
@@ -40110,6 +40557,16 @@
         "text": "{pct}% of your noble revenue"
       }
     },
+    "src.5e5abb05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{slot} Equipment"
+      }
+    },
     "src.5e5c8757": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40225,8 +40682,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js",
-        "js/ui.js"
+        "js/events.js"
       ],
       "source": {
         "text": "your spouse"
@@ -40552,6 +41008,16 @@
         "text": "With the ox pulling, you plough deeper and faster than any neighbor. The extra furlongs pay."
       }
     },
+    "src.60868b65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A town market keeps ordinary gear within reach."
+      }
+    },
     "src.608bd625": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40700,6 +41166,16 @@
       ],
       "source": {
         "text": "Seal the charter."
+      }
+    },
+    "src.61726fb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Right hand"
       }
     },
     "src.61766dd4": {
@@ -40962,6 +41438,16 @@
         "text": "🙏 Keep the faith"
       }
     },
+    "src.628e5a9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Go back"
+      }
+    },
     "src.629b5e8a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41152,6 +41638,16 @@
         "text": "First copy in this county: {money:cost}."
       }
     },
+    "src.6459cf0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equip…"
+      }
+    },
     "src.6460a6a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41312,6 +41808,16 @@
       ],
       "source": {
         "text": "Seek a loan"
+      }
+    },
+    "src.6517e893": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Nothing was worn."
       }
     },
     "src.652298c6": {
@@ -41583,6 +42089,16 @@
       ],
       "source": {
         "text": "📋 Report copied — paste it on Discord, in an email, or a GitHub issue."
+      }
+    },
+    "src.66c49281": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Leave this slot empty"
       }
     },
     "src.66d67c2c": {
@@ -41973,6 +42489,16 @@
       ],
       "source": {
         "text": "{icon} {name} — {cost} scholarship"
+      }
+    },
+    "src.69420081": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "An iron cap and a long guard over the nose."
       }
     },
     "src.694d4d79": {
@@ -42796,6 +43322,16 @@
         "text": "Call for a mediator."
       }
     },
+    "src.6db6bdd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "There is no compatible object in the armory."
+      }
+    },
     "src.6dc9eab6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43154,16 +43690,6 @@
       ],
       "source": {
         "text": "Your own soil, your own sweat."
-      }
-    },
-    "src.6fdb7b32": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The strange and precious gather where money does."
       }
     },
     "src.6fe02664": {
@@ -43555,6 +44081,16 @@
       ],
       "source": {
         "text": "The sickness passes your door."
+      }
+    },
+    "src.72402638": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Available"
       }
     },
     "src.7247792f": {
@@ -44039,6 +44575,16 @@
         "text": "A crown of your own — and a war to keep it."
       }
     },
+    "src.74b8d129": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "⚔ Among the spoils: {item}."
+      }
+    },
     "src.74b93f93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44350,6 +44896,16 @@
         "text": "Golden lions could delight the abbot — or scandalize him."
       }
     },
+    "src.76863df1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer."
+      }
+    },
     "src.769001cf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44399,16 +44955,6 @@
       ],
       "source": {
         "text": "Take his hand — you did not cross a war to lose him now."
-      }
-    },
-    "src.770d417d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "💰 Sold: {icon} {item} for {money:gold}."
       }
     },
     "src.770db4b7": {
@@ -44519,6 +45065,16 @@
       ],
       "source": {
         "text": "Dull, cold, and paid."
+      }
+    },
+    "src.7787478b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ring"
       }
     },
     "src.77a12c51": {
@@ -45186,7 +45742,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/items.js"
       ],
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
@@ -45614,16 +46170,6 @@
         "text": "The church is exactly where they went first."
       }
     },
-    "src.7dcb6e80": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Ask after rare goods."
-      }
-    },
     "src.7de60e28": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45792,6 +46338,16 @@
       ],
       "source": {
         "text": "Honest plunder, if plunder can be honest."
+      }
+    },
+    "src.7e98c350": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipped"
       }
     },
     "src.7ea0c05d": {
@@ -46142,6 +46698,16 @@
       ],
       "source": {
         "text": "paste back an exported save text"
+      }
+    },
+    "src.80b1ef84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Plain {item}"
       }
     },
     "src.80c2eb00": {
@@ -47265,6 +47831,16 @@
         "text": "Hear both sides fully."
       }
     },
+    "src.867148a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A city market always has serviceable gear for sale."
+      }
+    },
     "src.8672d776": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47745,6 +48321,16 @@
         "text": "Comrades who love you look less closely at you."
       }
     },
+    "src.898aba68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pledged to a lender"
+      }
+    },
     "src.89b09dda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47813,6 +48399,16 @@
       ],
       "source": {
         "text": "Bought confirmation of the household’s common rights."
+      }
+    },
+    "src.8a6165c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Both hands"
       }
     },
     "src.8a625411": {
@@ -48065,6 +48661,16 @@
         "text": "⚠ {enemy} presses deep into your lands — another season unchecked, and something falls."
       }
     },
+    "src.8b4eb89e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No object is lost. The outfit returns to the family armory at succession."
+      }
+    },
     "src.8b71555f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48093,16 +48699,6 @@
       ],
       "source": {
         "text": "Study or apprenticeship"
-      }
-    },
-    "src.8bbb8083": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "✨ Out of the earth: {icon} {item}."
       }
     },
     "src.8bcc5cfe": {
@@ -48513,6 +49109,16 @@
       ],
       "source": {
         "text": "Rest at the way-house. ({money:2})"
+      }
+    },
+    "src.8e354fe9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose {name}’s {slot} equipment from the shared family armory."
       }
     },
     "src.8e46eee2": {
@@ -49048,16 +49654,6 @@
         "text": "💒 No marriage possible: {reason}"
       }
     },
-    "src.90d6d212": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🎒 Bought: {icon} {item}."
-      }
-    },
     "src.90de2487": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49487,6 +50083,16 @@
       ],
       "source": {
         "text": "A show of force on the roads."
+      }
+    },
+    "src.9406135c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Devotional Pendant"
       }
     },
     "src.9408f4b6": {
@@ -50183,6 +50789,16 @@
         "text": "Masters keep the best work for their own."
       }
     },
+    "src.9827aacb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Minimum age {age}"
+      }
+    },
     "src.982814a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50322,16 +50938,6 @@
       ],
       "source": {
         "text": "Letters & Faith"
-      }
-    },
-    "src.988ed17b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Where coin gathers, curious things follow."
       }
     },
     "src.989351aa": {
@@ -50482,6 +51088,16 @@
       ],
       "source": {
         "text": "{count} counties"
+      }
+    },
+    "src.999ed0b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎁 You give {item} to {name}. (regard {regard})"
       }
     },
     "src.99a2e6ae": {
@@ -50736,6 +51352,16 @@
         "text": "A stranger of real accomplishment in martial matters."
       }
     },
+    "src.9ae0bf6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Not in the household"
+      }
+    },
     "src.9ae75be9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50924,6 +51550,16 @@
       ],
       "source": {
         "text": "You must first bleed in your liege’s wars (service {needed}+, now {current})."
+      }
+    },
+    "src.9c306400": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Nasal Helm"
       }
     },
     "src.9c30c762": {
@@ -51254,16 +51890,6 @@
       ],
       "source": {
         "text": "Sheikh"
-      }
-    },
-    "src.9de5a859": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🎒 Plunder: {icon} {item}."
       }
     },
     "src.9deb646d": {
@@ -52266,6 +52892,16 @@
         "text": "The crown’s gratitude, on the record."
       }
     },
+    "src.a2fd3580": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Turnshoe Boots"
+      }
+    },
     "src.a2feabb2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52705,6 +53341,16 @@
       ],
       "source": {
         "text": "Flee to the woods with what you can carry."
+      }
+    },
+    "src.a5b8c207": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Plain"
       }
     },
     "src.a5d9615a": {
@@ -53560,6 +54206,16 @@
         "text": "The Infirmary"
       }
     },
+    "src.aaef38a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a slot, then choose an exact object from the family armory. Changes cost no day."
+      }
+    },
     "src.aaf11603": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53629,6 +54285,16 @@
       ],
       "source": {
         "text": "At death’s door"
+      }
+    },
+    "src.ab5fcee6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Well-made {item}"
       }
     },
     "src.ab6a56bf": {
@@ -53709,6 +54375,16 @@
       ],
       "source": {
         "text": "✕ Close"
+      }
+    },
+    "src.abdd6ec0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unequip it before selling, gifting, or pledging it."
       }
     },
     "src.abe908ab": {
@@ -54833,6 +55509,16 @@
         "text": "Drill, guard duty, and paid service beneath another person’s banner."
       }
     },
+    "src.b2972ae3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Head"
+      }
+    },
     "src.b2ad7e14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55295,6 +55981,16 @@
         "text": "One word, and {rival} falls — if the web holds."
       }
     },
+    "src.b5154350": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Boards, hide, and an iron boss between the bearer and harm."
+      }
+    },
     "src.b51d04ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55385,6 +56081,16 @@
         "text": "Queen"
       }
     },
+    "src.b5741142": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fell in battle at {province}."
+      }
+    },
     "src.b586777d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55403,6 +56109,16 @@
       ],
       "source": {
         "text": "Your child {childname} lies shivering, skin like a stove-stone. The old women shake their heads."
+      }
+    },
+    "src.b59a59af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Final equipment worn by the deceased"
       }
     },
     "src.b5a5b118": {
@@ -55806,6 +56522,16 @@
         "text": "{kind} · a day’s outing"
       }
     },
+    "src.b7ad8389": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "In the armory"
+      }
+    },
     "src.b7bb7226": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55844,6 +56570,16 @@
       ],
       "source": {
         "text": "You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know."
+      }
+    },
+    "src.b7dd0c74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Round Shield"
       }
     },
     "src.b7e84d3e": {
@@ -56315,6 +57051,16 @@
       ],
       "source": {
         "text": "You kneel before {rulername} of {rname} and lay out your suit: your own lord is unjust, you say, and you would serve a worthier hand — his."
+      }
+    },
+    "src.bb6c5cd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Full figure of {name}"
       }
     },
     "src.bb701ce4": {
@@ -56908,16 +57654,6 @@
         "text": "Be seen, be useful, be remembered."
       }
     },
-    "src.bf73ea6b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🎒 From the chest: {icon} {item}."
-      }
-    },
     "src.bf73ee0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56926,6 +57662,16 @@
       ],
       "source": {
         "text": "{lord} reins in beside your strip of field. “You. You’re the one who works like two men. What is it you want in this life?”"
+      }
+    },
+    "src.bf99362d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A double-edged sword made for the close press of a shield wall."
       }
     },
     "src.bfc383b5": {
@@ -57096,6 +57842,16 @@
       ],
       "source": {
         "text": "Ask the proper observance."
+      }
+    },
+    "src.c0f8fdf4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fell in battle against {enemy}."
       }
     },
     "src.c103062f": {
@@ -57340,6 +58096,16 @@
         "text": "Yield a little power now, keep the crown and their love."
       }
     },
+    "src.c24015c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎒 Plunder: {item}."
+      }
+    },
     "src.c25dc13b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57501,6 +58267,16 @@
         "text": "Completed a pilgrimage to {destination}."
       }
     },
+    "src.c2f826b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Ash Spear"
+      }
+    },
     "src.c2fc86f1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57599,6 +58375,16 @@
       ],
       "source": {
         "text": "The estates have heard your motion this year; they will take another come the new year."
+      }
+    },
+    "src.c3aee117": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "In the family armory."
       }
     },
     "src.c3bc8a35": {
@@ -58703,16 +59489,6 @@
         "text": "Swallow it — this time."
       }
     },
-    "src.cad42abd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "wards off sickness and death"
-      }
-    },
     "src.cadfb6f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58903,16 +59679,6 @@
         "text": "Want nothing of theirs."
       }
     },
-    "src.cbb8a477": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🎒 Yours now: {icon} {item}."
-      }
-    },
     "src.cbca660d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58983,6 +59749,16 @@
         "text": "Buy him ale for the news."
       }
     },
+    "src.cbf2ea16": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No mechanical effect"
+      }
+    },
     "src.cc00f1a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59001,6 +59777,16 @@
       ],
       "source": {
         "text": "A public bench and your mark above the door. A guild member must staff it."
+      }
+    },
+    "src.cc25a532": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Neck"
       }
     },
     "src.cc28b475": {
@@ -59223,6 +60009,16 @@
         "text": "Refused the silver of the house of {late}."
       }
     },
+    "src.cd1d3762": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Broad Sword"
+      }
+    },
     "src.cd204650": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59292,6 +60088,16 @@
       ],
       "source": {
         "text": "Close"
+      }
+    },
+    "src.cda0e041": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fell in battle at {province} against {enemy}."
       }
     },
     "src.cdb2687a": {
@@ -59394,6 +60200,16 @@
         "text": "Cool tiles, murmured recitation, and the scratch of reed pens. Your calligraphy improves line by line, and the master of the madrasa watches your progress with interest."
       }
     },
+    "src.ce65d42e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment cannot be changed while the household is traveling."
+      }
+    },
     "src.ce748ff4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59422,6 +60238,16 @@
       ],
       "source": {
         "text": "Offer a peace pact — or, as an independent king or emperor, one defensive alliance."
+      }
+    },
+    "src.ce9b71ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Browse arms and useful goods."
       }
     },
     "src.ceacdf14": {
@@ -60035,6 +60861,16 @@
         "text": "Anointed against sickness."
       }
     },
+    "src.d32d08b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "two-handed"
+      }
+    },
     "src.d32e8ef9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60343,6 +61179,16 @@
       ],
       "source": {
         "text": "🕊 A humiliating peace. Reparations drain your coffers."
+      }
+    },
+    "src.d56ac454": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a household wearer and compatible slot. This costs no day."
       }
     },
     "src.d58b1503": {
@@ -61287,16 +62133,6 @@
         "text": "Good steel in skilled hands."
       }
     },
-    "src.da93d1aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "⚔ Among the spoils: {icon} {item}."
-      }
-    },
     "src.da99618c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61755,6 +62591,16 @@
       ],
       "source": {
         "text": "Every tide brings someone who owes you a toll."
+      }
+    },
+    "src.dd8b0bac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} returns to the armory from {name}."
       }
     },
     "src.ddb88f28": {
@@ -62245,6 +63091,16 @@
       ],
       "source": {
         "text": "{rival} comes with elders and a careful proposal: speak the injuries plainly, make restitution where it is owed, and swear before witnesses that the quarrel is ended."
+      }
+    },
+    "src.dff47c36": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎒 Yours now: {item}."
       }
     },
     "src.e0060376": {
@@ -63240,16 +64096,6 @@
         "text": "Better a schemer watched at your board than whispering in his hall."
       }
     },
-    "src.e60fa279": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🎁 You give {icon} {item} to {name}. (regard {regard})"
-      }
-    },
     "src.e6320424": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63258,6 +64104,16 @@
       ],
       "source": {
         "text": "Hunt down their field host."
+      }
+    },
+    "src.e63a95ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "⚔ Taken in the raid: {item}."
       }
     },
     "src.e663df00": {
@@ -63578,6 +64434,16 @@
       ],
       "source": {
         "text": "hardier"
+      }
+    },
+    "src.e8061023": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This equipment change will make the following moves:"
       }
     },
     "src.e80c41fa": {
@@ -64151,16 +65017,6 @@
         "text": "Wine, music, and thinner pockets by morning."
       }
     },
-    "src.eb192974": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Its powers serve whoever heads the family."
-      }
-    },
     "src.eb399071": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64591,16 +65447,6 @@
         "text": "🎲 Random name"
       }
     },
-    "src.edbfad4d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "🎒 {icon} {item} is yours now."
-      }
-    },
     "src.edc45b74": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64790,6 +65636,16 @@
       ],
       "source": {
         "text": "🧰 {name} begins work in {career}."
+      }
+    },
+    "src.ef20cda5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount}% health protection"
       }
     },
     "src.ef2e8935": {
@@ -65152,6 +66008,16 @@
         "text": "A baby, swaddled in rags, left at your doorstep in the night. It looks up at you and does not cry."
       }
     },
+    "src.f0e4e59d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Either hand"
+      }
+    },
     "src.f0ef0c46": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65510,6 +66376,16 @@
       ],
       "source": {
         "text": "It is not about strength. You pay up, aching in new places — and wiser."
+      }
+    },
+    "src.f33acb32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A small holy sign worn close to the heart."
       }
     },
     "src.f342cc36": {
@@ -66384,6 +67260,16 @@
         "text": "Some flaw in the vows, some closeness of blood — the church may be persuaded the marriage never was."
       }
     },
+    "src.f83d06f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "✨ Out of the earth: {item}."
+      }
+    },
     "src.f86ab027": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66794,16 +67680,6 @@
         "text": "Settle the Wasteland"
       }
     },
-    "src.faf91a24": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "⚔ Taken in the raid: {icon} {item}."
-      }
-    },
     "src.fb0a07e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66952,6 +67828,16 @@
       ],
       "source": {
         "text": "Automation (Z)"
+      }
+    },
+    "src.fba7f597": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment"
       }
     },
     "src.fbaaf622": {
@@ -67592,6 +68478,16 @@
       ],
       "source": {
         "text": "Fabricated a claim to {cname}."
+      }
+    },
+    "src.ff6e6ca9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Well-made"
       }
     },
     "src.ff70c1aa": {
@@ -69761,6 +70657,14 @@
         "text": "At war — policy is suspended"
       }
     },
+    "ui:Available": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Available"
+      }
+    },
     "ui:Back": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -69775,6 +70679,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Back to destinations"
+      }
+    },
+    "ui:Back to item": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to item"
       }
     },
     "ui:Banner service": {
@@ -69859,6 +70771,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet."
+      }
+    },
+    "ui:Body": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Body"
+      }
+    },
+    "ui:Both hands": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Both hands"
       }
     },
     "ui:Bread and coin for the poor at the {temple} gate. ({money:10})": {
@@ -69952,6 +70880,14 @@
         "text": "Cancel"
       }
     },
+    "ui:Cannot use this slot": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cannot use this slot"
+      }
+    },
     "ui:Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -69966,6 +70902,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Chamberlain"
+      }
+    },
+    "ui:Change equipment…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Change equipment…"
       }
     },
     "ui:Chief Imam": {
@@ -69994,12 +70938,28 @@
         "text": "Choose a destination for {purpose}"
       }
     },
+    "ui:Choose a household wearer and compatible slot. This costs no day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a household wearer and compatible slot. This costs no day."
+      }
+    },
     "ui:Choose a purpose and travel county by county over game time.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Choose a purpose and travel county by county over game time."
+      }
+    },
+    "ui:Choose a slot, then choose an exact object from the family armory. Changes cost no day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a slot, then choose an exact object from the family armory. Changes cost no day."
       }
     },
     "ui:Choose an education focus first.": {
@@ -70026,12 +70986,33 @@
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
       }
     },
+    "ui:Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer."
+      }
+    },
     "ui:Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map."
+      }
+    },
+    "ui:Choose {name}’s {slot} equipment from the shared family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name",
+        "slot"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose {name}’s {slot} equipment from the shared family armory."
       }
     },
     "ui:Chronicle of the realms": {
@@ -70118,6 +71099,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Commit {money:stake}…"
+      }
+    },
+    "ui:Confirm equipment change": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Confirm equipment change"
       }
     },
     "ui:Confirm the contract": {
@@ -70368,6 +71357,14 @@
         "text": "Each settlement keeps its own buildings — tap one to see them and raise more."
       }
     },
+    "ui:Either hand": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Either hand"
+      }
+    },
     "ui:Empty": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -70384,6 +71381,48 @@
       "location": "js/ui.js",
       "source": {
         "text": "Enterprise in {settlement}"
+      }
+    },
+    "ui:Equip {item}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equip {item}"
+      }
+    },
+    "ui:Equipment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment"
+      }
+    },
+    "ui:Equipment cannot be changed while the household is traveling.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment cannot be changed while the household is traveling."
+      }
+    },
+    "ui:Equipped": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipped"
+      }
+    },
+    "ui:Equip…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equip…"
       }
     },
     "ui:Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting.": {
@@ -70466,6 +71505,45 @@
         "text": "Favorable"
       }
     },
+    "ui:Feet": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Feet"
+      }
+    },
+    "ui:Fell in battle against {enemy}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enemy"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fell in battle against {enemy}."
+      }
+    },
+    "ui:Fell in battle at {province} against {enemy}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enemy",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fell in battle at {province} against {enemy}."
+      }
+    },
+    "ui:Fell in battle at {province}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fell in battle at {province}."
+      }
+    },
     "ui:Fields at {settlement}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -70474,6 +71552,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Fields at {settlement}"
+      }
+    },
+    "ui:Final equipment worn by the deceased": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Final equipment worn by the deceased"
       }
     },
     "ui:Financial contract": {
@@ -70528,6 +71614,16 @@
         "text": "French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors."
       }
     },
+    "ui:Full figure of {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Full figure of {name}"
+      }
+    },
     "ui:Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -70547,6 +71643,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry."
+      }
+    },
+    "ui:Go back": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Go back"
       }
     },
     "ui:God": {
@@ -70611,6 +71715,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Hajji"
+      }
+    },
+    "ui:Head": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Head"
       }
     },
     "ui:Held by {realm}": {
@@ -70748,6 +71860,22 @@
         "text": "In default — assigned revenues are paying this down."
       }
     },
+    "ui:In the armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "In the armory"
+      }
+    },
+    "ui:In the family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "In the family armory."
+      }
+    },
     "ui:Inherited debt:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -70828,6 +71956,22 @@
         "text": "Leave it idle"
       }
     },
+    "ui:Leave this slot empty": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Leave this slot empty"
+      }
+    },
+    "ui:Left hand": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Left hand"
+      }
+    },
     "ui:Lessons begin at age 6.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -70870,12 +72014,40 @@
         "text": "Map filter: {mode} (R)"
       }
     },
+    "ui:Masterwork": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Masterwork"
+      }
+    },
+    "ui:Masterwork {item}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "Masterwork {item}"
+      }
+    },
     "ui:Merchant advance": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Merchant advance"
+      }
+    },
+    "ui:Minimum age {age}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Minimum age {age}"
       }
     },
     "ui:Mosque Servant": {
@@ -70938,6 +72110,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Name {name} your enemy. (spends the day)"
+      }
+    },
+    "ui:Neck": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Neck"
       }
     },
     "ui:Neutral": {
@@ -71022,6 +72202,14 @@
         "text": "No lender will advance more while revenues are in default."
       }
     },
+    "ui:No mechanical effect": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No mechanical effect"
+      }
+    },
     "ui:No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -71038,6 +72226,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No notable traits."
+      }
+    },
+    "ui:No object is lost. The outfit returns to the family armory at succession.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No object is lost. The outfit returns to the family armory at succession."
       }
     },
     "ui:No occupation": {
@@ -71128,6 +72324,14 @@
         "text": "Not enough money."
       }
     },
+    "ui:Not in the household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Not in the household"
+      }
+    },
     "ui:Not now": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -71142,6 +72346,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Nothing of note."
+      }
+    },
+    "ui:Nothing was worn.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Nothing was worn."
       }
     },
     "ui:Novice": {
@@ -71387,12 +72599,38 @@
         "text": "Pilgrim"
       }
     },
+    "ui:Plain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Plain"
+      }
+    },
+    "ui:Plain {item}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "Plain {item}"
+      }
+    },
     "ui:Pledged loan": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Pledged loan"
+      }
+    },
+    "ui:Pledged to a lender": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pledged to a lender"
       }
     },
     "ui:Pledged: {asset}": {
@@ -71455,6 +72693,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Political attention: {used} of {capacity} assigned."
+      }
+    },
+    "ui:Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family."
       }
     },
     "ui:Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design.": {
@@ -71830,6 +73076,14 @@
         "text": "Requires {skill} Stewardship."
       }
     },
+    "ui:Resolve the current event before changing equipment.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Resolve the current event before changing equipment."
+      }
+    },
     "ui:Restore the coinage?": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -71856,6 +73110,14 @@
         "text": "Restore the crown of {title}"
       }
     },
+    "ui:Return it to the armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Return it to the armory"
+      }
+    },
     "ui:Return to title": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -71870,6 +73132,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Revenue assigned to lenders"
+      }
+    },
+    "ui:Right hand": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Right hand"
+      }
+    },
+    "ui:Ring": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ring"
       }
     },
     "ui:Ruins of {building}": {
@@ -72084,6 +73362,17 @@
         "text": "Sign and receive {money:amount}"
       }
     },
+    "ui:Slot: {slot}. Worth about {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "slot"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Slot: {slot}. Worth about {money:gold}."
+      }
+    },
     "ui:Sovereign — kneels to no one": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72164,14 +73453,6 @@
         "text": "Tap a marked county or choose it from the list. Routes use settled counties and authored straits."
       }
     },
-    "ui:Tap a treasure to see its powers — or to sell or gift it.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Tap a treasure to see its powers — or to sell or gift it."
-      }
-    },
     "ui:Tap the 🚩 on the map to give march orders.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72212,6 +73493,14 @@
         "text": "The Royal Council"
       }
     },
+    "ui:The armory is shared. Only equipped objects grant their powers.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The armory is shared. Only equipped objects grant their powers."
+      }
+    },
     "ui:The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72244,6 +73533,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "The estates have heard your motion this year; they will take another come the new year."
+      }
+    },
+    "ui:The fatal event unfolded at {province}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The fatal event unfolded at {province}."
       }
     },
     "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
@@ -72330,6 +73629,14 @@
         "text": "The ± beside the stat is last season’s real change — events and deeds included."
       }
     },
+    "ui:There is no compatible object in the armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "There is no compatible object in the armory."
+      }
+    },
     "ui:There is no heir.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72352,6 +73659,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This creates a dynastic tie, but this child does not currently transmit the crown."
+      }
+    },
+    "ui:This equipment change will make the following moves:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This equipment change will make the following moves:"
       }
     },
     "ui:This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.": {
@@ -72446,6 +73761,22 @@
         "text": "Turning back refunds nothing."
       }
     },
+    "ui:Unavailable during an unresolved event": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unavailable during an unresolved event"
+      }
+    },
+    "ui:Unavailable while traveling": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unavailable while traveling"
+      }
+    },
     "ui:Undermine your rival by fair means or foul.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72462,6 +73793,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Undermine {name} by fair means or foul."
+      }
+    },
+    "ui:Unequip it before selling, gifting, or pledging it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unequip it before selling, gifting, or pledging it."
       }
     },
     "ui:Unrecorded": {
@@ -72494,6 +73833,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Vassal dues"
+      }
+    },
+    "ui:Waist": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Waist"
       }
     },
     "ui:Waqf Patron": {
@@ -72537,6 +73884,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Weight-denominated contract; price movement does not change the amount due."
+      }
+    },
+    "ui:Well-made": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Well-made"
+      }
+    },
+    "ui:Well-made {item}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "Well-made {item}"
       }
     },
     "ui:When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.": {
@@ -72605,14 +73970,30 @@
         "text": "Work of {name}"
       }
     },
-    "ui:Worth about {money:gold}.": {
+    "ui:Worn at death": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Worn at death"
+      }
+    },
+    "ui:Worn by {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "money:gold"
+        "name"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Worth about {money:gold}."
+        "text": "Worn by {name}"
+      }
+    },
+    "ui:Worn here": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Worn here"
       }
     },
     "ui:You are already at war.": {
@@ -73307,6 +74688,14 @@
         "text": "overextended — your income & levy cut {pct}%"
       }
     },
+    "ui:pledged": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "pledged"
+      }
+    },
     "ui:priest": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -73555,20 +74944,20 @@
         "text": "this land"
       }
     },
+    "ui:two-handed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "two-handed"
+      }
+    },
     "ui:vassal of": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "vassal of"
-      }
-    },
-    "ui:wards off sickness and death": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "wards off sickness and death"
       }
     },
     "ui:worked by {name}": {
@@ -73718,7 +75107,7 @@
     "ui:your spouse": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui.js",
+      "location": "js/events.js",
       "source": {
         "text": "your spouse"
       }
@@ -73729,6 +75118,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "your vows forbid it."
+      }
+    },
+    "ui:{amount} gold a season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount} gold a season"
       }
     },
     "ui:{amount} piety a season": {
@@ -73791,6 +75190,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{amount}% for {years} years"
+      }
+    },
+    "ui:{amount}% health protection": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount}% health protection"
       }
     },
     "ui:{asset} is taken, prestige falls, and lenders refuse the household for four seasons.": {
@@ -74010,6 +75419,48 @@
         "text": "{icon} {name} — {money:gold}"
       }
     },
+    "ui:{item} moves from {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} moves from {name}."
+      }
+    },
+    "ui:{item} returns to the armory from {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} returns to the armory from {name}."
+      }
+    },
+    "ui:{item} returns to the armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} returns to the armory."
+      }
+    },
+    "ui:{item} will occupy both hands.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} will occupy both hands."
+      }
+    },
     "ui:{kind} · a day’s outing": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -74156,6 +75607,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{name} ({role})"
+      }
+    },
+    "ui:{name} - {slot}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name",
+        "slot"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} - {slot}"
       }
     },
     "ui:{name} · {relation}, age {age}{heir}": {
@@ -74540,6 +76002,27 @@
       "location": "js/ui.js",
       "source": {
         "text": "{skill} · {money:amount} each season"
+      }
+    },
+    "ui:{slot} Equipment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "slot"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{slot} Equipment"
+      }
+    },
+    "ui:{slot}: {item}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "slot"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{slot}: {item}"
       }
     },
     "ui:{stance} — suspended during war": {
