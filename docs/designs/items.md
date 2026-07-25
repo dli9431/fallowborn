@@ -31,6 +31,9 @@ procedural art.
 health protection. Battle, gold, prestige, and piety effects count only when worn by the
 current head. Unequipped wealth is mechanically inert. Base clothing shown by the paper
 doll is rank/profession/culture dress and never occupies an armory slot.
+Equipped footwear replaces the cosmetic shoes and follows the leg centers. Weapon poses
+align the palms with their grips: one-handed blades are held at the character's sides,
+while a two-handed weapon brings both arms onto its shared shaft.
 
 Ordinary gear can recur through town/city markets, peddlers, raids, plots, and war
 spoils. `offer_gear` guarantees an ordinary market offer; `offer_item` uses the full

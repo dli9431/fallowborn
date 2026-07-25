@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.1';
+  FB.VERSION = '1.54.2';
   FB.CHANGELOG = [
+    { v: '1.54.2', date: '2026-07-25', changes: [
+      'Equipment figures now align boots with legs and place hands around one- and two-handed weapon grips.',
+      'Equipment slot pickers now open over the equipment sheet and apply selections without a second confirmation.'
+    ] },
     { v: '1.54.1', date: '2026-07-25', changes: [
       'Settlement names in province Land tabs now stay on one line and wrap cleanly between places.',
       'Finance, council, and estates displays now use the broadly supported money icon.'

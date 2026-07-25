@@ -2220,6 +2220,14 @@ window.FB = window.FB || {};
   UI.openModal = openModal;
   UI._gmDismiss = true;
   UI.closeModal = function () {
+    const equipmentPicker = $('equip-picker-overlay');
+    if (equipmentPicker) {
+      equipmentPicker.parentNode.removeChild(equipmentPicker);
+      const pickerBack = UI._equipPickerReturnFocus;
+      UI._equipPickerReturnFocus = null;
+      if (pickerBack && document.documentElement.contains(pickerBack)) pickerBack.focus();
+      return;
+    }
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
     const back = UI._gmReturnFocus;
@@ -4935,6 +4943,7 @@ window.FB = window.FB || {};
   }
 
   function finishEquipment(cid, ref, returnMode) {
+    UI._equipPickerReturnFocus = null;
     UI.refresh();
     const exitMode = equipmentExitMode(returnMode);
     if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
@@ -4943,53 +4952,14 @@ window.FB = window.FB || {};
     else UI.closeModal();
   }
 
-  function confirmEquip(cid, slot, ref, returnMode) {
+  function applyEquip(cid, slot, ref, returnMode) {
     const s = FB.state;
-    const preview = FB.equipPreview(s, cid, slot, ref);
-    if (!preview.ok) {
-      UI.toast(equipCheckText(preview));
+    const result = FB.equipItem(s, cid, slot, ref);
+    if (!result.ok) {
+      UI.toast(equipCheckText(result));
       return;
     }
-    const item = preview.item;
-    const changes = [];
-    if (item.grip === 2) changes.push(FB.T('{item} will occupy both hands.', {
-      item:FB.itemName(s, ref)
-    }));
-    for (const removed of preview.removed) {
-      const wearer = s.chars[removed.cid];
-      if (removed.ref === ref) {
-        if (removed.cid !== cid) {
-          changes.push(FB.T('{item} moves from {name}.', {
-            item:FB.itemName(s, ref),
-            name:wearer ? FB.fullName(wearer) : removed.cid
-          }));
-        }
-        continue;
-      }
-      changes.push(FB.T('{item} returns to the armory from {name}.', {
-        item:FB.itemName(s, removed.ref),
-        name:wearer ? FB.fullName(wearer) : removed.cid
-      }));
-    }
-    if (!changes.length) {
-      FB.equipItem(s, cid, slot, ref);
-      finishEquipment(cid, ref, returnMode);
-      return;
-    }
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'This equipment change will make the following moves:')) + '</p><ul>';
-    for (const change of changes) h += '<li>' + esc(change) + '</li>';
-    h += '</ul></div><div class="gm-list">' +
-      '<button class="actionbtn" id="equip-confirm">' + esc(FB.T('Confirm equipment change')) +
-      '</button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Go back')) + '</button>';
-    openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h);
-    $('equip-confirm').addEventListener('click', function () {
-      const result = FB.equipItem(s, cid, slot, ref);
-      if (result.ok) finishEquipment(cid, ref, returnMode);
-    });
-    $('gm-cancel').addEventListener('click', function () {
-      UI.showEquipSlot(cid, slot, returnMode);
-    });
+    finishEquipment(cid, ref, returnMode);
   }
 
   UI.showEquipSlot = function (cid, slot, returnMode) {
@@ -5052,21 +5022,53 @@ window.FB = window.FB || {};
     const cancelLabel = equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close');
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(cancelLabel) + '</button>';
-    openModal(FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) }), h);
-    FB.paintFaces($('gm-body'), s);
-    const empty = $('equip-empty');
+    const pickerTitle = FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) });
+    let pickerRoot = $('gm-body');
+    let nested = false;
+    if (equipmentExit !== null && !$('genmodal').classList.contains('hidden')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'equip-picker-overlay';
+      overlay.className = 'equip-picker-overlay';
+      overlay.innerHTML = '<div class="equip-picker-card" role="dialog" aria-modal="true" ' +
+        'aria-labelledby="equip-picker-title"><h3 id="equip-picker-title">' +
+        esc(pickerTitle) + '</h3><div class="equip-picker-body">' + h + '</div></div>';
+      UI._equipPickerReturnFocus = document.activeElement;
+      pickerRoot.appendChild(overlay);
+      FB.localizeTree(overlay);
+      if (!FB.isTouch) {
+        const numbered = overlay.querySelectorAll('.actionbtn');
+        for (let n = 0; n < numbered.length && n < 18; n++) {
+          numbered[n].insertAdjacentHTML('afterbegin', hintFor(n));
+        }
+      }
+      overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) UI.closeModal();
+      });
+      nested = true;
+      pickerRoot = overlay;
+      setTimeout(function () {
+        const first = overlay.querySelector('button:not(:disabled)');
+        if (first) first.focus({ preventScroll:true });
+      }, 0);
+    } else {
+      openModal(pickerTitle, h);
+      pickerRoot = $('gm-body');
+    }
+    FB.paintFaces(pickerRoot, s);
+    const empty = pickerRoot.querySelector('#equip-empty');
     if (empty) empty.addEventListener('click', function () {
       FB.unequipItem(s, cid, slot);
       finishEquipment(cid, current, returnMode);
     });
-    const choices = $('gm-body').querySelectorAll('[data-equip-ref]');
+    const choices = pickerRoot.querySelectorAll('[data-equip-ref]');
     for (let i = 0; i < choices.length; i++) {
       choices[i].addEventListener('click', function () {
-        confirmEquip(cid, slot, choices[i].getAttribute('data-equip-ref'), returnMode);
+        applyEquip(cid, slot, choices[i].getAttribute('data-equip-ref'), returnMode);
       });
     }
-    $('gm-cancel').addEventListener('click', function () {
-      if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
+    pickerRoot.querySelector('#gm-cancel').addEventListener('click', function () {
+      if (nested) UI.closeModal();
+      else if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
       else if (returnMode === 'character') UI.showCharModal(cid);
       else UI.closeModal();
     });
@@ -5116,7 +5118,7 @@ window.FB = window.FB || {};
     const choices = $('gm-body').querySelectorAll('[data-item-equip-cid]');
     for (let i = 0; i < choices.length; i++) {
       choices[i].addEventListener('click', function () {
-        confirmEquip(choices[i].getAttribute('data-item-equip-cid'),
+        applyEquip(choices[i].getAttribute('data-item-equip-cid'),
           choices[i].getAttribute('data-item-equip-slot'), ref, 'item');
       });
     }

@@ -57,9 +57,11 @@ an **Equip items…** button. It opens a dedicated modal with one deterministic 
 figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
-navigation, and opens a numbered compatible-armory list; no drag-and-drop path is required.
-Two-handed and replacement moves receive a confirmation that names every displaced hand
-object and prior wearer. Equipment controls disable during travel or an unresolved event.
+navigation, and opens a numbered compatible-armory list over the still-visible equipment
+sheet; no drag-and-drop path is required.
+Choosing an object applies the equipment change immediately; displaced objects return to
+the armory without a second confirmation. Equipment controls disable during travel or an
+unresolved event.
 The mechanically active totals from worn items appear beneath the figure, including an
 explicit empty state. On narrow phones the figure and bonus summary stack above the same
 two-column grid.

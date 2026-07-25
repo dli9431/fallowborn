@@ -185,10 +185,21 @@ window.FB = window.FB || {};
       ctx.fillStyle = base;
       for (let b = -1; b <= 1; b += 2) {
         ctx.beginPath();
-        ctx.moveTo(b * 8, -31); ctx.lineTo(b * 25, -31);
-        ctx.lineTo(b * 25, 16); ctx.lineTo(b * 34, 28);
-        ctx.lineTo(b * 32, 35); ctx.lineTo(b * 7, 33);
+        ctx.moveTo(b * 14, -31); ctx.lineTo(b * 35, -31);
+        ctx.quadraticCurveTo(b * 36, -3, b * 33, 17);
+        ctx.quadraticCurveTo(b * 34, 21, b * 40, 25);
+        ctx.quadraticCurveTo(b * 39, 32, b * 31, 34);
+        ctx.lineTo(b * 14, 33);
+        ctx.quadraticCurveTo(b * 11, 29, b * 14, 22);
         ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = 'rgba(205,163,119,0.42)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(b * 16, -25); ctx.lineTo(b * 33, -25);
+        ctx.moveTo(b * 15, 18); ctx.quadraticCurveTo(b * 24, 14, b * 33, 18);
+        ctx.stroke();
+        ctx.strokeStyle = '#241d18';
+        ctx.lineWidth = 2.2;
       }
     } else if (kind === 'chest') {
       ctx.fillStyle = base; ctx.fillRect(-30, -24, 60, 48); ctx.strokeRect(-30, -24, 60, 48);
@@ -588,10 +599,13 @@ window.FB = window.FB || {};
     ctx.strokeStyle = hose; ctx.lineWidth = 16; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(68, 190); ctx.lineTo(64, 250);
     ctx.moveTo(92, 190); ctx.lineTo(96, 250); ctx.stroke();
-    ctx.strokeStyle = '#2b211b'; ctx.lineWidth = 13;
-    ctx.beginPath(); ctx.moveTo(59, 257); ctx.lineTo(70, 257);
-    ctx.moveTo(90, 257); ctx.lineTo(101, 257); ctx.stroke();
-    if (feet) drawItemArt(ctx, feet, 80, 248, 0.66, 0, false);
+    if (feet) {
+      drawItemArt(ctx, feet, 80, 248, 0.66, 0, false);
+    } else {
+      ctx.strokeStyle = '#2b211b'; ctx.lineWidth = 13;
+      ctx.beginPath(); ctx.moveTo(59, 257); ctx.lineTo(70, 257);
+      ctx.moveTo(90, 257); ctx.lineTo(101, 257); ctx.stroke();
+    }
 
     // rank/profession/culture clothing, independent of equipment
     const robe = look.faith === 'muslim' || look.profession === 'monk' ||
@@ -615,18 +629,34 @@ window.FB = window.FB || {};
       ctx.beginPath(); ctx.moveTo(61, 132); ctx.lineTo(99, 132); ctx.stroke();
     }
 
-    // sleeves, arms, and hands
-    ctx.strokeStyle = look.cloth; ctx.lineWidth = 15; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(55, 121); ctx.lineTo(38, 198);
-    ctx.moveTo(105, 121); ctx.lineTo(122, 198); ctx.stroke();
-    ctx.fillStyle = SKIN[PALE.indexOf(c.culture) >= 0 ? 0 :
-      (BROWN.indexOf(c.culture) >= 0 ? 2 : (c.culture === 'nubian' ? 3 : 1))][0];
-    ctx.beginPath(); ctx.arc(37, 204, 8, 0, Math.PI * 2);
-    ctx.arc(123, 204, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.lineCap = 'butt';
+    const skinPair = SKIN[PALE.indexOf(c.culture) >= 0 ? 0 :
+      (BROWN.indexOf(c.culture) >= 0 ? 2 : (c.culture === 'nubian' ? 3 : 1))];
+    const twoHanded = right && left && right.ref === left.ref && right.grip === 2;
+
+    // One-handed poses keep the arms at the sides. A two-handed pose is
+    // painted over the torso below so both sleeves can meet the shared grip.
+    if (!twoHanded) {
+      ctx.strokeStyle = look.cloth; ctx.lineWidth = 15; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(55, 121); ctx.lineTo(38, 198);
+      ctx.moveTo(105, 121); ctx.lineTo(122, 198); ctx.stroke();
+      ctx.fillStyle = skinPair[0];
+      ctx.beginPath(); ctx.arc(37, 204, 8, 0, Math.PI * 2);
+      ctx.arc(123, 204, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.lineCap = 'butt';
+    }
 
     if (body) drawItemArt(ctx, body, 80, 151, 1.04, 0, false);
     if (waist) drawItemArt(ctx, waist, 80, 187, 0.63, 0, false);
+
+    if (twoHanded) {
+      ctx.strokeStyle = look.cloth; ctx.lineWidth = 15; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(55, 121); ctx.lineTo(67, 207);
+      ctx.moveTo(105, 121); ctx.lineTo(80, 177); ctx.stroke();
+      ctx.fillStyle = skinPair[0];
+      ctx.beginPath(); ctx.arc(67, 207, 8, 0, Math.PI * 2);
+      ctx.arc(80, 177, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.lineCap = 'butt';
+    }
 
     // Reuse the compact face layer without its backdrop or item overlays.
     const face = document.createElement('canvas');
@@ -649,16 +679,33 @@ window.FB = window.FB || {};
     if (head) drawItemArt(ctx, head, 80, 48, 1.02, 0, false);
 
     // The character's right hand is viewer-left; art is mirrored there.
-    if (right && left && right.ref === left.ref && right.grip === 2) {
-      drawItemArt(ctx, right, 80, 170, 1.34, -0.06, false);
+    if (twoHanded) {
+      drawItemArt(ctx, right, 86, 164, 1.34, 0.42, false);
+      ctx.fillStyle = skinPair[0]; ctx.strokeStyle = skinPair[1]; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(67, 207, 6, 7, 0.42, 0, Math.PI * 2);
+      ctx.ellipse(80, 177, 6, 7, 0.42, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else {
       if (right) {
-        const rs = right.art && right.art.kind === 'shield' ? 0.92 : 0.72;
-        drawItemArt(ctx, right, 36, 174, rs, -0.12, true);
+        const rk = right.art && right.art.kind;
+        const rs = rk === 'shield' ? 0.92 : 0.72;
+        drawItemArt(ctx, right, rk === 'sword' || rk === 'seax' ? 35 : 36,
+          rk === 'sword' || rk === 'seax' ? 184 : 174, rs, -0.12, true);
+        if (rk === 'sword' || rk === 'seax') {
+          ctx.fillStyle = skinPair[0]; ctx.strokeStyle = skinPair[1]; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.ellipse(37, 204, 6, 7, -0.12, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
       }
       if (left) {
-        const ls = left.art && left.art.kind === 'shield' ? 0.92 : 0.72;
-        drawItemArt(ctx, left, 124, 174, ls, 0.12, false);
+        const lk = left.art && left.art.kind;
+        const ls = lk === 'shield' ? 0.92 : 0.72;
+        drawItemArt(ctx, left, lk === 'sword' || lk === 'seax' ? 125 : 124,
+          lk === 'sword' || lk === 'seax' ? 184 : 174, ls, 0.12, false);
+        if (lk === 'sword' || lk === 'seax') {
+          ctx.fillStyle = skinPair[0]; ctx.strokeStyle = skinPair[1]; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.ellipse(123, 204, 6, 7, 0.12, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
       }
     }
     if (ring) drawItemArt(ctx, ring, 124, 205, 0.17, 0, false);
