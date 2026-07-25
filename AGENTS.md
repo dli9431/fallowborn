@@ -50,15 +50,16 @@ same number and collide.
 **Default: commit directly onto `main`.** In the primary working directory, just commit your
 work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
 
-**Only when working inside a git worktree** do not commit straight onto `main`. Instead:
+**Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
+move, prune, repair, or otherwise modify a worktree or its registration.
 
-1. Create a commit on a temporary branch inside the worktree.
-2. Merge that temp branch into `main`.
-3. Once the merge is in `main`, clean up: remove the worktree, then delete the branch —
-   `git worktree remove <path>` followed by `git branch -d <branch>` (use `-d`, not `-D`, so
-   git refuses if the branch isn't fully merged). Confirm the worktree is clean first;
-   `git worktree remove` discards any uncommitted work in it. Leaving stale branches and
-   worktrees around is what let old, already-merged branches pile up.
+**When the owner explicitly asks for a new branch and a merge into `main`:**
+
+1. Create the requested temporary branch in the current checkout and commit the work there.
+2. Merge that temporary branch into `main`.
+3. Once the branch is fully merged, switch the current checkout off it if Git requires that,
+   then delete **only the branch** with `git branch -d <branch>` (use `-d`, not `-D`, so Git
+   refuses if it is not fully merged). Leave every worktree and worktree registration intact.
 
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
 touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
