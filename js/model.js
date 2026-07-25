@@ -134,7 +134,7 @@ window.FB = window.FB || {};
       childrenIds: []
     };
     const q = opts.quality || 0;
-    for (const s of SKILLS) c.skills[s] = FB.clamp(FB.ri(0, 6) + q, 0, FBDATA.balance.skillHardCap || 40);
+    for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q);
     if (!opts.traits) {
       const pool = Object.keys(FBDATA.traits).filter(t => !FBDATA.traits[t].noRandom &&
         ['veteran', 'literate', 'pilgrim', 'scarred', 'one_eyed', 'maimed', 'kinslayer', 'excommunicated'].indexOf(t) < 0);
@@ -234,22 +234,28 @@ window.FB = window.FB || {};
     // Equipped household gear sharpens its wearer (FB.itemBonus loads later).
     if (FB.state && FB.itemBonus && FB.state.chars &&
       FB.state.chars[c.id] === c) v += FB.itemBonus(FB.state, key, c.id);
-    return FB.clamp(v, 0, FBDATA.balance.skillHardCap || 40);
+    return Math.max(0, v);
   };
 
-  /* Skill growth is a soft cap, not a wall. Below balance.skillSoftCap every
-     gain lands; past it each point must beat a (softCap/current)^2 roll, so
-     piling a whole life into one stat yields less and less past it.
-     balance.skillHardCap is the true ceiling. Returns points actually gained. */
+  /* Skill growth is uncapped. Below balance.skillSoftCap every gain lands;
+     past it each point must beat a (softCap/current)^2 roll. At and beyond
+     balance.skillMasteryThreshold that chance is further multiplied by
+     (masteryThreshold/current)^skillMasteryPower. Only the raw trained skill
+     sets these odds; traits and equipment do not make training harder.
+     Returns points actually gained. */
   FB.gainSkill = function (c, key, n) {
-    const B = FBDATA.balance, soft = B.skillSoftCap || 20, hard = B.skillHardCap || 40;
+    const B = FBDATA.balance;
+    const soft = B.skillSoftCap || 20;
+    const mastery = B.skillMasteryThreshold || 40;
+    const power = B.skillMasteryPower !== undefined ? B.skillMasteryPower : 8;
     let gained = 0;
     for (let i = 0; i < (n || 1); i++) {
       const cur = c.skills[key] || 0;
-      if (cur >= hard) break;
       if (cur >= soft) {
         const x = soft / cur;
-        if (!FB.chance(x * x)) continue;
+        let chance = x * x;
+        if (cur >= mastery) chance *= Math.pow(mastery / cur, power);
+        if (!FB.chance(chance)) continue;
       }
       c.skills[key] = cur + 1;
       gained++;

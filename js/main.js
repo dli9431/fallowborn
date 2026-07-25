@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.56.1';
+  FB.VERSION = '1.56.2';
   FB.CHANGELOG = [
+    { v: '1.56.2', date: '2026-07-25', changes: [
+      'Skills can now rise beyond 40, with sharply diminishing advancement after mastery.'
+    ] },
     { v: '1.56.1', date: '2026-07-25', changes: [
       'Embedded phone play now shows an in-game Back control for dismissible dialogs, keeping itch fullscreen active.'
     ] },
@@ -800,7 +803,7 @@ window.FB = window.FB || {};
     });
     me.health = 8;
     me.dyn = FB.dynastyName(pr.culture, me.name, pr.name);
-    if (sc.mar) me.skills.mar = FB.clamp(me.skills.mar + sc.mar, 0, FBDATA.balance.skillHardCap || 40);
+    if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
     state.player.charId = me.id;
     FB.setCareer(state, me, sc.profession, 'journeyman');
 

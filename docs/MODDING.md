@@ -1076,10 +1076,17 @@ both the petition deed and unsolicited offer require those thresholds, as well a
 gentle house established before the current generation.
 `liegeGrantRepeatMult` is the multiplier applied to grant odds for each successful barony,
 title, neighboring fief, or court-awarded escheat already received in the current lifetime.
-Skills grow on a soft cap: below `skillSoftCap` (default 20) every gain lands; past it each
-point must beat a `(skillSoftCap / current)^2` roll (`FB.gainSkill`, js/model.js), so even a
-life spent on one stat diminishes hard — `skillHardCap` (default 40) is the true ceiling,
-and traits/items can push a read skill (`FB.skillOf`) no higher than that.
+Skills are uncapped but grow on a diminishing-return curve: below `skillSoftCap`
+(default 20) every gain lands; from 20 onward each point must beat a
+`(skillSoftCap / current)^2` roll (`FB.gainSkill`, js/model.js). At and beyond
+`skillMasteryThreshold` (default 40), that chance is further multiplied by
+`(skillMasteryThreshold / current)^skillMasteryPower` (default power 8). With the
+defaults, per-attempt chances include 40→41 at 25%, 41→42 at 19.5%, 45→46 at
+7.7%, 50→51 at 2.7%, and 60→61 at 0.43%. Advancement uses the raw trained skill;
+traits and equipped items do not make training harder, while `FB.skillOf` returns
+their full combined value with no upper ceiling. The former `skillHardCap` key is
+no longer read; older mods that set it must migrate to `skillMasteryThreshold` and
+`skillMasteryPower`.
 `focusSkillGainRate` (default 0.75) multiplies only the authored seasonal skill-training
 chances of daily focuses before they are converted to daily rolls.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
