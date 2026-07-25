@@ -175,14 +175,66 @@ FBDATA.events.push(
         log:'Reached {destination} after its patron was gone.'} }
   ]},
 
-/* ---------- shared decision after every destination ---------- */
-{ id:'travel_arrival_choice', title:'Where the Road Leads Next', trigger:{never:true},
+/* ---------- staying and working at the destination ---------- */
+{ id:'travel_arrival_choice', title:'A Season in a New Place', trigger:{never:true},
   travel:{kind:'decision'},
-  text:'Your purpose in {destination} is complete. Home still waits across the same long road, but a new life could begin here.',
+  text:'Your purpose in {destination} is complete, but a traveler cannot know a place in a day. You will stay and find local work for at least three months before choosing the road home.',
   options:[
-    { label:'Return home.', desc:'Travel automatically back along the saved route.',
-      effects:{travelReturn:true, log:'Turned homeward from {destination}.'} },
-    { label:'Settle in {destination}.', desc:'Move the household here without changing culture or faith.',
-      effects:{travelSettle:true, log:'Settled the household in {destination}.'} }
+    { label:'Find work and lodging.', desc:'Time will pass normally, with local work stories while you remain.',
+      effects:{log:'Began a season of work in {destination}.'} }
+  ]},
+{ id:'travel_work_board', title:'Board Earned at Dusk', trigger:{never:true},
+  travel:{kind:'work'},
+  text:'A household in {destination} needs another pair of hands. The work is ordinary, but so are bread, a dry corner, and being expected tomorrow.',
+  options:[
+    { label:'Take the wage in coin.', desc:'Work hard, keep your distance, and add to the purse.',
+      effects:{gold:3} },
+    { label:'Take board and goodwill.', desc:'Live better and become a familiar face.',
+      effects:{health:1, prestige:1} }
+  ]},
+{ id:'travel_work_neighbors', title:'Known in the Lane', trigger:{never:true},
+  travel:{kind:'work'},
+  text:'People in {destination} have begun to greet you before asking who you are. A neighbor offers work that comes with conversation and obligations.',
+  options:[
+    { label:'Learn how things are done here.', desc:'Local habits sharpen your judgment of people.',
+      effects:{skills:{dip:1}} },
+    { label:'Make yourself useful.', desc:'Practice your calling and earn a place in the day’s work.',
+      effects:{custom:'travel_work_career'} }
+  ]},
+{ id:'travel_work_pilgrimage', title:'Work at the Pilgrim House', trigger:{never:true},
+  travel:{kind:'work', purpose:'pilgrimage'},
+  text:'The pilgrim house in {destination} never lacks for tired feet, empty bowls, and names that must be entered correctly.',
+  options:[
+    { label:'Carry water and tend the weary.', desc:'Service keeps the journey’s purpose alive.',
+      effects:{piety:3, prestige:1} },
+    { label:'Keep the house accounts.', desc:'Order feeds more travelers than good intentions alone.',
+      effects:{skills:{ste:1}, gold:1} }
+  ]},
+{ id:'travel_work_trade', title:'Work Between the Stalls', trigger:{never:true},
+  travel:{kind:'work', purpose:'trade'},
+  text:'A broker in {destination} needs someone who can watch a delivery, remember a promise, and recognize a false weight.',
+  options:[
+    { label:'Take a commission on the delivery.', desc:'Careful work brings a modest return.',
+      effects:{gold:4} },
+    { label:'Study every weight and bargain.', desc:'Learn the market rather than merely passing through it.',
+      effects:{skills:{ste:1}, prestige:1} }
+  ]},
+{ id:'travel_work_study', title:'Work Beneath the Lectern', trigger:{never:true},
+  travel:{kind:'work', purpose:'study'},
+  text:'The masters in {destination} need pages copied, younger pupils corrected, and lamps watched long after respectable people sleep.',
+  options:[
+    { label:'Copy the difficult pages.', desc:'Slow work fixes the lesson in memory.',
+      effects:{skills:{lea:1}} },
+    { label:'Tutor a younger pupil.', desc:'Teaching pays a little and tests whether you truly understand.',
+      effects:{gold:2, skills:{dip:1}} }
+  ]},
+{ id:'travel_work_service', title:'Work Beyond the Hall', trigger:{never:true},
+  travel:{kind:'work', purpose:'service'},
+  text:'The hall in {destination} has endless work below the notice of great people: stores to count, messages to carry, and disputes to calm.',
+  options:[
+    { label:'Set the stores in order.', desc:'Reliable service earns wages and sharper stewardship.',
+      effects:{gold:3, skills:{ste:1}} },
+    { label:'Carry messages between households.', desc:'Become known as someone who arrives with the right words.',
+      effects:{prestige:2, skills:{dip:1}} }
   ]}
 );

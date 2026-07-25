@@ -50,7 +50,10 @@ are omitted when another household member is shown.
 At death, the legend freezes the head's loadout and optional battle/event provenance.
 The succession dialog shows that final paper doll and “Worn at death” list. This release
 does not remove, damage, loot, or steal any object: succession clears the dead wearer and
-any former-household assignments that do not belong to the new head's household.
+any former-household assignments that do not belong to the new head's household. The
+successor then automatically takes the strongest age-valid, unpledged gear from the shared
+armory in every slot. Mechanical effects outrank value, and the two hand slots compare the
+best one-handed pair against every two-handed object without consuming RNG.
 
 Related: [characters.md](characters.md) for wearer-specific skill and health effects,
 [ui.md](ui.md) for paper-doll interaction, and [state-and-saves.md](state-and-saves.md)

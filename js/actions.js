@@ -407,14 +407,34 @@ window.FB = window.FB || {};
     desc: function (s) {
       return s.player.travel && s.player.travel.phase === 'return'
         ? FB.T('You are already traveling home.')
-        : FB.T('Abandon the journey and retrace the road. Nothing is refunded.');
+        : (s.player.travel && s.player.travel.phase === 'arrived'
+          ? FB.T('Return along the saved route after the required stay. You may remain and keep finding local work as long as you like.')
+          : FB.T('Abandon the journey and retrace the road. Nothing is refunded.'));
     },
     show: function (s) { return !!s.player.travel; },
     can: function (s) {
-      return s.player.travel && s.player.travel.phase !== 'return'
-        ? true : FB.T('Already returning home.');
+      return FB.travelReturnEligible
+        ? FB.travelReturnEligible(s)
+        : (s.player.travel && s.player.travel.phase !== 'return'
+          ? true : FB.T('Already returning home.'));
     },
     run: function (s) { if (FB.travelTurnBack) FB.travelTurnBack(s); } },
+  { id: 'travel_settle_here', label: '🏠 Settle here permanently…', noConsume: true,
+    desc: function () {
+      return FB.T('Move the household here. Each character may make this permanent move only once in their lifetime.');
+    },
+    show: function (s) {
+      return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
+        !s.player.travelSettlement);
+    },
+    can: function (s) {
+      return FB.travelSettlementEligible
+        ? FB.travelSettlementEligible(s)
+        : FB.T('A permanent home is not yet possible here.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showTravelSettlement) FB.ui.showTravelSettlement();
+    } },
 
   { id: 'seek_blessing', label: '🕊 Seek a blessing', cd: 90,
     desc: function (s) {
@@ -2249,7 +2269,8 @@ window.FB = window.FB || {};
   FB.listInstants = function (state) {
     const out = [];
     for (const a of FB.instants) {
-      if (state.player.travel && a.id !== 'travel_turn_back') continue;
+      if (state.player.travel &&
+        ['travel_turn_back', 'travel_settle_here'].indexOf(a.id) < 0) continue;
       if (!a.show(state)) continue;
       let can = true, reason = '';
       if (a.cd !== undefined) {

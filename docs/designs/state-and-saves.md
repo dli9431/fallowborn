@@ -50,6 +50,11 @@ armory, validates old/new assignments, and auto-equips the current head in inven
 order (right hand before left). Existing collateral ids remain valid. This repair uses
 stable hashes for legacy appearance and consumes no saved RNG.
 
+On ordinary succession, `FB.autoEquipBest` deterministically rebuilds the new head’s
+loadout from all age-valid, unpledged armory objects after household assignments are
+reconciled. It compares mechanical power before value and optimizes both hands together;
+the selection adds no state shape and consumes no RNG.
+
 Generated-item Chronicle parameters store a `$item` snapshot rather than a rendered
 name. The display layer combines its frozen definition/quality identity with the active
 locale, so sale, gift, default, succession, and later catalog changes do not strand
@@ -108,11 +113,13 @@ default heat on first read, so no save-version migration is required.
 Overland travel is additive and save-safe. `player.travel` is `null` or the
 JSON-only journey record described in [travel.md](travel.md): purpose,
 home/destination/current county, phase, routes and leg clock, departure turn,
-encounter counters, and seen cultures/events. `player.travelHistory` stores
-completed purpose/destination pairs for the current character. Both initialize
-lazily without changing the save version. Succession cancels an active journey and
-clears the new character’s lifetime history; the household home remains
-`player.provinceId` unless a completed journey explicitly settles there.
+encounter counters, seen cultures/events, and optional destination-stay timing/work
+fields. `player.travelHistory` stores completed purpose/destination pairs for the
+current character. `player.travelSettlement` records the current character’s one
+completed permanent move as `{turn,destinationId}`. All initialize lazily without
+changing the save version. Succession cancels an active journey and clears both the
+new character’s lifetime history and permanent-move marker; the household home remains
+`player.provinceId` unless an eligible destination stay explicitly settles there.
 
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an

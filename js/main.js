@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.53.2';
+  FB.VERSION = '1.54.0';
   FB.CHANGELOG = [
+    { v: '1.54.0', date: '2026-07-25', changes: [
+      'Journeys now include destination stays with local work, a three-month return gate, and one permanent household move per character life.',
+      'A succeeding heir now equips the strongest usable items from the family armory.'
+    ] },
     { v: '1.53.2', date: '2026-07-25', changes: [
       'Equipment sheets now list worn bonuses beneath the full figure, and Coin & Credit uses a broadly supported icon.'
     ] },
@@ -1596,6 +1600,7 @@ window.FB = window.FB || {};
     if (FB.reclaimCharacterItems) FB.reclaimCharacterItems(s, heir.id);
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(s);
     else if (FB.clearLoadout) FB.clearLoadout(s, old.id);
+    if (FB.autoEquipBest) FB.autoEquipBest(s, heir.id);
 
     // only property passes; personal standing must be rebuilt somewhat
     FB.landPlots(s); // normalize a legacy farm before its old flag is discarded
@@ -1608,6 +1613,7 @@ window.FB = window.FB || {};
     p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
     p.warService = 0; p.liegeGrants = 0;
     p.travelHistory = [];
+    p.travelSettlement = null;
     p.pop = Math.round(p.pop * 0.5);
     // death dues and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };

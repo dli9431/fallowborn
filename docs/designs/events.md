@@ -19,11 +19,13 @@ Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 
 Road content in `data/events_travel.js` is still ordinary declarative event data,
 but carries top-level `travel:{kind}` metadata. `kind` is `culture`, `road`,
-`capstone`, or `decision`; a capstone may also name its `purpose`. The travel
-driver chooses unseen culture/road events at county arrivals and code-queues
-capstones with `trigger:{never:true}`. While traveling, already queued events
-remain valid, but the random home-event picker does not add a slot event. The
-shared destination decision uses the `travelReturn` / `travelSettle` effects.
+`capstone`, `decision`, or repeatable destination `work`; a capstone or work story
+may also name its `purpose`. The travel driver chooses unseen culture/road events
+at county arrivals, code-queues capstones with `trigger:{never:true}`, and schedules
+work stories every 55–85 days during a destination stay without immediate repeats.
+While traveling, already queued events remain valid, but the random home-event
+picker does not add a slot event. Returning and the once-per-life permanent move
+are destination deeds rather than automatic event choices.
 
 ## Localized display
 

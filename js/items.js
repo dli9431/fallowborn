@@ -690,6 +690,116 @@ window.FB = window.FB || {};
     return cleared;
   };
 
+  function itemPowerScore(item, headEffects) {
+    const fx = item.fx || {};
+    let score = 0;
+    for (let i = 0; i < FB.SKILLS.length; i++) score += fx[FB.SKILLS[i]] || 0;
+    score += (fx.health || 0) * 100;
+    if (headEffects) {
+      score += (fx.battle || 0) * 100;
+      score += fx.gold || 0;
+      score += fx.prestige || 0;
+      score += fx.piety || 0;
+    }
+    return score;
+  }
+
+  function compareEquipmentCandidates(a, b) {
+    if (a.score !== b.score) return b.score - a.score;
+    if (a.value !== b.value) return b.value - a.value;
+    return a.ref < b.ref ? -1 : (a.ref > b.ref ? 1 : 0);
+  }
+
+  function equipmentCombination(items) {
+    const refs = items.map(function (item) { return item.ref; }).sort();
+    let score = 0, value = 0;
+    for (let i = 0; i < items.length; i++) {
+      score += items[i].score;
+      value += items[i].value;
+    }
+    return { items:items, score:score, value:value, key:refs.join('|') };
+  }
+
+  function compareEquipmentCombinations(a, b) {
+    if (a.score !== b.score) return b.score - a.score;
+    if (a.value !== b.value) return b.value - a.value;
+    return a.key < b.key ? -1 : (a.key > b.key ? 1 : 0);
+  }
+
+  /* Succession gives the new protagonist first choice of the shared armory.
+     Mechanical power wins before value; the two hand slots are optimized as
+     one choice so a strong two-handed object is compared with the best valid
+     pair. No RNG is consumed, and pledged or age-gated gear is ignored. */
+  FB.autoEquipBest = function (state, cid) {
+    FB.ensureItems(state);
+    const c = state.chars[cid];
+    if (!c || c.dead || directHouseholdIds(state).indexOf(cid) < 0) return [];
+    const fixedSlots = ['head', 'neck', 'body', 'waist', 'feet', 'ring'];
+    const candidates = {};
+    const hands = [];
+    for (let i = 0; i < fixedSlots.length; i++) candidates[fixedSlots[i]] = [];
+    const refs = state.player.items.slice();
+    for (let i = 0; i < refs.length; i++) {
+      const item = rawResolved(state, refs[i]);
+      if (!item) continue;
+      const checkSlot = item.slot === 'hand' ? 'rightHand' : item.slot;
+      if (!basicEquipCheck(state, cid, checkSlot, refs[i], true).ok) continue;
+      const candidate = {
+        ref:refs[i],
+        item:item,
+        score:itemPowerScore(item, cid === state.player.charId),
+        value:item.value || 0
+      };
+      if (item.slot === 'hand') hands.push(candidate);
+      else if (candidates[item.slot]) candidates[item.slot].push(candidate);
+    }
+
+    const chosen = [];
+    const next = {};
+    for (let i = 0; i < fixedSlots.length; i++) {
+      const slot = fixedSlots[i];
+      candidates[slot].sort(compareEquipmentCandidates);
+      if (candidates[slot].length &&
+        (candidates[slot][0].score > 0 ||
+          (candidates[slot][0].score === 0 && candidates[slot][0].value > 0))) {
+        next[slot] = candidates[slot][0].ref;
+        chosen.push(candidates[slot][0]);
+      }
+    }
+
+    const combinations = [equipmentCombination([])];
+    for (let i = 0; i < hands.length; i++) {
+      combinations.push(equipmentCombination([hands[i]]));
+      if (hands[i].item.grip === 2) continue;
+      for (let j = i + 1; j < hands.length; j++) {
+        if (hands[j].item.grip !== 2) {
+          combinations.push(equipmentCombination([hands[i], hands[j]]));
+        }
+      }
+    }
+    combinations.sort(compareEquipmentCombinations);
+    const handChoice = combinations[0].items.slice().sort(compareEquipmentCandidates);
+    if (handChoice.length === 1 && handChoice[0].item.grip === 2) {
+      next.leftHand = handChoice[0].ref;
+      next.rightHand = handChoice[0].ref;
+      chosen.push(handChoice[0]);
+    } else {
+      if (handChoice[0]) {
+        next.rightHand = handChoice[0].ref;
+        chosen.push(handChoice[0]);
+      }
+      if (handChoice[1]) {
+        next.leftHand = handChoice[1].ref;
+        chosen.push(handChoice[1]);
+      }
+    }
+
+    delete state.player.loadouts[cid];
+    for (let i = 0; i < chosen.length; i++) clearAssignmentRaw(state, chosen[i].ref);
+    if (chosen.length) state.player.loadouts[cid] = next;
+    return chosen.map(function (item) { return item.ref; });
+  };
+
   FB.pledgeItem = function (state, ref) {
     FB.ensureItems(state);
     if (state.player.items.indexOf(ref) < 0 || loanPledgesRef(state, ref) ||

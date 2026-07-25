@@ -56,12 +56,32 @@ window.FB = window.FB || {};
       });
     }
   }
+  function stayDays(state, travel) {
+    if (!travel || travel.stayStartTurn === undefined) return 0;
+    return Math.max(0, state.turn - travel.stayStartTurn);
+  }
+  function nextWorkDelay() {
+    const min = Math.max(1, balance('travelWorkEventMinDays', 55));
+    const max = Math.max(min, balance('travelWorkEventMaxDays', 85));
+    return FB.ri(min, max);
+  }
 
   FB.travelEnsure = function (state) {
-    if (!state.player.cooldowns) state.player.cooldowns = {};
-    if (state.player.travel === undefined) state.player.travel = null;
+    const p = state.player;
+    if (!p.cooldowns) p.cooldowns = {};
+    if (p.travel === undefined) p.travel = null;
+    if (p.travelSettlement === undefined) p.travelSettlement = null;
     history(state);
-    return state.player.travel;
+    const t = p.travel;
+    /* Old saves may be waiting on the former immediate return-or-settle
+       decision. Its event id now introduces the mandatory stay, while these
+       additive fields let destination time begin without a save migration. */
+    if (t && t.phase === 'arrived' && t.completed) {
+      if (t.stayStartTurn === undefined) t.stayStartTurn = state.turn;
+      if (t.workEvents === undefined) t.workEvents = 0;
+      if (t.stayStarted === undefined) t.stayStarted = true;
+    }
+    return t;
   };
 
   FB.travelLocation = function (state) {
@@ -252,7 +272,8 @@ window.FB = window.FB || {};
     const events = FBDATA.events || [];
     for (let i = 0; i < events.length; i++) {
       const ev = events[i];
-      if (!ev.travel || ev.travel.kind !== kind || travel.seenEvents[ev.id]) continue;
+      if (!ev.travel || ev.travel.kind !== kind) continue;
+      if (kind !== 'work' && travel.seenEvents[ev.id]) continue;
       if (ev.travel.purpose && ev.travel.purpose !== travel.purpose) continue;
       out.push(ev);
     }
@@ -273,6 +294,28 @@ window.FB = window.FB || {};
     t.encounters[kind] = (t.encounters[kind] || 0) + 1;
     queueItem(state, ev.id, t);
     return true;
+  }
+  function queueWork(state) {
+    const t = state.player.travel;
+    if (!t) return false;
+    let pool = eventPool('work', t);
+    if (pool.length > 1 && t.lastWorkEventId) {
+      pool = pool.filter(function (ev) { return ev.id !== t.lastWorkEventId; });
+    }
+    if (!pool.length) return false;
+    const ev = FB.pick(pool);
+    t.lastWorkEventId = ev.id;
+    t.workEvents = (t.workEvents || 0) + 1;
+    queueItem(state, ev.id, t);
+    return true;
+  }
+  function tickDestinationStay(state) {
+    const t = state.player.travel;
+    if (!t || !t.completed || t.stayStartTurn === undefined) return;
+    if (t.nextWorkTurn === undefined) t.nextWorkTurn = state.turn + nextWorkDelay();
+    if (state.turn < t.nextWorkTurn) return;
+    queueWork(state);
+    t.nextWorkTurn = state.turn + nextWorkDelay();
   }
 
   function servicePatronAlive(state, t) {
@@ -334,10 +377,14 @@ window.FB = window.FB || {};
   FB.travelTick = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
-    if (!t || t.phase === 'arrived') return;
+    if (!t) return;
     if (p.dead || p.tier < 1 || p.tier > 2 || (p.flags && p.flags.in_prison) ||
       FB.atWarPersonally(state)) {
       FB.travelCancel(state);
+      return;
+    }
+    if (t.phase === 'arrived') {
+      tickDestinationStay(state);
       return;
     }
     if (!t.remainingRoute.length) {
@@ -355,9 +402,46 @@ window.FB = window.FB || {};
     if (FB.map) FB.map.request();
   };
 
+  FB.travelStayDays = function (state) {
+    return stayDays(state, FB.travelEnsure(state));
+  };
+
+  FB.travelReturnEligible = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t) return FB.T('No journey is in progress.');
+    if (t.phase === 'return') return FB.T('Already returning home.');
+    if (t.phase !== 'arrived') return true;
+    const remaining = balance('travelMinStayDays', 90) - stayDays(state, t);
+    return remaining <= 0 ? true : FB.T(
+      'Stay and work here for {days} more days before returning home.', {
+        days:remaining
+      });
+  };
+
+  FB.travelSettlementEligible = function (state) {
+    const p = state.player;
+    const t = FB.travelEnsure(state);
+    if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
+    if (p.travelSettlement) {
+      return FB.T('{name} has already made the one permanent move allowed in this lifetime.', {
+        name:FB.fullName(me(state))
+      });
+    }
+    const remaining = balance('travelSettleOfferDays', 360) - stayDays(state, t);
+    if (remaining > 0) {
+      return FB.T('A permanent home can be considered after {days} more days here.', {
+        days:remaining
+      });
+    }
+    if ((t.workEvents || 0) < balance('travelSettleWorkEvents', 4)) {
+      return FB.T('Build more of a life here through local work before settling permanently.');
+    }
+    return true;
+  };
+
   FB.travelTurnBack = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.phase === 'return') return false;
+    if (!t || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
     const route = (t.visited || [t.homeId]).slice(0, -1).reverse();
     if (t.currentId !== t.homeId && (!route.length || route[route.length - 1] !== t.homeId)) {
@@ -375,7 +459,7 @@ window.FB = window.FB || {};
 
   FB.travelReturn = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.phase !== 'arrived') return false;
+    if (!t || t.phase !== 'arrived' || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
     t.phase = 'return';
     t.remainingRoute = [t.homeId].concat(t.outboundRoute.slice(0, -1)).reverse();
@@ -388,7 +472,7 @@ window.FB = window.FB || {};
   FB.travelSettle = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
-    if (!t || t.phase !== 'arrived') return false;
+    if (!t || t.phase !== 'arrived' || FB.travelSettlementEligible(state) !== true) return false;
     const destination = t.destinationId;
     const rival = FB.getRole ? FB.getRole(state, 'rival', false) : null;
     if (rival) rival.homeProvinceId = t.homeId;
@@ -405,6 +489,7 @@ window.FB = window.FB || {};
       FB.getRole(state, 'lord', true);
       FB.getRole(state, 'priest', true);
     }
+    p.travelSettlement = { turn:state.turn, destinationId:destination };
     p.travel = null;
     if (FB.map) {
       FB.map.playerProv = destination;
@@ -454,6 +539,11 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t || t.phase !== 'arrived') return;
     recordCompletion(state);
+    if (t.stayStarted) return;
+    t.stayStarted = true;
+    t.stayStartTurn = state.turn;
+    t.workEvents = 0;
+    t.nextWorkTurn = state.turn + nextWorkDelay();
     clearQueued(state);
     queueItem(state, 'travel_arrival_choice', t);
   };
@@ -470,6 +560,13 @@ window.FB = window.FB || {};
     if (def && def.skill) FB.gainSkill(c, def.skill, 2);
     else FB.gainSkill(c, 'lea', 1);
     FB.travelCapstoneDone(state);
+  };
+  FB.fns.travel_work_career = function (state) {
+    const c = me(state);
+    const career = FB.careerOf ? FB.careerOf(state, c) : null;
+    const def = career && FBDATA.careers[career.profession];
+    if (career) career.experience = (career.experience || 0) + 1;
+    FB.gainSkill(c, def && def.skill ? def.skill : 'ste', 1);
   };
 
   /* Map overlay: destination rings while picking, the selected/active route,

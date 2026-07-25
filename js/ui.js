@@ -418,6 +418,7 @@ window.FB = window.FB || {};
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
+    travel_settle_here:'life',
     seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
     send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
@@ -462,6 +463,10 @@ window.FB = window.FB || {};
           location:here ? here.name : '?',
           destination:destination ? destination.name : '?'
         })) + (days ? ' · ' + esc(FB.T('{days} travel days remain', {days:days})) : '') +
+        (travel.phase === 'arrived' && FB.travelStayDays
+          ? ' · ' + esc(FB.T('{days} days living and working here', {
+              days:FB.travelStayDays(s)
+            })) : '') +
         '</div>';
     }
     if (s.player.war) {
@@ -2392,6 +2397,13 @@ window.FB = window.FB || {};
           outbound:item.legs * legDays,
           returnDays:item.legs * legDays
         })) + '</p>' +
+      '<p>' + esc(FB.T(
+        'At the destination you must stay and find local work for at least {days} days before returning home.', {
+          days:FBDATA.balance.travelMinStayDays || 90
+        })) + '</p>' +
+      '<p>' + esc(s.player.travelSettlement
+        ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
+        : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>' +
       '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {cost:item.cost})) +
       '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
       '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
@@ -2427,6 +2439,40 @@ window.FB = window.FB || {};
 
   UI.cancelTravelPicker = function () {
     closeTravelPicker(true);
+  };
+
+  UI.showTravelSettlement = function () {
+    const s = FB.state;
+    const t = s && s.player.travel;
+    const eligible = s && FB.travelSettlementEligible
+      ? FB.travelSettlementEligible(s) : false;
+    if (!s || !t || eligible !== true) {
+      if (eligible) UI.toast(eligible);
+      return;
+    }
+    const c = s.chars[s.player.charId];
+    const destination = FB.world.byId[t.destinationId];
+    if (!c || !destination) return;
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Move the household home to {destination}. Existing land, enterprises, culture, and faith will not move or change.', {
+        destination:destination.name
+      })) + '</p><p class="warnote"><b>' + esc(FB.T(
+      'This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.', {
+        name:FB.fullName(c)
+      })) + '</b></p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="travel-settle-confirm">🏠 ' +
+      esc(FB.T('Make {destination} our permanent home', {
+        destination:destination.name
+      })) + '</button><button type="button" class="actionbtn" id="travel-settle-cancel">' +
+      esc(FB.T('Keep staying for now')) + '</button></div>';
+    openModal(FB.T('Settle permanently in {destination}?', {
+      destination:destination.name
+    }), h);
+    $('travel-settle-confirm').addEventListener('click', function () {
+      UI.closeModal();
+      FB.travelSettle(s);
+    });
+    $('travel-settle-cancel').addEventListener('click', UI.closeModal);
   };
 
   /* ================= war target picker ================= */

@@ -99,11 +99,17 @@ The tier-1/2 **Take to the road…** deed opens a purpose dialog, then a map pic
 with marked valid destinations and a synchronized, focusable destination list.
 Map taps and list buttons select the same county and preview the settled-only
 route; the final confirmation states county legs, days each way, and exact cost.
+It also states the 90-day destination stay and whether this character’s one lifetime
+permanent move remains available.
 The picker pauses time, supports the normal map keyboard navigation, number keys,
 Tab, Enter, and Escape, and becomes a bottom sheet on narrow screens. During a
 journey the map keeps the gold household flag at home, draws a separate traveler
 compass and remaining route, and the Deeds panel replaces focuses/actions with
-current journey status and **Turn back toward home**.
+current journey status and **Turn back toward home**. At the destination the status
+also counts days living and working there. Return unlocks after 90 days; after a
+year and four work stories, **Settle here permanently…** opens a confirmation that
+names the destination, preserved property/culture/faith, and the once-per-character-life
+limit.
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via

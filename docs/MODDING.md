@@ -476,8 +476,9 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (scholarship points) ·
-`travelReturn: true` (begin the saved route home) · `travelSettle: true` (move the
-household to the completed destination without converting culture/faith) ·
+`travelReturn: true` (begin the saved route home once the minimum stay is complete) ·
+`travelSettle: true` (move the household to an eligible completed destination without
+converting culture/faith; limited to one permanent move per character life) ·
 `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
 `giveItem: "id"` (grant one definition from `FBDATA.items`; repeatable definitions create
 a fresh exact instance, while random finds use `custom: "loot_item"`) ·
@@ -764,12 +765,15 @@ by key, and site objects replace by their required stable `id`.
 - Routes use settled, non-wasteland adjacency. Entries in `straits` therefore
   work as travel crossings too.
 - Travel events are normal event objects with `trigger:{"never":true}` and
-  top-level `travel:{"kind":"culture|road|capstone|decision"}`. A capstone may
-  add `"purpose":"id"`. Culture/road events are drawn without repetition up to
-  the journey caps; the core driver queues a purpose’s capstone by the id
-  `travel_capstone_<purpose id>`.
+  top-level `travel:{"kind":"culture|road|capstone|decision|work"}`. A capstone
+  or work event may add `"purpose":"id"`. Culture/road events are drawn without
+  repetition up to the journey caps; destination work events repeat but never
+  immediately repeat the last story. The core driver queues a purpose’s capstone
+  by the id `travel_capstone_<purpose id>`.
 - `balance.travelLegDays`, `travelCooldownDays`, `travelCultureEventCap`, and
-  `travelRoadEventCap` tune the subsystem.
+  `travelRoadEventCap` tune the road. `travelMinStayDays`,
+  `travelWorkEventMinDays`, `travelWorkEventMaxDays`, `travelSettleOfferDays`,
+  and `travelSettleWorkEvents` tune destination life and permanent settlement.
 
 ## Finance contracts
 

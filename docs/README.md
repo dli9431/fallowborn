@@ -73,7 +73,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    study, or paid service. Choose a marked county from the map/list, then let days
    pass as the traveler crosses each county; their focus and personally staffed
    enterprise pause while the household continues at home. At the destination,
-   finish the purpose and choose whether to return or settle the household there.
+   finish the purpose, stay at least three months, and keep taking local work for
+   as long as you wish. After a year of building a life there, you may make that
+   county the household’s permanent home—but each character can relocate only once.
    Named characters remember hostile encounters: anger someone deeply enough and they may
    declare a rivalry of their own. A feud has visible heat, can grow from insults into claims
    and knives, or end through compensation, mediation, a witnessed oath, common cause, or
