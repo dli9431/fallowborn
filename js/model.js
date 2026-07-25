@@ -15,6 +15,61 @@ window.FB = window.FB || {};
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
   FB.religionOf = function (id) { return FBDATA.religions[id] || FBDATA.religions.catholic; };
 
+  /* Central religious offices are saved assignments, separate from territorial
+     rank. Religion data supplies only the initial holder and display title.
+     An own null value is an intentional vacancy and must survive repairs. */
+  FB.ensureReligiousHeads = function (state) {
+    if (!state) return {};
+    if (!state.religiousHeads || typeof state.religiousHeads !== 'object' ||
+        Array.isArray(state.religiousHeads)) state.religiousHeads = {};
+    for (const id in FBDATA.religions) {
+      const rel = FBDATA.religions[id];
+      if (!rel || !rel.head || !rel.head.realm) continue;
+      if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, id)) {
+        state.religiousHeads[id] = rel.head.realm;
+      }
+    }
+    return state.religiousHeads;
+  };
+
+  /* The live realm holding an exact faith's central office, or null while the
+     assignment is vacant, missing, or points at a dead realm. */
+  FB.religiousHeadOf = function (state, religionId) {
+    const rel = FBDATA.religions[religionId];
+    if (!state || !rel || !rel.head) return null;
+    const heads = FB.ensureReligiousHeads(state);
+    if (!Object.prototype.hasOwnProperty.call(heads, religionId)) return null;
+    const rid = heads[religionId];
+    const realm = rid !== null && state.realms ? state.realms[rid] : null;
+    return realm && realm.alive ? realm : null;
+  };
+
+  FB.religionsHeadedBy = function (state, realmId) {
+    const out = [];
+    if (!state || !realmId) return out;
+    FB.ensureReligiousHeads(state);
+    for (const id in FBDATA.religions) {
+      const head = FB.religiousHeadOf(state, id);
+      if (head && head.id === realmId) out.push(id);
+    }
+    return out;
+  };
+
+  FB.isReligiousHead = function (state, realmId, religionId) {
+    if (religionId !== undefined && religionId !== null) {
+      const head = FB.religiousHeadOf(state, religionId);
+      return !!head && head.id === realmId;
+    }
+    return FB.religionsHeadedBy(state, realmId).length > 0;
+  };
+
+  FB.religiousHeadTitle = function (state, religionId) {
+    const rel = FBDATA.religions[religionId];
+    if (!rel || !rel.head || !rel.head.title) return '';
+    const viewer = state && state.player ? state.player.charId : null;
+    return FB.dataText(state, viewer, 'religion', religionId, rel, 'head.title', {});
+  };
+
   /* avoid (optional): a plain object used as a set of lowercase names,
      e.g. { louis: true } — when provided, re-rolls up to 8 times to dodge
      a collision, then accepts the last roll regardless */
@@ -402,6 +457,8 @@ window.FB = window.FB || {};
     const p = state.player;
     const me = state.chars[p.charId];
     const rel = FB.religionOf(me.religion);
+    const headed = FB.religionsHeadedBy(state, 'player');
+    if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     let t = FB.titleWordFor(state, p.tier);
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       const g = rel.group;
@@ -436,6 +493,13 @@ window.FB = window.FB || {};
     if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
     const arr = FBDATA.titles[group] || FBDATA.titles.christian;
     const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) };
+    const headed = FB.religionsHeadedBy(state, 'player');
+    if (headed.length) {
+      const headReligion = headed[0];
+      snap.headReligion = headReligion;
+      snap.headTitle = FBDATA.religions[headReligion].head.title;
+      return snap;
+    }
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       if (p.profession === 'monk') {
         snap.special = rel.group === 'muslim' ? 'scholar' : me.sex === 'f' ? 'nun' : 'monk';
@@ -472,6 +536,14 @@ window.FB = window.FB || {};
   };
   FB.renderTitleSnapshot = function (snapshot) {
     if (!snapshot) return '';
+    if (snapshot.headReligion) {
+      const rel = FBDATA.religions[snapshot.headReligion];
+      const source = rel && rel.head && rel.head.title || snapshot.headTitle;
+      if (source) {
+        return FB.renderKey('religion.' + snapshot.headReligion + '.head.title.default',
+          { text: source }, {});
+      }
+    }
     const arr = FBDATA.titles[snapshot.group] || FBDATA.titles.christian;
     const index = FB.clamp(snapshot.tier || 0, 0, arr.length - 1);
     const specialWords = {
@@ -493,6 +565,8 @@ window.FB = window.FB || {};
      titles come from the capital county's faith group (rank+3 indexes
      FBDATA.titles: count→4 … emperor→7) */
   FB.realmRankTitle = function (state, realm) {
+    const headed = FB.religionsHeadedBy(state, realm.id);
+    if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     const pr = FB.world && FB.world.byId[realm.capital];
     const group = pr ? FB.religionOf(pr.religion).group : 'christian';
     const arr = FBDATA.titles[group] || FBDATA.titles.christian;

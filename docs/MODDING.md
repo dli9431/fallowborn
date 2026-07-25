@@ -927,7 +927,32 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 
 ## Cultures, religions, traits, titles, balance
 
-See `data/cultures.js` and `data/traits.js` for the exact shapes — they are self-describing.
+See `data/cultures.js` and `data/traits.js` for the exact culture and trait shapes.
+A religion has `name`, `group`, and `icon`, plus an optional centralized religious
+office:
+
+```json
+{ "catholic": {
+  "name": "Latin Christianity", "group": "christian", "icon": "✝",
+  "head": { "realm": "papacy", "title": "Pope" }
+} }
+```
+
+`head.realm` is the initial realm id used when that religion has no own entry in
+saved `state.religiousHeads`; `head.title` is localized pure-display text. The live
+mapping is saved independently, may be reassigned to another realm, and may be
+explicitly vacant with `null`. It is never inferred from the realm's capital faith or
+territorial rank, and absorbing the holder's realm does not make the office hereditary.
+Religions without `head` metadata have no centralized office.
+
+Core and custom systems should query `FB.religiousHeadOf(state, religionId)`,
+`FB.religionsHeadedBy(state, realmId)`, or
+`FB.isReligiousHead(state, realmId, religionId?)`; use
+`FB.religiousHeadTitle(state, religionId)` for the localized title. These APIs match
+exact religion ids, not broad religion groups. Generic rank words remain in
+`FBDATA.titles`; in core data, Muslim tier 7 is Great Sultan/Great Sultana because
+Caliph is reserved for the Sunni office.
+
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
 The top-level `currency` presentation schema is documented above. The deprecated
 `balance.coinageSymbol` alias changes only the topbar purse icon when no full currency

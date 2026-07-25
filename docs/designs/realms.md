@@ -25,6 +25,32 @@ changes the sovereign owner of the combined hierarchy. An intact player crown ha
 to a downfall usurper may instead leave the displaced rightful character one narrow
 restoration right; ordinary county conquest never creates one.
 
+## Religious head offices
+
+Central religious leadership is an office assignment, not a territorial tier.
+`FBDATA.religions[id].head` optionally supplies `{realm,title}`: the realm is the
+default holder for a new or newly repaired mapping, while the title is localized
+display data. Catholicism initially points to the Papacy and styles its ruler Pope;
+Sunni Islam initially points to the Abbasid Caliphate and styles its ruler Caliph.
+Faiths without `head` metadata, including Shia Islam, have no centralized head.
+Ordinary Muslim emperor-tier rulers use Great Sultan or Great Sultana instead.
+
+The live assignment belongs to `state.religiousHeads[religionId]`, whose value is an
+exact realm id or `null` for an explicit vacancy. `FB.religiousHeadOf` returns the
+assigned living realm or `null`; `FB.religionsHeadedBy` returns exact religion ids;
+`FB.isReligiousHead` tests either one faith or any office; and
+`FB.religiousHeadTitle` renders the localized office title. AI and player title
+rendering query these helpers before secular rank, and semantic player title snapshots
+record `headReligion` plus the English `headTitle` fallback so save labels, legends,
+and durable messages render in the active locale.
+
+An assignment to a missing or dead realm is vacant at read time but is not rewritten.
+Inheriting or absorbing the holder's territorial realm therefore does not transfer the
+office to the player: the old realm dies, the mapping remains, and a future election or
+caliphal-claim mechanic must explicitly assign a new realm. Existing war causes do not
+infer anything from these offices; future holy-war or religious-head actions must use
+the shared helpers rather than matching realm names, faith groups, or ranks.
+
 **Realms form a liege hierarchy.** Every realm has a `rank` (1 count … 4 emperor) and a
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,
 war target); `state.holder[pid]` is the county's direct holder. Authored realms are

@@ -24258,6 +24258,14 @@
         "text": "Baltic Paganism"
       }
     },
+    "religion.catholic.head.title.default": {
+      "context": "religion catholic, central religious office title, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Pope"
+      }
+    },
     "religion.catholic.name.default": {
       "context": "religion catholic, name, faith branch default.",
       "glossary": [],
@@ -24312,6 +24320,14 @@
       "location": "data/cultures.js",
       "source": {
         "text": "Slavic Paganism"
+      }
+    },
+    "religion.sunni.head.title.default": {
+      "context": "religion sunni, central religious office title, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Caliph"
       }
     },
     "religion.sunni.name.default": {
@@ -27926,7 +27942,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Caliph"
@@ -29186,6 +29202,16 @@
       ],
       "source": {
         "text": "You do not give ground. By morning every bruise in the village belongs to your cause."
+      }
+    },
+    "src.19d3e7cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Great Sultana"
       }
     },
     "src.19e7d6c0": {
@@ -42991,6 +43017,16 @@
       ],
       "source": {
         "text": "{icon} {name} — {cost} scholarship"
+      }
+    },
+    "src.692f88e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Great Sultan"
       }
     },
     "src.69420081": {
@@ -66540,6 +66576,16 @@
         "text": "Days blur into blisters and bruises. The serjeant’s stick finds every dropped shield, and the men wash and boast and sprawl with no thought for the slight recruit who always slips off alone. Your arms harden; the spear stops feeling like a stranger in your hands. And once, across the cook-fire, {suitor} passes you the bread without a second glance — and your treacherous heart nearly betrays you where the serjeant’s eye never could."
       }
     },
+    "src.efbf410f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Pope"
+      }
+    },
     "src.efbf6820": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70033,7 +70079,7 @@
       ],
       "location": "data/map_data.js",
       "source": {
-        "text": "Caliph"
+        "text": "Great Sultan"
       }
     },
     "title.muslim_f.0.default": {
@@ -70113,7 +70159,7 @@
       ],
       "location": "data/map_data.js",
       "source": {
-        "text": "Caliph"
+        "text": "Great Sultana"
       }
     },
     "title.pagan.0.default": {

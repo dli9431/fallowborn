@@ -301,6 +301,7 @@ window.FB = window.FB || {};
     // generate the dukes and counts inside each authored realm
     for (const r of FBDATA.realms) buildVassals(state, r.id);
     FB.invalidateRealmCache();
+    FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
   };
 
@@ -1986,6 +1987,8 @@ window.FB = window.FB || {};
       if (other && other.war && other.war.enemy === rid) other.war = null;
     }
     inherited.alive = false;
+    /* A religious office assigned to this realm now reads as vacant. It is
+       never transferred here: elections or claims must reassign it explicitly. */
     FB.breakAlliance(state, rid);
     const oldRank = mine.rank || Math.max(1, p.tier - 3);
     mine.rank = Math.max(oldRank, inherited.rank || 1);

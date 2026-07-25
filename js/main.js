@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.7';
+  FB.VERSION = '1.54.8';
   FB.CHANGELOG = [
+    { v: '1.54.8', date: '2026-07-25', changes: [
+      'Catholicism and Sunni Islam now have centralized heads, styling the rulers of the Papacy as Pope and the Abbasid Caliphate as Caliph.'
+    ] },
     { v: '1.54.7', date: '2026-07-25', changes: [
       'Starting county development now reflects the economic landscape of 867, with stronger Abbasid and Nile heartlands and less later-era weight on famous western cities.'
     ] },
@@ -660,6 +663,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      religiousHeads: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -789,6 +793,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      religiousHeads: {},
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
