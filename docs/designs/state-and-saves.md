@@ -167,13 +167,18 @@ settlement, while all other holdings remain unchanged.
 
 Network state is additive and lazily validated. `player.friendContacts` maps known
 character ids to current-life contact timestamps; the canonical friend remains
-`state.roles.friend` for events and mods. `player.retainers` stores compact
+`state.roles.friend` for events and mods. `player.socialAttention` is a character-id-keyed
+assignment map (one entry with core balance) and `player.socialGiftTurns` stores the last
+explicit cash-or-item gift turn per recipient for the current life. Invalid and dead
+references are discarded lazily. `player.retainers` stores compact
 `{charId,office,pay,startedTurn,unpaid}` contracts, while every personal attribute
 remains on the referenced character. `player.guildFavorTurns` bounds guild calls by
 character and `player.vassalLevyFavors` maps realm ids to expiry turns. Succession clears
-friendship, cultivated contacts, and exceptional vassal favors, but retains paid service
-contracts with a loyalty penalty. All missing or invalid fields self-heal without a
-save-version migration.
+friendship, cultivated contacts, social attention, gift clocks, and exceptional vassal
+favors, but retains paid service contracts with a loyalty penalty. Permanent relocation
+also clears friendship, contacts, courtship, and attention. Restore converts an old active
+`court_suitor` focus into attention on its living suitor and selects an ordinary valid
+focus. All missing or invalid fields self-heal without a save-version migration.
 
 Position definitions and the levy ledger are derived data. Earned offices continue to
 read compatibility flags, retainer contributions read live contracts, and

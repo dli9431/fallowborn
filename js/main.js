@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.57.0';
+  FB.VERSION = '1.58.0';
   FB.CHANGELOG = [
+    { v: '1.58.0', date: '2026-07-25', changes: [
+      'Character sheets now let you cultivate one personal relationship alongside daily work, with deliberate friendship and courtship thresholds and shared gift cooldowns.'
+    ] },
     { v: '1.57.0', date: '2026-07-25', changes: [
       'Religious heads can now fall vacant and recover. Faith & Community now offers Papal restoration, Caliphate claims, and absolution after sacrilegious wars.'
     ] },
@@ -785,6 +788,7 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
         items: [], loadouts: {}, itemMigration: 1,
@@ -922,6 +926,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [],
         items: [], loadouts: {}, itemMigration: 1,
@@ -979,6 +984,7 @@ window.FB = window.FB || {};
     if (!G.observe && !p.travel) {
       if (!(opts && opts.skipFocus)) FB.tickFocus(s);
       else FB.validateFocus(s);
+      FB.tickSocialAttention(s);
     }
 
     // advance date: 90-day seasons, 360-day years
@@ -1741,6 +1747,8 @@ window.FB = window.FB || {};
     FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
+    p.socialAttention = {};
+    p.socialGiftTurns = {};
     p.plot = null; // plots die with their plotter
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};

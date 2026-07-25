@@ -175,6 +175,10 @@ window.FB = window.FB || {};
     if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.repairWars) FB.repairWars(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
+    /* Personal attention and explicit-gift clocks are additive life-local
+       fields. This also converts the removed court_suitor focus in old saves. */
+    if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);
+    if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
     return FB.state;
   };
 })();

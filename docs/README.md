@@ -62,7 +62,7 @@ safely fall back to English.
 Time passes **day by day** (90-day seasons, 360-day years).
 
 1. Set a **focus** in the *Deeds* tab — it is pursued every day until you change it: work your
-   land, drill with the levy, haggle at market, copy manuscripts, court your intended…
+   land, drill with the levy, haggle at market, copy manuscripts, or manage your household…
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
    **Coin & Credit** is a no-day-cost household ledger: borrow against reliable income or
@@ -78,9 +78,11 @@ Time passes **day by day** (90-day seasons, 360-day years).
    finish the purpose, stay at least three months, and keep taking local work for
    as long as you wish. After a year of building a life there, you may make that
    county the household’s permanent home—but each character can relocate only once.
-   Named characters remember personal encounters. Cultivate a contact to sufficient regard
-   and you may explicitly name them as your friend; events that call for a friend use that
-   canonical relationship. Friendship belongs to the current life rather than the dynasty.
+   Named characters remember personal encounters. Assign your one **personal-attention**
+   slot to cultivate a character’s Regard each day alongside your ordinary focus. At
+   sufficient Regard you may explicitly name an eligible contact as your friend; events that
+   call for a friend use that canonical relationship. Friendship belongs to the current life
+   rather than the dynasty.
    Anger someone deeply enough and they may
    declare a rivalry of their own. A feud has visible heat, can grow from insults into claims
    and knives, or end through compensation, mediation, a witnessed oath, common cause, or

@@ -9767,7 +9767,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Court them daily until their regard is won."
+        "text": "Give them your personal attention until their regard is won."
       }
     },
     "event.meet_suitor.options.0.label.default": {
@@ -19895,16 +19895,6 @@
         "text": "✒ Copy manuscripts"
       }
     },
-    "focus.court_suitor.label.default": {
-      "context": "focus court_suitor, visible label.",
-      "glossary": [
-        "suitor"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "🌷 Court {suitor}"
-      }
-    },
     "focus.courtly_graces.label.default": {
       "context": "focus courtly_graces, visible label.",
       "glossary": [],
@@ -23656,17 +23646,6 @@
         "text": "🗝 The inherited household servants renew their service to the new head."
       }
     },
-    "news.social.befriended": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "name",
-        "regard"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{name} warms to your company. (regard {regard})"
-      }
-    },
     "news.social.courting_begins": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -23682,7 +23661,7 @@
       "glossary": [
         "name"
       ],
-      "location": "js/ui.js",
+      "location": "js/events.js",
       "source": {
         "text": "💔 The courtship of {name} is ended."
       }
@@ -23732,7 +23711,7 @@
         "name",
         "regard"
       ],
-      "location": "js/ui.js",
+      "location": "js/events.js",
       "source": {
         "text": "Your gift pleases {name}. (regard {regard})"
       }
@@ -31078,6 +31057,16 @@
         "text": "Meißen"
       }
     },
+    "src.0497728d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Cultivate relationship"
+      }
+    },
     "src.0499b0c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33113,16 +33102,6 @@
         "text": "Hard labor, and a little peace beside it."
       }
     },
-    "src.0d8df67c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Court them daily until their regard is won."
-      }
-    },
     "src.0d947417": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34318,16 +34297,6 @@
         "text": "🌱 Try for children"
       }
     },
-    "src.137273d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Pursue marriage with {name}: court them daily, then propose."
-      }
-    },
     "src.137ec3b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35362,6 +35331,16 @@
         "text": "Pious, prudent, and a little hollow."
       }
     },
+    "src.182dff4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "ready at +{threshold}"
+      }
+    },
     "src.183a18c5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35832,6 +35811,16 @@
       ],
       "source": {
         "text": "Beja"
+      }
+    },
+    "src.1a4937cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires +{threshold} regard; currently {regard}."
       }
     },
     "src.1a5dec0a": {
@@ -36412,6 +36401,16 @@
       ],
       "source": {
         "text": "Promoted to sergeant."
+      }
+    },
+    "src.1df09f39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days"
       }
     },
     "src.1df8c133": {
@@ -37485,16 +37484,6 @@
       ],
       "source": {
         "text": "🗡 Scheme against {rival}"
-      }
-    },
-    "src.230c20f0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day."
       }
     },
     "src.230c6f0f": {
@@ -39700,6 +39689,16 @@
         "text": "Urgent obligations"
       }
     },
+    "src.2dc0a713": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cultivate this relationship, then reach +{threshold} regard."
+      }
+    },
     "src.2dd29628": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40452,6 +40451,16 @@
         "text": "De jure"
       }
     },
+    "src.319c246d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{relation} · regard {regard} · gift ready in {days} days"
+      }
+    },
     "src.31a03846": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40660,6 +40669,16 @@
       ],
       "source": {
         "text": "🗝 {name} is dismissed from household service."
+      }
+    },
+    "src.32c79c36": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "not advancing toward +{threshold}"
       }
     },
     "src.32e1a58d": {
@@ -41767,16 +41786,6 @@
         "text": "your liege"
       }
     },
-    "src.38c71257": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🤝 Spend the day in their company"
-      }
-    },
     "src.38d14980": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42625,6 +42634,16 @@
       ],
       "source": {
         "text": "A press worked for neighbors as well as the family’s own harvest."
+      }
+    },
+    "src.3d01445b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cash and item gifts share a recipient cooldown. Ready in {days} days."
       }
     },
     "src.3d13f465": {
@@ -45205,7 +45224,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "js/events.js"
       ],
       "source": {
         "text": "💔 The courtship of {name} is ended."
@@ -46174,6 +46193,16 @@
       ],
       "source": {
         "text": "A burning fever"
+      }
+    },
+    "src.4c72951a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready now"
       }
     },
     "src.4c8ab2de": {
@@ -48029,6 +48058,16 @@
         "text": "🕊 The campaign is abandoned. The banners come home."
       }
     },
+    "src.55ec8bfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{relation} · regard {regard} · gift ready now"
+      }
+    },
     "src.55f76a98": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48438,6 +48477,16 @@
       ],
       "source": {
         "text": "Look to your own hearth."
+      }
+    },
+    "src.57512529": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
       }
     },
     "src.57595d4c": {
@@ -48938,6 +48987,16 @@
       ],
       "source": {
         "text": "👶 Your daughter {parent} has a son, {baby}."
+      }
+    },
+    "src.5a07dd5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Personal attention 0/{capacity} · no assignment · +{rate} regard/day when assigned"
       }
     },
     "src.5a093f19": {
@@ -51551,6 +51610,16 @@
         "text": "🏛 Govern the demesne"
       }
     },
+    "src.661568d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day."
+      }
+    },
     "src.662b1710": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52201,16 +52270,6 @@
         "text": "Tell the reeve who is stirring trouble."
       }
     },
-    "src.69553f41": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🌷 Court {suitor}"
-      }
-    },
     "src.695b61f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52256,7 +52315,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "js/events.js"
       ],
       "source": {
         "text": "Your gift pleases {name}. (regard {regard})"
@@ -52571,16 +52630,6 @@
       ],
       "source": {
         "text": "{amount}% for {years} years"
-      }
-    },
-    "src.6b0322f0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{relation} · regard {regard}"
       }
     },
     "src.6b0b34f8": {
@@ -56179,6 +56228,16 @@
         "text": "Kursk"
       }
     },
+    "src.7afb735f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Assign personal attention for +{rate} regard each ordinary day. This costs no day."
+      }
+    },
     "src.7b032c18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57582,6 +57641,16 @@
         "text": "Rest while you can."
       }
     },
+    "src.80f49d76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Give them your personal attention until their regard is won."
+      }
+    },
     "src.80fb2f15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58632,6 +58701,16 @@
       ],
       "source": {
         "text": "Zoom out"
+      }
+    },
+    "src.85b50a93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "End your current courtship before cultivating someone else."
       }
     },
     "src.85b92ad9": {
@@ -61269,6 +61348,16 @@
         "text": "Nice"
       }
     },
+    "src.925feb16": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Locked until +{threshold} regard; currently {regard}."
+      }
+    },
     "src.9260ec39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62443,16 +62532,6 @@
         "text": "Tracks in the snow, big as your palm. Something has been at the sheep, and the dogs whine at dusk."
       }
     },
-    "src.985deecc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "A treasure warms regard as mere silver never could. (spends the day)"
-      }
-    },
     "src.9860a4ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63174,6 +63253,16 @@
       ],
       "source": {
         "text": "Saved the lord’s life in battle!"
+      }
+    },
+    "src.9bd192e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "End the courtship to release this personal-attention assignment."
       }
     },
     "src.9bdb5094": {
@@ -64558,6 +64647,16 @@
         "text": "{skill} · free"
       }
     },
+    "src.a19983f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Stop cultivating"
+      }
+    },
     "src.a19af56b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65026,16 +65125,6 @@
       ],
       "source": {
         "text": "Shiraz"
-      }
-    },
-    "src.a3f5974c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it"
       }
     },
     "src.a3fe33e5": {
@@ -66824,6 +66913,16 @@
       ],
       "source": {
         "text": "Take service in the court."
+      }
+    },
+    "src.acc0c514": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling"
       }
     },
     "src.acdcb19d": {
@@ -70524,6 +70623,16 @@
         "text": "A shirt of rings for every serious man. (+15% levy, +3% battle odds, +20 men-at-arms)"
       }
     },
+    "src.bed192a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard."
+      }
+    },
     "src.bef086ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71034,16 +71143,6 @@
       ],
       "source": {
         "text": "Nishapur"
-      }
-    },
-    "src.c16771f6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{name} warms to your company. (regard {regard})"
       }
     },
     "src.c1679f62": {
@@ -71930,16 +72029,6 @@
         "text": "Settled most disputes by winning them."
       }
     },
-    "src.c5c9ade9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Win the favor of {name}, day by day."
-      }
-    },
     "src.c5d023a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72803,6 +72892,16 @@
         "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
       }
     },
+    "src.ca4ee790": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{days} days to +{threshold}"
+      }
+    },
     "src.ca535d95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72871,6 +72970,16 @@
       ],
       "source": {
         "text": "💒 You wed {name}, as your late parent pledged."
+      }
+    },
+    "src.cac46cbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}"
       }
     },
     "src.cacd2612": {
@@ -75568,16 +75677,6 @@
         "text": "Order at the end of a rope."
       }
     },
-    "src.d7fc898a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Win the favor of your intended, day by day."
-      }
-    },
     "src.d81824d4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76499,6 +76598,16 @@
       ],
       "source": {
         "text": "Sweat now, live later."
+      }
+    },
+    "src.dcfffe52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Withdraw personal attention. This costs no day."
       }
     },
     "src.dd0ece8e": {
@@ -77911,6 +78020,16 @@
       ],
       "source": {
         "text": "Athens"
+      }
+    },
+    "src.e39966a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)"
       }
     },
     "src.e3a29e93": {
@@ -81269,6 +81388,16 @@
         "text": "Stay out of it."
       }
     },
+    "src.f40a365a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "cultivated connection"
+      }
+    },
     "src.f40cb68e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83341,16 +83470,6 @@
         "text": "Disable"
       }
     },
-    "src.fe5df90e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Warm their regard for you. (spends the day)"
-      }
-    },
     "src.fe604d30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83489,16 +83608,6 @@
       ],
       "source": {
         "text": "{priest} preaches the Friday khutba with unusual fire — of wealth, its duties, and the scales that weigh every deed."
-      }
-    },
-    "src.fef5933e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Silver speaks warmly. (spends the day)"
       }
     },
     "src.fefc27b3": {
@@ -85517,6 +85626,17 @@
         "text": "+{percent}% personal tax"
       }
     },
+    "ui:+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)"
+      }
+    },
     "ui:10% is added to the signed face and the deadline moves two seasons.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -85948,6 +86068,16 @@
         "text": "Ask {lord} for lands and a banner."
       }
     },
+    "ui:Assign personal attention for +{rate} regard each ordinary day. This costs no day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rate"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Assign personal attention for +{rate} regard each ordinary day. This costs no day."
+      }
+    },
     "ui:At the destination you must stay and find local work for at least {days} days before returning home.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -86310,6 +86440,16 @@
         "text": "Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count."
       }
     },
+    "ui:Cash and item gifts share a recipient cooldown. Ready in {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cash and item gifts share a recipient cooldown. Ready in {days} days."
+      }
+    },
     "ui:Chamberlain": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -86643,6 +86783,16 @@
         "text": "Cultivate hostility at this court every season, inviting greater danger."
       }
     },
+    "ui:Cultivate this relationship, then reach +{threshold} regard.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cultivate this relationship, then reach +{threshold} regard."
+      }
+    },
     "ui:Cultivated connection · regard {regard}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -86913,6 +87063,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Empty"
+      }
+    },
+    "ui:End the courtship to release this personal-attention assignment.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "End the courtship to release this personal-attention assignment."
+      }
+    },
+    "ui:End your current courtship before cultivating someone else.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "End your current courtship before cultivating someone else."
       }
     },
     "ui:Enterprise in {settlement}": {
@@ -87712,6 +87878,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Loan against revenues"
+      }
+    },
+    "ui:Locked until +{threshold} regard; currently {regard}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "regard",
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Locked until +{threshold} regard; currently {regard}."
       }
     },
     "ui:Make {destination} our permanent home": {
@@ -88713,14 +88890,15 @@
         "text": "Provoke"
       }
     },
-    "ui:Pursue marriage with {name}: court them daily, then propose.": {
+    "ui:Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "name"
+        "name",
+        "threshold"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Pursue marriage with {name}: court them daily, then propose."
+        "text": "Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard."
       }
     },
     "ui:Put it to a vote: silver for banner service — the aid creeps up in exchange.": {
@@ -88807,6 +88985,17 @@
       "location": "js/travel.js",
       "source": {
         "text": "Ready in {days} days."
+      }
+    },
+    "ui:Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
       }
     },
     "ui:Receive {money:principal} · {money:due} due {date}": {
@@ -88945,6 +89134,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
+      }
+    },
+    "ui:Requires +{threshold} regard; currently {regard}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "regard",
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires +{threshold} regard; currently {regard}."
       }
     },
     "ui:Requires 40 favor; currently {favor}.": {
@@ -90190,22 +90390,12 @@
         "text": "Whom to honor with {icon} {item}? Such largesse is worth +{regard} regard."
       }
     },
-    "ui:Win the favor of your intended, day by day.": {
+    "ui:Withdraw personal attention. This costs no day.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js",
+      "location": "js/ui.js",
       "source": {
-        "text": "Win the favor of your intended, day by day."
-      }
-    },
-    "ui:Win the favor of {name}, day by day.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Win the favor of {name}, day by day."
+        "text": "Withdraw personal attention. This costs no day."
       }
     },
     "ui:Withdraw your court’s attention and free this assignment.": {
@@ -90768,6 +90958,14 @@
         "text": "courting"
       }
     },
+    "ui:cultivated connection": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "cultivated connection"
+      }
+    },
     "ui:daughter": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -90992,6 +91190,16 @@
         "text": "none chosen"
       }
     },
+    "ui:not advancing toward +{threshold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "not advancing toward +{threshold}"
+      }
+    },
     "ui:not enough money": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -91074,6 +91282,16 @@
       "location": "js/model.js",
       "source": {
         "text": "rabbi"
+      }
+    },
+    "ui:ready at +{threshold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "ready at +{threshold}"
       }
     },
     "ui:regard {amount}": {
@@ -91751,6 +91969,17 @@
         "text": "{days} days living and working here"
       }
     },
+    "ui:{days} days to +{threshold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{days} days to +{threshold}"
+      }
+    },
     "ui:{days} travel days remain": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -92355,18 +92584,19 @@
         "text": "{relationship} · regard {regard}"
       }
     },
-    "ui:{relation} · regard {regard}": {
+    "ui:{relation} · regard {regard} · gift ready in {days} days": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "days",
         "regard",
         "relation"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{relation} · regard {regard}"
+        "text": "{relation} · regard {regard} · gift ready in {days} days"
       }
     },
-    "ui:{relation} · regard {regard} · your lord’s favor rises with it": {
+    "ui:{relation} · regard {regard} · gift ready now": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "regard",
@@ -92374,7 +92604,30 @@
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it"
+        "text": "{relation} · regard {regard} · gift ready now"
+      }
+    },
+    "ui:{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "regard",
+        "relation"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days"
+      }
+    },
+    "ui:{relation} · regard {regard} · your lord’s favor rises with it · gift ready now": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "regard",
+        "relation"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready now"
       }
     },
     "ui:{relation} · {marital} · regard {regard}": {
@@ -92979,14 +93232,15 @@
         "text": "🌳 See the family tree"
       }
     },
-    "ui:🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day.": {
+    "ui:🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "name"
+        "name",
+        "threshold"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day."
+        "text": "🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day."
       }
     },
     "ui:🌾 Buy Freehold Land": {
@@ -93343,6 +93597,61 @@
       "location": "js/ui.js",
       "source": {
         "text": "🤝 Betrothed to {name} — the wedding follows once both are of age."
+      }
+    },
+    "ui:🤝 Cultivate relationship": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Cultivate relationship"
+      }
+    },
+    "ui:🤝 Personal attention 0/{capacity} · no assignment · +{rate} regard/day when assigned": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "rate"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Personal attention 0/{capacity} · no assignment · +{rate} regard/day when assigned"
+      }
+    },
+    "ui:🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "name",
+        "progress",
+        "rate",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}"
+      }
+    },
+    "ui:🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "name",
+        "progress",
+        "rate",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling"
+      }
+    },
+    "ui:🤝 Stop cultivating": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Stop cultivating"
       }
     },
     "ui:🤝 betrothed": {

@@ -912,8 +912,15 @@ player-originated loan families and the trade partnership:
   revenue-share, and coinage tunables are the `price*` and `finance*` keys under
   `FBDATA.balance`.
 - Household and education costs/chances use the `household*` and `education*`
-  balance keys. Network tunables include `friendOpinionThreshold`,
-  `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
+  balance keys. Personal relationships use `socialAttentionCapacity` (core 1),
+  `socialAttentionDailyOpinion` (fixed Regard per ordinary day; core 0.2),
+  `relationshipOpinionThreshold` (shared Call friend / proposal gate; core 40),
+  `socialGiftCooldownDays` (one explicit cash or item gift per recipient; core 90),
+  `socialCashGiftOpinion` (core 4), and the three-entry `socialItemGiftOpinion`
+  array (core `[4,8,12]`). `friendOpinionThreshold` is a deprecated fallback for older
+  data sets; new mods should define the shared relationship threshold. Council, realm,
+  wedding, and authored event gifts do not use the personal-gift cooldown. Other Network
+  tunables include `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
   `vassalLevyFavorRate`, and `vassalLevyFavorDays`.
 
 ## Settlements
@@ -967,8 +974,10 @@ unmarried children:
   `FB.transferItem`, `FB.equipItem`, `FB.unequipItem`, `FB.pledgeItem`,
   `FB.sellItem`, `FB.giveItem`, and `FB.destroyItem`.
 - Item cards list actual quality-adjusted powers, value, wearer, and valid actions.
-  Ordinary gifts grant +8/+15/+25 regard by quality; unique common/fine/famed items grant
-  +15/+25/+40. An equipped item must be removed before gift, sale, or pledge.
+  Ordinary Plain/Well-made/Masterwork gifts and unique common/fine/famed items map their
+  three tiers through `balance.socialItemGiftOpinion` (core: +4/+8/+12 Regard). Explicit
+  personal item gifts share the recipient cooldown described above. An equipped item must
+  be removed before gift, sale, or pledge.
 - Event hooks (`custom` effects): `offer_item` (the full eligible table) and
   `offer_gear` (ordinary gear only) put an exact object on sale through `item_offer`;
   `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),

@@ -116,6 +116,14 @@ seasonal fee; unavailable town/focus/age combinations remain visible with their 
 The upbringing summary repeats the current arrangement, projected chance, fee, and paused
 payment state.
 
+Living character sheets also own personal relationship controls. **Cultivate relationship**
+and **Stop cultivating** assign or withdraw the one social-attention slot without spending
+a day; while courting, the suitor holds that slot until the courtship ends. The assigned
+person's sheet repeats their Regard, fixed daily rate, and estimated days to +40. **Call
+friend** and **Propose marriage** remain visibly disabled below the shared threshold.
+Cash-gift controls show their +Regard value and either readiness or recipient-specific days
+remaining on the shared cash/item gift cooldown.
+
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
 a narrow phone. The sheet shows purse, price index, last movement and purse adjustment,
@@ -135,6 +143,9 @@ Faith & Community contains the contextual absolution, Papal-restoration, and
 Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
 confirmation sheets. A Catholic Papal conquest is marked as sacrilege in the war list
 and uses its own second confirmation; no penalty is applied until that final button.
+A separate personal-attention summary names the assigned character, current Regard, fixed
+daily rate, estimated days to the relationship threshold, and travel-pause state; attention
+never replaces the work focus.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
@@ -149,6 +160,12 @@ rank, standing, exact income modifier, enterprises, partnerships, positions, and
 guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Royal
 Council summary/link, and the computed levy ledger). Empty sections explain what is
 absent rather than inventing placeholder people.
+
+Connections begins with the same personal-attention summary as Deeds. Item-gift recipient
+buttons show the exact +Regard tier and are disabled with the remaining cooldown days when
+that person has already received either cash or an item gift. All assignment, friendship,
+courtship, and gift buttons are native focusable controls, so the same labels and disabled
+state remain available to keyboard and mobile users.
 
 The panel summarizes other systems and links to their focused controls. Character sheets
 remain the place to call a friend or manage one retainer; Work & Enterprises remains the

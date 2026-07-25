@@ -1,5 +1,5 @@
 /* Fallowborn — player activity.
-   FOCUSES run every day until changed (work, drill, prayer, courtship...).
+   FOCUSES run every day until changed (work, drill, prayer...).
    INSTANTS are one-shot deeds (poach, scheme, petitions...) that spend the day
    and may have day-cooldowns. Daily rates are tuned so a season (90 days) of a
    focus roughly equals one old seasonal deed. */
@@ -75,19 +75,6 @@ window.FB = window.FB || {};
       if (pr) pr.opinion = FB.clamp(pr.opinion + 2 / D, -100, 100);
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
-  { id: 'court_suitor', label: '🌷 Court {suitor}',
-    desc: function (s) {
-      const su = FB.getRole(s, 'suitor');
-      return su
-        ? FB.T('Win the favor of {name}, day by day.', { name: su.name })
-        : FB.T('Win the favor of your intended, day by day.');
-    },
-    show: suitorReady,
-    tick: function (s) {
-      const su = FB.getRole(s, 'suitor');
-      if (su) su.opinion = FB.clamp(su.opinion + (8 + FB.skillOf(me(s), 'dip') / 3) / D, -100, 100);
-    } },
-
   { id: 'toil', label: '🌾 Toil in the lord’s fields',
     desc: function () { return 'Hard bread, hard-earned.'; },
     show: function (s) { return s.player.tier === 0 && adult(s); },
@@ -369,10 +356,7 @@ window.FB = window.FB || {};
     } },
   { id: 'propose', label: '💒 Propose marriage', cd: 20,
     desc: function () { return 'Ask for their hand. Standing and wealth weigh heavily.'; },
-    show: function (s) {
-      const su = FB.getRole(s, 'suitor');
-      return suitorReady(s) && su && su.opinion >= 5;
-    },
+    show: function (s) { return suitorReady(s) && FB.canPropose(s); },
     run: function (s) {
       const p = s.player, m = s.chars[p.charId];
       // a woman's suit can be overtaken by the war: about a quarter of the time
@@ -2523,6 +2507,7 @@ window.FB = window.FB || {};
 
   FB.validateFocus = function (state) {
     if (state.player.travel) return;
+    if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(state);
     const cur = state.player.focus;
     // daily hot path: if the current focus is still offered, skip the full
     // listFocuses sweep (all ~27 show() callbacks) entirely. While afield the

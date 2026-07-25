@@ -89,6 +89,11 @@ three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggre
 scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
 add the target's `opinion/500` to success — a trusting victim is easier to undo.
+`player.socialAttention` is not another relationship meter: it names the one character
+whose existing Regard gains `balance.socialAttentionDailyOpinion` (+0.2 by default) each
+ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does not change
+that fixed rate. Attention pauses during overland travel and Observe mode but continues
+alongside work, study, war, and deeds that consume a day.
 
 **Rivalries grow out of contact.** The rival seat remains `state.roles.rival`, so old saves,
 events, and mods keep one canonical personal enemy. The player may deliberately name any
@@ -126,14 +131,18 @@ Guild member → Master → Guild officer → Guildmaster. The saved `guildRank`
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the
 character's vocational `rank` from journeyman to master.
 
-**Friendship requires an intentional relationship.** `player.friendContacts` records
-living, non-family characters whose company the current head has cultivated.
-At `balance.friendOpinionThreshold` regard the character sheet offers **Call friend**;
-accepting installs that exact character in the compatibility role
-`state.roles.friend`. If an event first needs `{friend}`, `FB.getRole` prefers the
-best eligible cultivated contact before generating a local peer. Naming a replacement
-is explicit and clears sworn-friend state. Friendship and its contacts clear on
-succession or permanent relocation; neither is inherited by the next head.
+**Friendship requires an intentional relationship.** Assigning personal attention records
+an eligible living, non-family character in `player.friendContacts`. At the shared
+`balance.relationshipOpinionThreshold` (+40 by default), the character sheet offers
+**Call friend**; accepting installs that exact character in the compatibility role
+`state.roles.friend` and frees the attention assignment. Existing +40 cultivated contacts
+remain nameable even when attention has moved elsewhere. A friendship story can formalize
+only the currently assigned, eligible person at the same threshold: `FB.getRole` never
+generates a stranger merely because event text contains `{friend}`. Naming a replacement
+is explicit and clears sworn-friend state. Friendship, its cultivated contacts, and
+personal attention clear on succession or permanent relocation; none is inherited by the
+next head. `balance.friendOpinionThreshold` is a deprecated fallback for older mods whose
+data does not define the shared relationship threshold.
 
 **Paid retainers are managed people, not family members.** `player.retainers` stores
 compact contracts pointing to ordinary characters. The office is additive to the

@@ -481,6 +481,8 @@ window.FB = window.FB || {};
     p.liege = null;
     delete state.roles.lord;
     delete state.roles.priest;
+    if (FB.clearCourtship) FB.clearCourtship(state);
+    if (FB.socialAttentionClear) FB.socialAttentionClear(state);
     if (FB.clearFriendship) FB.clearFriendship(state, true);
     else delete state.roles.friend;
     delete state.roles.notable;
