@@ -1,13 +1,21 @@
 # Characters: skills & growing up
 
-**Skills grow on a soft cap.** Every skill gain (focus training, event `skills` effects,
-education, coming of age) goes through `FB.gainSkill` (model.js): below
-`balance.skillSoftCap` (20) each point lands; past it each must beat a
-`(softCap/current)^2` roll, so single-stat stacking diminishes hard toward
-`balance.skillHardCap` (40), the true ceiling `FB.skillOf` also reads up to.
-Never write `c.skills[k]++` directly outside it. Daily focus training applies
-`balance.focusSkillGainRate` (0.75) to its authored seasonal chance before this
-soft-cap roll; event, education, and coming-of-age gains are unaffected.
+**Skills grow on an uncapped diminishing-return curve.** Every skill gain (focus
+training, event `skills` effects, education, coming of age) goes through
+`FB.gainSkill` (model.js). Below `balance.skillSoftCap` (20) each point lands;
+from 20 onward each must beat a `(softCap/current)^2` roll. At and beyond
+`balance.skillMasteryThreshold` (40), that chance is further multiplied by
+`(masteryThreshold/current)^skillMasteryPower` (power 8 by default). The resulting
+per-attempt chances include 40→41 at 25%, 41→42 at 19.5%, 45→46 at 7.7%,
+50→51 at 2.7%, and 60→61 at 0.43%. The roll uses only the raw trained skill,
+so traits and equipped items do not make training harder. `FB.skillOf` has no
+upper ceiling: every raw, trait, and equipped-item point retains its full effect.
+Existing saves need no migration; stored values already remain valid, and bonuses
+previously hidden by the old 40-point read ceiling become effective immediately.
+Never write `c.skills[k]++` directly outside `FB.gainSkill`. Daily focus training
+applies `balance.focusSkillGainRate` (0.75) to its authored seasonal chance before
+this diminishing-return roll; event, education, and coming-of-age gains are
+unaffected.
 
 **Equipment bonuses belong to the wearer.** `FB.skillOf` adds skill effects from that
 character's household loadout, not from every object the dynasty owns. Equipped health

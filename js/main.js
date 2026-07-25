@@ -800,7 +800,7 @@ window.FB = window.FB || {};
     });
     me.health = 8;
     me.dyn = FB.dynastyName(pr.culture, me.name, pr.name);
-    if (sc.mar) me.skills.mar = FB.clamp(me.skills.mar + sc.mar, 0, FBDATA.balance.skillHardCap || 40);
+    if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
     state.player.charId = me.id;
     FB.setCareer(state, me, sc.profession, 'journeyman');
 

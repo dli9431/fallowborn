@@ -1007,7 +1007,7 @@ window.FB = window.FB || {};
       const v = FB.skillOf(c, k);
       const name = FB.skillName(k);
       // the bar fills to the soft cap; past it the number keeps climbing and
-      // the bar turns bright to mark mastery beyond the old ceiling
+      // the bar turns bright to mark mastery beyond the soft cap
       h += '<div class="skillrow"><span class="skill-label" title="' + esc(name) + '">' +
         esc(name) + '</span>' +
         '<span class="bar"><i' + (v > soft ? ' class="over"' : '') + ' style="width:' +
@@ -6506,8 +6506,8 @@ window.FB = window.FB || {};
             born: s.date.year - FB.ri(35, 60), quality: 3, role: 'tutor'
           });
           master.epithetMsg = FB.msg('fx.epithet.hired_master', 'Hired master', {});
-          if (focus) master.skills[focus] = FB.clamp(FB.ri(15, 18), 0, FBDATA.balance.skillHardCap || 40);
-          else master.skills.lea = FB.clamp(FB.ri(11, 16), 0, FBDATA.balance.skillHardCap || 40);
+          if (focus) master.skills[focus] = Math.max(0, FB.ri(15, 18));
+          else master.skills.lea = Math.max(0, FB.ri(11, 16));
           c.edu.tutorId = master.id;
           c.edu.school = 'master';
           delete c.edu.schoolUnpaid;
