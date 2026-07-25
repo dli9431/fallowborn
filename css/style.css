@@ -102,7 +102,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 #title { padding-block: clamp(10px, 2vh, 20px); }
 #title #titlecrest { width: clamp(78px, 12vh, 120px); height: auto; }
 #title .gametitle {
-  font-size: clamp(36px, 7vh, 60px);
+  font-size: clamp(30px, min(13vw, 7vh), 60px);
   line-height: 1.1; margin-bottom: clamp(2px, 1vh, 8px);
 }
 #title .subtitle { margin-bottom: clamp(10px, 2.5vh, 26px); }
@@ -345,6 +345,9 @@ a.actionbtn { text-decoration: none; }
   padding: 2px 9px; margin: 2px 3px 2px 0; font-size: 12px; cursor: help;
 }
 .skillrow { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 2px 0; }
+.skillrow .skill-label {
+  width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .skillrow .bar { flex: 1; height: 7px; background: #191410; border-radius: 4px; overflow: hidden; }
 .skillrow .bar i { display: block; height: 100%; background: #c9a24a; }
 .skillrow .bar i.over { background: #ffe08a; box-shadow: 0 0 4px #c9a24a; }
@@ -434,8 +437,35 @@ textarea.modjson, textarea.savetext {
    by the home line; drawCrest strokes its own border, no css frame needed */
 .ccname .crest { vertical-align: -4px; margin-left: 6px; }
 .ccmeta .crest { vertical-align: -3px; margin-right: 4px; }
-#selfportrait { display: block; margin: 0 auto 8px; }
-.portrait-equip { display: block; min-height: 44px; margin: 0 auto 10px; }
+.self-overview {
+  display: grid; grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px; align-items: start; margin-bottom: 4px;
+}
+.self-portrait-tools { min-width: 0; }
+.self-portrait-button {
+  display: block; margin: 0 auto 6px; padding: 0; border: 0; border-radius: 5px;
+  background: none; cursor: pointer; line-height: 0;
+}
+#selfportrait { display: block; margin: 0; }
+.portrait-equip {
+  display: block; width: 96px; min-height: 34px; margin: 0 auto;
+  padding: 5px 6px; font-size: 12px; line-height: 1.15;
+}
+.self-overview-skills { min-width: 0; }
+.self-overview-skills .panelh { margin: 0 0 5px; font-size: 13px; }
+.self-overview-skills .skillrow { gap: 4px; margin: 3px 0; font-size: 11px; }
+.self-overview-skills .skill-label { width: 68px; }
+.self-overview-skills .skillrow .num { width: 18px; }
+.self-name { border-bottom: 0; padding-bottom: 0; }
+.self-details-divider { display: none; }
+@media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
+@media (min-width: 821px) and (min-height: 521px) {
+  #tb-portrait { display: none; }
+  .self-name { display: none; }
+  .self-details-divider {
+    display: block; border-top: 1px solid #40331f; margin: 9px 0 5px;
+  }
+}
 
 /* household paper dolls and exact equipment slots */
 .paper-sheet {

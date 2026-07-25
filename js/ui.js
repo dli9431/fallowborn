@@ -392,6 +392,7 @@ window.FB = window.FB || {};
   let activeLeftTab = 'char';   // left panel: char | family (Self open by default)
   const LEFT_TABS = ['char', 'family'];
   const actionGroupsOpen = { work:true, life:false, faith:false, realm:false, war:false };
+  const selfSectionsOpen = { titles:false, possessions:false };
   const ACTION_GROUPS = [
     { id:'work', label:'🧰 Work & Wealth' },
     { id:'life', label:'🌿 Life & Family' },
@@ -679,9 +680,11 @@ window.FB = window.FB || {};
     const soft = FBDATA.balance.skillSoftCap || 20;
     for (const k of FB.SKILLS) {
       const v = FB.skillOf(c, k);
+      const name = FB.skillName(k);
       // the bar fills to the soft cap; past it the number keeps climbing and
       // the bar turns bright to mark mastery beyond the old ceiling
-      h += '<div class="skillrow"><span style="width:86px">' + esc(FB.skillName(k)) + '</span>' +
+      h += '<div class="skillrow"><span class="skill-label" title="' + esc(name) + '">' +
+        esc(name) + '</span>' +
         '<span class="bar"><i' + (v > soft ? ' class="over"' : '') + ' style="width:' +
         Math.min(100, v / soft * 100) + '%"></i></span><span class="num">' + v + '</span></div>';
     }
@@ -845,8 +848,8 @@ window.FB = window.FB || {};
     }
   }
 
-  function itemChips(s) {
-    const ids = FB.itemList(s);
+  function itemChips(s, ids) {
+    ids = ids || FB.itemList(s);
     if (!ids.length) return '<span class="cmeta">' + esc(FB.T('Nothing of note.')) + '</span>';
     let h = '';
     for (const ref of ids) {
@@ -865,10 +868,10 @@ window.FB = window.FB || {};
   }
 
   /* the player's held titles (tier 3+): high dignities as rows, counties compact */
-  function titleRows(s) {
-    const t = FB.playerTitles(s);
+  function titleRows(s, t) {
+    t = t || FB.playerTitles(s);
     if (!t.high.length && !t.counties.length) return '';
-    let h = panelh('Titles');
+    let h = '';
     for (const e of t.high) {
       h += '<div class="kv"><span>' + esc(FB.T(e.d)) + '</span><b>' +
         esc(e.titleData ? FB.renderTitleSnapshot(e.titleData) : FB.L(e.t || '')) +
@@ -884,6 +887,17 @@ window.FB = window.FB || {};
         { count: t.counties.length })) + '</span><b>' + esc(names.join(' · ')) + '</b></div>';
     }
     return h;
+  }
+
+  function selfSectionHtml(id, label, count, body) {
+    const open = !!selfSectionsOpen[id];
+    const bodyId = 'self-section-' + id;
+    return '<button type="button" class="actiongroup-toggle self-section-toggle" ' +
+      'data-self-section="' + id + '" aria-expanded="' + (open ? 'true' : 'false') +
+      '" aria-controls="' + bodyId + '"><span>' + esc(FB.T(label)) + '</span><span>' +
+      esc(String(count)) + ' ' + (open ? '▾' : '▸') + '</span></button>' +
+      '<div id="' + bodyId + '" class="self-section-body' + (open ? '' : ' hidden') +
+      '">' + body + '</div>';
   }
 
   function dynasticStatusRows(s, me) {
@@ -911,12 +925,22 @@ window.FB = window.FB || {};
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
+    const titles = FB.playerTitles(s);
+    const titleCount = titles.high.length + titles.counties.length;
+    const items = FB.itemList(s);
     let h =
-      '<canvas id="selfportrait" class="pface" data-cid="' + me.id +
-      '" width="72" height="82"></canvas>' +
+      '<div class="panelh self-name">' + esc(FB.fullName(me)) + '</div>' +
+      '<div class="self-overview"><div class="self-portrait-tools">' +
+      '<button type="button" class="self-portrait-button" id="self-equipment-portrait" ' +
+      'aria-label="' + esc(FB.T('Equip items…')) + '" title="' +
+      esc(FB.T('Equip items…')) + '"><canvas id="selfportrait" class="pface" data-cid="' +
+      me.id + '" width="72" height="82" aria-hidden="true"></canvas></button>' +
       '<button type="button" class="btn portrait-equip" id="self-equipment" ' +
       'data-action-id="self-equipment">' + esc(FB.T('Equip items…')) + '</button>' +
-      '<div class="panelh">' + esc(FB.fullName(me)) + '</div>' +
+      '</div><div class="self-overview-skills">' + panelh('Skills') + skillBars(me) +
+      '</div></div>' +
+      panelh('Traits') + traitChips(me) +
+      '<div class="self-details-divider" aria-hidden="true"></div>' +
       kv('Rank', esc(FB.styledTitle(s))) +
       kv('Age', FB.ageOf(me, s.date.year)) +
       kv('Culture', esc(cultureName(s, me.culture))) +
@@ -925,11 +949,9 @@ window.FB = window.FB || {};
       ailmentChips(s, me) +
       kv('Reputation among the folk', Math.round(s.player.pop)) +
       (s.player.liege ? kv('Liege’s favor', Math.round(s.player.liegeOp || 0)) : '') +
-      titleRows(s) +
+      (titleCount ? selfSectionHtml('titles', 'Titles', titleCount, titleRows(s, titles)) : '') +
       dynasticStatusRows(s, me) +
-      panelh('Skills') + skillBars(me) +
-      panelh('Traits') + traitChips(me) +
-      panelh('Possessions') + itemChips(s) +
+      selfSectionHtml('possessions', 'Possessions', items.length, itemChips(s, items)) +
       panelh('Dynasty') +
       kv('House', esc(me.dyn || '—')) +
       kv('Generation', (s.generation || 1));
@@ -950,10 +972,23 @@ window.FB = window.FB || {};
     $('tab-char').innerHTML = h;
     FB.localizeTree($('tab-char'));
     FB.paintFaces($('tab-char'), s);
-    const seq = $('self-equipment');
-    if (seq) seq.addEventListener('click', function () {
-      UI.showEquipmentModal(me.id, 'close');
-    });
+    const equipmentTriggers = $('tab-char').querySelectorAll(
+      '#self-equipment-portrait, #self-equipment');
+    for (let i = 0; i < equipmentTriggers.length; i++) {
+      equipmentTriggers[i].addEventListener('click', function () {
+        UI.showEquipmentModal(me.id, 'close');
+      });
+    }
+    const sectionToggles = $('tab-char').querySelectorAll('[data-self-section]');
+    for (let i = 0; i < sectionToggles.length; i++) {
+      sectionToggles[i].addEventListener('click', function () {
+        const id = sectionToggles[i].getAttribute('data-self-section');
+        selfSectionsOpen[id] = !selfSectionsOpen[id];
+        renderChar();
+        const next = $('tab-char').querySelector('[data-self-section="' + id + '"]');
+        if (next) next.focus({ preventScroll:true });
+      });
+    }
     const sef = $('self-edufocus');
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
     const stu = $('self-tutor');

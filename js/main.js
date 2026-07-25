@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.3';
+  FB.VERSION = '1.54.4';
   FB.CHANGELOG = [
+    { v: '1.54.4', date: '2026-07-25', changes: [
+      'The title screen now keeps its name visible in narrow embedded views.',
+      'The Self panel now groups identity details compactly, opens equipment from the portrait, and collapses titles and possessions.'
+    ] },
     { v: '1.54.3', date: '2026-07-25', changes: [
       'Desktop scrollbars now use slim bronze styling throughout the game.',
       'The title screen now compacts itself to fit common browser and itch iframe heights without unnecessary scrolling.'

@@ -15,7 +15,9 @@ the bottom middle of the sheet.
 **Mobile layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). On phones the Deeds/Land/Chronicle panel takes the full
 width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` — toggled in
-`setTab`, opened by tapping the topbar portrait, closed by `#btn-closeself`). The time
+`setTab`, opened by tapping the mobile-only topbar portrait, closed by `#btn-closeself`).
+The redundant topbar portrait is hidden when the Self panel is persistently visible on
+desktop. The time
 controls become a fixed thumb-zone bar above the drawer (hidden by `body.picking` during
 the birthplace pick), most modals render as bottom sheets, and touch targets stay ≥44 px
 with safe-area insets. In portrait the topbar wraps to three rows: identity and ☰ up top,
@@ -62,6 +64,14 @@ The Self sheet and the sheets for living spouses and resident unmarried children
 an **Equip items…** button. It opens a dedicated modal with one deterministic full-body
 figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
+The Self overview places its skill bars beside the compact portrait; both the portrait and
+the narrow button directly beneath it open the equipment sheet. Traits sit below the
+overview, before the full identity and household details. Titles and Possessions use collapsed-by-default,
+counted accordion rows matching the Deeds group controls so large realms and armories do
+not dominate the Self panel. The full-name heading leads the mobile/short-screen drawer,
+where that drawer covers the topbar, and is hidden in the desktop panel because the
+persistent topbar already names the character. On desktop, a subtle divider separates
+Traits from the rank, age, culture, faith, and health details below.
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
 navigation, and opens a numbered compatible-armory list over the still-visible equipment
 sheet; no drag-and-drop path is required.
