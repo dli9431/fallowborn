@@ -1,5 +1,19 @@
 # Game state & saves
 
+Religious-head state is additive and keeps save version 3.
+`state.religiousHeads` maps an exact religion id to a realm id or to `null` for an
+explicit vacancy. New games seed missing entries from optional
+`FBDATA.religions[id].head.realm` metadata. `FB.ensureReligiousHeads` performs the same
+own-key repair on restore, so it adds the Papacy and Abbasid defaults to older saves
+without overwriting a vacancy, a later reassignment, or a mapping whose realm has died.
+The ordinary JSON snapshot/export round trip preserves the mapping unchanged.
+
+Player title snapshots may add `headReligion` and `headTitle`. The former selects the
+stable religion-owned catalog key and the latter is its English fallback, so save-slot
+metadata, legends, and structured messages can render Pope or Caliph in the active
+locale without storing rendered prose. A snapshot records the office held at that
+moment; rendering it later does not consult the live assignment.
+
 Dynastic diplomacy is additive and does not change save version 3.
 `realm.succession` holds lightweight royal members and a ruler-generation identity;
 materialized characters point back through `char.royalLine`.

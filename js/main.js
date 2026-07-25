@@ -657,6 +657,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      religiousHeads: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -786,6 +787,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      religiousHeads: {},
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,

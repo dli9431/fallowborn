@@ -102,10 +102,12 @@ FBDATA.settlementNames = {
 };
 
 FBDATA.religions = {
-  catholic:     { name:'Latin Christianity',  group:'christian', icon:'✝' },
+  catholic:     { name:'Latin Christianity',  group:'christian', icon:'✝',
+    head:{ realm:'papacy', title:'Pope' } },
   orthodox:     { name:'Greek Christianity',  group:'christian', icon:'☦' },
   eastern:      { name:'Eastern Christianity',group:'christian', icon:'☧' },
-  sunni:        { name:'Islam (Sunni)',       group:'muslim',    icon:'☪' },
+  sunni:        { name:'Islam (Sunni)',       group:'muslim',    icon:'☪',
+    head:{ realm:'abbasid', title:'Caliph' } },
   shia:         { name:'Islam (Shia)',        group:'muslim',    icon:'☪' },
   norse_pagan:  { name:'Norse Paganism',      group:'pagan',     icon:'ᚠ' },
   slavic_pagan: { name:'Slavic Paganism',     group:'pagan',     icon:'☀' },

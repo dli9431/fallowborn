@@ -607,8 +607,8 @@ FBDATA.scripted = [
 FBDATA.titles = {
   christian: ['Serf','Freeholder','Gentry','Baron','Count','Duke','King','Emperor'],
   christian_f: ['Serf','Freeholder','Gentlewoman','Baroness','Countess','Duchess','Queen','Empress'],
-  muslim: ['Fellah','Freeman','Sayyid','Sheikh','Emir','Grand Emir','Sultan','Caliph'],
-  muslim_f: ['Fellaha','Freewoman','Sayyida','Sheikha','Emira','Grand Emira','Sultana','Caliph'],
+  muslim: ['Fellah','Freeman','Sayyid','Sheikh','Emir','Grand Emir','Sultan','Great Sultan'],
+  muslim_f: ['Fellaha','Freewoman','Sayyida','Sheikha','Emira','Grand Emira','Sultana','Great Sultana'],
   pagan: ['Thrall','Karl','Huscarl','Hersir','Jarl','High Chief','King','High King'],
   pagan_f: ['Thrall','Karl','Shieldmaiden','Lady','Jarl','High Chief','Queen','High Queen'],
   jewish: ['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan']

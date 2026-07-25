@@ -614,6 +614,16 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, {field}, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
+            if data_name == "religions":
+                head = node_object(item.get("head")) or {}
+                for branch, record, line in branch_records(head.get("title")):
+                    inv.add(
+                        f"{namespace}.{item_id}.head.title.{branch}",
+                        record,
+                        f"{rel}:{line}",
+                        f"{namespace} {item_id}, central religious office title, faith branch {branch}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
             if data_name == "careers":
                 ranks = node_object(item.get("ranks")) or {}
                 for rank_id, rank_node in ranks.items():
