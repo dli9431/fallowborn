@@ -50,6 +50,12 @@ same number and collide.
 **Default: commit directly onto `main`.** In the primary working directory, just commit your
 work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
 
+**Every integration commit that assigns `FB.VERSION` must include that exact version in its
+commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,
+`v1.57.1: Fix island province connections`). This applies both to a direct commit on `main` and
+to the final merge/integration commit. Feature-branch commits do not guess a version, and
+docs-only commits do not assign one, so those commits are exempt.
+
 **Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
 move, prune, repair, or otherwise modify a worktree or its registration.
 
@@ -68,7 +74,7 @@ every other branch in flight (parallel worktrees are unaware of each other):
 1. **`FB.VERSION` + `FB.CHANGELOG`** (top of `js/main.js`) — at the merge, pick the next free
    version — **usually a PATCH (last number: balance, tweak, or fix); reserve a MINOR bump for a
    genuinely new feature, per `docs/VERSIONS.md`** — and write the changelog line from the
-   branch's description. Keep each
+   branch's description. Put the same version in the integration commit subject. Keep each
    `FB.CHANGELOG` entry **short, plain, and general — one or two sentences** that name the
    feature and hint where the player runs into it, not the full mechanics. Players read it in
    the in-game changelog modal; they want a pointer to the new thing, not a spec. See

@@ -57,10 +57,23 @@ The version and its changelog entry are assigned **when a change lands on `main`
 branch that makes the change:
 
 - **Working directly on `main`** (the default) — bump `FB.VERSION` and add the `FB.CHANGELOG`
-  entry in the same commit. That commit *is* the integration.
+  entry in the same commit. That commit *is* the integration, and its subject must include the
+  assigned version.
 - **On a feature branch or worktree you will merge** — do **not** touch `FB.VERSION` or
   `FB.CHANGELOG`. Put the player-facing changelog line in the commit/merge description; at the
-  merge, the integrator picks the next free version and adds the entry.
+  merge, the integrator picks the next free version, adds the entry, and includes the assigned
+  version in the final merge/integration commit subject.
+
+Use this subject format for every integration commit that assigns `FB.VERSION`:
+
+```text
+vMAJOR.MINOR.PATCH: description
+```
+
+For example: `v1.57.1: Fix island province connections`. The subject's version must exactly match
+the `FB.VERSION` value committed in `js/main.js`. Feature-branch commits are exempt because their
+version is intentionally unknown until integration. Docs-only commits are also exempt because
+they do not bump or assign `FB.VERSION`.
 
 Why: branches developed in parallel each guess the same "next" version and each head-insert into
 `FB.CHANGELOG`, so every branch collides with every other on the `js/main.js` top at merge — and
