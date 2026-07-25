@@ -391,6 +391,7 @@ textarea.modjson, textarea.savetext {
 .ccname .crest { vertical-align: -4px; margin-left: 6px; }
 .ccmeta .crest { vertical-align: -3px; margin-right: 4px; }
 #selfportrait { display: block; margin: 0 auto 8px; }
+.portrait-equip { display: block; min-height: 44px; margin: 0 auto 10px; }
 
 /* household paper dolls and exact equipment slots */
 .paper-sheet {
@@ -419,8 +420,6 @@ textarea.modjson, textarea.savetext {
   font-weight: normal; line-height: 1.25; text-overflow: ellipsis;
 }
 .equip-note { color: #918163; font-size: 11px; line-height: 1.35; margin-top: 7px; }
-#tab-char .paper-sheet { grid-template-columns: 1fr; }
-#tab-char .paperdoll { width: 170px; }
 .item-card { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 10px; }
 .itemart {
   display: block; flex: 0 0 auto; border: 1px solid #66522f;
