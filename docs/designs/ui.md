@@ -43,7 +43,8 @@ instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
 treasures, station upkeep, resident-family provisions, and school fees), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
-activation.
+activation. The gold button uses `FBDATA.balance.coinageSymbol` when a mod supplies
+one, falling back to the default money-bag symbol; this is display-only.
 
 Minor character sheets separate the education-focus picker from the instruction picker.
 Every school/tutor row shows the projected full-year directed-learning chance and exact

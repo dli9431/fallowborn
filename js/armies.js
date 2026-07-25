@@ -71,6 +71,7 @@ window.FB = window.FB || {};
   };
 
   function B() { return FBDATA.balance; }
+  function requestMap() { if (FB.map) FB.map.request(); }
 
   function provName(pid) {
     const pr = FB.world.byId[pid];
@@ -170,7 +171,7 @@ window.FB = window.FB || {};
       p.flags.hostHintShown = 1; // once per save: the host waits for hand-tapped orders
       if (FB.ui) FB.ui.toast('🚩 Your host has mustered — tap it on the map, then tap a province to march.');
     }
-    if (FB.map) FB.map.request();
+    requestMap();
     return host;
   };
 
@@ -203,6 +204,7 @@ window.FB = window.FB || {};
         '🚩 {realm} takes the field — some {men} spears against you.',
         { realm: r.name, men: men }));
     }
+    requestMap();
     return host;
   }
 
@@ -210,6 +212,7 @@ window.FB = window.FB || {};
     const i = state.armies.indexOf(army);
     if (i >= 0) state.armies.splice(i, 1);
     if (selId === army.id) selId = null;
+    requestMap();
   }
 
   /* ---------- pathing (BFS over province adjacency) ----------
@@ -243,12 +246,21 @@ window.FB = window.FB || {};
      costs balance.armyMarchDays. */
   FB.orderArmy = function (state, army, destPid) {
     if (!destPid) return false;
-    if (destPid === army.at) { army.path = []; army.goal = null; army.moveLeft = 0; return true; }
+    if (destPid === army.at) {
+      army.path = []; army.goal = null; army.moveLeft = 0;
+      requestMap();
+      return true;
+    }
     const path = FB.findPath(army.at, destPid);
-    if (!path) { army.path = []; army.goal = null; return false; }
+    if (!path) {
+      army.path = []; army.goal = null;
+      requestMap();
+      return false;
+    }
     army.path = path;
     army.goal = destPid;
     if (army.moveLeft <= 0) { army.from = army.at; army.moveLeft = B().armyMarchDays; }
+    requestMap();
     return true;
   };
 
@@ -262,6 +274,7 @@ window.FB = window.FB || {};
         army.from = army.at;
         army.at = army.path.shift();
         if (army.path.length) army.moveLeft = B().armyMarchDays;
+        requestMap();
       }
       return;
     }
@@ -400,7 +413,7 @@ window.FB = window.FB || {};
           { province: provName(pid), winner: wname, loser: lname }));
       }
     }
-    if (FB.map) FB.map.request();
+    requestMap();
   }
 
   FB.armyTick = function (state) {
@@ -420,6 +433,7 @@ window.FB = window.FB || {};
           a.men -= gone;
           a.size = Math.max(a.men, (a.size || a.men) - gone);
           a.allied = null;
+          requestMap();
         }
       }
     }
@@ -482,7 +496,6 @@ window.FB = window.FB || {};
       }
       march(state, a);
     }
-    if (state.armies.length && FB.map) FB.map.request(); // hosts on the road redraw daily
 
     // levies trickle back while a host rests on its sovereign's own land —
     // fresh peasants from the fields; the slain men-at-arms are not replaced
@@ -497,6 +510,7 @@ window.FB = window.FB || {};
         const add = Math.min(a.size - a.men, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
         a.units.levy += add;
         a.men += add;
+        requestMap();
       }
     }
 

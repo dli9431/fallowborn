@@ -120,6 +120,10 @@ window.FB = window.FB || {};
         clickNth('#travel-destination-list .travel-destination', slot);
         return;
       }
+      if (k === ' ' || k === 'e' || k === 'E' || k === 'f' || k === 'F') {
+        e.preventDefault();
+        return;
+      }
     }
 
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }

@@ -769,6 +769,8 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
     can: function (s) {
+      const sovereign = FB.topRealm(s, s.player.liege);
+      if (sovereign && FB.isRealmAtWar(s, sovereign)) return FB.T('At war with another realm');
       return s.player.prestige >= 200 ? true
         : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
           { current: Math.round(s.player.prestige) });
@@ -1275,11 +1277,13 @@ window.FB = window.FB || {};
     const p = state.player;
     const cur = FB.playerRealmId(state);
     const out = [];
+    if (cur && FB.isRealmAtWar(state, cur)) return out;
     for (const pid of (p.provs || [])) {
       for (const nb in (FB.world.adj[pid] || {})) {
         const own = state.owner[nb];
         if (!own || own === cur || own === 'player' || out.indexOf(own) >= 0) continue;
-        if (state.realms[own] && state.realms[own].alive && !state.realms[own].liege) out.push(own);
+        if (state.realms[own] && state.realms[own].alive && !state.realms[own].liege &&
+            !FB.isRealmAtWar(state, own)) out.push(own);
       }
     }
     return out;
@@ -1291,9 +1295,12 @@ window.FB = window.FB || {};
   FB.swearFealty = function (state, rid) {
     const p = state.player;
     const r = state.realms[rid];
-    if (!r || !r.alive) return;
+    if (!r || !r.alive || p.war) return false;
     const oldTop = p.liege ? FB.topRealm(state, p.liege) : null;
     const newTop = FB.topRealm(state, rid);
+    if ((oldTop && FB.isRealmAtWar(state, oldTop)) || FB.isRealmAtWar(state, newTop)) {
+      return false;
+    }
     for (const pid of (p.provs || [])) {
       state.owner[pid] = newTop;
       state.holder[pid] = 'player';
@@ -1318,6 +1325,7 @@ window.FB = window.FB || {};
         { realm: state.realms[oldTop].name }));
     }
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return true;
   };
 
   /* realms sworn directly to the player */
@@ -2176,6 +2184,7 @@ window.FB = window.FB || {};
   };
 
   function diplomacyBlocksWar(state, enemy) {
+    if (FB.isRealmAtWar(state, enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
     if (FB.areAllied(state, 'player', enemy)) return 'alliance';
     return null;
@@ -2185,6 +2194,8 @@ window.FB = window.FB || {};
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
   FB.warCauses = function (state, includeBlocked) {
     const p = state.player, out = [], seen = {};
+    const playerRealm = FB.playerRealmId(state);
+    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return out;
     const me = state.chars[p.charId];
     const restoration = me && me.restorationRight;
     if (restoration) {
@@ -2234,8 +2245,13 @@ window.FB = window.FB || {};
 
   FB.warLockedReason = function (state) {
     if (state.player.war) return FB.T('You are already at war.');
+    const playerRealm = FB.playerRealmId(state);
+    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) {
+      return FB.T('At war with another realm');
+    }
     const all = FB.warCauses(state, true);
     for (const cause of all) {
+      if (cause.blocked === 'war') return FB.T('At war with another realm');
       if (cause.blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the only realm you have cause against.');
       if (cause.blocked === 'pact') return FB.T('A sworn peace pact protects the only realm you have cause against.');
     }
@@ -2321,6 +2337,8 @@ window.FB = window.FB || {};
 
   FB.startPlayerWar = function (state, causeOrTarget) {
     if (state.player.war) return false;
+    const playerRealm = FB.playerRealmId(state);
+    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return false;
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
     if (!cause) {
       const target = String(causeOrTarget || '');

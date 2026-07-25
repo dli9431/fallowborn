@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.51.0';
+  FB.VERSION = '1.51.2';
   FB.CHANGELOG = [
+    { v: '1.51.2', date: '2026-07-24', changes: [
+      'Wars now keep every sovereign to one conflict, travel selection stays paused, titles render reliably, and army markers redraw only when their visible state changes.'
+    ] },
+    { v: '1.51.1', date: '2026-07-24', changes: [
+      'An importable Pound Sterling mod can show the household purse with a £ sign.'
+    ] },
     { v: '1.51.0', date: '2026-07-24', changes: [
       'A new 🧭 Take to the road deed lets freeholders and gentry set out on a journey — pilgrimage, trade, study, or paid service — traveling county by county across the map over game time, meeting events on the road, before turning back home or settling where they arrive.'
     ] },
@@ -774,6 +780,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
+    if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
     const p = s.player;
 
     if (!G.observe && !p.travel) {

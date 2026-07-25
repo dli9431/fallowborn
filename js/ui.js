@@ -282,6 +282,11 @@ window.FB = window.FB || {};
     return (r > 0 ? '+' : '') + r;
   }
 
+  function coinageSymbol() {
+    const symbol = FBDATA.balance.coinageSymbol;
+    return typeof symbol === 'string' && symbol ? symbol : null;
+  }
+
   /* the topbar stat breakdown (hover on desktop, tap for the modal): what
      gold/prestige/piety the player's station brings in each season, source
      by source — focus, rents, dues, buildings, household, treasures, upkeep */
@@ -349,7 +354,9 @@ window.FB = window.FB || {};
       season: FB.seasonName(s.date.season), day: dd, year: s.date.year
     });
     const net = s.seasonNet || {};
-    $('tb-gold').innerHTML = '💰 <span class="mono">' + Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
+    const coinSymbol = coinageSymbol();
+    $('tb-gold').innerHTML = esc(coinSymbol || '💰') + (coinSymbol ? '' : ' ') + '<span class="mono">' +
+      Math.floor(s.player.gold) + '</span>' + netBadge(net.gold);
     $('tb-prestige').innerHTML = '⭐ <span class="mono">' + Math.floor(s.player.prestige) + '</span>' + netBadge(net.prestige);
     $('tb-piety').innerHTML = FB.religionOf(me.religion).icon + ' <span class="mono">' + Math.floor(s.player.piety) + '</span>' + netBadge(net.piety);
     $('tb-health').innerHTML = '❤️ <span class="mono">' + Math.round(me.health) + '</span>';

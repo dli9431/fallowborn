@@ -399,7 +399,8 @@ window.FB = window.FB || {};
   };
   FB.titleFor = function (state) {
     const p = state.player;
-    const rel = FB.religionOf(state.chars[p.charId].religion);
+    const me = state.chars[p.charId];
+    const rel = FB.religionOf(me.religion);
     let t = FB.titleWordFor(state, p.tier);
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       const g = rel.group;

@@ -17,3 +17,4 @@ To add one:
 The `data` payload uses the same schema as runtime JSON mods — see
 [docs/MODDING.md](../docs/MODDING.md) for the full reference. Players can also import a
 mod as JSON at runtime from the Mods menu without touching any files.
+The `.json` files in this folder are ready-to-import user mods and do not load automatically.

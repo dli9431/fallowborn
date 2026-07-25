@@ -27904,6 +27904,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui.js"
       ],
       "source": {

@@ -1050,13 +1050,65 @@ window.FB = window.FB || {};
     realmId = FB.topRealm(state, realmId);
     const r = state.realms[realmId];
     if (r && r.war) return true;
-    // player wars count for the player's realm
-    if (state.player.war && (realmId === 'player' || realmId === FB.playerRealmId(state))) return true;
+    // player wars occupy both the sovereign the player answers for and the
+    // enemy sovereign; neither may enter a second conflict
+    const pw = state.player.war;
+    if (pw) {
+      const playerRealm = FB.playerRealmId(state);
+      const enemyRealm = FB.topRealm(state, pw.enemy);
+      if (realmId === 'player' || realmId === playerRealm || realmId === enemyRealm) return true;
+    }
     for (const id in state.realms) {
       const rr = state.realms[id];
-      if (rr.alive && rr.war && rr.war.enemy === realmId) return true;
+      if (rr.alive && rr.war && FB.topRealm(state, rr.war.enemy) === realmId) return true;
     }
     return false;
+  };
+
+  /* Old saves may contain wars created before the one-war-per-sovereign
+     invariant. Keep the player's valid war first, then accept valid AI wars
+     in stable realm-id order while no endpoint is already occupied. */
+  FB.repairWars = function (state) {
+    if (!state || !state.player || !state.realms) return;
+    const used = {}, activeHosts = {};
+    const pw = state.player.war;
+    if (pw) {
+      const enemy = state.realms[pw.enemy];
+      const enemyRealm = enemy && FB.topRealm(state, pw.enemy);
+      const playerRealm = FB.playerRealmId(state);
+      if (!enemy || !enemy.alive || enemyRealm !== pw.enemy || pw.enemy === 'player') {
+        state.player.war = null;
+        if (FB.validateFocus) FB.validateFocus(state);
+      } else {
+        used.player = activeHosts.player = 1;
+        used[enemyRealm] = activeHosts[enemyRealm] = 1;
+        if (playerRealm) used[playerRealm] = 1;
+      }
+    }
+
+    const ids = Object.keys(state.realms).sort();
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i], r = state.realms[id];
+      if (id === 'player' || !r || !r.war) continue;
+      const enemyId = r.war.enemy;
+      const enemy = state.realms[enemyId];
+      const valid = r.alive && !r.liege && enemy && enemy.alive && !enemy.liege &&
+        enemyId !== 'player' && enemyId !== id;
+      if (!valid || used[id] || used[enemyId]) {
+        r.war = null;
+        continue;
+      }
+      used[id] = used[enemyId] = 1;
+      activeHosts[id] = activeHosts[enemyId] = 1;
+    }
+
+    const armies = Array.isArray(state.armies) ? state.armies : [];
+    const seenHosts = {};
+    state.armies = armies.filter(function (army) {
+      if (!army || !activeHosts[army.realm] || seenHosts[army.realm]) return false;
+      seenHosts[army.realm] = 1;
+      return true;
+    });
   };
 
   /* ================= YEARLY WORLD TICK ================= */
@@ -1178,13 +1230,15 @@ window.FB = window.FB || {};
         else if (r.war.years >= 3 || FB.chance(0.35) || (r.war.captures || 0) >= 2) {
           r.war = null; // peace
         }
-      } else if (FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
+      } else if (!FB.isRealmAtWar(state, id) &&
+                 FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
         // pick a neighboring realm to attack
         const targets = [];
         for (const id2 in state.realms) {
           if (id2 === id) continue;
           const r2 = state.realms[id2];
-          if (!r2.alive || r2.liege || FB.areAllied(state, id, id2)) continue; // sovereigns only
+          if (!r2.alive || r2.liege || FB.isRealmAtWar(state, id2) ||
+              FB.areAllied(state, id, id2)) continue; // peaceful sovereigns only
           if (id2 === 'player') continue; // wars vs player handled below
           if (FB.realmsAdjacent(state, id, id2)) targets.push(id2);
         }
@@ -1212,7 +1266,7 @@ window.FB = window.FB || {};
       );
       const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
         Math.max(1, FB.realmDefensiveStrength(state, 'player')), 0.25, 1.25);
-      if (!r.war && FB.isPlayerSovereign(state) && !state.player.war &&
+      if (!FB.isRealmAtWar(state, id) && FB.isPlayerSovereign(state) && !state.player.war &&
         !(state.pacts && state.pacts[id] > state.turn) &&
         !FB.areAllied(state, id, 'player') &&
         FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
@@ -1231,13 +1285,14 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || !r.liege || id === 'player') continue;
+      const top = FB.topRealm(state, id);
+      if (top === id || FB.isRealmAtWar(state, top)) continue;
       // the 1.5% gate first: realmTerritory walks the whole realm table, and
       // ~98.5% of that work was thrown away when the roll failed
       if (!FB.chance(B.breakawayChance)) continue;
       const terr = FB.realmTerritory(state, id);
       if (terr.length < 3) continue;
-      const top = FB.topRealm(state, id);
-      if (top === id || FB.realmStrength(state, top) < 8) continue;
+      if (FB.realmStrength(state, top) < 8) continue;
       r.liege = null;
       for (const pid of terr) state.owner[pid] = id;
       FB.invalidateRealmCache();
@@ -1742,6 +1797,7 @@ window.FB = window.FB || {};
       host.units.mercs += cs;
       host.men += cs;
       host.size = (host.size === undefined ? host.men : host.size + cs); // the company swells the muster
+      if (FB.map) FB.map.request();
     }
     FB.news(state, FB.msg('news.war.mercenaries_join',
       '⚔ A mercenary company takes your coin — ~{men} spears join the host.', { men: cs }));
@@ -1761,6 +1817,7 @@ window.FB = window.FB || {};
       host.units.levy += add;
       host.men += add;
       host.size = host.size === undefined ? host.men : host.size + add;
+      if (FB.map) FB.map.request();
     } else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
   };
   /* the council's abstract pitched battle exists only while the enemy has

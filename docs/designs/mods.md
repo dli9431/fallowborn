@@ -29,4 +29,8 @@ merge into `FBDATA` by id before a new campaign begins. Their `name` and `desc` 
 career rank names, use the same structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
+Cosmetic currency mods may set `balance.coinageSymbol`. The UI escapes and displays that
+string in place of the default money-bag symbol on the topbar; the resource remains gold and
+no saved values, prices, or localized prose change.
+
 Related: `docs/MODDING.md` is the full mod authoring reference.

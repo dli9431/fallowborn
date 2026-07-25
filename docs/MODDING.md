@@ -134,7 +134,7 @@ A JSON mod is one object with any of these keys:
   "items":     { "id": { ... } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."] },
-  "balance":   { "freedomCost": 30 },
+  "balance":   { "freedomCost": 30, "coinageSymbol": "£" },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
 }
 ```
@@ -794,6 +794,8 @@ building, and events; spent via the "Adopt an innovation…" deed). Adopted ids 
 
 See `data/cultures.js` and `data/traits.js` for the exact shapes — they are self-describing.
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+`balance.coinageSymbol` is a display-only string for the topbar purse icon; omit it to keep
+the default money bag. It does not rename gold or alter resource amounts, costs, or contracts.
 `mortalityBase` scales the whole yearly mortality curve for player and kin alike
 (0.012 is the as-authored baseline; halve it for longer lives, raise it for a crueler age).
 That includes the wider-family simulation: `kinMarryChance` and `kinChildChance` are the

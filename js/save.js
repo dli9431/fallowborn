@@ -158,6 +158,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     backfillParents(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.repairWars) FB.repairWars(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
     return FB.state;
   };

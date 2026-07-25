@@ -18,6 +18,13 @@ and its vassal hierarchy intact. Defeat does not consume the right. Independence
 its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
 store only a descriptive `border` cause.
 
+Each sovereign may participate in only one active war. `FB.isRealmAtWar` treats both
+endpoints as occupied, including both sides of `player.war`; declarations, breakaways,
+independence, and fealty/defection conflicts wait until every affected sovereign is at
+peace. On load, `FB.repairWars` restores the invariant without changing save version 3:
+it preserves a valid player war first, then accepts non-conflicting valid AI wars in
+stable realm-id order and removes later overlaps and hosts no longer attached to a war.
+
 Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
 canonical realm pairs with their source and both ruler-generation stamps, and each realm
 may have only one ally. Partners cannot attack each other; a ruler change expires the
@@ -82,6 +89,10 @@ at `balance.armyReinforceRate` per day — the refill is all fresh levy; lost me
 and archers stay lost. On the map a host stands on a disc of its realm's
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.
+Map invalidation follows visible host state: raising or disbanding a host, changing its
+route, arriving in a county, changing allied levies, reinforcing, or fighting requests a
+render. Intermediate march-day countdowns do not, because markers remain on the county
+the host still occupies and there is no interpolated movement to draw.
 
 **The host can fight the war for you.** The ⚙ automation's host-command stances
 (`G.auto.hosts`) re-raise a destroyed host once the rearm window passes and steer an

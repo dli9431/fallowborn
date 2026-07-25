@@ -1954,6 +1954,7 @@ window.FB = window.FB || {};
   FB.doIndependence = function (state) {
     const p = state.player;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
+    if (oldLiege && FB.isRealmAtWar(state, oldLiege)) return false;
     if (!p.provs || !p.provs.length) {
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless
@@ -1974,6 +1975,7 @@ window.FB = window.FB || {};
       state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
     }
     FB.checkTierPromotions(state);
+    return true;
   };
 
   /* counties the liege could hand the player: adjacent to the player's lands,
