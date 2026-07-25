@@ -4945,6 +4945,10 @@ window.FB = window.FB || {};
     }).sort(function (a, b) {
       return FB.itemName(s, a).localeCompare(FB.itemName(s, b));
     });
+    if (!current && !refs.length) {
+      UI.toast(FB.T('There is no compatible object in the armory.'));
+      return;
+    }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose {name}’s {slot} equipment from the shared family armory.', {
         name:c.name, slot:itemSlotLabel(slot)
@@ -4983,8 +4987,9 @@ window.FB = window.FB || {};
         'There is no compatible object in the armory.')) + '</div>';
     }
     const equipmentExit = equipmentExitMode(returnMode);
+    const cancelLabel = equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close');
     h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T(equipmentExit !== null ? 'Back to equipment' : 'Close')) + '</button>';
+      esc(cancelLabel) + '</button>';
     openModal(FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) }), h);
     FB.paintFaces($('gm-body'), s);
     const empty = $('equip-empty');
