@@ -235,8 +235,8 @@ window.FB = window.FB || {};
     clearQueued(state);
     FB.news(state, FB.msg('news.travel.departed',
       '🧭 Set out from {home} for {destination}.', {
-        home:FB.world.byId(p.travel.homeId).name,
-        destination:FB.world.byId(p.travel.destinationId).name
+        home:FB.world.byId[p.travel.homeId].name,
+        destination:FB.world.byId[p.travel.destinationId].name
       }));
     if (FB.map) {
       FB.map.travelPreview = null;
@@ -326,7 +326,7 @@ window.FB = window.FB || {};
     clearQueued(state);
     p.travel = null;
     FB.news(state, FB.msg('news.travel.returned',
-      '🧭 Returned home to {home}.', {home:FB.world.byId(t.homeId).name}));
+      '🧭 Returned home to {home}.', {home:FB.world.byId[t.homeId].name}));
     if (FB.validateFocus) FB.validateFocus(state);
     if (FB.map) FB.map.request();
   }
@@ -368,7 +368,7 @@ window.FB = window.FB || {};
     t.legDaysLeft = route.length ? t.legDays : 0;
     if (!route.length) finishAtHome(state);
     else FB.news(state, FB.msg('news.travel.turned_back',
-      '🧭 Turned back toward {home}.', {home:FB.world.byId(t.homeId).name}));
+      '🧭 Turned back toward {home}.', {home:FB.world.byId[t.homeId].name}));
     if (FB.map) FB.map.request();
     return true;
   };
@@ -414,7 +414,7 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.travel.settled',
       '🧭 The household settles in {destination}.', {
-        destination:FB.world.byId(destination).name
+        destination:FB.world.byId[destination].name
       }));
     if (FB.validateFocus) FB.validateFocus(state);
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
@@ -430,7 +430,7 @@ window.FB = window.FB || {};
     if (!silent) {
       FB.news(state, FB.msg('news.travel.cancelled',
         '🧭 The journey ends as your station or obligations change. The household remains at {home}.', {
-          home:FB.world.byId(t.homeId).name
+          home:FB.world.byId[t.homeId].name
         }));
       if (FB.validateFocus) FB.validateFocus(state);
     }
