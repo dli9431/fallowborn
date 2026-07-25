@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.56.0';
+  FB.VERSION = '1.56.1';
   FB.CHANGELOG = [
+    { v: '1.56.1', date: '2026-07-25', changes: [
+      'Embedded phone play now shows an in-game Back control for dismissible dialogs, keeping itch fullscreen active.'
+    ] },
     { v: '1.56.0', date: '2026-07-25', changes: [
       'Two authored starting dates now let a dynasty begin in Spring 867 or Spring 1066, with historical rulers and bookmark-aware starts, saves, and Observe mode.'
     ] },

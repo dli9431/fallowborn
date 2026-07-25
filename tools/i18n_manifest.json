@@ -60936,16 +60936,6 @@
         "text": "Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent."
       }
     },
-    "src.932da173": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "button:not(:disabled)"
-      }
-    },
     "src.9332ba2b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],

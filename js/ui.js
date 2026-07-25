@@ -203,6 +203,7 @@ window.FB = window.FB || {};
      close/reopen pair; Back traversals invoke those directly, while visible
      Close buttons dismiss first and then consume their owned history entry. */
   const MOBILE_NAV_QUERY = '(max-width: 820px), (max-height: 520px)';
+  const mobileNavEmbedded = window.self !== window.top;
   let mobileNavSession = '';
   let mobileNavSerial = 0;
   let mobileNavReady = false;
@@ -231,6 +232,40 @@ window.FB = window.FB || {};
       state.session === mobileNavSession;
   }
 
+  function mobileNavCanBack(layer) {
+    if (!layer || !layer.visible || !layer.canBack) return false;
+    try {
+      return !!layer.canBack();
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /* Android consumes the physical Back button to leave itch's browser-owned
+     iframe fullscreen before history traversal. Embedded mobile dialogs
+     therefore expose the same history action as an in-game control. */
+  function mobileNavSyncBackControls() {
+    const layer = mobileNavLayers[mobileNavDepth];
+    const eventModal = $('eventmodal');
+    const eventBlocking = eventModal && !eventModal.classList.contains('hidden');
+    const canUse = mobileNavEmbedded && mobileLayoutNow() && mobileNavReady &&
+      mobileNavDepth > 0 && !mobileNavPendingBack && !eventBlocking &&
+      mobileNavCanBack(layer);
+    const gm = $('gm-history-back');
+    const genmodal = $('genmodal');
+    const showGeneric = !!canUse && !!genmodal &&
+      !genmodal.classList.contains('hidden') &&
+      (layer.kind === 'generic-modal' || layer.kind === 'modal-view');
+    if (gm) gm.classList.toggle('hidden', !showGeneric);
+    if (genmodal) genmodal.classList.toggle('embedded-history-back', showGeneric);
+
+    const equipment = $('equip-picker-history-back');
+    const overlay = $('equip-picker-overlay');
+    const showEquipment = !!canUse && !!overlay && layer.kind === 'equipment-picker';
+    if (equipment) equipment.classList.toggle('hidden', !showEquipment);
+    if (overlay) overlay.classList.toggle('embedded-history-back', showEquipment);
+  }
+
   function mobileNavStartNow() {
     mobileNavReady = false;
     mobileNavDepth = 0;
@@ -238,6 +273,7 @@ window.FB = window.FB || {};
     mobileNavQueued = [];
     mobileNavPendingBack = false;
     mobileNavNeedsReset = false;
+    mobileNavSyncBackControls();
     if (!mobileLayoutNow() || !window.history ||
       typeof window.history.pushState !== 'function' ||
       typeof window.history.replaceState !== 'function') return false;
@@ -248,6 +284,7 @@ window.FB = window.FB || {};
     } catch (err) {
       mobileNavReady = false; // buttons remain the complete fallback path
     }
+    mobileNavSyncBackControls();
     return mobileNavReady;
   }
 
@@ -256,6 +293,7 @@ window.FB = window.FB || {};
       mobileNavNeedsReset = true;
       if (!mobileNavPendingBack && mobileNavDepth > 0) {
         mobileNavPendingBack = true;
+        mobileNavSyncBackControls();
         try {
           window.history.go(-mobileNavDepth);
         } catch (err) {
@@ -281,11 +319,13 @@ window.FB = window.FB || {};
     } catch (err) {
       mobileNavReady = false;
       mobileNavQueued = [];
+      mobileNavSyncBackControls();
       return false;
     }
     mobileNavLayers.length = depth + 1; // a new branch discards old Forward layers
     mobileNavLayers[depth] = layer;
     mobileNavDepth = depth;
+    mobileNavSyncBackControls();
     return true;
   }
 
@@ -309,11 +349,13 @@ window.FB = window.FB || {};
   function mobileNavRequestBack() {
     if (!mobileNavReady || mobileNavDepth <= 0 || mobileNavPendingBack) return;
     mobileNavPendingBack = true;
+    mobileNavSyncBackControls();
     try {
       window.history.back();
     } catch (err) {
       mobileNavPendingBack = false;
       mobileNavReady = false;
+      mobileNavSyncBackControls();
     }
   }
 
@@ -344,6 +386,7 @@ window.FB = window.FB || {};
       found = true;
     }
     if (found) mobileNavSkipClosedTop();
+    mobileNavSyncBackControls();
     return found;
   }
 
@@ -374,6 +417,7 @@ window.FB = window.FB || {};
       mobileNavReady = false;
       mobileNavQueued = [];
       mobileNavPendingBack = false;
+      mobileNavSyncBackControls();
       return;
     }
     const target = Math.max(0, Math.min(state.depth || 0, mobileNavLayers.length - 1));
@@ -419,6 +463,7 @@ window.FB = window.FB || {};
     }
     if (mobileNavNeedsReset && mobileNavDepth > 0) {
       mobileNavPendingBack = true;
+      mobileNavSyncBackControls();
       try {
         window.history.go(-mobileNavDepth);
       } catch (err) {
@@ -429,6 +474,7 @@ window.FB = window.FB || {};
     }
     if (mobileNavSkipClosedTop()) return;
     mobileNavFlushQueued();
+    mobileNavSyncBackControls();
   }
 
   /* ================= screens ================= */
@@ -3090,6 +3136,7 @@ window.FB = window.FB || {};
             (genericNavSnapshot && genericNavSnapshot.historyBack);
         });
     }
+    mobileNavSyncBackControls();
   }
   UI.openModal = openModal;
   UI._gmDismiss = true;
@@ -6075,10 +6122,16 @@ window.FB = window.FB || {};
       overlay.id = 'equip-picker-overlay';
       overlay.className = 'equip-picker-overlay';
       overlay.innerHTML = '<div class="equip-picker-card" role="dialog" aria-modal="true" ' +
-        'aria-labelledby="equip-picker-title"><h3 id="equip-picker-title">' +
-        esc(pickerTitle) + '</h3><div class="equip-picker-body">' + h + '</div></div>';
+        'aria-labelledby="equip-picker-title"><div class="equip-picker-heading">' +
+        '<button type="button" id="equip-picker-history-back" ' +
+        'class="btn equip-picker-history-back hidden" aria-label="' +
+        esc(FB.T('Back')) + '">&#8592; <span>' + esc(FB.T('Back')) + '</span></button>' +
+        '<h3 id="equip-picker-title">' + esc(pickerTitle) +
+        '</h3></div><div class="equip-picker-body">' + h + '</div></div>';
       UI._equipPickerReturnFocus = document.activeElement;
       pickerRoot.appendChild(overlay);
+      overlay.querySelector('#equip-picker-history-back')
+        .addEventListener('click', mobileNavRequestBack);
       const pickerReturnFocus = UI._equipPickerReturnFocus;
       mobileNavPush('equipment-picker',
         function () { closeEquipmentPickerRaw(overlay, true); },
@@ -6086,7 +6139,7 @@ window.FB = window.FB || {};
           UI._equipPickerReturnFocus = pickerReturnFocus;
           if (!overlay.parentNode) $('gm-body').appendChild(overlay);
           setTimeout(function () {
-            const first = overlay.querySelector('button:not(:disabled)');
+            const first = overlay.querySelector('.equip-picker-body button:not(:disabled)');
             if (first) first.focus({ preventScroll:true });
           }, 0);
         },
@@ -6105,7 +6158,7 @@ window.FB = window.FB || {};
       nested = true;
       pickerRoot = overlay;
       setTimeout(function () {
-        const first = overlay.querySelector('button:not(:disabled)');
+        const first = overlay.querySelector('.equip-picker-body button:not(:disabled)');
         if (first) first.focus({ preventScroll:true });
       }, 0);
     } else {
@@ -7178,6 +7231,7 @@ window.FB = window.FB || {};
       if (FB.state) UI.showTab('char');
     });
     $('btn-closeself').addEventListener('click', closeSelfDrawer);
+    $('gm-history-back').addEventListener('click', mobileNavRequestBack);
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const hot = {
