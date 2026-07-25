@@ -43,7 +43,9 @@ Item cards render the exact object and show actual quality-adjusted effects, val
 wearer, and legal actions. Ordinary gifts grant +8/+15/+25 regard by quality; authored
 common/fine/famed heirlooms retain +15/+25/+40. Chronicle messages store a semantic item
 snapshot (`$item`) so a generated name stays localizable after the object leaves the
-armory.
+armory. The equipment sheet totals the powers that mechanically apply to its wearer and
+shows them beneath the full-body figure; head-only battle and seasonal-resource powers
+are omitted when another household member is shown.
 
 At death, the legend freezes the head's loadout and optional battle/event provenance.
 The succession dialog shows that final paper doll and “Worn at death” list. This release

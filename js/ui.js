@@ -785,12 +785,27 @@ window.FB = window.FB || {};
     }
     return '';
   }
+  function equipmentBonusHtml(s, c) {
+    const fx = {};
+    const keys = FB.SKILLS.concat(['battle', 'prestige', 'piety', 'gold', 'health']);
+    for (let i = 0; i < keys.length; i++) {
+      const value = FB.itemBonus(s, keys[i], c.id);
+      if (value) fx[keys[i]] = value;
+    }
+    const summary = itemFxText({ fx:fx });
+    return '<div class="equip-bonuses"><div class="equip-bonus-heading">' +
+      esc(FB.T('Equipment bonuses')) + '</div><div' +
+      (summary ? '' : ' class="cmeta"') + '>' +
+      esc(summary || FB.T('No equipment bonuses.')) + '</div></div>';
+  }
   function equipmentSheetHtml(s, c) {
     const loadout = FB.loadoutOf(s, c.id);
     const blocked = FB.equipmentBlockedReason ? FB.equipmentBlockedReason(s) : null;
-    let h = '<div class="paper-sheet"><canvas class="paperdoll" data-cid="' + c.id +
+    let h = '<div class="paper-sheet"><div class="paper-figure">' +
+      '<canvas class="paperdoll" data-cid="' + c.id +
       '" width="240" height="450" role="img" aria-label="' +
       esc(FB.T('Full figure of {name}', { name:FB.fullName(c) })) + '"></canvas>' +
+      equipmentBonusHtml(s, c) + '</div>' +
       '<div class="equip-panel"><div class="equip-heading">' + esc(FB.T('Equipment')) +
       '</div><div class="equip-grid">';
     for (const slot of FB.ITEM_SLOTS) {
@@ -3687,7 +3702,7 @@ window.FB = window.FB || {};
 
     h += '<div class="gm-footer"><button class="btn" id="finance-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(FB.T('🪙 Coin & Credit'), h, { modalClass:'fullsheet-modal' });
+    openModal(FB.T('💰 Coin & Credit'), h, { modalClass:'fullsheet-modal' });
     $('finance-close').addEventListener('click', UI.closeModal);
     const borrow = $('finance-borrow');
     if (borrow) borrow.addEventListener('click', UI.showFinanceBorrow);

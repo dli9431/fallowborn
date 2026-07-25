@@ -77,7 +77,7 @@
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "🪙 Coin & Credit…"
+        "text": "💰 Coin & Credit…"
       }
     },
     "action.debase_coinage.label.default": {
@@ -28588,6 +28588,16 @@
         "text": "Their word is iron."
       }
     },
+    "src.186569f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "💰 Coin & Credit"
+      }
+    },
     "src.187d748a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -28948,6 +28958,16 @@
         "text": "Ask {god} to knit what the flesh cannot."
       }
     },
+    "src.1a4687d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment bonuses"
+      }
+    },
     "src.1a5dec0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -29216,6 +29236,16 @@
       ],
       "source": {
         "text": "Swore an oath of brotherhood."
+      }
+    },
+    "src.1cbaa2a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Open the full figure and choose equipment from the family armory."
       }
     },
     "src.1cd4bd9b": {
@@ -34526,16 +34556,6 @@
         "text": "🏡 Declare a manor"
       }
     },
-    "src.3cb47311": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "button, input, textarea"
-      }
-    },
     "src.3cbfc3b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35137,6 +35157,16 @@
       ],
       "source": {
         "text": "A working boat whose catch is sold beyond the household."
+      }
+    },
+    "src.3fdbbe97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]"
       }
     },
     "src.3ff50c63": {
@@ -36062,6 +36092,16 @@
       ],
       "source": {
         "text": "⚖ The estates grant the aid — {liege}’s cut of your revenue rises to {pct}%."
+      }
+    },
+    "src.4573487a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💰 Coin & Credit…"
       }
     },
     "src.45742c81": {
@@ -37701,6 +37741,16 @@
         "text": "{realm} {direction} {opinion}"
       }
     },
+    "src.4df79ba5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment for {name}"
+      }
+    },
     "src.4e068032": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37849,16 +37899,6 @@
       ],
       "source": {
         "text": "The levy broke first at {cname}, as levy will. Your men-at-arms sold their ground dearly and formed the rearguard that bore you off — bloodied, beaten, but breathing."
-      }
-    },
-    "src.4ed9ac9a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🪙 Coin & Credit…"
       }
     },
     "src.4ee05e54": {
@@ -40053,6 +40093,16 @@
         "text": "Took the enemy’s tribute and ended the war."
       }
     },
+    "src.5b6c2095": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No equipment bonuses."
+      }
+    },
     "src.5b77f5fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40736,6 +40786,16 @@
       ],
       "source": {
         "text": "Demand a duel."
+      }
+    },
+    "src.5f3a5e34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to character"
       }
     },
     "src.5f3f9ea9": {
@@ -41678,6 +41738,16 @@
       ],
       "source": {
         "text": "Patient knots might fill a thin pot."
+      }
+    },
+    "src.6471a3cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to equipment"
       }
     },
     "src.647af104": {
@@ -52250,16 +52320,6 @@
       ],
       "source": {
         "text": "Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made."
-      }
-    },
-    "src.9f7c4918": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🪙 Coin & Credit"
       }
     },
     "src.9fa69249": {
@@ -67440,6 +67500,16 @@
         "text": "Stakes in the Common"
       }
     },
+    "src.f9508f3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equip items…"
+      }
+    },
     "src.f96122af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70673,12 +70743,28 @@
         "text": "Back"
       }
     },
+    "ui:Back to character": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to character"
+      }
+    },
     "ui:Back to destinations": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Back to destinations"
+      }
+    },
+    "ui:Back to equipment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to equipment"
       }
     },
     "ui:Back to item": {
@@ -71383,6 +71469,14 @@
         "text": "Enterprise in {settlement}"
       }
     },
+    "ui:Equip items…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equip items…"
+      }
+    },
     "ui:Equip {item}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -71401,12 +71495,30 @@
         "text": "Equipment"
       }
     },
+    "ui:Equipment bonuses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment bonuses"
+      }
+    },
     "ui:Equipment cannot be changed while the household is traveling.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Equipment cannot be changed while the household is traveling."
+      }
+    },
+    "ui:Equipment for {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment for {name}"
       }
     },
     "ui:Equipped": {
@@ -72194,6 +72306,14 @@
         "text": "No enterprise yet. Open one in a settlement below."
       }
     },
+    "ui:No equipment bonuses.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No equipment bonuses."
+      }
+    },
     "ui:No lender will advance more while revenues are in default.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -72432,6 +72552,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Open an enterprise in {settlement}…"
+      }
+    },
+    "ui:Open the full figure and choose equipment from the family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Open the full figure and choose equipment from the family armory."
       }
     },
     "ui:Open their sheet and your dealings with them": {
@@ -76524,6 +76652,14 @@
         "text": "💒 No marriage possible: {reason}"
       }
     },
+    "ui:💰 Coin & Credit": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "💰 Coin & Credit"
+      }
+    },
     "ui:💰 Money each season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -76781,14 +76917,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "🧰 Work — {career}"
-      }
-    },
-    "ui:🪙 Coin & Credit": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "🪙 Coin & Credit"
       }
     },
     "word.ui.fast.default": {

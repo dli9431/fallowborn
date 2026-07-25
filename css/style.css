@@ -402,6 +402,13 @@ textarea.modjson, textarea.savetext {
   display: block; width: 100%; height: auto; max-width: 180px; margin: 0 auto;
   border: 1px solid #66522f; border-radius: 8px; background: #211b14;
 }
+.paper-figure { min-width: 0; }
+.equip-bonuses {
+  margin-top: 7px; padding: 7px 8px; border: 1px solid #514126;
+  border-radius: 7px; background: #292116; color: #d8c89f;
+  font-size: 12px; line-height: 1.4;
+}
+.equip-bonus-heading { color: #d8b24a; font-size: 11px; margin-bottom: 3px; }
 .equip-panel { min-width: 0; }
 .equip-heading { color: #d8b24a; font-size: 14px; margin-bottom: 6px; }
 .equip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }

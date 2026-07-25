@@ -59,7 +59,9 @@ Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Spa
 navigation, and opens a numbered compatible-armory list; no drag-and-drop path is required.
 Two-handed and replacement moves receive a confirmation that names every displaced hand
 object and prior wearer. Equipment controls disable during travel or an unresolved event.
-On narrow phones the figure stacks above the same two-column grid.
+The mechanically active totals from worn items appear beneath the figure, including an
+explicit empty state. On narrow phones the figure and bonus summary stack above the same
+two-column grid.
 
 The item card reuses the isolated procedural object renderer and reports exact quality,
 quality-adjusted effects, value, current wearer, pledge state, and valid equip/unequip,

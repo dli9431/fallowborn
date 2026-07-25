@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.53.1';
+  FB.VERSION = '1.53.2';
   FB.CHANGELOG = [
+    { v: '1.53.2', date: '2026-07-25', changes: [
+      'Equipment sheets now list worn bonuses beneath the full figure, and Coin & Credit uses a broadly supported icon.'
+    ] },
     { v: '1.53.1', date: '2026-07-25', changes: [
       'Character sheets use compact portraits again, with the full equipment figure opening from an Equip items button on desktop and mobile.'
     ] },

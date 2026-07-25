@@ -824,7 +824,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
     run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
-  { id: 'coin_credit', label: '🪙 Coin & Credit…', noConsume: true,
+  { id: 'coin_credit', label: '💰 Coin & Credit…', noConsume: true,
     desc: function () {
       return 'Prices, reliable income, loans, pledged property, and trade partnerships.';
     },
