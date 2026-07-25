@@ -442,7 +442,103 @@ window.FB = window.FB || {};
         { temple: FB.templeWord(me(s).religion) });
     },
     show: function (s) { return adult(s); },
+    can: function (s) {
+      return FB.playerExcommunicated && FB.playerExcommunicated(s)
+        ? FB.T('The excommunicated may not seek a blessing.') : true;
+    },
     run: function (s) { s.eventQueue.push({ id: 'seek_blessing', ctx: {} }); } },
+  { id: 'seek_absolution', label: '🕊 Seek absolution…', noConsume: true,
+    desc: function () {
+      return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion.', {
+        gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
+        piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
+        opinion:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
+      });
+    },
+    show: function (s) {
+      return adult(s) && FB.playerExcommunicated && FB.playerExcommunicated(s);
+    },
+    can: function (s) {
+      if (s.player.war) return FB.T('You must first make peace.');
+      if (!FB.religiousHeadOf(s, 'catholic')) return FB.T('The Papacy is vacant; no Pope can absolve you.');
+      if (s.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
+        return FB.T('Absolution requires {money:gold}.',
+          { gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100) });
+      }
+      if (s.player.piety < FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100)) {
+        return FB.T('Absolution requires {piety} piety.',
+          { piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100) });
+      }
+      return true;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
+    } },
+  { id: 'restore_papacy', label: '✝ Restore the Papacy…', noConsume: true,
+    desc: function () {
+      return FB.T('Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.', {
+        piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
+        prestige:FB.religiousHeadBalance('religiousHeadRestorePrestige', 150)
+      });
+    },
+    show: function (s) {
+      return adult(s) && me(s).religion === 'catholic' && FB.isPlayerSovereign(s) &&
+        !!FB.religiousHeadVacancy(s, 'catholic');
+    },
+    can: function (s) {
+      const seat = FBDATA.religions.catholic.head.seat;
+      if (!FB.isPlayerSovereign(s)) return FB.T('Only a sovereign may restore the Papacy.');
+      if (!s.holder || s.holder[seat] !== 'player' ||
+          s.player.provs.indexOf(seat) < 0) {
+        return FB.T('You must hold Roma personally.');
+      }
+      if (s.player.provs.length < 2) {
+        return FB.T('You need another county before granting Roma away.');
+      }
+      return FB.canRestoreReligiousHead(s, 'catholic', 'player')
+        ? true : FB.T('The Papacy cannot be restored from this world state.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showReligiousHeadRestoration) {
+        FB.ui.showReligiousHeadRestoration('catholic');
+      }
+    } },
+  { id: 'claim_caliphate', label: '☪ Claim the Caliphate…', noConsume: true,
+    desc: function () {
+      return FB.T('Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety.', {
+        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+        piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300)
+      });
+    },
+    show: function (s) {
+      return adult(s) && me(s).religion === 'sunni' && s.player.tier >= 6 &&
+        !!FB.religiousHeadVacancy(s, 'sunni');
+    },
+    can: function (s) {
+      if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim the Caliphate.');
+      if (s.player.prestige < FB.religiousHeadBalance('religiousHeadClaimPrestige', 500)) {
+        return FB.T('You need {needed} prestige (now {current}).', {
+          needed:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+          current:Math.round(s.player.prestige)
+        });
+      }
+      if (s.player.piety < FB.religiousHeadBalance('religiousHeadClaimPiety', 300)) {
+        return FB.T('You need {needed} piety (now {current}).', {
+          needed:FB.religiousHeadBalance('religiousHeadClaimPiety', 300),
+          current:Math.round(s.player.piety)
+        });
+      }
+      if (!FB.controlsReligiousHeadClaim(s, 'sunni', 'player')) {
+        return FB.T('Control Baghdad, or both Mecca and Medina.');
+      }
+      return FB.canClaimReligiousHead(s, 'sunni', 'player')
+        ? true : FB.T('Your realm is not eligible to claim the Caliphate.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showReligiousHeadClaim) {
+        FB.ui.showReligiousHeadClaim('sunni');
+      }
+    } },
   { id: 'give_alms', label: '🕯 Give alms', cd: 30,
     desc: function (s) {
       return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
@@ -2158,6 +2254,15 @@ window.FB = window.FB || {};
     return null;
   }
 
+  function annotateReligiousWarCause(state, cause) {
+    const c = state.chars[state.player.charId];
+    if (!c || !cause || !FB.sameFaithHeadWarPolicy) return cause;
+    cause.sameFaithHeadWar = FB.sameFaithHeadWarPolicy(
+      state, c.religion, cause.enemy, cause.target);
+    cause.sacrilegious = cause.sameFaithHeadWar === 'sacrilege';
+    return cause;
+  }
+
   /* Semantic causes are the authoritative declaration surface. Passing true
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
   FB.warCauses = function (state, includeBlocked) {
@@ -2173,13 +2278,13 @@ window.FB = window.FB || {};
       } else {
         const blocked = diplomacyBlocksWar(state, rr.id);
         if (!blocked || includeBlocked) {
-          out.push({
+          out.push(annotateReligiousWarCause(state, {
             type: 'restoration',
             target: rr.capital,
             enemy: rr.id,
             titleName: restoration.titleName || rr.name,
             blocked: blocked
-          });
+          }));
         }
       }
     }
@@ -2198,6 +2303,7 @@ window.FB = window.FB || {};
         if (!cause) continue;
         cause.enemy = enemy;
         cause.blocked = diplomacyBlocksWar(state, enemy);
+        annotateReligiousWarCause(state, cause);
         seen[nb] = 1;
         if (!cause.blocked || includeBlocked) out.push(cause);
       }
@@ -2303,8 +2409,9 @@ window.FB = window.FB || {};
     }
   };
 
-  FB.startPlayerWar = function (state, causeOrTarget) {
+  FB.startPlayerWar = function (state, causeOrTarget, opts) {
     if (state.player.war) return false;
+    opts = opts || {};
     const playerRealm = FB.playerRealmId(state);
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return false;
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
@@ -2315,6 +2422,10 @@ window.FB = window.FB || {};
     if (!cause || !cause.target || cause.blocked) return false;
     const enemy = cause.enemy || state.owner[cause.target];
     if (!enemy || diplomacyBlocksWar(state, enemy)) return false;
+    const c = state.chars[state.player.charId];
+    const sameFaithPolicy = c && FB.sameFaithHeadWarPolicy
+      ? FB.sameFaithHeadWarPolicy(state, c.religion, enemy, cause.target) : null;
+    if (sameFaithPolicy === 'sacrilege' && !opts.confirmSacrilege) return false;
     state.player.war = {
       enemy: enemy, target: cause.target, wins: 0, losses: 0, seasons: 0,
       defending: false,
@@ -2323,9 +2434,13 @@ window.FB = window.FB || {};
         target: cause.target,
         titleKind: cause.titleKind || null,
         titleId: cause.titleId || null,
-        titleName: cause.titleName || null
+        titleName: cause.titleName || null,
+        sacrilegious:sameFaithPolicy === 'sacrilege'
       }
     };
+    if (sameFaithPolicy === 'sacrilege') {
+      FB.applySacrilegiousWarConsequences(state, c.religion);
+    }
     FB.news(state, FB.msg('news.action.war_declared',
       '⚔ You declare war upon {enemy} for {province}!', {
         enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,

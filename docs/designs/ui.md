@@ -129,6 +129,12 @@ The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Famil
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
 with `aria-expanded`; closed actions are not rendered, so number-key selection can never
 activate an invisible deed. The current daily focus remains pinned above the groups.
+The Self sheet's faith block names the live religious head or the number of days its
+office has been vacant, and states excommunication separately from the trait chip.
+Faith & Community contains the contextual absolution, Papal-restoration, and
+Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
+confirmation sheets. A Catholic Papal conquest is marked as sacrilege in the war list
+and uses its own second confirmation; no penalty is applied until that final button.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.56.3';
+  FB.VERSION = '1.57.0';
   FB.CHANGELOG = [
+    { v: '1.57.0', date: '2026-07-25', changes: [
+      'Religious heads can now fall vacant and recover. Faith & Community now offers Papal restoration, Caliphate claims, and absolution after sacrilegious wars.'
+    ] },
     { v: '1.56.3', date: '2026-07-25', changes: [
       'Island counties now remain on their own landmasses, restoring Man and removing disconnected coastal fragments.'
     ] },
@@ -774,6 +777,7 @@ window.FB = window.FB || {};
       armies: [], armyDown: {},
       alliances: [],
       religiousHeads: {},
+      religiousHeadVacancies: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -911,6 +915,7 @@ window.FB = window.FB || {};
       armies: [], armyDown: {},
       alliances: [],
       religiousHeads: {},
+      religiousHeadVacancies: {},
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -987,6 +992,7 @@ window.FB = window.FB || {};
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
     FB.scriptedTick(s);
+    if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1728,6 +1734,7 @@ window.FB = window.FB || {};
       return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated';
     });
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
+    FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues

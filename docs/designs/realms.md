@@ -28,12 +28,13 @@ restoration right; ordinary county conquest never creates one.
 ## Religious head offices
 
 Central religious leadership is an office assignment, not a territorial tier.
-`FBDATA.religions[id].head` optionally supplies `{realm,title}`: the realm is the
-default holder for a new or newly repaired mapping, while the title is localized
-display data. Catholicism initially points to the Papacy and styles its ruler Pope;
-Sunni Islam initially points to the Abbasid Caliphate and styles its ruler Caliph.
-Faiths without `head` metadata, including Shia Islam, have no centralized head.
-Ordinary Muslim emperor-tier rulers use Great Sultan or Great Sultana instead.
+`FBDATA.religions[id].head` supplies the global fallback `realm`, localized `title`,
+recovery policy, required seat or alternative claim-county sets, and the policy for
+same-faith wars against the office. The active bookmark may override the initial realm
+through `bookmark.religiousHeads`: 867 assigns `papacy`/`abbasid`, while 1066 assigns
+`papacy_1066`/`abbasid_1066`. Faiths without `head` metadata, including Shia Islam,
+have no centralized head. Ordinary Muslim emperor-tier rulers use Great Sultan or
+Great Sultana instead.
 
 The live assignment belongs to `state.religiousHeads[religionId]`, whose value is an
 exact realm id or `null` for an explicit vacancy. `FB.religiousHeadOf` returns the
@@ -44,12 +45,33 @@ rendering query these helpers before secular rank, and semantic player title sna
 record `headReligion` plus the English `headTitle` fallback so save labels, legends,
 and durable messages render in the active locale.
 
-An assignment to a missing or dead realm is vacant at read time but is not rewritten.
-Inheriting or absorbing the holder's territorial realm therefore does not transfer the
-office to the player: the old realm dies, the mapping remains, and a future election or
-caliphal-claim mechanic must explicitly assign a new realm. Existing war causes do not
-infer anything from these offices; future holy-war or religious-head actions must use
-the shared helpers rather than matching realm names, faith groups, or ranks.
+Every realm-death boundary calls `FB.markRealmDead`, which passes its assigned offices
+through `FB.vacateReligiousHeads` before killing the temporal realm. The assignment
+becomes `null` exactly once, a durable vacancy notice is emitted, and
+`state.religiousHeadVacancies[religionId]` records `{turn,formerHolder}`. Losing only
+part of the office realm changes nothing. County conquest, inheritance, and absorption
+never grant the office; ordinary county conquest also never grants the defeated crown.
+Explicit recovery is the only office-assignment path. Loading an older save with a dead
+mapped realm silently normalizes it to the same saved vacancy shape without replaying
+news.
+
+Catholic recovery uses `recovery:'grant_seat'`: a Catholic sovereign personally holding
+Roma and another county may grant Roma away. The bookmark's canonical Papacy is rebuilt
+as an independent rank-3 realm with a fresh ruler and succession, then assigned the
+office. After a 360-day vacancy, a qualified Catholic AI sovereign controlling Roma and
+other territory does this automatically. The player restoration awards piety and
+prestige, improves every living Catholic realm's opinion, and clears excommunication.
+
+Sunni recovery uses `recovery:'claim'` with alternative county sets: Baghdad, or Mecca
+and Medina together. A sovereign player king or emperor meeting the prestige threshold
+may spend piety to attach the office to the existing player realm without moving land.
+After 360 vacant days, independent Sunni AI realms of rank 3+ that meet a county set are
+ordered by rank, realm strength, then stable realm id; the strongest claims. With no
+eligible realm, the explicit vacancy persists. `FB.canRestoreReligiousHead`,
+`FB.restoreReligiousHead`, `FB.canClaimReligiousHead`,
+`FB.controlsReligiousHeadClaim`, `FB.claimReligiousHead`, and
+`FB.religiousHeadRecoveryTick` are the shared policy surface; callers do not match
+Papacy/Caliphate realm names.
 
 **Realms form a liege hierarchy.** Every realm has a `rank` (1 count … 4 emperor) and a
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,

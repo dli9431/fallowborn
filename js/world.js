@@ -107,6 +107,27 @@ window.FB = window.FB || {};
       }
     }
 
+    if (definition.religiousHeads !== undefined) {
+      var religiousHeads = definition.religiousHeads;
+      if (!religiousHeads || typeof religiousHeads !== 'object' ||
+          Array.isArray(religiousHeads)) {
+        fault('religiousHeads must be an object mapping faith ids to realm ids.');
+      } else {
+        for (var religionId in religiousHeads) {
+          if (!Object.prototype.hasOwnProperty.call(religiousHeads, religionId)) continue;
+          var religion = FBDATA.religions[religionId];
+          var headRealmId = religiousHeads[religionId];
+          if (!religion || !religion.head) {
+            fault('religiousHeads has invalid faith ' + religionId + '.');
+          } else if (typeof headRealmId !== 'string' || !headRealmId ||
+              !realms[headRealmId]) {
+            fault('religiousHeads.' + religionId + ' has invalid realm ' +
+              headRealmId + '.');
+          }
+        }
+      }
+    }
+
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
       if (!pr || !pr.id || pr.wasteland) continue;
@@ -689,6 +710,286 @@ window.FB = window.FB || {};
   }
   FB.realmFaithGroup = realmFaithGroup;
 
+  FB.religiousHeadBalance = function (key, fallback) {
+    const value = FBDATA.balance[key];
+    return value !== undefined ? value : fallback;
+  };
+
+  FB.realmReligionId = function (state, rid) {
+    if (!state || !rid) return null;
+    if (rid === 'player') {
+      const c = state.chars && state.chars[state.player.charId];
+      return c ? c.religion : null;
+    }
+    const r = state.realms[rid];
+    const pr = r && FB.world.byId[r.capital];
+    return pr ? pr.religion : null;
+  };
+
+  FB.adjustReligionRealmOpinions = function (state, religionId, amount) {
+    if (!state || !FB.adjustRealmOpinion) return;
+    for (const rid in state.realms) {
+      const realm = state.realms[rid];
+      if (rid === 'player' || !realm || !realm.alive) continue;
+      if (FB.realmReligionId(state, rid) === religionId) {
+        FB.adjustRealmOpinion(state, rid, amount);
+      }
+    }
+  };
+
+  /* Return the active office's same-faith war policy when a target belongs
+     to that office's temporal realm. An independent head protects its whole
+     sovereign realm; a vassal head protects only its own subtree. */
+  FB.sameFaithHeadWarPolicy = function (state, attackerReligionId, defenderRealmId, pid) {
+    const rel = FBDATA.religions[attackerReligionId];
+    const policy = rel && rel.head && rel.head.sameFaithWar;
+    if (!policy || policy === 'ordinary') return null;
+    const head = FB.religiousHeadOf(state, attackerReligionId);
+    if (!head || !defenderRealmId) return null;
+    if (defenderRealmId === head.id) return policy;
+    const defenderTop = FB.topRealm(state, defenderRealmId);
+    const headTop = FB.topRealm(state, head.id);
+    if (head.id === headTop && defenderTop === headTop) return policy;
+    if (pid && defenderTop === headTop &&
+        FB.realmTerritory(state, head.id).indexOf(pid) >= 0) {
+      return policy;
+    }
+    return null;
+  };
+
+  FB.playerExcommunicated = function (state) {
+    const c = state && state.chars && state.chars[state.player.charId];
+    return !!(c && c.traits && c.traits.indexOf('excommunicated') >= 0);
+  };
+
+  FB.applySacrilegiousWarConsequences = function (state, religionId) {
+    const B = FBDATA.balance;
+    const c = state && state.chars && state.chars[state.player.charId];
+    if (!state || !c) return false;
+    state.player.piety = Math.max(0, state.player.piety *
+      (B.religiousHeadWarPietyRetained !== undefined
+        ? B.religiousHeadWarPietyRetained : 0));
+    FB.adjustReligionRealmOpinions(state, religionId,
+      B.religiousHeadWarOpinion !== undefined ? B.religiousHeadWarOpinion : -40);
+    FB.addTrait(c, 'excommunicated');
+    FB.news(state, FB.msg('news.religion.sacrilegious_war',
+      '⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated.', {
+        realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
+      }));
+    return true;
+  };
+
+  FB.canSeekAbsolution = function (state) {
+    if (!FB.playerExcommunicated(state) || state.player.war) return false;
+    if (!FB.religiousHeadOf(state, 'catholic')) return false;
+    if (state.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
+      return false;
+    }
+    if (state.player.piety < FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100)) {
+      return false;
+    }
+    return true;
+  };
+
+  FB.seekAbsolution = function (state) {
+    if (!FB.canSeekAbsolution(state)) return false;
+    const c = state.chars[state.player.charId];
+    const gold = FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100);
+    const piety = FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100);
+    state.player.gold -= gold;
+    state.player.piety -= piety;
+    FB.removeTrait(c, 'excommunicated');
+    FB.adjustReligionRealmOpinions(state, 'catholic',
+      FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20));
+    FB.news(state, FB.msg('news.religion.absolution',
+      '🕊 {title} grants you absolution. The sentence of excommunication is lifted.', {
+        title:FB.dataParam('religion', 'catholic', 'head.title')
+      }));
+    return true;
+  };
+
+  function activeBookmarkRealmDefinition(state, rid) {
+    var bookmark = state && state.start && FB.bookmark
+      ? FB.bookmark(state.start.id) : FB.activeBookmark;
+    var realms = bookmark && bookmark.realms || [];
+    for (var i = 0; i < realms.length; i++) if (realms[i].id === rid) return realms[i];
+    return null;
+  }
+
+  function realmControlsClaimCounties(state, rid, sets) {
+    if (!Array.isArray(sets)) return false;
+    var top = FB.topRealm(state, rid);
+    for (var i = 0; i < sets.length; i++) {
+      var set = sets[i];
+      if (!Array.isArray(set) || !set.length) continue;
+      var controls = true;
+      for (var j = 0; j < set.length; j++) {
+        if (!FB.world.byId[set[j]] || state.owner[set[j]] !== top) {
+          controls = false;
+          break;
+        }
+      }
+      if (controls) return true;
+    }
+    return false;
+  }
+
+  FB.controlsReligiousHeadClaim = function (state, religionId, rid) {
+    const rel = FBDATA.religions[religionId];
+    return !!(rel && rel.head &&
+      realmControlsClaimCounties(state, rid, rel.head.claimCounties));
+  };
+
+  FB.canRestoreReligiousHead = function (state, religionId, controllerId) {
+    const rel = FBDATA.religions[religionId];
+    const meta = rel && rel.head;
+    const vacancy = FB.religiousHeadVacancy(state, religionId);
+    if (!state || !meta || meta.recovery !== 'grant_seat' || !meta.seat || !vacancy) {
+      return false;
+    }
+    const canonicalId = FB.religiousHeadDefaultRealm(state, religionId);
+    const definition = canonicalId && activeBookmarkRealmDefinition(state, canonicalId);
+    if (!definition || !FB.world.byId[meta.seat] ||
+        (state.realms[canonicalId] && state.realms[canonicalId].alive)) {
+      return false;
+    }
+    if (state.owner[meta.seat] !== FB.topRealm(state, controllerId)) return false;
+    if (FB.realmReligionId(state, controllerId) !== religionId) return false;
+    if (controllerId === 'player') {
+      return FB.isPlayerSovereign(state) &&
+        state.holder[meta.seat] === 'player' &&
+        state.player.provs.indexOf(meta.seat) >= 0 &&
+        state.player.provs.length >= 2;
+    }
+    const controller = state.realms[controllerId];
+    return !!(controller && controller.alive && !controller.liege &&
+      FB.realmProvinces(state, controllerId).length >= 2);
+  };
+
+  FB.restoreReligiousHead = function (state, religionId, controllerId) {
+    if (!FB.canRestoreReligiousHead(state, religionId, controllerId)) return false;
+    const meta = FBDATA.religions[religionId].head;
+    const canonicalId = FB.religiousHeadDefaultRealm(state, religionId);
+    const definition = activeBookmarkRealmDefinition(state, canonicalId);
+    const seat = FB.world.byId[meta.seat];
+    const controller = state.realms[controllerId];
+    const controllerName = controller ? controller.name : controllerId;
+    const restored = {
+      id:canonicalId,
+      name:definition.name,
+      color:definition.color,
+      capital:meta.seat,
+      aggression:definition.aggression !== undefined ? definition.aggression : 0,
+      rank:meta.restoredRank || 3,
+      liege:null,
+      alive:true,
+      ruler:makeRuler(seat.culture, null, state.date.year),
+      war:null,
+      op:0
+    };
+    state.realms[canonicalId] = restored;
+    FB.ensureRealmSuccession(state, canonicalId);
+    FB.transferProvince(state, meta.seat, canonicalId);
+    if (!FB.assignReligiousHead(state, religionId, canonicalId)) return false;
+    if (controllerId === 'player') {
+      state.player.piety += FB.religiousHeadBalance('religiousHeadRestorePiety', 200);
+      state.player.prestige += FB.religiousHeadBalance('religiousHeadRestorePrestige', 150);
+      FB.adjustReligionRealmOpinions(state, religionId,
+        FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15));
+      FB.removeTrait(state.chars[state.player.charId], 'excommunicated');
+      FB.news(state, FB.msg('news.religion.head_restored_player',
+        '⛪ You grant {seat} to the restored {realm}. {ruler} is chosen {title}.', {
+          seat:seat.name,
+          realm:restored.name,
+          ruler:restored.ruler.name,
+          title:FB.dataParam('religion', religionId, 'head.title')
+        }));
+    } else {
+      FB.news(state, FB.msg('news.religion.head_restored_ai',
+        '⛪ {controller} grants {seat} to the restored {realm}. {ruler} is chosen {title}.', {
+          controller:controllerName,
+          seat:seat.name,
+          realm:restored.name,
+          ruler:restored.ruler.name,
+          title:FB.dataParam('religion', religionId, 'head.title')
+        }));
+    }
+    return true;
+  };
+
+  FB.canClaimReligiousHead = function (state, religionId, rid) {
+    const rel = FBDATA.religions[religionId];
+    const meta = rel && rel.head;
+    const realm = state && state.realms && state.realms[rid];
+    if (!meta || meta.recovery !== 'claim' ||
+        !FB.religiousHeadVacancy(state, religionId) ||
+        !realm || !realm.alive || realm.liege ||
+        FB.realmReligionId(state, rid) !== religionId ||
+        !FB.controlsReligiousHeadClaim(state, religionId, rid)) {
+      return false;
+    }
+    if (rid !== 'player') return realm.rank >= 3;
+    return FB.isPlayerSovereign(state) && state.player.tier >= 6 &&
+      state.player.prestige >= FB.religiousHeadBalance('religiousHeadClaimPrestige', 500) &&
+      state.player.piety >= FB.religiousHeadBalance('religiousHeadClaimPiety', 300);
+  };
+
+  FB.claimReligiousHead = function (state, religionId, rid) {
+    if (!FB.canClaimReligiousHead(state, religionId, rid)) return false;
+    const realm = state.realms[rid];
+    if (rid === 'player') {
+      state.player.piety -= FB.religiousHeadBalance('religiousHeadClaimPiety', 300);
+    }
+    if (!FB.assignReligiousHead(state, religionId, rid)) return false;
+    if (rid === 'player') {
+      FB.news(state, FB.msg('news.religion.head_claimed_player',
+        '☪ You claim the office of {title} for your realm.', {
+          title:FB.dataParam('religion', religionId, 'head.title')
+        }));
+    } else {
+      FB.news(state, FB.msg('news.religion.head_claimed_ai',
+        '☪ {realm} claims the vacant office of {title}.', {
+          realm:realm.name,
+          title:FB.dataParam('religion', religionId, 'head.title')
+        }));
+    }
+    return true;
+  };
+
+  /* Daily recovery begins only after the saved vacancy has lasted a full
+     year. Player opportunities remain explicit deeds; AI choices are stable. */
+  FB.religiousHeadRecoveryTick = function (state) {
+    const wait = FB.religiousHeadBalance('religiousHeadVacancyDays', 360);
+    FB.ensureReligiousHeads(state);
+    for (const religionId in FBDATA.religions) {
+      const vacancy = FB.religiousHeadVacancy(state, religionId);
+      const rel = FBDATA.religions[religionId];
+      const meta = rel && rel.head;
+      if (!vacancy || !meta || state.turn - vacancy.turn < wait) continue;
+      if (meta.recovery === 'grant_seat') {
+        const controllerId = state.owner[meta.seat];
+        if (controllerId && controllerId !== 'player' &&
+            FB.canRestoreReligiousHead(state, religionId, controllerId)) {
+          FB.restoreReligiousHead(state, religionId, controllerId);
+        }
+      } else if (meta.recovery === 'claim') {
+        const candidates = [];
+        for (const rid in state.realms) {
+          if (rid !== 'player' && FB.canClaimReligiousHead(state, religionId, rid)) {
+            candidates.push(rid);
+          }
+        }
+        candidates.sort(function (a, b) {
+          const ar = state.realms[a], br = state.realms[b];
+          return (br.rank - ar.rank) ||
+            (FB.realmStrength(state, b) - FB.realmStrength(state, a)) ||
+            (a < b ? -1 : a > b ? 1 : 0);
+        });
+        if (candidates.length) FB.claimReligiousHead(state, religionId, candidates[0]);
+      }
+    }
+  };
+
   function newRoyalMember(state, realm, parentId, ageMax) {
     const sex = FB.chance(0.55) ? 'm' : 'f';
     const max = Math.max(0, ageMax === undefined ? 28 : ageMax);
@@ -1157,7 +1458,7 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return;
     if (FB.realmTerritory(state, rid).length) return;
-    r.alive = false; r.war = null;
+    FB.markRealmDead(state, rid);
     for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
   };
 
@@ -1170,13 +1471,16 @@ window.FB = window.FB || {};
     return false;
   };
 
-  FB.borderProvince = function (state, loserRealm, winnerRealm) {
+  FB.borderProvince = function (state, loserRealm, winnerRealm, allowed) {
     rcEnsure(state);
     const opts = [];
     for (const pid of (rc.provs[loserRealm] || [])) {
       const adj = FB.world.adj[pid] || {};
       for (const nb in adj) {
-        if (state.owner[nb] === winnerRealm) { opts.push(pid); break; }
+        if (state.owner[nb] === winnerRealm && (!allowed || allowed(pid))) {
+          opts.push(pid);
+          break;
+        }
       }
     }
     if (!opts.length) return null;
@@ -1196,7 +1500,7 @@ window.FB = window.FB || {};
       if (!fr || !fr.alive) continue;
       const terr = FB.realmTerritory(state, rid);
       if (!terr.length) {
-        fr.alive = false; fr.war = null;
+        FB.markRealmDead(state, rid);
         for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = fr.liege || null;
         if (state.player && state.player.liege === rid) {
           // a baron is bound to his county, not to the dead lord's house:
@@ -1289,7 +1593,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    r.alive = false; r.war = null;
+    FB.markRealmDead(state, rid);
     FB.invalidateRealmCache();
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
@@ -1501,21 +1805,25 @@ window.FB = window.FB || {};
       if (r.liege) continue; // vassals make no foreign policy of their own
       // war resolution
       if (r.war) {
-        const enemy = state.realms[r.war.enemy];
+        const war = r.war;
+        const enemy = state.realms[war.enemy];
         if (!enemy || !enemy.alive) { r.war = null; continue; }
         const sa = FB.realmStrength(state, id) * (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
-          (1 + 0.12 * ((r.war.fw || 0) - (r.war.fl || 0))); // field wins tilt the war
-        const defenseRatio = FB.realmDefensiveStrength(state, r.war.enemy) /
-          Math.max(1, FB.aiBaseHost(state, r.war.enemy));
-        const sd = FB.realmStrength(state, r.war.enemy) * defenseRatio *
+          (1 + 0.12 * ((war.fw || 0) - (war.fl || 0))); // field wins tilt the war
+        const defenseRatio = FB.realmDefensiveStrength(state, war.enemy) /
+          Math.max(1, FB.aiBaseHost(state, war.enemy));
+        const sd = FB.realmStrength(state, war.enemy) * defenseRatio *
           (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
-          (1 + 0.12 * ((r.war.fl || 0) - (r.war.fw || 0)));
-        const winner = sa > sd ? id : r.war.enemy;
-        const loser = winner === id ? r.war.enemy : id;
-        const taken = FB.borderProvince(state, loser, winner);
+          (1 + 0.12 * ((war.fl || 0) - (war.fw || 0)));
+        const winner = sa > sd ? id : war.enemy;
+        const loser = winner === id ? war.enemy : id;
+        const winnerReligion = FB.realmReligionId(state, winner);
+        const taken = FB.borderProvince(state, loser, winner, function (pid) {
+          return !FB.sameFaithHeadWarPolicy(state, winnerReligion, loser, pid);
+        });
         if (taken) {
           FB.transferProvince(state, taken, winner);
-          r.war.captures = (r.war.captures || 0) + 1;
+          war.captures = (war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
           if (FB.game.observe) { // the watcher hears of every fall, far or near
             FB.news(state, FB.msg('news.world.province_falls',
@@ -1537,11 +1845,12 @@ window.FB = window.FB || {};
               }));
           }
         }
-        r.war.years++;
+        war.years++;
         if (!state.realms[loser].alive) { r.war = null; }
-        else if (r.war.years >= 3 || FB.chance(0.35) || (r.war.captures || 0) >= 2) {
+        else if (war.years >= 3 || FB.chance(0.35) || (war.captures || 0) >= 2) {
           r.war = null; // peace
         }
+        if (!r.alive) continue;
       } else if (!FB.isRealmAtWar(state, id) &&
                  FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
         // pick a neighboring realm to attack
@@ -1552,6 +1861,8 @@ window.FB = window.FB || {};
           if (!r2.alive || r2.liege || FB.isRealmAtWar(state, id2) ||
               FB.areAllied(state, id, id2)) continue; // peaceful sovereigns only
           if (id2 === 'player') continue; // wars vs player handled below
+          if (FB.sameFaithHeadWarPolicy(state,
+              FB.realmReligionId(state, id), id2, null)) continue;
           if (FB.realmsAdjacent(state, id, id2)) targets.push(id2);
         }
         if (targets.length) {
@@ -1581,6 +1892,7 @@ window.FB = window.FB || {};
       if (!FB.isRealmAtWar(state, id) && FB.isPlayerSovereign(state) && !state.player.war &&
         !(state.pacts && state.pacts[id] > state.turn) &&
         !FB.areAllied(state, id, 'player') &&
+        !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null) &&
         FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
         FB.realmsAdjacent(state, id, 'player')) {
         state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
@@ -1961,7 +2273,7 @@ window.FB = window.FB || {};
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
       if (!p.provs.length) {
         p.tier = 2; p.liege = null;
-        if (state.realms.player) state.realms.player.alive = false;
+        if (state.realms.player) FB.markRealmDead(state, 'player');
         FB.news(state, FB.msg('news.war.landless',
           '⬇ Landless once more. The banners are folded away.', {}));
       }
@@ -1999,7 +2311,7 @@ window.FB = window.FB || {};
         });
         u.color = old ? old.color : '#f0c840'; // the map barely ripples
         if (old) {
-          old.alive = false; old.war = null;
+          FB.markRealmDead(state, 'player');
           FB.breakAlliance(state, 'player');
           if (old.rank >= 3) {
             const rightful = state.chars[p.charId];
@@ -2039,8 +2351,7 @@ window.FB = window.FB || {};
       p.provs = [];
     }
     if (state.realms.player && state.realms.player.alive) {
-      state.realms.player.alive = false;
-      state.realms.player.war = null;
+      FB.markRealmDead(state, 'player');
       for (const vid in state.realms) {
         if (state.realms[vid].liege === 'player') state.realms[vid].liege = p.liege || null;
       }
@@ -2379,9 +2690,9 @@ window.FB = window.FB || {};
       const other = state.realms[otherId];
       if (other && other.war && other.war.enemy === rid) other.war = null;
     }
-    inherited.alive = false;
-    /* A religious office assigned to this realm now reads as vacant. It is
-       never transferred here: elections or claims must reassign it explicitly. */
+    FB.markRealmDead(state, rid);
+    /* The realm's temporal inheritance is separate from any religious office:
+       markRealmDead leaves the latter explicitly vacant for recovery. */
     FB.breakAlliance(state, rid);
     const oldRank = mine.rank || Math.max(1, p.tier - 3);
     mine.rank = Math.max(oldRank, inherited.rank || 1);

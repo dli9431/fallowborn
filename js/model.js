@@ -15,21 +15,134 @@ window.FB = window.FB || {};
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
   FB.religionOf = function (id) { return FBDATA.religions[id] || FBDATA.religions.catholic; };
 
+  function bookmarkReligiousHead(state, religionId) {
+    var bookmark = null;
+    if (state && state.start && FB.bookmark) bookmark = FB.bookmark(state.start.id);
+    if (!bookmark) bookmark = FB.activeBookmark;
+    var mapping = bookmark && bookmark.religiousHeads;
+    if (mapping && Object.prototype.hasOwnProperty.call(mapping, religionId)) {
+      return mapping[religionId];
+    }
+    var rel = FBDATA.religions[religionId];
+    return rel && rel.head ? rel.head.realm : null;
+  }
+
+  FB.religiousHeadDefaultRealm = function (state, religionId) {
+    return bookmarkReligiousHead(state, religionId);
+  };
+
   /* Central religious offices are saved assignments, separate from territorial
-     rank. Religion data supplies only the initial holder and display title.
-     An own null value is an intentional vacancy and must survive repairs. */
+     rank. The active bookmark may replace a religion's global default holder.
+     An own null value is an intentional vacancy and must survive repairs; its
+     turn and former realm are preserved beside it for delayed recovery. */
   FB.ensureReligiousHeads = function (state) {
     if (!state) return {};
     if (!state.religiousHeads || typeof state.religiousHeads !== 'object' ||
         Array.isArray(state.religiousHeads)) state.religiousHeads = {};
+    if (!state.religiousHeadVacancies ||
+        typeof state.religiousHeadVacancies !== 'object' ||
+        Array.isArray(state.religiousHeadVacancies)) {
+      state.religiousHeadVacancies = {};
+    }
     for (const id in FBDATA.religions) {
       const rel = FBDATA.religions[id];
-      if (!rel || !rel.head || !rel.head.realm) continue;
+      if (!rel || !rel.head) continue;
       if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, id)) {
-        state.religiousHeads[id] = rel.head.realm;
+        state.religiousHeads[id] = bookmarkReligiousHead(state, id);
+      }
+      const assigned = state.religiousHeads[id];
+      if (assigned !== null && state.realms &&
+          (!state.realms[assigned] || !state.realms[assigned].alive)) {
+        const bookmarkDefault = bookmarkReligiousHead(state, id);
+        /* Older 1066 saves were seeded with the global 867 ids even though
+           those realm records never existed in their bookmark. Repair only
+           that missing-default signature; a realm that existed and died is
+           a genuine vacancy and must keep its clock. */
+        if (!state.realms[assigned] && assigned === rel.head.realm &&
+            bookmarkDefault && bookmarkDefault !== assigned &&
+            state.realms[bookmarkDefault] && state.realms[bookmarkDefault].alive &&
+            !state.religiousHeadVacancies[id]) {
+          state.religiousHeads[id] = bookmarkDefault;
+          delete state.religiousHeadVacancies[id];
+        } else {
+          state.religiousHeads[id] = null;
+          if (!state.religiousHeadVacancies[id]) {
+            state.religiousHeadVacancies[id] = {
+              turn:isFinite(state.turn) ? state.turn : 0,
+              formerHolder:assigned
+            };
+          }
+        }
+      } else if (state.religiousHeads[id] === null) {
+        const vacancy = state.religiousHeadVacancies[id];
+        if (!vacancy || !isFinite(vacancy.turn)) {
+          state.religiousHeadVacancies[id] = {
+            turn:isFinite(state.turn) ? state.turn : 0,
+            formerHolder:vacancy && vacancy.formerHolder || null
+          };
+        }
+      } else {
+        delete state.religiousHeadVacancies[id];
       }
     }
     return state.religiousHeads;
+  };
+
+  FB.religiousHeadVacancy = function (state, religionId) {
+    FB.ensureReligiousHeads(state);
+    if (!state || state.religiousHeads[religionId] !== null) return null;
+    return state.religiousHeadVacancies[religionId] || null;
+  };
+
+  FB.assignReligiousHead = function (state, religionId, realmId) {
+    const rel = FBDATA.religions[religionId];
+    const realm = state && state.realms && state.realms[realmId];
+    if (!state || !rel || !rel.head || !realm || !realm.alive) return false;
+    FB.ensureReligiousHeads(state);
+    state.religiousHeads[religionId] = realmId;
+    delete state.religiousHeadVacancies[religionId];
+    return true;
+  };
+
+  /* Set every office held by a dying realm to an explicit saved vacancy.
+     Repeated death cleanup is idempotent: null assignments neither reset the
+     vacancy clock nor emit a second announcement. */
+  FB.vacateReligiousHeads = function (state, realmId, opts) {
+    if (!state || !realmId) return [];
+    opts = opts || {};
+    FB.ensureReligiousHeads(state);
+    const vacated = [];
+    const realm = state.realms && state.realms[realmId];
+    for (const religionId in FBDATA.religions) {
+      if (state.religiousHeads[religionId] !== realmId) continue;
+      state.religiousHeads[religionId] = null;
+      state.religiousHeadVacancies[religionId] = {
+        turn:isFinite(state.turn) ? state.turn : 0,
+        formerHolder:realmId
+      };
+      vacated.push(religionId);
+      if (!opts.silent && FB.news && state.log) {
+        FB.news(state, FB.msg('news.religion.head_vacant',
+          '⛪ The office of {title} stands vacant after {realm} falls.', {
+            title:FB.dataParam('religion', religionId, 'head.title'),
+            realm:realm ? realm.name : realmId
+          }));
+      }
+    }
+    return vacated;
+  };
+
+  /* The single realm-death boundary used by conquest, escheat, revocation,
+     downfall, and inheritance. Territorial callers remain responsible for
+     reparenting vassals and moving capitals. */
+  FB.markRealmDead = function (state, realmId) {
+    const realm = state && state.realms && state.realms[realmId];
+    if (!realm || !realm.alive) return false;
+    FB.vacateReligiousHeads(state, realmId);
+    realm.alive = false;
+    realm.war = null;
+    if (FB.breakAlliance) FB.breakAlliance(state, realmId);
+    return true;
   };
 
   /* The live realm holding an exact faith's central office, or null while the

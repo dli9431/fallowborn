@@ -72,6 +72,14 @@
         "text": "🌾 Buy a plot of land…"
       }
     },
+    "action.claim_caliphate.label.default": {
+      "context": "action claim_caliphate, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "☪ Claim the Caliphate…"
+      }
+    },
     "action.coin_credit.label.default": {
       "context": "action coin_credit, visible label.",
       "glossary": [],
@@ -248,6 +256,14 @@
         "text": "💒 Propose marriage"
       }
     },
+    "action.restore_papacy.label.default": {
+      "context": "action restore_papacy, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "✝ Restore the Papacy…"
+      }
+    },
     "action.revoke_county.label.default": {
       "context": "action revoke_county, visible label.",
       "glossary": [],
@@ -272,6 +288,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "🗡 Scheme against {rival}"
+      }
+    },
+    "action.seek_absolution.label.default": {
+      "context": "action seek_absolution, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🕊 Seek absolution…"
       }
     },
     "action.seek_blessing.label.default": {
@@ -23464,6 +23488,16 @@
         "text": "🛡 {realm} promises an exceptional levy for one year; the favor costs goodwill."
       }
     },
+    "news.religion.absolution": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🕊 {title} grants you absolution. The sentence of excommunication is lifted."
+      }
+    },
     "news.religion.advanced": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -23472,6 +23506,75 @@
       "location": "js/economy.js",
       "source": {
         "text": "🛐 {name} advances in religious standing."
+      }
+    },
+    "news.religion.head_claimed_ai": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm",
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "☪ {realm} claims the vacant office of {title}."
+      }
+    },
+    "news.religion.head_claimed_player": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "☪ You claim the office of {title} for your realm."
+      }
+    },
+    "news.religion.head_restored_ai": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "controller",
+        "realm",
+        "ruler",
+        "seat",
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "⛪ {controller} grants {seat} to the restored {realm}. {ruler} is chosen {title}."
+      }
+    },
+    "news.religion.head_restored_player": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm",
+        "ruler",
+        "seat",
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "⛪ You grant {seat} to the restored {realm}. {ruler} is chosen {title}."
+      }
+    },
+    "news.religion.head_vacant": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm",
+        "title"
+      ],
+      "location": "js/model.js",
+      "source": {
+        "text": "⛪ The office of {title} stands vacant after {realm} falls."
+      }
+    },
+    "news.religion.sacrilegious_war": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated."
       }
     },
     "news.retainer.capacity_lost": {
@@ -30393,6 +30496,16 @@
         "text": "Listen before speaking."
       }
     },
+    "src.01332fd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only an independent king or emperor may claim the Caliphate."
+      }
+    },
     "src.013de910": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30552,6 +30665,16 @@
       ],
       "source": {
         "text": "Poitiers"
+      }
+    },
+    "src.02080562": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The Papacy is vacant; no Pope can absolve you."
       }
     },
     "src.0233cbc3": {
@@ -32189,6 +32312,16 @@
         "text": "A Match for {name}"
       }
     },
+    "src.09cecb56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This conquest is sacrilege."
+      }
+    },
     "src.09cfcdd2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33602,6 +33735,16 @@
       ],
       "source": {
         "text": "🎓 You take charge of {name}’s lessons."
+      }
+    },
+    "src.10fed99a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You need {needed} prestige (now {current})."
       }
     },
     "src.1106b434": {
@@ -36131,6 +36274,16 @@
         "text": "Neighbors at odds trust a fair tongue."
       }
     },
+    "src.1d627743": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent."
+      }
+    },
     "src.1d64cac9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36259,6 +36412,16 @@
       ],
       "source": {
         "text": "Promoted to sergeant."
+      }
+    },
+    "src.1df8c133": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion."
       }
     },
     "src.1df9ed64": {
@@ -38116,6 +38279,16 @@
         "text": "Martial"
       }
     },
+    "src.268542ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated."
+      }
+    },
     "src.2692fb9a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38194,6 +38367,16 @@
       ],
       "source": {
         "text": "Charge to the rescue."
+      }
+    },
+    "src.26c71b1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⛪ {controller} grants {seat} to the restored {realm}. {ruler} is chosen {title}."
       }
     },
     "src.26cd1348": {
@@ -39545,6 +39728,16 @@
       ],
       "source": {
         "text": "🕯 Your uncle {name} has died, aged {age}."
+      }
+    },
+    "src.2e1174d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You must hold Roma personally."
       }
     },
     "src.2e2e32a1": {
@@ -42204,6 +42397,16 @@
         "text": "Muster count adjustment"
       }
     },
+    "src.3be09796": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Church standing"
+      }
+    },
     "src.3be55318": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43328,6 +43531,16 @@
         "text": "Weaver"
       }
     },
+    "src.4141d66b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Absolution requires {piety} piety."
+      }
+    },
     "src.4151051a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43830,6 +44043,16 @@
         "text": "Everything is in place: the draught measured, the stair loosened, the witnesses elsewhere. {spouse} suspects nothing. One nod from you and it is done."
       }
     },
+    "src.438ac8b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You must first make peace."
+      }
+    },
     "src.43a60703": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43950,6 +44173,16 @@
       ],
       "source": {
         "text": "A permanent home can be considered after {days} more days here."
+      }
+    },
+    "src.4425e0b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication."
       }
     },
     "src.442631c2": {
@@ -44355,6 +44588,16 @@
         "text": "Slip away to the fields."
       }
     },
+    "src.458dd27c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Not yet"
+      }
+    },
     "src.458f89dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44655,6 +44898,16 @@
       ],
       "source": {
         "text": "Teach them yourself"
+      }
+    },
+    "src.46e0f9c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "⛪ The office of {title} stands vacant after {realm} falls."
       }
     },
     "src.46ee63fd": {
@@ -45006,6 +45259,16 @@
       ],
       "source": {
         "text": "Rush the final stroke NOW."
+      }
+    },
+    "src.485deb2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "religiousHeads."
       }
     },
     "src.486640ab": {
@@ -45670,6 +45933,16 @@
       ],
       "source": {
         "text": "🏠 Better the household…"
+      }
+    },
+    "src.4b7c5b80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🕊 Seek absolution…"
       }
     },
     "src.4b8bcd3c": {
@@ -47434,6 +47707,16 @@
         "text": "Peace is welcome, but not at the price of surrendering your claim."
       }
     },
+    "src.54351059": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Claim the Caliphate"
+      }
+    },
     "src.545a84f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47854,6 +48137,16 @@
       ],
       "source": {
         "text": "Glory above, cold water below."
+      }
+    },
+    "src.56363b98": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {opinion} opinion with every Catholic realm."
       }
     },
     "src.563afe14": {
@@ -49643,6 +49936,16 @@
         "text": "Beloozero"
       }
     },
+    "src.5e5f8f20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Accept the Pope’s absolution"
+      }
+    },
     "src.5e648c19": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50633,6 +50936,16 @@
       ],
       "source": {
         "text": "(current)"
+      }
+    },
+    "src.62a63300": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "☪ {realm} claims the vacant office of {title}."
       }
     },
     "src.62b3daa2": {
@@ -52580,6 +52893,16 @@
         "text": "A battered book in a dead tongue that still has things to say."
       }
     },
+    "src.6ca834e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The excommunicated may not seek a blessing."
+      }
+    },
     "src.6cadae7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54153,6 +54476,16 @@
         "text": "Lotharingia"
       }
     },
+    "src.7393a3b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler."
+      }
+    },
     "src.73a277b9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54762,6 +55095,16 @@
       ],
       "source": {
         "text": "The lord spoke of freedom."
+      }
+    },
+    "src.7637a77a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety."
       }
     },
     "src.76548f74": {
@@ -55834,6 +56177,16 @@
       ],
       "source": {
         "text": "Kursk"
+      }
+    },
+    "src.7b032c18": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there."
       }
     },
     "src.7b1a08f8": {
@@ -58281,6 +58634,16 @@
         "text": "Zoom out"
       }
     },
+    "src.85b92ad9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you."
+      }
+    },
     "src.85d6b4c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58911,6 +59274,26 @@
         "text": "Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember."
       }
     },
+    "src.88ecba4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "✝ Restore the Papacy…"
+      }
+    },
+    "src.8903d53a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Religious head"
+      }
+    },
     "src.8911941a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59482,6 +59865,16 @@
         "text": "Himself a vassal of {liege}"
       }
     },
+    "src.8b8812ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "☪ Claim the Caliphate…"
+      }
+    },
     "src.8b96b42e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59950,6 +60343,16 @@
       ],
       "source": {
         "text": "The measures prove short. Your word carries less than it did yesterday."
+      }
+    },
+    "src.8e2f5700": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Grant {seat} and restore the Papacy"
       }
     },
     "src.8e339cb0": {
@@ -60495,6 +60898,16 @@
         "text": "A literate mind is a quiet weapon."
       }
     },
+    "src.907b02b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🕊 {title} grants you absolution. The sentence of excommunication is lifted."
+      }
+    },
     "src.9083bd4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60624,6 +61037,16 @@
       ],
       "source": {
         "text": "Back to life."
+      }
+    },
+    "src.910c8c2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{title} · {realm}"
       }
     },
     "src.91135285": {
@@ -61978,6 +62401,16 @@
       ],
       "source": {
         "text": "✒ Copy manuscripts"
+      }
+    },
+    "src.9848c37f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Attack the Papacy?"
       }
     },
     "src.984d338a": {
@@ -64525,6 +64958,16 @@
         "text": "The thaw has come and the earth turns soft. What goes into the ground now decides who eats next winter."
       }
     },
+    "src.a3ac3880": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You need {needed} piety (now {current})."
+      }
+    },
     "src.a3cdcb09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64613,6 +65056,16 @@
       ],
       "source": {
         "text": "{spouse} speaks quietly after the hall empties: a shrewd reading of your rivals, your coffers, and your next move."
+      }
+    },
+    "src.a4032433": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep {seat}"
       }
     },
     "src.a40eb986": {
@@ -65580,6 +66033,16 @@
         "text": "Turov and Volhynia"
       }
     },
+    "src.a8addc75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "☪ You claim the office of {title} for your realm."
+      }
+    },
     "src.a8b0686d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65839,6 +66302,16 @@
       ],
       "source": {
         "text": "Send to {lord} for soldiers."
+      }
+    },
+    "src.a9be3ec1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "religiousHeads must be an object mapping faith ids to realm ids."
       }
     },
     "src.a9d4eac7": {
@@ -67625,6 +68098,16 @@
         "text": "Choose a file or paste JSON first."
       }
     },
+    "src.b2f33c6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Restore the Papacy?"
+      }
+    },
     "src.b2f56890": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67864,6 +68347,16 @@
       ],
       "source": {
         "text": "Changelog"
+      }
+    },
+    "src.b3dcd567": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Accept condemnation and declare war"
       }
     },
     "src.b40de6af": {
@@ -70121,6 +70614,16 @@
         "text": "A double-edged sword made for the close press of a shield wall."
       }
     },
+    "src.bfa06f12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only a sovereign may restore the Papacy."
+      }
+    },
     "src.bfc383b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70703,6 +71206,16 @@
       ],
       "source": {
         "text": "Find work and lodging."
+      }
+    },
+    "src.c238b73c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "religiousHeads has invalid faith"
       }
     },
     "src.c24015c4": {
@@ -71691,7 +72204,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/traits.js"
+        "data/traits.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Excommunicated"
@@ -71775,6 +72289,16 @@
       ],
       "source": {
         "text": "Over-domain penalty"
+      }
+    },
+    "src.c774b84f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The Papacy cannot be restored from this world state."
       }
     },
     "src.c7852dd0": {
@@ -74223,6 +74747,16 @@
         "text": "Broken in body, never once in complaint."
       }
     },
+    "src.d4296b93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Control Baghdad, or both Mecca and Medina."
+      }
+    },
     "src.d437d642": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74281,6 +74815,16 @@
       ],
       "source": {
         "text": "No war, no drills worth the name — just walls, weather, and wages. A soldier’s enemy in peacetime is the calendar."
+      }
+    },
+    "src.d4b31d8d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You need another county before granting Roma away."
       }
     },
     "src.d4e51728": {
@@ -74361,6 +74905,16 @@
       ],
       "source": {
         "text": "Nieces & nephews"
+      }
+    },
+    "src.d54d84ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seek absolution?"
       }
     },
     "src.d550d902": {
@@ -76097,6 +76651,16 @@
         "text": "Taifa of Granada"
       }
     },
+    "src.ddfa5b01": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared."
+      }
+    },
     "src.de03420a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77419,6 +77983,16 @@
         "text": "📕 The school fee for {name} cannot be met; their lessons pause for the season."
       }
     },
+    "src.e44f4fe0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⛪ You grant {seat} to the restored {realm}. {ruler} is chosen {title}."
+      }
+    },
     "src.e46712ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78501,6 +79075,16 @@
       ],
       "source": {
         "text": "Le Mans"
+      }
+    },
+    "src.e85dc705": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Absolution requires {money:gold}."
       }
     },
     "src.e85e4b88": {
@@ -80745,6 +81329,16 @@
         "text": "lord"
       }
     },
+    "src.f45134e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{title} — vacant for {days} days"
+      }
+    },
     "src.f4698571": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80994,6 +81588,16 @@
       ],
       "source": {
         "text": "de jure kingdoms"
+      }
+    },
+    "src.f588d092": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Claim the Caliphate?"
       }
     },
     "src.f58cb804": {
@@ -82117,6 +82721,16 @@
         "text": "Recite the words exactly."
       }
     },
+    "src.fb4b8f7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Canceling here changes nothing. After peace, an active Pope may grant costly absolution."
+      }
+    },
     "src.fb4d93b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83135,6 +83749,16 @@
       ],
       "source": {
         "text": "The line breaks in moments. You wake wounded among the ashes."
+      }
+    },
+    "src.fffda848": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your realm is not eligible to claim the Caliphate."
       }
     },
     "tech.guild_charters.desc.default": {
@@ -85062,6 +85686,42 @@
         "text": "Abbot"
       }
     },
+    "ui:Absolution requires {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Absolution requires {money:gold}."
+      }
+    },
+    "ui:Absolution requires {piety} piety.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Absolution requires {piety} piety."
+      }
+    },
+    "ui:Accept condemnation and declare war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Accept condemnation and declare war"
+      }
+    },
+    "ui:Accept the Pope’s absolution": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Accept the Pope’s absolution"
+      }
+    },
     "ui:Acolyte": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -85248,6 +85908,18 @@
         "text": "Ask for an exceptional levy"
       }
     },
+    "ui:Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "opinion",
+        "piety"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion."
+      }
+    },
     "ui:Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -85300,6 +85972,25 @@
       "location": "js/ui.js",
       "source": {
         "text": "At war — policy is suspended"
+      }
+    },
+    "ui:Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety",
+        "prestige"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety."
+      }
+    },
+    "ui:Attack the Papacy?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Attack the Papacy?"
       }
     },
     "ui:Available": {
@@ -85595,6 +86286,14 @@
         "text": "Cancel"
       }
     },
+    "ui:Canceling here changes nothing. After peace, an active Pope may grant costly absolution.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Canceling here changes nothing. After peace, an active Pope may grant costly absolution."
+      }
+    },
     "ui:Cannot use this slot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -85774,6 +86473,22 @@
         "text": "Church Patron"
       }
     },
+    "ui:Claim the Caliphate": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Claim the Caliphate"
+      }
+    },
+    "ui:Claim the Caliphate?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Claim the Caliphate?"
+      }
+    },
     "ui:Clerk": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -85864,6 +86579,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Continue"
+      }
+    },
+    "ui:Control Baghdad, or both Mecca and Medina.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Control Baghdad, or both Mecca and Medina."
       }
     },
     "ui:Costs {money:15}.": {
@@ -86004,6 +86727,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Decide nothing today"
+      }
+    },
+    "ui:Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "opinion",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler."
       }
     },
     "ui:Deeds — done at once unless noted": {
@@ -86277,6 +87011,14 @@
         "text": "Exact upfront cost: {money:cost}."
       }
     },
+    "ui:Excommunicated": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Excommunicated"
+      }
+    },
     "ui:Fabricated county claim": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -86534,12 +87276,45 @@
         "text": "Grant Land"
       }
     },
+    "ui:Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety",
+        "prestige"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication."
+      }
+    },
     "ui:Grant a single county": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Grant a single county"
+      }
+    },
+    "ui:Grant {seat} and restore the Papacy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "seat"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Grant {seat} and restore the Papacy"
+      }
+    },
+    "ui:Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank",
+        "seat",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there."
       }
     },
     "ui:Guarded": {
@@ -86821,6 +87596,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Keep staying for now"
+      }
+    },
+    "ui:Keep {seat}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "seat"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep {seat}"
       }
     },
     "ui:Khatib": {
@@ -87425,6 +88210,14 @@
         "text": "Not now"
       }
     },
+    "ui:Not yet": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Not yet"
+      }
+    },
     "ui:Nothing of note.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -87473,12 +88266,28 @@
         "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
       }
     },
+    "ui:Only a sovereign may restore the Papacy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only a sovereign may restore the Papacy."
+      }
+    },
     "ui:Only an adult can take to the road.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/travel.js",
       "source": {
         "text": "Only an adult can take to the road."
+      }
+    },
+    "ui:Only an independent king or emperor may claim the Caliphate.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only an independent king or emperor may claim the Caliphate."
       }
     },
     "ui:Only one guild favor may be called each year.": {
@@ -88262,6 +89071,14 @@
         "text": "Resolve the current event before changing equipment."
       }
     },
+    "ui:Restore the Papacy?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Restore the Papacy?"
+      }
+    },
     "ui:Restore the coinage?": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -88496,6 +89313,14 @@
         "text": "Seek a loan…"
       }
     },
+    "ui:Seek absolution?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seek absolution?"
+      }
+    },
     "ui:Seek the next guild rank — {rank} ({money:gold})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -88673,6 +89498,18 @@
         "text": "Spend {money:amount} and restore the coin"
       }
     },
+    "ui:Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety",
+        "prestige",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent."
+      }
+    },
     "ui:Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -88778,6 +89615,34 @@
         "text": "The Estates"
       }
     },
+    "ui:The Papacy cannot be restored from this world state.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The Papacy cannot be restored from this world state."
+      }
+    },
+    "ui:The Papacy is vacant; no Pope can absolve you.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The Papacy is vacant; no Pope can absolve you."
+      }
+    },
+    "ui:The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {opinion} opinion with every Catholic realm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "opinion",
+        "piety"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {opinion} opinion with every Catholic realm."
+      }
+    },
     "ui:The Royal Council": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -88834,6 +89699,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "The exceptional levy is already promised."
+      }
+    },
+    "ui:The excommunicated may not seek a blessing.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The excommunicated may not seek a blessing."
       }
     },
     "ui:The fatal event unfolded at {province}.": {
@@ -88986,12 +89859,28 @@
         "text": "There is no heir."
       }
     },
+    "ui:Think better of it": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Think better of it"
+      }
+    },
     "ui:This character has already made their one permanent move; this journey cannot relocate the household again.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "This character has already made their one permanent move; this journey cannot relocate the household again."
+      }
+    },
+    "ui:This conquest is sacrilege.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This conquest is sacrilege."
       }
     },
     "ui:This contract is reckoned by weight: price changes do not change the amount due.": {
@@ -89387,6 +90276,18 @@
         "text": "You cannot leave while personally at war."
       }
     },
+    "ui:You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "opinion",
+        "piety",
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared."
+      }
+    },
     "ui:You hold no landed realm from which to wage war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -89404,6 +90305,30 @@
       "location": "js/actions.js",
       "source": {
         "text": "You must first bleed in your liege’s wars (service {needed}+, now {current})."
+      }
+    },
+    "ui:You must first make peace.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You must first make peace."
+      }
+    },
+    "ui:You must hold Roma personally.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You must hold Roma personally."
+      }
+    },
+    "ui:You need another county before granting Roma away.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You need another county before granting Roma away."
       }
     },
     "ui:You need at least 200 prestige to rally men to your banner (now {current}).": {
@@ -89457,6 +90382,28 @@
       "location": "js/actions.js",
       "source": {
         "text": "You need at least {needed} prestige (now {current})."
+      }
+    },
+    "ui:You need {needed} piety (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You need {needed} piety (now {current})."
+      }
+    },
+    "ui:You need {needed} prestige (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You need {needed} prestige (now {current})."
       }
     },
     "ui:You need {plots} plots together in one settlement.": {
@@ -89625,6 +90572,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your mother"
+      }
+    },
+    "ui:Your realm is not eligible to claim the Caliphate.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your realm is not eligible to claim the Caliphate."
       }
     },
     "ui:Your rival": {
@@ -91743,6 +92698,28 @@
         "text": "{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}"
       }
     },
+    "ui:{title} · {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{title} · {realm}"
+      }
+    },
+    "ui:{title} — vacant for {days} days": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{title} — vacant for {days} days"
+      }
+    },
     "ui:{total} total · {levy} levy · {archers} archers · {retinue} men-at-arms": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -91948,6 +92925,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go."
+      }
+    },
+    "ui:⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you."
       }
     },
     "ui:⛪ Petition to annul the marriage ({money:15}, 20 piety)": {

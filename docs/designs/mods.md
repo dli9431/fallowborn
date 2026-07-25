@@ -17,6 +17,10 @@ bookmark id; each value replaces that entire bookmark and must include its date,
 provinces, realms, de jure hierarchy, straits, and scripted history. It is validated
 only when activated, after all enabled mods have applied. The existing top-level
 `provinces`/`realms`/hierarchy/straits/scripted fields remain the public 867 merge API.
+An optional `religiousHeads` map binds centralized faith offices to realm ids inside
+that atomic bookmark. Activation rejects unknown faiths, faiths without head metadata,
+and mapped realms absent from the bookmark; omission uses each religion's global
+`head.realm` fallback.
 
 A legacy mod that changes any world-shaping top-level field—provinces, realms,
 hierarchy, straits, scripted history, coastline, seas, or bounds—without also providing
