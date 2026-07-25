@@ -951,7 +951,10 @@ FBDATA.balance = {
   householdUpkeep: [1,1,2,4,6,9,14,20], // base seasonal cost of maintaining the player's station
   householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
-  friendOpinionThreshold: 40, // a deliberately cultivated contact may be named the canonical friend
+  socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
+  relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
+  socialGiftCooldownDays: 90, socialCashGiftOpinion: 4,
+  socialItemGiftOpinion: [4,8,12], // Plain/common, Well-made/fine, Masterwork/famed
   retainerCapacity: [0,1,2,2,3,3,4,5], // paid non-family household servants by player tier
   guildFavorStandingCost: 20, guildFavorCooldown: 360,
   vassalLevyFavorRate: 0.05, vassalLevyFavorDays: 360,

@@ -119,6 +119,36 @@ window.FB = window.FB || {};
     const rounded = Math.round(value);
     return (rounded > 0 ? '+' : '') + rounded;
   }
+  function signedRelationshipOpinion(value) {
+    const rounded = Math.round(value * 10) / 10;
+    return (rounded > 0 ? '+' : '') + rounded;
+  }
+  function socialAttentionSummary(s) {
+    const target = FB.socialAttentionTarget(s);
+    const capacity = FB.socialAttentionCapacity();
+    const rate = FB.socialAttentionDailyOpinion();
+    const threshold = FB.relationshipOpinionThreshold();
+    if (!target) {
+      return FB.T('🤝 Personal attention 0/{capacity} · no assignment · +{rate} regard/day when assigned', {
+        capacity:capacity, rate:rate
+      });
+    }
+    const days = FB.socialAttentionDaysToThreshold(s, target);
+    const progress = days === null
+      ? FB.T('not advancing toward +{threshold}', { threshold:threshold })
+      : (days
+        ? FB.T('{days} days to +{threshold}', { days:days, threshold:threshold })
+        : FB.T('ready at +{threshold}', { threshold:threshold }));
+    const paused = s.player.travel ? FB.T(' · paused while traveling') : '';
+    return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}{paused}', {
+      capacity:capacity,
+      name:FB.fullName(target),
+      regard:signedRelationshipOpinion(target.opinion),
+      rate:rate,
+      progress:progress,
+      paused:paused
+    });
+  }
   function opinionBand(value) {
     if (value >= 60) return FB.T('Warm');
     if (value >= 20) return FB.T('Favorable');
@@ -725,7 +755,7 @@ window.FB = window.FB || {};
     { id:'war', label:'⚔ War & Diplomacy' }
   ];
   const FOCUS_GROUP = {
-    study:'life', play:'life', rest:'life', pray:'faith', court_suitor:'life',
+    study:'life', play:'life', rest:'life', pray:'faith',
     toil:'work', work_land:'work', market:'work', keep_house:'work',
     craft_work:'work', trade_run:'work', copy_books:'faith', serve_church:'faith',
     militia:'war', drill:'war', stand_guard:'war', train_arms:'war', lead_host:'war',
@@ -795,6 +825,7 @@ window.FB = window.FB || {};
             })) : '') +
         '</div>';
     }
+    h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -1713,6 +1744,7 @@ window.FB = window.FB || {};
     /* Connections: regard is shown separately from the one canonical friend
        so warmth can no longer masquerade as the event relationship. */
     h += panelh('Connections');
+    h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
     const friend = FB.getRole(s, 'friend', false);
     if (friend) {
       h += charRow(s, friend, FB.T('Your friend · regard {regard}', {
@@ -4235,9 +4267,7 @@ window.FB = window.FB || {};
         const c = FB.materializeRoyalChild(s, rid, btn.dataset.royalChild);
         if (!c || !FB.canCourt(s, c)) return;
         UI.closeModal();
-        s.player.courtingId = c.id;
-        s.player.flags.courting = 1;
-        s.player.focus = 'court_suitor';
+        if (!FB.beginCourtship(s, c)) return;
         FB.news(s, FB.msg('news.social.royal_courting_begins',
           '🌷 You begin courting {name} of {realm}.', { name: FB.fullName(c), realm: r.name }));
         FB.game.passDay({ skipFocus: true });
@@ -5348,6 +5378,10 @@ window.FB = window.FB || {};
       FB.isHouseholdCharacter(s, c.id);
     const retainer = !c.dead && FB.retainerRecord ? FB.retainerRecord(s, c.id) : null;
     let h = UI.charCardHtml(s, c);
+    const attentionTarget = FB.socialAttentionTarget(s);
+    if (!c.dead && attentionTarget && attentionTarget.id === c.id) {
+      h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
+    }
     // the dead get a sheet for remembrance — their dates, skills, traits — but no dealings
     if (c.dead) {
       h += '<button class="btn" id="cm-close" style="margin-top:10px">Close</button>';
@@ -5372,21 +5406,64 @@ window.FB = window.FB || {};
         '<span class="adesc">Arrange an apprenticeship, change occupation, or seek guild rank.</span></button>';
     }
     if (c.id !== me.id) {
-      h += '<button class="actionbtn" id="cm-befriend">🤝 Spend the day in their company' +
-        '<span class="adesc">Warm their regard for you. (spends the day)</span></button>';
-      if (FB.canNameFriend && FB.canNameFriend(s, c)) {
+      const cultivated = !!(attentionTarget && attentionTarget.id === c.id);
+      const courtAttentionBlocked = !!(s.player.courtingId &&
+        s.player.courtingId !== c.id);
+      const courtAttentionHeld = s.player.courtingId === c.id && cultivated;
+      const attentionRate = FB.socialAttentionDailyOpinion();
+      if (cultivated) {
+        h += '<button class="actionbtn" id="cm-attention-stop"' +
+          (courtAttentionHeld ? ' disabled' : '') + '>' +
+          esc(FB.T('🤝 Stop cultivating')) +
+          '<span class="adesc">' + esc(courtAttentionHeld
+            ? FB.T('End the courtship to release this personal-attention assignment.')
+            : FB.T('Withdraw personal attention. This costs no day.')) +
+          '</span></button>';
+      } else {
+        h += '<button class="actionbtn" id="cm-attention"' +
+          (courtAttentionBlocked ? ' disabled' : '') + '>' +
+          esc(FB.T('🤝 Cultivate relationship')) +
+          '<span class="adesc">' + esc(courtAttentionBlocked
+            ? FB.T('End your current courtship before cultivating someone else.')
+            : FB.T('Assign personal attention for +{rate} regard each ordinary day. This costs no day.', {
+              rate:attentionRate
+            })) + '</span></button>';
+      }
+      if (FB.friendContactEligible && FB.friendContactEligible(s, c) &&
+        s.roles.friend !== c.id) {
+        const canNameFriend = FB.canNameFriend && FB.canNameFriend(s, c);
         const currentFriend = FB.getRole(s, 'friend', false);
-        h += '<button class="actionbtn" id="cm-namefriend">🤝 ' +
+        const threshold = FB.relationshipOpinionThreshold();
+        const knownContact = !!FB.friendContacts(s)[c.id];
+        h += '<button class="actionbtn" id="cm-namefriend"' +
+          (canNameFriend ? '' : ' disabled') + '>🤝 ' +
           esc(currentFriend
             ? FB.T('Name {name} as your friend…', { name:c.name })
             : FB.T('Call {name} your friend', { name:c.name })) +
-          '<span class="adesc">' + esc(FB.T(
-            'Bind the canonical friendship used by events and oaths to this character. (spends the day)')) +
+          '<span class="adesc">' + esc(canNameFriend
+            ? FB.T('Bind the canonical friendship used by events and oaths to this character. (spends the day)')
+            : (knownContact
+              ? FB.T('Requires +{threshold} regard; currently {regard}.', {
+                threshold:threshold, regard:signedRelationshipOpinion(c.opinion)
+              })
+              : FB.T('Cultivate this relationship, then reach +{threshold} regard.', {
+                threshold:threshold
+              }))) +
           '</span></button>';
       }
-      h += '<button class="actionbtn" id="cm-gift"' + (s.player.gold < 5 ? ' disabled' : '') + '>' +
+      const giftDays = FB.socialGiftDaysRemaining(s, c.id);
+      const cashGiftOpinion = FBDATA.balance.socialCashGiftOpinion === undefined
+        ? 4 : FBDATA.balance.socialCashGiftOpinion;
+      h += '<button class="actionbtn" id="cm-gift"' +
+        (s.player.gold < 5 || giftDays ? ' disabled' : '') + '>' +
         esc(FB.T('🎁 Send a gift ({money:5})')) +
-        '<span class="adesc">Silver speaks warmly. (spends the day)</span></button>';
+        '<span class="adesc">' + esc(giftDays
+          ? FB.T('Cash and item gifts share a recipient cooldown. Ready in {days} days.', {
+            days:giftDays
+          })
+          : FB.T('Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
+            regard:cashGiftOpinion, days:FB.socialGiftCooldownDays()
+          })) + '</span></button>';
       const isMySpouse = c.spouseId === me.id || c.id === me.spouseId;
       if (isMySpouse) {
         const doc = FB.marriageDoctrine(me.religion);
@@ -5430,21 +5507,27 @@ window.FB = window.FB || {};
             ? '🌷 Begin courtship (abandon your current suit)'
             : '🌷 Begin courtship')) +
           '<span class="adesc">' + esc(FB.T(
-            'Pursue marriage with {name}: court them daily, then propose.',
-            { name: c.name })) + '</span></button>';
+            'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard.',
+            { name:c.name, threshold:FB.relationshipOpinionThreshold() })) + '</span></button>';
         if (FB.stationOf(c) - FB.playerStation(s) > 0) {
           h += '<div class="progressnote">' + esc(FB.T(
             '⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match.',
             { name: c.name })) + '</div>';
         }
       } else if (s.player.courtingId === c.id) {
-        if (Math.round(c.opinion) >= 5) {
+        const proposalThreshold = FB.relationshipOpinionThreshold();
+        if (FB.canPropose(s)) {
           h += '<button class="actionbtn" id="cm-propose">💒 Propose marriage' +
             '<span class="adesc">Ask for their hand. Standing, wealth, and their regard decide.</span></button>';
         } else {
+          h += '<button class="actionbtn" id="cm-propose" disabled>💒 Propose marriage' +
+            '<span class="adesc">' + esc(FB.T(
+              'Locked until +{threshold} regard; currently {regard}.', {
+                threshold:proposalThreshold, regard:signedRelationshipOpinion(c.opinion)
+              })) + '</span></button>';
           h += '<div class="progressnote">' + esc(FB.T(
-            '🌷 You are courting {name}. Win more of their regard (5+) before proposing — the courtship focus works day by day.',
-            { name: c.name })) + '</div>';
+            '🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day.',
+            { name:c.name, threshold:proposalThreshold })) + '</div>';
         }
         h += '<button class="actionbtn" id="cm-breakoff">💔 Break off the courtship' +
           '<span class="adesc">Part ways without a wedding.</span></button>';
@@ -5531,15 +5614,17 @@ window.FB = window.FB || {};
       fn();
       FB.game.passDay({ skipFocus: true });
     }
-    const bf = $('cm-befriend');
-    if (bf) bf.addEventListener('click', function () {
-      actThen(function () {
-        c.opinion = FB.clamp(c.opinion + 4 + Math.floor(FB.skillOf(me, 'dip') / 3), -100, 100);
-        if (FB.noteFriendContact) FB.noteFriendContact(s, c);
-        FB.news(s, FB.msg('news.social.befriended',
-          '{name} warms to your company. (regard {regard})',
-          { name: c.name, regard: Math.round(c.opinion) }));
-      });
+    const cultivate = $('cm-attention');
+    if (cultivate) cultivate.addEventListener('click', function () {
+      if (!FB.socialAttentionAssign(s, c)) return;
+      UI.showCharModal(c.id);
+      UI.refresh();
+    });
+    const stopCultivating = $('cm-attention-stop');
+    if (stopCultivating) stopCultivating.addEventListener('click', function () {
+      if (!FB.socialAttentionWithdraw(s, c.id)) return;
+      UI.showCharModal(c.id);
+      UI.refresh();
     });
     const nameFriend = $('cm-namefriend');
     if (nameFriend) nameFriend.addEventListener('click', function () {
@@ -5551,26 +5636,21 @@ window.FB = window.FB || {};
     });
     const gf = $('cm-gift');
     if (gf) gf.addEventListener('click', function () {
-      actThen(function () {
-        s.player.gold = Math.max(0, s.player.gold - 5);
-        c.opinion = FB.clamp(c.opinion + 12, -100, 100);
-        FB.news(s, FB.msg('news.social.gift',
-          'Your gift pleases {name}. (regard {regard})',
-          { name: c.name, regard: Math.round(c.opinion) }));
-      });
+      if (!FB.giveSocialCashGift(s, c.id)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
     });
     const ct = $('cm-court');
     if (ct) ct.addEventListener('click', function () {
-      actThen(function () {
-        s.player.courtingId = c.id;
-        s.player.flags.courting = 1;
-        s.player.focus = 'court_suitor';
-        FB.news(s, FB.msg('news.social.courting_begins',
-          '🌷 You begin courting {name}.', { name: FB.fullName(c) }));
-      });
+      UI.closeModal();
+      if (!FB.beginCourtship(s, c)) return;
+      FB.news(s, FB.msg('news.social.courting_begins',
+        '🌷 You begin courting {name}.', { name:FB.fullName(c) }));
+      FB.game.passDay({ skipFocus:true });
     });
     const pp = $('cm-propose');
     if (pp) pp.addEventListener('click', function () {
+      if (!FB.canPropose(s)) return;
       UI.closeModal();
       s.eventQueue.push({ id: 'proposal_made', ctx: {} });
       FB.game.passDay({ skipFocus: true });
@@ -5609,12 +5689,7 @@ window.FB = window.FB || {};
     const bo = $('cm-breakoff');
     if (bo) bo.addEventListener('click', function () {
       UI.closeModal();
-      s.player.courtingId = null;
-      delete s.player.flags.courting;
-      c.opinion = FB.clamp(c.opinion - 20, -100, 100);
-      FB.noteRivalContact(s, c, 1, 'broken_courtship');
-      FB.news(s, FB.msg('news.social.courtship_ended',
-        '💔 The courtship of {name} is ended.', { name: c.name }));
+      FB.clearCourtship(s, { penalty:true, news:true });
       FB.validateFocus(s);
       UI.refresh();
     });
@@ -5906,7 +5981,10 @@ window.FB = window.FB || {};
             'Unequip it before selling, gifting, or pledging it.')) + '</span></button>' : '') +
         (assigned ? '' :
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
-        '<span class="adesc">A treasure warms regard as mere silver never could. (spends the day)</span></button>' +
+        '<span class="adesc">' + esc(FB.T(
+          '+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)', {
+            regard:FB.giftOpinion(item), days:FB.socialGiftCooldownDays()
+          })) + '</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
         esc(FB.T('💰 Sell it ({money:gold})', { gold: sell })) +
         '<span class="adesc">Sold is sold — there is no buying it back. (spends the day)</span></button>') +
@@ -5965,6 +6043,9 @@ window.FB = window.FB || {};
       'niecesNephews', 'unclesAunts', 'cousins', 'grandparents']) {
       for (const e of kin[g]) add(e.c, FB.T(e.rel));
     }
+    for (const contact of FB.friendConnections(s)) {
+      add(contact, FB.T('cultivated connection'));
+    }
     for (const role of ['lord', 'priest', 'friend', 'rival']) {
       const relation = role === 'lord' ? FB.T('your lord') :
         (role === 'priest' ? FB.T('your priest') :
@@ -5982,14 +6063,19 @@ window.FB = window.FB || {};
       })) + '</p></div><div class="gm-list">';
     for (const e of folk) {
       const op = Math.round(e.c.opinion);
-      const details = s.roles.lord === e.c.id
+      const giftDays = FB.socialGiftDaysRemaining(s, e.c.id);
+      let details = s.roles.lord === e.c.id
         ? FB.T('{relation} · regard {regard} · your lord’s favor rises with it', {
           relation: e.rel, regard: (op > 0 ? '+' : '') + op
         })
         : FB.T('{relation} · regard {regard}', {
           relation: e.rel, regard: (op > 0 ? '+' : '') + op
         });
-      h += '<button class="actionbtn" data-give="' + e.c.id + '">🎁 ' + esc(FB.fullName(e.c)) +
+      details += giftDays
+        ? FB.T(' · gift ready in {days} days', { days:giftDays })
+        : FB.T(' · gift ready now');
+      h += '<button class="actionbtn" data-give="' + e.c.id + '"' +
+        (giftDays ? ' disabled' : '') + '>🎁 ' + esc(FB.fullName(e.c)) +
         '<span class="adesc ' + FB.opClass(op) + '">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Keep it</button>';

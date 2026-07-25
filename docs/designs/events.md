@@ -72,6 +72,14 @@ and religious idiom. Rivalries can also begin without any event: the seasonal
 contacts and may have a slighted NPC declare a feud on its own, and a non-kin, non-spouse
 rivalry outlives its holder — passing to the heir as a legacy feud ([characters.md](characters.md)).
 
+**Friend events also require a real relationship.** Lazy `{friend}` resolution never
+generates a peer. Without a canonical `state.roles.friend`, it can resolve only the exact
+living, eligible character currently receiving social attention at
+`balance.relationshipOpinionThreshold`. The random `make_friend` story adds that same
+readiness trigger and formalizes that exact person in both visible and autoresolved paths;
+it does not add a second lump of Regard. Other events remain gated by `hasRole:'friend'`
+when they require a canonical friendship.
+
 **Lower-station stories have two paces.** The Old Custom landmark chain starts randomly
 for an adult at tier 0–2, then advances through high-weight stage flags so its five
 chapters unfold across later event slots. Its hearing uses four stat-specific formulas,

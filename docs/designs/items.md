@@ -43,11 +43,14 @@ duplicated. The Man-at-Arms starts in a Plain Ash Spear and Padded Jack; the Hed
 starts with a Well-made Broad Sword and Plain Round Shield.
 
 Item cards render the exact object and show actual quality-adjusted effects, value,
-wearer, and legal actions. Ordinary gifts grant +8/+15/+25 regard by quality; authored
-common/fine/famed heirlooms retain +15/+25/+40. Chronicle messages store a semantic item
-snapshot (`$item`) so a generated name stays localizable after the object leaves the
-armory. The equipment sheet totals the powers that mechanically apply to its wearer and
-shows them beneath the full-body figure; head-only battle and seasonal-resource powers
+wearer, and legal actions. Ordinary Plain/Well-made/Masterwork gifts and authored
+common/fine/famed heirlooms both use `balance.socialItemGiftOpinion` (+4/+8/+12 by
+default). An explicit item gift shares the recipient's
+`balance.socialGiftCooldownDays` clock with an explicit cash gift; council, realm,
+wedding, and authored event gifts do not use that clock. Chronicle messages store a
+semantic item snapshot (`$item`) so a generated name stays localizable after the object
+leaves the armory. The equipment sheet totals the powers that mechanically apply to its
+wearer and shows them beneath the full-body figure; head-only battle and seasonal-resource powers
 are omitted when another household member is shown.
 
 At death, the legend freezes the head's loadout and optional battle/event provenance.

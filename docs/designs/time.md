@@ -20,6 +20,13 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
+Personal social attention is independent of the daily focus. On every ordinary player day,
+`FB.tickSocialAttention` adds the fixed `balance.socialAttentionDailyOpinion` to the
+assigned character's existing Regard, including a day filled by an instant deed. It does
+not tick in Observe mode or while `player.travel` is active. The removed `court_suitor`
+focus is accepted only as old-save input: restore converts it to attention on the current
+suitor and selects a normal valid focus.
+
 The campaign's origin is saved as
 `state.start:{id,year,season,day}` and its current calendar remains
 `state.date:{year,season,day}`. New lives copy both from the selected bookmark; old
@@ -87,7 +94,8 @@ default. The enterprise specifically staffed by the traveling player produces
 nothing, while other household work, enterprises, contracts, pregnancy, aging,
 armies, and world simulation continue. Travel arrivals queue their own encounters;
 ordinary random home slot events are consumed but suppressed until the traveler is
-home or settled.
+home or settled. Personal social attention is paused for every travel day; a permanent
+move clears local cultivated relationships, an active courtship, and its assignment.
 
 For an independent count or higher, season boundaries also run
 `FB.tickForeignPolicy`. Saved Improve/Provoke assignments adjust neighboring sovereigns’

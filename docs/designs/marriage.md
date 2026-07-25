@@ -11,6 +11,15 @@ current protagonist may create a royal compact, and only one such compact may be
 at once; adulthood, sex, kinship, doctrine, courtship, proposal, and spouse capacity
 remain the standard gates.
 
+Every ordinary, matchmade, or royal courtship assigns the player's one
+`player.socialAttention` slot to that suitor while leaving the normal work/study focus
+alone. A proposal is unavailable until the suitor reaches the shared
+`balance.relationshipOpinionThreshold` (+40 by default); after that readiness gate, the
+existing proposal probability still weighs Regard, prestige, station, traits, and royal
+realm opinion. Starting another suit ends the former one with −20 Regard and records the
+same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
+and permanent-relocation cleanup release the assignment.
+
 Marriage to any listed child forms a dynastic tie, but only the visibly designated heir
 currently transmits the crown. The spouse succeeds first. Shared children form that
 spouse's branch, and if the spouse dies they retain the branch's place before royal

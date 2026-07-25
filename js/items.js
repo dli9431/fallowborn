@@ -843,10 +843,14 @@ window.FB = window.FB || {};
   FB.giftOpinion = function (value) {
     const item = value && value.def ? value : null;
     const def = item ? item.def : value;
+    const values = FBDATA.balance.socialItemGiftOpinion || [4, 8, 12];
+    let tier = 0;
     if (item && item.ordinary) {
-      return { plain:8, well:15, masterwork:25 }[item.quality] || 8;
+      tier = { plain:0, well:1, masterwork:2 }[item.quality] || 0;
+    } else {
+      tier = { common:0, fine:1, famed:2 }[def && def.rarity] || 0;
     }
-    return { common:15, fine:25, famed:40 }[def && def.rarity] || 15;
+    return values[tier] === undefined ? [4, 8, 12][tier] : values[tier];
   };
 
   FB.sellItem = function (state, ref) {
@@ -867,10 +871,12 @@ window.FB = window.FB || {};
     const c = state.chars[cid];
     if (!item || !c || c.dead || state.player.items.indexOf(ref) < 0 ||
       loanPledgesRef(state, ref) || assignmentForRaw(state, ref) ||
-      FB.isHouseholdCharacter(state, cid)) return false;
+      FB.isHouseholdCharacter(state, cid) ||
+      (FB.socialGiftReady && !FB.socialGiftReady(state, cid))) return false;
     const boost = FB.giftOpinion(item);
     if (!FB.transferItem(state, ref, cid)) return false;
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
+    if (FB.noteSocialGift) FB.noteSocialGift(state, cid);
     if (state.roles.lord === cid) {
       state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) + boost, -100, 100);
     }

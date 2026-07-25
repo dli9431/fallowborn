@@ -5,6 +5,15 @@ window.FB = window.FB || {};
   'use strict';
 
   /* ---------- supporting cast (roles) ---------- */
+  FB.relationshipOpinionThreshold = function () {
+    const b = FBDATA.balance;
+    if (b.relationshipOpinionThreshold !== undefined) {
+      return b.relationshipOpinionThreshold;
+    }
+    /* Deprecated compatibility key for older data sets and mods. */
+    return b.friendOpinionThreshold === undefined ? 40 : b.friendOpinionThreshold;
+  };
+
   FB.friendContacts = function (state) {
     const p = state.player;
     if (!p.friendContacts || typeof p.friendContacts !== 'object' ||
@@ -27,6 +36,7 @@ window.FB = window.FB || {};
     const kin = FB.kinOf ? FB.kinOf(state).byId : {};
     return !kin[c.id];
   }
+  FB.friendContactEligible = friendEligible;
 
   FB.noteFriendContact = function (state, c) {
     if (!friendEligible(state, c)) return false;
@@ -39,10 +49,185 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* ---------- personal social attention ----------
+     Regard remains the only relationship score. This life-local assignment
+     merely says whose regard receives the fixed daily cultivation rate. */
+  FB.socialAttentionCapacity = function () {
+    const value = FBDATA.balance.socialAttentionCapacity;
+    return Math.max(0, value === undefined ? 1 : Math.floor(value));
+  };
+
+  FB.socialAttentionEnsure = function (state) {
+    const p = state.player;
+    if (!p.socialAttention || typeof p.socialAttention !== 'object' ||
+      Array.isArray(p.socialAttention)) p.socialAttention = {};
+
+    /* Old saves may still be spending their whole day on the removed
+       courtship focus. Convert that intent once, then choose ordinary work. */
+    if (p.focus === 'court_suitor') {
+      const suitor = p.courtingId && state.chars[p.courtingId];
+      p.socialAttention = {};
+      if (suitor && !suitor.dead && suitor.id !== p.charId &&
+        FB.socialAttentionCapacity() > 0) {
+        p.socialAttention[suitor.id] = {
+          startedTurn:state.turn,
+          lastTurn:state.turn
+        };
+        FB.noteFriendContact(state, suitor);
+      }
+      p.focus = null;
+      if (FB.defaultFocus) p.focus = FB.defaultFocus(state);
+    }
+
+    const activeSuitor = p.courtingId && state.chars[p.courtingId];
+    if (p.courtingId && (!activeSuitor || activeSuitor.dead)) {
+      p.courtingId = null;
+      delete p.flags.courting;
+    }
+
+    const valid = [];
+    const courtId = p.courtingId;
+    if (courtId && p.socialAttention[courtId]) valid.push(courtId);
+    for (const id in p.socialAttention) {
+      if (id !== courtId) valid.push(id);
+    }
+    const capacity = FB.socialAttentionCapacity();
+    let kept = 0;
+    for (let i = 0; i < valid.length; i++) {
+      const id = valid[i];
+      const c = state.chars[id];
+      if (!c || c.dead || id === p.charId || kept >= capacity) {
+        delete p.socialAttention[id];
+        continue;
+      }
+      const record = p.socialAttention[id];
+      if (!record || typeof record !== 'object') {
+        p.socialAttention[id] = { startedTurn:state.turn, lastTurn:state.turn };
+      }
+      kept++;
+    }
+    return p.socialAttention;
+  };
+
+  FB.socialAttentionIds = function (state) {
+    const attention = FB.socialAttentionEnsure(state);
+    return Object.keys(attention);
+  };
+
+  FB.socialAttentionTarget = function (state) {
+    const ids = FB.socialAttentionIds(state);
+    return ids.length ? state.chars[ids[0]] : null;
+  };
+
+  FB.socialAttentionAssign = function (state, c, opts) {
+    opts = opts || {};
+    const p = state.player;
+    if (!c || c.dead || c.id === p.charId || !FB.socialAttentionCapacity()) return false;
+    const attention = FB.socialAttentionEnsure(state);
+    if (p.courtingId && p.courtingId !== c.id && !opts.courtship) return false;
+    if (attention[c.id]) {
+      attention[c.id].lastTurn = state.turn;
+      FB.noteFriendContact(state, c);
+      return true;
+    }
+    /* The shipped capacity is one: choosing a new person redirects the
+       assignment immediately and costs no day. */
+    for (const id in attention) delete attention[id];
+    attention[c.id] = { startedTurn:state.turn, lastTurn:state.turn };
+    FB.noteFriendContact(state, c);
+    return true;
+  };
+
+  FB.socialAttentionWithdraw = function (state, cid, force) {
+    const p = state.player;
+    const attention = FB.socialAttentionEnsure(state);
+    if (p.courtingId === cid && !force) return false;
+    if (!attention[cid]) return false;
+    delete attention[cid];
+    return true;
+  };
+
+  FB.socialAttentionClear = function (state) {
+    state.player.socialAttention = {};
+  };
+
+  FB.socialAttentionDailyOpinion = function () {
+    const value = FBDATA.balance.socialAttentionDailyOpinion;
+    return value === undefined ? 0.2 : value;
+  };
+
+  FB.socialAttentionDaysToThreshold = function (state, c) {
+    const rate = FB.socialAttentionDailyOpinion();
+    const need = FB.relationshipOpinionThreshold() - (c ? c.opinion : 0);
+    if (need <= 0) return 0;
+    if (rate <= 0) return null;
+    return Math.max(0, Math.ceil(need / rate - 0.000000001));
+  };
+
+  FB.tickSocialAttention = function (state) {
+    const rate = FB.socialAttentionDailyOpinion();
+    if (rate === 0) return;
+    const ids = FB.socialAttentionIds(state);
+    for (let i = 0; i < ids.length; i++) {
+      const c = state.chars[ids[i]];
+      if (!c || c.dead) continue;
+      c.opinion = FB.clamp(c.opinion + rate, -100, 100);
+      state.player.socialAttention[c.id].lastTurn = state.turn;
+    }
+  };
+
+  /* Cash and item gifts share one per-recipient, current-life clock. Authored
+     event, council, realm, and wedding gifts do not call this API. */
+  FB.socialGiftTurns = function (state) {
+    const p = state.player;
+    if (!p.socialGiftTurns || typeof p.socialGiftTurns !== 'object' ||
+      Array.isArray(p.socialGiftTurns)) p.socialGiftTurns = {};
+    for (const id in p.socialGiftTurns) {
+      const c = state.chars[id];
+      if (!c || c.dead || id === p.charId) delete p.socialGiftTurns[id];
+    }
+    return p.socialGiftTurns;
+  };
+
+  FB.socialGiftCooldownDays = function () {
+    const value = FBDATA.balance.socialGiftCooldownDays;
+    return value === undefined ? 90 : Math.max(0, value);
+  };
+
+  FB.socialGiftDaysRemaining = function (state, cid) {
+    const turns = FB.socialGiftTurns(state);
+    if (turns[cid] === undefined) return 0;
+    return Math.max(0, FB.socialGiftCooldownDays() - (state.turn - turns[cid]));
+  };
+
+  FB.socialGiftReady = function (state, cid) {
+    return FB.socialGiftDaysRemaining(state, cid) <= 0;
+  };
+
+  FB.noteSocialGift = function (state, cid) {
+    FB.socialGiftTurns(state)[cid] = state.turn;
+  };
+
+  FB.giveSocialCashGift = function (state, cid) {
+    const p = state.player;
+    const c = state.chars[cid];
+    const cost = 5;
+    if (!c || c.dead || c.id === p.charId || p.gold < cost ||
+      !FB.socialGiftReady(state, cid)) return false;
+    const value = FBDATA.balance.socialCashGiftOpinion;
+    const boost = value === undefined ? 4 : value;
+    p.gold -= cost;
+    c.opinion = FB.clamp(c.opinion + boost, -100, 100);
+    FB.noteSocialGift(state, cid);
+    FB.news(state, FB.msg('news.social.gift',
+      'Your gift pleases {name}. (regard {regard})',
+      { name:c.name, regard:Math.round(c.opinion) }));
+    return true;
+  };
+
   FB.friendCandidate = function (state, anyWarmContact) {
     const threshold = anyWarmContact ? 0 :
-      (FBDATA.balance.friendOpinionThreshold === undefined
-        ? 40 : FBDATA.balance.friendOpinionThreshold);
+      FB.relationshipOpinionThreshold();
     const contacts = FB.friendContacts(state);
     const out = [];
     for (const id in contacts) {
@@ -60,8 +245,7 @@ window.FB = window.FB || {};
 
   FB.canNameFriend = function (state, c) {
     const contacts = FB.friendContacts(state);
-    const threshold = FBDATA.balance.friendOpinionThreshold === undefined
-      ? 40 : FBDATA.balance.friendOpinionThreshold;
+    const threshold = FB.relationshipOpinionThreshold();
     return !!(friendEligible(state, c) && contacts[c.id] && c.opinion >= threshold &&
       state.roles.friend !== c.id);
   };
@@ -71,6 +255,7 @@ window.FB = window.FB || {};
     const formerId = state.roles.friend;
     if (formerId && formerId !== c.id) delete state.player.flags.sworn_friend;
     state.roles.friend = c.id;
+    FB.socialAttentionWithdraw(state, c.id, true);
     FB.news(state, FB.msg('news.social.friend_named',
       '🤝 You and {name} now call one another friend.', { name:c.name }));
     return true;
@@ -93,6 +278,24 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.attentionFriendCandidate = function (state) {
+    const known = FB.socialAttentionTarget(state);
+    if (!known || !friendEligible(state, known) ||
+      known.opinion < FB.relationshipOpinionThreshold()) return null;
+    return known;
+  };
+
+  FB.formalizeAttentionFriend = function (state) {
+    const current = state.roles.friend && state.chars[state.roles.friend];
+    if (current && !current.dead) return current;
+    if (state.roles.friend) delete state.player.flags.sworn_friend;
+    const known = FB.attentionFriendCandidate(state);
+    if (!known) return null;
+    state.roles.friend = known.id;
+    FB.socialAttentionWithdraw(state, known.id, true);
+    return known;
+  };
+
   FB.getRole = function (state, role, create) {
     if (role === 'spouse') {
       return FB.spouseOf(state, state.chars[state.player.charId]);
@@ -105,27 +308,22 @@ window.FB = window.FB || {};
     if (!create) return null;
     if (role === 'friend') {
       if (id) delete state.player.flags.sworn_friend;
-      /* A friendship story can deepen any cultivated warm connection;
-         explicit player naming still requires the configured threshold. */
-      const known = FB.friendCandidate(state, true);
-      if (known) {
-        state.roles.friend = known.id;
-        return known;
-      }
+      /* Lazy story resolution may see only the exact person currently
+         receiving attention at the shared threshold, never a stranger. */
+      return FB.attentionFriendCandidate(state);
     }
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
     let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
     if (role === 'lord') { opts.quality = 4; opts.sex = 'm'; opts.dyn = 'of ' + pr.name; opts.station = 3; }
     else if (role === 'priest') { opts.quality = 2; opts.sex = 'm'; opts.born = state.date.year - FB.ri(30, 60); opts.station = 1; }
-    else if (role === 'friend' || role === 'rival') {
+    else if (role === 'rival') {
       opts.born = state.date.year - FB.clamp(FB.ageOf(me, state.date.year) + FB.ri(-8, 8), 16, 70);
-      opts.opinion = role === 'friend' ? 30 : -25;
+      opts.opinion = -25;
       opts.station = Math.min(FB.playerStation(state), 3); // friends and rivals are peers
     }
     const c = FB.makeCharacter(state, opts);
     state.roles[role] = c.id;
-    if (role === 'friend') FB.noteFriendContact(state, c);
     return c;
   };
 
@@ -370,12 +568,49 @@ window.FB = window.FB || {};
     FB.promoteSpouse(state);
   };
 
+  FB.clearCourtship = function (state, opts) {
+    opts = opts || {};
+    const p = state.player;
+    const c = p.courtingId ? state.chars[p.courtingId] : null;
+    if (c) FB.socialAttentionWithdraw(state, c.id, true);
+    p.courtingId = null;
+    delete p.flags.courting;
+    if (c && !c.dead && opts.penalty) {
+      c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+      FB.noteRivalContact(state, c, 1, 'broken_courtship');
+    }
+    if (c && opts.news) {
+      FB.news(state, FB.msg('news.social.courtship_ended',
+        '💔 The courtship of {name} is ended.', { name:c.name }));
+    }
+    return c;
+  };
+
+  FB.beginCourtship = function (state, c) {
+    const p = state.player;
+    if (!c || c.dead || c.id === p.charId || !FB.socialAttentionCapacity()) return false;
+    if (p.courtingId && p.courtingId !== c.id) {
+      /* Redirecting a suit carries the same slight as a deliberate breakoff. */
+      FB.clearCourtship(state, { penalty:true, news:true });
+    }
+    p.courtingId = c.id;
+    p.flags.courting = 1;
+    return FB.socialAttentionAssign(state, c, { courtship:true });
+  };
+
+  FB.canPropose = function (state) {
+    const p = state.player;
+    const c = p.flags.courting && p.courtingId && state.chars[p.courtingId];
+    return !!(c && !c.dead && c.opinion >= FB.relationshipOpinionThreshold());
+  };
+
   /* The one true way to kill a character: severs marriage links and roles.
      A death also unmakes any betrothal, and a dowry settled at the pledge
      but not yet wed for returns to the player's coffers. */
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
     const me = state.chars[state.player.charId];
+    FB.socialAttentionWithdraw(state, c.id, true);
     if (state.roles.friend === c.id) FB.clearFriendship(state, false);
     if (FB.removeRetainer && FB.retainerRecord && FB.retainerRecord(state, c.id)) {
       FB.removeRetainer(state, c.id, 'death');
@@ -403,10 +638,7 @@ window.FB = window.FB || {};
     for (const r in state.roles) {
       if (state.roles[r] === c.id) delete state.roles[r];
     }
-    if (state.player.courtingId === c.id) {
-      state.player.courtingId = null;
-      delete state.player.flags.courting;
-    }
+    if (state.player.courtingId === c.id) FB.clearCourtship(state);
   };
 
   /* Can the player begin courting this character? */
@@ -1006,6 +1238,7 @@ window.FB = window.FB || {};
   FB.prepareEvent = function (state, ev, ctx) {
     /* Preserve the pre-i18n RNG/materialization order: title, body, explicit
        card, then every role mentioned anywhere in visible event prose. */
+    if (ev.id === 'make_friend') FB.formalizeAttentionFriend(state);
     materializeTextRoles(state, ev.title, ctx);
     materializeTextRoles(state, ev.text, ctx);
     if (ev.charCard) FB.getRole(state, ev.charCard, ev.charCard !== 'rival');
@@ -1780,10 +2013,7 @@ window.FB = window.FB || {};
       if (FB.issueItem) FB.issueItem(state, fx.giveItem);
     }
     if (fx.marry) FB.doMarry(state);
-    if (fx.clearSuitor) {
-      p.courtingId = null;
-      delete p.flags.courting;
-    }
+    if (fx.clearSuitor) FB.clearCourtship(state);
     if (fx.adoptChild) {
       const baby = FB.makeCharacter(state, {
         culture: me.culture, religion: me.religion, born: state.date.year,
@@ -1862,6 +2092,7 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    FB.socialAttentionWithdraw(state, s.id, true);
     /* Marriage makes a retainer resident family: end the paid office before
        the ordinary spouse livelihood and household rules take over. */
     if (FB.retainerRecord && FB.retainerRecord(state, s.id) && FB.removeRetainer) {
@@ -1963,6 +2194,17 @@ window.FB = window.FB || {};
      The wed_* pair only fires for spouses that carry an explicit station —
      spouses from older saves stay silent rather than guessing. */
   FB.fns = FB.fns || {};
+  FB.fns.begin_courtship = function (state) {
+    const su = FB.getRole(state, 'suitor', false);
+    return !!su && FB.beginCourtship(state, su);
+  };
+  FB.fns.formalize_attention_friend = function (state) {
+    return !!FB.formalizeAttentionFriend(state);
+  };
+  FB.fns.friendship_kindled_ready = function (state) {
+    const c = FB.attentionFriendCandidate(state);
+    return !!(c && state.roles.friend !== c.id);
+  };
   FB.fns.suitor_above_station = function (state) {
     const su = FB.getRole(state, 'suitor');
     return !!su && FB.stationOf(su) > FB.playerStation(state);

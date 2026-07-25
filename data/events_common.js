@@ -20,7 +20,7 @@ FBDATA.events.push(
   text:'Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made.',
   trigger:{ never:true }, /* fired by the "Seek a match" action */
   options:[
-    { label:'Pursue this match.', desc:'Court them daily until their regard is won.', effects:{ setFlag:'courting', focusSet:'court_suitor' } },
+    { label:'Pursue this match.', desc:'Give them your personal attention until their regard is won.', effects:{ custom:'begin_courtship' } },
     { label:'Not this one.', desc:'Not every road to fortune needs taking.', effects:{ clearSuitor:true } }
   ]},
 { id:'proposal_made', title:'The Question Is Asked', charCard:'suitor',
@@ -212,10 +212,10 @@ FBDATA.events.push(
 
 /* ---------- friends & rivals ---------- */
 { id:'make_friend', title:'A Friendship Kindled',
-  trigger:{ chance:0.15, noRole:'friend' }, weight:6,
+  trigger:{ chance:0.15, noRole:'friend', custom:'friendship_kindled_ready' }, weight:6,
   text:{ default:'Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood.',
     muslim:'Long hours shared with {friend} — work, jokes, a water-skin passed back and forth — have become something like brotherhood.' },
-  options:[ { label:'A friend is rare wealth.', desc:'Hold fast; such luck does not come twice.', effects:{ opinion:{role:'friend', amt:40} } } ]},
+  options:[ { label:'A friend is rare wealth.', desc:'Hold fast; such luck does not come twice.', effects:{ custom:'formalize_attention_friend' } } ]},
 { id:'make_rival', title:'Bad Blood',
   trigger:{ never:true },
   text:'The old injury has found a name. Before neighbors and kin, {rival} declares that no friendship stands between your houses and that every slight will be answered.',

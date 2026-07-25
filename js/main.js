@@ -778,6 +778,7 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
         items: [], loadouts: {}, itemMigration: 1,
@@ -914,6 +915,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, focus: null, dead: false, holdings: [],
         items: [], loadouts: {}, itemMigration: 1,
@@ -971,6 +973,7 @@ window.FB = window.FB || {};
     if (!G.observe && !p.travel) {
       if (!(opts && opts.skipFocus)) FB.tickFocus(s);
       else FB.validateFocus(s);
+      FB.tickSocialAttention(s);
     }
 
     // advance date: 90-day seasons, 360-day years
@@ -1731,6 +1734,8 @@ window.FB = window.FB || {};
     FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
     p.courtingId = null;
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
+    p.socialAttention = {};
+    p.socialGiftTurns = {};
     p.plot = null; // plots die with their plotter
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};
