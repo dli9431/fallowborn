@@ -32,6 +32,12 @@ the Menu, Automation, and end-game dialogs (`.fullsheet-modal`) fill the whole s
 edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, centered
 `.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
 footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
+Desktop scroll containers share narrow, rounded bronze thumbs over transparent tracks so
+panels, sheets, lists, and modals retain the parchment styling without prominent scrollbars.
+Touch devices keep their platform-native overlay scrolling.
+The title screen scales its crest, heading, button height, gaps, and footer spacing against
+viewport height so the full menu fits common standalone and itch iframe heights; genuinely
+short viewports retain `.screen` scrolling as the fallback.
 Hover-only affordances need a tap path (item chips toast their description).
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows

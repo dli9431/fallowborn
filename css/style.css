@@ -11,6 +11,22 @@ body {
   line-height: 1.45;
   font-variant-numeric: tabular-nums; /* digits share a width: no layout wobble as counters run */
 }
+/* Desktop scrollbars stay narrow and recede into the parchment chrome.
+   Touch devices retain their platform-native overlay scrolling. */
+@media (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(122,98,52,.68) transparent;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    min-height: 28px; border: 2px solid transparent; border-radius: 999px;
+    background: rgba(122,98,52,.68); background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(201,162,74,.78); }
+  *::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
+}
 button, select { font-family: inherit; }
 /* touch-action kills the double-tap-zoom delay; buttons are chrome, not text */
 button, .tab, .traitchip, .charrow, .toast {
@@ -80,6 +96,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .bigbtn:hover { filter: brightness(1.2); }
 .bigbtn:disabled { opacity: .45; cursor: default; }
+
+/* The hosted title often lives in a short iframe. Scale its vertical rhythm
+   with the viewport so the complete menu normally fits without scrolling. */
+#title { padding-block: clamp(10px, 2vh, 20px); }
+#title #titlecrest { width: clamp(78px, 12vh, 120px); height: auto; }
+#title .gametitle {
+  font-size: clamp(36px, 7vh, 60px);
+  line-height: 1.1; margin-bottom: clamp(2px, 1vh, 8px);
+}
+#title .subtitle { margin-bottom: clamp(10px, 2.5vh, 26px); }
+#title .modnote { margin: -8px 0 clamp(8px, 2vh, 18px); }
+#title .menubtns { gap: clamp(5px, 1.3vh, 12px); }
+#title .bigbtn {
+  min-height: clamp(38px, 5.5vh, 48px);
+  padding: clamp(6px, 1.2vh, 13px) 22px;
+  font-size: clamp(15px, 2.1vh, 17px);
+}
+#title .credits { margin-top: clamp(10px, 3vh, 30px); }
+
 .btn {
   background: #33291d; color: #e0d0a8; border: 1px solid #66522f; border-radius: 6px;
   padding: 9px 14px; font-size: 14px; cursor: pointer; min-height: 40px;

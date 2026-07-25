@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.2';
+  FB.VERSION = '1.54.3';
   FB.CHANGELOG = [
+    { v: '1.54.3', date: '2026-07-25', changes: [
+      'Desktop scrollbars now use slim bronze styling throughout the game.',
+      'The title screen now compacts itself to fit common browser and itch iframe heights without unnecessary scrolling.'
+    ] },
     { v: '1.54.2', date: '2026-07-25', changes: [
       'Equipment figures now align boots with legs and place hands around one- and two-handed weapon grips.',
       'Equipment slot pickers now open over the equipment sheet and apply selections without a second confirmation.'
