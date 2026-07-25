@@ -33,6 +33,10 @@ Observe mode. A legacy `{year,...}` entry is due on Spring day 1 and retains its
 existing flag and durable-message keys. Entries with `season` or `day` must also
 have a stable `id`; their once-only flag and message identity combine that id with
 the bookmark id, allowing exact dates without array-position identities.
+The same daily post-calendar phase runs `FB.religiousHeadRecoveryTick`. It is inert
+without an eligible vacancy; once a saved vacancy is 360 days old it can restore a
+qualified AI-controlled seat or assign the strongest eligible AI claimant in stable
+order, including in Observe mode.
 
 At a season boundary the household receives normal income, pays station and resident-family
 upkeep, collects livelihood wages, and pays each active school term. Unaffordable schooling

@@ -3,10 +3,20 @@
 Religious-head state is additive and keeps save version 3.
 `state.religiousHeads` maps an exact religion id to a realm id or to `null` for an
 explicit vacancy. New games seed missing entries from optional
-`FBDATA.religions[id].head.realm` metadata. `FB.ensureReligiousHeads` performs the same
-own-key repair on restore, so it adds the Papacy and Abbasid defaults to older saves
-without overwriting a vacancy, a later reassignment, or a mapping whose realm has died.
-The ordinary JSON snapshot/export round trip preserves the mapping unchanged.
+`bookmark.religiousHeads`, falling back to `FBDATA.religions[id].head.realm`; this lets
+867 and 1066 use different canonical realm ids. `state.religiousHeadVacancies` maps a
+vacant exact religion id to `{turn,formerHolder}`, where `formerHolder` is the old realm
+id. The turn gates delayed AI recovery and is never reset by repeated cleanup.
+
+`FB.ensureReligiousHeads` performs additive repair on restore. It preserves a living
+assignment, explicit vacancy, or later reassignment; adds a bookmark-aware default when
+the key is absent; and repairs the specific old-1066 signature where the missing global
+867 default was saved instead of the living bookmark realm. Any other mapping to a
+missing/dead realm silently becomes a saved vacancy stamped at the current turn. Realm
+death performs the same conversion before the realm is marked dead and emits the notice
+once. The ordinary JSON
+snapshot/export round trip preserves both maps unchanged, so an unresolved vacancy can
+persist indefinitely without raising save version 3.
 
 Player title snapshots may add `headReligion` and `headTitle`. The former selects the
 stable religion-owned catalog key and the latter is its English fallback, so save-slot

@@ -25,6 +25,9 @@ province snapshot in `data/bookmarks.js`. Province ids endure across bookmarks w
 the county seed represents the same place; an id is never reassigned to a different
 place. Each definition also owns its terrain, culture, faith, development, de jure
 duchy, owner, straits, realms, hierarchy, and scripted history.
+It may also map exact centralized faith offices to bookmark-local realm ids through
+`religiousHeads`; activation validates those ids against both the religion table and
+the bookmark's authored realms.
 
 The authored coastline, inland seas, rivers, and projection bounds are shared because
 the physical map window is the same. `FB.activateBookmark` validates the complete

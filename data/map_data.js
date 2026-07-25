@@ -939,6 +939,14 @@ FBDATA.balance = {
   foreignPolicyBase: 1, foreignPolicyDipCap: 1,
   foreignOpinionEnvoyDivisor: 400,
   foreignOpinionAttackMin: 0.25, foreignOpinionAttackMax: 2,
+  /* centralized religious offices: condemnation, reconciliation, and
+     player/AI recovery after a saved vacancy */
+  religiousHeadWarOpinion: -40, religiousHeadWarPietyRetained: 0,
+  religiousHeadAbsolutionGold: 100, religiousHeadAbsolutionPiety: 100,
+  religiousHeadAbsolutionOpinion: 20,
+  religiousHeadRestorePiety: 200, religiousHeadRestorePrestige: 150,
+  religiousHeadRestoreOpinion: 15, religiousHeadVacancyDays: 360,
+  religiousHeadClaimPrestige: 500, religiousHeadClaimPiety: 300,
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
   /* domain limit: counties the player may hold DIRECTLY before overload.

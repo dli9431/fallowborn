@@ -18,6 +18,30 @@ and its vassal hierarchy intact. Defeat does not consume the right. Independence
 its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
 store only a descriptive `border` cause.
 
+## War against a religious head
+
+`FB.sameFaithHeadWarPolicy` is the shared target check. It reads the exact attacker's
+religion, the live office assignment, and `religion.head.sameFaithWar`; it never matches
+realm names. Catholic player causes against the active Papacy remain legal when an
+ordinary de jure, fabricated, or restoration cause exists, but the picker marks them
+as sacrilege and opens a second confirmation. Canceling that confirmation changes no
+state. Confirming starts the selected war, reduces current piety to zero, applies -40
+opinion from every living Catholic realm, and adds the ruler's `excommunicated` trait.
+
+Excommunication is visible on the ruler sheet and blocks the Seek a blessing deed.
+Once the player is at peace and a living Pope holds the office, Seek absolution spends
+100 gold and 100 piety, removes the trait, and restores 20 Catholic-realm opinion.
+The sentence is personal and does not pass to the next protagonist. If the Papacy was
+destroyed, restoring it also clears the restorer's sentence.
+
+AI ordinary border-war selection rejects an active Papacy when the attacker is
+Catholic. Resolution of an already-running or broader same-faith war also filters
+Papal counties out of `FB.borderProvince`, protecting a Papal vassal subtree without
+protecting its whole secular overlord. Non-Catholic attackers and religions whose
+policy is `ordinary` remain unrestricted. Conquest transfers only the besieged county:
+even the last county creates an explicit office vacancy through the realm-death
+boundary and never grants the religious office or defeated crown.
+
 Each sovereign may participate in only one active war. `FB.isRealmAtWar` treats both
 endpoints as occupied, including both sides of `player.war`; declarations, breakaways,
 independence, and fealty/defection conflicts wait until every affected sovereign is at

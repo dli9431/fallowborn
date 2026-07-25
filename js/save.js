@@ -165,7 +165,8 @@ window.FB = window.FB || {};
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
     /* Save format 3 remains stable: missing religious-office assignments gain
-       data defaults, while own null vacancies and changed holders persist. */
+       bookmark-aware defaults; vacancies gain additive turn/former-holder
+       metadata, while own null vacancies and changed holders persist. */
     if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(FB.state);
     backfillParents(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);

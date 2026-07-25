@@ -331,6 +331,7 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
       "name": "My Start",
       "desc": "A complete alternate world.",
       "date": { "year": 1000, "season": 0, "day": 1 },
+      "religiousHeads": { "catholic": "my_papacy", "sunni": "my_caliphate" },
       "provinces": [ "...every province object..." ],
       "realms": [ "...every authored realm object..." ],
       "duchies": { "...": { "name": "...", "kingdom": "..." } },
@@ -345,9 +346,13 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
 
 Activation rejects a bookmark with duplicate ids; missing or cyclic lieges; missing
 capitals; invalid province realm/de-jure/culture/faith references; development outside
-1–10; broken straits; or invalid scripted targets. Bookmark ids use letters, digits,
-and underscores. Preserve an existing county id when it still denotes the same place;
-give genuinely different geography a new stable id, and never recycle a retired id.
+1–10; broken straits; or invalid scripted targets. `religiousHeads` is optional; when
+present it is an exact religion-id to authored-realm-id map. Every faith must define
+`religion.head`, and every mapped realm must exist in this complete bookmark. Omitting
+the map falls back to each faith's global `head.realm`, which is suitable only when the
+same realm id exists in every bookmark. Bookmark ids use letters, digits, and
+underscores. Preserve an existing county id when it still denotes the same place; give
+genuinely different geography a new stable id, and never recycle a retired id.
 
 A legacy mod that changes `provinces`, `realms`, `empires`, `kingdoms`, `duchies`,
 `straits`, `scripted`, `land`, `seas`, or `bounds` without supplying a complete
@@ -1028,16 +1033,45 @@ office:
 ```json
 { "catholic": {
   "name": "Latin Christianity", "group": "christian", "icon": "✝",
-  "head": { "realm": "papacy", "title": "Pope" }
+  "head": {
+    "realm": "papacy",
+    "title": "Pope",
+    "recovery": "grant_seat",
+    "seat": "roma",
+    "restoredRank": 3,
+    "sameFaithWar": "sacrilege"
+  }
 } }
 ```
 
-`head.realm` is the initial realm id used when that religion has no own entry in
-saved `state.religiousHeads`; `head.title` is localized pure-display text. The live
+`head.realm` is the global initial/canonical realm fallback when the active bookmark has
+no `religiousHeads[religionId]`; `head.title` is localized pure-display text. The live
 mapping is saved independently, may be reassigned to another realm, and may be
-explicitly vacant with `null`. It is never inferred from the realm's capital faith or
-territorial rank, and absorbing the holder's realm does not make the office hereditary.
-Religions without `head` metadata have no centralized office.
+explicitly vacant with `null`. `state.religiousHeadVacancies[religionId]` then records
+`{"turn":1234,"formerHolder":"papacy"}`. It is never inferred from capital faith or
+territorial rank, and absorbing or conquering the holder never makes the office
+hereditary. Religions without `head` metadata have no centralized office.
+
+`head.recovery` is `grant_seat` or `claim`. A `grant_seat` office requires `seat` and
+may set `restoredRank` (default 3); recovery grants that county to a fresh independent
+copy of the bookmark's canonical realm. A `claim` office supplies alternative complete
+county sets in `claimCounties`, for example:
+
+```json
+{ "head": {
+  "realm": "abbasid",
+  "title": "Caliph",
+  "recovery": "claim",
+  "claimCounties": [ ["baghdad"], ["mecca", "medina"] ],
+  "sameFaithWar": "ordinary"
+} }
+```
+
+Each inner array is one sufficient alternative. Core player/AI rank and resource gates
+remain engine rules; claiming attaches the office to an existing realm without moving
+land. `sameFaithWar` is `ordinary` or `sacrilege`. Core `sacrilege` policy leaves player
+causes legal behind a second confirmation, blocks ordinary same-faith AI selection, and
+protects the office realm's counties from incidental same-faith AI captures.
 
 Core and custom systems should query `FB.religiousHeadOf(state, religionId)`,
 `FB.religionsHeadedBy(state, realmId)`, or
@@ -1046,8 +1080,21 @@ Core and custom systems should query `FB.religiousHeadOf(state, religionId)`,
 exact religion ids, not broad religion groups. Generic rank words remain in
 `FBDATA.titles`; in core data, Muslim tier 7 is Great Sultan/Great Sultana because
 Caliph is reserved for the Sunni office.
+Realm-death and recovery code should use `FB.markRealmDead`,
+`FB.vacateReligiousHeads`, `FB.assignReligiousHead`,
+`FB.canRestoreReligiousHead` / `FB.restoreReligiousHead`, and
+`FB.canClaimReligiousHead` / `FB.claimReligiousHead` so assignments, vacancy clocks,
+and durable notices remain consistent.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+Religious-office tuning uses `religiousHeadWarOpinion`,
+`religiousHeadWarPietyRetained`, `religiousHeadAbsolutionGold`,
+`religiousHeadAbsolutionPiety`, `religiousHeadAbsolutionOpinion`,
+`religiousHeadRestorePiety`, `religiousHeadRestorePrestige`,
+`religiousHeadRestoreOpinion`, `religiousHeadVacancyDays`,
+`religiousHeadClaimPrestige`, and `religiousHeadClaimPiety`.
+`religiousHeadWarPietyRetained` is a multiplier on the attacker's current piety
+(the core value `0` forfeits it all); the opinion fields are signed changes.
 The top-level `currency` presentation schema is documented above. The deprecated
 `balance.coinageSymbol` alias changes only the topbar purse icon when no full currency
 definition is active; it never renames internal gold or alters amounts, costs, or contracts.

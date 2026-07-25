@@ -35,6 +35,12 @@ than a spent currency. Every attained rank may add a small seasonal piety contri
 `FB.livelihoodPiety`; non-player clerical careers retain their underlying career contribution
 as well. See [characters.md](characters.md) for the Catholic and Muslim paths.
 
+A Catholic ruler who confirms a sacrilegious war against the active Papacy forfeits all
+current piety, loses standing with every living Catholic realm, and gains the personal
+`excommunicated` trait. Excommunication blocks blessings. At peace, a living Pope may
+grant absolution for 100 gold and 100 piety, clearing the trait and repairing part of the
+Catholic opinion loss; succession and a qualifying Papal restoration also clear it.
+
 Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
 focus accrue power with discovery risk, then a resolution event fires (`plot` named
 chance — for plots with a personal victim it adds the target's `opinion/500` to success;

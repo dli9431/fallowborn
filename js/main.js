@@ -768,6 +768,7 @@ window.FB = window.FB || {};
       armies: [], armyDown: {},
       alliances: [],
       religiousHeads: {},
+      religiousHeadVacancies: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -905,6 +906,7 @@ window.FB = window.FB || {};
       armies: [], armyDown: {},
       alliances: [],
       religiousHeads: {},
+      religiousHeadVacancies: {},
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -981,6 +983,7 @@ window.FB = window.FB || {};
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
     FB.scriptedTick(s);
+    if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1722,6 +1725,7 @@ window.FB = window.FB || {};
       return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated';
     });
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
+    FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues

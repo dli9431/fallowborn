@@ -2192,7 +2192,7 @@ window.FB = window.FB || {};
         // his reattach upward, exactly as in FB.transferProvince
         const terr = FB.realmTerritory(state, old.id);
         if (!terr.length) {
-          old.alive = false; old.war = null;
+          FB.markRealmDead(state, old.id);
           for (const vid in state.realms) if (state.realms[vid].liege === old.id) state.realms[vid].liege = old.liege || null;
         } else if (old.capital === p.provinceId) {
           old.capital = terr[0];
@@ -2334,7 +2334,7 @@ window.FB = window.FB || {};
       state.holder[pid] = 'player';
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     }
-    r.alive = false;
+    FB.markRealmDead(state, rid);
     FB.invalidateRealmCache();
     if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes
     FB.news(state, FB.msg('news.event.fief_reclaimed',

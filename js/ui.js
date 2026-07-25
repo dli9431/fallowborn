@@ -744,7 +744,8 @@ window.FB = window.FB || {};
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
     travel_settle_here:'life',
-    seek_blessing:'faith', give_alms:'faith', hold_feast:'faith',
+    seek_blessing:'faith', seek_absolution:'faith', restore_papacy:'faith',
+    claim_caliphate:'faith', give_alms:'faith', hold_feast:'faith',
     send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
     swear_fealty:'war'
@@ -1247,6 +1248,23 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function religiousHeadStatusRow(s, religionId) {
+    const rel = FBDATA.religions[religionId];
+    if (!rel || !rel.head) return '';
+    const title = FB.religiousHeadTitle(s, religionId);
+    const head = FB.religiousHeadOf(s, religionId);
+    if (head) {
+      return kv('Religious head', esc(FB.T('{title} · {realm}', {
+        title:title, realm:head.name
+      })));
+    }
+    const vacancy = FB.religiousHeadVacancy(s, religionId);
+    const days = vacancy ? Math.max(0, s.turn - vacancy.turn) : 0;
+    return kv('Religious head', esc(FB.T('{title} — vacant for {days} days', {
+      title:title, days:days
+    })));
+  }
+
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
@@ -1270,6 +1288,9 @@ window.FB = window.FB || {};
       kv('Age', FB.ageOf(me, s.date.year)) +
       kv('Culture', esc(cultureName(s, me.culture))) +
       kv('Faith', rel.icon + ' ' + esc(religionName(s, me.religion))) +
+      religiousHeadStatusRow(s, me.religion) +
+      (FB.playerExcommunicated && FB.playerExcommunicated(s)
+        ? kv('Church standing', esc(FB.T('Excommunicated'))) : '') +
       kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
       kv('Reputation among the folk', Math.round(s.player.pop)) +
@@ -3391,6 +3412,79 @@ window.FB = window.FB || {};
     $('travel-settle-cancel').addEventListener('click', UI.closeModal);
   };
 
+  UI.showAbsolution = function () {
+    const s = FB.state;
+    if (!s || !FB.canSeekAbsolution(s)) return;
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {opinion} opinion with every Catholic realm.', {
+        gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
+        piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
+        opinion:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
+      })) + '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="absolution-confirm">🕊 ' +
+      esc(FB.T('Accept the Pope’s absolution')) + '</button>' +
+      '<button type="button" class="actionbtn" id="absolution-cancel">' +
+      esc(FB.T('Not yet')) + '</button></div>';
+    openModal(FB.T('Seek absolution?'), h);
+    $('absolution-confirm').addEventListener('click', function () {
+      FB.seekAbsolution(s);
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('absolution-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showReligiousHeadRestoration = function (religionId) {
+    const s = FB.state;
+    if (!s || !FB.canRestoreReligiousHead(s, religionId, 'player')) return;
+    const meta = FBDATA.religions[religionId].head;
+    const seat = FB.world.byId[meta.seat];
+    const title = FB.religiousHeadTitle(s, religionId);
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there.', {
+        seat:seat.name, rank:meta.restoredRank || 3, title:title
+      })) + '</p><p>' + esc(FB.T(
+      'You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared.', {
+        piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
+        prestige:FB.religiousHeadBalance('religiousHeadRestorePrestige', 150),
+        opinion:FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15)
+      })) + '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="head-restore-confirm">✝ ' +
+      esc(FB.T('Grant {seat} and restore the Papacy', { seat:seat.name })) +
+      '</button><button type="button" class="actionbtn" id="head-restore-cancel">' +
+      esc(FB.T('Keep {seat}', { seat:seat.name })) + '</button></div>';
+    openModal(FB.T('Restore the Papacy?'), h);
+    $('head-restore-confirm').addEventListener('click', function () {
+      FB.restoreReligiousHead(s, religionId, 'player');
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('head-restore-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showReligiousHeadClaim = function (religionId) {
+    const s = FB.state;
+    if (!s || !FB.canClaimReligiousHead(s, religionId, 'player')) return;
+    const title = FB.religiousHeadTitle(s, religionId);
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent.', {
+        piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300),
+        title:title,
+        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500)
+      })) + '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="head-claim-confirm">☪ ' +
+      esc(FB.T('Claim the Caliphate')) + '</button>' +
+      '<button type="button" class="actionbtn" id="head-claim-cancel">' +
+      esc(FB.T('Not yet')) + '</button></div>';
+    openModal(FB.T('Claim the Caliphate?'), h);
+    $('head-claim-confirm').addEventListener('click', function () {
+      FB.claimReligiousHead(s, religionId, 'player');
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('head-claim-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= war target picker ================= */
   UI.showWarTargets = function () {
     const s = FB.state;
@@ -3428,21 +3522,59 @@ window.FB = window.FB || {};
               ? FB.T(' (including ~{men} from {ally})', {
                 men: menText(s, support.men), ally: s.realms[support.ally].name
               }) : ''
-          })) + '</span></button>';
+          })) + '</span>' + (cause.sacrilegious
+            ? '<span class="adesc warnote">' + esc(FB.T(
+              '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
+            : '') + '</button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Think better of it</button>';
     openModal('Choose Your Conquest', h);
     document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
-        FB.startPlayerWar(FB.state, causes[Number(b.dataset.warCause)]);
-        UI.closeModal(); UI.refresh();
+        const cause = causes[Number(b.dataset.warCause)];
+        if (cause.sacrilegious) {
+          UI.showSacrilegiousWarConfirmation(cause);
+        } else {
+          FB.startPlayerWar(FB.state, cause);
+          UI.closeModal();
+          UI.refresh();
+        }
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
-  /* renounce the liege and fight for it — confirmed here, done in
-     FB.doIndependence (a baron seizes his home county in the bargain) */
+  /* Same cause, second confirmation: no state changes until the player
+     explicitly accepts the religious penalties here. */
+  UI.showSacrilegiousWarConfirmation = function (cause) {
+    const s = FB.state;
+    const B = FBDATA.balance;
+    const realm = cause && s.realms[cause.enemy];
+    if (!cause || !cause.sacrilegious || !realm) return;
+    const opinion = Math.abs(B.religiousHeadWarOpinion !== undefined
+      ? B.religiousHeadWarOpinion : -40);
+    const h = '<div class="gm-body-text"><p class="warnote"><b>' + esc(FB.T(
+      'This conquest is sacrilege.')) + '</b></p><p>' + esc(FB.T(
+      'Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler.', {
+        realm:realm.name, opinion:opinion
+      })) + '</p><p>' + esc(FB.T(
+      'Canceling here changes nothing. After peace, an active Pope may grant costly absolution.')) +
+      '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="sacrilege-confirm">⚔ ' +
+      esc(FB.T('Accept condemnation and declare war')) + '</button>' +
+      '<button type="button" class="actionbtn" id="sacrilege-cancel">' +
+      esc(FB.T('Think better of it')) + '</button></div>';
+    openModal(FB.T('Attack the Papacy?'), h);
+    $('sacrilege-confirm').addEventListener('click', function () {
+      FB.startPlayerWar(s, cause, { confirmSacrilege:true });
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('sacrilege-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* Renounce the liege and fight for it: confirmed here, then handled by
+     FB.doIndependence (a baron seizes his home county in the bargain). */
   UI.showIndependence = function () {
     const s = FB.state;
     const lg = s.realms[s.player.liege];
