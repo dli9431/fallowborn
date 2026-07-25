@@ -168,7 +168,7 @@ window.FB = window.FB || {};
 
   FB.guildTitle = function (career) {
     const names = {
-      none:'Outside the guild', member:'Guild member', master:'Guild master',
+      none:'Outside the guild', member:'Guild member', master:'Master',
       officer:'Guild officer', guildmaster:'Guildmaster'
     };
     return FB.T(names[(career && career.guildRank) || 'none']);
@@ -806,7 +806,7 @@ window.FB = window.FB || {};
       forms: {
         select:'value', param:'rank', cases:{
           member:'🏅 {name} is admitted as a guild member.',
-          master:'🏅 {name} is recognized as a guild master.',
+          master:'🏅 {name} is admitted among the masters.',
           officer:'🏅 {name} takes a seat as a guild officer.',
           guildmaster:'🏅 {name} is raised as guildmaster.',
           other:'🏅 {name} rises at the guild bench.'

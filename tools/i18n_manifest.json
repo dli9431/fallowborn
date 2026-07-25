@@ -23003,7 +23003,7 @@
         "forms": {
           "cases": {
             "guildmaster": "🏅 {name} is raised as guildmaster.",
-            "master": "🏅 {name} is recognized as a guild master.",
+            "master": "🏅 {name} is admitted among the masters.",
             "member": "🏅 {name} is admitted as a guild member.",
             "officer": "🏅 {name} takes a seat as a guild officer.",
             "other": "🏅 {name} rises at the guild bench."
@@ -31049,6 +31049,16 @@
       ],
       "source": {
         "text": "Trust to {god} and luck."
+      }
+    },
+    "src.259cd11d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏅 {name} is admitted among the masters."
       }
     },
     "src.25ae03b8": {
@@ -44695,16 +44705,6 @@
         "text": "{label}: {amount}"
       }
     },
-    "src.729cb109": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "🏅 {name} is recognized as a guild master."
-      }
-    },
     "src.729e6332": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50807,16 +50807,6 @@
         "text": "ArrowDown"
       }
     },
-    "src.94be3ea6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "Guild master"
-      }
-    },
     "src.94df41f3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53212,6 +53202,16 @@
       ],
       "source": {
         "text": "Abandon the scheme without testing the lie."
+      }
+    },
+    "src.a116b053": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Master"
       }
     },
     "src.a129ff10": {

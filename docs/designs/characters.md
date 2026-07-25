@@ -111,6 +111,11 @@ Related: [marriage.md](marriage.md) for spouses and child matches,
 existing events, portraits, titles, and mods; succession mirrors the heir's own career
 instead of inheriting the dead parent's occupation.
 
+**Guild standing is separate from career rank.** Guild careers display their standing as
+Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
+`member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the
+character's vocational `rank` from journeyman to master.
+
 **Apprenticeship complements tutoring.** A child old enough for a career's
 `apprenticeAge` may be placed with that trade from their sheet. It costs the career's
 entry fee, adds vocational experience and the career skill during the yearly life tick,
