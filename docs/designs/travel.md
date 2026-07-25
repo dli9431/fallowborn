@@ -79,8 +79,8 @@ following an invalid realm reference.
 
 `FB.travelSettle` moves `player.provinceId` only after the destination capstone.
 Culture, faith, dynasty property, enterprises, finance contracts, and the active
-rival remain unchanged. Home-local lord, priest, friend, and notable seats are
-cleared; the lord and priest are immediately regenerated from the destination.
+rival remain unchanged. Home-local lord, priest, friend, notable, and cultivated-friend
+contacts are cleared; the lord and priest are immediately regenerated from the destination.
 The map’s household marker then moves to the new home. The action is exposed only
 after a year and four work stories, uses an explicit confirmation, writes
 `player.travelSettlement`, and cannot succeed again during the same character’s

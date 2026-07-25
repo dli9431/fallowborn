@@ -4,7 +4,7 @@
    province at screen center · 1-9 pick focuses / deeds / event options /
    dialog items, Shift+1-9 reaches items 10-18 (physical keys, any layout) ·
    Space or E play/pause · F skip to the next happening ·
-   Z autoresolve settings · D/S/K/L/C open the Deeds/Self/Kin/Land/Chronicle
+   Z autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/Network/Chronicle
    panels · [ ] cycle panels · Esc menu / back / close dialog. */
 window.FB = window.FB || {};
 
@@ -159,6 +159,7 @@ window.FB = window.FB || {};
       case 's': case 'S': if (FB.state) FB.ui.showTab('char'); return;
       case 'k': case 'K': if (FB.state) FB.ui.showTab('family'); return;
       case 'l': case 'L': if (FB.state) FB.ui.showTab('prov'); return;
+      case 'n': case 'N': if (FB.state) FB.ui.showTab('network'); return;
       case 'c': case 'C': if (FB.state) FB.ui.showTab('log'); return;
       case '+': case '=':
         e.preventDefault();

@@ -883,7 +883,9 @@ window.FB = window.FB || {};
     }
     let t = demesne + vassal;
     t += FB.buildingBonus(state, 'tax');
-    t *= 1 + FB.techBonus(state, 'tax') + (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
+    t *= 1 + FB.techBonus(state, 'tax') +
+      (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0) +
+      (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0);
     if (p.liege) t *= 1 - (FB.parliamentAid ? FB.parliamentAid(state) : 0.25); // liege's cut — haggled in the estates
     return Math.round(t);
   };
@@ -933,9 +935,11 @@ window.FB = window.FB || {};
     total += FB.holdingBonus(state, 'gold');
     total += FB.landYield(state);
     total += FB.itemBonus(state, 'gold');
+    if (FB.positionBonus) total += FB.positionBonus(state, 'gold');
     if (FB.livelihoodBreakdown) {
       for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
     }
+    if (FB.retainerSeasonCost) total -= FB.retainerSeasonCost(state);
     if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
     const focus = FB.focusIncome(state);
     if (focus && focus.gold) total += focus.gold;
@@ -1000,9 +1004,30 @@ window.FB = window.FB || {};
       }
       add('gold', FB.T('Vassal dues'), dues);
       const tolls = addBuildings('gold', 'tax');
-      const innov = (rents + dues + tolls) * FB.techBonus(state, 'tax');
+      const taxable = rents + dues + tolls;
+      const innov = taxable * FB.techBonus(state, 'tax');
       add('gold', FB.T('Innovations'), innov);
-      if (p.liege) add('gold', FB.T('Liege’s cut'), -(rents + dues + tolls + innov) * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
+      const councilTax = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
+      add('gold', FB.T('Royal Seneschal'), councilTax);
+      let positionTax = 0;
+      if (FB.positionContributions) {
+        for (const source of FB.positionContributions(state, 'tax')) {
+          const def = FBDATA.positions[source.id];
+          if (!def) continue;
+          const amount = taxable * source.amount;
+          positionTax += amount;
+          const holder = source.charId && state.chars[source.charId];
+          const name = FB.dataText(state, p.charId, 'position', source.id, def, 'name');
+          add('gold', holder ? FB.T('{position} — {name}', {
+            position:name, name:holder.name
+          }) : name, amount);
+        }
+      }
+      if (p.liege) {
+        add('gold', FB.T('Liege’s cut'),
+          -(taxable + innov + councilTax + positionTax) *
+          (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
+      }
       addBuildings('gold', 'upkeep', -1, true);
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
@@ -1034,6 +1059,17 @@ window.FB = window.FB || {};
       for (const ln of FB.livelihoodBreakdown(state)) add('gold', ln.label, ln.amount);
       add('piety', FB.T('Household faith and learned service'), FB.livelihoodPiety(state));
     }
+    if (FB.positionContributions) {
+      for (const source of FB.positionContributions(state, 'gold')) {
+        const def = FBDATA.positions[source.id];
+        if (!def) continue;
+        const holder = source.charId && state.chars[source.charId];
+        const name = FB.dataText(state, p.charId, 'position', source.id, def, 'name');
+        add('gold', holder ? FB.T('{position} — {name}', {
+          position:name, name:holder.name
+        }) : name, source.amount);
+      }
+    }
 
     /* the daily focus trickle, as one expected season */
     const fg = FB.focusIncome(state);
@@ -1050,6 +1086,17 @@ window.FB = window.FB || {};
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);
     add('gold', FB.T('Family provisions and quarters'), -upkeep.family);
+    if (FB.retainerRecords) {
+      for (const record of FB.retainerRecords(state)) {
+        const c = state.chars[record.charId];
+        const def = FBDATA.positions[record.office];
+        if (!c || !def) continue;
+        add('gold', FB.T('{position} pay — {name}', {
+          position:FB.dataText(state, p.charId, 'position', record.office, def, 'name'),
+          name:c.name
+        }), -(record.pay || 0));
+      }
+    }
     if (FB.schoolingCostBreakdown) {
       for (const term of FB.schoolingCostBreakdown(state)) {
         const school = FBDATA.schooling[term.id];
@@ -1221,6 +1268,42 @@ window.FB = window.FB || {};
       if (r.alive && r.liege === 'player') out.push(id);
     }
     return out;
+  };
+
+  FB.vassalLevyFavor = function (state, rid) {
+    const p = state.player;
+    if (!p.vassalLevyFavors || typeof p.vassalLevyFavors !== 'object' ||
+      Array.isArray(p.vassalLevyFavors)) p.vassalLevyFavors = {};
+    const until = p.vassalLevyFavors[rid];
+    const r = state.realms[rid];
+    if (!until || until <= state.turn || !r || !r.alive || r.liege !== 'player') {
+      if (until) delete p.vassalLevyFavors[rid];
+      return null;
+    }
+    return { rid:rid, until:until };
+  };
+
+  FB.vassalLevyRate = function (state, rid) {
+    return (FBDATA.balance.vassalLevyRate || 0) +
+      (FB.vassalLevyFavor(state, rid) ? (FBDATA.balance.vassalLevyFavorRate || 0.05) : 0);
+  };
+
+  FB.canCallVassalLevyFavor = function (state, rid) {
+    const r = state.realms[rid];
+    return !!(r && r.alive && r.liege === 'player' &&
+      FB.liegeOpOf(state, rid) >= 40 && !FB.vassalLevyFavor(state, rid));
+  };
+
+  FB.callVassalLevyFavor = function (state, rid) {
+    if (!FB.canCallVassalLevyFavor(state, rid)) return false;
+    const r = state.realms[rid];
+    const days = FBDATA.balance.vassalLevyFavorDays || 360;
+    state.player.vassalLevyFavors[rid] = state.turn + days;
+    FB.adjustLiegeOp(state, rid, -15);
+    FB.news(state, FB.msg('news.realm.vassal_levy_favor',
+      '🛡 {realm} promises an exceptional levy for one year; the favor costs goodwill.',
+      { realm:r.name }));
+    return true;
   };
 
   /* hand a demesne county to a new sworn man */

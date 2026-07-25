@@ -880,8 +880,10 @@ window.FB = window.FB || {};
       /* Settle ordinary household income together; livelihoodSeason clamps the
          combined result once, so family wages really can meet family costs. */
       p.gold += income - upkeep - buildingUpkeep +
-        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold');
+        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
+        (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.retainerSeason) FB.retainerSeason(s);
       FB.educationSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
@@ -1620,9 +1622,11 @@ window.FB = window.FB || {};
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(s);
     else if (FB.clearLoadout) FB.clearLoadout(s, old.id);
     if (FB.autoEquipBest) FB.autoEquipBest(s, heir.id);
+    if (FB.retainerSuccession) FB.retainerSuccession(s);
 
     // only property passes; personal standing must be rebuilt somewhat
     FB.landPlots(s); // normalize a legacy farm before its old flag is discarded
+    if (FB.clearFriendship) FB.clearFriendship(s, true);
     const keep = {};
     for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
     p.flags = keep;
@@ -1630,6 +1634,7 @@ window.FB = window.FB || {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
     p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
+    p.vassalLevyFavors = {};
     p.warService = 0; p.liegeGrants = 0;
     p.travelHistory = [];
     p.travelSettlement = null;
@@ -1638,7 +1643,7 @@ window.FB = window.FB || {};
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
     s.seasonNet = null;
     FB.syncPlayerCareer(s);
-    delete s.roles.spouse; delete s.roles.suitor;
+    delete s.roles.spouse; delete s.roles.suitor; delete s.roles.friend;
     const inheritedRival = FB.getRole(s, 'rival', false);
     const inheritedIsKin = inheritedRival && !!FB.kinOf(s).byId[inheritedRival.id];
     const inheritedIsSpouse = inheritedRival && FB.spousesOf(s, heir).some(function (sp) {

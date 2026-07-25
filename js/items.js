@@ -86,6 +86,12 @@ window.FB = window.FB || {};
       }
       if (!married || c.id === state.player.charId) add(c, false);
     }
+    /* Paid retainers belong to the managed household for equipment and
+       career dealings, but remain distinct from resident family upkeep. */
+    for (let i = 0; i < ((state.player && state.player.retainers) || []).length; i++) {
+      const record = state.player.retainers[i];
+      if (record) add(state.chars[record.charId], false);
+    }
     return out;
   }
 

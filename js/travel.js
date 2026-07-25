@@ -481,7 +481,8 @@ window.FB = window.FB || {};
     p.liege = null;
     delete state.roles.lord;
     delete state.roles.priest;
-    delete state.roles.friend;
+    if (FB.clearFriendship) FB.clearFriendship(state, true);
+    else delete state.roles.friend;
     delete state.roles.notable;
     /* The active rival and all household/property/finance records are
        deliberately untouched. Local authority is regenerated at the new home. */

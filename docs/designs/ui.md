@@ -123,6 +123,23 @@ Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobi
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show opinion and the current direction.
 
+The contextual **Network** panel (`N`) answers who is tied to the current household and
+what that relationship does. Its four sections are Household (resident family,
+capacity-limited retainers, office, pay, and work assignment), Connections (canonical
+friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
+rank, standing, exact income modifier, enterprises, partnerships, positions, and bounded
+guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Royal
+Council summary/link, and the computed levy ledger). Empty sections explain what is
+absent rather than inventing placeholder people.
+
+The panel summarizes other systems and links to their focused controls. Character sheets
+remain the place to call a friend or manage one retainer; Work & Enterprises remains the
+staffing surface; Royal Council remains the crown-office manager. Retainer hire,
+dismissal, and friendship replacement use the standard focusable modal and confirmation
+patterns. Guild and vassal favors are direct focusable Network actions whose buttons state
+their full cost and duration before activation. Network is hidden in observe mode alongside
+other protagonist-only panels.
+
 The tier-1/2 **Take to the road…** deed opens a purpose dialog, then a map picker
 with marked valid destinations and a synchronized, focusable destination list.
 Map taps and list buttons select the same county and preview the settled-only

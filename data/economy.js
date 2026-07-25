@@ -50,6 +50,46 @@ FBDATA.careers = {
   }
 };
 
+/* Personal positions and household offices sit beside a character's career
+   and the player's station. Earned positions come from events; retainer
+   offices are filled by paid named characters in the household network. */
+FBDATA.positions = {
+  councilman: {
+    name:'Town Councilman', icon:'⚖', kind:'earned',
+    desc:'A place on the town bench brings commissions, introductions, and a voice in local affairs.',
+    fx:{ gold:0.5, enterprise:0.05 }
+  },
+  sergeant: {
+    name:'Sergeant', icon:'🛡', kind:'earned',
+    desc:'Drill pay and authority over a small professional core continue while the post is held.',
+    fx:{ gold:0.5, retinue:10 }
+  },
+  steward: {
+    name:'Household Steward', icon:'🗝', kind:'retainer', profession:'noble',
+    minTier:2, pay:2, quality:2,
+    desc:'Keeps accounts, directs servants, and makes the household’s work run more cleanly.',
+    fx:{ gold:1, enterprise:0.05 }
+  },
+  factor: {
+    name:'Household Factor', icon:'📒', kind:'retainer', profession:'merchant',
+    minTier:1, pay:2, quality:2,
+    desc:'Carries the household’s credit and bargains through market and guild connections.',
+    fx:{ enterprise:0.08 }
+  },
+  captain: {
+    name:'Household Captain', icon:'⚔', kind:'retainer', profession:'soldier',
+    minTier:2, pay:2.5, quality:3, maleOnly:true,
+    desc:'Commands sworn armsmen and adds a hard professional edge to the household host.',
+    fx:{ retinue:20 }
+  },
+  tutor: {
+    name:'Household Tutor', icon:'📚', kind:'retainer', profession:'monk',
+    minTier:1, pay:3, quality:3,
+    desc:'A resident learned servant who may be assigned to a child’s lessons without a second fee.',
+    fx:{}
+  }
+};
+
 /* Childhood instruction. A child's education focus names the subject; one of
    these arrangements names the school and its seasonal fee. Personal masters
    remain actual characters, so their skill and traits matter. */
