@@ -35292,6 +35292,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui.js",
         "js/util.js"
       ],
       "source": {
@@ -60861,6 +60862,16 @@
         "text": "Bruises seen by all accuse louder than words."
       }
     },
+    "src.cdfbccf3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Mobile navigation"
+      }
+    },
     "src.ce1c9071": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65355,6 +65366,16 @@
       ],
       "source": {
         "text": "You carve sideways through the press and plant yourself at his shoulder, a nameless recruit who fights like something loosed from a cage. Back to back you hold until the enemy breaks — and he stares at you as a man stares at a face he half-remembers from a dream."
+      }
+    },
+    "src.e84df5a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "On a phone, the browser or device Back control steps out of equipment choices, dialogs, and the Self/Kin drawer. It never undoes a decision that changed the game."
       }
     },
     "src.e85e4b88": {

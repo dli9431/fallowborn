@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.54.4';
+  FB.VERSION = '1.54.5';
   FB.CHANGELOG = [
+    { v: '1.54.5', date: '2026-07-25', changes: [
+      'Mobile browser Back now steps through drawers, dialogs, and equipment views without undoing game decisions.'
+    ] },
     { v: '1.54.4', date: '2026-07-25', changes: [
       'The title screen now keeps its name visible in narrow embedded views.',
       'The Self panel now groups identity details compactly, opens equipment from the portrait, and collapses titles and possessions.'

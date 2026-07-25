@@ -17,8 +17,8 @@ on desktop (`display:contents`). On phones the Deeds/Land/Chronicle panel takes 
 width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` — toggled in
 `setTab`, opened by tapping the mobile-only topbar portrait, closed by `#btn-closeself`).
 The redundant topbar portrait is hidden when the Self panel is persistently visible on
-desktop. The time
-controls become a fixed thumb-zone bar above the drawer (hidden by `body.picking` during
+desktop. The time controls become a fixed thumb-zone bar above the drawer (hidden by
+`body.picking` during
 the birthplace pick), most modals render as bottom sheets, and touch targets stay ≥44 px
 with safe-area insets. In portrait the topbar wraps to three rows: identity and ☰ up top,
 then the full date (with year) on its own line, then the four resources on their own
@@ -26,6 +26,15 @@ full-width row (`#tb-date` order 4, `#tb-stats` order 5; a single stats row clip
 leftmost figures on narrow screens, and the date is hidden in the tighter landscape bar).
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
+
+Mobile-layout UI layers mirror their navigation in the browser's same-document history:
+the Self/Kin drawer, generic dialogs, selected nested dialog views, the travel picker, and
+the equipment-slot overlay each add a same-URL entry. Browser/device Back unwinds one layer
+at a time, and visible Close/Back controls consume the same owned entry so dead entries do
+not accumulate. This uses only the game's own frame history, so it works unchanged in the
+itch iframe and never reaches into the parent page. Entries carry UI descriptors only;
+gameplay actions and mandatory event decisions are never made undoable. If the History API
+is unavailable or rejects an entry, all existing visible controls remain the fallback.
 
 Two families of dialog break the bottom-sheet default, both with the footer button pinned to
 the bottom middle so a long body needs no scroll to shut and nothing reaches for the top edge
