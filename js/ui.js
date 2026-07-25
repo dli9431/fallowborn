@@ -161,9 +161,246 @@ window.FB = window.FB || {};
   function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
   function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }
 
+  /* Mobile browser history mirrors only temporary UI layers, never simulation
+     actions. The entries keep the current URL unchanged so the same code works
+     from file://, the standalone site, and itch's iframe. A layer owns a raw
+     close/reopen pair; Back traversals invoke those directly, while visible
+     Close buttons dismiss first and then consume their owned history entry. */
+  const MOBILE_NAV_QUERY = '(max-width: 820px), (max-height: 520px)';
+  let mobileNavSession = '';
+  let mobileNavSerial = 0;
+  let mobileNavReady = false;
+  let mobileNavDepth = 0;
+  let mobileNavLayers = [];
+  let mobileNavQueued = [];
+  let mobileNavPendingBack = false;
+  let mobileNavApplying = false;
+  let mobileNavNeedsReset = false;
+
+  function mobileLayoutNow() {
+    if (window.matchMedia) return window.matchMedia(MOBILE_NAV_QUERY).matches;
+    return window.innerWidth <= 820 || window.innerHeight <= 520;
+  }
+
+  function mobileNavState(depth) {
+    return {
+      fallowbornNav:1,
+      session:mobileNavSession,
+      depth:depth
+    };
+  }
+
+  function mobileNavOwns(state) {
+    return !!state && state.fallowbornNav === 1 &&
+      state.session === mobileNavSession;
+  }
+
+  function mobileNavStartNow() {
+    mobileNavReady = false;
+    mobileNavDepth = 0;
+    mobileNavLayers = [];
+    mobileNavQueued = [];
+    mobileNavPendingBack = false;
+    mobileNavNeedsReset = false;
+    if (!mobileLayoutNow() || !window.history ||
+      typeof window.history.pushState !== 'function' ||
+      typeof window.history.replaceState !== 'function') return false;
+    mobileNavSession = 'fb-' + Date.now().toString(36) + '-' + (++mobileNavSerial);
+    try {
+      window.history.replaceState(mobileNavState(0), '');
+      mobileNavReady = true;
+    } catch (err) {
+      mobileNavReady = false; // buttons remain the complete fallback path
+    }
+    return mobileNavReady;
+  }
+
+  function mobileNavStart() {
+    if (mobileNavPendingBack || (mobileNavReady && mobileNavDepth > 0)) {
+      mobileNavNeedsReset = true;
+      if (!mobileNavPendingBack && mobileNavDepth > 0) {
+        mobileNavPendingBack = true;
+        try {
+          window.history.go(-mobileNavDepth);
+        } catch (err) {
+          mobileNavPendingBack = false;
+          mobileNavStartNow();
+        }
+      }
+      return;
+    }
+    mobileNavStartNow();
+  }
+
+  function mobileNavEnsure() {
+    if (mobileNavReady) return true;
+    if (!FB.state || $('game').classList.contains('hidden') || !mobileLayoutNow()) return false;
+    return mobileNavStartNow();
+  }
+
+  function mobileNavCommitLayer(layer) {
+    const depth = mobileNavDepth + 1;
+    try {
+      window.history.pushState(mobileNavState(depth), '');
+    } catch (err) {
+      mobileNavReady = false;
+      mobileNavQueued = [];
+      return false;
+    }
+    mobileNavLayers.length = depth + 1; // a new branch discards old Forward layers
+    mobileNavLayers[depth] = layer;
+    mobileNavDepth = depth;
+    return true;
+  }
+
+  function mobileNavPush(kind, close, reopen, isOpen, canBack) {
+    if (mobileNavApplying || !mobileNavEnsure()) return false;
+    const layer = {
+      kind:kind,
+      close:close,
+      reopen:reopen,
+      isOpen:isOpen,
+      canBack:canBack,
+      visible:true
+    };
+    if (mobileNavPendingBack) {
+      mobileNavQueued.push(layer);
+      return true;
+    }
+    return mobileNavCommitLayer(layer);
+  }
+
+  function mobileNavRequestBack() {
+    if (!mobileNavReady || mobileNavDepth <= 0 || mobileNavPendingBack) return;
+    mobileNavPendingBack = true;
+    try {
+      window.history.back();
+    } catch (err) {
+      mobileNavPendingBack = false;
+      mobileNavReady = false;
+    }
+  }
+
+  /* Mark any matching visible layer closed, even when another layer is above
+     it (departing from a travel picker closes both picker and review modal).
+     Once the top entry pops, invisible entries are skipped automatically. */
+  function mobileNavClosed(kind, discard) {
+    if (mobileNavApplying || !mobileNavReady) return false;
+    for (let depth = mobileNavDepth; depth > 0; depth--) {
+      const layer = mobileNavLayers[depth];
+      if (!layer || layer.kind !== kind || !layer.visible) continue;
+      layer.visible = false;
+      if (discard) layer.reopen = null;
+      if (depth === mobileNavDepth) mobileNavRequestBack();
+      return true;
+    }
+    return false;
+  }
+
+  function mobileNavClosedAll(kind, discard) {
+    if (mobileNavApplying || !mobileNavReady) return false;
+    let found = false;
+    for (let depth = mobileNavDepth; depth > 0; depth--) {
+      const layer = mobileNavLayers[depth];
+      if (!layer || layer.kind !== kind || !layer.visible) continue;
+      layer.visible = false;
+      if (discard) layer.reopen = null;
+      found = true;
+    }
+    if (found) mobileNavSkipClosedTop();
+    return found;
+  }
+
+  function mobileNavFlushQueued() {
+    if (!mobileNavReady || mobileNavPendingBack || mobileNavNeedsReset) return;
+    const queued = mobileNavQueued;
+    mobileNavQueued = [];
+    for (let i = 0; i < queued.length; i++) {
+      const layer = queued[i];
+      if (layer.isOpen && !layer.isOpen()) continue;
+      if (!mobileNavCommitLayer(layer)) break;
+    }
+  }
+
+  function mobileNavSkipClosedTop() {
+    const layer = mobileNavLayers[mobileNavDepth];
+    if (mobileNavDepth > 0 && layer && !layer.visible) {
+      mobileNavRequestBack();
+      return true;
+    }
+    return false;
+  }
+
+  function mobileNavPop(event) {
+    if (!mobileNavReady) return;
+    const state = event.state;
+    if (!mobileNavOwns(state)) {
+      mobileNavReady = false;
+      mobileNavQueued = [];
+      mobileNavPendingBack = false;
+      return;
+    }
+    const target = Math.max(0, Math.min(state.depth || 0, mobileNavLayers.length - 1));
+    const wasPending = mobileNavPendingBack;
+    mobileNavPendingBack = false;
+
+    /* A non-dismissible sheet may have a deliberate in-game choice instead of
+       a generic Back path. Restore its entry rather than bypassing the choice. */
+    if (!wasPending && target < mobileNavDepth) {
+      for (let depth = mobileNavDepth; depth > target; depth--) {
+        const layer = mobileNavLayers[depth];
+        if (layer && layer.visible && layer.canBack && !layer.canBack()) {
+          try { window.history.go(mobileNavDepth - target); } catch (err) { /* fallback buttons remain */ }
+          return;
+        }
+      }
+    }
+
+    mobileNavApplying = true;
+    if (target < mobileNavDepth) {
+      for (let depth = mobileNavDepth; depth > target; depth--) {
+        const layer = mobileNavLayers[depth];
+        if (layer && layer.visible) {
+          layer.close();
+          layer.visible = false;
+        }
+      }
+    } else if (target > mobileNavDepth) {
+      for (let depth = mobileNavDepth + 1; depth <= target; depth++) {
+        const layer = mobileNavLayers[depth];
+        if (layer && !layer.visible && layer.reopen) {
+          layer.reopen();
+          layer.visible = true;
+        }
+      }
+    }
+    mobileNavApplying = false;
+    mobileNavDepth = target;
+
+    if (mobileNavNeedsReset && mobileNavDepth === 0) {
+      mobileNavStartNow();
+      return;
+    }
+    if (mobileNavNeedsReset && mobileNavDepth > 0) {
+      mobileNavPendingBack = true;
+      try {
+        window.history.go(-mobileNavDepth);
+      } catch (err) {
+        mobileNavPendingBack = false;
+        mobileNavStartNow();
+      }
+      return;
+    }
+    if (mobileNavSkipClosedTop()) return;
+    mobileNavFlushQueued();
+  }
+
   /* ================= screens ================= */
   UI.showScreen = function (id) {
-    if (id !== null && travelPicker) closeTravelPicker(false);
+    if (id !== null && travelPicker) {
+      closeTravelPicker(false);
+      mobileNavClosed('travel-picker', true);
+    }
     for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
       const el = $(sid);
       el.classList.toggle('hidden', sid !== id);
@@ -181,8 +418,13 @@ window.FB = window.FB || {};
   };
 
   UI.showGame = function () {
-    if (travelPicker) closeTravelPicker(false);
+    if (travelPicker) {
+      closeTravelPicker(false);
+      mobileNavClosed('travel-picker', true);
+    }
     UI.showScreen(null);
+    document.body.classList.remove('showself');
+    mobileNavStart();
     portraitKey = ''; // a new life or loaded save must never keep the old face
     logRenderedTail = null; logRenderedLen = -1;
     FB.map.resize();
@@ -1768,9 +2010,30 @@ window.FB = window.FB || {};
     FB.localizeTree($('tab-log'));
   }
 
+  function selfDrawerOpen() {
+    return document.body.classList.contains('showself');
+  }
+
+  function openSelfDrawerRaw() {
+    document.body.classList.add('showself');
+    renderActiveTab();
+  }
+
+  function closeSelfDrawerRaw() {
+    document.body.classList.remove('showself');
+    if ($('tb-portrait').offsetParent !== null) $('tb-portrait').focus();
+  }
+
+  function closeSelfDrawer() {
+    if (!selfDrawerOpen()) return;
+    closeSelfDrawerRaw();
+    mobileNavClosed('self-drawer', false);
+  }
+
   function setTab(name) {
     if (FB.game && FB.game.observe && name === 'actions') return; // a watcher has no deeds
     const isLeft = LEFT_TABS.indexOf(name) >= 0;
+    const drawerWasOpen = selfDrawerOpen();
     if (isLeft) activeLeftTab = name; else activeTab = name;
     const bar = isLeft ? '#lefttabs .tab' : '#sidetabs .tab';
     document.querySelectorAll(bar).forEach(function (t) { t.classList.toggle('active', t.dataset.tab === name); });
@@ -1778,8 +2041,15 @@ window.FB = window.FB || {};
     body.querySelectorAll('.tabpane').forEach(function (p) { p.classList.remove('active'); });
     $('tab-' + name).classList.add('active');
     // on phones Self/Kin is a drawer (body.showself); the class is inert on desktop
-    document.body.classList.toggle('showself', isLeft);
+    if (isLeft) document.body.classList.add('showself');
+    else document.body.classList.remove('showself');
     renderActiveTab();
+    if (isLeft && !drawerWasOpen) {
+      mobileNavPush('self-drawer', closeSelfDrawerRaw, openSelfDrawerRaw,
+        selfDrawerOpen, function () { return true; });
+    } else if (!isLeft && drawerWasOpen) {
+      mobileNavClosed('self-drawer', false);
+    }
   }
 
   UI.cycleTab = function (dir) {
@@ -2215,10 +2485,134 @@ window.FB = window.FB || {};
   UI.eventsBusy = function () { return eventOpen; };
 
   /* ================= generic modal ================= */
-  function openModal(title, bodyHtml, opts) {
-    UI._gmDismiss = !(opts && opts.dismissable === false);
+  let genericNavSnapshot = null;
+  let genericViewSerial = 0;
+
+  function captureModalView(view) {
+    const body = $('gm-body');
+    view.title = $('gm-title').textContent;
+    view.body = document.createDocumentFragment();
+    view.scrollTop = body.scrollTop;
+    view.dismiss = UI._gmDismiss;
+    view.historyBack = !!(genericNavSnapshot && genericNavSnapshot.historyBack);
+    view.returnFocus = UI._gmReturnFocus;
+    view.returnAction = UI._gmReturnAction;
+    view.modalClass = UI._gmModalClass || '';
+    view.noFocus = !!(genericNavSnapshot && genericNavSnapshot.noFocus);
+    view.token = genericNavSnapshot && genericNavSnapshot.token;
+    view.focus = document.activeElement && $('genmodal').contains(document.activeElement)
+      ? document.activeElement : null;
+    while (body.firstChild) view.body.appendChild(body.firstChild);
+  }
+
+  function restoreModalView(view) {
     const gm = $('genmodal');
-    if (gm.classList.contains('hidden')) {
+    const body = $('gm-body');
+    while (body.firstChild) body.removeChild(body.firstChild);
+    $('gm-title').textContent = view.title;
+    body.appendChild(view.body);
+    body.scrollTop = view.scrollTop || 0;
+    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
+    UI._gmModalClass = view.modalClass || '';
+    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
+    UI._gmDismiss = view.dismiss;
+    UI._gmReturnFocus = view.returnFocus;
+    UI._gmReturnAction = view.returnAction;
+    genericNavSnapshot = {
+      dismiss:view.dismiss,
+      historyBack:view.historyBack,
+      returnFocus:view.returnFocus,
+      returnAction:view.returnAction,
+      modalClass:view.modalClass,
+      noFocus:view.noFocus,
+      token:view.token
+    };
+    gm.classList.remove('hidden');
+    setTimeout(function () {
+      if (view.focus && document.documentElement.contains(view.focus)) {
+        view.focus.focus({ preventScroll:true });
+      } else if (!view.noFocus) {
+        focusFirstModalControl();
+      }
+    }, 0);
+  }
+
+  function modalHistoryBack(fallback) {
+    const layer = mobileNavLayers[mobileNavDepth];
+    if (mobileNavReady && !mobileNavPendingBack && layer &&
+      layer.kind === 'modal-view' && layer.visible) {
+      mobileNavRequestBack();
+      return;
+    }
+    fallback();
+  }
+
+  function focusFirstModalControl() {
+    setTimeout(function () {
+      if ($('genmodal').classList.contains('hidden')) return;
+      const b = $('gm-body').querySelector(
+        'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]');
+      if (b) b.focus({ preventScroll:true });
+    }, 0);
+  }
+
+  function reopenGenericModalRaw() {
+    if (!genericNavSnapshot) return;
+    UI._gmDismiss = genericNavSnapshot.dismiss;
+    UI._gmReturnFocus = genericNavSnapshot.returnFocus;
+    UI._gmReturnAction = genericNavSnapshot.returnAction;
+    const gm = $('genmodal');
+    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
+    UI._gmModalClass = genericNavSnapshot.modalClass;
+    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
+    gm.classList.remove('hidden');
+    if (!genericNavSnapshot.noFocus) focusFirstModalControl();
+  }
+
+  function closeEquipmentPickerRaw(equipmentPicker, restoreFocus) {
+    if (!equipmentPicker) return;
+    if (equipmentPicker.parentNode) equipmentPicker.parentNode.removeChild(equipmentPicker);
+    const pickerBack = UI._equipPickerReturnFocus;
+    UI._equipPickerReturnFocus = null;
+    if (restoreFocus !== false && pickerBack &&
+      document.documentElement.contains(pickerBack)) pickerBack.focus();
+  }
+
+  function closeGenericModalRaw() {
+    $('genmodal').classList.add('hidden');
+    UI._gmDismiss = true;
+    const back = UI._gmReturnFocus;
+    const actionId = UI._gmReturnAction;
+    UI._gmReturnFocus = null;
+    UI._gmReturnAction = null;
+    if (back && document.documentElement.contains(back)) {
+      back.focus();
+      return;
+    }
+    if (actionId) {
+      const actions = document.querySelectorAll('[data-action-id]');
+      for (const action of actions) {
+        if (action.dataset.actionId === actionId) {
+          action.focus();
+          return;
+        }
+      }
+    }
+    if (FB.state && !$('game').classList.contains('hidden') &&
+      $('eventmodal').classList.contains('hidden')) $('btn-endturn').focus();
+  }
+
+  function openModal(title, bodyHtml, opts) {
+    const gm = $('genmodal');
+    const wasHidden = gm.classList.contains('hidden');
+    let previousView = null;
+    if (!wasHidden && opts && opts.historyView && !mobileNavApplying &&
+      mobileNavEnsure()) {
+      previousView = {};
+      captureModalView(previousView);
+    }
+    UI._gmDismiss = !(opts && opts.dismissable === false);
+    if (wasHidden) {
       UI._gmReturnFocus = document.activeElement;
       UI._gmReturnAction = UI._gmReturnFocus && UI._gmReturnFocus.dataset
         ? UI._gmReturnFocus.dataset.actionId : null;
@@ -2243,13 +2637,45 @@ window.FB = window.FB || {};
     /* opts.noFocus: leave nothing focused, so a stray Space/Enter cannot
        activate the first button (used where the choice must be deliberate) */
     if (!(opts && opts.noFocus)) {
-      setTimeout(function () {
-        const b = $('gm-body').querySelector(
-          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]');
-        // preventScroll: focusing a long dialog's lone Close button must not
-        // drag the view to the bottom (Changelog, How to Play)
-        if (b) b.focus({ preventScroll: true });
-      }, 0);
+      // preventScroll: focusing a long dialog's lone Close button must not
+      // drag the view to the bottom (Changelog, How to Play)
+      focusFirstModalControl();
+    }
+    const currentViewToken = ++genericViewSerial;
+    genericNavSnapshot = {
+      dismiss:UI._gmDismiss,
+      historyBack:!!(opts && opts.historyBack),
+      returnFocus:UI._gmReturnFocus,
+      returnAction:UI._gmReturnAction,
+      modalClass:UI._gmModalClass,
+      noFocus:!!(opts && opts.noFocus),
+      token:currentViewToken
+    };
+    if (previousView) {
+      const currentView = {};
+      const historyBackRender = opts.historyBackRender;
+      mobileNavPush('modal-view',
+        function () {
+          captureModalView(currentView);
+          if (historyBackRender) historyBackRender();
+          else restoreModalView(previousView);
+        },
+        function () {
+          captureModalView(previousView);
+          restoreModalView(currentView);
+        },
+        function () {
+          return !$('genmodal').classList.contains('hidden') &&
+            genericNavSnapshot && genericNavSnapshot.token === currentViewToken;
+        },
+        function () { return true; });
+    } else if (wasHidden) {
+      mobileNavPush('generic-modal', closeGenericModalRaw, reopenGenericModalRaw,
+        function () { return !$('genmodal').classList.contains('hidden'); },
+        function () {
+          return UI._gmDismiss ||
+            (genericNavSnapshot && genericNavSnapshot.historyBack);
+        });
     }
   }
   UI.openModal = openModal;
@@ -2257,33 +2683,13 @@ window.FB = window.FB || {};
   UI.closeModal = function () {
     const equipmentPicker = $('equip-picker-overlay');
     if (equipmentPicker) {
-      equipmentPicker.parentNode.removeChild(equipmentPicker);
-      const pickerBack = UI._equipPickerReturnFocus;
-      UI._equipPickerReturnFocus = null;
-      if (pickerBack && document.documentElement.contains(pickerBack)) pickerBack.focus();
+      closeEquipmentPickerRaw(equipmentPicker, true);
+      mobileNavClosed('equipment-picker', false);
       return;
     }
-    $('genmodal').classList.add('hidden');
-    UI._gmDismiss = true;
-    const back = UI._gmReturnFocus;
-    const actionId = UI._gmReturnAction;
-    UI._gmReturnFocus = null;
-    UI._gmReturnAction = null;
-    if (back && document.documentElement.contains(back)) {
-      back.focus();
-      return;
-    }
-    if (actionId) {
-      const actions = document.querySelectorAll('[data-action-id]');
-      for (const action of actions) {
-        if (action.dataset.actionId === actionId) {
-          action.focus();
-          return;
-        }
-      }
-    }
-    if (FB.state && !$('game').classList.contains('hidden') &&
-      $('eventmodal').classList.contains('hidden')) $('btn-endturn').focus();
+    closeGenericModalRaw();
+    mobileNavClosedAll('modal-view', true);
+    mobileNavClosed('generic-modal', false);
   };
 
   /* ================= overland travel picker ================= */
@@ -2378,6 +2784,11 @@ window.FB = window.FB || {};
       const first = list.querySelector('button');
       if (first) first.focus();
     }, 0);
+    mobileNavPush('travel-picker',
+      function () { closeTravelPicker(true); },
+      function () { UI.showTravelDestinations(purposeId); },
+      function () { return UI.travelPickerOpen(); },
+      function () { return true; });
   };
 
   UI.travelPickerOpen = function () {
@@ -2454,10 +2865,10 @@ window.FB = window.FB || {};
       esc(FB.T('Depart for {destination}', {destination:pr.name})) +
       '</button><button class="actionbtn" id="travel-review-back">' +
       esc(FB.T('Back to destinations')) + '</button></div>';
-    openModal('Review journey', h, {dismissable:false});
+    openModal('Review journey', h, {dismissable:false, historyBack:true});
     $('travel-depart').addEventListener('click', function () {
       if (FB.travelStart(s, travelPicker.purpose, item.destinationId, item.destinationRealm)) {
-        UI.cancelTravelPicker();
+        UI.cancelTravelPicker(true);
         UI.closeModal();
       }
     });
@@ -2481,8 +2892,9 @@ window.FB = window.FB || {};
     if (restorePause && !wasPaused) FB.game.setPaused(false);
   }
 
-  UI.cancelTravelPicker = function () {
+  UI.cancelTravelPicker = function (discard) {
     closeTravelPicker(true);
+    mobileNavClosed('travel-picker', !!discard);
   };
 
   UI.showTravelSettlement = function () {
@@ -4193,7 +4605,7 @@ window.FB = window.FB || {};
       }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Work of {name}', { name:c.name }), h);
+    openModal(FB.T('Work of {name}', { name:c.name }), h, { historyView:true });
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
@@ -4213,7 +4625,9 @@ window.FB = window.FB || {};
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
     });
-    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(UI.showLivelihoods);
+    });
   };
 
   UI.showEnterpriseMarket = function (settlement) {
@@ -4671,11 +5085,17 @@ window.FB = window.FB || {};
       '<div class="gm-footer"><button type="button" class="btn" id="equipment-close">' +
       esc(closeLabel) + '</button></div>';
     openModal(FB.T('Equipment for {name}', { name:FB.fullName(c) }), h,
-      { modalClass:'fullsheet-modal' });
+      {
+        modalClass:'fullsheet-modal',
+        historyView:exitMode === 'character',
+        historyBackRender:function () { UI.showCharModal(cid); }
+      });
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
     $('equipment-close').addEventListener('click', function () {
-      if (exitMode === 'character') UI.showCharModal(cid);
+      if (exitMode === 'character') {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
+      }
       else UI.closeModal();
     });
   };
@@ -4721,7 +5141,7 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Decide nothing today</button>';
-    openModal(FB.T('A Match for {name}', { name: c.name }), h);
+    openModal(FB.T('A Match for {name}', { name: c.name }), h, { historyView:true });
     document.querySelectorAll('[data-match]').forEach(function (b) {
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
@@ -4731,7 +5151,9 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus: true });
       });
     });
-    $('gm-cancel').addEventListener('click', function () { UI.showCharModal(cid); });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCharModal(cid); });
+    });
   };
 
   /* ================= suitor picker =================
@@ -4947,7 +5369,7 @@ window.FB = window.FB || {};
         '<span class="adesc ' + FB.opClass(op) + '">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Keep it</button>';
-    openModal('A Gift Worth Giving', h);
+    openModal('A Gift Worth Giving', h, { historyView:true });
     document.querySelectorAll('[data-give]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (FB.giveItem(s, id, b.dataset.give)) {
@@ -4956,7 +5378,9 @@ window.FB = window.FB || {};
         }
       });
     });
-    $('gm-cancel').addEventListener('click', function () { UI.showItemModal(id); });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showItemModal(id); });
+    });
   };
 
   function equipCheckText(check) {
@@ -4978,12 +5402,21 @@ window.FB = window.FB || {};
   }
 
   function finishEquipment(cid, ref, returnMode) {
-    UI._equipPickerReturnFocus = null;
+    const nestedPicker = $('equip-picker-overlay');
+    if (nestedPicker) {
+      closeEquipmentPickerRaw(nestedPicker, false);
+      mobileNavClosed('equipment-picker', true);
+    } else {
+      UI._equipPickerReturnFocus = null;
+    }
     UI.refresh();
     const exitMode = equipmentExitMode(returnMode);
     if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
-    else if (returnMode === 'character') UI.showCharModal(cid);
-    else if (returnMode === 'item') UI.showItemModal(ref);
+    else if (returnMode === 'character') {
+      modalHistoryBack(function () { UI.showCharModal(cid); });
+    } else if (returnMode === 'item') {
+      modalHistoryBack(function () { UI.showItemModal(ref); });
+    }
     else UI.closeModal();
   }
 
@@ -5069,6 +5502,19 @@ window.FB = window.FB || {};
         esc(pickerTitle) + '</h3><div class="equip-picker-body">' + h + '</div></div>';
       UI._equipPickerReturnFocus = document.activeElement;
       pickerRoot.appendChild(overlay);
+      const pickerReturnFocus = UI._equipPickerReturnFocus;
+      mobileNavPush('equipment-picker',
+        function () { closeEquipmentPickerRaw(overlay, true); },
+        function () {
+          UI._equipPickerReturnFocus = pickerReturnFocus;
+          if (!overlay.parentNode) $('gm-body').appendChild(overlay);
+          setTimeout(function () {
+            const first = overlay.querySelector('button:not(:disabled)');
+            if (first) first.focus({ preventScroll:true });
+          }, 0);
+        },
+        function () { return document.documentElement.contains(overlay); },
+        function () { return true; });
       FB.localizeTree(overlay);
       if (!FB.isTouch) {
         const numbered = overlay.querySelectorAll('.actionbtn');
@@ -5104,7 +5550,9 @@ window.FB = window.FB || {};
     pickerRoot.querySelector('#gm-cancel').addEventListener('click', function () {
       if (nested) UI.closeModal();
       else if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
-      else if (returnMode === 'character') UI.showCharModal(cid);
+      else if (returnMode === 'character') {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
+      }
       else UI.closeModal();
     });
   };
@@ -5143,7 +5591,11 @@ window.FB = window.FB || {};
       }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back to item')) + '</button>';
-    openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h);
+    openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h,
+      {
+        historyView:true,
+        historyBackRender:function () { UI.showItemModal(ref); }
+      });
     const un = $('item-unequip');
     if (un) un.addEventListener('click', function () {
       const at = FB.itemAssignment(s, ref);
@@ -5157,7 +5609,9 @@ window.FB = window.FB || {};
           choices[i].getAttribute('data-item-equip-slot'), ref, 'item');
       });
     }
-    $('gm-cancel').addEventListener('click', function () { UI.showItemModal(ref); });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showItemModal(ref); });
+    });
   };
 
   /* ---------- education: focus picker ---------- */
@@ -5185,7 +5639,10 @@ window.FB = window.FB || {};
       '</span></button>';
     h += '</div><button class="btn" id="edu-back">' + esc(FB.T('Back')) + '</button>';
     openModal(self ? FB.T('🎓 Your education') :
-      FB.T('🎓 Education of {name}', { name: c.name }), h);
+      FB.T('🎓 Education of {name}', { name: c.name }), h, {
+        historyView:true,
+        historyBackRender:function () { UI.showCharModal(cid); }
+      });
     document.querySelectorAll('[data-edufocus]').forEach(function (b) {
       b.addEventListener('click', function () {
         const k = b.getAttribute('data-edufocus');
@@ -5217,10 +5674,12 @@ window.FB = window.FB || {};
             }
           }
         }, { subject: self ? 'self' : 'other', focus: k || 'other', name: c.name }));
-        UI.showCharModal(cid);
+        modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
-    $('edu-back').addEventListener('click', function () { UI.showCharModal(cid); });
+    $('edu-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCharModal(cid); });
+    });
   };
 
   /* ---------- education: tutor picker ---------- */
@@ -5358,7 +5817,10 @@ window.FB = window.FB || {};
       })) + '</span></button>';
     h += '</div><button class="btn" id="tut-back">' + esc(FB.T('Back')) + '</button>';
     openModal(self ? FB.T('🧑‍🏫 Your schooling') :
-      FB.T('🧑‍🏫 Instruction for {name}', { name: c.name }), h);
+      FB.T('🧑‍🏫 Instruction for {name}', { name: c.name }), h, {
+        historyView:true,
+        historyBackRender:function () { UI.showCharModal(cid); }
+      });
     document.querySelectorAll('[data-school]').forEach(function (b) {
       b.addEventListener('click', function () {
         const id = b.getAttribute('data-school');
@@ -5378,7 +5840,7 @@ window.FB = window.FB || {};
           subject:self ? 'self' : 'other', name:c.name,
           school:FB.dataParam('schooling', id)
         }));
-        UI.showCharModal(cid);
+        modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
     document.querySelectorAll('[data-tutor]').forEach(function (b) {
@@ -5438,10 +5900,12 @@ window.FB = window.FB || {};
             name: c.name
           }));
         }
-        UI.showCharModal(cid);
+        modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
-    $('tut-back').addEventListener('click', function () { UI.showCharModal(cid); });
+    $('tut-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCharModal(cid); });
+    });
   };
 
   /* ---------- name an heir ---------- */
@@ -5800,7 +6264,7 @@ window.FB = window.FB || {};
     }
     h += langSelector();
     h += '<button class="btn" id="gm-back">Back</button>';
-    openModal('Settings', h);
+    openModal('Settings', h, { historyView:true });
     function speedLabel(i) {
       return FB.T('Speed {current} / {total} — {description}', {
         current: i + 1,
@@ -5829,7 +6293,9 @@ window.FB = window.FB || {};
         FB.setLocale(langSel.value);
       });
     }
-    $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   UI.showSaveLoad = function (saving) {
@@ -5857,7 +6323,7 @@ window.FB = window.FB || {};
       h += '<div class="hint" style="text-align:center;margin:8px auto 0">⚠ This browser is blocking save storage — slots may vanish. Export keeps a life as text.</div>';
     }
     h += '<button class="btn" id="gm-back">Back</button>';
-    openModal(saving ? 'Save Game' : 'Load Game', h);
+    openModal(saving ? 'Save Game' : 'Load Game', h, { historyView:true });
     document.querySelectorAll('[data-slot]').forEach(function (b) {
       b.addEventListener('click', function () {
         const n = parseInt(b.dataset.slot, 10);
@@ -5871,7 +6337,9 @@ window.FB = window.FB || {};
     });
     if (saving) $('sl-export').addEventListener('click', UI.showExport);
     else $('sl-import').addEventListener('click', UI.showImport);
-    $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   /* a life as copyable text — the escape hatch for browsers that wipe
@@ -5882,7 +6350,7 @@ window.FB = window.FB || {};
       '<div class="gm-body-text"><p>This text <b>is</b> your current life. Copy it somewhere safe — a note, an email to yourself — then paste it back with 📥 Import on any device or browser. It is long; that is normal.</p></div>' +
       '<textarea id="sl-xtext" class="savetext" readonly rows="6"></textarea>' +
       '<div class="gm-list"><button class="actionbtn" id="sl-xcopy">📋 Copy to clipboard</button></div>' +
-      '<button class="btn" id="gm-back">Back</button>');
+      '<button class="btn" id="gm-back">Back</button>', { historyView:true });
     const ta = $('sl-xtext');
     ta.value = FB.save.exportState();
     $('sl-xcopy').addEventListener('click', function () {
@@ -5895,7 +6363,9 @@ window.FB = window.FB || {};
         });
       } else { document.execCommand('copy'); done(); }
     });
-    $('gm-back').addEventListener('click', function () { UI.showSaveLoad(true); });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showSaveLoad(true); });
+    });
   };
 
   UI.showImport = function () {
@@ -5903,7 +6373,7 @@ window.FB = window.FB || {};
       '<div class="gm-body-text"><p>Paste an exported save text below, then load it. The life wakes where it left off — and lands in the autosave slot too.</p></div>' +
       '<textarea id="sl-itext" class="savetext" rows="6" placeholder="FBS1.…"></textarea>' +
       '<div class="gm-list"><button class="actionbtn" id="sl-iload">📥 Load this life</button></div>' +
-      '<button class="btn" id="gm-back">Back</button>');
+      '<button class="btn" id="gm-back">Back</button>', { historyView:true });
     $('sl-iload').addEventListener('click', function () {
       const data = FB.save.parseExport($('sl-itext').value);
       if (!data) { UI.toast('That text is not a Fallowborn save.'); return; }
@@ -5912,7 +6382,9 @@ window.FB = window.FB || {};
         FB.save.autosave(); // plant the imported life in local storage too
       }
     });
-    $('gm-back').addEventListener('click', function () { UI.showSaveLoad(false); });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showSaveLoad(false); });
+    });
   };
 
   /* a bug or idea as copyable text — the player’s words bundled with everything
@@ -5948,7 +6420,7 @@ window.FB = window.FB || {};
       '<span class="adesc">watch it get fixed</span></a>' +
       '</div>' +
       '<button class="btn" id="gm-back">Back</button>';
-    openModal('Report a Bug', h);
+    openModal('Report a Bug', h, { historyView:true });
     $('rp-copy').addEventListener('click', function () {
       const msg = $('rp-text').value.trim();
       if (!msg) { UI.toast('Write a line about the bug or idea first.'); $('rp-text').focus(); return; }
@@ -5978,7 +6450,9 @@ window.FB = window.FB || {};
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
-    $('gm-back').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   UI.showHelp = function () {
@@ -6000,6 +6474,8 @@ window.FB = window.FB || {};
       '<p>Every county belongs by ancient right to a duchy, a kingdom, and an empire — its <b>de jure</b> titles. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>' +
       '<h4>The map</h4>' +
       '<p>Drag to pan; scroll, pinch, or <b>PgUp</b>/<b>PgDn</b> to zoom; tap a province for details. County names appear as you zoom in. Realms wage their own wars; borders shift with the decades.</p>' +
+      '<h4>Mobile navigation</h4>' +
+      '<p>On a phone, the browser or device Back control steps out of equipment choices, dialogs, and the Self/Kin drawer. It never undoes a decision that changed the game.</p>' +
       '<h4>Map filters</h4>' +
       '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
@@ -6008,8 +6484,11 @@ window.FB = window.FB || {};
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu, beside 📤 Export / 📥 Import — a life kept as text survives browsers that wipe their storage, and travels to other devices.</p>' +
-      '</div><button class="btn primary" id="gm-ok">Close</button>');
-    $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+      '</div><button class="btn primary" id="gm-ok">Close</button>',
+      { historyView:true });
+    $('gm-ok').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   UI.showChangelog = function () {
@@ -6020,8 +6499,13 @@ window.FB = window.FB || {};
       h += '</ul>';
     }
     h += '</div><div class="gm-footer"><button class="btn primary" id="gm-ok">Close</button></div>';
-    openModal('Changelog', h, { modalClass: 'changelog-modal' });
-    $('gm-ok').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+    openModal('Changelog', h, {
+      modalClass:'changelog-modal',
+      historyView:true
+    });
+    $('gm-ok').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   UI.showMods = function () {
@@ -6067,7 +6551,7 @@ window.FB = window.FB || {};
       (mods.length || bundled.some(function (m) { return FB.mods.isEnabled(m.id); }) ? '<button class="btn danger" id="mod-clear">Remove all mods</button>' : '') +
       '<button class="btn" id="gm-ok2">Close</button></div>' +
       '<p class="hint" style="margin-top:8px">Re-applying a mod of the same name replaces it. Adding or removing reloads the page.</p>';
-    openModal('Mods', h);
+    openModal('Mods', h, { historyView:true });
     bundled.forEach(function (mod, i) {
       $('mod-bundled-' + i).addEventListener('click', function () { FB.mods.toggle(mod.id); });
     });
@@ -6087,7 +6571,9 @@ window.FB = window.FB || {};
     });
     const mc = $('mod-clear');
     if (mc) mc.addEventListener('click', function () { FB.mods.clear(); });
-    $('gm-ok2').addEventListener('click', function () { FB.state ? UI.showMenu() : UI.closeModal(); });
+    $('gm-ok2').addEventListener('click', function () {
+      modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
+    });
   };
 
   /* ================= boot-time wiring ================= */
@@ -6104,9 +6590,8 @@ window.FB = window.FB || {};
     $('tb-portrait').addEventListener('click', function () {
       if (FB.state) UI.showTab('char');
     });
-    $('btn-closeself').addEventListener('click', function () {
-      document.body.classList.remove('showself');
-    });
+    $('btn-closeself').addEventListener('click', closeSelfDrawer);
+    window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const hot = {
         actions: { key: 'D', label: 'Deeds' },
