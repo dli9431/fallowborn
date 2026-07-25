@@ -254,8 +254,12 @@ when no full `currency` is supplied it changes only the topbar icon. A full
 ## The map
 
 All coordinates are **real-world [longitude, latitude]**. The engine projects them (Mercator)
-and rasterizes provinces automatically: every land pixel joins its nearest province seed.
-**You never draw province borders** — you place a seed point where the province's heart is.
+and rasterizes provinces automatically: every land pixel joins its nearest province seed
+on the same polygon in `land`. Separate islands and mainlands must therefore be separate
+land polygons; this keeps an island seed from claiming a disconnected shore across water.
+A land polygon without a seed falls back to unrestricted assignment so scenery-only
+polygons remain visible. **You never draw province borders** — you place a seed point
+where the province's heart is.
 
 ### Adding a province (a county)
 

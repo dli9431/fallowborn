@@ -2,11 +2,14 @@
 
 **Provinces have no drawn borders — and each is one county.** `js/world.js` rasterizes
 the map at boot: scanline-fills the land polygons (Mercator projection from `js/util.js`),
-then assigns every land pixel to the nearest county seed (~500 seeds — counties plus a
-handful of wastelands; the assignment
-scans an x-sorted seed window, so the denser map costs no extra boot time). Adjacency,
-coastal flags, and centroids are derived from that raster. Changing `FBDATA.provinces`
-(authored as compact rows in `data/counties.js`) reshapes the map automatically.
+then assigns every land pixel to the nearest county seed on the same authored land
+polygon (~500 seeds — counties plus a handful of wastelands). Keeping seed competition
+within a land polygon prevents island counties from acquiring disconnected mainland
+fragments across water. A polygon without a seed falls back to unrestricted assignment
+so mod-added scenery remains visible. The assignment scans an x-sorted seed window, so
+the denser map costs no extra boot time. Adjacency, coastal flags, and centroids are
+derived from that raster. Changing `FBDATA.provinces` (authored as compact rows in
+`data/counties.js`) reshapes the map automatically.
 
 **Settlements are derived, not stored.** `FB.settlementsOf(state, pid)` (world.js)
 generates 2–4 named places per province from a plain string hash (never the seeded RNG)

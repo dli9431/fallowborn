@@ -244,6 +244,7 @@ window.FB = window.FB || {};
     FB.initProjection(gridW);
     const W = FB.proj.W, H = FB.proj.H;
     const land = new Uint8Array(W * H);
+    const landmass = new Uint16Array(W * H); // 0 = sea, else FBDATA.land index+1
     const grid = new Uint16Array(W * H); // 0 = sea, else provinceIndex+1
 
     const provs = FBDATA.provinces.map(function (p, i) {
@@ -260,58 +261,78 @@ window.FB = window.FB || {};
 
     steps.push(function () {
       progress(0.1, 'Raising the continents…');
-      for (const poly of FBDATA.land) fillPolyScanline(land, W, H, projectPoly(poly), 1);
+      for (let li = 0; li < FBDATA.land.length; li++) {
+        const pts = projectPoly(FBDATA.land[li]);
+        fillPolyScanline(land, W, H, pts, 1);
+        fillPolyScanline(landmass, W, H, pts, li + 1);
+      }
     });
     steps.push(function () {
       progress(0.25, 'Filling the seas…');
-      for (const poly of FBDATA.seas) fillPolyScanline(land, W, H, projectPoly(poly), 0);
+      for (const poly of FBDATA.seas) {
+        const pts = projectPoly(poly);
+        fillPolyScanline(land, W, H, pts, 0);
+        fillPolyScanline(landmass, W, H, pts, 0);
+      }
       // snap seeds that fell in water to nearest land pixel
       for (const pr of provs) {
         pr.sx = FB.clamp(pr.sx, 0, W - 1); pr.sy = FB.clamp(pr.sy, 0, H - 1);
-        if (land[pr.sy * W + pr.sx]) continue;
-        let found = false;
-        for (let r = 1; r < 50 && !found; r++) {
-          for (let dy = -r; dy <= r && !found; dy++) {
-            for (let dx = -r; dx <= r && !found; dx++) {
-              if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-              const nx = pr.sx + dx, ny = pr.sy + dy;
-              if (nx >= 0 && ny >= 0 && nx < W && ny < H && land[ny * W + nx]) {
-                pr.sx = nx; pr.sy = ny; found = true;
+        if (!land[pr.sy * W + pr.sx]) {
+          let found = false;
+          for (let r = 1; r < 50 && !found; r++) {
+            for (let dy = -r; dy <= r && !found; dy++) {
+              for (let dx = -r; dx <= r && !found; dx++) {
+                if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+                const nx = pr.sx + dx, ny = pr.sy + dy;
+                if (nx >= 0 && ny >= 0 && nx < W && ny < H && land[ny * W + nx]) {
+                  pr.sx = nx; pr.sy = ny; found = true;
+                }
               }
             }
           }
         }
+        pr.landmass = landmass[pr.sy * W + pr.sx];
       }
     });
 
-    // nearest-seed assignment in row bands. Seeds are sorted by x so each
-    // pixel only scans the x-window that can beat its current best —
-    // the result is identical to the naive all-seeds scan (ties still go
-    // to the lowest province index), just ~an order cheaper.
+    // Nearest-seed assignment in row bands. A seed competes only on its
+    // authored land polygon, preventing island counties from acquiring
+    // disconnected mainland fragments across water. An unseeded polygon
+    // falls back to all seeds so mod-added scenery remains visible.
+    // Seeds are sorted by x so each pixel only scans the x-window that can
+    // beat its current best (ties still go to the lowest province index).
     const BAND = 80;
     let bandStart = 0;
-    let sorted = null, sxArr = null;
+    let sorted = null, sxArr = null, landmassSeeds = null;
     function assignBand() {
       if (!sorted) {
         sorted = provs.slice().sort(function (a, b) { return a.sx - b.sx; });
         sxArr = sorted.map(function (p) { return p.sx; });
+        landmassSeeds = {};
+        for (const pr of provs) {
+          if (pr.landmass) landmassSeeds[pr.landmass] = (landmassSeeds[pr.landmass] || 0) + 1;
+        }
       }
       const n = sorted.length;
       const yEnd = Math.min(H, bandStart + BAND);
       for (let y = bandStart; y < yEnd; y++) {
         for (let x = 0; x < W; x++) {
           if (!land[y * W + x]) continue;
+          const lm = landmass[y * W + x];
+          const restrictLandmass = landmassSeeds[lm] ? lm : 0;
           // binary search: first seed with sx >= x
           let lo = 0, hi = n;
           while (lo < hi) { const mid = (lo + hi) >> 1; if (sxArr[mid] < x) lo = mid + 1; else hi = mid; }
           let best = -1, bd = Infinity, bIdx = Infinity;
           for (let i = lo; i < n; i++) { // walk right
             const dx = sxArr[i] - x; if (dx * dx > bd) break;
+            if (restrictLandmass && sorted[i].landmass !== restrictLandmass) continue;
             const dy = sorted[i].sy - y, d = dx * dx + dy * dy;
             if (d < bd || (d === bd && sorted[i].idx < bIdx)) { bd = d; best = i; bIdx = sorted[i].idx; }
           }
           for (let i = lo - 1; i >= 0; i--) { // walk left
             const dx = x - sxArr[i]; if (dx * dx > bd) break;
+            if (restrictLandmass && sorted[i].landmass !== restrictLandmass) continue;
             const dy = sorted[i].sy - y, d = dx * dx + dy * dy;
             if (d < bd || (d === bd && sorted[i].idx < bIdx)) { bd = d; best = i; bIdx = sorted[i].idx; }
           }
