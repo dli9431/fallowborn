@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.56.2';
+  FB.VERSION = '1.56.3';
   FB.CHANGELOG = [
+    { v: '1.56.3', date: '2026-07-25', changes: [
+      'Island counties now remain on their own landmasses, restoring Man and removing disconnected coastal fragments.'
+    ] },
     { v: '1.56.2', date: '2026-07-25', changes: [
       'Skills can now rise beyond 40, with sharply diminishing advancement after mastery.'
     ] },

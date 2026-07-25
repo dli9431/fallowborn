@@ -6,12 +6,12 @@
    provinces just by looking up a city on any real map.
 
    - bounds:      the lon/lat window of the playable world
-   - land:        polygons of land (flat arrays: lon,lat,lon,lat,...)
+   - land:        separate landmass polygons (flat arrays: lon,lat,...)
    - seas:        polygons CARVED OUT of land (inland seas: Caspian etc.)
    - rivers:      decorative polylines
    - provinces:   seed points; province shapes are generated automatically
-                  (every land pixel joins its nearest seed — no polygon
-                  drawing needed to mod the map!)
+                  (every land pixel joins its nearest seed on that landmass
+                  — no province drawing needed to mod the map!)
    - realms:      starting realms of 867 AD
    - straits:     extra adjacency across water [provinceId, provinceId]
    - scripted:    dated historical invasions that spawn realms
@@ -105,6 +105,11 @@ FBDATA.land = [
   -6.2,53.35, -6.0,52.95, -6.4,52.3, -7.1,52.1, -8.5,51.6, -9.8,51.5,
   -10.3,52.0, -9.7,52.6, -9.5,53.25, -10.0,53.4, -9.9,54.1, -8.5,54.3,
   -8.4,54.65, -8.3,55.2, -7.4,55.35, -6.0,55.2, -5.9,54.6
+],
+/* ---- Isle of Man ---- */
+[
+  -4.82,54.08, -4.69,54.04, -4.58,54.08, -4.48,54.16, -4.38,54.28,
+  -4.34,54.40, -4.43,54.43, -4.56,54.36, -4.67,54.27, -4.77,54.17
 ],
 /* ---- Sicily ---- */
 [ 15.6,38.25, 13.35,38.15, 12.5,38.0, 12.45,37.8, 13.6,37.25, 15.15,36.95, 15.3,37.5 ],
@@ -580,7 +585,8 @@ FBDATA.straits = [
 ['messina','reggio'], ['palermo','tunis'], ['malaga','tangier'],
 ['silves','tangier'], ['constantinople','nicaea'], ['candia','athens'],
 ['nicosia','antioch'], ['cagliari','pisa'], ['ajaccio','lucca'],
-['ajaccio','nice'], ['dublin','gwynedd'], ['man','dublin'],
+['ajaccio','nice'], ['mallorca','valencia'], ['dublin','gwynedd'],
+['man','dublin'], ['man','whithorn'],
 ['whithorn','ulaid'], ['visby','birka'], ['visby','riga'],
 ['scarborough','arhus'], ['tonsberg','arhus'], ['cherson','sinope'],
 ['zeila','aden'], ['sohar','hormuz'], ['muscat','tiz']
