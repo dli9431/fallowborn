@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.51.4';
+  FB.VERSION = '1.51.5';
   FB.CHANGELOG = [
+    { v: '1.51.5', date: '2026-07-24', changes: [
+      'On touch, event choices accept deliberate taps sooner while still rejecting instant repeated taps.'
+    ] },
     { v: '1.51.4', date: '2026-07-24', changes: [
       'Journeys now depart, return, settle, and cancel without province lookup errors.'
     ] },

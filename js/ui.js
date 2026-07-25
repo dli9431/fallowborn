@@ -150,12 +150,13 @@ window.FB = window.FB || {};
   /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
      appear just as the player's thumb is already coming down toward the time
      bar, so an in-flight tap lands on a freshly drawn option and chooses an
-     outcome by accident. For a short window after the modal's action buttons
-     render, drop taps on them. This also throttles blowing through a queue of
-     events. It covers touch taps and the keyboard digit path (which fires the
-     same click); desktop mouse users act on a centered modal with no button
-     under the pointer, so the guard is limited to touch. Tunable below. */
-  const EVENT_INPUT_GUARD_MS = 700;
+     outcome by accident. Briefly drop input after each set of action buttons
+     renders: long enough to catch an instant follow-up tap, but short enough
+     that deliberately moving through events stays responsive. Autoresolved
+     events render no buttons and never arm this guard. Desktop mouse users act
+     on a centered modal with no button under the pointer, so the guard is
+     limited to touch. */
+  const EVENT_INPUT_GUARD_MS = 350;
   let eventGuardUntil = 0;
   function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
   function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }

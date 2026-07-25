@@ -82,10 +82,12 @@ compass and remaining route, and the Deeds panel replaces focuses/actions with
 current journey status and **Turn back toward home**.
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
-input for a short window after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
+input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
-must not pick an outcome by accident. The guard rearms for each queued event and each outcome
-screen, and — since the keyboard digit path fires the same click — it covers both input routes.
+must not pick an outcome by accident, while a deliberate next tap should feel immediate. The
+guard rearms for each queued event and each outcome screen. Autoresolved events render no
+buttons, so they bypass the guard naturally; exceptional choices that automation intentionally
+shows remain protected.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 
