@@ -63,6 +63,36 @@ window.FB = window.FB || {};
   FB.getUidCounter = function () { return _uid; };
 
   FB.SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
+  FB.dateOrdinal = function (date) {
+    return date.year * 360 + date.season * 90 + (date.day - 1);
+  };
+  FB.dateFromOrdinal = function (ordinal) {
+    const year = Math.floor(ordinal / 360);
+    let rest = ordinal - year * 360;
+    const season = Math.floor(rest / 90);
+    rest -= season * 90;
+    return { year:year, season:season, day:rest + 1 };
+  };
+  FB.startOf = function (state) {
+    const start = state && state.start;
+    return start ? {
+      id:start.id || '867',
+      year:start.year,
+      season:start.season === undefined ? 0 : start.season,
+      day:start.day === undefined ? 1 : start.day
+    } : { id:'867', year:867, season:0, day:1 };
+  };
+  /* Turn deadlines are converted through the saved current date, not a
+     hard-coded epoch. This works for old v3 saves and every bookmark date. */
+  FB.dateAtTurn = function (state, turn) {
+    const delta = Number(turn) - Number(state.turn || 0);
+    return FB.dateFromOrdinal(FB.dateOrdinal(state.date) + delta);
+  };
+  FB.campaignYears = function (state) {
+    const start = FB.startOf(state);
+    return Math.max(0,
+      Math.floor((FB.dateOrdinal(state.date) - FB.dateOrdinal(start)) / 360));
+  };
   FB.seasonName = function (season) {
     const name = FB.SEASONS[season] || '';
     return FB.T ? FB.T(name) : name;

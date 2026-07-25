@@ -15,6 +15,7 @@ window.FBMODS = window.FBMODS || [];
   const BKEY = 'fb_mods_bundled';
   let currencySupplied = false;
   let currencyInvalid = false;
+  let legacyBookmarkLimited = false;
 
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
@@ -48,6 +49,14 @@ window.FBMODS = window.FBMODS || [];
 
   M.count = function () { return readAll().length + readEnabled().length; };
   M.currencyInvalid = function () { return currencyInvalid; };
+  M.bookmarkAvailable = function (id) {
+    return id !== '1066' || !legacyBookmarkLimited;
+  };
+  M.bookmarkWarning = function () {
+    return legacyBookmarkLimited
+      ? 'Spring 1066 is hidden for new games because an active legacy mod changes the world without providing a complete 1066 bookmark. Existing matching saves can still load.'
+      : '';
+  };
 
   /* the stored mods as {name, kb} for display — a mod may carry an
      optional cosmetic "name" field (ignored by the merge) */
@@ -143,13 +152,44 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.apply = function (mod) {
+    const legacyWorldKeys = [
+      'provinces','realms','empires','kingdoms','duchies','straits',
+      'scripted','bounds','land','seas'
+    ];
+    let changesLegacyWorld = false;
+    for (let wi = 0; wi < legacyWorldKeys.length; wi++) {
+      if (own(mod, legacyWorldKeys[wi])) { changesLegacyWorld = true; break; }
+    }
+    let supplies1066 = false;
+    if (mod.bookmarks) {
+      if (Array.isArray(mod.bookmarks)) {
+        for (const definition of mod.bookmarks) {
+          if (!definition || !definition.id) continue;
+          FBDATA.bookmarks[definition.id] = definition;
+          if (definition.id === '1066') supplies1066 = true;
+        }
+      } else {
+        for (const bookmarkId in mod.bookmarks) {
+          if (!own(mod.bookmarks, bookmarkId)) continue;
+          const definition = mod.bookmarks[bookmarkId];
+          if (!definition || typeof definition !== 'object') continue;
+          // The table key is authoritative, just like ids in merge-by-id arrays.
+          definition.id = bookmarkId;
+          FBDATA.bookmarks[bookmarkId] = definition;
+          if (bookmarkId === '1066') supplies1066 = true;
+        }
+      }
+    }
+    if (changesLegacyWorld && !supplies1066) legacyBookmarkLimited = true;
     if (mod.events) mergeById(FBDATA.events, mod.events, 'id');
     if (mod.provinces) mergeById(FBDATA.provinces, mod.provinces, 'id');
     if (mod.realms) mergeById(FBDATA.realms, mod.realms, 'id');
     if (mod.empires) for (const k in mod.empires) FBDATA.empires[k] = mod.empires[k];
     if (mod.kingdoms) for (const k in mod.kingdoms) FBDATA.kingdoms[k] = mod.kingdoms[k];
     if (mod.duchies) for (const k in mod.duchies) FBDATA.duchies[k] = mod.duchies[k];
-    if (mod.straits) FBDATA.straits = FBDATA.straits.concat(mod.straits);
+    if (mod.straits) {
+      for (const strait of mod.straits) FBDATA.straits.push(strait);
+    }
     // scripted entries are replaced only on a (year, realm) match — several
     // realms may act in the same year without clobbering one another
     if (mod.scripted) {
@@ -197,6 +237,7 @@ window.FBMODS = window.FBMODS || [];
   M.applyStored = function () {
     currencySupplied = false;
     currencyInvalid = false;
+    legacyBookmarkLimited = false;
     const on = readEnabled();
     for (const mod of M.bundled()) {
       if (on.indexOf(mod.id) === -1) continue;

@@ -133,7 +133,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 /* scenario cards */
-#scenariolist {
+#scenariolist, #bookmarklist {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 12px; width: min(100%, 900px); margin-bottom: 16px;
 }

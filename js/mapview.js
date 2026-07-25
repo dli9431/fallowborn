@@ -24,13 +24,15 @@ window.FB = window.FB || {};
   FB.map = M;
 
   M.init = function (canvas) {
+    if (M.canvas) {
+      M.useWorld();
+      return;
+    }
     M.canvas = canvas;
     M.ctx = canvas.getContext('2d');
     M.base = document.createElement('canvas');
-    M.base.width = FB.world.W; M.base.height = FB.world.H;
     M.baseCtx = M.base.getContext('2d');
     M.hilite = document.createElement('canvas');
-    M.hilite.width = FB.world.W; M.hilite.height = FB.world.H;
     M.hiliteCtx = M.hilite.getContext('2d');
 
     canvas.addEventListener('pointerdown', onDown);
@@ -39,8 +41,26 @@ window.FB = window.FB || {};
     canvas.addEventListener('pointercancel', onUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', function () { M.resize(); M.request(); });
+    M.useWorld();
+  };
+
+  /* Rebind the off-screen paint surfaces after a bookmark switch. The visible
+     canvas and its input listeners survive, so moving between start dates or
+     loading another date in one session cannot stack pointer handlers. */
+  M.useWorld = function () {
+    if (!M.canvas || !FB.world) return;
+    M.base.width = FB.world.W; M.base.height = FB.world.H;
+    M.hilite.width = FB.world.W; M.hilite.height = FB.world.H;
+    M.selected = null;
+    M.playerProv = null;
+    M.capitals = [];
+    M.ownerOf = null;
+    M.colorOf = null;
+    M.holderOf = null;
+    M.dirty = true;
     M.resize();
     M.fitView();
+    M.request();
   };
 
   M.resize = function () {
@@ -249,8 +269,9 @@ window.FB = window.FB || {};
         ctx.font = (pr.wasteland ? 'italic ' : '') + fs + 'px Georgia';
         ctx.lineWidth = 3 * M.dpr; ctx.strokeStyle = 'rgba(20,16,10,0.7)';
         ctx.fillStyle = pr.wasteland ? 'rgba(230,225,210,0.55)' : 'rgba(255,250,235,0.92)';
-        ctx.strokeText(pr.name, s[0], s[1]);
-        ctx.fillText(pr.name, s[0], s[1]);
+        const provinceName = FB.L(pr.name);
+        ctx.strokeText(provinceName, s[0], s[1]);
+        ctx.fillText(provinceName, s[0], s[1]);
       }
       // capital stars
       ctx.font = Math.round(9 * M.dpr) + 'px Georgia';

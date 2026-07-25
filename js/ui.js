@@ -160,7 +160,7 @@ window.FB = window.FB || {};
       return FB.T('Defensive allies - neither realm may attack the other');
     }
     if (s.pacts && s.pacts[rid] > s.turn) {
-      const year = FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360);
+      const year = FB.dateAtTurn(s, s.pacts[rid]).year;
       return FB.isRealmAtWar(s, rid)
         ? FB.T('Peace pact until {year} AD · at war elsewhere', { year: year })
         : FB.T('Peace pact until {year} AD', { year: year });
@@ -437,7 +437,7 @@ window.FB = window.FB || {};
       closeTravelPicker(false);
       mobileNavClosed('travel-picker', true);
     }
-    for (const sid of ['loading', 'title', 'newgame', 'pickprov', 'chargen']) {
+    for (const sid of ['loading', 'title', 'bookmarks', 'newgame', 'pickprov', 'chargen']) {
       const el = $(sid);
       el.classList.toggle('hidden', sid !== id);
       el.classList.remove('asbar');
@@ -632,7 +632,7 @@ window.FB = window.FB || {};
       FB.drawCrest($('crest'), me.dyn || me.name);
     }
     const pr = FB.world.byId[s.player.provinceId];
-    $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? pr.name : '?');
+    $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? FB.L(pr.name) : '?');
     const dateStr = FB.T('{season} {day} · {year} AD', {
       season: FB.seasonName(s.date.season), day: dd, year: s.date.year
     });
@@ -2370,7 +2370,7 @@ window.FB = window.FB || {};
       if (realm && s.pacts && s.pacts[rid] > s.turn) {
         h += '<div class="progressnote">' + esc(FB.T(
           '🕊 A pact of peace holds until {year} AD.',
-          { year: FBDATA.balance.startYear + Math.floor(s.pacts[rid] / 360) })) + '</div>';
+          { year: FB.dateAtTurn(s, s.pacts[rid]).year })) + '</div>';
       }
       h += panelh('Notable folk');
       const nb = FB.provNotables(s, pid);
@@ -4128,14 +4128,14 @@ window.FB = window.FB || {};
         : '') +
       '</div></div>' +
       '<div style="margin-top:10px">' +
-      kv('Realm', esc(r.name)) +
+      kv('Realm', esc(FB.L(r.name))) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
       kv('Realm host', '~' + esc(menText(s, men))) +
       kv('Defensive alliance', esc(allianceText(s, rid))) +
       (liege ? kv('Overlord',
         '<button class="linklike" data-liege="' + esc(liege.id) + '">' +
-        esc(liege.name) + '</button>') : '') +
-      (cap ? kv('Capital', esc(cap.name)) : '') +
+        esc(FB.L(liege.name)) + '</button>') : '') +
+      (cap ? kv('Capital', esc(FB.L(cap.name))) : '') +
       '</div>';
     if (family.length) {
       h += '<div class="panelh">' + esc(FB.T('Ruler’s family and succession')) + '</div>';
@@ -6718,7 +6718,7 @@ window.FB = window.FB || {};
 
   UI.gameOver = function () {
     const s = FB.state;
-    const years = s.date.year - FBDATA.balance.startYear;
+    const years = FB.campaignYears(s);
     const summary = FB.renderMessage(FB.msg('fx.gameover.summary', {
       forms: {
         select: 'plural', param: 'generations', cases: {
@@ -6963,9 +6963,10 @@ window.FB = window.FB || {};
     $('sl-iload').addEventListener('click', function () {
       const data = FB.save.parseExport($('sl-itext').value);
       if (!data) { UI.toast('That text is not a Fallowborn save.'); return; }
-      if (FB.game.loadData(data)) {
+      if (FB.game.loadData(data, function () {
+        FB.save.autosave(); // plant the imported life after its world has activated
+      })) {
         UI.closeModal();
-        FB.save.autosave(); // plant the imported life in local storage too
       }
     });
     $('gm-back').addEventListener('click', function () {
@@ -7043,7 +7044,7 @@ window.FB = window.FB || {};
 
   UI.showHelp = function () {
     openModal('How to Play', '<div class="gm-body-text">' +
-      '<p><b>Fallowborn</b> is a life-and-dynasty game. You begin in 867 AD — most likely poor — and try to raise your family through the ranks of medieval society before old age claims each generation.</p>' +
+      '<p><b>Fallowborn</b> is a life-and-dynasty game. You begin in an authored medieval world — most likely poor — and try to raise your family through the ranks of society before old age claims each generation.</p>' +
       '<h4>Day by day</h4><ul>' +
       '<li>Set a <b>focus</b> in the Deeds tab — it is pursued every day until you change it (work the land, drill, haggle, pray, court…).</li>' +
       '<li><b>Deeds</b> are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated.</li>' +

@@ -44,8 +44,11 @@ structured clauses instead of being spliced into surrounding prose.
 New chronicle and event-log entries store locale-neutral `{key, params}` message descriptors
 and are rendered in the player's current locale. Legacy saves and unstructured mod prose keep
 their frozen English text as a compatibility fallback. Scripted-history descriptors use the
-entry's year and realm/new-realm id, not its array position, so inserting another scripted
-event cannot change the meaning of a saved key.
+legacy entry's year and realm/new-realm id, not its array position, so inserting another
+scripted event cannot change the meaning of a saved key. Precise-date entries use their
+stable event id plus the active bookmark id. The daily scheduler described in
+[time.md](time.md) makes `season` and `day` optional while preserving Spring day 1
+behavior and flag keys for every existing 867 entry.
 
 The event modal shows a character card for the event's `charCard` role and for every
 `{role}` token the event's strings mention (js/ui.js `showEvent`); cards carry the

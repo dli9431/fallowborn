@@ -72,6 +72,19 @@ assembly where the terms of service, the aid and scutage, are voted on — see
 `FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal opinion lives in
 `player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate` and a
 share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
+
+Realm, ownership, and de jure source data belong to the active start bookmark. The
+867 and 1066 definitions may therefore use different realm ids, liege chains,
+capitals, county owners, and hierarchy names without altering saved political state.
+Activation clears all owner-, liege-, and de-jure-derived caches before a campaign is
+created or restored.
+
+Every explicitly authored start realm may supply
+`ruler:{name,sex,culture,born,mar,trait}`. `FB.initPolitics` copies that historical
+profile verbatim into the realm's initial lightweight ruler, deriving only start-age
+and ordinary succession bookkeeping. Generated counts, dukes, children, heirs,
+successors, and later houses continue through the saved RNG, so authored start rulers
+do not turn the whole family tree into fixed history.
 Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
 with his home county: the granting count yields it (dissolving if left landless) and
 the player answers to the granter's own liege — a liege must outrank his man, and

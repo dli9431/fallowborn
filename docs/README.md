@@ -1,7 +1,8 @@
 # Fallowborn
 
 A browser grand-strategy dynasty saga — except you probably start as a **serf**.
-Beginning in **867 AD**, guide one family through the generations: from mud-floored huts toward
+Begin in **Spring 867** or **Spring 1066**, then guide one family through the
+generations: from mud-floored huts toward
 manors, baronies, and — if fortune and cunning allow — crowns.
 
 ## Play
@@ -38,7 +39,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   The gold sheet also records this year's
   purchasing-power change from coin prices.
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
-  on its own while you watch the map, tap provinces, and read the chronicle. Its ☰ →
+  from the bookmark you selected while you watch the map, tap provinces, and read the
+  chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.
 - The game autosaves every spring; three manual save slots live in the ☰ menu, beside 📤 Export / 📥 Import for keeping a life as text — the fallback for browsers that wipe local storage (some iPhones), and a way to move a life between devices.
 - **☰ → 🐞 Report a bug** builds a ready-made report: your description (bug or suggestion)
@@ -216,13 +218,17 @@ bleed gold and men — and past eight seasons, exhaustion ends them with nothing
 
 Seven scenarios: Serf, Free Farmer, Craftsman's Apprentice, Novice Monk, Man-at-Arms,
 Hedge Knight, and Petty Baron — anywhere on a map spanning Europe, the Middle East, and
-North Africa.
+North Africa. Before choosing a scenario, choose the authored Spring 867 or Spring 1066
+world. The latter begins after Harold Godwinson's coronation and before the Norwegian
+and Norman invasions; those invasion chains are not yet scripted.
 
 **Sharing a start (seeds):** New Game offers a **Fresh start** or **🔑 Use this seed**.
-Paste a friend's full start code to begin with their exact world, scenario, province, and
+Paste a friend's full six-part start code to begin with their exact bookmark, world,
+scenario, province, and
 character — the character screen comes pre-filled, so you can check the details before
-committing. A bare word or code works too: same 867 world (same rulers, same generated
-lords), your own picks. Your own start code waits in the ☰ menu once your story begins —
+committing. Old five-part codes still select 867. A bare word or code preserves the
+random world seed but lets you choose the bookmark and other details. Your own start
+code waits in the ☰ menu once your story begins —
 tap it to copy and share. Codes reproduce exactly only on the same game version and mod
 set.
 

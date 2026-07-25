@@ -49,6 +49,14 @@ Touch devices keep their platform-native overlay scrolling.
 The title screen scales its crest, heading, button height, gaps, and footer spacing against
 viewport height so the full menu fits common standalone and itch iframe heights; genuinely
 short viewports retain `.screen` scrolling as the fallback.
+
+New Game proceeds through bookmark → social scenario → province → character. Bookmark
+cards use the same responsive grid and native-button keyboard behavior as scenario
+cards. Selecting one activates its world before the province picker is shown, so the
+preview owner colors, county details, headings, era help, Observe mode, and character
+birth year all read the same active definition. Returning from scenarios goes back to
+the bookmark list without wiring another set of map listeners.
+
 Hover-only affordances need a tap path (item chips toast their description).
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows
