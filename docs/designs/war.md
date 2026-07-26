@@ -224,6 +224,12 @@ valid, or it lacks two sovereign attackers and also lacks one attacker with 75% 
 the defending strength. A launched campaign no longer depends on the office remaining
 occupied.
 
+Two code-queued wartime events make those transitions unmissable without automation:
+`ghw_called` announces the Pope's Crusade or Caliph's Jihad on the call day, and
+`ghw_muster_complete` announces the march on the first active day after the army tick
+has raised the gathered sovereign hosts. They are informational events; joining and
+campaign review remain in the Deeds tab.
+
 Objectives are the target kingdom's counties controlled by another religion group at
 the call. They keep their normal owner and holder throughout the campaign.
 `campaign.occupations[provinceId]` holds only temporary occupation, siege progress,

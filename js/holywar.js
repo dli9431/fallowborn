@@ -239,6 +239,17 @@ window.FB = window.FB || {};
     return null;
   }
 
+  function campaignEventContext(state, campaign) {
+    var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
+    return {
+      campaignType:campaign.callingReligion === 'catholic' ? 'crusade' :
+        (campaign.callingReligion === 'sunni' ? 'jihad' : 'other'),
+      caller:realmName(state, campaign.callerRealm),
+      leader:realmName(state, campaign.leaderRealm),
+      kingdom:kingdom ? kingdom.name : campaign.targetKingdom
+    };
+  }
+
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
     if (!state || state.greatHolyWar || !config(religionId)) return false;
     var conf = config(religionId), history = ensureHistory(state);
@@ -392,6 +403,7 @@ window.FB = window.FB || {};
         campaign:FB.dataParam('religion', religionId, 'head.greatHolyWar.name'),
         kingdom:kingdom ? kingdom.name : kingdomId
       }));
+    FB.queueEvent(state, 'ghw_called', campaignEventContext(state, campaign));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return campaign;
   };
@@ -744,6 +756,9 @@ window.FB = window.FB || {};
     campaign.phase = 'active';
     campaign.launchedTurn = state.turn;
     campaign.deadlineTurn = state.turn + B('greatHolyWarDeadlineDays', 2880);
+    /* armyTick has already run on the launch day. Queue the second announcement
+       on the following tick, after the newly active sovereign hosts have raised. */
+    campaign.musterEventPending = true;
     ensureHistory(state).firstLaunched[campaign.callingReligion] = true;
     breakCrossCampTies(state, campaign);
     if (FB.playerGreatHolyWarHostActive(state)) {
@@ -1592,6 +1607,11 @@ window.FB = window.FB || {};
       return;
     }
     if (campaign.phase !== 'active') return;
+    if (campaign.musterEventPending) {
+      campaign.musterEventPending = false;
+      FB.queueEvent(state, 'ghw_muster_complete',
+        campaignEventContext(state, campaign));
+    }
     pruneParticipants(state, campaign);
     var attackerCount = 0;
     for (var i = 0; i < campaign.participants.attackers.length; i++) {

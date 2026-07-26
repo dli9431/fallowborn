@@ -126,6 +126,12 @@ unlanded expeditions. The new-year world tick runs the saved, seeded historical 
 scheduler before ordinary realm declarations, so campaign participants cannot open a
 second war that year.
 
+The call itself queues a wartime announcement event immediately. Launch marks a
+second announcement pending; it is queued on the following daily holy-war tick,
+after that day's army tick has raised the newly active sovereign hosts. Both use the
+ordinary event-modal/autoresolve path, so fast-forward stops on them whenever war
+event automation is off.
+
 Observe mode runs the same yearly scheduler, daily host movement, battles, occupation,
 repair, and settlement deterministically; it merely suppresses protagonist event
 handling. Catholic calls unlock in late 1095 and Sunni calls in 1105. Resolution
