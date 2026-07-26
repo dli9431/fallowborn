@@ -76,8 +76,9 @@ lists wrap between places, never inside a settlement name, so each link stays re
 The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
-treasures, station upkeep, resident-family provisions, maintained standards, and school
-fees), tap or click opens the same rows as a small modal
+treasures, station upkeep, resident-family provisions, maintained standards, wartime
+necessities, raised-host logistics by component, and school fees), tap or click opens
+the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation. The money button uses `FB.money`: compact formatting for its visible
 balance, the configured `icon` for the mark, and localized long denomination names
@@ -101,6 +102,13 @@ productive or combat property. The permanent section keeps Pack Mule, Fine Tools
 Mail, Warhorse, and other existing assets under their old one-time ownership rules.
 The sheet uses ordinary numbered action buttons, nested same-document history, a sticky
 footer, and the `fullsheet-modal` narrow/mobile layout.
+
+The conquest picker previews the current household's normal-muster logistics before
+the player declares. Selecting the player's raised host in the Land panel shows the
+current live logistics total beside its composition; ordinary war-status text repeats
+that total. These surfaces read `FB.playerMusterUpkeepParts` and
+`FB.playerHostUpkeepParts`, so great levies, reinforcements, casualties, mercenary
+companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
 
 **Managed household sheets keep compact bust portraits and open equipment separately.**
 The Self sheet and the sheets for living spouses and resident unmarried children each offer

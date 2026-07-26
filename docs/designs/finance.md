@@ -20,10 +20,16 @@ default, and stable-id state. Old version-3 saves therefore begin at a price
 index of 1 on their next annual tick; no past inflation is reconstructed.
 `FB.addPricePressure(state, amount, years, source)` adds deterministic saved
 shocks. Lean harvests and pestilence add scarcity/disruption pressure, plague
-recovery eases it, personal war adds annual pressure, and sovereign coinage
-adds explicit monetary shocks. Ordinary variation and investment outcomes use
-the saved `FB.rng` stream only. `lastYear` and stored investment resolutions
+recovery eases it, war in the player's sovereign realm adds annual pressure,
+and sovereign coinage adds explicit monetary shocks. Ordinary variation and
+investment outcomes use the saved `FB.rng` stream only. `lastYear` and stored investment resolutions
 prevent reloads from applying or rolling an outcome twice.
+
+War also has an immediate seasonal price. While `FB.playerRealmAtWar(state)` is true,
+`FB.householdUpkeepParts` adds `wartime`, equal by default to 25% of the station base
+plus resident-family provisions. Retainer contracts, schooling, buildings, and other
+authored charges are not multiplied. This is computed on demand, so peace removes the
+surcharge without a save field.
 
 **Contracts state exact terms.** Pledged loans, merchant advances, and loans
 against revenues grant base gold now and record a fixed face value. A nominal
@@ -33,9 +39,12 @@ debasement may instead demand a real, weight-denominated contract whose due
 value does not move. `FB.reliableGoldIncome` is the shared numeric seasonal net
 used by the gold ledger and credit capacity; windfalls, sales, other loans, and
 unmatured investments never count. Its recurring costs include resident-family upkeep,
-active maintained household standards, retainer contracts, and the disclosed fees of
-current schooling arrangements. The ledger shows maintained standards separately from
-basic household and family costs.
+active maintained household standards, retainer contracts, wartime household scarcity,
+the live raised host's base/levy/archer/retinue/mercenary logistics, and the disclosed
+fees of current schooling arrangements. The same components are itemized by
+`FB.incomeBreakdown`, with maintained standards separate from basic household and family
+costs, so the gold sheet, Finance net, credit capacity, and prudent building automation
+share one result.
 
 Loans mature as lump sums at season boundaries. An affordable maturity repays
 automatically. The first miss adds the signed 10% face penalty and grants two

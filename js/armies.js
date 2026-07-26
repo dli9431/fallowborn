@@ -85,6 +85,50 @@ window.FB = window.FB || {};
   };
   FB.playerHost = function (state) { return FB.hostOf(state, 'player'); };
 
+  function hostUpkeepParts(units, mercenaryCompanies) {
+    const bal = B();
+    const base = bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase;
+    const levy = Math.max(0, Number(units.levy) || 0) / 100 *
+      (bal.hostLogisticsLevyPer100 === undefined ? 0.5 : bal.hostLogisticsLevyPer100);
+    const archers = Math.max(0, Number(units.arch) || 0) / 100 *
+      (bal.hostLogisticsArcherPer100 === undefined ? 1 : bal.hostLogisticsArcherPer100);
+    const retinue = Math.max(0, Number(units.ret) || 0) / 100 *
+      (bal.hostLogisticsRetinuePer100 === undefined ? 2 : bal.hostLogisticsRetinuePer100);
+    const mercenaries = Math.max(0, Number(mercenaryCompanies) || 0) *
+      (bal.hostLogisticsMercenaryCompany === undefined
+        ? 4 : bal.hostLogisticsMercenaryCompany);
+    return {
+      base:base, levy:levy, archers:archers, retinue:retinue,
+      mercenaries:mercenaries,
+      total:base + levy + archers + retinue + mercenaries
+    };
+  }
+
+  /* Current seasonal cost of the live player host. A missing (disbanded or
+     shattered) host has no base logistics and therefore costs nothing. */
+  FB.playerHostUpkeepParts = function (state) {
+    const host = FB.playerHost(state);
+    if (!host) {
+      return { base:0, levy:0, archers:0, retinue:0, mercenaries:0, total:0 };
+    }
+    const units = FB.hostUnits(host);
+    const companySize = B().mercCompanySize || 150;
+    const contracted = state.player.war && state.player.war.mercCos;
+    const companies = contracted || Math.ceil((units.mercs || 0) / companySize);
+    return hostUpkeepParts(units, companies);
+  };
+
+  /* Declaration preview: the present peacetime composition at an ordinary
+     muster, before a great levy, mercenaries, or defensive allies join it. */
+  FB.playerMusterUpkeepParts = function (state) {
+    const comp = FB.playerComposition(state);
+    const units = { levy:comp.levy, arch:comp.arch, ret:comp.ret, mercs:0 };
+    const men = units.levy + units.arch + units.ret;
+    const floor = B().armyMinMen || 40;
+    if (men < floor) units.levy += floor - men;
+    return hostUpkeepParts(units, 0);
+  };
+
   FB.armiesAt = function (state, pid) {
     FB.armiesEnsure(state);
     return state.armies.filter(function (a) { return a.at === pid; });

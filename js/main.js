@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.61.0';
+  FB.VERSION = '1.62.0';
   FB.CHANGELOG = [
+    { v: '1.62.0', date: '2026-07-26', changes: [
+      'Wars now raise household necessity costs and charge seasonal logistics based on the live host’s composition.'
+    ] },
     { v: '1.61.0', date: '2026-07-26', changes: [
       'Commoner households can now choose a living standard that shapes their daily expenses, provisions, comfort, health, and standing.'
     ] },
@@ -1066,6 +1069,12 @@ window.FB = window.FB || {};
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
         if (G.auto.research) FB.autoResearch(s);
+      }
+      /* A raised host costs its live composition once per season, for both
+         ordinary and great holy wars. Shattered/disbanded hosts return zero. */
+      if (FB.playerHostUpkeepParts) {
+        const hostUpkeep = FB.playerHostUpkeepParts(s);
+        p.gold = Math.max(0, p.gold - hostUpkeep.total);
       }
       FB.playerWarTick(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);

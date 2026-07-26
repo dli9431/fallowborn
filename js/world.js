@@ -1765,6 +1765,14 @@ window.FB = window.FB || {};
     return false;
   };
 
+  /* War reaches the household through the sovereign realm the player answers
+     to, whether or not the protagonist personally rides with its host. */
+  FB.playerRealmAtWar = function (state) {
+    if (!state || !state.player) return false;
+    const realmId = FB.playerRealmId(state);
+    return !!(realmId && FB.isRealmAtWar(state, realmId));
+  };
+
   /* Old saves may contain wars created before the one-war-per-sovereign
      invariant. Keep the player's valid war first, then accept valid AI wars
      in stable realm-id order while no endpoint is already occupied. */
@@ -2266,11 +2274,11 @@ window.FB = window.FB || {};
     FB.validateFocus(state);
   };
 
-  /* Each war season asks for orders instead of rolling a hidden battle:
-     upkeep (including mercenary pay) and exhaustion are charged here, the
-     ENEMY makes its move — in a defensive war their columns advance unless
-     beaten back — then a war-council event is queued. Its options act
-     through the FB.fns.war_* handlers below. */
+  /* Each war season asks for orders instead of rolling a hidden battle. Host
+     logistics are charged from the shared live-composition calculation at
+     the season boundary; this tick advances exhaustion, lets the ENEMY make
+     its move, and queues a war-council event. Its options act through the
+     FB.fns.war_* handlers below. */
   FB.playerWarTick = function (state) {
     const p = state.player;
     const w = p.war;
@@ -2282,7 +2290,6 @@ window.FB = window.FB || {};
       FB.endPlayerWar(state); return;
     }
     w.seasons++;
-    p.gold = Math.max(0, p.gold - (2 + (p.provs ? p.provs.length : 0) + (w.mercCos || 0) * 4));
     if (!w.defending && w.casus && w.casus.type === 'restoration' && enemy.capital) {
       w.target = enemy.capital; // the right follows the living seat of the usurped crown
       w.casus.target = enemy.capital;

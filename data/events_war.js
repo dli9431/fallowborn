@@ -13,7 +13,7 @@ FBDATA.events.push(
 { id:'war_muster', title:'The Banners Rise', trigger:{ never:true }, wartime:true,
   text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls while the council presses the works.',
   options:[
-    { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season).',
+    { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season while the host is raised).',
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to war.' } },
@@ -22,7 +22,7 @@ FBDATA.events.push(
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
   text:'{enemy} marches on your lands. Roads fill with carts and rumor; your captains stand in the yard, waiting for orders.',
   options:[
-    { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season).',
+    { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season while the host is raised).',
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the defense.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to the defense.' } },

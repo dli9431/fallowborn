@@ -961,17 +961,21 @@ window.FB = window.FB || {};
       return FB.renderMessage(FB.msg('fx.action.mercenary_desc', {
         forms: {
           select: 'value', param: 'hasCompanies', cases: {
-            none: '~150 spears: {money:15} now, {money:4} a season while the war lasts.',
+            none: '~150 spears: {money:15} now, {money:upkeep} a season while the host is raised.',
             some: {
               select: 'plural', param: 'count', cases: {
-                one: '~150 spears: {money:15} now, {money:4} a season while the war lasts. ({count} company under your banner)',
-                other: '~150 spears: {money:15} now, {money:4} a season while the war lasts. ({count} companies under your banner)'
+                one: '~150 spears: {money:15} now, {money:upkeep} a season while the host is raised. ({count} company under your banner)',
+                other: '~150 spears: {money:15} now, {money:upkeep} a season while the host is raised. ({count} companies under your banner)'
               }
             },
-            other: '~150 spears: {money:15} now, {money:4} a season while the war lasts.'
+            other: '~150 spears: {money:15} now, {money:upkeep} a season while the host is raised.'
           }
         }
-      }, { hasCompanies: n ? 'some' : 'none', count: n }),
+      }, {
+        hasCompanies: n ? 'some' : 'none', count: n,
+        upkeep:FBDATA.balance.hostLogisticsMercenaryCompany === undefined
+          ? 4 : FBDATA.balance.hostLogisticsMercenaryCompany
+      }),
       { state: s, viewer: s.player.charId });
     },
     show: function (s) { return !!s.player.war; },
@@ -1160,6 +1164,7 @@ window.FB = window.FB || {};
     const p = state.player;
     let total = -FB.householdUpkeep(state);
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
+    if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
     if (p.tier >= 3) {
       total += FB.playerTax(state);
       total -= FB.buildingBonus(state, 'upkeep');
@@ -1325,6 +1330,15 @@ window.FB = window.FB || {};
     if (FB.householdStandardEffect) {
       add('prestige', FB.T('Household luxuries'),
         FB.householdStandardEffect(state, 'prestige'));
+    }
+    add('gold', FB.T('Wartime scarcity for household necessities'), -upkeep.wartime);
+    if (FB.playerHostUpkeepParts) {
+      const hostUpkeep = FB.playerHostUpkeepParts(state);
+      add('gold', FB.T('Raised-host base logistics'), -hostUpkeep.base);
+      add('gold', FB.T('Levy food and supplies'), -hostUpkeep.levy);
+      add('gold', FB.T('Archer food and supplies'), -hostUpkeep.archers);
+      add('gold', FB.T('Men-at-arms food and supplies'), -hostUpkeep.retinue);
+      add('gold', FB.T('Mercenary company contracts'), -hostUpkeep.mercenaries);
     }
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {

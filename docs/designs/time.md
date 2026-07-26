@@ -52,11 +52,14 @@ qualified AI-controlled seat or assign the strongest eligible AI claimant in sta
 order, including in Observe mode.
 
 At a season boundary the household receives normal income, pays station and resident-family
-upkeep, and collects livelihood wages. Maintained commoner standards settle next. If their
+upkeep, including the wartime necessities surcharge when the player's sovereign realm is
+at war, and collects livelihood wages. Maintained commoner standards settle next. If their
 total is unaffordable, discretionary levels lapse in a stable order until the remainder can
 be paid; surviving luxuries then grant their prestige. Retainer capacity/pay and active
 school terms settle after standards, so a lost quarters level can reduce service capacity
-before contracts are paid. Unaffordable schooling pauses for that term. Then
+before contracts are paid. Unaffordable schooling pauses for that term. Any live player
+host then pays composition-based logistics, clamped at an empty purse if unaffordable,
+before the ordinary war and great holy-war seasonal drivers run. Then
 `FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
 new year `FB.financeYear` then moves the price index and revalues the remaining purse before
