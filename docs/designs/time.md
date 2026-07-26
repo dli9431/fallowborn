@@ -20,6 +20,12 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 
+Focus defaults are role-first. A landed adult defaults to `govern`, gentry to
+`manage_manor`, and only serfs/commoners default from their vocation. Hands-on
+soldier, craft, trade, and clerical foci stop at tier 2. An already-active Sweet
+Polly disguise remains the deliberate exception until its chain ends; promotion
+also ends tier-1–2 travel immediately.
+
 Personal social attention is independent of the daily focus. On every ordinary player day,
 `FB.tickSocialAttention` adds the fixed `balance.socialAttentionDailyOpinion` to the
 assigned character's existing Regard, including a day filled by an instant deed. It does
@@ -91,6 +97,10 @@ wages can meet school fees, and records one quarter of the arrangement's annual 
 bonus for every paid term. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
+
+For a tier-3+ player, the yearly livelihood tick freezes secular career experience
+and ordinary vocation work. Clerical vocational years continue solely so religious
+standing can advance. Other household workers are unaffected.
 
 An active overland journey (`player.travel`, [travel.md](travel.md)) replaces the
 player’s daily focus tick with `FB.travelTick`. County legs take three days by

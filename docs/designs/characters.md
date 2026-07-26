@@ -126,6 +126,15 @@ instead of inheriting the dead parent's occupation. That mirror now remains the 
 actual career at every station: acquiring a landed title does not silently replace a
 merchant, craft, clerical, or military occupation with `noble`.
 
+At tier 3+, that career is biography rather than daily employment. The player cannot
+change occupation, seek guild advancement, earn ordinary career experience, or staff
+an enterprise personally. Existing rank, guild standing, and history remain available
+to flavor and return if the character becomes landless gentry again. Spouses, dependent
+children, and retainers continue their normal work and enterprise progression. Landed
+monks and priests keep gaining the vocational years required for religious-office
+advancement, and office-derived seasonal piety remains active, but their hands-on
+scriptorium and parish work stops.
+
 **Guild standing is separate from career rank.** Guild careers display their standing as
 Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the

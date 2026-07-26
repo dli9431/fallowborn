@@ -149,7 +149,11 @@ king tier and up), not full chars — the Deeds banner's "vassal of X" links to 
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great
 officers of the crown.
 
-**Tiers** 0–7 (serf…emperor) + `profession` gate actions (`js/actions.js`) and events. Map
+**Tiers** 0–7 (serf…emperor) feed the five broader societal roles documented in
+[events.md](events.md). Runtime changes use `FB.setPlayerTier`, which preserves the
+gentry-generation rule while immediately revalidating travel, focus, livelihood
+staffing, and any lower-to-landed farewell. Political vassal/sovereign status remains
+separate from this audience. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a
 county — and bound to it: a baron's liege is always the county's direct holder, so if his
 lord's house dies — or the county changes hands under a living lord — the baron reattaches

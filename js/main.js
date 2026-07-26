@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.58.0';
+  FB.VERSION = '1.59.0';
   FB.CHANGELOG = [
+    { v: '1.59.0', date: '2026-07-25', changes: [
+      'Events, tasks, and livelihoods now follow societal role, with new stories for gentry, lords, and crowned rulers.'
+    ] },
     { v: '1.58.0', date: '2026-07-25', changes: [
       'Character sheets now let you cultivate one personal relationship alongside daily work, with deliberate friendship and courtship thresholds and shared gift cooldowns.'
     ] },
@@ -1189,9 +1192,9 @@ window.FB = window.FB || {};
         if (c.edu && c.edu.focus) {
           FB.gainSkill(c, c.edu.focus, 2);
           if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
-          s.eventQueue.push({ id: 'child_educated', ctx: { childId: cid } });
+          FB.queueEvent(s, 'child_educated', { childId:cid });
         } else {
-          s.eventQueue.push({ id: 'child_comes_of_age', ctx: { childId: cid } });
+          FB.queueEvent(s, 'child_comes_of_age', { childId:cid });
         }
       }
     }
@@ -1201,9 +1204,9 @@ window.FB = window.FB || {};
       if (me.edu && me.edu.focus) {
         FB.gainSkill(me, me.edu.focus, 2);
         if (me.edu.focus === 'lea') FB.addTrait(me, 'literate');
-        s.eventQueue.push({ id: 'player_educated', ctx: {} });
+        FB.queueEvent(s, 'player_educated', {});
       } else {
-        s.eventQueue.push({ id: 'player_comes_of_age', ctx: {} });
+        FB.queueEvent(s, 'player_comes_of_age', {});
       }
     }
 
@@ -1504,7 +1507,7 @@ window.FB = window.FB || {};
           if (father && father !== me && father.childrenIds.indexOf(baby.id) < 0) father.childrenIds.push(baby.id);
           if (mother && mother !== me && mother.childrenIds.indexOf(baby.id) < 0) mother.childrenIds.push(baby.id);
           if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
-          s.eventQueue.push({ id: 'child_born_flavor', ctx: { childId: baby.id } });
+          FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
         }
       }
       return;
@@ -1737,7 +1740,8 @@ window.FB = window.FB || {};
     if (heir.edu && heir.edu.tutorId === 'self') heir.edu.tutorId = null;
     // coming-of-age events queued for a player who died a teen must not fire for the heir
     s.eventQueue = s.eventQueue.filter(function (ev) {
-      return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated';
+      return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated' &&
+        ev.id !== 'station_farewell';
     });
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
@@ -1753,6 +1757,7 @@ window.FB = window.FB || {};
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};
     p.rivalPeace = {};
+    p.stationFarewell = null;
     if (FB.clearItemOffer) FB.clearItemOffer(s); // the peddler moves on
     else p.itemOffer = null;
     s.pregnant = null;
@@ -1800,7 +1805,7 @@ window.FB = window.FB || {};
         initiator: 'legacy',
         cause: 'inherited'
       };
-      s.eventQueue.push({ id: 'rival_legacy', ctx: {} });
+      FB.queueEvent(s, 'rival_legacy', {});
     } else {
       if (inheritedRival) FB.endRivalry(s, inheritedRival.id, true);
       else p.rivalry = null;
@@ -1878,8 +1883,10 @@ window.FB = window.FB || {};
       }
       FB.save.restore(data);
       FB.syncPlayerCareer(FB.state);
+      if (FB.enterpriseList) FB.enterpriseList(FB.state);
       if (FB.travelEnsure) FB.travelEnsure(FB.state);
       if (FB.travelValidate) FB.travelValidate(FB.state);
+      if (FB.validateFocus) FB.validateFocus(FB.state);
       G.observe = false;
       document.body.classList.remove('observing');
       G.pickMode = false;

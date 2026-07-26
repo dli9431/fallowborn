@@ -149,15 +149,44 @@ FBDATA.events.push(
     { label:'Now my true education begins.', desc:'The world is the last and hardest tutor.', effects:{ } }
   ]},
 
+/* ---------- leaving a former station ---------- */
+{ id:'station_farewell', title:'Never Again', trigger:{ never:true }, once:true,
+  text:{ forms:{ select:'value', param:'formerProfession', cases:{
+    farmer:'The soil still lies beneath your nails when petitioners first call you “my lord.” Fields that once commanded every daylight hour are now worked at your order. You may remember that life, but you will never return to it unchanged.',
+    craftsman:'Your hands remember the weight of tools even as clerks place seals and tallies before them. The old bench made you; title has carried you beyond it.',
+    merchant:'You still reckon a bargain at a glance, but factors now cross the market in your name. The road and stall belong to an earlier life.',
+    soldier:'Your body remembers the sergeant’s stick and the cold watch. Now other soldiers wait upon your command, and the common rank is closed behind you.',
+    monk:'The hours of ink, prayer, and common service formed you. Office and land now ask another kind of duty, however plain the old habit once felt.',
+    priest:'You once served one altar and the souls gathered before it. Rank and land have widened that charge beyond any parish door.',
+    noble:'You were trained for hall and saddle; now the hall is yours to answer for. Service has become rule.',
+    other:'The work that carried you this far belongs to an earlier station. Its lessons remain, though its daily burdens have passed to other hands.'
+  }}},
+  options:[
+    { label:'Honor the life that made you.', desc:'Keep faith with your roots, though the great call it sentiment.',
+      effects:{ popularOpinion:10, prestige:-5, log:'Honored the life lived before taking up rule.' } },
+    { label:'Put the old life away.', desc:'A ruler cannot forever look backward.',
+      effects:{ prestige:10, popularOpinion:-8, log:'Renounced the old station and embraced rule.' } }
+  ]},
+
 /* ---------- health ---------- */
 { id:'winter_fever', title:'The Coughing Sickness',
   trigger:{ seasons:[3], chance:0.16, notFlags:['ill'] }, childhood:true, weight:10, cooldown:8,
-  text:'A wet cough settles in your chest as the cold bites. Half the village is abed with it.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A wet cough settles in your chest as the cold bites. Half the village is abed with it.',
+    commoner:'A wet cough settles in your chest as the cold bites. Half the street is abed with it.',
+    gentry:'A wet cough settles in your chest as the cold bites. Servants carry the same sickness from room to room.',
+    lord:'A wet cough settles in your chest as the cold bites. The hall grows quiet as servants and petitioners fall ill.',
+    crowned:'A wet cough settles in your chest as the cold bites. Even guarded royal chambers cannot bar a winter sickness.',
+    other:'A wet cough settles in your chest as the cold bites. The household is full of the same sickness.'
+  }}},
   options:[
     { label:'Rest and broth.', desc:'Give the sickness a warm bed and time.', effects:{ health:-1, setFlag:'ill', log:'Took ill over winter.' } },
-    { label:'Work through it.', chance:0.5, desc:'Sweat it out — or let it dig its claws in.',
+    { label:'Work through it.', require:{ societalRoles:['serf','commoner','gentry'] },
+      chance:0.5, desc:'Sweat it out — or let it dig its claws in.',
       success:{ text:'You sweat it out at your labors.', effects:{ } },
-      failure:{ text:'You collapse. The sickness digs deep.', effects:{ health:-2, setFlag:'ill' } } }
+      failure:{ text:'You collapse. The sickness digs deep.', effects:{ health:-2, setFlag:'ill' } } },
+    { label:'Keep council from your sickbed.', require:{ societalRoles:['lord','crowned'] },
+      desc:'Rule cannot pause for a cough.', effects:{ health:-2, prestige:3, setFlag:'ill' } }
   ]},
 { id:'recovery', title:'On the Mend',
   trigger:{ flags:['ill'], chance:0.6 }, wartime:true, childhood:true, weight:30,
@@ -165,10 +194,22 @@ FBDATA.events.push(
   options:[ { label:'Back to life.', desc:'The world kept turning without you.', effects:{ clearFlag:'ill', health:1 } } ]},
 { id:'bad_tooth', title:'A Rotten Tooth',
   trigger:{ minAge:25, chance:0.1 }, weight:4, cooldown:20,
-  text:'A tooth throbs like a war-drum. The smith owns the only pliers in the village.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A tooth throbs like a war-drum. The smith owns the only pliers in the village.',
+    commoner:'A tooth throbs like a war-drum. A barber in town claims a steady hand with the pliers.',
+    gentry:'A tooth throbs like a war-drum. The household sends for a barber who has pulled worse.',
+    lord:'A tooth throbs like a war-drum. Your physician recommends the old, swift remedy.',
+    crowned:'A tooth throbs like a war-drum. The royal physician arrives with silver instruments and grave confidence.',
+    other:'A tooth throbs like a war-drum. Someone nearby owns pliers and confidence.'
+  }}},
   options:[
-    { label:'Have it pulled.', desc:'Short pain, then peace — for a coin.', effects:{ health:-1, gold:-1, log:'Lost a tooth to the smith’s pliers.' } },
-    { label:'Endure it.', desc:'Pain dulls with time. So they say.', effects:{ health:-1 } }
+    { label:'Have it pulled.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Short pain, then peace — for a coin.', effects:{ health:-1, gold:-1, log:'Had the rotten tooth pulled.' } },
+    { label:'Endure it.', desc:'Pain dulls with time. So they say.', effects:{ health:-1 } },
+    { label:'Trust the court physician. ({money:5})',
+      require:{ societalRoles:['lord','crowned'], goldMin:5 },
+      desc:'Better instruments, the same moment of terror.',
+      effects:{ gold:-5, log:'Had the rotten tooth treated by a physician.' } }
   ]},
 
 /* ---------- faith ---------- */
@@ -177,7 +218,7 @@ FBDATA.events.push(
   text:'{priest} preaches with unusual fire — of the rich man, the camel, and the needle’s eye.',
   options:[
     { label:'Take it to heart.', desc:'Good words, freely given, freely kept.', effects:{ piety:5, opinion:{role:'priest', amt:5} } },
-    { label:'Doze in the back.', desc:'The sermon will keep; so will the bench.', effects:{ opinion:{role:'priest', amt:-5} } }
+    { label:'Let the words pass unheard.', desc:'The sermon will keep; your attention does not.', effects:{ opinion:{role:'priest', amt:-5} } }
   ]},
 { id:'seek_blessing', title:'At the {temple}', trigger:{ never:true }, /* fired by the "Seek a blessing" deed */
   text:'Cool shadow and quiet within the {temple}. The {holy} hears you out, then asks what you would have of {god}.',
@@ -190,16 +231,25 @@ FBDATA.events.push(
       desc:'Ask {god} to knit what the flesh cannot.', effects:{ piety:-40, health:2, log:'Anointed against sickness.' } },
     { label:'A prayer for children. (25 piety)', require:{ pietyMin:25, married:true },
       desc:'Ask for the patter of small feet.', effects:{ piety:-25, setFlag:'blessed_union' } },
-    { label:'The {holy} speaks well of you to your lord. (35 piety)', require:{ pietyMin:35 },
+    { label:'The {holy} speaks well of you to the lord. (35 piety)',
+      require:{ pietyMin:35, societalRoles:['serf','commoner','gentry'] },
       desc:'A good word from the pulpit weighs with the great.',
-      effects:{ piety:-35, opinionLiege:15, log:'The clergy praised your name at the manor.' } },
+      effects:{ piety:-35, opinion:{role:'lord', amt:15}, log:'The clergy praised your name at the manor.' } },
     { label:'Masses sung for your ancestors. (25 piety)', require:{ pietyMin:25 },
       desc:'The dead are honored, and the living speak of it.',
       effects:{ piety:-25, prestige:8, popularOpinion:4, log:'Masses were sung for the family dead.' } },
     { label:'A blessing upon your house. (30 piety)', require:{ pietyMin:30, married:true },
       desc:'Grace settles over hearth and home.',
       effects:{ piety:-30, opinion:{ role:'spouse', amt:20 }, log:'The house was blessed.' } },
-    { label:'Only quiet prayer.', desc:'Ask nothing, want nothing.', effects:{ piety:2 } }
+    { label:'Only quiet prayer.', desc:'Ask nothing, want nothing.', effects:{ piety:2 } },
+    { label:'Praise before your liege. (35 piety)',
+      require:{ pietyMin:35, societalRoles:['lord','crowned'], isVassal:true },
+      desc:'The clergy’s public favor strengthens your standing at court.',
+      effects:{ piety:-35, opinionLiege:15, prestige:4, log:'The clergy praised your rule before the liege.' } },
+    { label:'Prayers for the realm. (35 piety)',
+      require:{ pietyMin:35, societalRoles:['lord','crowned'], isVassal:false },
+      desc:'Let every pulpit commend peace beneath your rule.',
+      effects:{ piety:-35, prestige:8, popularOpinion:6, log:'The clergy offered public prayers for the realm.' } }
   ]},
 { id:'doubt', title:'A Dark Night of the Soul',
   trigger:{ minAge:30, chance:0.08 }, weight:3, once:true,
@@ -213,8 +263,7 @@ FBDATA.events.push(
 /* ---------- friends & rivals ---------- */
 { id:'make_friend', title:'A Friendship Kindled',
   trigger:{ chance:0.15, noRole:'friend', custom:'friendship_kindled_ready' }, weight:6,
-  text:{ default:'Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood.',
-    muslim:'Long hours shared with {friend} — work, jokes, a water-skin passed back and forth — have become something like brotherhood.' },
+  text:'Long hours shared with {friend} — conversation, favors, and private jokes — have become a friendship neither of you needs to name.',
   options:[ { label:'A friend is rare wealth.', desc:'Hold fast; such luck does not come twice.', effects:{ custom:'formalize_attention_friend' } } ]},
 { id:'make_rival', title:'Bad Blood',
   trigger:{ never:true },
@@ -227,12 +276,19 @@ FBDATA.events.push(
       effects:{ rivalHeat:-5, queue:'rival_mediation' } },
     { label:'Answer enmity with defiance.', desc:'Let every witness know that you will give as good as you get.',
       effects:{ opinion:{role:'rival', amt:-10}, rivalHeat:15, prestige:3 } } ]},
-{ id:'rival_scheme', title:'A Knife in the Dark Market',
+{ id:'rival_scheme', title:'Poisoned Words',
   trigger:{ chance:0.2, hasRole:'rival', roleOpinionBelow:{role:'rival', value:-30} }, weight:6, cooldown:10,
-  text:'{rival} has been spreading poison about you — theft, blasphemy, worse. People look at you differently now.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'{rival} has been spreading poison about you through the village — theft, blasphemy, worse. People look at you differently now.',
+    commoner:'{rival} has been spreading poison about you through market and street — theft, blasphemy, worse.',
+    gentry:'{rival} has carried old accusations from manor to manor. Invitations cool and neighbors look twice.',
+    lord:'{rival} whispers against you in other halls, turning every judgment into evidence of tyranny or weakness.',
+    crowned:'{rival} has seeded the court with accusations fit for a crown: impiety, illegitimacy, and secret betrayal.',
+    other:'{rival} has been spreading poison about you, and people look at you differently now.'
+  }}},
   options:[
     { label:'Confront them before witnesses.', chance:0.6, desc:'Drag the poison into daylight and dare them to repeat it.',
-      success:{ text:'They stammer and withdraw the words. The village laughs at them.', effects:{ prestige:8, opinion:{role:'rival', amt:-10}, rivalHeat:8 } },
+      success:{ text:'They stammer and withdraw the words. The witnesses laugh at them.', effects:{ prestige:8, opinion:{role:'rival', amt:-10}, rivalHeat:8 } },
       failure:{ text:'They double down, and the crowd murmurs against you.', effects:{ prestige:-8, rivalHeat:10 } } },
     { label:'Let the lie die on its own.', desc:'Lies starve slower than truth feeds.', effects:{ prestige:-4, rivalHeat:-8 } },
     { label:'Repay them in kind.', desc:'Poison for poison, and yours brewed better.', effects:{ opinion:{role:'rival', amt:-15}, rivalHeat:15, skills:{int:1} } }
@@ -282,7 +338,7 @@ FBDATA.events.push(
     { label:'Refuse their hand.', desc:'Some injuries deserve a longer memory.', effects:{ opinion:{role:'rival', amt:-10}, rivalHeat:20, prestige:2 } }
   ]},
 { id:'rival_common_cause', title:'Under One Roof',
-  trigger:{ hasRole:'rival', rivalHeatMin:20, rivalHeatMax:69, chance:0.12 }, weight:5, cooldown:14,
+  trigger:{ societalRoles:['serf','commoner','gentry'], hasRole:'rival', rivalHeatMin:20, rivalHeatMax:69, chance:0.12 }, weight:5, cooldown:14,
   text:'Fire takes a neighbor’s roof in a hard wind. You and {rival} arrive from opposite lanes, each with people and ladders, and find yourselves holding the same sagging beam while sparks fall around you.',
   options:[
     { label:'Work beside them until the fire is beaten.', desc:'Shared labor may do what argument could not.', chance:'skill_dip',
@@ -312,7 +368,7 @@ FBDATA.events.push(
         effects:{ rivalContact:{role:'rival', score:1, cause:'inherited'} } } }
   ]},
 { id:'friend_in_need', title:'A Friend in Need',
-  trigger:{ chance:0.15, hasRole:'friend', goldMin:5 }, weight:5, cooldown:12,
+  trigger:{ societalRoles:['serf','commoner','gentry'], chance:0.15, hasRole:'friend', goldMin:5 }, weight:5, cooldown:12,
   text:'{friend} comes to you at dusk, shame-faced. A debt is due, and the collector is not a patient man.',
   options:[
     { label:'Pay it. ({money:5})', desc:'A debt forgotten is a friend kept.', effects:{ gold:-5, opinion:{role:'friend', amt:25}, prestige:3 } },
@@ -320,7 +376,7 @@ FBDATA.events.push(
   ]},
 
 { id:'sworn_aid', title:'The Oath Remembered',
-  trigger:{ flags:['sworn_friend'], hasRole:'friend', goldMax:3, chance:0.4 }, weight:12, cooldown:12,
+  trigger:{ societalRoles:['serf','commoner','gentry'], flags:['sworn_friend'], hasRole:'friend', goldMax:3, chance:0.4 }, weight:12, cooldown:12,
   text:'Word of your hard times reaches {friend}. The oath you swore was not words only: they arrive with a purse and no speeches.',
   options:[
     { label:'Take it, and remember.', desc:'Oaths, it turns out, can be eaten.', effects:{ gold:6, opinion:{role:'friend', amt:5} } },
@@ -334,7 +390,7 @@ FBDATA.events.push(
     { label:'“I want nothing I cannot repay.”', desc:'Pride keeps the ledger clean between friends.', effects:{ prestige:3, opinion:{role:'friend', amt:10} } }
   ]},
 { id:'friend_vouch', title:'Standing Surety',
-  trigger:{ hasRole:'friend', roleOpinionAbove:{role:'friend', value:20}, chance:0.15 }, weight:5, cooldown:12,
+  trigger:{ societalRoles:['serf','commoner','gentry'], hasRole:'friend', roleOpinionAbove:{role:'friend', value:20}, chance:0.15 }, weight:5, cooldown:12,
   text:'{friend} stands before the manor court accused of short-measuring grain. One respected voice swearing to their honesty could settle it — and they are looking at you.',
   options:[
     { label:'Swear to their honesty.', desc:'Your good name, wagered on theirs.', chance:0.6,
@@ -360,7 +416,7 @@ FBDATA.events.push(
     { label:'Spring the trap.', chance:'plot', desc:'One word, and {rival} falls — if the web holds.',
       success:{ text:'Debts, rumors, and old friends turn all at once. {rival} is ruined — everyone suspects you, and no one can prove it.',
         effects:{ custom:'plot_end', prestige:8, skills:{int:2}, opinion:{role:'rival', amt:-30}, rivalHeat:20, log:'Brought a rival low by intrigue.' } },
-      failure:{ text:'A thread snaps — a bought man sells you back. The whole village knows whose hand held the knife.',
+      failure:{ text:'A thread snaps — a bought man sells you back. Every neighbor knows whose hand held the knife.',
         effects:{ custom:'plot_end', prestige:-10, opinion:{role:'rival', amt:-20}, rivalHeat:15, popularOpinion:-5 } } },
     { label:'Let it go. Mercy — or nerves.', desc:'A sprung trap can catch the hunter.', effects:{ custom:'plot_end', piety:3, rivalHeat:-10 } }
   ]},
@@ -431,20 +487,38 @@ FBDATA.events.push(
   ]},
 { id:'drink_trouble', title:'One Cup Too Many',
   trigger:{ chance:0.1, minAge:16, notFlags:['in_prison'], religionGroups:['christian','pagan','jewish'] }, weight:4, cooldown:12,
-  text:'The feast-ale flows, songs get louder, and someone insults someone’s mother. Fists are already rising.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'The feast-ale flows, songs get louder, and someone insults someone’s mother. Fists are already rising.',
+    commoner:'The ale flows, songs get louder, and a tradesman answers an insult with an overturned bench.',
+    gentry:'The manor feast runs late. Two guests forget their manners and reach for each other across the board.',
+    lord:'A feast in your hall turns sour when two retainers trade insults and half the company chooses sides.',
+    crowned:'At the royal feast, a drunken quarrel between great men threatens to become a public disgrace.',
+    other:'Drink loosens tongues until a quarrel threatens the whole gathering.'
+  }}},
   options:[
-    { label:'Wade in swinging.', chance:0.55, desc:'Glory or a ditch — the ale decides.',
+    { label:'Wade in swinging.', require:{ societalRoles:['serf','commoner','gentry'] },
+      chance:0.55, desc:'Glory or a ditch — the ale decides.',
       success:{ text:'You crack heads and emerge grinning, a small legend by morning.', effects:{ prestige:4, skills:{mar:1} } },
       failure:{ text:'You wake in a ditch, short a pouch and long a black eye.', effects:{ gold:-3, health:-1 } } },
-    { label:'Slip out the back.', desc:'No songs are sung about the man who left early.', effects:{ } },
+    { label:'Leave before it worsens.', desc:'No songs are sung about the one who leaves early.', effects:{ } },
     { label:'Talk them all down.', chance:0.5, desc:'A cool tongue could spare many teeth — including yours.',
       success:{ text:'Somehow, you turn rage to laughter. Men remember it.', effects:{ prestige:5, skills:{dip:1} } },
-      failure:{ text:'A stray fist finds you anyway.', effects:{ health:-1 } } }
+      failure:{ text:'A stray fist finds you anyway.', effects:{ health:-1 } } },
+    { label:'Order the hall cleared.', require:{ societalRoles:['lord','crowned'] },
+      desc:'End the spectacle with unmistakable authority.',
+      effects:{ prestige:4, popularOpinion:-2 } }
   ]},
 /* ---------- items: peddlers, offers, and finds ---------- */
 { id:'peddler_knock', title:'The Peddler’s Pack',
   trigger:{ minAge:16, goldMin:15, chance:0.08 }, weight:4, cooldown:16,
-  text:'A peddler with a guarded pack and quick eyes asks, very quietly, after “a buyer of unusual things.”',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A peddler with a guarded pack and quick eyes asks, very quietly, after “a buyer of unusual things.”',
+    commoner:'A travelling seller with a guarded pack asks whether prosperous households buy curiosities.',
+    gentry:'A factor presents himself at the manor gate with one unusual object and a carefully rehearsed provenance.',
+    lord:'A licensed merchant asks private audience, claiming to carry something worthy of your collection.',
+    crowned:'A foreign factor petitions the household officers for leave to show the crown an object without equal.',
+    other:'A guarded seller asks after a buyer of unusual things.'
+  }}},
   options:[
     { label:'See what he carries.', desc:'Unusual things find unusual owners.', effects:{ custom:'offer_item' } },
     { label:'Send him on his way.', desc:'Curiosity is cheap; its prizes are not.', effects:{ } }
@@ -457,11 +531,19 @@ FBDATA.events.push(
   ]},
 { id:'artifact_found', title:'Out of the Earth',
   trigger:{ minAge:16, chance:0.03 }, weight:3, cooldown:40,
-  text:'A plough-share catches; a spade follows. Out of the earth comes a thing of the old times, caked in clay and glinting beneath.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A plough-share catches; a spade follows. Out of the earth comes a thing of the old times, caked in clay and glinting beneath.',
+    commoner:'Laborers clearing a foundation uncover a clay-caked thing from the old times and bring it to you.',
+    gentry:'A tenant’s plough uncovers worked metal, and the reeve carries the find to your manor.',
+    lord:'Diggers on your demesne uncover something ancient and place it beneath your steward’s seal.',
+    crowned:'Workmen on crown land uncover an ancient object. Scholars and clergy both claim the right to judge it.',
+    other:'The earth gives up a clay-caked thing from the old times.'
+  }}},
   options:[
     { label:'Keep it.', desc:'The earth gives up its secrets rarely.', effects:{ custom:'find_artifact' } },
     { label:'Give it to the {temple}.', desc:'Old things belong to {god}, and the {holy} will remember.', effects:{ piety:12, opinion:{role:'priest', amt:10} } },
-    { label:'Sell it quietly.', desc:'Clay-caked wonders still fetch bright coin.', effects:{ gold:30, piety:-2 } }
+    { label:'Sell it quietly.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Clay-caked wonders still fetch bright coin.', effects:{ gold:30, piety:-2 } }
   ]},
 { id:'plot_locked_chest', title:'The Chest Sings', trigger:{ never:true },
   text:'The household sleeps; the dog knows you now. The chest waits where the steward believes nobody knows.',
@@ -478,17 +560,30 @@ FBDATA.events.push(
 { id:'visit_village', title:'{settlement}', trigger:{ never:true },
   text:'Mud lanes, low roofs, and every face turning to mark the newcomer. {settlement} is small enough that nothing here goes unnoticed — including you.',
   options:[
-    { label:'Trade at the village green.', desc:'Small coin, but honest.', effects:{ gold:2 } },
-    { label:'Share news at the well.', desc:'Gossip is a currency too.', effects:{ skills:{dip:1}, worldNews:true } },
+    { label:'Trade at the village green.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Small coin, but honest.', effects:{ gold:2 } },
+    { label:'Share news at the well.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Gossip is a currency too.', effects:{ skills:{dip:1}, worldNews:true } },
     { label:'Preach to the villagers.', require:{ professions:['monk','priest'] }, desc:'A ready ear is a small congregation.', effects:{ piety:4, popularOpinion:2 } },
     { label:'Hear the villagers’ grievances.', require:{ tierMin:3 }, desc:'The smallfolk remember who listened.', effects:{ popularOpinion:4, prestige:1 } },
-    { label:'Rest at the ale-house. ({money:2})', require:{ religionGroups:['christian','pagan','jewish'], goldMin:2 }, desc:'A bench, a cup, an hour’s peace.', effects:{ health:1, gold:-2 } },
-    { label:'Rest at the way-house. ({money:2})', require:{ religionGroups:['muslim'], goldMin:2 }, desc:'A quiet corner and a full cup.', effects:{ health:1, gold:-2 } }
+    { label:'Rest at the ale-house. ({money:2})',
+      require:{ societalRoles:['serf','commoner','gentry'], religionGroups:['christian','pagan','jewish'], goldMin:2 },
+      desc:'A bench, a cup, an hour’s peace.', effects:{ health:1, gold:-2 } },
+    { label:'Rest at the way-house. ({money:2})',
+      require:{ societalRoles:['serf','commoner','gentry'], religionGroups:['muslim'], goldMin:2 },
+      desc:'A quiet corner and a full cup.', effects:{ health:1, gold:-2 } },
+    { label:'Inspect the reeve’s accounts.', require:{ societalRoles:['lord','crowned'] },
+      desc:'A short visit keeps rents and obligations honest.', chance:'skill_ste',
+      success:{ text:'The tallies agree once your eye reaches them. The reeve grows suddenly precise.',
+        effects:{ gold:4, skills:{ste:1} } },
+      failure:{ text:'Every figure has an explanation and none of them quite meet.',
+        effects:{ popularOpinion:-2 } } }
   ]},
 { id:'visit_town', title:'{settlement}', trigger:{ never:true },
   text:'Market stalls, a smithy’s clangor, and strangers enough that no one stares. {settlement} has walls of a sort, laws of a sort, and coin for those who know their trade.',
   options:[
-    { label:'Sell at the market.', chance:0.65, desc:'Good coin if the buyers are hungry.',
+    { label:'Sell at the market.', require:{ societalRoles:['serf','commoner','gentry'] },
+      chance:0.65, desc:'Good coin if the buyers are hungry.',
       success:{ text:'Good prices and quick hands. You come home heavier by a few coins.', effects:{ gold:4, skills:{ste:1} } },
       failure:{ text:'A slow market day. You barely cover the road.', effects:{ gold:1 } } },
     { label:'Look for paying work.', require:{ tierMax:1 }, chance:0.7, desc:'Strong backs are sometimes in demand.',
@@ -499,17 +594,21 @@ FBDATA.events.push(
       success:{ text:'A merchant train needs spears for the road. Easy duty, fair pay.', effects:{ gold:4, skills:{mar:1} } },
       failure:{ text:'No one is hiring swords this season.', effects:{ } } },
     { label:'Hear the {holy} preach at the {temple}.', desc:'An hour of good words costs nothing.', effects:{ piety:3 } },
-    { label:'Court the town’s notables.', require:{ tierMin:2 }, desc:'Useful names are learned over wine.', effects:{ prestige:3, skills:{dip:1} } },
-    { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A town market keeps ordinary gear within reach.', effects:{ custom:'offer_gear' } }
+    { label:'Court the town’s notables.', require:{ societalRoles:['gentry','lord'] }, desc:'Useful names are learned over wine.', effects:{ prestige:3, skills:{dip:1} } },
+    { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A town market keeps ordinary gear within reach.', effects:{ custom:'offer_gear' } },
+    { label:'Patronize the guilds. ({money:5})', require:{ societalRoles:['lord','crowned'], goldMin:5 },
+      desc:'Let the masters associate prosperity with your name.',
+      effects:{ gold:-5, prestige:4, popularOpinion:3 } }
   ]},
 { id:'visit_city', title:'{settlement}', trigger:{ never:true },
   text:'Gates like cliffs, streets like rivers. In {settlement} a fortune is made or lost every day, and nobody asks where you were born — only what you carry.',
   options:[
-    { label:'Trade in the great market.', chance:0.6, desc:'Fortunes turn fast here, in both directions.',
+    { label:'Trade in the great market.', require:{ societalRoles:['serf','commoner','gentry'] },
+      chance:0.6, desc:'Fortunes turn fast here, in both directions.',
       success:{ text:'The great market swallows all you brought and asks for more.', effects:{ gold:6, skills:{ste:1} } },
       failure:{ text:'A cutpurse thinner than a shadow. You feel the lightness at the gate.', effects:{ gold:-2 } } },
     { label:'Seek out a scholar’s teaching.', desc:'The city keeps wisdom for those who ask.', effects:{ skills:{lea:1}, research:2 } },
-    { label:'Petition at the great houses.', require:{ tierMin:2 }, chance:0.55, desc:'A name in the right ledger opens doors.',
+    { label:'Petition at the great houses.', require:{ societalRoles:['gentry','lord'] }, chance:0.55, desc:'A name in the right ledger opens doors.',
       success:{ text:'A door opens; a name is taken down. Doors remember.', effects:{ prestige:4, skills:{dip:1} } },
       failure:{ text:'Stewards and secretaries, all day. The great remain unseen.', effects:{ prestige:-1 } } },
     { label:'Hire your blade out.', require:{ professions:['soldier'] }, chance:'battle', desc:'Good pay, if harder men don’t want it too.',
@@ -520,21 +619,24 @@ FBDATA.events.push(
     { label:'Wander the pleasure quarter.', require:{ religionGroups:['christian','pagan','jewish'] }, desc:'Wine, music, and thinner pockets by morning.',
       effects:{ health:1, gold:-2, piety:-3 } },
     { label:'Linger in the bath-houses.', require:{ religionGroups:['muslim'] }, desc:'Steam soaks the road out of tired bones.',
-      effects:{ health:1, gold:-1 } }
+      effects:{ health:1, gold:-1 } },
+    { label:'Receive the civic delegation.', require:{ societalRoles:['lord','crowned'] },
+      desc:'Hear merchants, clergy, and magistrates together.',
+      effects:{ prestige:5, popularOpinion:3, skills:{dip:1} } }
   ]},
 
 /* ---------- childhood (a minor heir's years) ----------
    While the player is under 16 the engine fires ONLY childhood:true events,
    so every event here gates maxAge:15 and carries the tag. */
 { id:'child_lessons', title:'Letters in the Dust',
-  trigger:{ maxAge:15, minAge:6, chance:0.3 }, childhood:true, weight:8, cooldown:8,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], chance:0.3 }, childhood:true, weight:8, cooldown:8,
   text:'The {holy} traces letters in the dust with a stick and looks at you expectantly. Few children are offered even this much.',
   options:[
     { label:'Trace them until they stay.', desc:'Letters learned young are kept for life.', effects:{ skills:{lea:1}, piety:2, opinion:{role:'priest', amt:5} } },
     { label:'Slip away to the fields.', desc:'Sunshine teaches its own lessons.', effects:{ health:1, opinion:{role:'priest', amt:-3} } }
   ]},
 { id:'child_dare', title:'The Dare',
-  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:6,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], chance:0.25 }, childhood:true, weight:7, cooldown:6,
   text:'The old willow leans far over the millpond, and every child knows the dare: climb to the high branch and jump.',
   options:[
     { label:'Climb. Jump.', chance:0.6, desc:'Glory above, cold water below.',
@@ -552,7 +654,7 @@ FBDATA.events.push(
     { label:'The hedgerow can wait.', desc:'The birds keep; hunger is patient too.', effects:{ } }
   ]},
 { id:'child_bully', title:'The Big One',
-  trigger:{ maxAge:15, minAge:6, chance:0.2 }, childhood:true, weight:7, cooldown:8,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], chance:0.2 }, childhood:true, weight:7, cooldown:8,
   text:'The miller’s son is a head taller than anyone his age and has decided you are today’s sport. The lane is blocked, and the other children are watching.',
   options:[
     { label:'Fight him.', chance:0.45, desc:'A bloody nose now, or a toll forever.',
@@ -573,7 +675,7 @@ FBDATA.events.push(
       failure:{ text:'Caught lingering behind the arras. The steward’s cuff rings your ear.', effects:{ health:-1, opinion:{role:'lord', amt:-3} } } }
   ]},
 { id:'child_festival', title:'Festival, Waist-High',
-  trigger:{ maxAge:15, minAge:6, seasons:[1], chance:0.3 }, childhood:true, weight:7, cooldown:8,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], seasons:[1], chance:0.3 }, childhood:true, weight:7, cooldown:8,
   text:'Festival day, seen from below: a forest of legs, the smell of honey-cakes, and the children’s footrace at noon.',
   options:[
     { label:'Run the race.', chance:0.5, desc:'Win or lose, the day is sweet.',
@@ -584,7 +686,7 @@ FBDATA.events.push(
       failure:{ text:'The baker has met children before.', effects:{ } } }
   ]},
 { id:'child_wooden_swords', title:'Wooden Swords',
-  trigger:{ maxAge:15, minAge:6, chance:0.25 }, childhood:true, weight:7, cooldown:6,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], chance:0.25 }, childhood:true, weight:7, cooldown:6,
   text:'The village children divide into two armies with stick-swords and hurdle-shields. Someone must lead the charge.',
   options:[
     { label:'Lead it.', desc:'First to charge is first remembered.', effects:{ skills:{mar:1}, prestige:1 } },
@@ -600,9 +702,52 @@ FBDATA.events.push(
     { label:'Fall asleep warm.', desc:'A warm sleep is its own small treasure.', effects:{ health:1 } }
   ]},
 
+{ id:'child_tutor_household', title:'The Tutor’s Measure',
+  trigger:{ maxAge:15, minAge:6, societalRoles:['gentry','lord','crowned'], chance:0.3 },
+  childhood:true, weight:8, cooldown:7,
+  text:'Your tutor closes the book and asks you to explain the lesson without its words before you. A household may inherit land; it cannot inherit judgment.',
+  options:[
+    { label:'Reason it through.', desc:'Understanding lasts longer than recitation.', effects:{ skills:{lea:1} } },
+    { label:'Turn the lesson toward practical accounts.', desc:'Every principle eventually reaches a ledger.', effects:{ skills:{ste:1} } }
+  ]},
+{ id:'child_high_table', title:'At the High Table',
+  trigger:{ maxAge:15, minAge:7, societalRoles:['gentry','lord','crowned'], chance:0.25 },
+  childhood:true, weight:7, cooldown:7,
+  text:'Every glance at the high table carries meaning: who sits, who waits, whose cup is filled first. Tonight you are expected to notice all of it and offend no one.',
+  options:[
+    { label:'Mind every courtesy.', desc:'Grace is discipline made invisible.', effects:{ skills:{dip:1}, prestige:1 } },
+    { label:'Watch who whispers to whom.', desc:'Manners hide as much as they reveal.', effects:{ skills:{int:1} } }
+  ]},
+{ id:'child_falconry', title:'The Young Hawk',
+  trigger:{ maxAge:15, minAge:8, societalRoles:['gentry','lord','crowned'], chance:0.22 },
+  childhood:true, weight:7, cooldown:8,
+  text:'A young hawk sits restless upon your glove, all hunger, fear, and sharp attention. The falconer waits to see whether you command or merely clutch.',
+  options:[
+    { label:'Hold steady and loose it cleanly.', chance:0.65, desc:'Patience first; the flight follows.',
+      success:{ text:'The hawk circles once, then falls exactly where your hand directed.', effects:{ prestige:3, skills:{mar:1} } },
+      failure:{ text:'The jesses tangle and the hawk leaves a bright line across your wrist.', effects:{ health:-1 } } },
+    { label:'Learn the creature before commanding it.', desc:'Temper understood is temper governed.', effects:{ skills:{dip:1} } }
+  ]},
+{ id:'child_lineage_arms', title:'Names Upon the Wall',
+  trigger:{ maxAge:15, minAge:8, societalRoles:['gentry','lord','crowned'], chance:0.2 },
+  childhood:true, weight:7, cooldown:9,
+  text:'Painted arms and remembered names line the hall. An elder points from one ancestor to the next, then asks what duty such a lineage lays upon you.',
+  options:[
+    { label:'Make the name greater.', desc:'Inheritance is a challenge, not a cushion.', effects:{ prestige:4 } },
+    { label:'Learn where every claim began.', desc:'Old rights reward a careful memory.', effects:{ skills:{lea:1} } },
+    { label:'Remember the disgraces too.', desc:'A house learns most from what it would hide.', effects:{ skills:{int:1}, piety:2 } }
+  ]},
+
 { id:'old_age_reflection', title:'The Long Look Back',
   trigger:{ minAge:55, chance:0.2 }, weight:4, once:true,
-  text:'Your hands ache with old labors. Children you knew as babes now have grey in their beards. What remains, when the body fails?',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'Your hands ache with old labors. Children you knew as babes now have grey in their beards. What remains, when the body fails?',
+    commoner:'Your hands remember work they can no longer perform. Apprentices have become masters. What remains, when the body fails?',
+    gentry:'The manor has changed around you, repaired by hands younger than yours. What remains, when the body fails?',
+    lord:'You have judged quarrels, raised banners, and watched heirs grow beneath your roof. What remains, when the body fails?',
+    crowned:'Crowns outlive their wearers, and realms remember selectively. What remains when the body fails and rule passes on?',
+    other:'Years have gathered behind you. What remains, when the body fails?'
+  }}},
   options:[
     { label:'My name. My blood. My house.', desc:'Let the line carry what the body cannot.', effects:{ prestige:10 } },
     { label:'My soul, made ready.', desc:'Set your accounts with {god} in order.', effects:{ piety:10 } },

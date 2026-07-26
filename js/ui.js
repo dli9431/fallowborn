@@ -1113,9 +1113,10 @@ window.FB = window.FB || {};
     if (!def) return '';
     let detail = FB.careerTitle(s, c);
     if (def.guild) detail += ' · ' + FB.guildTitle(career);
-    let h = '<div class="progressnote">' + esc(FB.T('🧰 Work — {career}', {
-      career:detail
-    })) + '</div>';
+    const former = c.id === s.player.charId && s.player.tier >= 3;
+    let h = '<div class="progressnote">' + esc(former
+      ? FB.T('🧰 Former calling — {career}', { career:detail })
+      : FB.T('🧰 Work — {career}', { career:detail })) + '</div>';
     const religious = FB.religiousPathOf(s, c);
     if (religious) {
       h += '<div class="progressnote">' + esc(FB.T('🛐 Religious standing — {rank}', {
@@ -1335,8 +1336,13 @@ window.FB = window.FB || {};
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me);
     if (FB.ageOf(me, s.date.year) >= 10) {
-      h += '<button class="actionbtn" id="self-work">🧰 Work, training & enterprises…' +
-        '<span class="adesc">Manage the occupations and productive property of your household.</span></button>';
+      const landed = s.player.tier >= 3;
+      h += '<button class="actionbtn" id="self-work">' +
+        esc(FB.T(landed ? '🧰 Household work & enterprises…' : '🧰 Work, training & enterprises…')) +
+        '<span class="adesc">' + esc(FB.T(landed
+          ? 'Your calling is now biography; manage the occupations and productive property of your household.'
+          : 'Manage the occupations and productive property of your household.')) +
+        '</span></button>';
     } else {
       h += '<div class="hint">' + esc(FB.T('Too young for an apprenticeship yet.')) + '</div>';
     }
@@ -3834,7 +3840,8 @@ window.FB = window.FB || {};
     openModal('Where To?', h);
     document.querySelectorAll('[data-visit]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.state.eventQueue.push({ id: 'visit_' + btn.dataset.kind, ctx: { settlement: btn.dataset.visit } });
+        FB.queueEvent(FB.state, 'visit_' + btn.dataset.kind,
+          { settlement:btn.dataset.visit });
         UI.closeModal();
         FB.game.passDay({ skipFocus: true }); // the outing spends the day
       });
@@ -4167,7 +4174,7 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         const rid = btn.dataset.rid;
         FB.state.player.appealRid = rid;
-        FB.state.eventQueue.push({ id: 'liege_appeal', ctx: { rid: rid } });
+        FB.queueEvent(FB.state, 'liege_appeal', { rid:rid });
         UI.closeModal(); UI.refresh();
       });
     });
@@ -4207,7 +4214,7 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         s.player.petitionPid = btn.dataset.pid;
-        s.eventQueue.push({ id: 'county_petition', ctx: { pid: btn.dataset.pid } });
+        FB.queueEvent(s, 'county_petition', { pid:btn.dataset.pid });
         UI.closeModal(); UI.refresh();
       });
     });
@@ -4580,7 +4587,7 @@ window.FB = window.FB || {};
         if (s.player.gold < cost || obl.lastMotion === s.date.year) return;
         s.player.gold -= cost;
         obl.lastMotion = s.date.year;
-        s.eventQueue.push({ id: 'parliament_' + btn.dataset.motion });
+        FB.queueEvent(s, 'parliament_' + btn.dataset.motion, {});
         UI.closeModal(); UI.refresh();
       });
     });
@@ -4604,7 +4611,7 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         const rid = btn.dataset.rid;
         FB.state.player.revokeRid = rid;
-        FB.state.eventQueue.push({ id: 'vassal_revoke', ctx: { rid: rid } });
+        FB.queueEvent(FB.state, 'vassal_revoke', { rid:rid });
         UI.closeModal(); UI.refresh();
       });
     });
@@ -5203,7 +5210,9 @@ window.FB = window.FB || {};
     const s = FB.state;
     const me = s.chars[s.player.charId];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
+      s.player.tier >= 3
+        ? 'Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season.'
+        : 'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
       '</p></div><div class="panelh">' + esc(FB.T('Household work')) + '</div><div class="gm-list">';
     for (const c of FB.householdWorkers(s)) {
       const age = FB.ageOf(c, s.date.year);
@@ -5211,11 +5220,13 @@ window.FB = window.FB || {};
       const career = FB.careerOf(s, c);
       const def = FBDATA.careers[career.profession];
       const retainer = FB.retainerRecord(s, c.id);
+      const landedSelf = c.id === me.id && s.player.tier >= 3;
       h += '<button class="actionbtn" data-career="' + c.id + '">' +
         FB.faceTag(c, 30, 36) + ' ' + esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
         '<span class="adesc">' + esc(FB.careerTitle(s, c) +
           (def && def.guild ? ' · ' + FB.guildTitle(career) : '') +
-          (retainer ? ' · ' + positionName(s, retainer.office) : '')) + '</span></button>';
+          (retainer ? ' · ' + positionName(s, retainer.office) : '') +
+          (landedSelf ? ' · ' + FB.T('former calling') : '')) + '</span></button>';
     }
     h += '</div><div class="panelh">' + esc(FB.T('Family enterprises')) + '</div><div class="gm-list">';
     const enterprises = FB.enterpriseList(s);
@@ -5269,10 +5280,13 @@ window.FB = window.FB || {};
     if (!c || c.dead) return;
     const age = FB.ageOf(c, s.date.year);
     const career = FB.careerOf(s, c);
+    const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
     let h = livelihoodNote(s, c) + '<div class="gm-body-text"><p>' + esc(FB.T(
-      age < 16
-        ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
-        : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.')) +
+      landedSelf
+        ? 'This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally.'
+        : (age < 16
+          ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
+          : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.'))) +
       '</p></div><div class="gm-list">';
     for (const item of FB.careerChoices(s, c)) {
       const same = career.chosen && career.profession === item.id;
@@ -5341,7 +5355,9 @@ window.FB = window.FB || {};
       }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Work of {name}', { name:c.name }), h, { historyView:true });
+    openModal(landedSelf
+      ? FB.T('Former calling of {name}', { name:c.name })
+      : FB.T('Work of {name}', { name:c.name }), h, { historyView:true });
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
@@ -5785,7 +5801,7 @@ window.FB = window.FB || {};
     if (pp) pp.addEventListener('click', function () {
       if (!FB.canPropose(s)) return;
       UI.closeModal();
-      s.eventQueue.push({ id: 'proposal_made', ctx: {} });
+      FB.queueEvent(s, 'proposal_made', {});
       FB.game.passDay({ skipFocus: true });
     });
     const dv = $('cm-divorce');
@@ -5816,7 +5832,7 @@ window.FB = window.FB || {};
     if (an) an.addEventListener('click', function () {
       UI.closeModal();
       s.player.cooldowns.annul = s.turn; // the church hears one plea a year
-      s.eventQueue.push({ id: 'annulment_plea', ctx: {} });
+      FB.queueEvent(s, 'annulment_plea', {});
       FB.game.passDay({ skipFocus: true });
     });
     const bo = $('cm-breakoff');
@@ -5875,7 +5891,7 @@ window.FB = window.FB || {};
     const settle = $('cm-settle');
     if (settle) settle.addEventListener('click', function () {
       actThen(function () {
-        s.eventQueue.push({ id: 'rival_mediation', ctx: {} });
+        FB.queueEvent(s, 'rival_mediation', {});
       });
     });
     const nc = $('cm-nochildren');
@@ -6035,7 +6051,7 @@ window.FB = window.FB || {};
         if (!m) return;
         UI.closeModal();
         FB.pickSuitor(s, m.id);
-        s.eventQueue.push({ id: 'meet_suitor', ctx: {} });
+        FB.queueEvent(s, 'meet_suitor', {});
         FB.game.passDay({ skipFocus: true });
       });
     });

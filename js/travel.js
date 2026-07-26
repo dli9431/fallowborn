@@ -16,14 +16,10 @@ window.FB = window.FB || {};
   function queueItem(state, id, travel) {
     const loc = FB.world.byId[travel.currentId];
     const dest = FB.world.byId[travel.destinationId];
-    state.eventQueue.push({
-      id:id,
-      ctx:{
-        locationId:loc ? loc.id : travel.currentId,
-        destinationId:dest ? dest.id : travel.destinationId
-      },
-      travel:true
-    });
+    FB.queueEvent(state, id, {
+      locationId:loc ? loc.id : travel.currentId,
+      destinationId:dest ? dest.id : travel.destinationId
+    }, { travel:true });
   }
   function clearQueued(state) {
     state.eventQueue = (state.eventQueue || []).filter(function (item) {

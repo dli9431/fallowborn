@@ -423,7 +423,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | key | meaning |
 |---|---|
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
-| `professions` | any of `farmer craftsman merchant soldier monk priest noble` |
+| `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
+| `professions` | any actively practiced vocation from `farmer craftsman merchant soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
 | `seasons` | array of 0 spring … 3 winter |
 | `yearMin` / `yearMax` | calendar gate |
@@ -446,9 +447,16 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
 
+The same trigger keys may be used in an option's `require` object. Societal role does
+not imply political position: combine it with `isVassal` or `isLiege` where that
+distinction matters.
+
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
 seasons (a season lasts 90 in-game days — the engine converts). Random events land on 1–2
 random days per season (one extra in wartime); queued events (`queue`) fire the next day.
+Core code queues through `FB.queueEvent`, which snapshots `societalRole`, `profession`,
+and `formerProfession` into the JSON-safe event context for exact-value localization
+selectors. Mods should use the effect-level `queue` field whenever possible.
 
 `wartime: true` (top-level, next to `weight`) marks an event as fit for a war footing. While
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,

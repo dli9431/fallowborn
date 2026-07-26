@@ -1654,14 +1654,6 @@
         "text": "Sell it quietly."
       }
     },
-    "event.artifact_found.text.default": {
-      "context": "Event artifact_found, text, faith branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "A plough-share catches; a spade follows. Out of the earth comes a thing of the old times, caked in clay and glinting beneath."
-      }
-    },
     "event.artifact_found.title.default": {
       "context": "Event artifact_found, title, faith branch default.",
       "glossary": [],
@@ -1979,7 +1971,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Lost a tooth to the smith’s pliers."
+        "text": "Had the rotten tooth pulled."
       }
     },
     "event.bad_tooth.options.0.label.default": {
@@ -2006,12 +1998,30 @@
         "text": "Endure it."
       }
     },
-    "event.bad_tooth.text.default": {
-      "context": "Event bad_tooth, text, faith branch default.",
+    "event.bad_tooth.options.2.desc.default": {
+      "context": "Event bad_tooth, authored option 2, desc, branch default.",
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "A tooth throbs like a war-drum. The smith owns the only pliers in the village."
+        "text": "Better instruments, the same moment of terror."
+      }
+    },
+    "event.bad_tooth.options.2.effects.log.default": {
+      "context": "Durable event log for bad_tooth, authored option 2, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Had the rotten tooth treated by a physician."
+      }
+    },
+    "event.bad_tooth.options.2.label.default": {
+      "context": "Event bad_tooth, authored option 2, label, branch default.",
+      "glossary": [
+        "money:5"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Trust the court physician. ({money:5})"
       }
     },
     "event.bad_tooth.title.default": {
@@ -3514,6 +3524,70 @@
         "text": "The Lessons End"
       }
     },
+    "event.child_falconry.options.0.desc.default": {
+      "context": "Event child_falconry, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Patience first; the flight follows."
+      }
+    },
+    "event.child_falconry.options.0.failure.text.default": {
+      "context": "Event child_falconry, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The jesses tangle and the hawk leaves a bright line across your wrist."
+      }
+    },
+    "event.child_falconry.options.0.label.default": {
+      "context": "Event child_falconry, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Hold steady and loose it cleanly."
+      }
+    },
+    "event.child_falconry.options.0.success.text.default": {
+      "context": "Event child_falconry, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The hawk circles once, then falls exactly where your hand directed."
+      }
+    },
+    "event.child_falconry.options.1.desc.default": {
+      "context": "Event child_falconry, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Temper understood is temper governed."
+      }
+    },
+    "event.child_falconry.options.1.label.default": {
+      "context": "Event child_falconry, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Learn the creature before commanding it."
+      }
+    },
+    "event.child_falconry.text.default": {
+      "context": "Event child_falconry, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A young hawk sits restless upon your glove, all hunger, fear, and sharp attention. The falconer waits to see whether you command or merely clutch."
+      }
+    },
+    "event.child_falconry.title.default": {
+      "context": "Event child_falconry, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Young Hawk"
+      }
+    },
     "event.child_festival.options.0.desc.default": {
       "context": "Event child_festival, authored option 0, desc, branch default.",
       "glossary": [],
@@ -3680,6 +3754,54 @@
         "text": "A Child Burns With Fever"
       }
     },
+    "event.child_high_table.options.0.desc.default": {
+      "context": "Event child_high_table, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Grace is discipline made invisible."
+      }
+    },
+    "event.child_high_table.options.0.label.default": {
+      "context": "Event child_high_table, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Mind every courtesy."
+      }
+    },
+    "event.child_high_table.options.1.desc.default": {
+      "context": "Event child_high_table, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Manners hide as much as they reveal."
+      }
+    },
+    "event.child_high_table.options.1.label.default": {
+      "context": "Event child_high_table, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Watch who whispers to whom."
+      }
+    },
+    "event.child_high_table.text.default": {
+      "context": "Event child_high_table, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Every glance at the high table carries meaning: who sits, who waits, whose cup is filled first. Tonight you are expected to notice all of it and offend no one."
+      }
+    },
+    "event.child_high_table.title.default": {
+      "context": "Event child_high_table, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "At the High Table"
+      }
+    },
     "event.child_lessons.options.0.desc.default": {
       "context": "Event child_lessons, authored option 0, desc, branch default.",
       "glossary": [],
@@ -3728,6 +3850,70 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Letters in the Dust"
+      }
+    },
+    "event.child_lineage_arms.options.0.desc.default": {
+      "context": "Event child_lineage_arms, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Inheritance is a challenge, not a cushion."
+      }
+    },
+    "event.child_lineage_arms.options.0.label.default": {
+      "context": "Event child_lineage_arms, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Make the name greater."
+      }
+    },
+    "event.child_lineage_arms.options.1.desc.default": {
+      "context": "Event child_lineage_arms, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Old rights reward a careful memory."
+      }
+    },
+    "event.child_lineage_arms.options.1.label.default": {
+      "context": "Event child_lineage_arms, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Learn where every claim began."
+      }
+    },
+    "event.child_lineage_arms.options.2.desc.default": {
+      "context": "Event child_lineage_arms, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A house learns most from what it would hide."
+      }
+    },
+    "event.child_lineage_arms.options.2.label.default": {
+      "context": "Event child_lineage_arms, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Remember the disgraces too."
+      }
+    },
+    "event.child_lineage_arms.text.default": {
+      "context": "Event child_lineage_arms, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Painted arms and remembered names line the hall. An elder points from one ancestor to the next, then asks what duty such a lineage lays upon you."
+      }
+    },
+    "event.child_lineage_arms.title.default": {
+      "context": "Event child_lineage_arms, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Names Upon the Wall"
       }
     },
     "event.child_page.options.0.desc.default": {
@@ -3856,6 +4042,54 @@
       "location": "data/events_common.js",
       "source": {
         "text": "The Small Hunter"
+      }
+    },
+    "event.child_tutor_household.options.0.desc.default": {
+      "context": "Event child_tutor_household, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Understanding lasts longer than recitation."
+      }
+    },
+    "event.child_tutor_household.options.0.label.default": {
+      "context": "Event child_tutor_household, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Reason it through."
+      }
+    },
+    "event.child_tutor_household.options.1.desc.default": {
+      "context": "Event child_tutor_household, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Every principle eventually reaches a ledger."
+      }
+    },
+    "event.child_tutor_household.options.1.label.default": {
+      "context": "Event child_tutor_household, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Turn the lesson toward practical accounts."
+      }
+    },
+    "event.child_tutor_household.text.default": {
+      "context": "Event child_tutor_household, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Your tutor closes the book and asks you to explain the lesson without its words before you. A household may inherit land; it cannot inherit judgment."
+      }
+    },
+    "event.child_tutor_household.title.default": {
+      "context": "Event child_tutor_household, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Tutor’s Measure"
       }
     },
     "event.child_winter_tales.options.0.desc.default": {
@@ -4076,7 +4310,7 @@
       "glossary": [],
       "location": "data/events_world.js",
       "source": {
-        "text": "Someone in this village has read a book."
+        "text": "Astronomers have written of stranger things."
       }
     },
     "event.comet.options.2.label.default": {
@@ -5024,6 +5258,102 @@
       "location": "data/events_common.js",
       "source": {
         "text": "A Door Half-Shut"
+      }
+    },
+    "event.crown_precedence.options.0.desc.default": {
+      "context": "Event crown_precedence, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Let records settle what pride cannot."
+      }
+    },
+    "event.crown_precedence.options.0.failure.text.default": {
+      "context": "Event crown_precedence, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Each side produces an older document than the last."
+      }
+    },
+    "event.crown_precedence.options.0.label.default": {
+      "context": "Event crown_precedence, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Judge by ancient right."
+      }
+    },
+    "event.crown_precedence.options.0.success.text.default": {
+      "context": "Event crown_precedence, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A forgotten precedent ends the quarrel cleanly."
+      }
+    },
+    "event.crown_precedence.options.1.desc.default": {
+      "context": "Event crown_precedence, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A crown may define the customs it inherits."
+      }
+    },
+    "event.crown_precedence.options.1.failure.text.default": {
+      "context": "Event crown_precedence, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The compromise gives both men a fresh grievance."
+      }
+    },
+    "event.crown_precedence.options.1.label.default": {
+      "context": "Event crown_precedence, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Create a new order of precedence."
+      }
+    },
+    "event.crown_precedence.options.1.success.text.default": {
+      "context": "Event crown_precedence, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Both magnates accept a rule that honors each without yielding to either."
+      }
+    },
+    "event.crown_precedence.options.2.desc.default": {
+      "context": "Event crown_precedence, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Nearness to the throne is yours to grant or deny."
+      }
+    },
+    "event.crown_precedence.options.2.label.default": {
+      "context": "Event crown_precedence, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Keep them both waiting."
+      }
+    },
+    "event.crown_precedence.text.default": {
+      "context": "Event crown_precedence, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "At a great ceremony, two magnates claim the place nearest your throne. Genealogy, old privilege, and naked ambition have turned a pace of floor into a contest for the realm to watch."
+      }
+    },
+    "event.crown_precedence.title.default": {
+      "context": "Event crown_precedence, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Who Stands Nearest"
       }
     },
     "event.devoted_friend.options.0.desc.default": {
@@ -6025,7 +6355,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "No songs are sung about the man who left early."
+        "text": "No songs are sung about the one who leaves early."
       }
     },
     "event.drink_trouble.options.1.label.default": {
@@ -6033,7 +6363,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Slip out the back."
+        "text": "Leave before it worsens."
       }
     },
     "event.drink_trouble.options.2.desc.default": {
@@ -6068,12 +6398,20 @@
         "text": "Somehow, you turn rage to laughter. Men remember it."
       }
     },
-    "event.drink_trouble.text.default": {
-      "context": "Event drink_trouble, text, faith branch default.",
+    "event.drink_trouble.options.3.desc.default": {
+      "context": "Event drink_trouble, authored option 3, desc, branch default.",
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "The feast-ale flows, songs get louder, and someone insults someone’s mother. Fists are already rising."
+        "text": "End the spectacle with unmistakable authority."
+      }
+    },
+    "event.drink_trouble.options.3.label.default": {
+      "context": "Event drink_trouble, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Order the hall cleared."
       }
     },
     "event.drink_trouble.title.default": {
@@ -6788,6 +7126,72 @@
         "text": "The Ford in Flood"
       }
     },
+    "event.former_calling_petition.options.0.desc.default": {
+      "context": "Event former_calling_petition, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Turn memory into patronage."
+      }
+    },
+    "event.former_calling_petition.options.0.effects.log.default": {
+      "context": "Durable event log for former_calling_petition, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Patronized the people of a former calling."
+      }
+    },
+    "event.former_calling_petition.options.0.label.default": {
+      "context": "Event former_calling_petition, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Grant their petition. ({money:10})"
+      }
+    },
+    "event.former_calling_petition.options.1.desc.default": {
+      "context": "Event former_calling_petition, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Attention is cheaper than reform, but not worthless."
+      }
+    },
+    "event.former_calling_petition.options.1.label.default": {
+      "context": "Event former_calling_petition, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Hear them and grant what costs nothing."
+      }
+    },
+    "event.former_calling_petition.options.2.desc.default": {
+      "context": "Event former_calling_petition, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Rule looks forward."
+      }
+    },
+    "event.former_calling_petition.options.2.label.default": {
+      "context": "Event former_calling_petition, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The old life has no claim upon this office."
+      }
+    },
+    "event.former_calling_petition.title.default": {
+      "context": "Event former_calling_petition, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Voices from the Old Life"
+      }
+    },
     "event.foundling.options.0.desc.default": {
       "context": "Event foundling, authored option 0, desc, branch default.",
       "glossary": [],
@@ -7096,6 +7500,150 @@
       "location": "data/events_paths.js",
       "source": {
         "text": "A Feud on Your Doorstep"
+      }
+    },
+    "event.gentry_guest_right.options.0.desc.default": {
+      "context": "Event gentry_guest_right, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Generosity travels farther than any guest."
+      }
+    },
+    "event.gentry_guest_right.options.0.label.default": {
+      "context": "Event gentry_guest_right, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Offer the best chamber."
+      }
+    },
+    "event.gentry_guest_right.options.1.desc.default": {
+      "context": "Event gentry_guest_right, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Hospitality need not be blind."
+      }
+    },
+    "event.gentry_guest_right.options.1.failure.text.default": {
+      "context": "Event gentry_guest_right, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Your questions turn welcome into insult."
+      }
+    },
+    "event.gentry_guest_right.options.1.label.default": {
+      "context": "Event gentry_guest_right, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Share the fire and ask careful questions."
+      }
+    },
+    "event.gentry_guest_right.options.1.success.text.default": {
+      "context": "Event gentry_guest_right, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The tale is sound, and the guest repays caution with useful news."
+      }
+    },
+    "event.gentry_guest_right.options.2.desc.default": {
+      "context": "Event gentry_guest_right, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Courtesy at arm’s length is still courtesy."
+      }
+    },
+    "event.gentry_guest_right.options.2.label.default": {
+      "context": "Event gentry_guest_right, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Send them to the village inn."
+      }
+    },
+    "event.gentry_guest_right.text.default": {
+      "context": "Event gentry_guest_right, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A traveler of respectable family arrives after dark with a tired horse and a letter of introduction. Guest-right demands a place by the fire; prudence asks what trouble followed them."
+      }
+    },
+    "event.gentry_guest_right.title.default": {
+      "context": "Event gentry_guest_right, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A Guest at the Manor"
+      }
+    },
+    "event.gentry_rent_arrears.options.0.desc.default": {
+      "context": "Event gentry_rent_arrears, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Mercy now may preserve a good tenant."
+      }
+    },
+    "event.gentry_rent_arrears.options.0.label.default": {
+      "context": "Event gentry_rent_arrears, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Grant them a season’s grace."
+      }
+    },
+    "event.gentry_rent_arrears.options.1.desc.default": {
+      "context": "Event gentry_rent_arrears, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A fair debt can be paid by willing hands."
+      }
+    },
+    "event.gentry_rent_arrears.options.1.label.default": {
+      "context": "Event gentry_rent_arrears, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Take labor in place of coin."
+      }
+    },
+    "event.gentry_rent_arrears.options.2.desc.default": {
+      "context": "Event gentry_rent_arrears, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A manor cannot run upon excuses."
+      }
+    },
+    "event.gentry_rent_arrears.options.2.label.default": {
+      "context": "Event gentry_rent_arrears, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Order the reeve to collect in full."
+      }
+    },
+    "event.gentry_rent_arrears.text.default": {
+      "context": "Event gentry_rent_arrears, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Rent day closes with one household absent from the tally. Their crop failed, the reeve says, but your own roof and obligations do not wait upon better weather."
+      }
+    },
+    "event.gentry_rent_arrears.title.default": {
+      "context": "Event gentry_rent_arrears, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Rent-Day Tally"
       }
     },
     "event.good_omen.options.0.desc.default": {
@@ -9360,17 +9908,7 @@
       ],
       "location": "data/events_common.js",
       "source": {
-        "text": "Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood."
-      }
-    },
-    "event.make_friend.text.muslim": {
-      "context": "Event make_friend, text, faith branch muslim.",
-      "glossary": [
-        "friend"
-      ],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Long hours shared with {friend} — work, jokes, a water-skin passed back and forth — have become something like brotherhood."
+        "text": "Long hours shared with {friend} — conversation, favors, and private jokes — have become a friendship neither of you needs to name."
       }
     },
     "event.make_friend.title.default": {
@@ -10462,14 +11000,6 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Nothing. So savor the days that remain."
-      }
-    },
-    "event.old_age_reflection.text.default": {
-      "context": "Event old_age_reflection, text, faith branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "Your hands ache with old labors. Children you knew as babes now have grey in their beards. What remains, when the body fails?"
       }
     },
     "event.old_age_reflection.title.default": {
@@ -12016,14 +12546,6 @@
         "text": "Send him on his way."
       }
     },
-    "event.peddler_knock.text.default": {
-      "context": "Event peddler_knock, text, faith branch default.",
-      "glossary": [],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "A peddler with a guarded pack and quick eyes asks, very quietly, after “a buyer of unusual things.”"
-      }
-    },
     "event.peddler_knock.title.default": {
       "context": "Event peddler_knock, title, faith branch default.",
       "glossary": [],
@@ -12226,6 +12748,40 @@
       "location": "data/events_world.js",
       "source": {
         "text": "Flee to another province."
+      }
+    },
+    "event.pestilence_rages.options.3.desc.default": {
+      "context": "Event pestilence_rages, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Pay, protection, and firm orders can keep the dead from the lanes."
+      }
+    },
+    "event.pestilence_rages.options.3.label.default": {
+      "context": "Event pestilence_rages, authored option 3, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Organize burial crews. ({money:10})"
+      }
+    },
+    "event.pestilence_rages.options.4.desc.default": {
+      "context": "Event pestilence_rages, authored option 4, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Harsh boundaries may save the wider realm."
+      }
+    },
+    "event.pestilence_rages.options.4.label.default": {
+      "context": "Event pestilence_rages, authored option 4, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Close the roads and isolate the sick."
       }
     },
     "event.pestilence_rages.text.default": {
@@ -12659,7 +13215,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "A thread snaps — a bought man sells you back. The whole village knows whose hand held the knife."
+        "text": "A thread snaps — a bought man sells you back. Every neighbor knows whose hand held the knife."
       }
     },
     "event.plot_ruin_rival.options.0.label.default": {
@@ -12932,6 +13488,70 @@
       "location": "data/events_common.js",
       "source": {
         "text": "The Barn at Midnight"
+      }
+    },
+    "event.poacher_before_bench.options.0.desc.default": {
+      "context": "Event poacher_before_bench, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Mercy without inviting every hunter into the wood."
+      }
+    },
+    "event.poacher_before_bench.options.0.label.default": {
+      "context": "Event poacher_before_bench, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Pardon the hunger, confiscate the bow."
+      }
+    },
+    "event.poacher_before_bench.options.1.desc.default": {
+      "context": "Event poacher_before_bench, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Let the offense repay the demesne."
+      }
+    },
+    "event.poacher_before_bench.options.1.label.default": {
+      "context": "Event poacher_before_bench, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Set labor in place of the fine."
+      }
+    },
+    "event.poacher_before_bench.options.2.desc.default": {
+      "context": "Event poacher_before_bench, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A right unenforced soon ceases to be a right."
+      }
+    },
+    "event.poacher_before_bench.options.2.label.default": {
+      "context": "Event poacher_before_bench, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Uphold the forest law."
+      }
+    },
+    "event.poacher_before_bench.text.default": {
+      "context": "Event poacher_before_bench, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A poacher stands before your bench with a thin hare, three hungry children, and a forester demanding the full penalty."
+      }
+    },
+    "event.poacher_before_bench.title.default": {
+      "context": "Event poacher_before_bench, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The Poacher at the Bench"
       }
     },
     "event.poetry_quarrel.options.0.desc.default": {
@@ -13903,6 +14523,102 @@
         "text": "On the Mend"
       }
     },
+    "event.reeve_false_ledgers.options.0.desc.default": {
+      "context": "Event reeve_false_ledgers, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Patient figures may find where the coin vanished."
+      }
+    },
+    "event.reeve_false_ledgers.options.0.failure.text.default": {
+      "context": "Event reeve_false_ledgers, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The figures multiply until suspicion outruns proof."
+      }
+    },
+    "event.reeve_false_ledgers.options.0.label.default": {
+      "context": "Event reeve_false_ledgers, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Audit every holding."
+      }
+    },
+    "event.reeve_false_ledgers.options.0.success.text.default": {
+      "context": "Event reeve_false_ledgers, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A trail of small omissions leads to one very comfortable reeve."
+      }
+    },
+    "event.reeve_false_ledgers.options.1.desc.default": {
+      "context": "Event reeve_false_ledgers, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Truth may be worth more than punishment."
+      }
+    },
+    "event.reeve_false_ledgers.options.1.failure.text.default": {
+      "context": "Event reeve_false_ledgers, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "He mistakes mercy for weakness and denies everything."
+      }
+    },
+    "event.reeve_false_ledgers.options.1.label.default": {
+      "context": "Event reeve_false_ledgers, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Offer mercy for a full confession."
+      }
+    },
+    "event.reeve_false_ledgers.options.1.success.text.default": {
+      "context": "Event reeve_false_ledgers, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The reeve names every partner and returns what remains."
+      }
+    },
+    "event.reeve_false_ledgers.options.2.desc.default": {
+      "context": "Event reeve_false_ledgers, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "End the loss and deny the court its entertainment."
+      }
+    },
+    "event.reeve_false_ledgers.options.2.label.default": {
+      "context": "Event reeve_false_ledgers, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Dismiss him without spectacle."
+      }
+    },
+    "event.reeve_false_ledgers.text.default": {
+      "context": "Event reeve_false_ledgers, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Two copies of the reeve’s seasonal tally reach your table. They agree upon every rent except the silver that should have reached your chest."
+      }
+    },
+    "event.reeve_false_ledgers.title.default": {
+      "context": "Event reeve_false_ledgers, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The Reeve’s Two Tallies"
+      }
+    },
     "event.relic_found.options.0.desc.default": {
       "context": "Event relic_found, authored option 0, desc, branch default.",
       "glossary": [],
@@ -14687,7 +15403,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "They stammer and withdraw the words. The village laughs at them."
+        "text": "They stammer and withdraw the words. The witnesses laugh at them."
       }
     },
     "event.rival_scheme.options.1.desc.default": {
@@ -14722,22 +15438,80 @@
         "text": "Repay them in kind."
       }
     },
-    "event.rival_scheme.text.default": {
-      "context": "Event rival_scheme, text, faith branch default.",
-      "glossary": [
-        "rival"
-      ],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "{rival} has been spreading poison about you — theft, blasphemy, worse. People look at you differently now."
-      }
-    },
     "event.rival_scheme.title.default": {
       "context": "Event rival_scheme, title, faith branch default.",
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "A Knife in the Dark Market"
+        "text": "Poisoned Words"
+      }
+    },
+    "event.royal_progress.options.0.desc.default": {
+      "context": "Event royal_progress, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Let distant subjects see the full weight of the crown."
+      }
+    },
+    "event.royal_progress.options.0.label.default": {
+      "context": "Event royal_progress, authored option 0, label, branch default.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Travel in splendor. ({money:25})"
+      }
+    },
+    "event.royal_progress.options.1.desc.default": {
+      "context": "Event royal_progress, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Be seen without devouring every host’s stores."
+      }
+    },
+    "event.royal_progress.options.1.label.default": {
+      "context": "Event royal_progress, authored option 1, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Travel with a lean household. ({money:10})"
+      }
+    },
+    "event.royal_progress.options.2.desc.default": {
+      "context": "Event royal_progress, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Roads waste time better spent governing."
+      }
+    },
+    "event.royal_progress.options.2.label.default": {
+      "context": "Event royal_progress, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Rule from the capital."
+      }
+    },
+    "event.royal_progress.text.default": {
+      "context": "Event royal_progress, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Councillors propose a progress through the realm: justice beneath open skies, feasts in loyal towns, and a royal household consuming supplies everywhere it passes."
+      }
+    },
+    "event.royal_progress.title.default": {
+      "context": "Event royal_progress, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The Royal Progress"
       }
     },
     "event.save_the_lord.options.0.desc.default": {
@@ -14991,7 +15765,7 @@
       ],
       "location": "data/events_common.js",
       "source": {
-        "text": "The {holy} speaks well of you to your lord. (35 piety)"
+        "text": "The {holy} speaks well of you to the lord. (35 piety)"
       }
     },
     "event.seek_blessing.options.5.desc.default": {
@@ -15056,6 +15830,54 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Only quiet prayer."
+      }
+    },
+    "event.seek_blessing.options.8.desc.default": {
+      "context": "Event seek_blessing, authored option 8, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The clergy’s public favor strengthens your standing at court."
+      }
+    },
+    "event.seek_blessing.options.8.effects.log.default": {
+      "context": "Durable event log for seek_blessing, authored option 8, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The clergy praised your rule before the liege."
+      }
+    },
+    "event.seek_blessing.options.8.label.default": {
+      "context": "Event seek_blessing, authored option 8, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Praise before your liege. (35 piety)"
+      }
+    },
+    "event.seek_blessing.options.9.desc.default": {
+      "context": "Event seek_blessing, authored option 9, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let every pulpit commend peace beneath your rule."
+      }
+    },
+    "event.seek_blessing.options.9.effects.log.default": {
+      "context": "Durable event log for seek_blessing, authored option 9, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The clergy offered public prayers for the realm."
+      }
+    },
+    "event.seek_blessing.options.9.label.default": {
+      "context": "Event seek_blessing, authored option 9, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Prayers for the realm. (35 piety)"
       }
     },
     "event.seek_blessing.text.default": {
@@ -15157,7 +15979,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "The sermon will keep; so will the bench."
+        "text": "The sermon will keep; your attention does not."
       }
     },
     "event.sermon.options.1.label.default": {
@@ -15165,7 +15987,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Doze in the back."
+        "text": "Let the words pass unheard."
       }
     },
     "event.sermon.text.default": {
@@ -15448,6 +16270,62 @@
         "text": "Sowing Season"
       }
     },
+    "event.station_farewell.options.0.desc.default": {
+      "context": "Event station_farewell, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Keep faith with your roots, though the great call it sentiment."
+      }
+    },
+    "event.station_farewell.options.0.effects.log.default": {
+      "context": "Durable event log for station_farewell, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Honored the life lived before taking up rule."
+      }
+    },
+    "event.station_farewell.options.0.label.default": {
+      "context": "Event station_farewell, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Honor the life that made you."
+      }
+    },
+    "event.station_farewell.options.1.desc.default": {
+      "context": "Event station_farewell, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A ruler cannot forever look backward."
+      }
+    },
+    "event.station_farewell.options.1.effects.log.default": {
+      "context": "Durable event log for station_farewell, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Renounced the old station and embraced rule."
+      }
+    },
+    "event.station_farewell.options.1.label.default": {
+      "context": "Event station_farewell, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Put the old life away."
+      }
+    },
+    "event.station_farewell.title.default": {
+      "context": "Event station_farewell, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Never Again"
+      }
+    },
     "event.strange_bounty.options.0.desc.default": {
       "context": "Event strange_bounty, authored option 0, desc, branch default.",
       "glossary": [],
@@ -15520,12 +16398,36 @@
         "text": "Bury the drowned man properly."
       }
     },
-    "event.strange_bounty.text.default": {
-      "context": "Event strange_bounty, text, faith branch default.",
+    "event.strange_bounty.options.3.desc.default": {
+      "context": "Event strange_bounty, authored option 3, desc, branch default.",
       "glossary": [],
       "location": "data/events_world.js",
       "source": {
-        "text": "A storm-tide leaves a broken ship on the strand — timbers, casks, and a drowned man with rings on his fingers. By law it is the lord’s. By dawn, it is whoever’s got there first."
+        "text": "Lawful salvage belongs to the authority that keeps the coast."
+      }
+    },
+    "event.strange_bounty.options.3.label.default": {
+      "context": "Event strange_bounty, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Claim the cargo by wreck-right."
+      }
+    },
+    "event.strange_bounty.options.4.desc.default": {
+      "context": "Event strange_bounty, authored option 4, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Costly honesty carries across the sea."
+      }
+    },
+    "event.strange_bounty.options.4.label.default": {
+      "context": "Event strange_bounty, authored option 4, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Return marked goods to their owners."
       }
     },
     "event.strange_bounty.title.default": {
@@ -18172,6 +19074,22 @@
         "text": "Linger in the bath-houses."
       }
     },
+    "event.visit_city.options.8.desc.default": {
+      "context": "Event visit_city, authored option 8, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Hear merchants, clergy, and magistrates together."
+      }
+    },
+    "event.visit_city.options.8.label.default": {
+      "context": "Event visit_city, authored option 8, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Receive the civic delegation."
+      }
+    },
     "event.visit_city.text.default": {
       "context": "Event visit_city, text, faith branch default.",
       "glossary": [
@@ -18355,6 +19273,24 @@
         "text": "Browse arms and useful goods."
       }
     },
+    "event.visit_town.options.7.desc.default": {
+      "context": "Event visit_town, authored option 7, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let the masters associate prosperity with your name."
+      }
+    },
+    "event.visit_town.options.7.label.default": {
+      "context": "Event visit_town, authored option 7, label, branch default.",
+      "glossary": [
+        "money:5"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Patronize the guilds. ({money:5})"
+      }
+    },
     "event.visit_town.text.default": {
       "context": "Event visit_town, text, faith branch default.",
       "glossary": [
@@ -18473,6 +19409,38 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Rest at the way-house. ({money:2})"
+      }
+    },
+    "event.visit_village.options.6.desc.default": {
+      "context": "Event visit_village, authored option 6, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A short visit keeps rents and obligations honest."
+      }
+    },
+    "event.visit_village.options.6.failure.text.default": {
+      "context": "Event visit_village, authored option 6, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Every figure has an explanation and none of them quite meet."
+      }
+    },
+    "event.visit_village.options.6.label.default": {
+      "context": "Event visit_village, authored option 6, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Inspect the reeve’s accounts."
+      }
+    },
+    "event.visit_village.options.6.success.text.default": {
+      "context": "Event visit_village, authored option 6, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The tallies agree once your eye reaches them. The reeve grows suddenly precise."
       }
     },
     "event.visit_village.text.default": {
@@ -18623,14 +19591,6 @@
       "location": "data/events_world.js",
       "source": {
         "text": "He weaves your deeds into his tale. Your name will travel roads you never will."
-      }
-    },
-    "event.wandering_skald.text.default": {
-      "context": "Event wandering_skald, text, faith branch default.",
-      "glossary": [],
-      "location": "data/events_world.js",
-      "source": {
-        "text": "A traveling singer works the crowd by the fire — wars in far lands, kings dead and crowned, and a rumor for every purse."
       }
     },
     "event.wandering_skald.title.default": {
@@ -19571,12 +20531,20 @@
         "text": "You sweat it out at your labors."
       }
     },
-    "event.winter_fever.text.default": {
-      "context": "Event winter_fever, text, faith branch default.",
+    "event.winter_fever.options.2.desc.default": {
+      "context": "Event winter_fever, authored option 2, desc, branch default.",
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "A wet cough settles in your chest as the cold bites. Half the village is abed with it."
+        "text": "Rule cannot pause for a cough."
+      }
+    },
+    "event.winter_fever.options.2.label.default": {
+      "context": "Event winter_fever, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Keep council from your sickbed."
       }
     },
     "event.winter_fever.title.default": {
@@ -30334,6 +31302,16 @@
         "text": "Swear Fealty"
       }
     },
+    "src.0065081f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Your questions turn welcome into insult."
+      }
+    },
     "src.006602d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30394,6 +31372,16 @@
         "text": "Inverness"
       }
     },
+    "src.00a947ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Patient figures may find where the coin vanished."
+      }
+    },
     "src.00c27443": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -30423,6 +31411,16 @@
       ],
       "source": {
         "text": "Menu"
+      }
+    },
+    "src.00dacd24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A traveler of respectable family arrives after dark with a tired horse and a letter of introduction. Guest-right demands a place by the fire; prudence asks what trouble followed them."
       }
     },
     "src.00fb0aa9": {
@@ -30794,6 +31792,16 @@
       ],
       "source": {
         "text": "The Patron Is Gone"
+      }
+    },
+    "src.031c75a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Your tutor closes the book and asks you to explain the lesson without its words before you. A household may inherit land; it cannot inherit judgment."
       }
     },
     "src.032a6f14": {
@@ -32101,16 +33109,6 @@
         "text": "A Feud on Your Doorstep"
       }
     },
-    "src.08e6eef4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A thread snaps — a bought man sells you back. The whole village knows whose hand held the knife."
-      }
-    },
     "src.08fcb55d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32319,6 +33317,16 @@
       ],
       "source": {
         "text": "That life’s world could not be activated."
+      }
+    },
+    "src.09d1a53d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Travel in splendor. ({money:25})"
       }
     },
     "src.09d9ce95": {
@@ -32550,6 +33558,16 @@
       ],
       "source": {
         "text": "{count} · about {money:gold}/season"
+      }
+    },
+    "src.0ad11baa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Patronized the people of a former calling."
       }
     },
     "src.0ad3095d": {
@@ -33072,6 +34090,16 @@
         "text": "👑 {realm} joins your rule by rightful succession."
       }
     },
+    "src.0d6209d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A manor cannot run upon excuses."
+      }
+    },
     "src.0d7329ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33494,6 +34522,16 @@
         "text": "Steel rings; your point finds their shoulder. Honor is satisfied, loudly."
       }
     },
+    "src.0fcd2414": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Temper understood is temper governed."
+      }
+    },
     "src.0fe07306": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33532,6 +34570,16 @@
       ],
       "source": {
         "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
+      }
+    },
+    "src.100f123a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let the words pass unheard."
       }
     },
     "src.10182c06": {
@@ -33612,6 +34660,16 @@
       ],
       "source": {
         "text": "Ignore the summons."
+      }
+    },
+    "src.104df13e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Hospitality need not be blind."
       }
     },
     "src.104e9517": {
@@ -33936,6 +34994,16 @@
         "text": "Blood of the House"
       }
     },
+    "src.11ead8bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Truth may be worth more than punishment."
+      }
+    },
     "src.11f8b8b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34006,6 +35074,16 @@
         "text": "From Bench to Ledger"
       }
     },
+    "src.12419659": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Manage household occupations, apprenticeships, workers, and family businesses."
+      }
+    },
     "src.124596b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34014,6 +35092,16 @@
       ],
       "source": {
         "text": "That text is not a Fallowborn save."
+      }
+    },
+    "src.1248ecd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The clergy offered public prayers for the realm."
       }
     },
     "src.12492d0d": {
@@ -34267,6 +35355,16 @@
         "text": "Part ways without a wedding."
       }
     },
+    "src.1351fe0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Learn where every claim began."
+      }
+    },
     "src.13537f5a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34325,6 +35423,16 @@
       ],
       "source": {
         "text": "Put pride aside and accept an outsider’s terms."
+      }
+    },
+    "src.139178e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The sermon will keep; your attention does not."
       }
     },
     "src.1397066c": {
@@ -34495,6 +35603,16 @@
       ],
       "source": {
         "text": "Veteran retainer"
+      }
+    },
+    "src.1426ac85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Make the name greater."
       }
     },
     "src.142ce8fa": {
@@ -34806,6 +35924,16 @@
       ],
       "source": {
         "text": "No apprenticeship chosen"
+      }
+    },
+    "src.158a3a57": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The clergy praised your rule before the liege."
       }
     },
     "src.1595f0c3": {
@@ -35593,6 +36721,16 @@
         "text": "Receive {money:principal} · {money:due} due {date}"
       }
     },
+    "src.1970d9f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Young Hawk"
+      }
+    },
     "src.197d40f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35611,6 +36749,16 @@
       ],
       "source": {
         "text": "🕸 {ruler} of {realm} is dragged from the council board in disgrace."
+      }
+    },
+    "src.198686cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Order the hall cleared."
       }
     },
     "src.1995cebc": {
@@ -35651,16 +36799,6 @@
       ],
       "source": {
         "text": "Dig the grave yourself."
-      }
-    },
-    "src.19b01854": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Doze in the back."
       }
     },
     "src.19b0be0f": {
@@ -35821,16 +36959,6 @@
       ],
       "source": {
         "text": "Requires +{threshold} regard; currently {regard}."
-      }
-    },
-    "src.1a5dec0a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Lost a tooth to the smith’s pliers."
       }
     },
     "src.1a682a2d": {
@@ -36755,6 +37883,16 @@
         "text": "{slot}: {item}"
       }
     },
+    "src.1f97c99a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "End the spectacle with unmistakable authority."
+      }
+    },
     "src.1fbe32eb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37456,6 +38594,16 @@
         "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet."
       }
     },
+    "src.22f2ac9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Put the old life away."
+      }
+    },
     "src.22f5620f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37544,6 +38692,16 @@
       ],
       "source": {
         "text": "Unavailable during an unresolved event"
+      }
+    },
+    "src.23388e66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Prayers for the realm. (35 piety)"
       }
     },
     "src.23394ec0": {
@@ -37674,6 +38832,16 @@
       ],
       "source": {
         "text": "none chosen"
+      }
+    },
+    "src.23c42453": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Leave before it worsens."
       }
     },
     "src.23c734d6": {
@@ -37987,6 +39155,16 @@
         "text": "💰 Prices fall {rate}% this year; the purse gains {money:amount} of purchasing power."
       }
     },
+    "src.24ed4cca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The old life has no claim upon this office."
+      }
+    },
     "src.24fec001": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38208,6 +39386,16 @@
         "text": "The seat could be yours, if the notables agree."
       }
     },
+    "src.26142d29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Every figure has an explanation and none of them quite meet."
+      }
+    },
     "src.26325dab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38336,6 +39524,16 @@
       ],
       "source": {
         "text": "An Omen"
+      }
+    },
+    "src.26bd3705": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Offer mercy for a full confession."
       }
     },
     "src.26c105e4": {
@@ -38618,6 +39816,16 @@
         "text": "Spare no expense."
       }
     },
+    "src.281293e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Roads waste time better spent governing."
+      }
+    },
     "src.2828738e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38797,6 +40005,16 @@
       ],
       "source": {
         "text": "Cardiff"
+      }
+    },
+    "src.29514f08": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Rule looks forward."
       }
     },
     "src.2957a2d3": {
@@ -39139,6 +40357,16 @@
         "text": "kinsman"
       }
     },
+    "src.2b7b3850": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally."
+      }
+    },
     "src.2b81e976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39157,6 +40385,16 @@
       ],
       "source": {
         "text": "Their gratitude is likely; their fevers are catching."
+      }
+    },
+    "src.2b8ef821": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The Reeve’s Two Tallies"
       }
     },
     "src.2b9afe76": {
@@ -39599,6 +40837,16 @@
         "text": "Answer with your fists."
       }
     },
+    "src.2d28bbd2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Harsh boundaries may save the wider realm."
+      }
+    },
     "src.2d3d09af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39677,6 +40925,16 @@
       ],
       "source": {
         "text": "Lose a vassal quietly, keep the rest calm."
+      }
+    },
+    "src.2dae2974": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Had the rotten tooth treated by a physician."
       }
     },
     "src.2db2f379": {
@@ -40009,16 +41267,6 @@
         "text": "Meet them with the host you already have."
       }
     },
-    "src.2f88eae1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The feast-ale flows, songs get louder, and someone insults someone’s mother. Fists are already rising."
-      }
-    },
     "src.2f9c78d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40048,6 +41296,16 @@
       ],
       "source": {
         "text": "Judge it yourself, fairly."
+      }
+    },
+    "src.2fbba23b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Dismiss him without spectacle."
       }
     },
     "src.2fcd457f": {
@@ -40611,16 +41869,6 @@
         "text": "Building Works in {province}"
       }
     },
-    "src.32665fc6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Long hours shared with {friend} — work, jokes, a jug passed back and forth — have become something like brotherhood."
-      }
-    },
     "src.32a21de1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41021,16 +42269,6 @@
         "text": "{late} is dead — and {childname}, your child together, carries the blood of a house that never welcomed you. Now its kin gather to settle the inheritance, and every eye turns to your child."
       }
     },
-    "src.346bc5f0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_world.js"
-      ],
-      "source": {
-        "text": "Someone in this village has read a book."
-      }
-    },
     "src.346d7e4b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41264,16 +42502,6 @@
         "text": "Cancel"
       }
     },
-    "src.35b8c0a3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A Knife in the Dark Market"
-      }
-    },
     "src.35c25438": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41372,6 +42600,16 @@
       ],
       "source": {
         "text": "(not enough money)"
+      }
+    },
+    "src.366a3887": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Uphold the forest law."
       }
     },
     "src.3680760c": {
@@ -42114,6 +43352,16 @@
       ],
       "source": {
         "text": "Appeal to a Higher Lord"
+      }
+    },
+    "src.3a806284": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Close the roads and isolate the sick."
       }
     },
     "src.3a858ae5": {
@@ -43270,6 +44518,16 @@
         "text": "🏰 Stand garrison duty"
       }
     },
+    "src.3fa456de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Generosity travels farther than any guest."
+      }
+    },
     "src.3fa45bfa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43370,6 +44628,16 @@
         "text": "The Drill-Yard"
       }
     },
+    "src.40315491": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The hawk circles once, then falls exactly where your hand directed."
+      }
+    },
     "src.40484238": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43398,16 +44666,6 @@
       ],
       "source": {
         "text": "Household Factor"
-      }
-    },
-    "src.405127cc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A plough-share catches; a spade follows. Out of the earth comes a thing of the old times, caked in clay and glinting beneath."
       }
     },
     "src.405d1b5b": {
@@ -45130,16 +46388,6 @@
         "text": "🕊 {realm} receives the gifts but refuses the defensive compact."
       }
     },
-    "src.47bb74bf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "They stammer and withdraw the words. The village laughs at them."
-      }
-    },
     "src.47c59181": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46024,6 +47272,16 @@
         "text": "Your men would not stand — some would not even draw. You watch your own banner come down from the gate tower."
       }
     },
+    "src.4bb3c1d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Two copies of the reeve’s seasonal tally reach your table. They agree upon every rent except the silver that should have reached your chest."
+      }
+    },
     "src.4bc76e18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46225,16 +47483,6 @@
         "text": "Honor by steel — win loud or bleed quiet."
       }
     },
-    "src.4c96f6df": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Slip out the back."
-      }
-    },
     "src.4cb864ca": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46434,6 +47682,16 @@
       ],
       "source": {
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
+      }
+    },
+    "src.4dcf1668": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Every principle eventually reaches a ledger."
       }
     },
     "src.4ddad239": {
@@ -46766,6 +48024,16 @@
         "text": "forest"
       }
     },
+    "src.4f2d3e47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Better instruments, the same moment of terror."
+      }
+    },
     "src.4f30a6e1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47096,6 +48364,16 @@
         "text": "Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony."
       }
     },
+    "src.515afcbd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A forgotten precedent ends the quarrel cleanly."
+      }
+    },
     "src.515cb682": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47154,16 +48432,6 @@
       ],
       "source": {
         "text": "👑 The match ties your house to a greater one — your name rises."
-      }
-    },
-    "src.518b358c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A wet cough settles in your chest as the cold bites. Half the village is abed with it."
       }
     },
     "src.5192363e": {
@@ -47334,6 +48602,16 @@
       ],
       "source": {
         "text": "Trade partnerships"
+      }
+    },
+    "src.522bba25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Grace is discipline made invisible."
       }
     },
     "src.5232db25": {
@@ -48358,6 +49636,16 @@
         "text": "Build Where?"
       }
     },
+    "src.56e0d11c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Learn the creature before commanding it."
+      }
+    },
     "src.56ea1388": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48549,6 +49837,16 @@
         "text": "Cork"
       }
     },
+    "src.57b55206": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Former calling of {name}"
+      }
+    },
     "src.57b99edc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48629,6 +49927,16 @@
         "text": "another realm"
       }
     },
+    "src.57f61758": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "At a great ceremony, two magnates claim the place nearest your throne. Genealogy, old privilege, and naked ambition have turned a pace of floor into a contest for the realm to watch."
+      }
+    },
     "src.580cfd8a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48657,6 +49965,16 @@
       ],
       "source": {
         "text": "Men with a painted board have stretched a rope across the road near {location}. They call the demand an ancient toll."
+      }
+    },
+    "src.58298317": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Pardon the hunger, confiscate the bow."
       }
     },
     "src.582e165e": {
@@ -49089,16 +50407,6 @@
         "text": "Let the heavens burn for you."
       }
     },
-    "src.5a57dd69": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Long hours shared with {friend} — work, jokes, a water-skin passed back and forth — have become something like brotherhood."
-      }
-    },
     "src.5a5c92ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49458,6 +50766,16 @@
       ],
       "source": {
         "text": "Leicester"
+      }
+    },
+    "src.5bde882f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The tale is sound, and the guest repays caution with useful news."
       }
     },
     "src.5bf74906": {
@@ -50266,6 +51584,16 @@
         "text": "One whisper, if it lands, reshapes the hall."
       }
     },
+    "src.5f7b4743": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Praise before your liege. (35 piety)"
+      }
+    },
     "src.5f87da58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50316,16 +51644,6 @@
         "text": "Mâcon"
       }
     },
-    "src.5fd1e249": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The sermon will keep; so will the bench."
-      }
-    },
     "src.5fdb0914": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50364,6 +51682,16 @@
       ],
       "source": {
         "text": "Glory and grave both live in the shield-wall. Stand."
+      }
+    },
+    "src.60135367": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Create a new order of precedence."
       }
     },
     "src.6013a660": {
@@ -51137,6 +52465,16 @@
         "text": "The Old Sergeant’s Wager"
       }
     },
+    "src.6374ca60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Let the offense repay the demesne."
+      }
+    },
     "src.63854a25": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51307,6 +52645,16 @@
       ],
       "source": {
         "text": "Held by {realm}"
+      }
+    },
+    "src.64802eb5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The jesses tangle and the hawk leaves a bright line across your wrist."
       }
     },
     "src.648224f4": {
@@ -51660,6 +53008,16 @@
         "text": "Trade at the village green."
       }
     },
+    "src.664a6be7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Travel with a lean household. ({money:10})"
+      }
+    },
     "src.6658b003": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51840,6 +53198,16 @@
         "text": "Trade the workbench for the open road."
       }
     },
+    "src.6735f313": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A Guest at the Manor"
+      }
+    },
     "src.673e4893": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51888,6 +53256,16 @@
       ],
       "source": {
         "text": "Tarsos"
+      }
+    },
+    "src.679763f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The clergy’s public favor strengthens your standing at court."
       }
     },
     "src.67a0ccf4": {
@@ -52248,6 +53626,16 @@
       ],
       "source": {
         "text": "Great Sultan"
+      }
+    },
+    "src.693058a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Remember the disgraces too."
       }
     },
     "src.69420081": {
@@ -52932,6 +54320,16 @@
         "text": "Gold"
       }
     },
+    "src.6c9eb6c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Rent day closes with one household absent from the tally. Their crop failed, the reeve says, but your own roof and obligations do not wait upon better weather."
+      }
+    },
     "src.6ca73312": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53362,6 +54760,16 @@
         "text": "First voice for the crown buys the crown’s notice."
       }
     },
+    "src.6e123c6f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Inspect the reeve’s accounts."
+      }
+    },
     "src.6e40214e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53400,6 +54808,16 @@
       ],
       "source": {
         "text": "The lord’s riders catch you at the ford. You are dragged back in a halter."
+      }
+    },
+    "src.6e64ed91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Poisoned Words"
       }
     },
     "src.6e856186": {
@@ -53830,6 +55248,16 @@
       ],
       "source": {
         "text": "Olomouc"
+      }
+    },
+    "src.7068f72c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let every pulpit commend peace beneath your rule."
       }
     },
     "src.706ad472": {
@@ -54966,6 +56394,16 @@
         "text": "Bled fierce and long before it closed."
       }
     },
+    "src.75648b7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Order the reeve to collect in full."
+      }
+    },
     "src.7574bd3d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55216,16 +56654,6 @@
         "text": "Holy Roman Empire"
       }
     },
-    "src.769001cf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "No songs are sung about the man who left early."
-      }
-    },
     "src.76925860": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55285,6 +56713,16 @@
       ],
       "source": {
         "text": "Take his hand — you did not cross a war to lose him now."
+      }
+    },
+    "src.76f7f3a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A poacher stands before your bench with a thin hare, three hungry children, and a forester demanding the full penalty."
       }
     },
     "src.76fe892b": {
@@ -55535,6 +56973,16 @@
       ],
       "source": {
         "text": "Broken before the court, he will never trouble you again."
+      }
+    },
+    "src.782a4f09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Manners hide as much as they reveal."
       }
     },
     "src.782fa99f": {
@@ -55876,6 +57324,16 @@
       ],
       "source": {
         "text": "Buy the next plot for {money:cost} · seasonal yield {money:before} → {money:after}."
+      }
+    },
+    "src.79a697b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Never Again"
       }
     },
     "src.79ad420b": {
@@ -56228,6 +57686,16 @@
         "text": "Kursk"
       }
     },
+    "src.7af38d84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "former calling"
+      }
+    },
     "src.7afb735f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56266,6 +57734,16 @@
       ],
       "source": {
         "text": "Pain dulls with time. So they say."
+      }
+    },
+    "src.7b394c6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Let distant subjects see the full weight of the crown."
       }
     },
     "src.7b448750": {
@@ -56680,6 +58158,16 @@
         "text": "has invalid empire"
       }
     },
+    "src.7d2d9c00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Patronize the guilds. ({money:5})"
+      }
+    },
     "src.7d4c2218": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56858,6 +58346,16 @@
       ],
       "source": {
         "text": "Send them to the lord’s court."
+      }
+    },
+    "src.7df04136": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Claim the cargo by wreck-right."
       }
     },
     "src.7dfeae28": {
@@ -57109,6 +58607,16 @@
       ],
       "source": {
         "text": "Two neighboring houses have fallen out over a mill-race, and both send riders to your hall the same afternoon, seeking your name for their cause."
+      }
+    },
+    "src.7ef1cebc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Keep them both waiting."
       }
     },
     "src.7efbfff9": {
@@ -57651,6 +59159,16 @@
         "text": "Give them your personal attention until their regard is won."
       }
     },
+    "src.80f87f7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Keep faith with your roots, though the great call it sentiment."
+      }
+    },
     "src.80fb2f15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57691,6 +59209,26 @@
         "text": "Peace bought with a little pride."
       }
     },
+    "src.81353024": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The Poacher at the Bench"
+      }
+    },
+    "src.813d3cfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Voices from the Old Life"
+      }
+    },
     "src.814abf14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57729,6 +59267,16 @@
       ],
       "source": {
         "text": "Inherited debt:"
+      }
+    },
+    "src.818715d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Hear them and grant what costs nothing."
       }
     },
     "src.819b8cb5": {
@@ -58723,6 +60271,16 @@
         "text": "⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you."
       }
     },
+    "src.85d2ea6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A ruler cannot forever look backward."
+      }
+    },
     "src.85d6b4c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58741,6 +60299,16 @@
       ],
       "source": {
         "text": "Son of the lord’s house"
+      }
+    },
+    "src.85e0347b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The tallies agree once your eye reaches them. The reeve grows suddenly precise."
       }
     },
     "src.85e52476": {
@@ -58941,6 +60509,16 @@
       ],
       "source": {
         "text": "👑 They say {realm} is the mightiest power of the age."
+      }
+    },
+    "src.86be52ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Who Stands Nearest"
       }
     },
     "src.86d5e0b5": {
@@ -59283,6 +60861,16 @@
         "text": "Shield-wall practice through the winter months. (+3% battle odds per rank)"
       }
     },
+    "src.888ffdbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A young hawk sits restless upon your glove, all hunger, fear, and sharp attention. The falconer waits to see whether you command or merely clutch."
+      }
+    },
     "src.88bdda1e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59341,6 +60929,16 @@
       ],
       "source": {
         "text": "Płock"
+      }
+    },
+    "src.88e115c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Rent-Day Tally"
       }
     },
     "src.88e733fd": {
@@ -59541,6 +61139,16 @@
       ],
       "source": {
         "text": "Patience looks much like fear from the border."
+      }
+    },
+    "src.89d491fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season."
       }
     },
     "src.89e9f6ed": {
@@ -60044,6 +61652,16 @@
         "text": "Right may be on your side — the ledger is on his."
       }
     },
+    "src.8c0c869b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Grant their petition. ({money:10})"
+      }
+    },
     "src.8c1be1a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60332,6 +61950,16 @@
       ],
       "source": {
         "text": "Only an adult can take to the road."
+      }
+    },
+    "src.8da91953": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Turn the lesson toward practical accounts."
       }
     },
     "src.8db2fbaf": {
@@ -61328,6 +62956,16 @@
         "text": "Scorched but standing. You saved the most of it."
       }
     },
+    "src.925874af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Grant them a season’s grace."
+      }
+    },
     "src.925bc85d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61636,6 +63274,16 @@
       ],
       "source": {
         "text": "Completed a masterwork."
+      }
+    },
+    "src.9425db0e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Pay, protection, and firm orders can keep the dead from the lanes."
       }
     },
     "src.9428044a": {
@@ -62031,6 +63679,16 @@
         "text": "A debt forgotten is a friend kept."
       }
     },
+    "src.96296c25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Set labor in place of the fine."
+      }
+    },
     "src.962f5b4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62119,6 +63777,16 @@
       ],
       "source": {
         "text": "Household Shrine"
+      }
+    },
+    "src.97025ece": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Mercy without inviting every hunter into the wood."
       }
     },
     "src.9704501f": {
@@ -62251,6 +63919,16 @@
         "text": "{opinion} · {policy} · {status}"
       }
     },
+    "src.977c7cc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Attention is cheaper than reform, but not worthless."
+      }
+    },
     "src.977e6c13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62269,6 +63947,16 @@
       ],
       "source": {
         "text": "Against all cynics, holiness prevails. The mitre is yours."
+      }
+    },
+    "src.979c9802": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Mind every courtesy."
       }
     },
     "src.979dd730": {
@@ -62851,6 +64539,16 @@
       ],
       "source": {
         "text": "Dongola"
+      }
+    },
+    "src.9a11e1b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Each side produces an older document than the last."
       }
     },
     "src.9a282111": {
@@ -63786,6 +65484,16 @@
         "text": "Your barb lands perfectly. {name} fumes; the crowd laughs."
       }
     },
+    "src.9e5606be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Hold steady and loose it cleanly."
+      }
+    },
     "src.9e5be72b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63874,6 +65582,16 @@
       ],
       "source": {
         "text": "A mind like lightning."
+      }
+    },
+    "src.9ea38b88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Old rights reward a careful memory."
       }
     },
     "src.9eae0e21": {
@@ -64304,16 +66022,6 @@
       ],
       "source": {
         "text": "Nürnberg"
-      }
-    },
-    "src.a0224454": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "{rival} has been spreading poison about you — theft, blasphemy, worse. People look at you differently now."
       }
     },
     "src.a029db56": {
@@ -65067,6 +66775,16 @@
         "text": "You need {needed} piety (now {current})."
       }
     },
+    "src.a3bd1c2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Trust the court physician. ({money:5})"
+      }
+    },
     "src.a3cdcb09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65237,6 +66955,16 @@
         "text": "Household page"
       }
     },
+    "src.a495dca1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Hear merchants, clergy, and magistrates together."
+      }
+    },
     "src.a4a0cb4e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65255,6 +66983,16 @@
       ],
       "source": {
         "text": "The old formula leaves little room to wriggle. The right is older than the reeve’s office."
+      }
+    },
+    "src.a4b62795": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧰 Household work & enterprises…"
       }
     },
     "src.a4ba8ae2": {
@@ -65718,16 +67456,6 @@
       ],
       "source": {
         "text": "Bought the bishop’s mitre."
-      }
-    },
-    "src.a6b4e430": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "Your hands ache with old labors. Children you knew as babes now have grey in their beards. What remains, when the body fails?"
       }
     },
     "src.a6c1c29f": {
@@ -66203,16 +67931,6 @@
         "text": "🧭 Take to the road…"
       }
     },
-    "src.a8debf20": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_world.js"
-      ],
-      "source": {
-        "text": "A traveling singer works the crowd by the fire — wars in far lands, kings dead and crowned, and a rumor for every purse."
-      }
-    },
     "src.a9086f96": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66534,6 +68252,16 @@
         "text": "The Infirmary"
       }
     },
+    "src.aabc8f99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A crown may define the customs it inherits."
+      }
+    },
     "src.aaef38a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66592,6 +68320,16 @@
       ],
       "source": {
         "text": "The Go-Between"
+      }
+    },
+    "src.ab4394ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Rule cannot pause for a cough."
       }
     },
     "src.ab43d664": {
@@ -66855,6 +68593,16 @@
         "text": "Reverence travels better than certainty."
       }
     },
+    "src.ac5e8871": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Every glance at the high table carries meaning: who sits, who waits, whose cup is filled first. Tonight you are expected to notice all of it and offend no one."
+      }
+    },
     "src.ac829f30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66973,6 +68721,16 @@
       ],
       "source": {
         "text": "Maimed"
+      }
+    },
+    "src.ad18c98b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "They stammer and withdraw the words. The witnesses laugh at them."
       }
     },
     "src.ad25ae3f": {
@@ -68247,6 +70005,16 @@
         "text": "row on any province, and the 🗺 map filters ("
       }
     },
+    "src.b2fca5d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Had the rotten tooth pulled."
+      }
+    },
     "src.b3074f16": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68435,6 +70203,16 @@
       ],
       "source": {
         "text": "The Ford in Flood"
+      }
+    },
+    "src.b3da5477": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Costly honesty carries across the sea."
       }
     },
     "src.b3dc8779": {
@@ -69109,6 +70887,16 @@
         "text": "Son of the chief’s house"
       }
     },
+    "src.b6dd86bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Honored the life lived before taking up rule."
+      }
+    },
     "src.b6de282c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69167,6 +70955,16 @@
       ],
       "source": {
         "text": "Stay home"
+      }
+    },
+    "src.b7097835": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A right unenforced soon ceases to be a right."
       }
     },
     "src.b70d85c7": {
@@ -69400,6 +71198,26 @@
         "text": "Believer"
       }
     },
+    "src.b7f7cf7c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Mercy now may preserve a good tenant."
+      }
+    },
+    "src.b807b50f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Judge by ancient right."
+      }
+    },
     "src.b814e6fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69498,6 +71316,16 @@
       ],
       "source": {
         "text": "Hunt them down and hang one."
+      }
+    },
+    "src.b8a74c74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Nearness to the throne is yours to grant or deny."
       }
     },
     "src.b8b6afa4": {
@@ -69899,6 +71727,16 @@
       ],
       "source": {
         "text": "Dust may yet yield what memory cannot."
+      }
+    },
+    "src.bb404e81": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "End the loss and deny the court its entertainment."
       }
     },
     "src.bb48e606": {
@@ -70633,6 +72471,16 @@
         "text": "Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard."
       }
     },
+    "src.bee2cbd2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Share the fire and ask careful questions."
+      }
+    },
     "src.bef086ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70713,6 +72561,16 @@
         "text": "Western Sahara"
       }
     },
+    "src.bf778908": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "No songs are sung about the one who leaves early."
+      }
+    },
     "src.bf99362d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70771,6 +72629,16 @@
       ],
       "source": {
         "text": "The village children divide into two armies with stick-swords and hurdle-shields. Someone must lead the charge."
+      }
+    },
+    "src.bffa8121": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Be seen without devouring every host’s stores."
       }
     },
     "src.c00b4e84": {
@@ -71013,6 +72881,16 @@
         "text": "Sovereign — kneels to no one"
       }
     },
+    "src.c10c184c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The {holy} speaks well of you to the lord. (35 piety)"
+      }
+    },
     "src.c10fbd02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71193,6 +73071,16 @@
       ],
       "source": {
         "text": "🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt."
+      }
+    },
+    "src.c1bee5d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Inheritance is a challenge, not a cushion."
       }
     },
     "src.c1c43225": {
@@ -71405,6 +73293,16 @@
       ],
       "source": {
         "text": "A higher lord’s favor — or a letter home."
+      }
+    },
+    "src.c28a6ca4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Patience first; the flight follows."
       }
     },
     "src.c28e3431": {
@@ -72621,6 +74519,16 @@
         "text": "🏛 {ruler} of {realm} is dismissed from your council — and will not forget it."
       }
     },
+    "src.c8985011": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let the masters associate prosperity with your name."
+      }
+    },
     "src.c8bbfbc8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72649,6 +74557,16 @@
       ],
       "source": {
         "text": "Visby"
+      }
+    },
+    "src.c8d9ffff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Reason it through."
       }
     },
     "src.c8e03468": {
@@ -72731,16 +74649,6 @@
         "text": "Almería"
       }
     },
-    "src.c981a186": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_world.js"
-      ],
-      "source": {
-        "text": "A storm-tide leaves a broken ship on the strand — timbers, casks, and a drowned man with rings on his fingers. By law it is the lord’s. By dawn, it is whoever’s got there first."
-      }
-    },
     "src.c983b76b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72749,6 +74657,16 @@
       ],
       "source": {
         "text": "Festival Day"
+      }
+    },
+    "src.c989bbe6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Audit every holding."
       }
     },
     "src.c99ce018": {
@@ -72850,6 +74768,16 @@
       ],
       "source": {
         "text": "A new heir can say what the dead could not."
+      }
+    },
+    "src.ca08a0e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A fair debt can be paid by willing hands."
       }
     },
     "src.ca2c6a8e": {
@@ -73623,6 +75551,16 @@
         "text": "🏅 {name} takes a seat as a guild officer."
       }
     },
+    "src.cd28a85d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Long hours shared with {friend} — conversation, favors, and private jokes — have become a friendship neither of you needs to name."
+      }
+    },
     "src.cd29d32c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73955,6 +75893,16 @@
         "text": "Learn by watching; draw no eyes to a jaw too smooth."
       }
     },
+    "src.cedd47f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A trail of small omissions leads to one very comfortable reeve."
+      }
+    },
     "src.cee6551d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73973,6 +75921,16 @@
       ],
       "source": {
         "text": "Fustat"
+      }
+    },
+    "src.cefbd80c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Courtesy at arm’s length is still courtesy."
       }
     },
     "src.cf1557ac": {
@@ -74155,6 +76113,16 @@
         "text": "Husband"
       }
     },
+    "src.d05472da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Renounced the old station and embraced rule."
+      }
+    },
     "src.d058abbe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74243,16 +76211,6 @@
       ],
       "source": {
         "text": "{stance} — suspended during war"
-      }
-    },
-    "src.d0c78fae": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A tooth throbs like a war-drum. The smith owns the only pliers in the village."
       }
     },
     "src.d0d814ab": {
@@ -75406,6 +77364,16 @@
         "text": "🧭 Set out from {home} for {destination}."
       }
     },
+    "src.d6d9506b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Honor the life that made you."
+      }
+    },
     "src.d6d9e207": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75464,6 +77432,16 @@
       ],
       "source": {
         "text": "Make yourself useful."
+      }
+    },
+    "src.d70679be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A house learns most from what it would hide."
       }
     },
     "src.d70d1fc5": {
@@ -75745,6 +77723,16 @@
       ],
       "source": {
         "text": "A diadem of an empire nobody remembers — and everybody bows to."
+      }
+    },
+    "src.d85f006c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Take labor in place of coin."
       }
     },
     "src.d87e1222": {
@@ -76350,6 +78338,16 @@
         "text": "Only quiet prayer."
       }
     },
+    "src.db85ebd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The reeve names every partner and returns what remains."
+      }
+    },
     "src.db8ff5fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76608,6 +78606,16 @@
       ],
       "source": {
         "text": "Withdraw personal attention. This costs no day."
+      }
+    },
+    "src.dd0abfcc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Turn memory into patronage."
       }
     },
     "src.dd0ece8e": {
@@ -77010,6 +79018,16 @@
         "text": "Take the wager. ({money:2})"
       }
     },
+    "src.dec5afd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The Royal Progress"
+      }
+    },
     "src.dec99196": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77200,6 +79218,16 @@
         "text": "One voice carries further than forty quarrels."
       }
     },
+    "src.dfb5a400": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Tutor’s Measure"
+      }
+    },
     "src.dfb8555c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77388,6 +79416,16 @@
       ],
       "source": {
         "text": "📜 Ahmad ibn Tulun, governor of Egypt, casts off Baghdad’s yoke. Egypt is his."
+      }
+    },
+    "src.e077b0f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A thread snaps — a bought man sells you back. Every neighbor knows whose hand held the knife."
       }
     },
     "src.e0911029": {
@@ -77842,6 +79880,16 @@
         "text": "At the evening majlis a braggart recites verses mocking your family — polished, cruel, and already being repeated with delight."
       }
     },
+    "src.e288471a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Names Upon the Wall"
+      }
+    },
     "src.e28e0167": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77972,6 +80020,16 @@
         "text": "Every debt in one place — most of them owed to you."
       }
     },
+    "src.e34b12a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Organize burial crews. ({money:10})"
+      }
+    },
     "src.e356f793": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78070,6 +80128,16 @@
       ],
       "source": {
         "text": "reigning ruler"
+      }
+    },
+    "src.e3eb90d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Send them to the village inn."
       }
     },
     "src.e3fe5f32": {
@@ -78365,6 +80433,16 @@
         "text": "🎓 Hire a personal learned master ({money:amount} each season)"
       }
     },
+    "src.e54a2c14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Rule from the capital."
+      }
+    },
     "src.e54d8cb5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78534,6 +80612,16 @@
       ],
       "source": {
         "text": "Better a schemer watched at your board than whispering in his hall."
+      }
+    },
+    "src.e606aa7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Astronomers have written of stranger things."
       }
     },
     "src.e617b0f8": {
@@ -78784,16 +80872,6 @@
       ],
       "source": {
         "text": "Kingdom of Sweden"
-      }
-    },
-    "src.e74de8ac": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The {holy} speaks well of you to your lord. (35 piety)"
       }
     },
     "src.e755fb85": {
@@ -79566,6 +81644,16 @@
         "text": "Worms"
       }
     },
+    "src.ea61b2df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Councillors propose a progress through the realm: justice beneath open skies, feasts in loyal towns, and a royal household consuming supplies everywhere it passes."
+      }
+    },
     "src.ea841021": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79574,6 +81662,16 @@
       ],
       "source": {
         "text": "Crushed the great rising of the commons."
+      }
+    },
+    "src.ea942dfd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "At the High Table"
       }
     },
     "src.eaa3e0f3": {
@@ -79775,6 +81873,16 @@
       ],
       "source": {
         "text": "Dorset"
+      }
+    },
+    "src.eba4e87e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The compromise gives both men a fresh grievance."
       }
     },
     "src.eba99b40": {
@@ -80498,6 +82606,16 @@
         "text": "Win a name, or eat the mud."
       }
     },
+    "src.ef9e29fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Receive the civic delegation."
+      }
+    },
     "src.efa77a48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80906,6 +83024,16 @@
       ],
       "source": {
         "text": "Spurn him grandly. You have outgrown the blushing boy from the muster line."
+      }
+    },
+    "src.f16d8f9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Let records settle what pride cannot."
       }
     },
     "src.f171af22": {
@@ -81599,6 +83727,16 @@
         "text": "Move the household home to {destination}. Existing land, enterprises, culture, and faith will not move or change."
       }
     },
+    "src.f4e6045e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Painted arms and remembered names line the hall. An elder points from one ancestor to the next, then asks what duty such a lineage lays upon you."
+      }
+    },
     "src.f4ec5e02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81607,6 +83745,16 @@
       ],
       "source": {
         "text": "Treasurer"
+      }
+    },
+    "src.f4f4f112": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Lawful salvage belongs to the authority that keeps the coast."
       }
     },
     "src.f502af8c": {
@@ -81627,6 +83775,16 @@
       ],
       "source": {
         "text": "🕯 Your grandfather {name} has died, aged {age}."
+      }
+    },
+    "src.f5230b0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A short visit keeps rents and obligations honest."
       }
     },
     "src.f528bbf1": {
@@ -81859,16 +84017,6 @@
         "text": "🏳 Stop observing"
       }
     },
-    "src.f60ecaab": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "A peddler with a guarded pack and quick eyes asks, very quietly, after “a buyer of unusual things.”"
-      }
-    },
     "src.f6153717": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81977,6 +84125,16 @@
       ],
       "source": {
         "text": "Press a de jure right, a fabricated county claim, or a crown-restoration right."
+      }
+    },
+    "src.f6cf5741": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Keep council from your sickbed."
       }
     },
     "src.f6f1dff9": {
@@ -82320,6 +84478,16 @@
         "text": "Run the race."
       }
     },
+    "src.f8a0125d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "He mistakes mercy for weakness and denies everything."
+      }
+    },
     "src.f8aa99ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82488,6 +84656,16 @@
       ],
       "source": {
         "text": "Move it back by night."
+      }
+    },
+    "src.f9624f73": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Watch who whispers to whom."
       }
     },
     "src.f9639820": {
@@ -82698,6 +84876,16 @@
       ],
       "source": {
         "text": "Seek a loan…"
+      }
+    },
+    "src.faa249d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Both magnates accept a rule that honors each without yielding to either."
       }
     },
     "src.faaa07ce": {
@@ -83000,6 +85188,16 @@
         "text": "⚔ Declare war…"
       }
     },
+    "src.fbbf0098": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Offer the best chamber."
+      }
+    },
     "src.fbbf19d4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83008,6 +85206,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} buys back the claim for {money:gold}."
+      }
+    },
+    "src.fbe05d62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧰 Former calling — {career}"
       }
     },
     "src.fbf28c29": {
@@ -83088,6 +85296,16 @@
       ],
       "source": {
         "text": "Work the extra days instead."
+      }
+    },
+    "src.fc63924a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The figures multiply until suspicion outruns proof."
       }
     },
     "src.fc65ae7e": {
@@ -83198,6 +85416,16 @@
       ],
       "source": {
         "text": "{relation} · {marital} · regard {regard}"
+      }
+    },
+    "src.fced05c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Understanding lasts longer than recitation."
       }
     },
     "src.fcf0838d": {
@@ -83390,6 +85618,16 @@
         "text": "Clerk"
       }
     },
+    "src.fdd8d02a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your calling is now biography; manage the occupations and productive property of your household."
+      }
+    },
     "src.fdda4cf7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83438,6 +85676,16 @@
       ],
       "source": {
         "text": "Let the beast carry what the road demands."
+      }
+    },
+    "src.fe0f69ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Return marked goods to their owners."
       }
     },
     "src.fe135de9": {
@@ -87379,6 +89627,16 @@
         "text": "Foreign Policy"
       }
     },
+    "ui:Former calling of {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Former calling of {name}"
+      }
+    },
     "ui:French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -89969,14 +92227,6 @@
         "text": "The household owns:"
       }
     },
-    "ui:The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season."
-      }
-    },
     "ui:The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -91039,6 +93289,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "favor {favor}"
+      }
+    },
+    "ui:former calling": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "former calling"
       }
     },
     "ui:friend": {
@@ -93723,6 +95981,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "🧑‍🏫 Your schooling"
+      }
+    },
+    "ui:🧰 Former calling — {career}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "career"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧰 Former calling — {career}"
       }
     },
     "ui:🧰 Work & Enterprises": {

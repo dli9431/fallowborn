@@ -1900,7 +1900,7 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.world.war_declared_on_player',
           '🔥 {realm} declares war upon YOU!', { realm: r.name }));
         FB.warFooting(state);
-        state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
+        FB.queueEvent(state, 'war_defense_muster', {});
       }
     }
 
@@ -1929,7 +1929,7 @@ window.FB = window.FB || {};
           state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
             defending: true, casus: { type: 'independence' } };
           FB.warFooting(state);
-          state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
+          FB.queueEvent(state, 'war_defense_muster', {});
         }
       } else if (tr && tr.alive && !tr.war) {
         tr.war = { enemy: id, years: 0, captures: 0,
@@ -2187,7 +2187,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    state.eventQueue.push({ id: 'war_council', ctx: {} });
+    FB.queueEvent(state, 'war_council', {});
   };
 
   /* Is a hostile field host standing in the player's own lands? Drives the
@@ -2272,7 +2272,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
       if (!p.provs.length) {
-        p.tier = 2; p.liege = null;
+        FB.setPlayerTier(state, 2); p.liege = null;
         if (state.realms.player) FB.markRealmDead(state, 'player');
         FB.news(state, FB.msg('news.war.landless',
           '⬇ Landless once more. The banners are folded away.', {}));
@@ -2356,7 +2356,7 @@ window.FB = window.FB || {};
         if (state.realms[vid].liege === 'player') state.realms[vid].liege = p.liege || null;
       }
     }
-    p.tier = 2;
+    FB.setPlayerTier(state, 2);
     p.liege = null; p.liegeOp = 0; p.liegeOps = {};
     p.pop = 0;
     p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
@@ -2411,7 +2411,9 @@ window.FB = window.FB || {};
         for (const q of state.eventQueue) {
           if (q.id === 'war_tribute_offer') { queued = true; break; }
         }
-        if (!queued && !w.tributeDeclined) state.eventQueue.push({ id: 'war_tribute_offer', ctx: {} });
+        if (!queued && !w.tributeDeclined) {
+          FB.queueEvent(state, 'war_tribute_offer', {});
+        }
       }
     }
   };
@@ -2696,7 +2698,7 @@ window.FB = window.FB || {};
     FB.breakAlliance(state, rid);
     const oldRank = mine.rank || Math.max(1, p.tier - 3);
     mine.rank = Math.max(oldRank, inherited.rank || 1);
-    p.tier = Math.max(p.tier, mine.rank + 3);
+    FB.setPlayerTier(state, Math.max(p.tier, mine.rank + 3), { attachLiege:false });
     if ((inherited.rank || 0) >= oldRank) {
       mine.name = inherited.name;
       mine.color = inherited.color || mine.color;
@@ -2878,7 +2880,7 @@ window.FB = window.FB || {};
     if (indep && FB.playerKingdom(state) && p.tier < 6) newTier = 6;
     if (indep && FB.playerEmpire(state) && p.tier < 7) newTier = 7;
     if (newTier > p.tier) {
-      p.tier = newTier;
+      FB.setPlayerTier(state, newTier, { attachLiege:false });
       const titleData = FB.titleSnapshot(state);
       FB.news(state, FB.msg('news.world.promoted',
         '👑 You are raised to {title}!', { title: { $title: titleData } }));

@@ -165,7 +165,7 @@ FBDATA.events.push(
     { label:'Pay them to move on.', require:{ goldMin:5 }, desc:'Buy quiet, and hope quiet stays bought.', effects:{ gold:-5 } }
   ]},
 { id:'good_ox_year', title:'A Strong Team',
-  trigger:{ flags:['own_ox'], seasons:[2], chance:0.5 }, weight:6, cooldown:3,
+  trigger:{ tierMax:1, flags:['own_ox'], seasons:[2], chance:0.5 }, weight:6, cooldown:3,
   text:'With the ox pulling, you plough deeper and faster than any neighbor. The extra furlongs pay.',
   options:[ { label:'The beast earns its hay.', desc:'Let the plough do the boasting.', effects:{ gold:4 } } ]},
 
@@ -510,6 +510,34 @@ FBDATA.events.push(
       failure:{ text:'Everyone shouts a different command until a stronger voice takes over.', effects:{ prestige:-2 } } },
     { label:'Run for more help.', desc:'Little glory, but no one drowns for your pride.', effects:{ prestige:1 } },
     { label:'Keep walking.', desc:'The river keeps its secrets; so will you.', effects:{ prestige:-2 } }
+  ]},
+
+/* ================= GENTRY LIFE ================= */
+{ id:'gentry_rent_arrears', title:'The Rent-Day Tally',
+  trigger:{ societalRoles:['gentry'], minAge:16, seasons:[2], chance:0.16 },
+  weight:7, cooldown:12,
+  text:'Rent day closes with one household absent from the tally. Their crop failed, the reeve says, but your own roof and obligations do not wait upon better weather.',
+  options:[
+    { label:'Grant them a season’s grace.', desc:'Mercy now may preserve a good tenant.',
+      effects:{ gold:-3, piety:5, popularOpinion:5 } },
+    { label:'Take labor in place of coin.', desc:'A fair debt can be paid by willing hands.',
+      effects:{ gold:2, popularOpinion:2, skills:{ste:1} } },
+    { label:'Order the reeve to collect in full.', desc:'A manor cannot run upon excuses.',
+      effects:{ gold:6, popularOpinion:-5, prestige:2 } }
+  ]},
+{ id:'gentry_guest_right', title:'A Guest at the Manor',
+  trigger:{ societalRoles:['gentry'], minAge:16, chance:0.14 }, weight:6, cooldown:14,
+  text:'A traveler of respectable family arrives after dark with a tired horse and a letter of introduction. Guest-right demands a place by the fire; prudence asks what trouble followed them.',
+  options:[
+    { label:'Offer the best chamber.', desc:'Generosity travels farther than any guest.',
+      effects:{ gold:-4, prestige:6, piety:3 } },
+    { label:'Share the fire and ask careful questions.', chance:'skill_int',
+      desc:'Hospitality need not be blind.',
+      success:{ text:'The tale is sound, and the guest repays caution with useful news.',
+        effects:{ prestige:3, skills:{int:1}, worldNews:true } },
+      failure:{ text:'Your questions turn welcome into insult.', effects:{ prestige:-3 } } },
+    { label:'Send them to the village inn.', desc:'Courtesy at arm’s length is still courtesy.',
+      effects:{ gold:-1 } }
   ]},
 
 /* =========================================================================
