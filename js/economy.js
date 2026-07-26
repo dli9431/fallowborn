@@ -429,10 +429,239 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Maintained commoner living standards are additive save-format-3 state.
+     Definitions carry the whole benefit/upkeep of each current level; earlier
+     levels are not summed. Work outfits sleep unless somebody can use them. */
+  FB.ensureHouseholdStandards = function (state) {
+    const p = state.player;
+    if (!p.householdStandards || typeof p.householdStandards !== 'object' ||
+        Array.isArray(p.householdStandards)) p.householdStandards = {};
+    const table = FBDATA.householdStandards || {};
+    for (const id in table) {
+      const levels = Array.isArray(table[id].levels) ? table[id].levels : [];
+      let level = Number(p.householdStandards[id]);
+      if (!isFinite(level)) level = 0;
+      level = FB.clamp(Math.floor(level), 0, levels.length);
+      if (level) p.householdStandards[id] = level;
+      else if (p.householdStandards[id] !== undefined) delete p.householdStandards[id];
+    }
+    return p.householdStandards;
+  };
+
+  FB.householdStandardIds = function () {
+    const out = [];
+    for (const id in (FBDATA.householdStandards || {})) out.push(id);
+    return out;
+  };
+
+  FB.householdStandardLevel = function (state, id) {
+    return FB.ensureHouseholdStandards(state)[id] || 0;
+  };
+
+  FB.householdStandardLevelDef = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    const level = FB.householdStandardLevel(state, id);
+    return def && level && def.levels ? def.levels[level - 1] || null : null;
+  };
+
+  FB.householdStandardWorkerEligible = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def || def.kind !== 'work' || !def.profession) return true;
+    for (const c of FB.householdMembers(state)) {
+      if (FB.ageOf(c, state.date.year) < 16) continue;
+      const career = FB.careerOf(state, c);
+      if (!career || !career.chosen || career.rank === 'unassigned' ||
+          career.rank === 'apprentice') continue;
+      if (career.profession === def.profession) return true;
+    }
+    /* A paid retainer has no household wage of their own, but can use the
+       maintained outfit while staffing a matching family enterprise. */
+    const enterprises = state.player.enterprises || [];
+    for (const e of enterprises) {
+      const worker = e.workerId && state.chars[e.workerId];
+      const enterprise = FBDATA.enterprises && FBDATA.enterprises[e.type];
+      if (!worker || worker.dead || !enterprise ||
+          enterprise.profession !== def.profession) continue;
+      if (FB.retainerRecord(state, worker.id)) return true;
+    }
+    return false;
+  };
+
+  FB.householdStandardActive = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def || state.player.tier > 2 || !FB.householdStandardLevel(state, id)) return false;
+    return def.kind !== 'work' || FB.householdStandardWorkerEligible(state, id);
+  };
+
+  FB.householdStandardEffects = function (state) {
+    const out = {
+      mortality:0, education:0, retainers:0, prestige:0,
+      travelCost:1, travelLegDays:null, work:{}
+    };
+    const table = FBDATA.householdStandards || {};
+    for (const id in table) {
+      if (!FB.householdStandardActive(state, id)) continue;
+      const def = table[id];
+      const level = FB.householdStandardLevelDef(state, id);
+      const fx = level && level.fx ? level.fx : {};
+      if (fx.mortality) out.mortality += fx.mortality;
+      if (fx.education) out.education += fx.education;
+      if (fx.retainers) out.retainers += fx.retainers;
+      if (fx.prestige) out.prestige += fx.prestige;
+      if (fx.travelCost !== undefined) out.travelCost *= fx.travelCost;
+      if (fx.travelLegDays !== undefined) {
+        out.travelLegDays = out.travelLegDays === null ? fx.travelLegDays :
+          Math.min(out.travelLegDays, fx.travelLegDays);
+      }
+      if (fx.work && def.profession) {
+        out.work[def.profession] = (out.work[def.profession] || 0) + fx.work;
+      }
+    }
+    return out;
+  };
+
+  FB.householdStandardEffect = function (state, key) {
+    const effects = FB.householdStandardEffects(state);
+    return effects[key] === undefined ? 0 : effects[key];
+  };
+
+  FB.householdWorkMultiplier = function (state, profession) {
+    const work = FB.householdStandardEffects(state).work;
+    return 1 + (work[profession] || 0);
+  };
+
+  FB.householdStandardsUpkeepParts = function (state) {
+    const lines = [];
+    let total = 0;
+    const table = FBDATA.householdStandards || {};
+    for (const id in table) {
+      if (!FB.householdStandardActive(state, id)) continue;
+      const level = FB.householdStandardLevel(state, id);
+      const current = table[id].levels && table[id].levels[level - 1];
+      const amount = current ? Number(current.upkeep) || 0 : 0;
+      if (!amount) continue;
+      lines.push({ id:id, def:table[id], level:level, levelDef:current, amount:amount });
+      total += amount;
+    }
+    return { lines:lines, total:total };
+  };
+
+  FB.householdStandardsUpkeep = function (state) {
+    return FB.householdStandardsUpkeepParts(state).total;
+  };
+
+  FB.householdStandardUpgradeAvailable = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def || !Array.isArray(def.levels)) return FB.T('That household standard is unavailable.');
+    if (state.player.tier > 2) return FB.T('Maintained household standards are dormant at landed rank.');
+    const level = FB.householdStandardLevel(state, id);
+    if (level >= def.levels.length) return FB.T('This standard is already at its highest level.');
+    const next = def.levels[level];
+    const tierMin = next.tierMin === undefined ? level : next.tierMin;
+    if (state.player.tier < tierMin) {
+      return FB.T('Requires {rank} rank.', {
+        rank:tierMin >= 2 ? FB.T('Gentry') : tierMin >= 1 ? FB.T('Freeholder') : FB.T('Serf')
+      });
+    }
+    if (def.kind === 'work' && !FB.householdStandardWorkerEligible(state, id)) {
+      return FB.T('No eligible household worker currently practices this profession.');
+    }
+    if (state.player.gold + 0.0001 < (Number(next.cost) || 0)) {
+      return FB.T('Not enough money: requires {money:cost}.', { cost:Number(next.cost) || 0 });
+    }
+    return true;
+  };
+
+  FB.buyHouseholdStandard = function (state, id) {
+    if (FB.householdStandardUpgradeAvailable(state, id) !== true) return false;
+    const def = FBDATA.householdStandards[id];
+    const oldLevel = FB.householdStandardLevel(state, id);
+    const next = def.levels[oldLevel];
+    state.player.gold -= Number(next.cost) || 0;
+    FB.ensureHouseholdStandards(state)[id] = oldLevel + 1;
+    FB.news(state, FB.msg('news.household_standard.bought',
+      '🏠 The household establishes {level} for {standard}.', {
+        level:FB.dataParam('householdStandard', id, 'levels.' + oldLevel + '.name'),
+        standard:FB.dataParam('householdStandard', id)
+      }));
+    return true;
+  };
+
+  function reduceStandard(state, id, automatic) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    const level = FB.householdStandardLevel(state, id);
+    if (!def || !level) return false;
+    const map = FB.ensureHouseholdStandards(state);
+    if (level > 1) map[id] = level - 1;
+    else delete map[id];
+    FB.news(state, FB.msg('news.household_standard.reduced', {
+      forms: {
+        select:'value', param:'automatic', cases:{
+          yes:'🏠 Coin runs short; the household lets {level} lapse from {standard}.',
+          no:'🏠 The household gives up {level} in {standard}; its setup investment is lost.',
+          other:'🏠 The household gives up {level} in {standard}.'
+        }
+      }
+    }, {
+      automatic:automatic ? 'yes' : 'no',
+      level:FB.dataParam('householdStandard', id, 'levels.' + (level - 1) + '.name'),
+      standard:FB.dataParam('householdStandard', id)
+    }));
+    return true;
+  }
+
+  FB.reduceHouseholdStandard = function (state, id) {
+    return reduceStandard(state, id, false);
+  };
+
+  function standardToLapse(state) {
+    const table = FBDATA.householdStandards || {};
+    const priority = ['luxuries', 'wares', 'transport', 'quarters', 'board'];
+    for (let i = 0; i < priority.length; i++) {
+      if (FB.householdStandardActive(state, priority[i])) return priority[i];
+    }
+    /* A mod-added general standard follows the core discretionary categories
+       in stable definition order, before tools needed for current work. */
+    for (const id in table) {
+      if (priority.indexOf(id) >= 0 || table[id].kind === 'work') continue;
+      if (FB.householdStandardActive(state, id)) return id;
+    }
+    let best = null, bestLevel = -1;
+    for (const id in table) {
+      if (table[id].kind !== 'work' || !FB.householdStandardActive(state, id)) continue;
+      const level = FB.householdStandardLevel(state, id);
+      if (level > bestLevel) {
+        best = id;
+        bestLevel = level;
+      }
+    }
+    return best;
+  }
+
+  /* Called after ordinary livelihood income and before service, schooling,
+     and finance settlements. Standards lapse rather than create debt. */
+  FB.householdStandardsSeason = function (state) {
+    const reduced = [];
+    let upkeep = FB.householdStandardsUpkeep(state);
+    let available = Math.max(0, state.player.gold);
+    while (upkeep > available + 0.0001) {
+      const id = standardToLapse(state);
+      if (!id || !reduceStandard(state, id, true)) break;
+      reduced.push(id);
+      upkeep = FB.householdStandardsUpkeep(state);
+    }
+    available = Math.max(0, state.player.gold);
+    const paid = Math.min(available, upkeep);
+    state.player.gold = Math.max(0, state.player.gold - paid);
+    state.player.prestige += FB.householdStandardEffect(state, 'prestige');
+    return { paid:paid, reduced:reduced };
+  };
+
   FB.retainerCapacity = function (state) {
     const scale = FBDATA.balance.retainerCapacity || [0,1,2,2,3,3,4,5];
     const tier = FB.clamp(state.player.tier || 0, 0, scale.length - 1);
-    return Math.max(0, scale[tier] || 0);
+    return Math.max(0, (scale[tier] || 0) +
+      FB.householdStandardEffect(state, 'retainers'));
   };
 
   /* Retainers are inherited household contracts, not family members. Records
@@ -979,6 +1208,7 @@ window.FB = window.FB || {};
     amount *= 0.9 + Math.min(10, dev) * 0.02;
     amount *= FB.guildIncomeMultiplier(career);
     amount *= 1 + FB.positionBonus(state, 'enterprise');
+    amount *= FB.householdWorkMultiplier(state, career.profession);
     return amount;
   };
 
@@ -1007,6 +1237,7 @@ window.FB = window.FB || {};
       if (!career.chosen) continue;
       if (age < 16 || career.rank === 'apprentice') amount = -0.25;
       else amount = career.rank === 'master' ? def.masterWage : def.wage;
+      if (amount > 0) amount *= FB.householdWorkMultiplier(state, career.profession);
       if (amount) lines.push({
         label:def.icon + ' ' + c.name + ' — ' + FB.careerTitle(state, c), amount:amount
       });
@@ -1020,11 +1251,14 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(state)) {
       if (FB.ageOf(c, state.date.year) < 16) continue;
       const religious = FB.religiousPathOf(state, c);
-      if (religious && religious.step.pietyYield) amount += religious.step.pietyYield;
-      if (c.id === me.id) continue;
       const career = FB.careerOf(state, c);
+      const profession = career && career.profession;
+      const workMult = profession === 'monk' || profession === 'priest'
+        ? FB.householdWorkMultiplier(state, profession) : 1;
+      if (religious && religious.step.pietyYield) amount += religious.step.pietyYield * workMult;
+      if (c.id === me.id) continue;
       const def = career && FBDATA.careers[career.profession];
-      if (def && def.piety) amount += def.piety;
+      if (def && def.piety) amount += def.piety * workMult;
     }
     return amount;
   };

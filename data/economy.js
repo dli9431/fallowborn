@@ -150,6 +150,201 @@ FBDATA.enterprises = {
   }
 };
 
+/* Optional maintained living standards for commoner households. Costs on a
+   level are paid when advancing from the previous level; upkeep is the full
+   seasonal cost of the current level, not a sum of earlier levels. */
+FBDATA.householdStandards = {
+  board: {
+    name:'Board', icon:'🍲', kind:'general',
+    desc:'Food kept above bare subsistence: fuller stores, broader fare, and rarer seasonings.',
+    levels:[
+      {
+        name:'Full Larder', cost:10, upkeep:0.5, tierMin:0,
+        desc:'Reduces yearly household mortality by 0.1 percentage points.',
+        fx:{ mortality:0.001 }
+      },
+      {
+        name:'Varied Board', cost:40, upkeep:1.5, tierMin:1,
+        desc:'Reduces yearly household mortality by 0.2 percentage points.',
+        fx:{ mortality:0.002 }
+      },
+      {
+        name:'Spiced and Imported Table', cost:120, upkeep:4, tierMin:2,
+        desc:'Reduces yearly household mortality by 0.3 percentage points.',
+        fx:{ mortality:0.003 }
+      }
+    ]
+  },
+  wares: {
+    name:'Household wares', icon:'🧺', kind:'general',
+    desc:'Bedding, vessels, linens, and furnishings maintained for a more capable home.',
+    levels:[
+      {
+        name:'Good Bedding and Vessels', cost:15, upkeep:0.25, tierMin:0,
+        desc:'Adds 1 percentage point to yearly education chances.',
+        fx:{ education:0.01 }
+      },
+      {
+        name:'Chests, Linens and Copperware', cost:50, upkeep:1, tierMin:1,
+        desc:'Adds 2.5 percentage points to yearly education chances.',
+        fx:{ education:0.025 }
+      },
+      {
+        name:'Painted Furniture and Fine Hangings', cost:150, upkeep:3, tierMin:2,
+        desc:'Adds 4 percentage points to yearly education chances.',
+        fx:{ education:0.04 }
+      }
+    ]
+  },
+  quarters: {
+    name:'Quarters', icon:'🏠', kind:'general',
+    desc:'Sounder, roomier buildings that shelter the family and make space for service.',
+    levels:[
+      {
+        name:'Sound Roof and Raised Bed', cost:20, upkeep:0.5, tierMin:0,
+        desc:'Reduces yearly household mortality by 0.05 percentage points.',
+        fx:{ mortality:0.0005, retainers:0 }
+      },
+      {
+        name:'Chambered House', cost:75, upkeep:1.5, tierMin:1,
+        desc:'Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer.',
+        fx:{ mortality:0.001, retainers:1 }
+      },
+      {
+        name:'Hall, Chambers and Outbuildings', cost:250, upkeep:5, tierMin:2,
+        desc:'Reduces yearly household mortality by 0.2 percentage points and adds room for two retainers.',
+        fx:{ mortality:0.002, retainers:2 }
+      }
+    ]
+  },
+  luxuries: {
+    name:'Luxuries', icon:'✨', kind:'general',
+    desc:'Visible comfort and display that turn household prosperity into social standing.',
+    levels:[
+      {
+        name:'Sunday Woollens', cost:20, upkeep:0.5, tierMin:0,
+        desc:'Adds 0.25 prestige each season.',
+        fx:{ prestige:0.25 }
+      },
+      {
+        name:'Dyed Cloth and Fur', cost:80, upkeep:2, tierMin:1,
+        desc:'Adds 0.75 prestige each season.',
+        fx:{ prestige:0.75 }
+      },
+      {
+        name:'Imported Cloth and Silver Plate', cost:250, upkeep:6, tierMin:2,
+        desc:'Adds 1.5 prestige each season.',
+        fx:{ prestige:1.5 }
+      }
+    ]
+  },
+  transport: {
+    name:'Transport', icon:'🐴', kind:'general',
+    desc:'Maintained beasts and vehicles for journeys, distinct from permanent productive livestock.',
+    levels:[
+      {
+        name:'Pack Ass', cost:25, upkeep:0.25, tierMin:1,
+        desc:'Journey costs are multiplied by 0.85; each county leg takes 3 days.',
+        fx:{ travelCost:0.85, travelLegDays:3 }
+      },
+      {
+        name:'Mule and Cart', cost:90, upkeep:1, tierMin:1,
+        desc:'Journey costs are multiplied by 0.75; each county leg takes 2 days.',
+        fx:{ travelCost:0.75, travelLegDays:2 }
+      },
+      {
+        name:'Riding Horses and Covered Wagon', cost:300, upkeep:4, tierMin:2,
+        desc:'Journey costs are multiplied by 0.60; each county leg takes 1 day.',
+        fx:{ travelCost:0.60, travelLegDays:1 }
+      }
+    ]
+  },
+  outfit_farmer: {
+    name:'Farming outfit', icon:'🌾', kind:'work', profession:'farmer',
+    desc:'Maintained husbandry equipment that improves paid farming and family enterprises, but is not saleable property.',
+    levels:[
+      { name:'Iron-Edged Husbandry Tools', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises farming output by 5%.', fx:{ work:0.05 } },
+      { name:'Ox Tackle and Mouldboard Plough', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises farming output by 10%.', fx:{ work:0.10 } },
+      { name:'Full Plough Team and Harvest Gear', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises farming output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_craftsman: {
+    name:'Craft outfit', icon:'🔨', kind:'work', profession:'craftsman',
+    desc:'Maintained trade tools that improve paid craft work and workshops, but are not saleable property.',
+    levels:[
+      { name:'Journeyman’s Tool Chest', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises craft output by 5%.', fx:{ work:0.05 } },
+      { name:'Tempered Guild Tools', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises craft output by 10%.', fx:{ work:0.10 } },
+      { name:'Master’s Instruments and Patterns', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises craft output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_merchant: {
+    name:'Merchant outfit', icon:'⚖', kind:'work', profession:'merchant',
+    desc:'Maintained commercial equipment that improves paid trade and merchant enterprises, but is not saleable property.',
+    levels:[
+      { name:'Sealed Weights and Locking Chest', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises merchant output by 5%.', fx:{ work:0.05 } },
+      { name:'Fine Scales and Merchant’s Ledgers', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises merchant output by 10%.', fx:{ work:0.10 } },
+      { name:'Coffers, Bills and Caravan Tackle', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises merchant output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_soldier: {
+    name:'Soldier’s work outfit', icon:'🛡', kind:'work', profession:'soldier',
+    desc:'Maintained service equipment that improves paid military work only; combat still depends on armory equipment and holdings.',
+    levels:[
+      { name:'Fitted Arms and Field Kit', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises paid soldiering output by 5%.', fx:{ work:0.05 } },
+      { name:'Campaign Harness and Remount', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises paid soldiering output by 10%.', fx:{ work:0.10 } },
+      { name:'Retainer’s Full Harness', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises paid soldiering output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_monk: {
+    name:'Monastic work outfit', icon:'✒', kind:'work', profession:'monk',
+    desc:'Maintained writing equipment that improves a monk’s paid and religious work, but is not saleable property.',
+    levels:[
+      { name:'Scribe’s Writing Chest', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises monastic output by 5%.', fx:{ work:0.05 } },
+      { name:'Illuminator’s Desk and Pigments', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises monastic output by 10%.', fx:{ work:0.10 } },
+      { name:'Working Library and Copyist’s Instruments', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises monastic output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_priest: {
+    name:'Clerical work outfit', icon:'🕯', kind:'work', profession:'priest',
+    desc:'Maintained service furnishings that improve a priest’s paid and religious work, but are not saleable property.',
+    levels:[
+      { name:'Portable Service Chest', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises clerical output by 5%.', fx:{ work:0.05 } },
+      { name:'Vestments, Vessels and Service Books', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises clerical output by 10%.', fx:{ work:0.10 } },
+      { name:'Complete Liturgical Treasury', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises clerical output by 15%.', fx:{ work:0.15 } }
+    ]
+  },
+  outfit_noble: {
+    name:'Estate-service outfit', icon:'🏡', kind:'work', profession:'noble',
+    desc:'Maintained estate records and instruments that improve paid household administration, but are not saleable property.',
+    levels:[
+      { name:'Steward’s Account Chest', cost:25, upkeep:0.5, tierMin:0,
+        desc:'Raises estate-service output by 5%.', fx:{ work:0.05 } },
+      { name:'Survey Rolls and Seal Press', cost:100, upkeep:1.5, tierMin:1,
+        desc:'Raises estate-service output by 10%.', fx:{ work:0.10 } },
+      { name:'Estate Office and Muniments Chest', cost:300, upkeep:4, tierMin:2,
+        desc:'Raises estate-service output by 15%.', fx:{ work:0.15 } }
+    ]
+  }
+};
+
 /* Coin & Credit contracts. These are deliberately exact-term contracts, not
    annual percentage rates: markup is fixed when the agreement is signed and
    term is measured in 90-day seasons. Display names live in the UI so faith-

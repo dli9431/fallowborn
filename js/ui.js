@@ -28,6 +28,34 @@ window.FB = window.FB || {};
     const def = FBDATA.positions && FBDATA.positions[id];
     return def ? dt(s, 'position', id, def, 'desc') : '';
   }
+  function householdStandardName(s, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    return def ? dt(s, 'householdStandard', id, def, 'name') : id;
+  }
+  function householdStandardLevelName(s, id, level) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    return def && level && def.levels && def.levels[level - 1]
+      ? dt(s, 'householdStandard', id, def, 'levels.' + (level - 1) + '.name')
+      : FB.T('Baseline');
+  }
+  function householdStandardLevelDesc(s, id, level) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    return def && level && def.levels && def.levels[level - 1]
+      ? dt(s, 'householdStandard', id, def, 'levels.' + (level - 1) + '.desc')
+      : FB.T('No maintained improvement.');
+  }
+  function householdStandardsSummary(s) {
+    const parts = [];
+    for (const id of FB.householdStandardIds()) {
+      const level = FB.householdStandardLevel(s, id);
+      const def = FBDATA.householdStandards[id];
+      if (!level || !def || !FB.householdStandardActive(s, id)) continue;
+      parts.push(FB.T('{icon} level {level}', {
+        icon:def.icon || '🏠', level:level
+      }));
+    }
+    return parts.join(' · ');
+  }
   function positionEffectText(id) {
     const def = FBDATA.positions && FBDATA.positions[id];
     const fx = (def && def.fx) || {};
@@ -1121,7 +1149,8 @@ window.FB = window.FB || {};
       instruction = s.chars[c.edu.tutorId].name;
     }
     const chance = Math.round(Math.min(FBDATA.balance.educationChanceCap || 0.9,
-      FB.educationInstructionChance(s, c) + FB.holdingBonus(s, 'edu')) * 100);
+      FB.educationInstructionChance(s, c) + FB.holdingBonus(s, 'edu') +
+      (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0)) * 100);
     const fee = FB.schoolingCost(s, c);
     let note = FB.T('🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly', {
       focus:focusName, instruction:instruction, chance:chance
@@ -1334,6 +1363,7 @@ window.FB = window.FB || {};
     const titles = FB.playerTitles(s);
     const titleCount = titles.high.length + titles.counties.length;
     const items = FB.itemList(s);
+    const standardSummary = householdStandardsSummary(s);
     let h =
       '<div class="panelh self-name">' + esc(FB.fullName(me)) + '</div>' +
       '<div class="self-overview"><div class="self-portrait-tools">' +
@@ -1365,6 +1395,9 @@ window.FB = window.FB || {};
       kv('House', esc(me.dyn || '—')) +
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me);
+    if (standardSummary) {
+      h += kv('Active household standards', esc(standardSummary));
+    }
     if (FB.ageOf(me, s.date.year) >= 10) {
       const landed = s.player.tier >= 3;
       h += '<button class="actionbtn" id="self-work">' +
@@ -1760,6 +1793,11 @@ window.FB = window.FB || {};
     })));
     const householdCost = FB.householdUpkeepParts(s);
     h += kv('Family establishment each season', esc(FB.money(householdCost.total)));
+    const standardSummary = householdStandardsSummary(s);
+    h += kv('Maintained standards each season',
+      esc(FB.money(FB.householdStandardsUpkeep(s))));
+    h += kv('Active household standards',
+      esc(standardSummary || FB.T('None')));
     if (retainers.length) {
       h += kv('Retainer contracts each season', esc(FB.money(FB.retainerSeasonCost(s))));
     }
@@ -3420,7 +3458,6 @@ window.FB = window.FB || {};
     const s = FB.state;
     const def = FBDATA.travelPurposes[travelPicker.purpose];
     const pr = FB.world.byId[item.destinationId];
-    const legDays = FBDATA.balance.travelLegDays || 3;
     let h = '<div class="gm-body-text">' +
       '<p><b>' + esc((def.icon || '🧭') + ' ' +
         travelPurposeText(s, travelPicker.purpose, 'name')) + '</b></p>' +
@@ -3428,8 +3465,8 @@ window.FB = window.FB || {};
         '{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions.', {
           destination:pr.name,
           legs:item.legs,
-          outbound:item.legs * legDays,
-          returnDays:item.legs * legDays
+          outbound:item.days,
+          returnDays:item.days
         })) + '</p>' +
       '<p>' + esc(FB.T(
         'At the destination you must stay and find local work for at least {days} days before returning home.', {
@@ -5368,37 +5405,306 @@ window.FB = window.FB || {};
     $('finance-cancel').addEventListener('click', UI.showFinance);
   };
 
-  /* ================= household holdings picker ================= */
-  UI.showHoldings = function () {
-    const s = FB.state;
-    let h = '<p class="hint">' + esc(FB.T(
-      'Property passes to your heirs — a household built up over generations is its own kind of greatness.')) +
-      '</p><div class="gm-list">';
-    for (const t of FB.holdingAvailable(s)) {
+  /* ================= household standards & permanent holdings ================= */
+  function householdStandardRow(s, id) {
+    const def = FBDATA.householdStandards[id];
+    const level = FB.householdStandardLevel(s, id);
+    const current = level && def.levels[level - 1];
+    const active = FB.householdStandardActive(s, id);
+    const next = level < def.levels.length ? def.levels[level] : null;
+    let detail = level
+      ? FB.T('Level {level}: {name}', {
+        level:level, name:householdStandardLevelName(s, id, level)
+      })
+      : FB.T('Baseline — no maintained improvement');
+    if (level) {
+      detail += active
+        ? FB.T(' · {money:upkeep}/season upkeep', { upkeep:Number(current.upkeep) || 0 })
+        : FB.T(' · dormant — no upkeep or benefit');
+    }
+    if (next) {
+      detail += FB.T(' · next setup {money:cost}', { cost:Number(next.cost) || 0 });
+    } else {
+      detail += FB.T(' · highest level');
+    }
+    return '<button class="actionbtn household-standard" data-household-standard="' +
+      esc(id) + '">' + esc((def.icon || '🏠') + ' ' + householdStandardName(s, id)) +
+      '<span class="adesc">' + esc(detail) + '</span></button>';
+  }
+
+  function householdStandardPreview(s, id, level) {
+    const map = FB.ensureHouseholdStandards(s);
+    const hadLevel = Object.prototype.hasOwnProperty.call(map, id);
+    const previous = map[id];
+    let preview;
+    try {
+      if (level) map[id] = level;
+      else delete map[id];
+      preview = {
+        upkeep:FB.householdStandardsUpkeep(s),
+        net:FB.reliableGoldIncome(s)
+      };
+    } finally {
+      if (hadLevel) map[id] = previous;
+      else delete map[id];
+    }
+    return preview;
+  }
+
+  function permanentHoldingsHtml(s) {
+    let h = '<div class="panelh">' + esc(FB.T('Permanent household property')) +
+      '</div><div class="hint">' + esc(FB.T(
+        'Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses.')) +
+      '</div><div class="gm-list">';
+    const available = FB.holdingAvailable(s);
+    for (const t of available) {
       const short = s.player.gold < t.def.cost;
-      h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
+      h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' +
+        (short ? ' disabled' : '') + '>' +
         esc(FB.T('{icon} {name} — {money:cost}', {
-          icon: t.def.icon, name: dt(s, 'holding', t.id, t.def, 'name'), cost: t.def.cost
+          icon:t.def.icon, name:dt(s, 'holding', t.id, t.def, 'name'), cost:t.def.cost
         })) + '<span class="adesc">' + esc(dt(s, 'holding', t.id, t.def, 'desc')) +
         (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
+    }
+    if (!available.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No further permanent holding is available for this station and profession.')) +
+        '</div>';
     }
     h += '</div>';
     const done = FB.holdingList(s);
     if (done.length) {
-      h += '<p class="hint">' + esc(FB.T('The household owns:')) + ' ' + done.map(function (id) {
-        const d = FBDATA.holdings[id];
-        return d ? d.icon + ' ' + esc(dt(s, 'holding', id, d, 'name')) : esc(id);
-      }).join(' · ') + '</p>';
+      const names = done.map(function (id) {
+        const def = FBDATA.holdings[id];
+        return def ? def.icon + ' ' + dt(s, 'holding', id, def, 'name') : id;
+      });
+      h += '<div class="progressnote">' + esc(FB.T('Owned permanently: {holdings}', {
+        holdings:names.join(' · ')
+      })) + '</div>';
     }
-    h += '<button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Better the Household', h);
-    document.querySelectorAll('[data-holding]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        FB.buyHolding(FB.state, btn.dataset.holding);
-        UI.closeModal(); UI.refresh();
+    return h;
+  }
+
+  UI.showHousehold = function () {
+    const s = FB.state;
+    FB.ensureHouseholdStandards(s);
+    const upkeep = FB.householdStandardsUpkeep(s);
+    const net = FB.reliableGoldIncome(s);
+    const projected = s.player.gold + net;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend.')) +
+      '</p>' + kv('Standards upkeep each season', esc(FB.money(upkeep))) +
+      kv('Reliable seasonal net', '<span class="' +
+        (net < 0 ? 'op-bad' : net > 0 ? 'op-good' : '') + '">' +
+        esc(fmtAmt(net, true)) + '</span>') +
+      kv('Projected purse after one season', '<span class="' +
+        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
+      (projected < 0 ? '<p class="op-bad">' + esc(FB.T(
+        'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
+        '</p>' : '') + '</div>';
+
+    h += '<div class="panelh">' + esc(FB.T('Living standards')) + '</div>' +
+      '<div class="gm-list">';
+    for (const id of FB.householdStandardIds()) {
+      const def = FBDATA.householdStandards[id];
+      if (def.kind === 'work') continue;
+      h += householdStandardRow(s, id);
+    }
+    h += '</div><div class="panelh">' + esc(FB.T('Work outfits')) + '</div>' +
+      '<div class="hint">' + esc(FB.T(
+        'An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat.')) +
+      '</div><div class="gm-list">';
+    let outfits = 0;
+    for (const id of FB.householdStandardIds()) {
+      const def = FBDATA.householdStandards[id];
+      if (def.kind !== 'work') continue;
+      if (!FB.householdStandardLevel(s, id) &&
+          !FB.householdStandardWorkerEligible(s, id)) continue;
+      h += householdStandardRow(s, id);
+      outfits++;
+    }
+    if (!outfits) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No practiced household profession currently has a relevant outfit.')) + '</div>';
+    }
+    h += '</div>' + permanentHoldingsHtml(s) +
+      '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Done')) + '</button></div>';
+    openModal(FB.T('🏠 Household standards & property'), h, {
+      modalClass:'fullsheet-modal'
+    });
+    document.querySelectorAll('[data-household-standard]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showHouseholdStandard(button.getAttribute('data-household-standard'));
+      });
+    });
+    document.querySelectorAll('[data-holding]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        FB.buyHolding(s, button.getAttribute('data-holding'));
+        UI.refresh();
+        UI.showHousehold();
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* Compatibility for older deeds and third-party UI calls. */
+  UI.showHoldings = UI.showHousehold;
+
+  UI.showHouseholdStandard = function (id) {
+    const s = FB.state;
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def) { UI.showHousehold(); return; }
+    const level = FB.householdStandardLevel(s, id);
+    const current = level && def.levels[level - 1];
+    const active = FB.householdStandardActive(s, id);
+    const availability = FB.householdStandardUpgradeAvailable(s, id);
+    const next = level < def.levels.length ? def.levels[level] : null;
+    let h = '<div class="gm-body-text"><p>' +
+      esc(dt(s, 'householdStandard', id, def, 'desc')) + '</p>' +
+      kv('Current level', esc(level
+        ? FB.T('{level} — {name}', {
+          level:level, name:householdStandardLevelName(s, id, level)
+        }) : FB.T('Baseline'))) +
+      kv('Current seasonal upkeep', esc(active && current
+        ? FB.money(Number(current.upkeep) || 0) : FB.money(0))) +
+      '<p' + (active || !level ? '' : ' class="op-bad"') + '>' +
+      esc(level
+        ? householdStandardLevelDesc(s, id, level) +
+          (active ? '' : ' ' + FB.T('Dormant: no upkeep or benefit right now.'))
+        : FB.T('No maintained improvement is active.')) + '</p></div><div class="gm-list">';
+    if (next) {
+      h += '<button class="actionbtn" id="household-standard-upgrade"' +
+        (availability === true ? '' : ' disabled') + '>' +
+        esc(FB.T('Improve to level {level}: {name}', {
+          level:level + 1,
+          name:householdStandardLevelName(s, id, level + 1)
+        })) + '<span class="adesc">' +
+        esc(FB.T('Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}', {
+          cost:Number(next.cost) || 0,
+          upkeep:Number(next.upkeep) || 0,
+          benefit:householdStandardLevelDesc(s, id, level + 1)
+        })) + (availability === true ? '' : ' ' + esc(availability)) +
+        '</span></button>';
+    }
+    if (level) {
+      h += '<button class="actionbtn danger" id="household-standard-reduce">' +
+        esc(FB.T('Reduce this standard by one level…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'No refund. The lost level and its setup investment must be purchased again.')) +
+        '</span></button>';
+    }
+    h += '<button class="actionbtn" id="household-standard-back">' +
+      esc(FB.T('Back to household')) + '</button></div>';
+    openModal((def.icon || '🏠') + ' ' + householdStandardName(s, id), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal',
+      historyBackRender:function () { UI.showHousehold(); }
+    });
+    const upgrade = $('household-standard-upgrade');
+    if (upgrade) upgrade.addEventListener('click', function () {
+      UI.showHouseholdStandardUpgrade(id);
+    });
+    const reduce = $('household-standard-reduce');
+    if (reduce) reduce.addEventListener('click', function () {
+      UI.showHouseholdStandardReduction(id);
+    });
+    $('household-standard-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showHousehold(); });
+    });
+  };
+
+  UI.showHouseholdStandardUpgrade = function (id) {
+    const s = FB.state;
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    const level = def ? FB.householdStandardLevel(s, id) : 0;
+    const next = def && def.levels[level];
+    if (!def || !next || FB.householdStandardUpgradeAvailable(s, id) !== true) {
+      UI.showHouseholdStandard(id);
+      return;
+    }
+    const preview = householdStandardPreview(s, id, level + 1);
+    const netAfter = preview.net;
+    const projected = s.player.gold - (Number(next.cost) || 0) + netAfter;
+    let h = '<div class="gm-body-text">' +
+      kv('Setup cost now', esc(FB.money(Number(next.cost) || 0))) +
+      kv('New seasonal upkeep', esc(FB.money(Number(next.upkeep) || 0))) +
+      kv('New benefit', esc(householdStandardLevelDesc(s, id, level + 1))) +
+      kv('Projected seasonal net', '<span class="' +
+        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
+        esc(fmtAmt(netAfter, true)) + '</span>') +
+      kv('Projected purse after next season', '<span class="' +
+        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
+      (projected < 0 ? '<p class="op-bad">' + esc(FB.T(
+        'Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep.')) +
+        '</p>' : '') + '</div><div class="gm-list">' +
+      '<button class="actionbtn" id="household-standard-confirm">' +
+      esc(FB.T('Pay {money:cost} and establish {name}', {
+        cost:Number(next.cost) || 0,
+        name:householdStandardLevelName(s, id, level + 1)
+      })) + '</button><button class="actionbtn" id="household-standard-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Improve {standard}?', {
+      standard:householdStandardName(s, id)
+    }), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal',
+      historyBackRender:function () { UI.showHouseholdStandard(id); }
+    });
+    $('household-standard-confirm').addEventListener('click', function () {
+      if (!FB.buyHouseholdStandard(s, id)) return;
+      UI.refresh();
+      UI.showHousehold();
+    });
+    $('household-standard-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showHouseholdStandard(id); });
+    });
+  };
+
+  UI.showHouseholdStandardReduction = function (id) {
+    const s = FB.state;
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    const level = def ? FB.householdStandardLevel(s, id) : 0;
+    if (!def || !level) { UI.showHouseholdStandard(id); return; }
+    const previous = level > 1 ? def.levels[level - 2] : null;
+    const active = FB.householdStandardActive(s, id);
+    const preview = householdStandardPreview(s, id, level - 1);
+    const netAfter = preview.net;
+    const projected = s.player.gold + netAfter;
+    const resultName = level > 1
+      ? householdStandardLevelName(s, id, level - 1) : FB.T('Baseline');
+    const h = '<div class="gm-body-text"><p class="op-bad">' + esc(FB.T(
+      'The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again.', {
+        name:householdStandardLevelName(s, id, level)
+      })) + '</p>' +
+      kv('New level', esc(resultName)) +
+      kv('New seasonal upkeep', esc(FB.money(active && previous
+        ? Number(previous.upkeep) || 0 : 0))) +
+      kv('Projected seasonal net', '<span class="' +
+        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
+        esc(fmtAmt(netAfter, true)) + '</span>') +
+      kv('Projected purse after next season', '<span class="' +
+        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
+      '</div><div class="gm-list"><button class="actionbtn danger" ' +
+      'id="household-standard-reduce-confirm">' +
+      esc(FB.T('Give up this level with no refund')) +
+      '</button><button class="actionbtn" id="household-standard-reduce-cancel">' +
+      esc(FB.T('Keep it')) + '</button></div>';
+    openModal(FB.T('Reduce {standard}?', {
+      standard:householdStandardName(s, id)
+    }), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal',
+      historyBackRender:function () { UI.showHouseholdStandard(id); }
+    });
+    $('household-standard-reduce-confirm').addEventListener('click', function () {
+      if (!FB.reduceHouseholdStandard(s, id)) return;
+      UI.refresh();
+      UI.showHousehold();
+    });
+    $('household-standard-reduce-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showHouseholdStandard(id); });
+    });
   };
 
   /* ================= freehold land market ================= */
@@ -6928,7 +7234,8 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     function yearlyChance(chance) {
       return Math.round(Math.min(B.educationChanceCap || 0.9,
-        chance + FB.holdingBonus(s, 'edu')) * 100);
+        chance + FB.holdingBonus(s, 'edu') +
+        (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0)) * 100);
     }
     function tutorChance(t) {
       return Math.min(B.educationChanceCap || 0.9,

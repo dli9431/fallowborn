@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.60.2';
+  FB.VERSION = '1.61.0';
   FB.CHANGELOG = [
+    { v: '1.61.0', date: '2026-07-26', changes: [
+      'Commoner households can now choose a living standard that shapes their daily expenses, provisions, comfort, health, and standing.'
+    ] },
     { v: '1.60.2', date: '2026-07-25', changes: [
       'Great holy wars now announce the religious head’s call and the assembled armies’ march through wartime events.'
     ] },
@@ -808,7 +811,7 @@ window.FB = window.FB || {};
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
-        holdings: [], enterprises: [],
+        holdings: [], enterprises: [], householdStandards: {},
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
         landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null, research: 0
@@ -949,6 +952,7 @@ window.FB = window.FB || {};
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
+        householdStandards: {},
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null, research: 0
       },
@@ -1050,6 +1054,7 @@ window.FB = window.FB || {};
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
       FB.educationSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
@@ -1258,6 +1263,8 @@ window.FB = window.FB || {};
 
     // player mortality (curve scaled by the balance knob, 0.012 = as-authored)
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
+    const standardMortality = FB.householdStandardEffect ?
+      FB.householdStandardEffect(s, 'mortality') : 0;
     const age = FB.ageOf(me, year);
     const station = FB.playerStation(s);
     let q = (age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28) * mortScale;
@@ -1268,6 +1275,7 @@ window.FB = window.FB || {};
     if (p.flags.plague_here) q += 0.06;
     q -= FB.traitAgg(me).health;
     q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
+    q -= standardMortality;
     q = FB.clamp(q, 0.002, 0.6);
     if (age > 90 || FB.chance(q)) {
       G.die(FB.msg('legend.death.age', {
@@ -1290,6 +1298,10 @@ window.FB = window.FB || {};
     if (!p.flags.ill && me.health >= 7) FB.cureAilments(me, 'wound', 1); // one old wound knits each year
 
     // everyone else ages & sometimes dies
+    const maintainedHousehold = {};
+    if (standardMortality && FB.householdMembers) {
+      for (const member of FB.householdMembers(s)) maintainedHousehold[member.id] = 1;
+    }
     for (const id in s.chars) {
       const c = s.chars[id];
       if (c.dead || id === p.charId) continue;
@@ -1305,6 +1317,7 @@ window.FB = window.FB || {};
       }
       if (p.flags.plague_here) cq += 0.05;
       cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
+      if (maintainedHousehold[c.id]) cq -= standardMortality;
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
         const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;
         const wasChild = me.childrenIds.indexOf(c.id) >= 0;
@@ -1392,7 +1405,8 @@ window.FB = window.FB || {};
     const base = FBDATA.balance.educationBaseChance === undefined ?
       0.18 : FBDATA.balance.educationBaseChance;
     const lessonBoost = c.edu.lessonBoost || 0;
-    const p = base + lessonBoost + FB.holdingBonus(s, 'edu');
+    const p = base + lessonBoost + FB.holdingBonus(s, 'edu') +
+      (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0);
     c.edu.lessonBoost = 0;
     if (FB.chance(Math.min(FBDATA.balance.educationChanceCap || 0.9, p))) {
       FB.gainSkill(c, c.edu.focus, 1);

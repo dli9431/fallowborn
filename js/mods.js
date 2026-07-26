@@ -215,6 +215,11 @@ window.FBMODS = window.FBMODS || [];
     if (mod.positions) for (const k in mod.positions) FBDATA.positions[k] = mod.positions[k];
     if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.householdStandards) {
+      for (const k in mod.householdStandards) {
+        FBDATA.householdStandards[k] = mod.householdStandards[k];
+      }
+    }
     if (mod.travelPurposes) {
       for (const k in mod.travelPurposes) FBDATA.travelPurposes[k] = mod.travelPurposes[k];
     }

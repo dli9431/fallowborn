@@ -22385,6 +22385,774 @@
         "text": "A Shop of Your Own"
       }
     },
+    "householdStandard.board.desc.default": {
+      "context": "householdStandard board, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Food kept above bare subsistence: fuller stores, broader fare, and rarer seasonings."
+      }
+    },
+    "householdStandard.board.levels.0.desc.default": {
+      "context": "householdStandard board, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.1 percentage points."
+      }
+    },
+    "householdStandard.board.levels.0.name.default": {
+      "context": "householdStandard board, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Full Larder"
+      }
+    },
+    "householdStandard.board.levels.1.desc.default": {
+      "context": "householdStandard board, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.2 percentage points."
+      }
+    },
+    "householdStandard.board.levels.1.name.default": {
+      "context": "householdStandard board, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Varied Board"
+      }
+    },
+    "householdStandard.board.levels.2.desc.default": {
+      "context": "householdStandard board, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.3 percentage points."
+      }
+    },
+    "householdStandard.board.levels.2.name.default": {
+      "context": "householdStandard board, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Spiced and Imported Table"
+      }
+    },
+    "householdStandard.board.name.default": {
+      "context": "householdStandard board, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Board"
+      }
+    },
+    "householdStandard.luxuries.desc.default": {
+      "context": "householdStandard luxuries, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Visible comfort and display that turn household prosperity into social standing."
+      }
+    },
+    "householdStandard.luxuries.levels.0.desc.default": {
+      "context": "householdStandard luxuries, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 0.25 prestige each season."
+      }
+    },
+    "householdStandard.luxuries.levels.0.name.default": {
+      "context": "householdStandard luxuries, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Sunday Woollens"
+      }
+    },
+    "householdStandard.luxuries.levels.1.desc.default": {
+      "context": "householdStandard luxuries, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 0.75 prestige each season."
+      }
+    },
+    "householdStandard.luxuries.levels.1.name.default": {
+      "context": "householdStandard luxuries, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Dyed Cloth and Fur"
+      }
+    },
+    "householdStandard.luxuries.levels.2.desc.default": {
+      "context": "householdStandard luxuries, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 1.5 prestige each season."
+      }
+    },
+    "householdStandard.luxuries.levels.2.name.default": {
+      "context": "householdStandard luxuries, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Imported Cloth and Silver Plate"
+      }
+    },
+    "householdStandard.luxuries.name.default": {
+      "context": "householdStandard luxuries, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Luxuries"
+      }
+    },
+    "householdStandard.outfit_craftsman.desc.default": {
+      "context": "householdStandard outfit_craftsman, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained trade tools that improve paid craft work and workshops, but are not saleable property."
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.0.desc.default": {
+      "context": "householdStandard outfit_craftsman, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises craft output by 5%."
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.0.name.default": {
+      "context": "householdStandard outfit_craftsman, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Journeyman’s Tool Chest"
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.1.desc.default": {
+      "context": "householdStandard outfit_craftsman, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises craft output by 10%."
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.1.name.default": {
+      "context": "householdStandard outfit_craftsman, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Tempered Guild Tools"
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.2.desc.default": {
+      "context": "householdStandard outfit_craftsman, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises craft output by 15%."
+      }
+    },
+    "householdStandard.outfit_craftsman.levels.2.name.default": {
+      "context": "householdStandard outfit_craftsman, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Master’s Instruments and Patterns"
+      }
+    },
+    "householdStandard.outfit_craftsman.name.default": {
+      "context": "householdStandard outfit_craftsman, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Craft outfit"
+      }
+    },
+    "householdStandard.outfit_farmer.desc.default": {
+      "context": "householdStandard outfit_farmer, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained husbandry equipment that improves paid farming and family enterprises, but is not saleable property."
+      }
+    },
+    "householdStandard.outfit_farmer.levels.0.desc.default": {
+      "context": "householdStandard outfit_farmer, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises farming output by 5%."
+      }
+    },
+    "householdStandard.outfit_farmer.levels.0.name.default": {
+      "context": "householdStandard outfit_farmer, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Iron-Edged Husbandry Tools"
+      }
+    },
+    "householdStandard.outfit_farmer.levels.1.desc.default": {
+      "context": "householdStandard outfit_farmer, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises farming output by 10%."
+      }
+    },
+    "householdStandard.outfit_farmer.levels.1.name.default": {
+      "context": "householdStandard outfit_farmer, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Ox Tackle and Mouldboard Plough"
+      }
+    },
+    "householdStandard.outfit_farmer.levels.2.desc.default": {
+      "context": "householdStandard outfit_farmer, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises farming output by 15%."
+      }
+    },
+    "householdStandard.outfit_farmer.levels.2.name.default": {
+      "context": "householdStandard outfit_farmer, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Full Plough Team and Harvest Gear"
+      }
+    },
+    "householdStandard.outfit_farmer.name.default": {
+      "context": "householdStandard outfit_farmer, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Farming outfit"
+      }
+    },
+    "householdStandard.outfit_merchant.desc.default": {
+      "context": "householdStandard outfit_merchant, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained commercial equipment that improves paid trade and merchant enterprises, but is not saleable property."
+      }
+    },
+    "householdStandard.outfit_merchant.levels.0.desc.default": {
+      "context": "householdStandard outfit_merchant, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises merchant output by 5%."
+      }
+    },
+    "householdStandard.outfit_merchant.levels.0.name.default": {
+      "context": "householdStandard outfit_merchant, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Sealed Weights and Locking Chest"
+      }
+    },
+    "householdStandard.outfit_merchant.levels.1.desc.default": {
+      "context": "householdStandard outfit_merchant, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises merchant output by 10%."
+      }
+    },
+    "householdStandard.outfit_merchant.levels.1.name.default": {
+      "context": "householdStandard outfit_merchant, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Fine Scales and Merchant’s Ledgers"
+      }
+    },
+    "householdStandard.outfit_merchant.levels.2.desc.default": {
+      "context": "householdStandard outfit_merchant, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises merchant output by 15%."
+      }
+    },
+    "householdStandard.outfit_merchant.levels.2.name.default": {
+      "context": "householdStandard outfit_merchant, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Coffers, Bills and Caravan Tackle"
+      }
+    },
+    "householdStandard.outfit_merchant.name.default": {
+      "context": "householdStandard outfit_merchant, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Merchant outfit"
+      }
+    },
+    "householdStandard.outfit_monk.desc.default": {
+      "context": "householdStandard outfit_monk, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained writing equipment that improves a monk’s paid and religious work, but is not saleable property."
+      }
+    },
+    "householdStandard.outfit_monk.levels.0.desc.default": {
+      "context": "householdStandard outfit_monk, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises monastic output by 5%."
+      }
+    },
+    "householdStandard.outfit_monk.levels.0.name.default": {
+      "context": "householdStandard outfit_monk, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Scribe’s Writing Chest"
+      }
+    },
+    "householdStandard.outfit_monk.levels.1.desc.default": {
+      "context": "householdStandard outfit_monk, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises monastic output by 10%."
+      }
+    },
+    "householdStandard.outfit_monk.levels.1.name.default": {
+      "context": "householdStandard outfit_monk, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Illuminator’s Desk and Pigments"
+      }
+    },
+    "householdStandard.outfit_monk.levels.2.desc.default": {
+      "context": "householdStandard outfit_monk, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises monastic output by 15%."
+      }
+    },
+    "householdStandard.outfit_monk.levels.2.name.default": {
+      "context": "householdStandard outfit_monk, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Working Library and Copyist’s Instruments"
+      }
+    },
+    "householdStandard.outfit_monk.name.default": {
+      "context": "householdStandard outfit_monk, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Monastic work outfit"
+      }
+    },
+    "householdStandard.outfit_noble.desc.default": {
+      "context": "householdStandard outfit_noble, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained estate records and instruments that improve paid household administration, but are not saleable property."
+      }
+    },
+    "householdStandard.outfit_noble.levels.0.desc.default": {
+      "context": "householdStandard outfit_noble, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises estate-service output by 5%."
+      }
+    },
+    "householdStandard.outfit_noble.levels.0.name.default": {
+      "context": "householdStandard outfit_noble, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Steward’s Account Chest"
+      }
+    },
+    "householdStandard.outfit_noble.levels.1.desc.default": {
+      "context": "householdStandard outfit_noble, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises estate-service output by 10%."
+      }
+    },
+    "householdStandard.outfit_noble.levels.1.name.default": {
+      "context": "householdStandard outfit_noble, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Survey Rolls and Seal Press"
+      }
+    },
+    "householdStandard.outfit_noble.levels.2.desc.default": {
+      "context": "householdStandard outfit_noble, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises estate-service output by 15%."
+      }
+    },
+    "householdStandard.outfit_noble.levels.2.name.default": {
+      "context": "householdStandard outfit_noble, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Estate Office and Muniments Chest"
+      }
+    },
+    "householdStandard.outfit_noble.name.default": {
+      "context": "householdStandard outfit_noble, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Estate-service outfit"
+      }
+    },
+    "householdStandard.outfit_priest.desc.default": {
+      "context": "householdStandard outfit_priest, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained service furnishings that improve a priest’s paid and religious work, but are not saleable property."
+      }
+    },
+    "householdStandard.outfit_priest.levels.0.desc.default": {
+      "context": "householdStandard outfit_priest, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises clerical output by 5%."
+      }
+    },
+    "householdStandard.outfit_priest.levels.0.name.default": {
+      "context": "householdStandard outfit_priest, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Portable Service Chest"
+      }
+    },
+    "householdStandard.outfit_priest.levels.1.desc.default": {
+      "context": "householdStandard outfit_priest, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises clerical output by 10%."
+      }
+    },
+    "householdStandard.outfit_priest.levels.1.name.default": {
+      "context": "householdStandard outfit_priest, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Vestments, Vessels and Service Books"
+      }
+    },
+    "householdStandard.outfit_priest.levels.2.desc.default": {
+      "context": "householdStandard outfit_priest, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises clerical output by 15%."
+      }
+    },
+    "householdStandard.outfit_priest.levels.2.name.default": {
+      "context": "householdStandard outfit_priest, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Complete Liturgical Treasury"
+      }
+    },
+    "householdStandard.outfit_priest.name.default": {
+      "context": "householdStandard outfit_priest, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Clerical work outfit"
+      }
+    },
+    "householdStandard.outfit_soldier.desc.default": {
+      "context": "householdStandard outfit_soldier, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained service equipment that improves paid military work only; combat still depends on armory equipment and holdings."
+      }
+    },
+    "householdStandard.outfit_soldier.levels.0.desc.default": {
+      "context": "householdStandard outfit_soldier, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises paid soldiering output by 5%."
+      }
+    },
+    "householdStandard.outfit_soldier.levels.0.name.default": {
+      "context": "householdStandard outfit_soldier, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Fitted Arms and Field Kit"
+      }
+    },
+    "householdStandard.outfit_soldier.levels.1.desc.default": {
+      "context": "householdStandard outfit_soldier, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises paid soldiering output by 10%."
+      }
+    },
+    "householdStandard.outfit_soldier.levels.1.name.default": {
+      "context": "householdStandard outfit_soldier, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Campaign Harness and Remount"
+      }
+    },
+    "householdStandard.outfit_soldier.levels.2.desc.default": {
+      "context": "householdStandard outfit_soldier, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Raises paid soldiering output by 15%."
+      }
+    },
+    "householdStandard.outfit_soldier.levels.2.name.default": {
+      "context": "householdStandard outfit_soldier, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Retainer’s Full Harness"
+      }
+    },
+    "householdStandard.outfit_soldier.name.default": {
+      "context": "householdStandard outfit_soldier, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Soldier’s work outfit"
+      }
+    },
+    "householdStandard.quarters.desc.default": {
+      "context": "householdStandard quarters, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Sounder, roomier buildings that shelter the family and make space for service."
+      }
+    },
+    "householdStandard.quarters.levels.0.desc.default": {
+      "context": "householdStandard quarters, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.05 percentage points."
+      }
+    },
+    "householdStandard.quarters.levels.0.name.default": {
+      "context": "householdStandard quarters, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Sound Roof and Raised Bed"
+      }
+    },
+    "householdStandard.quarters.levels.1.desc.default": {
+      "context": "householdStandard quarters, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer."
+      }
+    },
+    "householdStandard.quarters.levels.1.name.default": {
+      "context": "householdStandard quarters, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Chambered House"
+      }
+    },
+    "householdStandard.quarters.levels.2.desc.default": {
+      "context": "householdStandard quarters, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Reduces yearly household mortality by 0.2 percentage points and adds room for two retainers."
+      }
+    },
+    "householdStandard.quarters.levels.2.name.default": {
+      "context": "householdStandard quarters, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Hall, Chambers and Outbuildings"
+      }
+    },
+    "householdStandard.quarters.name.default": {
+      "context": "householdStandard quarters, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Quarters"
+      }
+    },
+    "householdStandard.transport.desc.default": {
+      "context": "householdStandard transport, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maintained beasts and vehicles for journeys, distinct from permanent productive livestock."
+      }
+    },
+    "householdStandard.transport.levels.0.desc.default": {
+      "context": "householdStandard transport, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Journey costs are multiplied by 0.85; each county leg takes 3 days."
+      }
+    },
+    "householdStandard.transport.levels.0.name.default": {
+      "context": "householdStandard transport, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Pack Ass"
+      }
+    },
+    "householdStandard.transport.levels.1.desc.default": {
+      "context": "householdStandard transport, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Journey costs are multiplied by 0.75; each county leg takes 2 days."
+      }
+    },
+    "householdStandard.transport.levels.1.name.default": {
+      "context": "householdStandard transport, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Mule and Cart"
+      }
+    },
+    "householdStandard.transport.levels.2.desc.default": {
+      "context": "householdStandard transport, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Journey costs are multiplied by 0.60; each county leg takes 1 day."
+      }
+    },
+    "householdStandard.transport.levels.2.name.default": {
+      "context": "householdStandard transport, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Riding Horses and Covered Wagon"
+      }
+    },
+    "householdStandard.transport.name.default": {
+      "context": "householdStandard transport, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Transport"
+      }
+    },
+    "householdStandard.wares.desc.default": {
+      "context": "householdStandard wares, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Bedding, vessels, linens, and furnishings maintained for a more capable home."
+      }
+    },
+    "householdStandard.wares.levels.0.desc.default": {
+      "context": "householdStandard wares, level 1, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 1 percentage point to yearly education chances."
+      }
+    },
+    "householdStandard.wares.levels.0.name.default": {
+      "context": "householdStandard wares, level 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Good Bedding and Vessels"
+      }
+    },
+    "householdStandard.wares.levels.1.desc.default": {
+      "context": "householdStandard wares, level 2, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 2.5 percentage points to yearly education chances."
+      }
+    },
+    "householdStandard.wares.levels.1.name.default": {
+      "context": "householdStandard wares, level 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Chests, Linens and Copperware"
+      }
+    },
+    "householdStandard.wares.levels.2.desc.default": {
+      "context": "householdStandard wares, level 3, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Adds 4 percentage points to yearly education chances."
+      }
+    },
+    "householdStandard.wares.levels.2.name.default": {
+      "context": "householdStandard wares, level 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Painted Furniture and Fine Hangings"
+      }
+    },
+    "householdStandard.wares.name.default": {
+      "context": "householdStandard wares, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Household wares"
+      }
+    },
     "item.ash_spear.desc.default": {
       "context": "item ash_spear, desc, faith branch default.",
       "glossary": [],
@@ -24493,6 +25261,36 @@
       "location": "js/holywar.js",
       "source": {
         "text": "📯 You renew your predecessor’s vow. The dynasty’s service and claim remain whole."
+      }
+    },
+    "news.household_standard.bought": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "level",
+        "standard"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🏠 The household establishes {level} for {standard}."
+      }
+    },
+    "news.household_standard.reduced": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "level",
+        "standard"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "no": "🏠 The household gives up {level} in {standard}; its setup investment is lost.",
+            "other": "🏠 The household gives up {level} in {standard}.",
+            "yes": "🏠 Coin runs short; the household lets {level} lapse from {standard}."
+          },
+          "param": "automatic",
+          "select": "value"
+        }
       }
     },
     "news.item.acquired": {
@@ -31835,6 +32633,16 @@
         "text": "Dry priests preach kindly of their patrons."
       }
     },
+    "src.00a78e23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Sounder, roomier buildings that shelter the family and make space for service."
+      }
+    },
     "src.00a91b30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -32386,6 +33194,16 @@
       ],
       "source": {
         "text": "Some doors are better left unknocked."
+      }
+    },
+    "src.03a98ff9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Fitted Arms and Field Kit"
       }
     },
     "src.03c514e2": {
@@ -33203,6 +34021,7 @@
       "glossary": [],
       "location": [
         "data/map_data.js",
+        "js/economy.js",
         "js/model.js"
       ],
       "source": {
@@ -33359,6 +34178,16 @@
       ],
       "source": {
         "text": "Bukhara"
+      }
+    },
+    "src.0866f2ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty."
       }
     },
     "src.086d79a6": {
@@ -34061,6 +34890,16 @@
       ],
       "source": {
         "text": "Emir of {province}"
+      }
+    },
+    "src.0acbb2c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Iron-Edged Husbandry Tools"
       }
     },
     "src.0acedc2c": {
@@ -34834,6 +35673,16 @@
         "text": "A good word from the pulpit weighs with the great."
       }
     },
+    "src.0e902ce6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Farming outfit"
+      }
+    },
     "src.0ea2d34d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34842,6 +35691,16 @@
       ],
       "source": {
         "text": "Many recover, blessing your name."
+      }
+    },
+    "src.0ead5d2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Survey Rolls and Seal Press"
       }
     },
     "src.0eb9c8a1": {
@@ -35808,6 +36667,16 @@
         "text": "Three weeks’ bread, and whatever the war leaves of you."
       }
     },
+    "src.12bc5c93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "New level"
+      }
+    },
     "src.12c0d39a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36258,6 +37127,16 @@
         "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
       }
     },
+    "src.145d6b9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses."
+      }
+    },
     "src.14708a68": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36266,6 +37145,16 @@
       ],
       "source": {
         "text": "You need {plots} plots together in one settlement."
+      }
+    },
+    "src.1475253d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Permanent household property"
       }
     },
     "src.148f67ec": {
@@ -36306,6 +37195,16 @@
       ],
       "source": {
         "text": "Your hall blazes with lamps. Neighbors, vassals, and rivals eat your meat and drink your chilled sherbet — and measure you all the while."
+      }
+    },
+    "src.14c53978": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Campaign Harness and Remount"
       }
     },
     "src.14cdcc97": {
@@ -36802,6 +37701,16 @@
         "text": "Your spear takes the boar before the lord’s. Bold — perhaps too bold. But men saw it."
       }
     },
+    "src.16faf94b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏠 Coin runs short; the household lets {level} lapse from {standard}."
+      }
+    },
     "src.17032074": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36830,6 +37739,16 @@
       ],
       "source": {
         "text": "The Miller’s Reckoning"
+      }
+    },
+    "src.172a26fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Scribe’s Writing Chest"
       }
     },
     "src.173294f1": {
@@ -37525,6 +38444,16 @@
         "text": "Learn from whoever will teach you."
       }
     },
+    "src.1a2c141e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to household"
+      }
+    },
     "src.1a36e3bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37673,16 +38602,6 @@
       ],
       "source": {
         "text": "🚩 The host marches to bring {enemy} to battle."
-      }
-    },
-    "src.1b169f93": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Property passes to your heirs — a household built up over generations is its own kind of greatness."
       }
     },
     "src.1b371063": {
@@ -38173,6 +39092,16 @@
       ],
       "source": {
         "text": "Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion."
+      }
+    },
+    "src.1df9c4ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current seasonal upkeep"
       }
     },
     "src.1df9ed64": {
@@ -38698,6 +39627,16 @@
         "text": "Deeds"
       }
     },
+    "src.208439ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained service furnishings that improve a priest’s paid and religious work, but are not saleable property."
+      }
+    },
     "src.208e8d72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38716,6 +39655,16 @@
       ],
       "source": {
         "text": "Burning faith."
+      }
+    },
+    "src.208ff22e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Sound Roof and Raised Bed"
       }
     },
     "src.2094b4be": {
@@ -39178,6 +40127,16 @@
         "text": "Muezzin"
       }
     },
+    "src.22b4995a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend."
+      }
+    },
     "src.22bb20de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39316,6 +40275,16 @@
       ],
       "source": {
         "text": "Registan"
+      }
+    },
+    "src.23363bfb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "· next setup {money:cost}"
       }
     },
     "src.2336b016": {
@@ -39568,6 +40537,16 @@
         "text": "For one year this vassal sends an extra {percent}% of its levy; costs 15 favor. (spends the day)"
       }
     },
+    "src.24022ef6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}"
+      }
+    },
     "src.2407fbaa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39707,6 +40686,16 @@
       ],
       "source": {
         "text": "A thin, sad yield. Winter will have teeth this year."
+      }
+    },
+    "src.2480286c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 1 percentage point to yearly education chances."
       }
     },
     "src.2485258e": {
@@ -39968,6 +40957,16 @@
       ],
       "source": {
         "text": "Set your feet and hold the line."
+      }
+    },
+    "src.25d66546": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises merchant output by 5%."
       }
     },
     "src.25db363e": {
@@ -40278,6 +41277,16 @@
       ],
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {money:gold} on the match."
+      }
+    },
+    "src.26fbe5a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Journeyman’s Tool Chest"
       }
     },
     "src.2726d393": {
@@ -41289,6 +42298,16 @@
       ],
       "source": {
         "text": "Buried an inherited feud."
+      }
+    },
+    "src.2c4ee3a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Bedding, vessels, linens, and furnishings maintained for a more capable home."
       }
     },
     "src.2c5368ad": {
@@ -42693,6 +43712,16 @@
         "text": "not advancing toward +{threshold}"
       }
     },
+    "src.32df7a61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No refund. The lost level and its setup investment must be purchased again."
+      }
+    },
     "src.32e1a58d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42973,6 +44002,16 @@
         "text": "Unavailable while traveling"
       }
     },
+    "src.341738cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Improve {standard}?"
+      }
+    },
     "src.3431f4a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43084,6 +44123,16 @@
         "text": "Your mother"
       }
     },
+    "src.348397be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "That household standard is unavailable."
+      }
+    },
     "src.348472b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43132,6 +44181,16 @@
       ],
       "source": {
         "text": "in the Deeds tab — it is pursued every day until you change it (work the land, drill, haggle, pray, court…)."
+      }
+    },
+    "src.3500d2dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Varied Board"
       }
     },
     "src.3510226e": {
@@ -43484,6 +44543,16 @@
       ],
       "source": {
         "text": "Auxerre"
+      }
+    },
+    "src.36eea24e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Sunday Woollens"
       }
     },
     "src.36f7288c": {
@@ -44368,6 +45437,16 @@
         "text": "🌾 Buy a plot of land…"
       }
     },
+    "src.3b5b0f90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Merchant outfit"
+      }
+    },
     "src.3b61cb75": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44586,6 +45665,16 @@
       ],
       "source": {
         "text": "⚔ {winner} has conquered {province} — your home! New masters rule here now."
+      }
+    },
+    "src.3c739811": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Reduce this standard by one level…"
       }
     },
     "src.3c7a77b4": {
@@ -44870,6 +45959,16 @@
         "text": "Send the false count."
       }
     },
+    "src.3dcdc031": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Requires {rank} rank."
+      }
+    },
     "src.3de8daea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44960,6 +46059,16 @@
         "text": "Chartres"
       }
     },
+    "src.3e2d9a11": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Hall, Chambers and Outbuildings"
+      }
+    },
     "src.3e3429d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45048,6 +46157,16 @@
       ],
       "source": {
         "text": "Meat and coin — if the forester is elsewhere."
+      }
+    },
+    "src.3ebb16c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏠 The household gives up {level} in {standard}; its setup investment is lost."
       }
     },
     "src.3ebe8bbb": {
@@ -45793,6 +46912,16 @@
         "text": "🎓 You are left to your own devices."
       }
     },
+    "src.41e773cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Painted Furniture and Fine Hangings"
+      }
+    },
     "src.41eb960f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46032,6 +47161,16 @@
       ],
       "source": {
         "text": "Tell him YOUR story."
+      }
+    },
+    "src.431cbd6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No maintained improvement is active."
       }
     },
     "src.43249313": {
@@ -47272,6 +48411,16 @@
         "text": "Fight the flames for your stock."
       }
     },
+    "src.47d165d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Maintained household standards"
+      }
+    },
     "src.47d7895b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47524,6 +48673,16 @@
         "text": "{sex} of {age}"
       }
     },
+    "src.492cf361": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Soldier’s work outfit"
+      }
+    },
     "src.4944da7c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47552,6 +48711,16 @@
       ],
       "source": {
         "text": "From baron upward the Deeds tab always shows"
+      }
+    },
+    "src.4953422d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Complete Liturgical Treasury"
       }
     },
     "src.49569c1a": {
@@ -47764,6 +48933,16 @@
       ],
       "source": {
         "text": "⚔ War & Diplomacy"
+      }
+    },
+    "src.4a27ccca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.2 percentage points."
       }
     },
     "src.4a3327a4": {
@@ -48134,6 +49313,16 @@
       ],
       "source": {
         "text": "Two copies of the reeve’s seasonal tally reach your table. They agree upon every rent except the silver that should have reached your chest."
+      }
+    },
+    "src.4bb56054": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises farming output by 10%."
       }
     },
     "src.4bc76e18": {
@@ -48518,6 +49707,16 @@
         "text": "{title} {ruler} · fields ~{men}"
       }
     },
+    "src.4d61e6ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises craft output by 15%."
+      }
+    },
     "src.4d6d6cab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48538,6 +49737,16 @@
         "text": "Question follows question; the wording never changes. The testament stands."
       }
     },
+    "src.4d8cbab1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pay {money:cost} and establish {name}"
+      }
+    },
     "src.4d8f58eb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48546,6 +49755,16 @@
       ],
       "source": {
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
+      }
+    },
+    "src.4da08ca9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Standards upkeep each season"
       }
     },
     "src.4dcf1668": {
@@ -49028,6 +50247,16 @@
         "text": "Save (Menu → Load game → 📥 Import wakes this exact moment):"
       }
     },
+    "src.4ff53f11": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Steward’s Account Chest"
+      }
+    },
     "src.50024ca5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49128,6 +50357,16 @@
         "text": "⚔ Battle at {province} — {winner} breaks the host of {loser}."
       }
     },
+    "src.50a77e3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 0.75 prestige each season."
+      }
+    },
     "src.50b15723": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49158,6 +50397,16 @@
         "text": "The old willow leans far over the millpond, and every child knows the dare: climb to the high branch and jump."
       }
     },
+    "src.50d8f38c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current level"
+      }
+    },
     "src.50dd14af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49166,6 +50415,16 @@
       ],
       "source": {
         "text": "+{amount} development when raised"
+      }
+    },
+    "src.50e2459c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Journey costs are multiplied by 0.85; each county leg takes 3 days."
       }
     },
     "src.50e441d6": {
@@ -49436,6 +50695,16 @@
       ],
       "source": {
         "text": "+{men} men-at-arms"
+      }
+    },
+    "src.51c85ca5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "New seasonal upkeep"
       }
     },
     "src.51ca7499": {
@@ -49738,6 +51007,16 @@
         "text": "Home"
       }
     },
+    "src.52fefb42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained husbandry equipment that improves paid farming and family enterprises, but is not saleable property."
+      }
+    },
     "src.531430e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49756,6 +51035,16 @@
       ],
       "source": {
         "text": "Rents, reeves, and repairs."
+      }
+    },
+    "src.5329d728": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Work outfits"
       }
     },
     "src.533fe57a": {
@@ -50480,6 +51769,16 @@
         "text": "Gossip is a currency too."
       }
     },
+    "src.567a8f39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🏠 Household standards & property"
+      }
+    },
     "src.5681fe26": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50628,6 +51927,16 @@
       ],
       "source": {
         "text": "Good profit, poor prayers — and his mill if he fails."
+      }
+    },
+    "src.5731445d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises monastic output by 15%."
       }
     },
     "src.57344272": {
@@ -52237,6 +53546,16 @@
         "text": "{pct}% of your noble revenue"
       }
     },
+    "src.5e4fdd3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "· highest level"
+      }
+    },
     "src.5e5abb05": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52556,6 +53875,16 @@
       ],
       "source": {
         "text": "Burn the page and recant privately."
+      }
+    },
+    "src.5f8b42ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " · highest level"
       }
     },
     "src.5fa20a78": {
@@ -52997,6 +54326,16 @@
       ],
       "source": {
         "text": "Your standing and cunning against their lawyers and pride."
+      }
+    },
+    "src.6178590c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Active household standards"
       }
     },
     "src.617b1bfb": {
@@ -53477,6 +54816,16 @@
       ],
       "source": {
         "text": "your current life. Copy it somewhere safe — a note, an email to yourself — then paste it back with 📥 Import on any device or browser. It is long; that is normal."
+      }
+    },
+    "src.63c373f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Baseline — no maintained improvement"
       }
     },
     "src.63cbf192": {
@@ -54112,6 +55461,16 @@
         "text": "Leave this slot empty"
       }
     },
+    "src.66c77a28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained service equipment that improves paid military work only; combat still depends on armory equipment and holdings."
+      }
+    },
     "src.66d67c2c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54182,6 +55541,16 @@
         "text": "Press the appeal one last time."
       }
     },
+    "src.67061adf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.05 percentage points."
+      }
+    },
     "src.6712b0ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54220,6 +55589,16 @@
       ],
       "source": {
         "text": "💍 {name} enters your household as your second wife."
+      }
+    },
+    "src.67567298": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises clerical output by 15%."
       }
     },
     "src.67713967": {
@@ -54432,6 +55811,16 @@
         "text": "+10% levy while he serves"
       }
     },
+    "src.68571ed8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises merchant output by 10%."
+      }
+    },
     "src.6859c32a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54570,6 +55959,16 @@
       ],
       "source": {
         "text": "A broken bone"
+      }
+    },
+    "src.68f2c53f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Projected purse after one season"
       }
     },
     "src.68fdd27c": {
@@ -54764,6 +56163,16 @@
         "text": "Share your wood with the neighbors."
       }
     },
+    "src.698cb93b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises clerical output by 10%."
+      }
+    },
     "src.698d36c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54944,6 +56353,16 @@
         "text": "Sinope"
       }
     },
+    "src.6a8d657b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises merchant output by 15%."
+      }
+    },
     "src.6a950ed8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55014,6 +56433,16 @@
         "text": "Pay without a word. ({money:4})"
       }
     },
+    "src.6ae47b67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Working Library and Copyist’s Instruments"
+      }
+    },
     "src.6aed70a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55042,6 +56471,16 @@
       ],
       "source": {
         "text": "{amount}% for {years} years"
+      }
+    },
+    "src.6aff28ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Improve to level {level}: {name}"
       }
     },
     "src.6b0b34f8": {
@@ -55074,6 +56513,16 @@
         "text": "Begin a Plot"
       }
     },
+    "src.6b2f44e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Fine Scales and Merchant’s Ledgers"
+      }
+    },
     "src.6b37bfaf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55102,6 +56551,26 @@
       ],
       "source": {
         "text": "{asset} is taken, prestige falls, and lenders refuse the household for four seasons."
+      }
+    },
+    "src.6b3e6ca9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Imported Cloth and Silver Plate"
+      }
+    },
+    "src.6b492776": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 4 percentage points to yearly education chances."
       }
     },
     "src.6b4e4e80": {
@@ -55274,6 +56743,16 @@
         "text": "greatHolyWar has invalid firstByYear."
       }
     },
+    "src.6c49d984": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises monastic output by 5%."
+      }
+    },
     "src.6c4e0a99": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55302,6 +56781,16 @@
       ],
       "source": {
         "text": "Manbij"
+      }
+    },
+    "src.6c7c8ee2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises craft output by 10%."
       }
     },
     "src.6c88702e": {
@@ -55392,6 +56881,16 @@
       ],
       "source": {
         "text": "Abkhazia-Kartli"
+      }
+    },
+    "src.6cc2b458": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained writing equipment that improves a monk’s paid and religious work, but is not saleable property."
       }
     },
     "src.6cc802ec": {
@@ -56523,6 +58022,16 @@
       ],
       "source": {
         "text": "{have} of {total} kingdoms"
+      }
+    },
+    "src.71756075": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises estate-service output by 15%."
       }
     },
     "src.7175f4f8": {
@@ -57698,6 +59207,16 @@
         "text": "A meal and a bed for the night."
       }
     },
+    "src.76709f89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Pack Ass"
+      }
+    },
     "src.76838385": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57787,6 +59306,16 @@
       ],
       "source": {
         "text": "Take his hand — you did not cross a war to lose him now."
+      }
+    },
+    "src.76f5e78d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.1 percentage points."
       }
     },
     "src.76f7f3a9": {
@@ -57927,6 +59456,16 @@
       ],
       "source": {
         "text": "Dull, cold, and paid."
+      }
+    },
+    "src.77679ebc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Luxuries"
       }
     },
     "src.7780a2ea": {
@@ -58268,6 +59807,16 @@
       ],
       "source": {
         "text": "{position} pay — {name}"
+      }
+    },
+    "src.791713ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Estate-service outfit"
       }
     },
     "src.791a80ec": {
@@ -59092,6 +60641,16 @@
         "text": "{used} of {capacity}"
       }
     },
+    "src.7c2d4d43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 0.25 prestige each season."
+      }
+    },
     "src.7c449655": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59342,6 +60901,16 @@
         "text": "Syrian Desert"
       }
     },
+    "src.7d874cfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Journey costs are multiplied by 0.75; each county leg takes 2 days."
+      }
+    },
     "src.7d87d9a6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59562,16 +61131,6 @@
         "text": "Swallow defeat; grudges keep longer than grain."
       }
     },
-    "src.7e4e9883": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Beasts, tools, and standing — bought once, kept for generations."
-      }
-    },
     "src.7e5293d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59701,6 +61260,16 @@
       ],
       "source": {
         "text": "Families gather, terms are weighed — your standing, your prospects, the size of your purse. You ask for the hand of {suitor}."
+      }
+    },
+    "src.7ed1ac3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Portable Service Chest"
       }
     },
     "src.7eeb2320": {
@@ -59941,6 +61510,16 @@
       ],
       "source": {
         "text": "Vestfold"
+      }
+    },
+    "src.7fb0c65c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Coffers, Bills and Caravan Tackle"
       }
     },
     "src.7fc09435": {
@@ -61073,6 +62652,16 @@
         "text": "Climbing the ladder"
       }
     },
+    "src.8403aebb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Setup cost now"
+      }
+    },
     "src.8407bec1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61425,6 +63014,16 @@
         "text": "End your current courtship before cultivating someone else."
       }
     },
+    "src.85b7c6b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Transport"
+      }
+    },
     "src.85b92ad9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61623,6 +63222,16 @@
       ],
       "source": {
         "text": "De jure kingdoms"
+      }
+    },
+    "src.865b3954": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises craft output by 5%."
       }
     },
     "src.8661a9ca": {
@@ -61835,6 +63444,16 @@
         "text": "Everyone notices. “The Watered Cup,” they toast, snickering."
       }
     },
+    "src.8783681c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Chambered House"
+      }
+    },
     "src.8783a616": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62023,6 +63642,16 @@
       ],
       "source": {
         "text": "The steward finds three errors before you finish the first column."
+      }
+    },
+    "src.886232d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{level} — {name}"
       }
     },
     "src.888b3637": {
@@ -62403,6 +64032,16 @@
       ],
       "source": {
         "text": "Go with the scouts."
+      }
+    },
+    "src.8a4538e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Estate Office and Muniments Chest"
       }
     },
     "src.8a4ac226": {
@@ -62896,6 +64535,16 @@
         "text": "Seneschal"
       }
     },
+    "src.8c267542": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises paid soldiering output by 5%."
+      }
+    },
     "src.8c2688de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62986,6 +64635,16 @@
         "text": "{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices."
       }
     },
+    "src.8c9de3d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Journey costs are multiplied by 0.60; each county leg takes 1 day."
+      }
+    },
     "src.8ca85cff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63036,6 +64695,16 @@
         "text": "Pray through the night."
       }
     },
+    "src.8ce973d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained commercial equipment that improves paid trade and merchant enterprises, but is not saleable property."
+      }
+    },
     "src.8ceeb02a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63044,6 +64713,16 @@
       ],
       "source": {
         "text": "This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again."
+      }
+    },
+    "src.8cf745c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Maintained standards each season"
       }
     },
     "src.8cf8fd88": {
@@ -63474,6 +65153,16 @@
       ],
       "source": {
         "text": "~150 spears: {money:15} now, {money:4} a season while the war lasts."
+      }
+    },
+    "src.8ec791d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises clerical output by 5%."
       }
     },
     "src.8ecae4b0": {
@@ -64020,6 +65709,16 @@
         "text": "The clergy praised your name at the manor."
       }
     },
+    "src.9104a8c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "· {money:upkeep}/season upkeep"
+      }
+    },
     "src.91074677": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64308,6 +66007,16 @@
       ],
       "source": {
         "text": "Zagreb"
+      }
+    },
+    "src.928d016d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Sealed Weights and Locking Chest"
       }
     },
     "src.928f2551": {
@@ -64690,6 +66399,16 @@
         "text": "⚔ Great holy war campaign…"
       }
     },
+    "src.94c7f416": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Level {level}: {name}"
+      }
+    },
     "src.94df41f3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64728,6 +66447,16 @@
       ],
       "source": {
         "text": "Earn from the war instead of feeding it."
+      }
+    },
+    "src.94f91ccf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises farming output by 15%."
       }
     },
     "src.95271b43": {
@@ -65091,6 +66820,16 @@
       ],
       "source": {
         "text": "Household Shrine"
+      }
+    },
+    "src.96c95d05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Not enough money: requires {money:cost}."
       }
     },
     "src.97025ece": {
@@ -65715,6 +67454,16 @@
         "text": "Taifa of Zaragoza"
       }
     },
+    "src.99331931": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Tempered Guild Tools"
+      }
+    },
     "src.9944b824": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66064,6 +67813,16 @@
       ],
       "source": {
         "text": "Not yet mustered"
+      }
+    },
+    "src.9aa3163a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " · {money:upkeep}/season upkeep"
       }
     },
     "src.9aa8a00a": {
@@ -67438,6 +69197,16 @@
         "text": "A Suit Against a Neighbor"
       }
     },
+    "src.a05b8677": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Reduce {standard}?"
+      }
+    },
     "src.a0624a21": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67917,6 +69686,16 @@
       ],
       "source": {
         "text": "The household sleeps; the dog knows you now. The chest waits where the steward believes nobody knows."
+      }
+    },
+    "src.a25bfa52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.2 percentage points and adds room for two retainers."
       }
     },
     "src.a26505b0": {
@@ -68541,16 +70320,6 @@
         "text": "Herat"
       }
     },
-    "src.a5520acd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Better the Household"
-      }
-    },
     "src.a557e228": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69021,6 +70790,16 @@
       ],
       "source": {
         "text": "Keep moving."
+      }
+    },
+    "src.a768267f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No practiced household profession currently has a relevant outfit."
       }
     },
     "src.a77ee662": {
@@ -69616,6 +71395,16 @@
         "text": "Merchant’s daughter"
       }
     },
+    "src.aa23b380": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Retainer’s Full Harness"
+      }
+    },
     "src.aa26483a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70198,6 +71987,16 @@
         "text": "Maimed"
       }
     },
+    "src.acfc5cdd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained trade tools that improve paid craft work and workshops, but are not saleable property."
+      }
+    },
     "src.ad18c98b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70558,6 +72357,16 @@
         "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
       }
     },
+    "src.aecbd224": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "· dormant — no upkeep or benefit"
+      }
+    },
     "src.aef2e453": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70586,6 +72395,16 @@
       ],
       "source": {
         "text": "A face only a mother could love, and she kept her counsel."
+      }
+    },
+    "src.af08c06a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained estate records and instruments that improve paid household administration, but are not saleable property."
       }
     },
     "src.af1a7cc9": {
@@ -71170,6 +72989,16 @@
         "text": "Already occupying {settlement}:"
       }
     },
+    "src.b19d87ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises estate-service output by 5%."
+      }
+    },
     "src.b1a1e9ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71448,6 +73277,16 @@
       ],
       "source": {
         "text": "Set foreign policy"
+      }
+    },
+    "src.b2d2f5f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises paid soldiering output by 10%."
       }
     },
     "src.b2e22054": {
@@ -73444,6 +75283,16 @@
         "text": "Keep it."
       }
     },
+    "src.bbb87a19": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Riding Horses and Covered Wagon"
+      }
+    },
     "src.bbbbcddb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73544,6 +75393,16 @@
         "text": "Another witness names the bargain aloud. The court turns on you."
       }
     },
+    "src.bbfe0055": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Owned permanently: {holdings}"
+      }
+    },
     "src.bc0a1ad4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73562,6 +75421,16 @@
       ],
       "source": {
         "text": "Rabbi"
+      }
+    },
+    "src.bc0ffdab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Household luxuries"
       }
     },
     "src.bc106b15": {
@@ -73653,6 +75522,16 @@
       ],
       "source": {
         "text": "Kin and gossips name three who would hear your suit:"
+      }
+    },
+    "src.bc76dbef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Full Plough Team and Harvest Gear"
       }
     },
     "src.bc7cdba0": {
@@ -73753,6 +75632,16 @@
       ],
       "source": {
         "text": "You lose, thoroughly. But you got up every time, and everyone saw that too."
+      }
+    },
+    "src.bcccf574": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No further permanent holding is available for this station and profession."
       }
     },
     "src.bcdfb3e1": {
@@ -74748,6 +76637,16 @@
         "text": "Wounds and sickness prove too much. {name} does not see another season."
       }
     },
+    "src.c18f13cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Board"
+      }
+    },
     "src.c1938174": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74899,6 +76798,16 @@
       ],
       "source": {
         "text": "Find work and lodging."
+      }
+    },
+    "src.c2388dca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Spiced and Imported Table"
       }
     },
     "src.c238b73c": {
@@ -75060,6 +76969,16 @@
       ],
       "source": {
         "text": "Offer pitched battle."
+      }
+    },
+    "src.c2b53524": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Food kept above bare subsistence: fuller stores, broader fare, and rarer seasonings."
       }
     },
     "src.c2b820ab": {
@@ -75350,6 +77269,16 @@
       ],
       "source": {
         "text": "Open the purse. ({money:20})"
+      }
+    },
+    "src.c3f1b843": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 2.5 percentage points to yearly education chances."
       }
     },
     "src.c3f293b0": {
@@ -76024,6 +77953,16 @@
         "text": "Over-domain penalty"
       }
     },
+    "src.c7739057": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Dyed Cloth and Fur"
+      }
+    },
     "src.c774b84f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76496,6 +78435,16 @@
         "text": "Decline in humility."
       }
     },
+    "src.c9fe6a2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Master’s Instruments and Patterns"
+      }
+    },
     "src.ca01cbbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76887,6 +78836,16 @@
         "text": "Want nothing of theirs."
       }
     },
+    "src.cbba06aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Living standards"
+      }
+    },
     "src.cbca660d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77136,6 +79095,16 @@
       ],
       "source": {
         "text": "Mallorca"
+      }
+    },
+    "src.cc8e2a79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " · next setup {money:cost}"
       }
     },
     "src.cc8fa198": {
@@ -77630,6 +79599,16 @@
         "text": "marsh"
       }
     },
+    "src.ceb595e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Mule and Cart"
+      }
+    },
     "src.cec64fcd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77960,6 +79939,16 @@
         "text": "Count the living and begin again."
       }
     },
+    "src.d090c12c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Projected purse after next season"
+      }
+    },
     "src.d093790a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78068,6 +80057,16 @@
       ],
       "source": {
         "text": "Empty"
+      }
+    },
+    "src.d15c4811": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Chests, Linens and Copperware"
       }
     },
     "src.d1aa3c6c": {
@@ -78369,6 +80368,26 @@
       ],
       "source": {
         "text": "An idle enterprise produces no seasonal income."
+      }
+    },
+    "src.d3113e0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Visible comfort and display that turn household prosperity into social standing."
+      }
+    },
+    "src.d314c42a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Maintained household standards are dormant at landed rank."
       }
     },
     "src.d3160c42": {
@@ -79071,6 +81090,16 @@
         "text": "The fields were blessed."
       }
     },
+    "src.d6367180": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Maintain living standards and work outfits, or buy permanent household property."
+      }
+    },
     "src.d636835d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79109,6 +81138,16 @@
       ],
       "source": {
         "text": "Mufti"
+      }
+    },
+    "src.d656fc2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep."
       }
     },
     "src.d65af45e": {
@@ -79472,6 +81511,16 @@
         "text": "No journey is in progress."
       }
     },
+    "src.d7e9aeab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Vestments, Vessels and Service Books"
+      }
+    },
     "src.d7f53d95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79500,6 +81549,16 @@
       ],
       "source": {
         "text": "Order at the end of a rope."
+      }
+    },
+    "src.d8172429": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again."
       }
     },
     "src.d81824d4": {
@@ -80205,6 +82264,16 @@
         "text": "Under the ruined top layer: silk, barely touched."
       }
     },
+    "src.db77d21c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Quarters"
+      }
+    },
     "src.db7db04c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80385,6 +82454,16 @@
         "text": "You wake with a hand over your mouth and steel already moving. There are three of them, and they know the room — someone drew them a map. {god} help you, the guards are not coming."
       }
     },
+    "src.dc6bf228": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No eligible household worker currently practices this profession."
+      }
+    },
     "src.dc754dfd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80413,6 +82492,16 @@
       ],
       "source": {
         "text": "Loose your own falcon first."
+      }
+    },
+    "src.dc89116c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No maintained improvement."
       }
     },
     "src.dc95aa61": {
@@ -80553,6 +82642,16 @@
       ],
       "source": {
         "text": "The family refuses — politely, but firmly. Perhaps with more standing, or more silver…"
+      }
+    },
+    "src.dd5b5586": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maintained beasts and vehicles for journeys, distinct from permanent productive livestock."
       }
     },
     "src.dd5bfc3e": {
@@ -81115,6 +83214,16 @@
         "text": "Sens"
       }
     },
+    "src.df96f933": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.3 percentage points."
+      }
+    },
     "src.dfa19082": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81373,6 +83482,16 @@
       ],
       "source": {
         "text": "🕊 Cultivate the court"
+      }
+    },
+    "src.e0b4b4e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dormant: no upkeep or benefit right now."
       }
     },
     "src.e0c4a0e2": {
@@ -81751,6 +83870,7 @@
       "glossary": [],
       "location": [
         "data/map_data.js",
+        "js/economy.js",
         "js/model.js"
       ],
       "source": {
@@ -81935,6 +84055,16 @@
       ],
       "source": {
         "text": "Heritable pasture, fuel, and water rights recorded for the household."
+      }
+    },
+    "src.e3318cb3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "This standard is already at its highest level."
       }
     },
     "src.e335fe42": {
@@ -83011,6 +85141,16 @@
         "text": "Évora"
       }
     },
+    "src.e805bb42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat."
+      }
+    },
     "src.e809327d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83301,6 +85441,16 @@
         "text": "Playing a woman is a harder road: some doors open only by marriage, others only by defiance."
       }
     },
+    "src.e886d8e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Clerical work outfit"
+      }
+    },
     "src.e887f059": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83319,6 +85469,16 @@
       ],
       "source": {
         "text": "{money:pay} each season; the first season is paid on entry."
+      }
+    },
+    "src.e8ab3530": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Illuminator’s Desk and Pigments"
       }
     },
     "src.e8c170ff": {
@@ -83369,6 +85529,16 @@
       ],
       "source": {
         "text": "He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market."
+      }
+    },
+    "src.e8f97364": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer."
       }
     },
     "src.e911331b": {
@@ -83750,6 +85920,16 @@
       ],
       "source": {
         "text": "Wine, music, and thinner pockets by morning."
+      }
+    },
+    "src.eb151994": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Adds 1.5 prestige each season."
       }
     },
     "src.eb399071": {
@@ -84182,6 +86362,16 @@
         "text": "Riders from over the border have burned two of your hamlets and driven off cattle. Your people look to you for an answer."
       }
     },
+    "src.ed01e46a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Projected seasonal net"
+      }
+    },
     "src.ed1c445c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84371,6 +86561,16 @@
       ],
       "source": {
         "text": "Grievously wounded"
+      }
+    },
+    "src.ee704dc5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Ox Tackle and Mouldboard Plough"
       }
     },
     "src.ee74299a": {
@@ -84601,6 +86801,16 @@
       ],
       "source": {
         "text": "Win a name, or eat the mud."
+      }
+    },
+    "src.ef97df5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Full Larder"
       }
     },
     "src.ef9e29fb": {
@@ -84883,6 +87093,16 @@
         "text": "Drill, drill, and drill again. The sergeant’s stick finds every lazy elbow. “Sloppy lines die,” he says. “Neat lines kill.”"
       }
     },
+    "src.f0909f8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises estate-service output by 10%."
+      }
+    },
     "src.f0a4538a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85041,6 +87261,16 @@
       ],
       "source": {
         "text": "Spurn him grandly. You have outgrown the blushing boy from the muster line."
+      }
+    },
+    "src.f1580daa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏠 The household gives up {level} in {standard}."
       }
     },
     "src.f16d8f9e": {
@@ -85523,6 +87753,16 @@
         "text": "On the Mend"
       }
     },
+    "src.f3fe5da2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises farming output by 5%."
+      }
+    },
     "src.f3feb7ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85698,7 +87938,8 @@
       "glossary": [],
       "location": [
         "data/map_data.js",
-        "js/main.js"
+        "js/main.js",
+        "js/economy.js"
       ],
       "source": {
         "text": "Serf"
@@ -85804,6 +88045,16 @@
         "text": "The lord despises you and refuses."
       }
     },
+    "src.f50f8152": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises monastic output by 10%."
+      }
+    },
     "src.f5135d8b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85844,16 +88095,6 @@
         "text": "Meat, mead, and politics."
       }
     },
-    "src.f536eb94": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The household owns:"
-      }
-    },
     "src.f53e1bcf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85872,6 +88113,16 @@
       ],
       "source": {
         "text": "📯 Call great holy war…"
+      }
+    },
+    "src.f54f43d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Monastic work outfit"
       }
     },
     "src.f5568dd3": {
@@ -86345,6 +88596,16 @@
         "text": "Copy the difficult pages."
       }
     },
+    "src.f7727494": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{icon} level {level}"
+      }
+    },
     "src.f7750ded": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86705,6 +88966,16 @@
         "text": "Equip items…"
       }
     },
+    "src.f95948f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "New benefit"
+      }
+    },
     "src.f96122af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86885,6 +89156,16 @@
         "text": "Repaid in full, and handsomely."
       }
     },
+    "src.fa5e078c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Craft outfit"
+      }
+    },
     "src.fa628550": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86983,6 +89264,16 @@
       ],
       "source": {
         "text": "Defaults remembered"
+      }
+    },
+    "src.fad97def": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Raises paid soldiering output by 15%."
       }
     },
     "src.fadb4a06": {
@@ -87103,6 +89394,16 @@
       ],
       "source": {
         "text": "Recite the words exactly."
+      }
+    },
+    "src.fb49f2d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Household wares"
       }
     },
     "src.fb4b8f7b": {
@@ -87233,6 +89534,16 @@
       ],
       "source": {
         "text": "🪁 Play"
+      }
+    },
+    "src.fbba9334": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏠 The household establishes {level} for {standard}."
       }
     },
     "src.fbbdd300": {
@@ -87575,6 +89886,16 @@
         "text": "Prove that the reeve means to rob lord and village alike."
       }
     },
+    "src.fd4b0ae6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": " · dormant — no upkeep or benefit"
+      }
+    },
     "src.fd5425e0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87623,6 +89944,16 @@
       ],
       "source": {
         "text": "Let some other purse be lightened."
+      }
+    },
+    "src.fda19a62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Baseline"
       }
     },
     "src.fda47c83": {
@@ -87713,6 +90044,16 @@
       ],
       "source": {
         "text": "Preview"
+      }
+    },
+    "src.fddf9fc1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Good Bedding and Vessels"
       }
     },
     "src.fddfeb6a": {
@@ -87963,6 +90304,16 @@
       ],
       "source": {
         "text": "Upbringing"
+      }
+    },
+    "src.ff177688": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Give up this level with no refund"
       }
     },
     "src.ff263e51": {
@@ -89720,6 +92071,22 @@
         "text": " · designated heir"
       }
     },
+    "ui: · dormant — no upkeep or benefit": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": " · dormant — no upkeep or benefit"
+      }
+    },
+    "ui: · highest level": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": " · highest level"
+      }
+    },
     "ui: · mandatory holy places: {places}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -89728,6 +92095,16 @@
       "location": "js/ui.js",
       "source": {
         "text": " · mandatory holy places: {places}"
+      }
+    },
+    "ui: · next setup {money:cost}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": " · next setup {money:cost}"
       }
     },
     "ui: · pay missed this season": {
@@ -89746,6 +92123,16 @@
       "location": "js/ui.js",
       "source": {
         "text": " · staffs {work}"
+      }
+    },
+    "ui: · {money:upkeep}/season upkeep": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:upkeep"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": " · {money:upkeep}/season upkeep"
       }
     },
     "ui: · {rank}": {
@@ -90411,6 +92798,14 @@
         "text": "An inherited campaign vow"
       }
     },
+    "ui:An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat."
+      }
+    },
     "ui:Answer the {campaign}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -90608,6 +93003,14 @@
         "text": "Back to equipment"
       }
     },
+    "ui:Back to household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to household"
+      }
+    },
     "ui:Back to item": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -90622,6 +93025,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Banner service"
+      }
+    },
+    "ui:Baseline": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Baseline"
+      }
+    },
+    "ui:Baseline — no maintained improvement": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Baseline — no maintained improvement"
       }
     },
     "ui:Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.": {
@@ -91516,6 +93935,14 @@
         "text": "Done"
       }
     },
+    "ui:Dormant: no upkeep or benefit right now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Dormant: no upkeep or benefit right now."
+      }
+    },
     "ui:Drawing the known world…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -91880,6 +94307,14 @@
         "text": "Former calling of {name}"
       }
     },
+    "ui:Freeholder": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
     "ui:French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -91917,6 +94352,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry."
+      }
+    },
+    "ui:Gentry": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Gentry"
+      }
+    },
+    "ui:Give up this level with no refund": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Give up this level with no refund"
       }
     },
     "ui:God": {
@@ -92097,6 +94548,14 @@
         "text": "Hiring settles the first seasonal pay of {money:pay} and spends the day."
       }
     },
+    "ui:Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses."
+      }
+    },
     "ui:Home instruction (free)": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92119,6 +94578,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Household faith and learned service"
+      }
+    },
+    "ui:Household luxuries": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Household luxuries"
       }
     },
     "ui:Household service is paid each season and limited by station.": {
@@ -92183,6 +94650,27 @@
       "location": "js/ui.js",
       "source": {
         "text": "Improve relations"
+      }
+    },
+    "ui:Improve to level {level}: {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "level",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Improve to level {level}: {name}"
+      }
+    },
+    "ui:Improve {standard}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Improve {standard}?"
       }
     },
     "ui:In arrears — the next missed deadline defaults.": {
@@ -92363,6 +94851,17 @@
         "text": "Lessons begin at age 6."
       }
     },
+    "ui:Level {level}: {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "level",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Level {level}: {name}"
+      }
+    },
     "ui:Levy ledger": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92397,6 +94896,14 @@
         "text": "Liege’s cut"
       }
     },
+    "ui:Living standards": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Living standards"
+      }
+    },
     "ui:Loan against revenues": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92414,6 +94921,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Locked until +{threshold} regard; currently {regard}."
+      }
+    },
+    "ui:Maintained household standards": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Maintained household standards"
+      }
+    },
+    "ui:Maintained household standards are dormant at landed rank.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Maintained household standards are dormant at landed rank."
       }
     },
     "ui:Make {destination} our permanent home": {
@@ -92702,6 +95225,14 @@
         "text": "No coin is committed to distant trade."
       }
     },
+    "ui:No eligible household worker currently practices this profession.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No eligible household worker currently practices this profession."
+      }
+    },
     "ui:No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92734,6 +95265,14 @@
         "text": "No equipment bonuses."
       }
     },
+    "ui:No further permanent holding is available for this station and profession.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No further permanent holding is available for this station and profession."
+      }
+    },
     "ui:No guild favor is available.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92764,6 +95303,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "No lost kingdom is currently eligible."
+      }
+    },
+    "ui:No maintained improvement is active.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No maintained improvement is active."
+      }
+    },
+    "ui:No maintained improvement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No maintained improvement."
       }
     },
     "ui:No managed household worker currently belongs to a guild.": {
@@ -92856,6 +95411,14 @@
         "text": "No personal host yet. Land, military positions, and sworn service will appear here."
       }
     },
+    "ui:No practiced household profession currently has a relevant outfit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No practiced household profession currently has a relevant outfit."
+      }
+    },
     "ui:No province chosen — a random home will be found.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92870,6 +95433,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No qualifying destination can be reached."
+      }
+    },
+    "ui:No refund. The lost level and its setup investment must be purchased again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No refund. The lost level and its setup investment must be purchased again."
       }
     },
     "ui:No steady sources yet — deeds and events still move it.": {
@@ -92918,6 +95489,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "Not enough money."
+      }
+    },
+    "ui:Not enough money: requires {money:cost}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Not enough money: requires {money:cost}."
       }
     },
     "ui:Not in the household": {
@@ -93112,6 +95693,16 @@
         "text": "Over-domain penalty"
       }
     },
+    "ui:Owned permanently: {holdings}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "holdings"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Owned permanently: {holdings}"
+      }
+    },
     "ui:Parishioner": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -93187,6 +95778,17 @@
         "text": "Pay {money:amount} now and clear this obligation. There is no early-payment penalty."
       }
     },
+    "ui:Pay {money:cost} and establish {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pay {money:cost} and establish {name}"
+      }
+    },
     "ui:Pay {money:gold} to be struck from the serf-roll.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -93225,6 +95827,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Peace pact with {realm}"
+      }
+    },
+    "ui:Permanent household property": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Permanent household property"
       }
     },
     "ui:Personal work perk: guild membership adds {money:amount} to each season at the bench.": {
@@ -93423,14 +96033,6 @@
         "text": "Professed Sister"
       }
     },
-    "ui:Property passes to your heirs — a household built up over generations is its own kind of greatness.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Property passes to your heirs — a household built up over generations is its own kind of greatness."
-      }
-    },
     "ui:Provoke": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -93590,6 +96192,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Recognition adds {piety} piety each season."
+      }
+    },
+    "ui:Reduce this standard by one level…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Reduce this standard by one level…"
+      }
+    },
+    "ui:Reduce {standard}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Reduce {standard}?"
       }
     },
     "ui:Renew the vow": {
@@ -93786,6 +96406,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Requires the first seasonal pay of {money:pay}."
+      }
+    },
+    "ui:Requires {rank} rank.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Requires {rank} rank."
       }
     },
     "ui:Requires {skill} Stewardship and {prestige} prestige.": {
@@ -94152,6 +96782,14 @@
         "text": "Seneschal"
       }
     },
+    "ui:Serf": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
     "ui:Service of {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -94194,6 +96832,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "Settlements"
+      }
+    },
+    "ui:Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "benefit",
+        "money:cost",
+        "money:upkeep"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}"
       }
     },
     "ui:Sickness has taken hold.": {
@@ -94416,6 +97066,14 @@
         "text": "That county does not qualify for this journey."
       }
     },
+    "ui:That household standard is unavailable.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "That household standard is unavailable."
+      }
+    },
     "ui:The Estates": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -94578,12 +97236,14 @@
         "text": "The household office remains an additive appointment."
       }
     },
-    "ui:The household owns:": {
+    "ui:The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again.": {
       "context": "Explicit UI localization call.",
-      "glossary": [],
+      "glossary": [
+        "name"
+      ],
       "location": "js/ui.js",
       "source": {
-        "text": "The household owns:"
+        "text": "The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again."
       }
     },
     "ui:The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}.": {
@@ -94610,6 +97270,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "The people and institutions tied to this household, and what each tie currently does."
+      }
+    },
+    "ui:The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty."
       }
     },
     "ui:The retainer leaves immediately and remembers the slight.": {
@@ -94682,6 +97350,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "There is no heir."
+      }
+    },
+    "ui:These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend."
       }
     },
     "ui:Think better of it": {
@@ -94782,6 +97458,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This school does not teach the chosen focus."
+      }
+    },
+    "ui:This standard is already at its highest level.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "This standard is already at its highest level."
       }
     },
     "ui:This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.": {
@@ -94940,6 +97624,14 @@
         "text": "Warm"
       }
     },
+    "ui:Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep."
+      }
+    },
     "ui:Watches for schemes against you; your own plots weave faster": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -95057,6 +97749,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Work of {name}"
+      }
+    },
+    "ui:Work outfits": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Work outfits"
       }
     },
     "ui:Worn at death": {
@@ -96972,6 +99672,17 @@
         "text": "{destination}: {legs} legs, {days} days each way, {money:cost}."
       }
     },
+    "ui:{icon} level {level}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "icon",
+        "level"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{icon} level {level}"
+      }
+    },
     "ui:{icon} {name} ×{rank}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -97086,6 +99797,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{legs} county legs · {days} days each way · {money:cost}"
+      }
+    },
+    "ui:{level} — {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "level",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{level} — {name}"
       }
     },
     "ui:{marital} · regard {regard}": {
@@ -98310,6 +101032,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "🏗 Raise a building…"
+      }
+    },
+    "ui:🏠 Household standards & property": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🏠 Household standards & property"
       }
     },
     "ui:🏰 Domain {held}/{cap} held directly": {

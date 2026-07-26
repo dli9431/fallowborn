@@ -22,9 +22,12 @@ paid service:
 
 `FB.travelRoute` is a breadth-first route over county adjacency. It excludes
 wastelands and counties without culture/religion, while authored straits remain
-ordinary valid adjacency. Cost is
-`ceil(2 + roundTripLegs × 0.25) + purpose.cost`. A leg takes
-`balance.travelLegDays` (three by default).
+ordinary valid adjacency. The unmodified cost is
+`ceil(2 + roundTripLegs × 0.25) + purpose.cost`. `FB.travelCost` retains that
+two-argument compatibility path; passing the optional state applies the active maintained
+transport multiplier to the complete cost and rounds up. `FB.travelLegDays(state)` is the
+shared preview/departure helper: a leg takes `balance.travelLegDays` (three by default),
+or the active transport level's three, two, or one days.
 
 Arrival begins a destination stay rather than an immediate return-or-settle choice.
 The traveler must remain for `balance.travelMinStayDays` (90) before returning,
@@ -53,6 +56,11 @@ and last work event). `player.travelHistory` is an array of completed
 `{purpose,destinationId,turn}` records. `player.travelSettlement` is `null` or the
 current character’s completed `{turn,destinationId}` permanent move. All initialize
 lazily, so version-3 saves need no migration.
+
+Cost and `legDays` are copied into the journey when departure spends the purse.
+Return travel uses that saved leg duration. Reducing, upgrading, losing, or dormancy of
+household transport after departure therefore cannot change a journey already underway;
+old journey records missing a valid leg duration repair to the unmodified base value.
 
 `FB.travelTick` runs once per normal game day after household/pregnancy and army
 simulation and before daily events are picked. The player’s focus does not tick
@@ -88,6 +96,6 @@ after a year and four work stories, uses an explicit confirmation, writes
 life. Succession clears that lifetime marker for the heir.
 
 The public surface is `FB.travelLocation`, `FB.travelRoute`,
-`FB.travelDestinations`, `FB.travelCost`, `FB.travelStart`, `FB.travelTick`,
+`FB.travelDestinations`, `FB.travelCost`, `FB.travelLegDays`, `FB.travelStart`, `FB.travelTick`,
 `FB.travelStayDays`, `FB.travelReturnEligible`, `FB.travelSettlementEligible`,
 `FB.travelTurnBack`, `FB.travelReturn`, `FB.travelSettle`, and `FB.travelCancel`.

@@ -77,6 +77,15 @@ window.FB = window.FB || {};
       if (t.workEvents === undefined) t.workEvents = 0;
       if (t.stayStarted === undefined) t.stayStarted = true;
     }
+    /* Journeys have always snapshotted their leg clock. Repair an older or
+       mod-damaged record to the unmodified base value, never to a household
+       standard that may have changed since departure. */
+    if (t && (!isFinite(Number(t.legDays)) || Number(t.legDays) < 1)) {
+      t.legDays = Math.max(1, balance('travelLegDays', 3));
+    }
+    if (t && (!isFinite(Number(t.legDaysLeft)) || Number(t.legDaysLeft) < 0)) {
+      t.legDaysLeft = t.remainingRoute && t.remainingRoute.length ? t.legDays : 0;
+    }
     return t;
   };
 
@@ -114,11 +123,22 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.travelCost = function (purposeId, routeOrLegs) {
+  FB.travelLegDays = function (state) {
+    if (state && FB.householdStandardEffects) {
+      const modified = FB.householdStandardEffects(state).travelLegDays;
+      if (modified !== null && modified !== undefined) return Math.max(1, modified);
+    }
+    return Math.max(1, balance('travelLegDays', 3));
+  };
+
+  FB.travelCost = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
       ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
-    return Math.ceil(2 + legs * 2 * 0.25) + ((def && def.cost) || 0);
+    const base = Math.ceil(2 + legs * 2 * 0.25) + ((def && def.cost) || 0);
+    const mult = state && FB.householdStandardEffects
+      ? FB.householdStandardEffects(state).travelCost : 1;
+    return Math.ceil(base * mult);
   };
 
   FB.travelEligible = function (state) {
@@ -158,6 +178,7 @@ window.FB = window.FB || {};
     if (purposeId !== 'pilgrimage' && historyHas(state, purposeId, pid)) return;
     const route = FB.travelRoute(p.provinceId, pid);
     if (!route || !route.length) return;
+    const legDays = FB.travelLegDays(state);
     seen[pid] = 1;
     out.push({
       purpose:purposeId,
@@ -165,8 +186,9 @@ window.FB = window.FB || {};
       destinationRealm:realmId || null,
       route:route,
       legs:route.length,
-      days:route.length * balance('travelLegDays', 3),
-      cost:FB.travelCost(purposeId, route)
+      days:route.length * legDays,
+      legDays:legDays,
+      cost:FB.travelCost(purposeId, route, state)
     });
   }
 
@@ -225,7 +247,7 @@ window.FB = window.FB || {};
     if (!choice || state.player.gold < choice.cost) return false;
 
     const p = state.player;
-    const legDays = balance('travelLegDays', 3);
+    const legDays = choice.legDays || FB.travelLegDays(state);
     p.gold -= choice.cost;
     p.cooldowns.take_road = state.turn;
     p.travel = {

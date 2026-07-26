@@ -46,6 +46,7 @@ STRUCTURED_DATA = {
     "positions": "position",
     "schooling": "schooling",
     "enterprises": "enterprise",
+    "householdStandards": "householdStandard",
     "travelPurposes": "travelPurpose",
     "items": "item",
     "plots": "plot",
@@ -600,7 +601,10 @@ def extract_structured(inv: Inventory) -> None:
     for data_name, namespace in STRUCTURED_DATA.items():
         path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                        "cultures.js" if data_name in ("cultures", "religions") else
-                       "economy.js" if data_name in ("careers", "positions", "schooling", "enterprises") else
+                       "economy.js" if data_name in (
+                           "careers", "positions", "schooling", "enterprises",
+                           "householdStandards"
+                       ) else
                        "travel.js" if data_name == "travelPurposes" else
                        "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
@@ -646,6 +650,20 @@ def extract_structured(inv: Inventory) -> None:
                             f"{namespace} {item_id}, rank {rank_id}, faith branch {branch}.",
                             TOKEN_RE.findall(record["text"]),
                         )
+            if data_name == "householdStandards":
+                levels = node_array(item.get("levels")) or []
+                for level_index, level_node in enumerate(levels):
+                    level = node_object(level_node) or {}
+                    for field in DATA_FIELDS:
+                        for branch, record, line in branch_records(level.get(field)):
+                            inv.add(
+                                f"{namespace}.{item_id}.levels.{level_index}.{field}.{branch}",
+                                record,
+                                f"{rel}:{line}",
+                                f"{namespace} {item_id}, level {level_index + 1}, "
+                                f"{field}, faith branch {branch}.",
+                                TOKEN_RE.findall(record["text"]),
+                            )
 
     # World names are display data, but ruler profiles are proper names. The
     # compact county rows and realm(...) bookmark helper calls need a narrow
