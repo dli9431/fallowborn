@@ -443,7 +443,8 @@ window.FBDATA = window.FBDATA || {};
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
           career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
-          enterprise: FBDATA.enterprises, travelPurpose: FBDATA.travelPurposes
+          enterprise: FBDATA.enterprises, householdStandard:FBDATA.householdStandards,
+          travelPurpose: FBDATA.travelPurposes
         };
         const def = tables[value.$data] && tables[value.$data][value.id];
         out[key] = def && state

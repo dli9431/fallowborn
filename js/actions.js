@@ -13,6 +13,14 @@ window.FB = window.FB || {};
   function me(state) { return state.chars[state.player.charId]; }
   function adult(state) { return FB.ageOf(me(state), state.date.year) >= 16; }
   function female(state) { return me(state).sex === 'f'; }
+  function vocationalMultiplier(state, focus) {
+    if (!focus || !focus.vocational || !FB.householdWorkMultiplier) return 1;
+    const profession = state.player.profession;
+    const relevant = Array.isArray(focus.vocational)
+      ? focus.vocational.indexOf(profession) >= 0
+      : focus.vocational === profession;
+    return relevant ? FB.householdWorkMultiplier(state, profession) : 1;
+  }
   // disguised in the ranks: any live chapter of the Sweet Polly Oliver chain
   // (events_peasant.js) means she is afield with the army, not at home — her
   // focus options become a soldier's, not a housewife's or a market-day's
@@ -76,6 +84,7 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
   { id: 'toil', label: '🌾 Toil in the lord’s fields',
+    vocational: 'farmer',
     desc: function () { return 'Hard bread, hard-earned.'; },
     show: function (s) { return s.player.tier === 0 && adult(s); },
     tick: function (s) {
@@ -94,6 +103,7 @@ window.FB = window.FB || {};
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
   { id: 'work_land', label: '🌾 Work your land',
+    vocational: 'farmer',
     desc: function () { return 'Your own soil, your own sweat.'; },
     show: function (s) { return s.player.tier === 1 && s.player.profession === 'farmer'; },
     tick: function (s) {
@@ -107,6 +117,7 @@ window.FB = window.FB || {};
       return { gold: g };
     } },
   { id: 'market', label: '⚖ Haggle at market',
+    vocational: 'merchant',
     desc: function () { return 'Turn surplus into silver. (stewardship pays)'; },
     show: function (s) { return s.player.tier === 1 && adult(s); },
     tick: function (s) {
@@ -124,6 +135,7 @@ window.FB = window.FB || {};
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
   { id: 'craft_work', label: '🔨 Work the bench',
+    vocational: 'craftsman',
     desc: function () { return 'Steady hands, steady coin.'; },
     show: function (s) { return s.player.profession === 'craftsman' && s.player.tier <= 2; },
     tick: function (s) {
@@ -132,6 +144,7 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { gold: 3.5 + (s.player.flags.guild_member ? 1 : 0) }; } },
   { id: 'trade_run', label: '🐫 Run trade ventures',
+    vocational: 'merchant',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
     show: function (s) { return s.player.profession === 'merchant' && s.player.tier <= 2; },
     tick: function (s) {
@@ -151,6 +164,7 @@ window.FB = window.FB || {};
     } },
 
   { id: 'drill', label: '⚔ Drill at arms',
+    vocational: 'soldier',
     desc: function () { return 'The sergeant’s stick teaches quickly.'; },
     show: function (s) {
       return afield(s) ||
@@ -162,6 +176,7 @@ window.FB = window.FB || {};
     },
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard', label: '🏰 Stand garrison duty',
+    vocational: 'soldier',
     desc: function () { return 'Dull, cold, and paid.'; },
     show: function (s) {
       return s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s);
@@ -174,6 +189,7 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 2 }; } },
 
   { id: 'copy_books', label: '✒ Copy manuscripts',
+    vocational: ['monk', 'priest'],
     desc: function () { return 'Letters, slowly mastered. (+learning, +piety)'; },
     show: function (s) {
       return s.player.tier <= 2 &&
@@ -186,6 +202,7 @@ window.FB = window.FB || {};
     },
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church', label: '🕯 Serve the faithful',
+    vocational: ['monk', 'priest'],
     desc: function () { return 'Alms, sermons, and burials.'; },
     show: function (s) {
       return s.player.tier <= 2 &&
@@ -199,6 +216,7 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 4, prestige: 2 }; } },
 
   { id: 'manage_manor', label: '🏡 Manage the manor',
+    vocational: 'noble',
     desc: function () { return 'Rents, reeves, and repairs.'; },
     show: function (s) { return s.player.tier === 2; },
     tick: function (s) {
@@ -210,6 +228,7 @@ window.FB = window.FB || {};
       return { gold: (B.manorIncome[0] + B.manorIncome[1]) / 2 + FB.skillOf(me(s), 'ste') / 4 };
     } },
   { id: 'serve_lord', label: '🤝 Attend the lord’s hall',
+    vocational: 'noble',
     desc: function () { return 'Be seen, be useful, be remembered.'; },
     show: function (s) { return s.player.tier === 2; },
     tick: function (s) {
@@ -222,6 +241,7 @@ window.FB = window.FB || {};
   /* the chatelaine's road: noblewomen command through the household and the
      court, not the drill yard — favor and polish instead of swordplay */
   { id: 'courtly_graces', label: '🕊 Cultivate the court',
+    vocational: 'noble',
     desc: function () { return 'Hawking, letters, and patronage — favor is won in hall and garden. (+liege’s favor, +prestige)'; },
     show: function (s) { return female(s) && adult(s) && s.player.tier >= 2; },
     tick: function (s) {
@@ -703,12 +723,16 @@ window.FB = window.FB || {};
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', label: '🏠 Better the household…', noConsume: true,
-    desc: function () { return 'Beasts, tools, and standing — bought once, kept for generations.'; },
+    desc: function () { return 'Maintain living standards and work outfits, or buy permanent household property.'; },
     show: function (s) { return s.player.tier <= 2 && adult(s); },
     can: function (s) {
-      return FB.holdingAvailable(s).length ? true : 'Nothing suitable for your station remains.';
+      return ((FBDATA.householdStandards && FB.householdStandardIds().length) ||
+        FB.holdingAvailable(s).length) ? true : 'Nothing suitable for your station remains.';
     },
-    run: function (s) { if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings(); } },
+    run: function (s) {
+      if (FB.ui && FB.ui.showHousehold) FB.ui.showHousehold();
+      else if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings();
+    } },
 
   { id: 'livelihoods', label: '🧰 Work, training & enterprises…', noConsume: true,
     desc: function (s) {
@@ -1114,7 +1138,17 @@ window.FB = window.FB || {};
   FB.focusIncome = function (state) {
     if (state.player.travel) return null;
     for (const f of FB.focuses) {
-      if (f.id === state.player.focus) return f.gain ? f.gain(state) : null;
+      if (f.id === state.player.focus) {
+        if (!f.gain) return null;
+        const raw = f.gain(state);
+        if (!raw) return null;
+        const out = {};
+        const mult = vocationalMultiplier(state, f);
+        for (const key in raw) {
+          out[key] = raw[key] > 0 ? raw[key] * mult : raw[key];
+        }
+        return out;
+      }
     }
     return null;
   };
@@ -1125,6 +1159,7 @@ window.FB = window.FB || {};
   FB.reliableGoldIncome = function (state, ignoreAssignments) {
     const p = state.player;
     let total = -FB.householdUpkeep(state);
+    if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (p.tier >= 3) {
       total += FB.playerTax(state);
       total -= FB.buildingBonus(state, 'upkeep');
@@ -1283,6 +1318,14 @@ window.FB = window.FB || {};
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);
     add('gold', FB.T('Family provisions and quarters'), -upkeep.family);
+    if (FB.householdStandardsUpkeep) {
+      add('gold', FB.T('Maintained household standards'),
+        -FB.householdStandardsUpkeep(state));
+    }
+    if (FB.householdStandardEffect) {
+      add('prestige', FB.T('Household luxuries'),
+        FB.householdStandardEffect(state, 'prestige'));
+    }
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {
         const c = state.chars[record.charId];
@@ -2657,7 +2700,22 @@ window.FB = window.FB || {};
     if (state.player.travel) return;
     FB.validateFocus(state);
     for (const f of FB.focuses) {
-      if (f.id === state.player.focus) { f.tick(state); return; }
+      if (f.id === state.player.focus) {
+        const mult = vocationalMultiplier(state, f);
+        const before = {
+          gold:state.player.gold,
+          prestige:state.player.prestige,
+          piety:state.player.piety
+        };
+        f.tick(state);
+        if (mult > 1) {
+          for (const key of ['gold', 'prestige', 'piety']) {
+            const gained = state.player[key] - before[key];
+            if (gained > 0) state.player[key] += gained * (mult - 1);
+          }
+        }
+        return;
+      }
     }
   };
 

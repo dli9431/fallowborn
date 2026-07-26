@@ -41,10 +41,16 @@ authored name, description, and prose remain English unless they exactly match a
 catalog source; translation packs for third-party mods are outside the core v1 contract.
 
 Livelihood and instruction definitions are moddable data too. Top-level `careers`,
-`schooling`, and `enterprises` tables
+`schooling`, `enterprises`, and `householdStandards` tables
 merge into `FBDATA` by id before a new campaign begins. Their `name` and `desc` fields, plus
-career rank names, use the same structured-data localization path as other core definitions;
+career rank names and household-standard level names/descriptions, use the same
+structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
+
+Household-standard definitions replace atomically by id. Their ordered `levels` arrays are
+never deep-merged: a replacement supplies its complete rank gates, setup/upkeep values,
+display fields, and effects. This keeps saved numeric levels stable and makes definition
+order a deterministic tie-break for work-outfit lapses.
 
 Currency presentation is a top-level atomic mod value. `M.apply` lets each
 `mod.currency` replace `FBDATA.currency`; after every enabled bundled and pasted mod

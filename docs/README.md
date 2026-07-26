@@ -35,7 +35,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   done while traveling or resolving an event. Only worn objects grant bonuses.
 - **Hover or tap your gold, prestige, or piety** in the top bar for a source-by-source
   breakdown of what each brings in every season — focus, rents, dues, buildings,
-  household improvements, resident-family costs, school fees, treasures, and upkeep.
+  household improvements, maintained standards, resident-family costs, school fees,
+  treasures, and upkeep.
   The gold sheet also records this year's
   purchasing-power change from coin prices.
 - **Observe mode** (New Game → 👁 Observe): no character at all — the world simulates
@@ -65,6 +66,15 @@ Time passes **day by day** (90-day seasons, 360-day years).
    land, drill with the levy, haggle at market, copy manuscripts, or manage your household…
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
+   Commoners can open **🏠 Better the household…** without spending a day. Five living
+   standards and profession-specific work outfits rise through purchased levels with
+   seasonal upkeep; the sheet previews the next season before every upgrade. Better food
+   and quarters protect the household, wares aid education, luxuries bring prestige,
+   transport makes later journeys cheaper or faster, and work outfits improve matching
+   paid work and enterprises. If upkeep cannot be met, optional levels lapse in a safe,
+   predictable order rather than creating debt. Levels pass to heirs, but a lost or
+   voluntarily reduced level must be bought again. Permanent Pack Mules, tools, mail,
+   Warhorses, and productive holdings remain a separate buy-once property section.
    **Coin & Credit** is a no-day-cost household ledger: borrow against reliable income or
    named collateral, repay early, and commit merchant coin to four-season trade
    partnerships. Prices can raise or lower the purchasing power of idle coin and fixed
@@ -73,7 +83,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    pledge or revenue assignment is enforced. Debt passes to heirs.
    Adult freeholders and gentry can **🧭 Take to the road…** for pilgrimage, trade,
    study, or paid service. Choose a marked county from the map/list, then let days
-   pass as the traveler crosses each county; their focus and personally staffed
+   pass as the traveler crosses each county; maintained transport changes the quoted
+   cost and leg duration when departure begins, and that quote stays fixed for the
+   whole journey. Their focus and personally staffed
    enterprise pause while the household continues at home. At the destination,
    finish the purpose, stay at least three months, and keep taking local work for
    as long as you wish. After a year of building a life there, you may make that
@@ -122,6 +134,7 @@ Time passes **day by day** (90-day seasons, 360-day years).
    ordinary membership to guildmaster, and landing does not erase a person's learned
    occupation.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
+   Its household block also shows active standard icons/levels and their seasonal upkeep.
    Established households can hire a limited number of paid retainers as stewards, factors,
    captains, or tutors. Their seasonal contracts pass to an heir, but their personal loyalties
    may not. The same tab shows every source and modifier behind the current levy instead of

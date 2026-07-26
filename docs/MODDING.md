@@ -126,6 +126,7 @@ A JSON mod is one object with any of these keys:
   "positions": { "id": { ... } },
   "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
+  "householdStandards": { "id": { ... } },
   "travelPurposes": { "id": { ... } },
   "travelSites": [ ... ],
   "finance":    {
@@ -723,6 +724,80 @@ Each `player.landPlots` entry is `{provinceId, settlement}`. Its economy is tune
 is inherited and appears in the seasonal ledger, but plots are not generic loan
 collateral.
 
+## Maintained household standards
+
+`FBDATA.householdStandards` (in `data/economy.js`, mod key
+`householdStandards`) defines optional commoner living standards and profession
+outfits. A same-id mod entry replaces the complete definition, including its ordered
+level array:
+
+```json
+{
+  "householdStandards": {
+    "warm_hearth": {
+      "name": "Hearth",
+      "icon": "🔥",
+      "kind": "general",
+      "desc": "Fuel and fittings maintained above bare necessity.",
+      "levels": [
+        {
+          "name": "Banked Fire",
+          "desc": "Reduces yearly household mortality by 0.05 percentage points.",
+          "cost": 12,
+          "upkeep": 0.25,
+          "tierMin": 0,
+          "fx": { "mortality": 0.0005 }
+        },
+        {
+          "name": "Tiled Stove",
+          "desc": "Reduces yearly household mortality by 0.1 percentage points.",
+          "cost": 50,
+          "upkeep": 1,
+          "tierMin": 1,
+          "fx": { "mortality": 0.001 }
+        }
+      ]
+    }
+  }
+}
+```
+
+- `kind` is `"general"` or `"work"`. A work definition also requires
+  `profession`, naming an id in `FBDATA.careers`.
+- `levels` are sequential. `cost` is the one-time setup price to advance from the
+  previous level; `upkeep` is the complete seasonal cost of the current level, not a
+  cumulative sum. `tierMin` gates that level. Standards are dormant at tier 3 and above.
+- A work outfit is also dormant without an adult resident family member practicing that
+  profession, or a matching retainer currently staffing an enterprise. Dormant levels
+  keep their saved purchase but have no upkeep or effect.
+- General `fx` keys are `mortality` (subtracted from yearly household mortality chance),
+  `education` (added to yearly directed-learning chance), `retainers` (flat household
+  capacity), `prestige` (per season), `travelCost` (multiplier on a new journey's whole
+  upfront cost), and `travelLegDays` (days per county leg, snapshotted at departure).
+- Work levels use `fx.work`, a fractional multiplier on matching vocational focus
+  resources, resident-family wages or clerical yield, and staffed-enterprise output.
+  It does not modify skills or combat. Multiple active mod definitions for one profession
+  add their work fractions.
+- `name`/`desc` on both the definition and each level are pure display fields and accept
+  the usual text tokens and faith-variant objects. Core extraction keys use
+  `householdStandard.<id>.levels.<zero-based-index>.<field>.<branch>`.
+- Purchased levels live in the JSON-safe `player.householdStandards` map and pass through
+  succession. They are not holdings or items and therefore cannot be sold, pledged, gifted,
+  or referenced by holding event effects.
+- If upkeep is unaffordable, core discretionary ids lapse first in this order:
+  `luxuries`, `wares`, `transport`, `quarters`, `board`. Other general definitions follow
+  in stable definition order, then active work outfits. Work outfits lose the highest
+  active level first, with definition order breaking ties.
+
+The public engine helpers are `FB.ensureHouseholdStandards`,
+`FB.householdStandardLevel`, `FB.householdStandardLevelDef`,
+`FB.householdStandardWorkerEligible`, `FB.householdStandardActive`,
+`FB.householdStandardEffects`, `FB.householdStandardEffect`,
+`FB.householdWorkMultiplier`, `FB.householdStandardUpgradeAvailable`,
+`FB.buyHouseholdStandard`, `FB.reduceHouseholdStandard`,
+`FB.householdStandardsUpkeepParts`, `FB.householdStandardsUpkeep`, and
+`FB.householdStandardsSeason`.
+
 ## Careers and apprenticeships
 
 `FBDATA.careers` (in `data/economy.js`, mod key `careers`) defines the work a
@@ -882,6 +957,11 @@ by key, and site objects replace by their required stable `id`.
   `religionGroups` restrict it to the traveler’s faith.
 - Routes use settled, non-wasteland adjacency. Entries in `straits` therefore
   work as travel crossings too.
+- `FB.travelCost(purposeId, routeOrLegs)` remains the unmodified compatibility
+  calculation. Passing a state as the optional third argument applies active household
+  transport; `FB.travelLegDays(state)` supplies the matching leg duration. Departure
+  stores both cost and leg duration so later data or household changes do not alter a
+  journey already underway.
 - Travel events are normal event objects with `trigger:{"never":true}` and
   top-level `travel:{"kind":"culture|road|capstone|decision|work"}`. A capstone
   or work event may add `"purpose":"id"`. Culture/road events are drawn without

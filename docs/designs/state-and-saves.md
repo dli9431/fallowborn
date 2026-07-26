@@ -165,6 +165,14 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
+Maintained household standards are additive and keep save format 3.
+`player.householdStandards` is a plain definition-id to numeric-level map. Missing state
+means every standard is at baseline level zero; `FB.ensureHouseholdStandards` creates the
+map lazily and clamps known entries to their current moddable definition. Purchased levels
+pass unchanged through succession because the player household object persists. Rank or
+worker dormancy changes neither the map nor the save shape. No active-effect total,
+seasonal upkeep total, localized level name, or travel modifier is serialized.
+
 Network state is additive and lazily validated. `player.friendContacts` maps known
 character ids to current-life contact timestamps; the canonical friend remains
 `state.roles.friend` for events and mods. `player.socialAttention` is a character-id-keyed

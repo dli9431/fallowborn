@@ -76,7 +76,8 @@ lists wrap between places, never inside a settlement name, so each link stays re
 The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
-treasures, station upkeep, resident-family provisions, and school fees), tap or click opens the same rows as a small modal
+treasures, station upkeep, resident-family provisions, maintained standards, and school
+fees), tap or click opens the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation. The money button uses `FB.money`: compact formatting for its visible
 balance, the configured `icon` for the mark, and localized long denomination names
@@ -84,6 +85,22 @@ for its accessible label. Compound amounts may therefore use multiple units with
 changing the underlying `player.gold`. The deprecated
 `FBDATA.balance.coinageSymbol` changes only the default icon when no full currency
 definition is active.
+
+The commoner **Better the household…** deed opens the full-screen-capable Household
+standards & property sheet. It shows active standards upkeep, reliable seasonal net, and
+the projected purse after one season before listing five general standards, relevant
+profession outfits, and permanent holdings as separate sections. Each standard row opens
+a native-button detail view. Upgrade confirmation states setup cost, complete new upkeep,
+benefit, seasonal net, and projected purse; a negative projection warns without disabling
+an otherwise affordable purchase. Reduction requires a second explicit confirmation that
+names the lost level and no-refund/re-purchase rule. `UI.showHoldings` remains an alias to
+this sheet for older deeds and mods.
+
+Maintained transport and outfits are explicitly described as expenses rather than
+productive or combat property. The permanent section keeps Pack Mule, Fine Tools, Good
+Mail, Warhorse, and other existing assets under their old one-time ownership rules.
+The sheet uses ordinary numbered action buttons, nested same-document history, a sticky
+footer, and the `fullsheet-modal` narrow/mobile layout.
 
 **Managed household sheets keep compact bust portraits and open equipment separately.**
 The Self sheet and the sheets for living spouses and resident unmarried children each offer
@@ -94,7 +111,9 @@ The Self overview places its skill bars beside the compact portrait; both the po
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
 overview, before the full identity and household details. Titles and Possessions use collapsed-by-default,
 counted accordion rows matching the Deeds group controls so large realms and armories do
-not dominate the Self panel. The full-name heading leads the mobile/short-screen drawer,
+not dominate the Self panel. Active maintained standards appear in the livelihood summary
+as compact icons with numeric levels; dormant purchased levels stay off that active row.
+The full-name heading leads the mobile/short-screen drawer,
 where that drawer covers the topbar, and is hidden in the desktop panel because the
 persistent topbar already names the character. On desktop, a subtle divider separates
 Traits from the rank, age, culture, faith, and health details below.
@@ -159,7 +178,8 @@ both views show opinion and the current direction.
 
 The contextual **Network** panel (`N`) answers who is tied to the current household and
 what that relationship does. Its four sections are Household (resident family,
-capacity-limited retainers, office, pay, and work assignment), Connections (canonical
+capacity-limited retainers, office, pay, work assignment, and maintained-standard
+summary/upkeep), Connections (canonical
 friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
 rank, standing, exact income modifier, enterprises, partnerships, positions, and bounded
 guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Royal

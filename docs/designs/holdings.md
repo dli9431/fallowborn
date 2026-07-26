@@ -1,13 +1,44 @@
 # Holdings (commoner property)
 
-**Commoners play tall through holdings.** `FBDATA.holdings` (map_data.js) is family
-property for tiers 0–2, bought with gold via the better-household deed
+**Commoners play tall through holdings and maintained standards.** `FBDATA.holdings`
+(map_data.js) is family property for tiers 0–2, bought with gold through the
+permanent-property section of the household deed
 (`FB.buyHolding`/`FB.holdingAvailable` in actions.js). `player.holdings` persists across
 generations; bonuses via `FB.holdingBonus` (gold/prestige/piety per season, battle, edu,
 health). Events gate on `holdings`/`notHoldings` and use `holding`/`loseHolding` effects.
 Definitions marked `eventOnly` are excluded from the purchase picker. Rights of Common
 are such a holding: the Old Custom landmark chain can secure the family's heritable
 pasture, fuel, and water rights, and those rights then pass to later generations.
+
+`FBDATA.householdStandards` (`data/economy.js`) is deliberately different from
+property. Board, wares, quarters, luxuries, transport, and profession-specific work
+outfits advance one purchased level at a time. Each level has its own setup cost,
+seasonal upkeep, rank gate, and complete current-level effect. Levels pass through
+succession in `player.householdStandards`, but cannot be sold, pledged, or used as
+event holdings. Level one is generally open to serfs, level two to freeholders, and
+level three to gentry; transport starts at freeholder rank.
+
+`FB.ensureHouseholdStandards` lazily creates and clamps the JSON-safe saved map, so old
+format-3 saves begin at level zero. `FB.householdStandardEffects` supplies mortality,
+education, retainer-capacity, prestige, travel, and profession-output modifiers.
+`FB.householdStandardsUpkeepParts` and `FB.householdStandardsUpkeep` expose only active
+upkeep. Work outfits are dormant without an eligible resident worker (or a retainer
+staffing a matching enterprise), and every standard is dormant above tier 2. Purchased
+levels remain saved through either dormant state.
+
+At a season boundary, ordinary household and livelihood income settles first.
+`FB.householdStandardsSeason` then pays maintained standards before retainers,
+schooling, and finance. When the purse cannot cover the total, levels lapse without
+debt or another penalty: luxuries, wares, transport, quarters, board, then active work
+outfits. Work outfits lose the highest active level first, with definition order
+breaking ties. A lost or voluntarily reduced level gives no refund and must be bought
+again at full setup cost. Every purchase and lapse writes a locale-neutral durable
+Chronicle descriptor.
+
+Profession outfits multiply positive vocational focus resources, resident-family wages
+or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid
+work only. Permanent Pack Mule, Fine Tools, Good Mail, Warhorse, and other holding/item
+effects remain separate productive or combat property.
 
 **Freeholders assemble land before they can claim a manor.** Repeatable plots live in
 `player.landPlots` as `{provinceId, settlement}` and pass to heirs. The Buy Freehold Land

@@ -52,8 +52,11 @@ qualified AI-controlled seat or assign the strongest eligible AI claimant in sta
 order, including in Observe mode.
 
 At a season boundary the household receives normal income, pays station and resident-family
-upkeep, collects livelihood wages, and pays each active school term. Unaffordable schooling
-pauses for that term. Then
+upkeep, and collects livelihood wages. Maintained commoner standards settle next. If their
+total is unaffordable, discretionary levels lapse in a stable order until the remainder can
+be paid; surviving luxuries then grant their prestige. Retainer capacity/pay and active
+school terms settle after standards, so a lost quarters level can reduce service capacity
+before contracts are paid. Unaffordable schooling pauses for that term. Then
 `FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
 new year `FB.financeYear` then moves the price index and revalues the remaining purse before
@@ -92,9 +95,10 @@ seasonal war tick, and [finance.md](finance.md) for contract and annual price pr
 
 Season boundaries also run `FB.livelihoodSeason`: wages from resident household members,
 profits from staffed enterprises, and learned household piety enter the same measured
-season ledger as focus income and upkeep. `FB.educationSeason` follows it so those household
-wages can meet school fees, and records one quarter of the arrangement's annual learning
-bonus for every paid term. New years run `FB.livelihoodYearly` for
+season ledger as focus income and upkeep. `FB.householdStandardsSeason` follows it, then
+retainer settlement, then `FB.educationSeason`, so those household wages can meet standards,
+service, and school fees in the disclosed order. Education records one quarter of the
+arrangement's annual learning bonus for every paid term. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
 
@@ -104,7 +108,8 @@ standing can advance. Other household workers are unaffected.
 
 An active overland journey (`player.travel`, [travel.md](travel.md)) replaces the
 player’s daily focus tick with `FB.travelTick`. County legs take three days by
-default. The enterprise specifically staffed by the traveling player produces
+default and may be shortened by maintained transport at departure. The enterprise
+specifically staffed by the traveling player produces
 nothing, while other household work, enterprises, contracts, pregnancy, aging,
 armies, and world simulation continue. Travel arrivals queue their own encounters;
 ordinary random home slot events are consumed but suppressed until the traveler is
