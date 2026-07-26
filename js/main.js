@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.60.0';
+  FB.VERSION = '1.60.1';
   FB.CHANGELOG = [
+    { v: '1.60.1', date: '2026-07-25', changes: [
+      'Mobile Back now returns through previously selected Deeds, Land, Network, and Chronicle panels before leaving the game.'
+    ] },
     { v: '1.60.0', date: '2026-07-25', changes: [
       'Crusades and Jihads now gather sovereign camps for field battles and objective sieges, with contribution deciding the territorial partition.'
     ] },
@@ -969,7 +972,7 @@ window.FB = window.FB || {};
     FB.ui.showGame();
     FB.map.fitView();
     FB.map.select(null);
-    FB.ui.showTab('log');
+    FB.ui.showTab('log', { history:false });
     FB.ui.refresh();
     FB.news(state, FB.msg('news.life.observe_begins',
       '👁 You settle in to watch the realms go about their centuries.', {}));

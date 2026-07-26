@@ -228,11 +228,11 @@ window.FB = window.FB || {};
   function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
   function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }
 
-  /* Mobile browser history mirrors only temporary UI layers, never simulation
-     actions. The entries keep the current URL unchanged so the same code works
-     from file://, the standalone site, and itch's iframe. A layer owns a raw
-     close/reopen pair; Back traversals invoke those directly, while visible
-     Close buttons dismiss first and then consume their owned history entry. */
+  /* Mobile browser history mirrors panel changes and temporary UI layers, never
+     simulation actions. The entries keep the current URL unchanged so the same
+     code works from file://, the standalone site, and itch's iframe. A layer
+     owns a raw close/reopen pair; Back traversals invoke those directly, while
+     visible Close buttons dismiss first and then consume their owned entry. */
   const MOBILE_NAV_QUERY = '(max-width: 820px), (max-height: 520px)';
   const mobileNavEmbedded = window.self !== window.top;
   let mobileNavSession = '';
@@ -2274,7 +2274,6 @@ window.FB = window.FB || {};
   UI.selectProvince = function (pid) {
     selectedProv = pid;
     FB.map.select(pid, mapGroupOf);
-    activeTab = 'prov';
     setTab('prov');
   };
 
@@ -2600,9 +2599,10 @@ window.FB = window.FB || {};
     mobileNavClosed('self-drawer', false);
   }
 
-  function setTab(name) {
+  function setTab(name, opts) {
     if (FB.game && FB.game.observe && (name === 'actions' || name === 'network')) return;
     const isLeft = LEFT_TABS.indexOf(name) >= 0;
+    const previousTab = activeTab;
     const drawerWasOpen = selfDrawerOpen();
     if (isLeft) activeLeftTab = name; else activeTab = name;
     const bar = isLeft ? '#lefttabs .tab' : '#sidetabs .tab';
@@ -2620,6 +2620,13 @@ window.FB = window.FB || {};
     } else if (!isLeft && drawerWasOpen) {
       mobileNavClosed('self-drawer', false);
     }
+    if (!isLeft && name !== previousTab && !(opts && opts.history === false)) {
+      mobileNavPush('panel-tab',
+        function () { setTab(previousTab, { history:false }); },
+        function () { setTab(name, { history:false }); },
+        function () { return activeTab === name && !selfDrawerOpen(); },
+        function () { return true; });
+    }
   }
 
   UI.cycleTab = function (dir) {
@@ -2631,7 +2638,7 @@ window.FB = window.FB || {};
     setTab(order[i]);
   };
 
-  UI.showTab = function (name) { setTab(name); };
+  UI.showTab = function (name, opts) { setTab(name, opts); };
 
   /* ================= autoresolve ================= */
   /* Which category does an event fall into for the autoresolve settings? */
