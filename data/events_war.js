@@ -179,6 +179,40 @@ FBDATA.events.push(
   ]},
 
 /* ---------- great holy wars (queued by js/holywar.js) ---------- */
+{ id:'ghw_called',
+  title:{ forms:{ select:'value', param:'campaignType', cases:{
+    crusade:'The Pope Calls a Crusade',
+    jihad:'The Caliph Calls a Jihad',
+    other:'A Great Holy War Is Called'
+  }}},
+  trigger:{ never:true }, wartime:true,
+  text:{ forms:{ select:'value', param:'campaignType', cases:{
+    crusade:'The Pope calls Christendom to a Crusade for {kingdom}. Across the Latin realms, preachers carry the summons and rulers take the cross. The banners have 180 days to gather.',
+    jihad:'The Caliph calls the faithful to Jihad for {kingdom}. Across the Muslim realms, preachers carry the summons and rulers take the vow. The armies have 180 days to gather.',
+    other:'{caller} calls the faithful to a great holy war for {kingdom}. Preachers carry the summons from court to court, and the armies have 180 days to gather.'
+  }}},
+  options:[
+    { label:'The summons is heard.',
+      desc:'Eligible freeholders and rulers can answer from the Deeds tab during the 180-day gathering.',
+      effects:{} }
+  ]},
+{ id:'ghw_muster_complete',
+  title:{ forms:{ select:'value', param:'campaignType', cases:{
+    crusade:'The Crusade Begins',
+    jihad:'The Jihad Begins',
+    other:'The Great Holy War Begins'
+  }}},
+  trigger:{ never:true }, wartime:true,
+  text:{ forms:{ select:'value', param:'campaignType', cases:{
+    crusade:'The 180 days of preaching and preparation are ended. The crusading hosts stand beneath their banners, and {leader} takes command for the march on {kingdom}.',
+    jihad:'The 180 days of preaching and preparation are ended. The armies of the jihad stand beneath their banners, and {leader} takes command for the march on {kingdom}.',
+    other:'The 180 days of preaching and preparation are ended. The gathered hosts stand beneath their banners, and {leader} takes command for the march on {kingdom}.'
+  }}},
+  options:[
+    { label:'Let the armies march.',
+      desc:'The campaign is active and the gathered hosts are now in the field.',
+      effects:{} }
+  ]},
 { id:'ghw_field_battle_won', title:'A Victory for the Faith', trigger:{ never:true }, wartime:true,
   text:'The opposing host breaks at {cname}. Your banner remains among the victorious ranks, and every campfire carries the tale before nightfall.',
   options:[

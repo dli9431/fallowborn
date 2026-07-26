@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.60.1';
+  FB.VERSION = '1.60.2';
   FB.CHANGELOG = [
+    { v: '1.60.2', date: '2026-07-25', changes: [
+      'Great holy wars now announce the religious head’s call and the assembled armies’ march through wartime events.'
+    ] },
     { v: '1.60.1', date: '2026-07-25', changes: [
       'Mobile Back now returns through previously selected Deeds, Land, Network, and Chronicle panels before leaving the game.'
     ] },

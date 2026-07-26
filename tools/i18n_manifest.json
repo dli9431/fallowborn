@@ -7758,6 +7758,22 @@
         "text": "The Rent-Day Tally"
       }
     },
+    "event.ghw_called.options.0.desc.default": {
+      "context": "Event ghw_called, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Eligible freeholders and rulers can answer from the Deeds tab during the 180-day gathering."
+      }
+    },
+    "event.ghw_called.options.0.label.default": {
+      "context": "Event ghw_called, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The summons is heard."
+      }
+    },
     "event.ghw_expedition_danger.options.0.desc.default": {
       "context": "Event ghw_expedition_danger, authored option 0, desc, branch default.",
       "glossary": [],
@@ -7920,6 +7936,22 @@
       "location": "data/events_war.js",
       "source": {
         "text": "A Victory for the Faith"
+      }
+    },
+    "event.ghw_muster_complete.options.0.desc.default": {
+      "context": "Event ghw_muster_complete, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The campaign is active and the gathered hosts are now in the field."
+      }
+    },
+    "event.ghw_muster_complete.options.0.label.default": {
+      "context": "Event ghw_muster_complete, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Let the armies march."
       }
     },
     "event.good_omen.options.0.desc.default": {
@@ -42391,6 +42423,16 @@
         "text": "This creates a dynastic tie, but this child does not currently transmit the crown."
       }
     },
+    "src.314a4141": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Let the armies march."
+      }
+    },
     "src.31731fb2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42399,6 +42441,16 @@
       ],
       "source": {
         "text": "{destination} costs {money:cost}; you have {money:gold}."
+      }
+    },
+    "src.3176ec82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The summons is heard."
       }
     },
     "src.317a8b92": {
@@ -78639,6 +78691,16 @@
         "text": "No war, no drills worth the name — just walls, weather, and wages. A soldier’s enemy in peacetime is the calendar."
       }
     },
+    "src.d4ab1f4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The campaign is active and the gathered hosts are now in the field."
+      }
+    },
     "src.d4b31d8d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88121,6 +88183,16 @@
       ],
       "source": {
         "text": "The line breaks in moments. You wake wounded among the ashes."
+      }
+    },
+    "src.fff1bdcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Eligible freeholders and rulers can answer from the Deeds tab during the 180-day gathering."
       }
     },
     "src.fffda848": {

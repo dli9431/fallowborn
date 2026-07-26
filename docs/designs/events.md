@@ -14,6 +14,12 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+Great holy-war transitions use that same blocking path. The religious head's call
+queues `ghw_called` on the call day, and the first active-day tick queues
+`ghw_muster_complete` after the campaign hosts have had their raising pass. With
+war-event automation off, both open normally and stop fast-forward; war-event
+automation may resolve them into the Chronicle like other wartime notices.
+
 **Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
 to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
 `crowned`. Event triggers and option requirements may use `societalRoles`; vassal,
