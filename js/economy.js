@@ -239,6 +239,7 @@ window.FB = window.FB || {};
   };
 
   FB.careerChoices = function (state, c) {
+    if (c.id === state.player.charId && state.player.tier >= 3) return [];
     const age = FB.ageOf(c, state.date.year);
     const religionGroup = FB.religionOf(c.religion).group;
     const current = FB.careerOf(state, c);
@@ -361,11 +362,7 @@ window.FB = window.FB || {};
     const p = state.player;
     if (step.flag) p.flags[step.flag] = 1;
     if (!step.tier || step.tier <= p.tier) return;
-    p.tier = step.tier;
-    if (p.tier >= 3 && !p.liege) {
-      const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
-      if (rid && rid !== 'player') p.liege = rid;
-    }
+    FB.setPlayerTier(state, step.tier);
   }
 
   FB.takeReligiousStep = function (state, c) {
@@ -392,6 +389,7 @@ window.FB = window.FB || {};
   FB.beginCareer = function (state, c, profession) {
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
+    if (c.id === state.player.charId && state.player.tier >= 3) return false;
     const age = FB.ageOf(c, state.date.year);
     const apprentice = age < 16;
     const cost = apprentice ? (def.apprenticeCost || 0) : 0;
@@ -860,6 +858,11 @@ window.FB = window.FB || {};
         }
       }
     }
+    if (p.tier >= 3) {
+      for (const enterprise of p.enterprises) {
+        if (enterprise.workerId === p.charId) enterprise.workerId = null;
+      }
+    }
     return p.enterprises;
   };
 
@@ -885,6 +888,7 @@ window.FB = window.FB || {};
     const out = [];
     if (!def) return out;
     for (const c of FB.householdWorkers(state)) {
+      if (c.id === state.player.charId && state.player.tier >= 3) continue;
       const age = FB.ageOf(c, state.date.year);
       const career = FB.careerOf(state, c);
       if (age < 16 || !career || career.profession !== def.profession) continue;
@@ -1038,6 +1042,13 @@ window.FB = window.FB || {};
       const def = career && FBDATA.careers[career.profession];
       if (!def) continue;
       const age = FB.ageOf(c, state.date.year);
+      if (c.id === state.player.charId && state.player.tier >= 3) {
+        /* Office-holding clergy still accumulate the years required for
+           religious standing; every secular hands-on career freezes. */
+        if (age >= 16 && (career.profession === 'monk' ||
+          career.profession === 'priest')) career.experience++;
+        continue;
+      }
       if (!career.chosen && age >= 16) {
         career.chosen = true;
         career.rank = 'journeyman';
@@ -1067,6 +1078,7 @@ window.FB = window.FB || {};
   };
 
   FB.guildAdvance = function (state, c) {
+    if (c && c.id === state.player.charId && state.player.tier >= 3) return null;
     const career = FB.careerOf(state, c);
     const def = career && FBDATA.careers[career.profession];
     if (!def || !def.guild || career.rank === 'apprentice' || career.rank === 'unassigned') return null;
@@ -1088,6 +1100,7 @@ window.FB = window.FB || {};
 
   FB.takeGuildStep = function (state, c) {
     c = c || playerChar(state);
+    if (c.id === state.player.charId && state.player.tier >= 3) return false;
     const career = FB.careerOf(state, c);
     const step = FB.guildAdvance(state, c);
     if (!step || step.blocked || state.player.gold < step.cost) return false;
@@ -1381,7 +1394,7 @@ window.FB = window.FB || {};
 
     const career = currentCareer(state);
     const income = FB.reliableGoldIncome ? FB.reliableGoldIncome(state) : 0;
-    if (defs.merchant && income > 0 && career &&
+    if (defs.merchant && state.player.tier <= 2 && income > 0 && career &&
       (career.profession === 'merchant' || career.profession === 'craftsman' ||
         state.player.tier === 2)) {
       const principal = Math.floor(Math.min(defs.merchant.maxPrincipal || 100,

@@ -152,7 +152,10 @@ window.FB = window.FB || {};
 
   { id: 'drill', label: '⚔ Drill at arms',
     desc: function () { return 'The sergeant’s stick teaches quickly.'; },
-    show: function (s) { return afield(s) || (s.player.profession === 'soldier' && !female(s)); },
+    show: function (s) {
+      return afield(s) ||
+        (s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s));
+    },
     tick: function (s) {
       s.player.gold += 1 / D;
       if (skillDch(0.7)) skillUp(s, 'mar');
@@ -160,7 +163,9 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard', label: '🏰 Stand garrison duty',
     desc: function () { return 'Dull, cold, and paid.'; },
-    show: function (s) { return s.player.profession === 'soldier' && !female(s); },
+    show: function (s) {
+      return s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s);
+    },
     tick: function (s) {
       s.player.gold += 2 / D;
       const lord = FB.getRole(s, 'lord', false);
@@ -170,7 +175,10 @@ window.FB = window.FB || {};
 
   { id: 'copy_books', label: '✒ Copy manuscripts',
     desc: function () { return 'Letters, slowly mastered. (+learning, +piety)'; },
-    show: function (s) { return s.player.profession === 'monk' || s.player.profession === 'priest'; },
+    show: function (s) {
+      return s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest');
+    },
     tick: function (s) {
       s.player.piety += 2 / D;
       if (skillDch(0.6)) skillUp(s, 'lea');
@@ -179,7 +187,10 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church', label: '🕯 Serve the faithful',
     desc: function () { return 'Alms, sermons, and burials.'; },
-    show: function (s) { return s.player.profession === 'monk' || s.player.profession === 'priest'; },
+    show: function (s) {
+      return s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest');
+    },
     tick: function (s) {
       s.player.piety += 4 / D;
       s.player.prestige += 2 / D;
@@ -272,12 +283,12 @@ window.FB = window.FB || {};
         const discoveredCtx = {};
         for (const key in (pl.context || {})) discoveredCtx[key] = pl.context[key];
         discoveredCtx.plotId = pl.id;
-        s.eventQueue.push({ id: 'plot_discovered', ctx: discoveredCtx });
+        FB.queueEvent(s, 'plot_discovered', discoveredCtx);
         return;
       }
       if (pl.power >= def.need) {
         pl.sprung = 1;
-        s.eventQueue.push({ id: def.event, ctx: pl.context || {} });
+        FB.queueEvent(s, def.event, pl.context || {});
       }
     } },
 
@@ -312,7 +323,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier <= 1 && adult(s); },
     run: function (s) {
       if (FB.chance(0.65)) FB.applyEffects(s, { gold: FB.ri(2, 5), skills: { int: FB.chance(0.4) ? 1 : 0 } });
-      else s.eventQueue.push({ id: 'caught_poaching', ctx: {} });
+      else FB.queueEvent(s, 'caught_poaching', {});
     } },
   { id: 'scheme_rival', label: '🗡 Scheme against {rival}', cd: 60,
     desc: function (s) {
@@ -351,7 +362,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showSuitorPicker) FB.ui.showSuitorPicker();
       else { // no UI to choose with: take the peer match through the old door
         FB.pickSuitor(s, cands[1] ? cands[1].id : cands[0].id);
-        s.eventQueue.push({ id: 'meet_suitor', ctx: {} });
+        FB.queueEvent(s, 'meet_suitor', {});
       }
     } },
   { id: 'propose', label: '💒 Propose marriage', cd: 20,
@@ -365,9 +376,9 @@ window.FB = window.FB || {};
       // female + low-station + once-per-life gate as the random opener.
       if (m.sex === 'f' && p.tier <= 2 && FB.ageOf(m, s.date.year) <= 35 &&
         !p.flags.polly_ever && FB.chance(0.25)) {
-        s.eventQueue.push({ id: 'polly_propose_war', ctx: {} });
+        FB.queueEvent(s, 'polly_propose_war', {});
       } else {
-        s.eventQueue.push({ id: 'proposal_made', ctx: {} });
+        FB.queueEvent(s, 'proposal_made', {});
       }
     } },
 
@@ -430,7 +441,7 @@ window.FB = window.FB || {};
       return FB.playerExcommunicated && FB.playerExcommunicated(s)
         ? FB.T('The excommunicated may not seek a blessing.') : true;
     },
-    run: function (s) { s.eventQueue.push({ id: 'seek_blessing', ctx: {} }); } },
+    run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
   { id: 'seek_absolution', label: '🕊 Seek absolution…', noConsume: true,
     desc: function () {
       return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion.', {
@@ -602,8 +613,15 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings(); } },
 
   { id: 'livelihoods', label: '🧰 Work, training & enterprises…', noConsume: true,
-    desc: function () { return 'Choose occupations, arrange apprenticeships, staff shops, and grow family businesses.'; },
-    show: function (s) { return adult(s) || FB.householdMembers(s).length > 1; },
+    desc: function (s) {
+      return s.player.tier >= 3
+        ? 'Manage household occupations, apprenticeships, workers, and family businesses.'
+        : 'Choose occupations, arrange apprenticeships, staff shops, and grow family businesses.';
+    },
+    show: function (s) {
+      if (s.player.tier < 3) return adult(s) || FB.householdMembers(s).length > 1;
+      return FB.householdWorkers(s).length > 1 || FB.enterpriseList(s).length > 0;
+    },
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
@@ -681,7 +699,7 @@ window.FB = window.FB || {};
       const chance = FB.liegeGrantChance(s,
         0.15 + lord.opinion / 400 + s.player.prestige / 1200);
       if (FB.chance(chance)) {
-        s.eventQueue.push({ id: 'grant_of_barony', ctx: {} });
+        FB.queueEvent(s, 'grant_of_barony', {});
       } else {
         FB.news(s, FB.msg('news.action.barony_refused',
           'The lord smiles, promises nothing, and speaks of the weather.', {}));
@@ -692,7 +710,7 @@ window.FB = window.FB || {};
   { id: 'hold_court', label: '⚖ Hold court', cd: 90,
     desc: function () { return 'Hear petitions and render judgment.'; },
     show: function (s) { return s.player.tier >= 3; },
-    run: function (s) { s.eventQueue.push({ id: 'hold_court_event', ctx: {} }); } },
+    run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
   { id: 'squeeze_taxes', label: '💰 Squeeze the taxes', cd: 180,
     desc: function () { return 'Extra silver now; grumbling later.'; },
     show: function (s) { return s.player.tier >= 3; },
@@ -728,7 +746,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
-    run: function (s) { s.eventQueue.push({ id: 'court_feast', ctx: {} }); } },
+    run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
   { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1440,
     desc: function () { return 'Ask for greater lands and higher style.'; },
     show: function (s) { return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege; },
@@ -741,7 +759,7 @@ window.FB = window.FB || {};
         { current: Math.round(s.player.prestige) });
       return true;
     },
-    run: function (s) { s.eventQueue.push({ id: 'title_request', ctx: {} }); } },
+    run: function (s) { FB.queueEvent(s, 'title_request', {}); } },
   { id: 'petition_county', label: '🤝 Petition for a neighbor’s fief…', cd: 720, noConsume: true,
     desc: function (s) {
       return FB.T('Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.',
@@ -1561,7 +1579,9 @@ window.FB = window.FB || {};
     for (const vid of FB.playerVassals(state)) {
       for (const pid of FB.realmHeldCounties(state, vid)) gold += (state.dev[pid] || 1) * B.vassalTaxRate * seasons;
       FB.adjustLiegeOp(state, vid, -15);
-      if (FB.liegeOpOf(state, vid) <= -50) state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: vid } });
+      if (FB.liegeOpOf(state, vid) <= -50) {
+        FB.queueEvent(state, 'vassal_revolt', { rid:vid });
+      }
     }
     gold = Math.ceil(gold * steMul);
     if (gold > 0) {
@@ -2432,7 +2452,7 @@ window.FB = window.FB || {};
       }));
     state.player.prestige += 5;
     FB.warFooting(state);
-    state.eventQueue.push({ id: 'war_muster', ctx: {} });
+    FB.queueEvent(state, 'war_muster', {});
     return true;
   };
 
@@ -2486,10 +2506,10 @@ window.FB = window.FB || {};
     if (!adult(state)) return 'study';
     if (afield(state)) return 'drill'; // disguised in the ranks — train at arms
     let want;
-    if (p.profession === 'monk') want = 'copy_books';
-    else if (p.profession === 'priest') want = 'serve_church';
-    else if (p.tier >= 3) want = 'govern';
+    if (p.tier >= 3) want = 'govern';
     else if (p.tier === 2) want = 'manage_manor';
+    else if (p.profession === 'monk') want = 'copy_books';
+    else if (p.profession === 'priest') want = 'serve_church';
     else {
       want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
         merchant: 'trade_run', soldier: 'drill', noble: 'train_arms' })[p.profession];

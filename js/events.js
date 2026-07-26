@@ -407,7 +407,7 @@ window.FB = window.FB || {};
       initiator: initiator || 'player',
       cause: cause || 'declared'
     };
-    if (queueEvent) state.eventQueue.push({ id: queueEvent, ctx: {} });
+    if (queueEvent) FB.queueEvent(state, queueEvent, {});
     return true;
   };
 
@@ -1561,7 +1561,11 @@ window.FB = window.FB || {};
 
     if (tg.tierMin !== undefined && p.tier < tg.tierMin) return false;
     if (tg.tierMax !== undefined && p.tier > tg.tierMax) return false;
-    if (tg.professions && tg.professions.indexOf(p.profession) < 0) return false;
+    if (tg.societalRoles && tg.societalRoles.indexOf(FB.societalRole(state)) < 0) return false;
+    /* Profession requirements describe personally practicing a vocation.
+       Landed careers survive as biography, but no longer satisfy work gates. */
+    if (tg.professions && (p.tier >= 3 ||
+      tg.professions.indexOf(p.profession) < 0)) return false;
     if (tg.minAge !== undefined && age < tg.minAge) return false;
     if (tg.maxAge !== undefined && age > tg.maxAge) return false;
     if (tg.sex && me.sex !== tg.sex) return false;
@@ -1654,6 +1658,106 @@ window.FB = window.FB || {};
       p.gentryGeneration = state.generation;
     }
   };
+
+  /* Queue context is a snapshot, not a view of whichever title the player
+     happens to hold when the modal is finally opened. That keeps selectors,
+     autoresolve, and durable event logs faithful across promotion. */
+  FB.eventContext = function (state, ctx) {
+    const out = {};
+    ctx = ctx || {};
+    for (const key in ctx) {
+      if (Object.prototype.hasOwnProperty.call(ctx, key)) out[key] = ctx[key];
+    }
+    if (out.societalRole === undefined) out.societalRole = FB.societalRole(state);
+    if (out.profession === undefined) out.profession = state.player.profession;
+    if (out.formerProfession === undefined) {
+      out.formerProfession = state.player.professionBack || state.player.profession;
+    }
+    return out;
+  };
+
+  FB.queueEvent = function (state, id, ctx, extra) {
+    const item = { id:id, ctx:FB.eventContext(state, ctx) };
+    extra = extra || {};
+    for (const key in extra) {
+      if (Object.prototype.hasOwnProperty.call(extra, key)) item[key] = extra[key];
+    }
+    state.eventQueue = state.eventQueue || [];
+    state.eventQueue.push(item);
+    return item;
+  };
+
+  function lowerStationStoryActive(state) {
+    const f = state.player.flags || {};
+    const active = [
+      'old_custom_1', 'old_custom_2', 'old_custom_3', 'old_custom_resolve',
+      'polly_1', 'polly_2', 'polly_3', 'polly_4', 'polly_reunion',
+      'on_campaign'
+    ];
+    for (let i = 0; i < active.length; i++) if (f[active[i]]) return true;
+    for (const key in f) {
+      if (key.indexOf('mill_path_') === 0 || key.indexOf('bench_path_') === 0 ||
+        key === 'testament_memory' || key === 'testament_witnesses' ||
+        key === 'testament_seal' || key === 'testament_crooked') return true;
+    }
+    return false;
+  }
+
+  FB.queueStationFarewellIfReady = function (state) {
+    const record = state.player.stationFarewell;
+    if (!record || record.queued || record.charId !== state.player.charId ||
+      (state.player.fired && state.player.fired.station_farewell) ||
+      state.player.tier < 3 || lowerStationStoryActive(state)) return false;
+    FB.queueEvent(state, 'station_farewell', {
+      societalRole:record.fromRole,
+      formerProfession:record.formerProfession
+    });
+    record.queued = true;
+    return true;
+  };
+
+  /* All runtime title changes pass here so role-gated work and travel cannot
+     linger for a day after promotion or demotion. Callers still own realm
+     transfers, announcements, and title-specific rewards. */
+  FB.setPlayerTier = function (state, tier, opts) {
+    opts = opts || {};
+    const p = state.player;
+    const oldTier = p.tier;
+    tier = FB.clamp(Math.floor(tier), 0, 7);
+    if (tier === oldTier) return false;
+    const oldRole = FB.societalRole(oldTier);
+    const newRole = FB.societalRole(tier);
+    p.tier = tier;
+    if (oldTier < 2 && tier >= 2) FB.markGentryRise(state);
+
+    if (oldTier < 3 && tier >= 3) {
+      p.stationFarewell = p.fired && p.fired.station_farewell ? null : {
+          charId:p.charId,
+          fromRole:oldRole,
+          toRole:newRole,
+          formerProfession:p.professionBack || p.profession,
+          promotedTurn:state.turn,
+          queued:false
+        };
+      for (const enterprise of (p.enterprises || [])) {
+        if (enterprise.workerId === p.charId) enterprise.workerId = null;
+      }
+    } else if (oldTier >= 3 && tier < 3) {
+      p.stationFarewell = null;
+      state.eventQueue = (state.eventQueue || []).filter(function (item) {
+        return item.id !== 'station_farewell';
+      });
+    }
+
+    if (tier >= 3 && !p.liege && opts.attachLiege !== false) {
+      const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
+      if (rid && rid !== 'player') p.liege = rid;
+    }
+    if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+    if (FB.travelValidate) FB.travelValidate(state);
+    if (FB.validateFocus) FB.validateFocus(state);
+    return true;
+  };
   FB.fns.barony_offer_eligible = function (state) {
     const B = FBDATA.balance;
     const lord = FB.getRole(state, 'lord', true);
@@ -1668,8 +1772,10 @@ window.FB = window.FB || {};
      while days tick by. Event cooldowns in data are in seasons (90 days). */
   FB.pickDailyEvents = function (state) {
     const out = [];
+    FB.queueStationFarewellIfReady(state);
     while (state.eventQueue.length && out.length < 3) {
       const qev = state.eventQueue.shift();
+      qev.ctx = FB.eventContext(state, qev.ctx);
       // a tribute offer dies with its war: siege taken, terms sought, or the
       // campaign broken before the envoys were received
       if (qev.id === 'war_tribute_offer') {
@@ -1720,7 +1826,7 @@ window.FB = window.FB || {};
         roll -= (eligible[i].weight || 5);
         if (roll <= 0) { chosen = eligible[i]; break; }
       }
-      const ctx = {};
+      const ctx = FB.eventContext(state, {});
       // events about "a young child" name (and afflict) one actual child, so
       // the text and any killChild effect speak of the same person
       if (chosen.trigger.hasYoungChild) {
@@ -1981,14 +2087,7 @@ window.FB = window.FB || {};
       if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
     if (fx.tierSet !== undefined && fx.tierSet > p.tier) {
-      const oldTier = p.tier;
-      p.tier = fx.tierSet;
-      if (oldTier < 2 && p.tier >= 2) FB.markGentryRise(state);
-      if (p.tier >= 3 && !p.liege) {
-        const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
-        if (rid && rid !== 'player') p.liege = rid;
-      }
-      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+      FB.setPlayerTier(state, fx.tierSet);
     }
     if (fx.tierUp) {
       FB.grantByLiege(state);
@@ -2071,7 +2170,7 @@ window.FB = window.FB || {};
         }
       } else if (FB.ui && FB.ui.showHeirPick) FB.ui.showHeirPick();
     }
-    if (fx.queue) state.eventQueue.push({ id: fx.queue, ctx: ctx });
+    if (fx.queue) FB.queueEvent(state, fx.queue, ctx);
     if (fx.worldNews) FB.randomWorldNews(state);
     if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));
     if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
@@ -2285,7 +2384,7 @@ window.FB = window.FB || {};
     }
     const ctx = { lateName: sp.name + (sp.dyn ? ' ' + sp.dyn : ''), lateStation: sp.station };
     if (heir) ctx.childId = heir.id;
-    state.eventQueue.push({ id: heir ? 'house_claim' : 'widow_settlement', ctx: ctx });
+    FB.queueEvent(state, heir ? 'house_claim' : 'widow_settlement', ctx);
   };
 
   /* payout fns for the widowhood events — all scale off the dowry the late
@@ -2317,9 +2416,7 @@ window.FB = window.FB || {};
       '💰 The inheritance settles {money:gold} under your stewardship.', { gold: g }));
     // a noble house's estate lifts a common steward into the gentry
     if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
-      p.tier = 2;
-      FB.markGentryRise(state);
-      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+      FB.setPlayerTier(state, 2);
       FB.news(state, FB.msg('news.event.inheritance_raises_station',
         '🏛 Stewarding a noble inheritance raises you into the gentry.', {}));
     }
@@ -2374,7 +2471,7 @@ window.FB = window.FB || {};
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless
       p.provs = [p.provinceId];
-      if (p.tier < 4) p.tier = 4;
+      if (p.tier < 4) FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.transferProvince(state, p.provinceId, 'player');
     }
     p.liege = null;
@@ -2387,7 +2484,7 @@ window.FB = window.FB || {};
         '⚔ {realm} will not let you go without a fight!',
         { realm: state.realms[oldLiege].name }));
       FB.warFooting(state);
-      state.eventQueue.push({ id: 'war_defense_muster', ctx: {} });
+      FB.queueEvent(state, 'war_defense_muster', {});
     }
     FB.checkTierPromotions(state);
     return true;
@@ -2415,7 +2512,7 @@ window.FB = window.FB || {};
       p.provs = p.provs || [];
       if (p.provs.indexOf(p.provinceId) < 0) p.provs.push(p.provinceId);
       if (state.holder) state.holder[p.provinceId] = 'player';
-      p.tier = 4;
+      FB.setPlayerTier(state, 4);
       FB.recordLiegeGrant(state);
       const old = p.liege && state.realms[p.liege];
       if (old) {
@@ -2562,7 +2659,7 @@ window.FB = window.FB || {};
     const held = FB.realmHeldCounties(state, rid);
     p.war = { enemy: rid, target: held[0] || null, wins: 0, losses: 0, seasons: 0, defending: false };
     FB.warFooting(state);
-    state.eventQueue.push({ id: 'war_muster', ctx: {} });
+    FB.queueEvent(state, 'war_muster', {});
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
   /* a vassal yields his fief peacefully */
@@ -2612,7 +2709,9 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.event.vassal_tax_paid',
       '💰 {realm} pays {money:gold} under protest.',
       { realm: state.realms[worst].name, gold: g }));
-    if (FB.liegeOpOf(state, worst) <= -50) state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: worst } });
+    if (FB.liegeOpOf(state, worst) <= -50) {
+      FB.queueEvent(state, 'vassal_revolt', { rid:worst });
+    }
   };
 
   FB.randomWorldNews = function (state) {    // report a random ongoing war or strong realm

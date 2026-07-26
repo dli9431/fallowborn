@@ -12,7 +12,15 @@ the full authoring shape.
 `js/events.js` interprets declarative triggers/effects (documented exhaustively in
 docs/MODDING.md). New effect/trigger keys must be added there *and* documented in
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
-`state.eventQueue` / effect `queue`.
+`FB.queueEvent` / effect `queue`.
+
+**Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
+to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
+`crowned`. Event triggers and option requirements may use `societalRoles`; vassal,
+sovereign, and liege checks remain independent. A `professions` requirement means
+the player is personally practicing that vocation, so it never passes at tier 3+.
+Queued and random events snapshot societal role and profession in their context,
+allowing saved events and autoresolve to retain the wording with which they began.
 
 Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 [time.md](time.md)).
@@ -88,6 +96,13 @@ Master's Empty Bench, and Words Before Dawn are two-part stories whose second de
 queued immediately; they are once per life. Short lower-station incidents remain ordinary
 cooldown events. Chain flags are life-local and disappear at succession with the rest of
 `player.flags`.
+
+Promotion does not cut one of these stories short. The Old Custom, Mill's Due,
+Master's Empty Bench, Words Before Dawn, levy-service, and Sweet Polly stage flags
+remain eligible until their final decision. No new lower-station opener begins
+after promotion. Once those flags clear, a once-per-character `station_farewell`
+decision asks the new ruler to honor or renounce the former life; succession or
+demotion cancels an unresolved farewell belonging to the prior station.
 
 **A woman’s road to arms.** With the martial training foci closed to women (see
 [characters.md](characters.md)), the *Sweet Polly Oliver* chain is one of the few ways a

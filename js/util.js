@@ -30,6 +30,21 @@ window.FB = window.FB || {};
 
   FB.clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
 
+  /* A title's broad social audience. Political position (vassal, sovereign,
+     liege) stays orthogonal: two counts share a societal role even when only
+     one answers to a king. */
+  FB.SOCIETAL_ROLES = ['serf', 'commoner', 'gentry', 'lord', 'crowned'];
+  FB.societalRole = function (stateOrTier) {
+    const tier = typeof stateOrTier === 'number'
+      ? stateOrTier
+      : (stateOrTier && stateOrTier.player ? stateOrTier.player.tier : 0);
+    if (tier <= 0) return 'serf';
+    if (tier === 1) return 'commoner';
+    if (tier === 2) return 'gentry';
+    if (tier <= 5) return 'lord';
+    return 'crowned';
+  };
+
   /* deterministic 2D hash noise in [0,1), independent of the RNG stream */
   FB.noise2 = function (x, y) {
     let h = (x * 374761393 + y * 668265263) | 0;

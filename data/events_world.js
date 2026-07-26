@@ -52,10 +52,20 @@ FBDATA.events.push(
     { label:'Shut your household away.', desc:'Hide from the sickness and hope it passes your door.', chance:0.75,
       success:{ text:'The sickness passes your door.', effects:{ gold:-3 } },
       failure:{ text:'It finds a crack. The fever takes you.', effects:{ health:-3, setFlag:'ill' } } },
-    { label:'Help bury the dead.', desc:'The village will remember — if the fever does not claim you too.', chance:0.55,
+    { label:'Help bury the dead.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'The village will remember — if the fever does not claim you too.', chance:0.55,
       success:{ text:'Grim work, holy work. The village will not forget.', effects:{ piety:12, prestige:8, popularOpinion:10 } },
       failure:{ text:'The dead share their sickness with the living.', effects:{ piety:8, health:-3, setFlag:'ill' } } },
-    { label:'Flee to another province.', desc:'Somewhere the bells are not ringing. Perhaps.', effects:{ moveRandom:true, gold:-5, clearFlag:'plague_here', log:'Fled the pestilence.' } }
+    { label:'Flee to another province.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Somewhere the bells are not ringing. Perhaps.', effects:{ moveRandom:true, gold:-5, clearFlag:'plague_here', log:'Fled the pestilence.' } },
+    { label:'Organize burial crews. ({money:10})',
+      require:{ societalRoles:['lord','crowned'], goldMin:10 },
+      desc:'Pay, protection, and firm orders can keep the dead from the lanes.',
+      effects:{ gold:-10, piety:10, prestige:8, popularOpinion:10 } },
+    { label:'Close the roads and isolate the sick.',
+      require:{ societalRoles:['lord','crowned'] },
+      desc:'Harsh boundaries may save the wider realm.',
+      effects:{ popularOpinion:-6, prestige:5 } }
   ]},
 { id:'pestilence_ends', title:'The Bells Fall Silent',
   trigger:{ flags:['plague_here'], chance:0.3 }, wartime:true, childhood:true, weight:10,
@@ -70,11 +80,18 @@ FBDATA.events.push(
   options:[
     { label:'An omen of my rise.', desc:'Let the heavens burn for you.', effects:{ prestige:5 } },
     { label:'A warning to repent.', desc:'Best to kneel while there is still time.', effects:{ piety:8 } },
-    { label:'A rock in the sky.', desc:'Someone in this village has read a book.', effects:{ skills:{lea:1} } }
+    { label:'A rock in the sky.', desc:'Astronomers have written of stranger things.', effects:{ skills:{lea:1} } }
   ]},
 { id:'wandering_skald', title:'The Storyteller',
   trigger:{ chance:0.1 }, weight:4, cooldown:12,
-  text:'A traveling singer works the crowd by the fire — wars in far lands, kings dead and crowned, and a rumor for every purse.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A traveling singer works the crowd by the fire — wars in far lands, kings dead and crowned, and a rumor for every purse.',
+    commoner:'A traveling singer draws a crowd in the square with wars, coronations, and rumors from distant roads.',
+    gentry:'A traveling singer is admitted to the manor fire with songs from courts and battlefields beyond your ken.',
+    lord:'A celebrated singer asks leave to perform in your hall, carrying news disguised as verse.',
+    crowned:'A singer from distant courts performs before the throne, each polished verse trailing an unpolished rumor.',
+    other:'A traveling singer brings songs and rumors from distant roads.'
+  }}},
   options:[
     { label:'Buy him ale for the news.', require:{ goldMin:1, religionGroups:['christian','pagan','jewish'] }, desc:'A little silver, a lot of the world.', effects:{ gold:-1, skills:{dip:1}, worldNews:true } },
     { label:'Buy him supper for the news.', require:{ goldMin:1, religionGroups:['muslim'] }, desc:'A full belly loosens any tongue.', effects:{ gold:-1, skills:{dip:1}, worldNews:true } },
@@ -91,13 +108,28 @@ FBDATA.events.push(
   ]},
 { id:'strange_bounty', title:'The Sea Gives',
   trigger:{ coastal:true, chance:0.08 }, weight:4, cooldown:16,
-  text:'A storm-tide leaves a broken ship on the strand — timbers, casks, and a drowned man with rings on his fingers. By law it is the lord’s. By dawn, it is whoever’s got there first.',
+  text:{ forms:{ select:'value', param:'societalRole', cases:{
+    serf:'A storm-tide leaves a broken ship on the strand — timbers, casks, and a drowned man with rings on his fingers. By law it is the lord’s. By dawn, it is whoever gets there first.',
+    commoner:'A storm-tide leaves a broken ship on the strand. The lord’s claim is clear, but so are the casks lying unattended.',
+    gentry:'A wreck scatters cargo across the strand. The coastal lord claims the wreck-right; local hands have already begun carrying.',
+    lord:'A wreck lies upon your coast, its cargo caught between your lawful wreck-right and the customs of the shore.',
+    crowned:'A foreign wreck lies on the royal coast. Salvage, diplomacy, and the rights of the crown arrive together.',
+    other:'A storm-tide leaves a broken ship and valuable cargo upon the strand.'
+  }}},
   options:[
-    { label:'Take what the sea offers.', desc:'The sea pays no tithe, but the lord’s men keep accounts.', chance:0.7,
+    { label:'Take what the sea offers.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'The sea pays no tithe, but the lord’s men keep accounts.', chance:0.7,
       success:{ text:{ default:'Casks of wine and a purse of foreign silver, safely hidden.',
         muslim:'Bolts of dyed cloth and a purse of foreign silver, safely hidden.' }, effects:{ gold:10, piety:-2 } },
       failure:{ text:'The lord’s men arrive while your arms are full.', effects:{ gold:-3, prestige:-4, opinion:{role:'lord', amt:-10} } } },
-    { label:'Report it to the lord.', desc:'Honesty is cheaper than a whipping, and sometimes rewarded.', effects:{ opinion:{role:'lord', amt:8}, gold:2 } },
-    { label:'Bury the drowned man properly.', desc:'The dead deserve better than gulls.', effects:{ piety:8 } }
+    { label:'Report it to the lord.', require:{ societalRoles:['serf','commoner','gentry'] },
+      desc:'Honesty is cheaper than a whipping, and sometimes rewarded.', effects:{ opinion:{role:'lord', amt:8}, gold:2 } },
+    { label:'Bury the drowned man properly.', desc:'The dead deserve better than gulls.', effects:{ piety:8 } },
+    { label:'Claim the cargo by wreck-right.', require:{ societalRoles:['lord','crowned'] },
+      desc:'Lawful salvage belongs to the authority that keeps the coast.',
+      effects:{ gold:15, prestige:5, popularOpinion:-3 } },
+    { label:'Return marked goods to their owners.', require:{ societalRoles:['lord','crowned'] },
+      desc:'Costly honesty carries across the sea.',
+      effects:{ gold:-5, prestige:10, piety:5 } }
   ]}
 );

@@ -322,7 +322,7 @@ window.FB = window.FB || {};
     let worst = vs[0];
     for (const v of vs) if (FB.liegeOpOf(state, v) < FB.liegeOpOf(state, worst)) worst = v;
     FB.adjustLiegeOp(state, worst, -25);
-    state.eventQueue.push({ id: 'vassal_revolt', ctx: { rid: worst } });
+    FB.queueEvent(state, 'vassal_revolt', { rid:worst });
   };
   FB.fns.council_gift_take = function (state) {
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));

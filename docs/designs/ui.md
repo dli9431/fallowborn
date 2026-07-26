@@ -62,6 +62,10 @@ birth year all read the same active definition. Returning from scenarios goes ba
 the bookmark list without wiring another set of map listeners.
 
 Hover-only affordances need a tap path (item chips toast their description).
+The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only
+former calling. Career changes, guild steps, and personal enterprise assignment are
+removed while household occupations, religious-office advancement, and business
+staffing remain available.
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that

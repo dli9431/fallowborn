@@ -959,7 +959,7 @@ window.FB = window.FB || {};
       id:defId,
       price:item.value
     };
-    state.eventQueue.push({ id:'item_offer', ctx:{} });
+    FB.queueEvent(state, 'item_offer', {});
     return ref;
   };
 

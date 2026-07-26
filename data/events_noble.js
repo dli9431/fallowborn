@@ -177,6 +177,92 @@ FBDATA.events.push(
       failure:{ text:'“I do not poach another man’s vassals.” Worse — a letter about your visit rides back to your liege.', effects:{ custom:'appeal_lose' } } },
     { label:'Think better of it, and withdraw.', desc:'Some doors are better left unknocked.', effects:{ } }
   ]},
+
+/* ---- station-specific life at court and on the demesne ---- */
+{ id:'reeve_false_ledgers', title:'The Reeve’s Two Tallies',
+  trigger:{ societalRoles:['lord','crowned'], minAge:16, chance:0.14 }, weight:7, cooldown:12,
+  text:'Two copies of the reeve’s seasonal tally reach your table. They agree upon every rent except the silver that should have reached your chest.',
+  options:[
+    { label:'Audit every holding.', chance:'skill_ste',
+      desc:'Patient figures may find where the coin vanished.',
+      success:{ text:'A trail of small omissions leads to one very comfortable reeve.',
+        effects:{ gold:12, prestige:5, skills:{ste:1} } },
+      failure:{ text:'The figures multiply until suspicion outruns proof.',
+        effects:{ prestige:-2 } } },
+    { label:'Offer mercy for a full confession.', chance:'skill_dip',
+      desc:'Truth may be worth more than punishment.',
+      success:{ text:'The reeve names every partner and returns what remains.',
+        effects:{ gold:7, popularOpinion:4, skills:{dip:1} } },
+      failure:{ text:'He mistakes mercy for weakness and denies everything.',
+        effects:{ popularOpinion:-3 } } },
+    { label:'Dismiss him without spectacle.', desc:'End the loss and deny the court its entertainment.',
+      effects:{ prestige:2 } }
+  ]},
+{ id:'poacher_before_bench', title:'The Poacher at the Bench',
+  trigger:{ societalRoles:['lord','crowned'], minAge:16, chance:0.13 }, weight:7, cooldown:12,
+  text:'A poacher stands before your bench with a thin hare, three hungry children, and a forester demanding the full penalty.',
+  options:[
+    { label:'Pardon the hunger, confiscate the bow.', desc:'Mercy without inviting every hunter into the wood.',
+      effects:{ popularOpinion:7, prestige:2 } },
+    { label:'Set labor in place of the fine.', desc:'Let the offense repay the demesne.',
+      effects:{ gold:3, popularOpinion:2, skills:{ste:1} } },
+    { label:'Uphold the forest law.', desc:'A right unenforced soon ceases to be a right.',
+      effects:{ gold:6, prestige:4, popularOpinion:-6 } }
+  ]},
+{ id:'former_calling_petition', title:'Voices from the Old Life',
+  trigger:{ societalRoles:['lord','crowned'], minAge:16, chance:0.12 }, weight:6, cooldown:16,
+  text:{ forms:{ select:'value', param:'formerProfession', cases:{
+    farmer:'Tenant farmers ask you to repair a neglected mill-race before the next harvest.',
+    craftsman:'Masters of your old craft ask for a charter protecting honest measures and apprentices.',
+    merchant:'Merchants who remember your bargaining days ask for guards and fair tolls upon the road.',
+    soldier:'Veterans from the ranks ask pensions for the wounded and bread for soldiers’ widows.',
+    monk:'A poor religious house asks the former brother at court to remember its leaking roof and empty pantry.',
+    priest:'Clergy from a small parish ask their former fellow servant for books, lamps, and burial cloth.',
+    noble:'Young household knights ask for a proper yard, mounts, and masters of arms.',
+    other:'People from the work you once knew ask whether title has made you forget them.'
+  }}},
+  options:[
+    { label:'Grant their petition. ({money:10})', require:{ goldMin:10 },
+      desc:'Turn memory into patronage.',
+      effects:{ gold:-10, popularOpinion:8, prestige:5, log:'Patronized the people of a former calling.' } },
+    { label:'Hear them and grant what costs nothing.', desc:'Attention is cheaper than reform, but not worthless.',
+      effects:{ popularOpinion:3, prestige:2 } },
+    { label:'The old life has no claim upon this office.', desc:'Rule looks forward.',
+      effects:{ prestige:5, popularOpinion:-5 } }
+  ]},
+{ id:'royal_progress', title:'The Royal Progress',
+  trigger:{ societalRoles:['crowned'], minAge:16, chance:0.12 }, weight:7, cooldown:16,
+  text:'Councillors propose a progress through the realm: justice beneath open skies, feasts in loyal towns, and a royal household consuming supplies everywhere it passes.',
+  options:[
+    { label:'Travel in splendor. ({money:25})', require:{ goldMin:25 },
+      desc:'Let distant subjects see the full weight of the crown.',
+      effects:{ gold:-25, prestige:15, popularOpinion:8 } },
+    { label:'Travel with a lean household. ({money:10})', require:{ goldMin:10 },
+      desc:'Be seen without devouring every host’s stores.',
+      effects:{ gold:-10, prestige:7, popularOpinion:10 } },
+    { label:'Rule from the capital.', desc:'Roads waste time better spent governing.',
+      effects:{ prestige:3 } }
+  ]},
+{ id:'crown_precedence', title:'Who Stands Nearest',
+  trigger:{ societalRoles:['crowned'], minAge:16, chance:0.1 }, weight:6, cooldown:18,
+  text:'At a great ceremony, two magnates claim the place nearest your throne. Genealogy, old privilege, and naked ambition have turned a pace of floor into a contest for the realm to watch.',
+  options:[
+    { label:'Judge by ancient right.', chance:'skill_lea',
+      desc:'Let records settle what pride cannot.',
+      success:{ text:'A forgotten precedent ends the quarrel cleanly.',
+        effects:{ prestige:10, skills:{lea:1} } },
+      failure:{ text:'Each side produces an older document than the last.',
+        effects:{ prestige:-4 } } },
+    { label:'Create a new order of precedence.', chance:'skill_dip',
+      desc:'A crown may define the customs it inherits.',
+      success:{ text:'Both magnates accept a rule that honors each without yielding to either.',
+        effects:{ prestige:12, skills:{dip:1} } },
+      failure:{ text:'The compromise gives both men a fresh grievance.',
+        effects:{ prestige:-5, popularOpinion:-2 } } },
+    { label:'Keep them both waiting.', desc:'Nearness to the throne is yours to grant or deny.',
+      effects:{ prestige:6, popularOpinion:-3 } }
+  ]},
+
 /* ---- the player as liege ---- */
 { id:'vassal_petition', title:'A Vassal’s Suit',
   trigger:{ isLiege:true, chance:0.15 }, weight:6, cooldown:8,

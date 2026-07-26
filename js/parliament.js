@@ -81,7 +81,7 @@ window.FB = window.FB || {};
     if (FB.isRealmAtWar(state, state.player.liege) && FB.chance(0.6)) id = 'parliament_subsidy';
     else if (obl.aid < (B.parliamentAidMax || 0.40) - 0.001 && FB.chance(0.5)) id = 'parliament_aid_hike';
     else if (FB.chance(0.35)) id = 'parliament_grievance';
-    state.eventQueue.push({ id: id });
+    FB.queueEvent(state, id, {});
   };
 
   /* ---------- event helpers (FB.fns.parliament_* — triggers & effects) ---------- */
