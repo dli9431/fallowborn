@@ -69,3 +69,11 @@ ranges, but should use the exact-instance APIs in `js/items.js` rather than muta
 subsystem creates an instance automatically when that definition is repeatable.
 
 Related: `docs/MODDING.md` is the full mod authoring reference.
+
+Religious-head overlays may add or replace `head.greatHolyWar`. Activation validates
+the localized campaign name, minimum date, chances, crisis kingdoms, and every sacred
+kingdom/county reference against the selected atomic bookmark. A religion without
+both a live centralized head and this metadata has no caller; therefore decentralized
+core faiths remain unable to call unless a mod deliberately supplies both pieces.
+The runtime freezes ids and numeric campaign state only, and the active mod
+fingerprint continues to protect saves that reference mod-added targets.

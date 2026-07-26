@@ -210,6 +210,23 @@ Related: [mods.md](mods.md) for how saves are stamped with the active mod set,
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries,
 and [finance.md](finance.md) for the saved contract schema.
 
+Great holy wars are additive save-format-3 state. `state.greatHolyWar` is either null
+or a locale-neutral record containing the stable campaign id, phase, calling religion,
+caller and military leader realm ids, frozen target/holy/objective ids, dates,
+participant arrays, temporary occupations, resolve, contribution, result, and
+settlement. `state.greatHolyWarHistory` owns the sequence, first-call/first-launch
+markers, uninterrupted sacred-loss clocks, office restoration observations,
+per-faith cooldowns, and a bounded completed-campaign summary. The personal
+`player.greatHolyWar` record owns camp, service mode, vow/renewal/withdrawal flags,
+mandatory-defense status, and territorial eligibility.
+
+`FB.repairGreatHolyWar` runs before `FB.repairWars` on restore. Missing fields on old
+saves initialize lazily; malformed ids, phases, objectives, occupations, participants,
+and pledges are discarded or clamped without rendering prose. Army repair then keeps
+at most one host for every living active sovereign participant. Preparation and
+settlement do not preserve field hosts. Contribution belongs to the campaign rather
+than the current character, so it persists across protagonist succession.
+
 Saves from before parents were recorded (first-generation siblings known only
 by role) have a father and mother synthesized on load — long dead, ages
 fitted to the oldest child — so the family tree shows them instead of an

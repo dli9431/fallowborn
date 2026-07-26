@@ -213,3 +213,20 @@ its generation. Province-by-province loss in a lost defensive war (`FB.warLosePr
 remains the other way down, landing at the same tier 2.
 
 Related: [provinces.md](provinces.md) for the land itself.
+
+## Realm faith and campaign settlements
+
+`realm.religion` is an optional saved, locale-neutral identity for a ruling realm.
+`FB.realmReligionId` prefers it and falls back to the capital county's population
+religion for authored realms and old saves. This separates ruler faith from local
+population: conquest, capital relocation, and great holy-war settlement do not
+silently convert county culture or religion. Fresh authored realms and generated
+vassals initialize the field from their capital when no explicit value is supplied.
+
+Great holy-war occupations are not realms and never alter ownership during combat.
+Final settlement uses `FB.transferProvince` only for occupied objectives. Uncaptured
+counties retain their old sovereigns, holders, capitals, and vassal chains. New
+campaign sovereigns and vassals receive the calling religion explicitly, plus a
+sponsor-derived culture and dynasty identity. Ordinary province transfer remains
+responsible for relocating a dispossessed capital, marking a landless house dead,
+and vacating any centralized religious office it held.

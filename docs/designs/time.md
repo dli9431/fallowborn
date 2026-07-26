@@ -107,6 +107,21 @@ opinion deterministically after the player’s war tick. On the winter boundary 
 before `FB.worldTick`, so the new opinion affects that year’s AI declarations; yearly
 opinion decay follows in `yearlyLife`.
 
+Great holy wars use all three existing clock scales without a new timer. The daily
+tick records sacred-place control, launches a prepared call on its exact 180th day,
+advances or decays objective sieges after field armies march and fight, and checks
+resolve/objective/deadline victory. Season boundaries award one service contribution
+to every active participant and queue the personal service event for vassal or
+unlanded expeditions. The new-year world tick runs the saved, seeded historical call
+scheduler before ordinary realm declarations, so campaign participants cannot open a
+second war that year.
+
+Observe mode runs the same yearly scheduler, daily host movement, battles, occupation,
+repair, and settlement deterministically; it merely suppresses protagonist event
+handling. Catholic calls unlock in late 1095 and Sunni calls in 1105. Resolution
+starts an 18-year per-faith cooldown; a preparation collapse starts eight years.
+An active campaign has an eight-year deadline.
+
 Season boundaries also run `FB.tickRivalry`, for every player, right after
 `FB.financeSeason` and before the season ledger closes: it ages recorded hostile contacts,
 decays an active feud’s heat, honors post-settlement peace cooldowns, and can have a

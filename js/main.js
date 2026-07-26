@@ -781,6 +781,8 @@ window.FB = window.FB || {};
       alliances: [],
       religiousHeads: {},
       religiousHeadVacancies: {},
+      greatHolyWar: null,
+      greatHolyWarHistory: {},
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -790,7 +792,8 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, focus: null, dead: false, holdings: [], enterprises: [],
+        provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
+        holdings: [], enterprises: [],
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
         landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null, research: 0
@@ -920,6 +923,8 @@ window.FB = window.FB || {};
       alliances: [],
       religiousHeads: {},
       religiousHeadVacancies: {},
+      greatHolyWar: null,
+      greatHolyWarHistory: {},
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -928,7 +933,7 @@ window.FB = window.FB || {};
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, focus: null, dead: false, holdings: [],
+        provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null, research: 0
       },
@@ -979,6 +984,13 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
     if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
+    if (!G.observe && s.greatHolyWar && s.greatHolyWar.phase === 'settlement' &&
+        s.greatHolyWar.settlement &&
+        s.greatHolyWar.settlement.pendingPlayer) {
+      G.setPaused(true);
+      if (FB.ui.showGreatHolyWarSettlement) FB.ui.showGreatHolyWarSettlement();
+      return undefined;
+    }
     const p = s.player;
 
     if (!G.observe && !p.travel) {
@@ -1006,6 +1018,7 @@ window.FB = window.FB || {};
     if (G.observe) {
       if (seasonBoundary && newYear) FB.worldTick(s);
       FB.armyTick(s);
+      if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       s.eventQueue.length = 0;
       FB.ui.refresh();
       return seasonBoundary ? 'season' : 'day';
@@ -1035,6 +1048,7 @@ window.FB = window.FB || {};
         if (G.auto.research) FB.autoResearch(s);
       }
       FB.playerWarTick(s);
+      if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
       FB.tickForeignPolicy(s);
       FB.financeSeason(s);
       FB.tickRivalry(s);
@@ -1064,6 +1078,7 @@ window.FB = window.FB || {};
 
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
+    if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
@@ -1742,6 +1757,7 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
     FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
@@ -1833,6 +1849,7 @@ window.FB = window.FB || {};
       s.realms.player.succession.rulerGeneration = oldGeneration + 1;
       s.realms.player.succession.heirCharId = null;
       s.realms.player.liege = p.liege || null;
+      s.realms.player.religion = heir.religion;
     }
 
     FB.news(s, FB.msg('news.life.succession',

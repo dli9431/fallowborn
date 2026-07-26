@@ -2054,7 +2054,12 @@ window.FB = window.FB || {};
     if (fx.travelSettle && FB.travelSettle) FB.travelSettle(state);
     if (fx.convertToProvince) {
       const pr = FB.world.byId[p.provinceId];
-      if (pr) me.religion = pr.religion;
+      if (pr) {
+        me.religion = pr.religion;
+        if (state.realms.player && state.realms.player.alive) {
+          state.realms.player.religion = pr.religion;
+        }
+      }
     }
     if (fx.declareIndependence) FB.doIndependence(state);
     if (fx.pickHeir) {

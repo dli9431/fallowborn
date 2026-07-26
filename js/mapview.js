@@ -283,6 +283,10 @@ window.FB = window.FB || {};
         ctx.fillText('★', s[0], s[1]);
       }
     }
+    // great holy-war objectives and temporary occupations sit beneath hosts
+    if (FB.state && FB.renderGreatHolyWar) {
+      FB.renderGreatHolyWar(ctx, toScreen, z, M.dpr);
+    }
     // field armies (hosts on the march, battle markers)
     if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
     // overland journeys: valid destination rings, route, and traveler

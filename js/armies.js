@@ -1,6 +1,6 @@
 /* Fallowborn — field armies: mustered hosts that march the map and fight
    when they meet. One host per sovereign realm (levies with hired companies
-   folded in), raised while a war lasts and disbanded at peace. The player's
+   folded in), raised while an ordinary or great holy war lasts. The player's
    host musters the moment war begins (FB.warFooting) and is ordered by
    tapping the map — or by the automated stances (G.auto.hosts: defensive /
    offensive), which steer only an idle host and always yield to a
@@ -96,6 +96,11 @@ window.FB = window.FB || {};
      a war — the per-tick `warring` map below is only for the hot loops. */
   FB.armiesHostile = function (state, a, b) {
     if (a.realm === b.realm) return false;
+    if (FB.greatHolyWarCamp) {
+      const greatCampA = FB.greatHolyWarCamp(state, a.realm);
+      const greatCampB = FB.greatHolyWarCamp(state, b.realm);
+      if (greatCampA && greatCampB) return greatCampA !== greatCampB;
+    }
     const w = state.player.war;
     if (a.realm === 'player') return !!(w && w.enemy === b.realm);
     if (b.realm === 'player') return !!(w && w.enemy === a.realm);
@@ -119,6 +124,21 @@ window.FB = window.FB || {};
       if (!e || !e.alive) continue;
       m[id] = r.war.enemy; // a realm's own declaration wins
       if (!m[r.war.enemy]) m[r.war.enemy] = id;
+    }
+    if (state.greatHolyWar && state.greatHolyWar.phase === 'active' &&
+        FB.greatHolyWarEnemies) {
+      for (const campName of ['attackers', 'defenders']) {
+        const participants = state.greatHolyWar.participants[campName] || [];
+        for (const participant of participants) {
+          if (!participant.sovereign) continue;
+          const enemies = FB.greatHolyWarEnemies(state, participant.realm);
+          m[participant.realm] = enemies.length ? enemies[0] : '__great_holy_war__';
+        }
+      }
+      if (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(state)) {
+        const playerEnemies = FB.greatHolyWarEnemies(state, 'player');
+        m.player = playerEnemies.length ? playerEnemies[0] : '__great_holy_war__';
+      }
     }
     return m;
   }
@@ -144,16 +164,21 @@ window.FB = window.FB || {};
   FB.raisePlayerHost = function (state) {
     FB.armiesEnsure(state);
     const p = state.player, w = p.war;
-    if (!w) return null;
+    const greatHost = FB.playerGreatHolyWarHostActive &&
+      FB.playerGreatHolyWarHostActive(state);
+    if (!w && !greatHost) return null;
     const existing = FB.playerHost(state);
     if (existing) return existing;
     const down = state.armyDown['player'];
     if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
     const cs = B().mercCompanySize || 150;
     const comp = FB.playerComposition(state);
-    const units = { levy: comp.levy, arch: comp.arch, ret: comp.ret, mercs: (w.mercCos || 0) * cs };
-    if (w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
-    const allied = w.defending && FB.alliedReinforcement
+    const units = {
+      levy: comp.levy, arch: comp.arch, ret: comp.ret,
+      mercs: (w && w.mercCos || 0) * cs
+    };
+    if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
+    const allied = w && w.defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
     let men = units.levy + units.arch + units.ret + units.mercs;
@@ -188,7 +213,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    const allied = defending && FB.alliedReinforcement
+    const allied = !FB.greatHolyWarCamp(state, rid) && defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, rid) : { ally: null, men: 0 };
     men += allied.men;
     const f = aiFracs(state);
@@ -301,6 +326,10 @@ window.FB = window.FB || {};
       if (d < bd) { bd = d; best = o; }
     }
     if (best) return best.at;
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm) &&
+        FB.greatHolyWarArmyGoal) {
+      return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
+    }
     const en = warring[army.realm];
     if (en === 'player') return playerHome(state);
     const er = en && state.realms[en];
@@ -316,9 +345,13 @@ window.FB = window.FB || {};
      otherwise refits at home */
   function playerGoal(state, host, mode) {
     const p = state.player, w = p.war;
-    if (!w) return host.at;
     const home = playerHome(state);
     if (host.broken !== undefined && state.turn - host.broken < 40) return home;
+    if (!w && FB.playerGreatHolyWarHostActive &&
+        FB.playerGreatHolyWarHostActive(state) && FB.greatHolyWarArmyGoal) {
+      return FB.greatHolyWarArmyGoal(state, 'player', host.at) || home;
+    }
+    if (!w) return host.at;
     const prey = FB.hostOf(state, w.enemy);
     if (mode === 'def') {
       if (prey && (prey.at === p.provinceId || (p.provs && p.provs.indexOf(prey.at) >= 0) ||
@@ -384,9 +417,11 @@ window.FB = window.FB || {};
     const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const ratio = FB.clamp(sl / sw, 0.3, 1); // a close fight costs the winner too
-    applyLosses(winner, Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio));
+    const winnerLoss = Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio);
+    applyLosses(winner, winnerLoss);
     if (winner.men < 1) winner.men = 1;
-    applyLosses(loser, Math.round(loser.men * (B().battleLoseLoss || 0.62)));
+    const loserLoss = Math.round(loser.men * (B().battleLoseLoss || 0.62));
+    applyLosses(loser, loserLoss);
     const pInvolved = winner.realm === 'player' || loser.realm === 'player';
     // the beaten host routs for home — or disperses entirely
     if (loser.men < (B().armyMinMen || 40)) {
@@ -397,7 +432,13 @@ window.FB = window.FB || {};
       FB.orderArmy(state, loser, loser.realm === 'player' ? playerHome(state) : state.realms[loser.realm].capital);
       loser.moveLeft = Math.min(loser.moveLeft, 1); // it limps away at once
     }
-    if (pInvolved) {
+    const greatBattle = FB.greatHolyWarBattle &&
+      FB.greatHolyWarBattle(state, pid, winner, loser, winnerLoss, loserLoss);
+    if (greatBattle) {
+      /* Coalition resolve and contribution are owned by holywar.js. An
+         ordinary bilateral war (if malformed legacy state supplied one)
+         must not also resolve this battle. */
+    } else if (pInvolved) {
       const won = winner.realm === 'player';
       const steel = FB.hostUnits(winner.realm === 'player' ? winner : loser).ret > 0;
       /* The outcome handler may end the war immediately. Freeze the opposing
@@ -459,7 +500,8 @@ window.FB = window.FB || {};
     for (let i = state.armies.length - 1; i >= 0; i--) {
       const a = state.armies[i];
       if (a.realm === 'player') {
-        if (!p.war) {
+        if (!p.war && !(FB.playerGreatHolyWarHostActive &&
+            FB.playerGreatHolyWarHostActive(state))) {
           disband(state, a);
           FB.news(state, FB.msg('news.army.disbands',
             '🏳 The war is done — the host disbands to hearth and field.', {}));
@@ -473,7 +515,9 @@ window.FB = window.FB || {};
     // orders & marches
     const autoHosts = FB.game.auto && FB.game.auto.hosts;
     // automated command re-raises a destroyed host once the rearm window passes
-    if (autoHosts && autoHosts !== 'manual' && p.war && !hostByRealm['player']) {
+    if (autoHosts && autoHosts !== 'manual' &&
+        (p.war || (FB.playerGreatHolyWarHostActive &&
+          FB.playerGreatHolyWarHostActive(state))) && !hostByRealm['player']) {
       FB.raisePlayerHost(state);
     }
     for (const a of state.armies) {
@@ -498,7 +542,7 @@ window.FB = window.FB || {};
         // a hunting host tracks its prey day by day, not where it was —
         // looked up live, since the disband loop above may have removed it
         const prey = FB.hostOf(state, a.huntPrey);
-        if (!prey || warring['player'] !== a.huntPrey) a.huntPrey = null;
+        if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
         else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
       }
       march(state, a);
@@ -677,10 +721,21 @@ window.FB = window.FB || {};
       if (x < -40 || y < -40 || x > ctx.canvas.width + 40 || y > ctx.canvas.height + 40) continue;
       const mine = a.realm === 'player';
       const realm = mine ? null : s.realms[a.realm];
-      const hostileToMe = !mine && s.player.war && s.player.war.enemy === a.realm;
+      const playerGreatCamp = FB.playerGreatHolyWarCamp
+        ? FB.playerGreatHolyWarCamp(s) : null;
+      const armyGreatCamp = FB.greatHolyWarCamp
+        ? FB.greatHolyWarCamp(s, a.realm) : null;
+      const hostileToMe = !mine &&
+        ((playerGreatCamp && armyGreatCamp && playerGreatCamp !== armyGreatCamp) ||
+         (s.player.war && s.player.war.enemy === a.realm));
+      const friendlyToMe = !mine && playerGreatCamp &&
+        armyGreatCamp === playerGreatCamp;
       // your side always marches in green, your war enemy in red; everyone
       // else keeps their realm's color
-      const col = mine ? '#3fae4a' : (hostileToMe ? '#c8352b' : (realm ? realm.color : '#888888'));
+      const col = (mine || friendlyToMe ||
+        (!playerGreatCamp && armyGreatCamp === 'attackers')) ? '#3fae4a'
+        : ((hostileToMe || (!playerGreatCamp && armyGreatCamp === 'defenders'))
+          ? '#c8352b' : (realm ? realm.color : '#888888'));
 
       // base disc in the host's color over a soft shadow: the side a host
       // fights for reads at a glance — two pennants alone did not

@@ -230,15 +230,21 @@ window.FB = window.FB || {};
   { id: 'lead_host', label: '🚩 Lead the host',
     desc: function (s) {
       return s.player.war ? 'Command your men in the field. (better odds at the war council)'
+        : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
+          ? 'Command your host in the great holy war. (+martial over time)'
         : 'Serve in your liege’s host. (+liege’s favor)';
     },
     show: function (s) {
       return !!s.player.war ||
+        !!(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s)) ||
         !!(s.player.flags.with_liege_host && s.player.liege && FB.isRealmAtWar(s, s.player.liege));
     },
     tick: function (s) {
       if (s.player.war) s.player.war.led = (s.player.war.led || 0) + 1;
-      else s.player.liegeOp = FB.clamp((s.player.liegeOp || 0) + 4 / D, -100, 100);
+      else if (!(FB.playerGreatHolyWarHostActive &&
+          FB.playerGreatHolyWarHostActive(s))) {
+        s.player.liegeOp = FB.clamp((s.player.liegeOp || 0) + 4 / D, -100, 100);
+      }
       if (skillDch(0.5)) skillUp(s, 'mar');
     } },
   { id: 'scheming', label: '🕸 Advance the plot',
@@ -521,6 +527,98 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showReligiousHeadClaim) {
         FB.ui.showReligiousHeadClaim('sunni');
+      }
+    } },
+  { id: 'call_great_holy_war', label: '📯 Call great holy war…', noConsume: true,
+    desc: function () {
+      return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.');
+    },
+    show: function (s) {
+      if (!adult(s) || s.greatHolyWar) return false;
+      for (const religionId in FBDATA.religions) {
+        const religion = FBDATA.religions[religionId];
+        const head = religion && religion.head && religion.head.greatHolyWar &&
+          FB.religiousHeadOf(s, religionId);
+        if (head && head.id === 'player') return true;
+      }
+      return false;
+    },
+    can: function (s) {
+      for (const religionId in FBDATA.religions) {
+        const religion = FBDATA.religions[religionId];
+        const head = religion && religion.head && religion.head.greatHolyWar &&
+          FB.religiousHeadOf(s, religionId);
+        if (!head || head.id !== 'player') continue;
+        if (FB.canCallGreatHolyWar(s, religionId, null, 'player')) return true;
+      }
+      return FB.T('No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarTargets) FB.ui.showGreatHolyWarTargets();
+    } },
+  { id: 'join_great_holy_war', label: '📯 Answer the great holy war…', noConsume: true,
+    desc: function () {
+      return FB.T('Take the campaign vow before the gathering ends. Freeholders and greater ranks may serve.');
+    },
+    show: function (s) {
+      const campaign = s.greatHolyWar;
+      const pledge = s.player.greatHolyWar;
+      return !!(campaign && campaign.phase === 'preparation' &&
+        (!pledge || pledge.campaignId !== campaign.id) &&
+        FB.playerGreatHolyWarJoinCamp(s));
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarJoin) FB.ui.showGreatHolyWarJoin();
+    } },
+  { id: 'great_holy_war_status', label: '⚔ Great holy war campaign…', noConsume: true,
+    desc: function (s) {
+      const campaign = s.greatHolyWar;
+      return campaign && campaign.phase === 'preparation'
+        ? FB.T('Review the camps, target, and time remaining before the banners march.')
+        : FB.T('Review coalition strength, resolve, occupations, contribution, and reward standing.');
+    },
+    show: function (s) { return !!s.greatHolyWar; },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarPanel) FB.ui.showGreatHolyWarPanel();
+    } },
+  { id: 'renew_great_holy_war_vow', label: '📯 Renew the inherited vow…', noConsume: true,
+    desc: function () {
+      return FB.T('Keep your dynasty’s contribution and territorial eligibility under its new leader.');
+    },
+    show: function (s) {
+      const pledge = s.player.greatHolyWar;
+      return !!(s.greatHolyWar && pledge && pledge.renewalRequired);
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarRenewal) FB.ui.showGreatHolyWarRenewal();
+    } },
+  { id: 'withdraw_great_holy_war', label: '🏳 Withdraw from great holy war…', noConsume: true,
+    desc: function (s) {
+      const pledge = s.player.greatHolyWar;
+      return pledge && pledge.renewalRequired
+        ? FB.T('Decline the inherited vow without a personal penalty, but surrender territorial eligibility.')
+        : FB.T('Abandon the vow for 100 piety and 50 prestige, surrendering territorial eligibility.');
+    },
+    show: function (s) {
+      const campaign = s.greatHolyWar, pledge = s.player.greatHolyWar;
+      return !!(campaign && pledge && pledge.campaignId === campaign.id &&
+        !pledge.withdrawn &&
+        (campaign.phase === 'preparation' || campaign.phase === 'active'));
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarWithdraw) FB.ui.showGreatHolyWarWithdraw();
+    } },
+  { id: 'great_holy_war_settlement', label: '👑 Decide the campaign grant…', noConsume: true,
+    desc: function () {
+      return FB.T('Accept the territorial award or decline it for piety and prestige.');
+    },
+    show: function (s) {
+      return !!(s.greatHolyWar && s.greatHolyWar.phase === 'settlement' &&
+        s.greatHolyWar.settlement && s.greatHolyWar.settlement.pendingPlayer);
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGreatHolyWarSettlement) {
+        FB.ui.showGreatHolyWarSettlement();
       }
     } },
   { id: 'give_alms', label: '🕯 Give alms', cd: 30,
@@ -807,7 +905,8 @@ window.FB = window.FB || {};
         { men: FB.playerLevy(s) + ((w && w.mercCos) || 0) * (FBDATA.balance.mercCompanySize || 150) });
     },
     show: function (s) {
-      if (!s.player.war) return false;
+      if (!s.player.war && !(FB.playerGreatHolyWarHostActive &&
+          FB.playerGreatHolyWarHostActive(s))) return false;
       if (FB.playerHost && FB.playerHost(s)) return false; // already in the field
       const down = (s.armyDown || {})['player'];
       return down === undefined || s.turn - down >= FBDATA.balance.armyRearmDays;
@@ -2251,6 +2350,7 @@ window.FB = window.FB || {};
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
   FB.warCauses = function (state, includeBlocked) {
     const p = state.player, out = [], seen = {};
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return out;
     const playerRealm = FB.playerRealmId(state);
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return out;
     const me = state.chars[p.charId];
@@ -2303,6 +2403,9 @@ window.FB = window.FB || {};
 
   FB.warLockedReason = function (state) {
     if (state.player.war) return FB.T('You are already at war.');
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) {
+      return FB.T('You are committed to a great holy war.');
+    }
     const playerRealm = FB.playerRealmId(state);
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) {
       return FB.T('At war with another realm');
@@ -2395,6 +2498,7 @@ window.FB = window.FB || {};
 
   FB.startPlayerWar = function (state, causeOrTarget, opts) {
     if (state.player.war) return false;
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return false;
     opts = opts || {};
     const playerRealm = FB.playerRealmId(state);
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return false;

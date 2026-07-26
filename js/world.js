@@ -105,6 +105,9 @@ window.FB = window.FB || {};
           fault('realm ' + rid + ' has an invalid ruler profile.');
         }
       }
+      if (realmDef.religion !== undefined && !FBDATA.religions[realmDef.religion]) {
+        fault('realm ' + rid + ' has invalid faith ' + realmDef.religion + '.');
+      }
     }
 
     if (definition.religiousHeads !== undefined) {
@@ -149,6 +152,104 @@ window.FB = window.FB || {};
       if (!Object.prototype.hasOwnProperty.call(kingdoms, kid)) continue;
       if (!kingdoms[kid].empire || !empires[kingdoms[kid].empire]) {
         fault('kingdom ' + kid + ' has invalid empire ' + kingdoms[kid].empire + '.');
+      }
+    }
+
+    /* Great holy wars are optional head metadata. Their ids must resolve
+       against this exact bookmark so a mod cannot install a campaign whose
+       sacred counties or target kingdoms disappear at activation. */
+    for (var ghwReligionId in FBDATA.religions) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.religions, ghwReligionId)) continue;
+      var ghwReligion = FBDATA.religions[ghwReligionId];
+      var ghw = ghwReligion && ghwReligion.head && ghwReligion.head.greatHolyWar;
+      if (!ghw) continue;
+      if (typeof ghw !== 'object' || Array.isArray(ghw)) {
+        fault('faith ' + ghwReligionId + ' greatHolyWar must be an object.');
+        continue;
+      }
+      if (typeof ghw.name !== 'string' || !ghw.name) {
+        fault('faith ' + ghwReligionId + ' greatHolyWar has no name.');
+      }
+      var ghwDate = ghw.minDate || {};
+      if (!isFinite(ghwDate.year) || !isFinite(ghwDate.season) ||
+          !isFinite(ghwDate.day) || ghwDate.season < 0 || ghwDate.season > 3 ||
+          ghwDate.day < 1 || ghwDate.day > 90) {
+        fault('faith ' + ghwReligionId + ' greatHolyWar has an invalid minDate.');
+      }
+      if (ghw.firstTarget && !kingdoms[ghw.firstTarget]) {
+        fault('faith ' + ghwReligionId + ' greatHolyWar has invalid firstTarget ' +
+          ghw.firstTarget + '.');
+      }
+      if (ghw.firstByYear !== undefined && !isFinite(ghw.firstByYear)) {
+        fault('faith ' + ghwReligionId +
+          ' greatHolyWar has invalid firstByYear.');
+      }
+      var ghwTargets = Array.isArray(ghw.sacredTargets) ? ghw.sacredTargets : [];
+      if (!ghwTargets.length) {
+        fault('faith ' + ghwReligionId + ' greatHolyWar needs sacredTargets.');
+      }
+      for (var ghwTargetIndex = 0; ghwTargetIndex < ghwTargets.length; ghwTargetIndex++) {
+        var ghwTarget = ghwTargets[ghwTargetIndex] || {};
+        if (!kingdoms[ghwTarget.kingdom]) {
+          fault('faith ' + ghwReligionId + ' greatHolyWar has invalid sacred kingdom ' +
+            ghwTarget.kingdom + '.');
+        }
+        var ghwCounties = Array.isArray(ghwTarget.counties) ? ghwTarget.counties : [];
+        if (!ghwCounties.length) {
+          fault('faith ' + ghwReligionId + ' greatHolyWar sacred target ' +
+            ghwTarget.kingdom + ' has no counties.');
+        }
+        for (var ghwCountyIndex = 0; ghwCountyIndex < ghwCounties.length; ghwCountyIndex++) {
+          var ghwCountyId = ghwCounties[ghwCountyIndex];
+          var ghwCounty = provinceIds[ghwCountyId];
+          var ghwDuchy = ghwCounty && duchies[ghwCounty.duchy];
+          if (!ghwCounty || ghwCounty.wasteland ||
+              !ghwDuchy || ghwDuchy.kingdom !== ghwTarget.kingdom) {
+            fault('faith ' + ghwReligionId + ' greatHolyWar has invalid sacred county ' +
+              ghwCountyId + ' for ' + ghwTarget.kingdom + '.');
+          }
+        }
+      }
+      if (ghw.firstTarget) {
+        var ghwFirstSacred = false;
+        for (var ghwFirstIndex = 0; ghwFirstIndex < ghwTargets.length; ghwFirstIndex++) {
+          if (ghwTargets[ghwFirstIndex] &&
+              ghwTargets[ghwFirstIndex].kingdom === ghw.firstTarget) {
+            ghwFirstSacred = true;
+            break;
+          }
+        }
+        if (!ghwFirstSacred) {
+          fault('faith ' + ghwReligionId +
+            ' greatHolyWar firstTarget must appear in sacredTargets.');
+        }
+      }
+      var ghwCrisis = Array.isArray(ghw.crisisKingdoms) ? ghw.crisisKingdoms : [];
+      for (var ghwCrisisIndex = 0; ghwCrisisIndex < ghwCrisis.length; ghwCrisisIndex++) {
+        if (!kingdoms[ghwCrisis[ghwCrisisIndex]]) {
+          fault('faith ' + ghwReligionId + ' greatHolyWar has invalid crisis kingdom ' +
+            ghwCrisis[ghwCrisisIndex] + '.');
+        }
+      }
+      for (var ghwChanceIndex = 0; ghwChanceIndex < 2; ghwChanceIndex++) {
+        var ghwChanceKey = ghwChanceIndex ? 'crisisChance' : 'yearlyChance';
+        if (ghw[ghwChanceKey] !== undefined &&
+            (!isFinite(ghw[ghwChanceKey]) || ghw[ghwChanceKey] < 0 ||
+             ghw[ghwChanceKey] > 1)) {
+          fault('faith ' + ghwReligionId + ' greatHolyWar has invalid ' +
+            ghwChanceKey + '.');
+        }
+      }
+      if (ghw.crisisShare !== undefined &&
+          (!isFinite(ghw.crisisShare) || ghw.crisisShare < 0 ||
+           ghw.crisisShare > 1)) {
+        fault('faith ' + ghwReligionId +
+          ' greatHolyWar has invalid crisisShare.');
+      }
+      if (ghw.lossGuaranteeYears !== undefined &&
+          (!isFinite(ghw.lossGuaranteeYears) || ghw.lossGuaranteeYears < 1)) {
+        fault('faith ' + ghwReligionId +
+          ' greatHolyWar has invalid lossGuaranteeYears.');
       }
     }
 
@@ -198,6 +299,7 @@ window.FB = window.FB || {};
             realms[event.newRealm.id] || !provinceIds[event.newRealm.capital] ||
             provinceIds[event.newRealm.capital].wasteland ||
             (event.newRealm.liege && !realms[event.newRealm.liege]) ||
+            (event.newRealm.religion && !FBDATA.religions[event.newRealm.religion]) ||
             (event.newRealm.ruler && !validRulerProfile(event.newRealm.ruler))) {
           fault('scripted event at index ' + ei + ' has an invalid new realm.');
         }
@@ -577,6 +679,7 @@ window.FB = window.FB || {};
         id: r.id, name: r.name, color: r.color, capital: r.capital,
         aggression: r.aggression !== undefined ? r.aggression : 1,
         rank: r.rank || 3, liege: r.liege || null,
+        religion: r.religion || (cap ? cap.religion : null),
         alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish', r.ruler, state.date.year),
         war: null, op: 0
       };
@@ -643,6 +746,8 @@ window.FB = window.FB || {};
       id: opts.id, name: opts.name,
       color: shade(state.realms[top] ? state.realms[top].color : '#888888', opts.id),
       capital: opts.capital, aggression: 0, rank: opts.rank || 1, liege: opts.liege,
+      religion: opts.religion ||
+        ((FB.world.byId[opts.capital] || {}).religion || null),
       alive: true, ruler: makeRuler(opts.culture || 'frankish', null,
         state.date && state.date.year), war: null,
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
@@ -704,9 +809,8 @@ window.FB = window.FB || {};
   }
 
   function realmFaithGroup(state, rid) {
-    const r = state.realms[rid];
-    const pr = r && FB.world.byId[r.capital];
-    return pr ? FB.religionOf(pr.religion).group : null;
+    const religionId = FB.realmReligionId(state, rid);
+    return religionId ? FB.religionOf(religionId).group : null;
   }
   FB.realmFaithGroup = realmFaithGroup;
 
@@ -718,10 +822,13 @@ window.FB = window.FB || {};
   FB.realmReligionId = function (state, rid) {
     if (!state || !rid) return null;
     if (rid === 'player') {
+      const playerRealm = state.realms && state.realms.player;
+      if (playerRealm && playerRealm.religion) return playerRealm.religion;
       const c = state.chars && state.chars[state.player.charId];
       return c ? c.religion : null;
     }
     const r = state.realms[rid];
+    if (r && r.religion) return r.religion;
     const pr = r && FB.world.byId[r.capital];
     return pr ? pr.religion : null;
   };
@@ -882,6 +989,7 @@ window.FB = window.FB || {};
       aggression:definition.aggression !== undefined ? definition.aggression : 0,
       rank:meta.restoredRank || 3,
       liege:null,
+      religion:religionId,
       alive:true,
       ruler:makeRuler(seat.culture, null, state.date.year),
       war:null,
@@ -1138,7 +1246,8 @@ window.FB = window.FB || {};
       name: m.name,
       sex: m.sex,
       culture: r.ruler.culture,
-      religion: cap ? cap.religion : state.chars[state.player.charId].religion,
+      religion: r.religion ||
+        (cap ? cap.religion : state.chars[state.player.charId].religion),
       born: m.born,
       dyn: 'of ' + r.name,
       station: r.rank <= 2 ? 3 : 4,
@@ -1636,7 +1745,9 @@ window.FB = window.FB || {};
   };
 
   FB.isRealmAtWar = function (state, realmId) {
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, realmId)) return true;
     realmId = FB.topRealm(state, realmId);
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, realmId)) return true;
     const r = state.realms[realmId];
     if (r && r.war) return true;
     // player wars occupy both the sovereign the player answers for and the
@@ -1691,6 +1802,19 @@ window.FB = window.FB || {};
       activeHosts[id] = activeHosts[enemyId] = 1;
     }
 
+    const great = state.greatHolyWar;
+    if (great && great.phase === 'active') {
+      for (const campName of ['attackers', 'defenders']) {
+        const camp = great.participants && great.participants[campName];
+        if (!camp) continue;
+        for (const participant of camp) {
+          if (participant && participant.sovereign) {
+            activeHosts[participant.realm] = 1;
+          }
+        }
+      }
+    }
+
     const armies = Array.isArray(state.armies) ? state.armies : [];
     const seenHosts = {};
     state.armies = armies.filter(function (army) {
@@ -1740,6 +1864,7 @@ window.FB = window.FB || {};
           capital: ev.newRealm.capital,
           aggression: ev.newRealm.aggression !== undefined ? ev.newRealm.aggression : 1,
           rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
+          religion: ev.newRealm.religion || (cap ? cap.religion : null),
           alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic',
             ev.newRealm.ruler, state.date.year), war: null, op: 0
         };
@@ -1760,6 +1885,7 @@ window.FB = window.FB || {};
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
+    if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
 
     // realm AI
     for (const id in state.realms) {
@@ -2115,6 +2241,7 @@ window.FB = window.FB || {};
   FB.atWarPersonally = function (state) {
     const p = state.player;
     if (p.war) return true;
+    if (FB.playerGreatHolyWarActive && FB.playerGreatHolyWarActive(state)) return true;
     if (p.flags.on_campaign) return true;
     if (p.flags.with_liege_host && p.liege && FB.isRealmAtWar(state, p.liege)) return true;
     if (p.profession === 'soldier' && FB.isRealmAtWar(state, state.owner[p.provinceId])) return true;
@@ -2632,6 +2759,7 @@ window.FB = window.FB || {};
     const r = old || { id: 'player', color: '#f0c840', aggression: 0, war: null, op: 0 };
     r.name = nm;
     r.capital = (p.provs && p.provs[0]) || p.provinceId;
+    r.religion = me.religion;
     r.alive = true;
     r.rank = Math.max(1, p.tier - 3);
     r.liege = p.liege || null;
@@ -2710,6 +2838,7 @@ window.FB = window.FB || {};
       mar: FB.skillOf(rulerChar || state.chars[p.charId], 'mar'),
       generation: (mine.ruler && mine.ruler.generation !== undefined ? mine.ruler.generation : 1)
     };
+    mine.religion = (rulerChar || state.chars[p.charId]).religion || mine.religion;
     const top = mine.liege ? FB.topRealm(state, mine.liege) : 'player';
     for (const pid in state.owner) {
       const h = state.holder && state.holder[pid];

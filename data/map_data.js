@@ -953,6 +953,17 @@ FBDATA.balance = {
   religiousHeadRestorePiety: 200, religiousHeadRestorePrestige: 150,
   religiousHeadRestoreOpinion: 15, religiousHeadVacancyDays: 360,
   religiousHeadClaimPrestige: 500, religiousHeadClaimPiety: 300,
+  /* great holy wars (js/holywar.js): one global two-camp campaign */
+  greatHolyWarPreparationDays: 180, greatHolyWarCooldownDays: 6480,
+  greatHolyWarCollapseCooldownDays: 2880, greatHolyWarDeadlineDays: 2880,
+  greatHolyWarVolunteersPerCamp: 8,
+  greatHolyWarSiegeBase: 120, greatHolyWarSiegePerDev: 10,
+  greatHolyWarSiegeMenPerDev: 27, greatHolyWarSiegeMinRate: 0.5,
+  greatHolyWarSiegeMaxRate: 2, greatHolyWarSiegeDecay: 1,
+  greatHolyWarBattleResolve: 10, greatHolyWarOccupationResolve: 5,
+  greatHolyWarWithdrawPiety: 100, greatHolyWarWithdrawPrestige: 50,
+  greatHolyWarCrownShare: 0.35, greatHolyWarDuchyShare: 0.25,
+  greatHolyWarCountyShare: 0.15,
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
   /* domain limit: counties the player may hold DIRECTLY before overload.
