@@ -961,7 +961,7 @@ window.FB = window.FB || {};
     FB.ui.showGame();
     FB.map.fitView();
     FB.map.select(null);
-    FB.ui.showTab('log');
+    FB.ui.showTab('log', { history:false });
     FB.ui.refresh();
     FB.news(state, FB.msg('news.life.observe_begins',
       '👁 You settle in to watch the realms go about their centuries.', {}));

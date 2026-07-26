@@ -27,18 +27,19 @@ leftmost figures on narrow screens, and the date is hidden in the tighter landsc
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
 
-Mobile-layout UI layers mirror their navigation in the browser's same-document history:
-the Self/Kin drawer, generic dialogs, selected nested dialog views, the travel picker, and
-the equipment-slot overlay each add a same-URL entry. Browser/device Back unwinds one layer
-at a time, and visible Close/Back controls consume the same owned entry so dead entries do
-not accumulate. This uses only the game's own frame history and never reaches into an embed's
-parent page. Android consumes physical Back to leave itch's browser-owned iframe fullscreen
-before it traverses that history, so reversible generic dialogs and nested equipment pickers
-show a sticky in-game Back control on embedded mobile layouts; it invokes the same owned
-history entry and keeps fullscreen active. Direct play on `play.fallowborn.com` continues to
-use device Back normally. Entries carry UI descriptors only; gameplay actions and mandatory
-event decisions are never made undoable. If the History API is unavailable or rejects an
-entry, all existing visible controls remain the fallback.
+Mobile-layout UI states mirror their navigation in the browser's same-document history:
+switches among Deeds/Land/Network/Chronicle, the Self/Kin drawer, generic dialogs, selected
+nested dialog views, the travel picker, and the equipment-slot overlay each add a same-URL
+entry. Browser/device Back unwinds one state at a time, returning through previously selected
+panels before leaving the game, and visible Close/Back controls consume the same owned entry
+so dead entries do not accumulate. This uses only the game's own frame history and never
+reaches into an embed's parent page. Android consumes physical Back to leave itch's
+browser-owned iframe fullscreen before it traverses that history, so reversible generic
+dialogs and nested equipment pickers show a sticky in-game Back control on embedded mobile
+layouts; it invokes the same owned history entry and keeps fullscreen active. Direct play on
+`play.fallowborn.com` continues to use device Back normally. Entries carry UI descriptors
+only; gameplay actions and mandatory event decisions are never made undoable. If the History
+API is unavailable or rejects an entry, all existing visible controls remain the fallback.
 
 Two families of dialog break the bottom-sheet default, both with the footer button pinned to
 the bottom middle so a long body needs no scroll to shut and nothing reaches for the top edge
