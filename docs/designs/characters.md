@@ -83,6 +83,16 @@ is back at 7+ and the character is not ill; sicknesses clear only with
 (`opts.ill` covers pre-ailment saves), so marks come and go with the condition;
 `scarred` and `one_eyed` trait marks are drawn for every character, NPCs included.
 
+**A rich table protects the young.** Each station above serf trims the yearly
+mortality of the household's own children (and of a child protagonist) by
+`balance.richChildMortalityBonus` (7%), and each station gives a
+`balance.richChildHealthChance` (10%) yearly chance that a resident child under
+16 gains a point of health, up to 8 — so the children of rulers and rich
+merchants die a little less often and grow a little hardier than a serf's.
+Paid care in the `child_fever` event follows the schooling ladder: the wise
+woman (3 gold, 60%), a physician (10, 75%), a renowned physician (30, 90%),
+beside free prayer (55%).
+
 **Regard earns its keep.** Every character carries one `opinion` of the player (−100…100).
 It gates deeds and events (courtship, petitions, `roleOpinionAbove/Below` triggers), and
 three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggregate now

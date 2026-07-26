@@ -1113,6 +1113,10 @@ The top-level `currency` presentation schema is documented above. The deprecated
 definition is active; it never renames internal gold or alters amounts, costs, or contracts.
 `mortalityBase` scales the whole yearly mortality curve for player and kin alike
 (0.012 is the as-authored baseline; halve it for longer lives, raise it for a crueler age).
+`richChildMortalityBonus` is the fraction of childhood mortality removed per
+station above serf for the household's own children (and a child protagonist),
+and `richChildHealthChance` the yearly chance per station that such a child
+gains a point of health, up to 8.
 That includes the wider-family simulation: `kinMarryChance` and `kinChildChance` are the
 per-year chances that an adult kinsman weds, and that a wed kinswoman bears a child.
 `fertilityByAge` shapes how age wears on conception: per sex (`f`/`m`), a list of
