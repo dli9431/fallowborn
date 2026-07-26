@@ -202,3 +202,54 @@ the same ledger and is separate from Royal Council authority or officer manageme
 Related: [events.md](events.md) for the interpreter, [time.md](time.md) for the seasonal
 tick, [realms.md](realms.md) for who can target whom, [provinces.md](provinces.md) for
 the map the hosts march on.
+
+## Great holy-war campaigns
+
+`js/holywar.js` adds one global two-camp campaign beside the bilateral war records.
+An active centralized religious head calls it; participating independent sovereigns
+each retain the same one-host invariant used by ordinary wars, and the strongest
+attacking volunteer becomes military leader. `FB.armiesHostile` checks coalition camps
+before ordinary enemies, so same-camp hosts are friendly and opposite camps fight when
+they share a county. `FB.isRealmAtWar` includes preparation pledges and active
+participants, preventing a participant from opening another ordinary war.
+
+Preparation lasts 180 days. Attackers must be exact-faith sovereign volunteers.
+Sovereigns controlling frozen objective land are mandatory defenders; other
+sovereigns from a religion group opposed to the caller may volunteer. Each camp has
+eight voluntary AI places, while mandatory defenders and the player do not consume
+that cap. At launch, attacking volunteers still entangled in an ordinary war drop
+out, mandatory defenders receive white peace, and cross-camp alliances and player
+pacts break. The call collapses if the head becomes vacant, the target ceases to be
+valid, or it lacks two sovereign attackers and also lacks one attacker with 75% of
+the defending strength. A launched campaign no longer depends on the office remaining
+occupied.
+
+Objectives are the target kingdom's counties controlled by another religion group at
+the call. They keep their normal owner and holder throughout the campaign.
+`campaign.occupations[provinceId]` holds only temporary occupation, siege progress,
+the progressing camp, and the occupying host. An uncontested qualifying camp gains
+`clamp(combined men / (development × 27), 0.5, 2)` siege-days each day toward
+`120 + development × 10`; idle work decays by one. Defender work recaptures an
+occupied county. Battles shift resolve by 10 and occupations by 5. Defenders win at
+−100 resolve, when no sovereign attacker remains, or after eight years. Attackers
+must occupy every frozen lost holy county, at least half the objective counties, and
+60% of objective development. Only occupied counties transfer at settlement.
+
+Contribution is keyed by participant realm, with the protagonist recorded as
+`player`, and therefore survives character succession. Field winners earn
+`5 + floor(enemy casualties / 100)`, surviving losers one; an occupation or recapture
+pays `10 + development × 2` divided by friendly strength present. Every completed
+campaign season gives one service point, and personal expedition events add one or
+three. A successor must renew the inherited vow to resume service and land
+eligibility. Ordinary withdrawal costs 100 piety and 50 prestige and forfeits land
+eligibility.
+
+Attacker settlement orders captured land by contribution. The sacred or
+highest-development county anchors the new sovereign result, then complete duchies
+and individual counties are awarded where the 35% crown, 25% duchy, and 15% county
+bands allow. A kingdom is never created without the existing de jure majority;
+otherwise the highest complete duchy or county result is used. AI grants create new
+cadet rulers based on the sponsoring realm's culture and dynasty identity, leaving
+that sponsor's old realm intact. Player choices can found a realm, exchange and
+relocate a vassal demesne, attach a secondary grant to an existing sovereign realm,
+unite a won crown with existing lands, or decline for non-land honor.

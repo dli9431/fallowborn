@@ -216,6 +216,17 @@ or press on for the walls. Defense cuts the same way against you: keep the enemy
 host out of your lands, for three seasons unchecked costs you a border county. Wars
 bleed gold and men — and past eight seasons, exhaustion ends them with nothing gained.
 
+Great holy wars are separate global campaigns with many sovereign hosts on two camps.
+Catholic Crusades may be called from late 1095 when Jerusalem is outside Christian rule;
+Sunni Jihads may be called from 1105 when Jerusalem, Baghdad, Mecca, or Medina is outside
+Muslim rule. An active Pope or Caliph makes the call, then banners gather for 180 days.
+Adult freeholders and higher ranks may answer from the Deeds tab. Sovereigns command their
+own host; vassals and unlanded volunteers serve through campaign events. Attackers must
+occupy every lost holy objective, at least half the frozen target counties, and 60% of
+their development within eight years. Battles, occupations, and seasons of service build
+dynasty-persistent contribution, which determines crowns, duchies, counties, or piety and
+prestige when the occupied land is partitioned.
+
 ### Starts
 
 Seven scenarios: Serf, Free Farmer, Craftsman's Apprentice, Novice Monk, Man-at-Arms,

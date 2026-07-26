@@ -176,5 +176,39 @@ FBDATA.events.push(
   options:[
     { label:'Rally who you can in the dark.', desc:'Live now; be avenged later.', effects:{ gold:-4, health:-1, prestige:-4,
       deathProvenance:{ kind:'battle', province:'context', enemy:'war' } } }
+  ]},
+
+/* ---------- great holy wars (queued by js/holywar.js) ---------- */
+{ id:'ghw_field_battle_won', title:'A Victory for the Faith', trigger:{ never:true }, wartime:true,
+  text:'The opposing host breaks at {cname}. Your banner remains among the victorious ranks, and every campfire carries the tale before nightfall.',
+  options:[
+    { label:'Give thanks, then tend the wounded.', desc:'Your service is written into the campaign’s reckoning.',
+      effects:{ prestige:8, piety:4, skills:{mar:1} } }
+  ]},
+{ id:'ghw_field_battle_lost', title:'The Faithful Are Driven Back', trigger:{ never:true }, wartime:true,
+  text:'Your camp’s line buckles at {cname}. You escape with the remnant while the enemy holds the field.',
+  options:[
+    { label:'Rally beneath the nearest banner.', desc:'The campaign is not decided by one bloody day.',
+      effects:{ health:-1, prestige:-3, deathProvenance:{ kind:'battle', province:'context' } } }
+  ]},
+{ id:'ghw_expedition_service', title:'A Season Beneath the Banners',
+  trigger:{ never:true }, wartime:true,
+  text:'You pass a season in the great host: dusty marches, cold watches, and the endless labor that keeps an army together.',
+  options:[
+    { label:'Continue your service.', desc:'Quiet duty still counts when the spoils are divided.',
+      effects:{ custom:'ghw_service_safe', piety:1 } }
+  ]},
+{ id:'ghw_expedition_danger', title:'Beyond the Campfires',
+  trigger:{ never:true }, wartime:true,
+  text:'Scouts need volunteers to cross dangerous ground before dawn. Success would bring useful intelligence; failure may leave no road home.',
+  options:[
+    { label:'Go with the scouts.', chance:'battle', desc:'Risk blood for a larger share of the campaign’s honor.',
+      success:{ text:'You return with prisoners and a sure account of the enemy road.',
+        effects:{ custom:'ghw_service_danger', prestige:5, skills:{mar:1} } },
+      failure:{ text:'The patrol is discovered. You crawl back after a running fight in the dark.',
+        effects:{ custom:'ghw_service_safe', health:-2, prestige:1,
+          deathProvenance:{ kind:'battle', province:'player' } } } },
+    { label:'Remain with the baggage.', desc:'Safe service is service nonetheless.',
+      effects:{ custom:'ghw_service_safe', piety:1 } }
   ]}
 );

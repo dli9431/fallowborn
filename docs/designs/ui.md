@@ -205,6 +205,23 @@ shows remain protected.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 
+## Great holy-war presentation
+
+An active call adds a compact Deeds summary and a focusable campaign action. The
+full-sheet campaign dialog names caller, military leader, schedule, camp strengths,
+resolve, both participant lists, every frozen objective and occupation/siege state,
+and the protagonist's contribution share and current reward band. A player religious
+head gets a target picker; eligible adults get pledge, renewal, and withdrawal
+confirmations. A pending territorial grant is a non-dismissable accept/decline dialog
+that explains whether acceptance founds a realm, relocates a vassal, attaches a
+secondary grant, or unites a crown.
+
+The map draws target rings, temporary occupation color, and siege arcs underneath
+field hosts. The Land panel repeats the selected objective's occupation and progress,
+so the information remains accessible without relying on canvas color. All dialogs
+use ordinary action buttons, number-key ordering, focus management, Escape/history
+rules, and the existing mobile bottom-sheet layout.
+
 ## Localization
 
 Settings exposes English plus French, German, Italian, and Spanish as AI-translated Preview

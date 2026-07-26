@@ -105,14 +105,35 @@ FBDATA.religions = {
   catholic:     { name:'Latin Christianity',  group:'christian', icon:'✝',
     head:{
       realm:'papacy', title:'Pope', recovery:'grant_seat', seat:'roma',
-      restoredRank:3, sameFaithWar:'sacrilege'
+      restoredRank:3, sameFaithWar:'sacrilege',
+      greatHolyWar:{
+        name:'Crusade',
+        minDate:{ year:1095, season:3, day:1 },
+        firstTarget:'k_syria', firstByYear:1100,
+        yearlyChance:0.25, crisisChance:0.75,
+        crisisKingdoms:['k_armenia','k_anatolia'],
+        crisisGroup:'muslim', crisisShare:0.25,
+        sacredTargets:[
+          { kingdom:'k_syria', counties:['jerusalem'] }
+        ]
+      }
     } },
   orthodox:     { name:'Greek Christianity',  group:'christian', icon:'☦' },
   eastern:      { name:'Eastern Christianity',group:'christian', icon:'☧' },
   sunni:        { name:'Islam (Sunni)',       group:'muslim',    icon:'☪',
     head:{
       realm:'abbasid', title:'Caliph', recovery:'claim',
-      claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary'
+      claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary',
+      greatHolyWar:{
+        name:'Jihad',
+        minDate:{ year:1105, season:0, day:1 },
+        yearlyChance:0.35, lossGuaranteeYears:10,
+        sacredTargets:[
+          { kingdom:'k_syria', counties:['jerusalem'] },
+          { kingdom:'k_iraq', counties:['baghdad'] },
+          { kingdom:'k_arabia', counties:['mecca','medina'] }
+        ]
+      }
     } },
   shia:         { name:'Islam (Shia)',        group:'muslim',    icon:'☪' },
   norse_pagan:  { name:'Norse Paganism',      group:'pagan',     icon:'ᚠ' },
