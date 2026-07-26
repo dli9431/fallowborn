@@ -143,6 +143,8 @@ window.FB = window.FB || {};
   FB.setCareer = function (state, c, profession, rank) {
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
+    if (def.requiresTech && FB.techRequirementMet &&
+        !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (def.maleOnly && c.sex !== 'm') return false;
     const career = FB.careerOf(state, c);
     const changedProfession = career.profession !== profession;
@@ -251,11 +253,16 @@ window.FB = window.FB || {};
       const def = FBDATA.careers[id];
       if (def.hiddenChoice) continue;
       if (def.tierMin !== undefined && state.player.tier < def.tierMin) continue;
+      if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
       if (def.maleOnly && c.sex !== 'm') continue;
       if (def.religionGroups && def.religionGroups.indexOf(religionGroup) < 0) continue;
       if (age < 16 && age < (def.apprenticeAge || 10)) continue;
       if (playerClericalOffice && id !== current.profession) continue;
-      out.push({ id:id, def:def, cost:age < 16 ? (def.apprenticeCost || 0) : 0 });
+      out.push({
+        id:id, def:def,
+        cost:age < 16 ? Math.round((def.apprenticeCost || 0) *
+          FB.techCostFactor(state, 'training')) : 0
+      });
     }
     return out;
   };
@@ -390,9 +397,11 @@ window.FB = window.FB || {};
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
     if (c.id === state.player.charId && state.player.tier >= 3) return false;
+    if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     const age = FB.ageOf(c, state.date.year);
     const apprentice = age < 16;
-    const cost = apprentice ? (def.apprenticeCost || 0) : 0;
+    const cost = apprentice ? Math.round((def.apprenticeCost || 0) *
+      FB.techCostFactor(state, 'training')) : 0;
     if (state.player.gold < cost) return false;
     if (!FB.setCareer(state, c, profession, apprentice ? 'apprentice' : 'journeyman')) return false;
     state.player.gold -= cost;
@@ -760,7 +769,7 @@ window.FB = window.FB || {};
     const def = id && FBDATA.schooling[id];
     if (id === 'master' && !FB.educationTutor(state, c, false)) return 0;
     return c && c.edu && c.edu.focus && def && FB.schoolingAvailable(state, c, id) ?
-      (def.cost || 0) : 0;
+      (def.cost || 0) * FB.techCostFactor(state, 'training') : 0;
   };
 
   /* Full-year directed-learning chance supplied by the current teacher or
@@ -810,8 +819,7 @@ window.FB = window.FB || {};
       if (c.edu.tutorId && !FB.educationTutor(state, c, true)) continue;
       const chance = FB.educationInstructionChance(state, c);
       if (chance <= base) continue;
-      const def = id && FBDATA.schooling[id];
-      const cost = def ? (def.cost || 0) : 0;
+      const cost = FB.schoolingCost(state, c);
       if (cost && state.player.gold + 0.0001 < cost) {
         if (!c.edu.schoolUnpaid) {
           c.edu.schoolUnpaid = 1;
@@ -880,7 +888,8 @@ window.FB = window.FB || {};
     const def = FBDATA.enterprises[type];
     let copies = 0;
     for (const e of FB.enterpriseList(state)) if (e.type === type) copies++;
-    return Math.round(def.cost * Math.pow(FBDATA.balance.enterpriseRepeatCostGrowth || 1.35, copies));
+    return Math.round(def.cost * Math.pow(FBDATA.balance.enterpriseRepeatCostGrowth || 1.35, copies) *
+      FB.techCostFactor(state, 'enterprise'));
   };
 
   FB.enterpriseWorkers = function (state, type) {
@@ -906,6 +915,7 @@ window.FB = window.FB || {};
     const standing = FB.enterpriseList(state);
     for (const id in FBDATA.enterprises) {
       const def = FBDATA.enterprises[id];
+      if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
       if (def.devMin && (state.dev[p.provinceId] || 1) < def.devMin) continue;
       if (def.coastal && (!pr || !pr.coastal)) continue;
       if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) continue;

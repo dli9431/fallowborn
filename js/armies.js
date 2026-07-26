@@ -24,9 +24,9 @@ window.FB = window.FB || {};
        manual / holdManual (player host only) mark a hand-tapped route still
        playing out and a hand-given halt — the automated stances never touch
        either.
-       units: { levy, arch, ret, mercs } — the host's composition (men is
+       units: { levy, arch, cav, ret, mercs } — the host's composition (men is
        always the total). Each class fights at its own quality
-       (balance.qualityLevy/Archer/Retinue/Merc); battle casualties fall
+       (balance.qualityLevy/Archer/Cavalry/Retinue/Merc); battle casualties fall
        levy-first and men-at-arms last, and a resting host refills with fresh
        levy only — the slain professionals are not replaced mid-war.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
@@ -41,7 +41,14 @@ window.FB = window.FB || {};
   FB.hostUnits = function (army) {
     if (!army.units) {
       const mercs = army.mercs || 0;
-      army.units = { levy: Math.max(0, army.men - mercs), arch: 0, ret: 0, mercs: mercs };
+      army.units = {
+        levy:Math.max(0, army.men - mercs), arch:0, cav:0, ret:0, mercs:mercs
+      };
+    }
+    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+      if (!isFinite(Number(army.units[key])) || Number(army.units[key]) < 0) {
+        army.units[key] = 0;
+      }
     }
     return army.units;
   };
@@ -51,23 +58,30 @@ window.FB = window.FB || {};
     if (!units || !men) return 1;
     const bal = B();
     return (units.levy * (bal.qualityLevy || 1) + units.arch * (bal.qualityArcher || 1) +
+      (units.cav || 0) * (bal.qualityCavalry || 1) +
       units.ret * (bal.qualityRetinue || 1) + (units.mercs || 0) * (bal.qualityMerc || 1)) / men;
   };
 
-  /* AI realms keep no buildings: their professional core is a simple
-     fraction of the host, growing once the era turns (balance knobs) */
-  function aiFracs(state) {
+  /* AI realms keep no buildings: their baseline professional core is joined
+     by nation-specific military technology. */
+  function aiFracs(state, rid) {
     const bal = B();
-    let r = bal.aiRetinueFrac || 0, a = bal.aiArcherFrac || 0;
-    if (state.date.year >= (bal.aiEraStepYear || 1e9)) {
-      r += bal.aiEraStepFrac || 0; a += bal.aiEraStepFrac || 0;
+    const tech = FB.techAIUnits ? FB.techAIUnits(state, rid) : {};
+    let r = (bal.aiRetinueFrac || 0) + (tech.ret || 0);
+    let a = (bal.aiArcherFrac || 0) + (tech.arch || 0);
+    let c = tech.cav || 0;
+    const professional = r + a + c;
+    if (professional > 0.9) {
+      const scale = 0.9 / professional;
+      r *= scale; a *= scale; c *= scale;
     }
-    return { ret: r, arch: a };
+    return { ret:r, arch:a, cav:c };
   }
-  FB.aiHostQuality = function (state) {
-    const bal = B(), f = aiFracs(state);
-    return (1 - f.ret - f.arch) * (bal.qualityLevy || 1) +
-      f.arch * (bal.qualityArcher || 1) + f.ret * (bal.qualityRetinue || 1);
+  FB.aiHostQuality = function (state, rid) {
+    const bal = B(), f = aiFracs(state, rid);
+    return (1 - f.ret - f.arch - f.cav) * (bal.qualityLevy || 1) +
+      f.arch * (bal.qualityArcher || 1) + f.cav * (bal.qualityCavalry || 1) +
+      f.ret * (bal.qualityRetinue || 1);
   };
 
   function B() { return FBDATA.balance; }
@@ -174,14 +188,14 @@ window.FB = window.FB || {};
     const cs = B().mercCompanySize || 150;
     const comp = FB.playerComposition(state);
     const units = {
-      levy: comp.levy, arch: comp.arch, ret: comp.ret,
+      levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
       mercs: (w && w.mercCos || 0) * cs
     };
     if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
     const allied = w && w.defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
-    let men = units.levy + units.arch + units.ret + units.mercs;
+    let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
     const floor = B().armyMinMen || 40;
     if (men < floor) { units.levy += floor - men; men = floor; }
     const home = playerHome(state);
@@ -203,7 +217,7 @@ window.FB = window.FB || {};
   function raiseAIHost(state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
-    let men = Math.max(60, Math.round(FB.realmStrength(state, rid) * B().levyPerDev * (B().aiHostPerDev || 0.3)));
+    let men = FB.aiBaseHost(state, rid);
     let defending = !!(state.player.war && !state.player.war.defending && state.player.war.enemy === rid);
     if (!defending) {
       for (const id in state.realms) {
@@ -216,10 +230,13 @@ window.FB = window.FB || {};
     const allied = !FB.greatHolyWarCamp(state, rid) && defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, rid) : { ally: null, men: 0 };
     men += allied.men;
-    const f = aiFracs(state);
+    const f = aiFracs(state, rid);
     const base = men - allied.men;
-    const units = { ret: Math.round(base * f.ret), arch: Math.round(base * f.arch), levy: 0, mercs: 0 };
-    units.levy = base - units.ret - units.arch + allied.men;
+    const units = {
+      ret:Math.round(base * f.ret), arch:Math.round(base * f.arch),
+      cav:Math.round(base * f.cav), levy:0, mercs:0
+    };
+    units.levy = base - units.ret - units.arch - units.cav + allied.men;
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
@@ -385,17 +402,18 @@ window.FB = window.FB || {};
     } else {
       const r = state.realms[army.realm];
       pw = army.men * q * (1 + (r && r.ruler ? r.ruler.mar : 5) / (B().battleMarAI || 22));
+      pw *= 1 + (FB.techBonus ? FB.techBonus(state, 'battle', army.realm) : 0);
     }
     return pw;
   }
 
-  /* battle losses: the levy wall takes the brunt, the paid and armored core
-     dies last (ret > mercs > archers > levy in stubbornness) */
+  /* Battle losses fall through the ordered classes: levy, archers,
+     mercenaries, cavalry, then men-at-arms. */
   function applyLosses(army, lost) {
     army.men = Math.max(0, army.men - lost);
     if (!army.units) return;
     let rem = lost;
-    const order = ['levy', 'arch', 'mercs', 'ret'];
+    const order = ['levy', 'arch', 'mercs', 'cav', 'ret'];
     for (const k of order) {
       if (rem <= 0) break;
       const d = Math.min(army.units[k] || 0, rem);

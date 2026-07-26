@@ -790,7 +790,8 @@ window.FB = window.FB || {};
       start: start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
-      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
+      realmTech: {}, realmTechMigration: 1,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
@@ -811,7 +812,7 @@ window.FB = window.FB || {};
         holdings: [], enterprises: [],
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
-        landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null, research: 0
+        landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
@@ -932,7 +933,8 @@ window.FB = window.FB || {};
       start:start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
-      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {}, tech: [],
+      chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
+      realmTech: {}, realmTechMigration: 1,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
@@ -950,7 +952,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         items: [], loadouts: {}, itemMigration: 1,
-        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null, research: 0
+        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
@@ -1031,6 +1033,7 @@ window.FB = window.FB || {};
        march daily — and that is all. No focus, upkeep, mortality, births,
        events, or autosaves; nothing personal ever reaches the watcher. */
     if (G.observe) {
+      if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
       if (seasonBoundary && newYear) FB.worldTick(s);
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
@@ -1056,12 +1059,12 @@ window.FB = window.FB || {};
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
-        p.research = (p.research || 0) + FB.buildingBonus(s, 'research') + FB.techBonus(s, 'research');
+        FB.addResearch(s, FB.buildingBonus(s, 'research'));
         if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
-        if (G.auto.research) FB.autoResearch(s);
       }
+      if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
       FB.tickForeignPolicy(s);

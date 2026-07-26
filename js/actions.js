@@ -309,12 +309,17 @@ window.FB = window.FB || {};
     gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
   { id: 'patronize', label: '📜 Patronize scholars',
     desc: function (s) {
-      return FB.T('Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})',
-        { amount: Math.floor(s.player.research || 0) });
+      const record = FB.realmTechRecord(s);
+      const active = record.active && FBDATA.tech[record.active];
+      return active
+        ? FB.T('Fund learned people; their work aids the national project {technology}.', {
+          technology:FB.dataText(s, s.player.charId, 'tech', record.active, active, 'name', {})
+        })
+        : FB.T('Fund learned people; their work is banked until the nation begins a technology.');
     },
     show: function (s) { return s.player.tier >= 3 && adult(s); },
     tick: function (s) {
-      s.player.research = (s.player.research || 0) + (4 + FB.skillOf(me(s), 'lea') / 3) / D;
+      FB.addResearch(s, (4 + FB.skillOf(me(s), 'lea') / 3) / D);
       s.player.gold = Math.max(0, s.player.gold - 2 / D);
       if (skillDch(0.3)) skillUp(s, 'lea');
     },
@@ -827,15 +832,18 @@ window.FB = window.FB || {};
       return 'Nothing more can be raised in your lands.';
     },
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
-  { id: 'adopt_tech', label: '💡 Adopt an innovation…', noConsume: true,
+  { id: 'adopt_tech', label: '💡 Technology…', noConsume: true,
     desc: function (s) {
-      return FB.T('Scholarship: {amount} — spend it on advances that outlive you.',
-        { amount: Math.floor(s.player.research || 0) });
+      const rid = FB.techRealmId(s);
+      const realm = s.realms[rid];
+      const levels = FB.techLevels(s, rid);
+      return FB.T('{realm}: Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5.', {
+        realm:realm ? realm.name : FB.T('Your nation'),
+        military:levels.military, economy:levels.economy,
+        administrative:levels.administrative
+      });
     },
     show: function (s) { return s.player.tier >= 3; },
-    can: function (s) {
-      return FB.techAvailable(s).length ? true : 'No new innovation is within reach — prerequisites, or the age itself.';
-    },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast', label: '🍗 Hold a feast', cd: 180,
     desc: function (s) {
@@ -1094,7 +1102,8 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     const me = state.chars[state.player.charId];
     const ste = me ? FB.skillOf(me, 'ste') : 0;
-    return (B.domainBase || 4) + Math.floor(ste / (B.domainStewPer || 5));
+    return (B.domainBase || 4) + Math.floor(ste / (B.domainStewPer || 5)) +
+      FB.techBonus(state, 'domain');
   };
   /* counties held directly over the cap (0 if within it) */
   FB.domainOver = function (state) {
@@ -1186,7 +1195,8 @@ window.FB = window.FB || {};
     }
 
     /* noble revenue (playerTax, unrounded so the lines tell the truth):
-       demesne rents, vassal dues, tolls — grown by innovations, cut by a liege */
+       demesne rents, vassal dues, tolls — grown by national technology,
+       cut by a liege */
     if (p.tier >= 3) {
       let rents = 0;
       for (const pid of (p.provs || [])) rents += (state.dev[pid] || 1) * B.taxPerDev;
@@ -1202,8 +1212,8 @@ window.FB = window.FB || {};
       add('gold', FB.T('Vassal dues'), dues);
       const tolls = addBuildings('gold', 'tax');
       const taxable = rents + dues + tolls;
-      const innov = taxable * FB.techBonus(state, 'tax');
-      add('gold', FB.T('Innovations'), innov);
+      const nationalTech = taxable * FB.techBonus(state, 'tax');
+      add('gold', FB.T('National technology'), nationalTech);
       const councilTax = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
       add('gold', FB.T('Royal Seneschal'), councilTax);
       let positionTax = 0;
@@ -2058,52 +2068,421 @@ window.FB = window.FB || {};
     return true;
   };
 
-  /* ================= technology (playing tall) =================
-     Innovations are bought with scholarship (player.research) and live in
-     state.tech — they persist across generations. */
-  FB.techList = function (state) {
-    return state.tech = state.tech || []; // lazy init for older saves
+  /* ================= national technology =================
+     Every sovereign realm owns one record. Vassals resolve through the liege
+     chain, so fealty changes effective technology without deleting either
+     nation's dormant knowledge. */
+  const TECH_BRANCHES = ['military', 'economy', 'administrative'];
+
+  function emptyTechRecord() {
+    return { completed:[], active:null, progress:{}, reserve:0 };
+  }
+
+  function rawTechRecord(state, rid) {
+    state.realmTech = state.realmTech || {};
+    let record = state.realmTech[rid];
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      record = state.realmTech[rid] = emptyTechRecord();
+    }
+    if (!Array.isArray(record.completed)) record.completed = [];
+    if (!record.progress || typeof record.progress !== 'object' ||
+        Array.isArray(record.progress)) record.progress = {};
+    if (!isFinite(Number(record.reserve)) || Number(record.reserve) < 0) record.reserve = 0;
+    else record.reserve = Number(record.reserve);
+    if (record.active !== null && typeof record.active !== 'string') record.active = null;
+    for (const id in record.progress) {
+      if (!isFinite(Number(record.progress[id])) || Number(record.progress[id]) < 0) {
+        delete record.progress[id];
+      } else {
+        record.progress[id] = Number(record.progress[id]);
+      }
+    }
+    return record;
+  }
+
+  FB.techRealmId = function (state, realmId) {
+    let rid = realmId;
+    if (rid === undefined || rid === null) {
+      rid = FB.playerRealmId ? FB.playerRealmId(state) :
+        (state.owner && state.player ? state.owner[state.player.provinceId] : null);
+    }
+    if (rid && state.realms && state.realms[rid] && FB.topRealm) {
+      rid = FB.topRealm(state, rid);
+    }
+    return rid || 'player';
   };
 
-  FB.techBonus = function (state, key) {
-    let sum = 0;
-    for (const id of FB.techList(state)) {
+  /* Save-format-3 migration. The first copy of an old repeatable capstone
+     becomes its linear level; later ranks refund the scholarship actually
+     paid under the historical 100 × 1.6^rank price curve. */
+  FB.ensureRealmTech = function (state) {
+    state.realmTech = state.realmTech || {};
+    if (state.realmTechMigration) return state.realmTech;
+    const rid = FB.techRealmId(state);
+    const record = rawTechRecord(state, rid);
+    const legacy = Array.isArray(state.tech) ? state.tech : [];
+    const seen = {};
+    const oldCapstones = {
+      improved_husbandry:100, martial_drill:100, royal_catalogue:100
+    };
+    const oldRanks = {};
+    for (const id of legacy) {
+      if (!seen[id]) {
+        seen[id] = 1;
+        record.completed.push(id);
+      } else if (oldCapstones[id]) {
+        const rank = oldRanks[id] === undefined ? 1 : oldRanks[id] + 1;
+        oldRanks[id] = rank;
+        record.reserve += Math.round(oldCapstones[id] *
+          Math.pow(FBDATA.balance.techRepeatCostGrowth || 1.6, rank));
+      }
+    }
+    if (state.player && isFinite(Number(state.player.research)) &&
+        Number(state.player.research) > 0) {
+      record.reserve += Number(state.player.research);
+    }
+    delete state.tech;
+    if (state.player) delete state.player.research;
+    state.realmTechMigration = 1;
+    return state.realmTech;
+  };
+
+  FB.realmTechRecord = function (state, realmId) {
+    FB.ensureRealmTech(state);
+    return rawTechRecord(state, FB.techRealmId(state, realmId));
+  };
+
+  FB.techList = function (state, realmId) {
+    return FB.realmTechRecord(state, realmId).completed;
+  };
+
+  FB.hasTech = function (state, id, realmId) {
+    return FB.techList(state, realmId).indexOf(id) >= 0;
+  };
+
+  FB.techRequirementMet = function (state, requirement, realmId) {
+    if (!requirement) return true;
+    const list = Array.isArray(requirement) ? requirement : [requirement];
+    for (const id of list) if (!FB.hasTech(state, id, realmId)) return false;
+    return true;
+  };
+
+  FB.techBranchLevel = function (state, branch, realmId) {
+    let level = 0;
+    for (const id of FB.techList(state, realmId)) {
       const def = FBDATA.tech[id];
-      if (def && def.fx && def.fx[key]) sum += def.fx[key];
+      if (def && def.branch === branch && (def.level || 0) > level) level = def.level;
+    }
+    return level;
+  };
+
+  FB.techLevels = function (state, realmId) {
+    return {
+      military:FB.techBranchLevel(state, 'military', realmId),
+      economy:FB.techBranchLevel(state, 'economy', realmId),
+      administrative:FB.techBranchLevel(state, 'administrative', realmId)
+    };
+  };
+
+  FB.techCulture = function (state, realmId) {
+    const rid = FB.techRealmId(state, realmId);
+    const realm = state.realms && state.realms[rid];
+    if (realm && realm.ruler && realm.ruler.culture) return realm.ruler.culture;
+    const c = state.player && state.chars && state.chars[state.player.charId];
+    return c ? c.culture : null;
+  };
+
+  function techMatchesCulture(def, culture) {
+    if (def.cultures && def.cultures.indexOf(culture) < 0) return false;
+    if (def.notCultures && def.notCultures.indexOf(culture) >= 0) return false;
+    return true;
+  }
+
+  FB.techForLevel = function (state, branch, level, realmId) {
+    const record = FB.realmTechRecord(state, realmId);
+    for (const id of record.completed) {
+      const completed = FBDATA.tech[id];
+      if (completed && completed.branch === branch && completed.level === level) {
+        return { id:id, def:completed };
+      }
+    }
+    if (record.active) {
+      const active = FBDATA.tech[record.active];
+      if (active && active.branch === branch && active.level === level) {
+        return { id:record.active, def:active };
+      }
+    }
+    const culture = FB.techCulture(state, realmId);
+    for (const id in FBDATA.tech) {
+      const def = FBDATA.tech[id];
+      if (def.branch === branch && def.level === level && techMatchesCulture(def, culture)) {
+        return { id:id, def:def };
+      }
+    }
+    return null;
+  };
+
+  /* The next node of every incomplete branch, including locked nodes for the
+     UI. Only these records may become the single active project. */
+  FB.techProjects = function (state, realmId) {
+    const rid = FB.techRealmId(state, realmId);
+    const done = FB.techList(state, rid);
+    const record = FB.realmTechRecord(state, rid);
+    const out = [];
+    for (const branch of TECH_BRANCHES) {
+      const nextLevel = FB.techBranchLevel(state, branch, rid) + 1;
+      if (nextLevel > 5) continue;
+      const item = FB.techForLevel(state, branch, nextLevel, rid);
+      if (!item) continue;
+      const def = item.def;
+      const yearLocked = !!(def.yearMin && state.date.year < def.yearMin);
+      const reqLocked = !!(def.req && !FB.techRequirementMet(state, def.req, rid));
+      out.push({
+        id:item.id, def:def, branch:branch, level:nextLevel,
+        cost:FB.techCost(state, item.id),
+        progress:record.progress[item.id] || 0,
+        active:record.active === item.id,
+        yearLocked:yearLocked, reqLocked:reqLocked,
+        available:done.indexOf(item.id) < 0 && !yearLocked && !reqLocked
+      });
+    }
+    return out;
+  };
+
+  FB.techAvailable = function (state, realmId) {
+    return FB.techProjects(state, realmId).filter(function (item) {
+      return item.available;
+    });
+  };
+
+  FB.techCost = function (state, id) {
+    const def = FBDATA.tech[id];
+    return def ? Number(def.cost) || 0 : 0;
+  };
+
+  FB.techBonus = function (state, key, realmId) {
+    let sum = 0;
+    for (const id of FB.techList(state, realmId)) {
+      const def = FBDATA.tech[id];
+      if (def && def.fx && def.fx[key]) sum += Number(def.fx[key]) || 0;
     }
     return sum;
   };
 
-  /* the price of adopting an innovation NOW: repeatable capstones cost
-     cost × techRepeatCostGrowth per rank already held, so each further
-     rank of the same bonus comes dearer (diminishing returns) */
-  FB.techCost = function (state, id) {
-    const def = FBDATA.tech[id];
-    if (!def) return 0;
-    if (!def.repeat) return def.cost;
-    let n = 0;
-    for (const t of FB.techList(state)) if (t === id) n++;
-    return Math.round(def.cost * Math.pow(FBDATA.balance.techRepeatCostGrowth || 1.6, n));
-  };
-
-  /* development ceiling: tech raises it for the player's own lands */
-  FB.devCap = function (state, pid) {
-    let cap = 10;
-    if (FB.demesne(state).indexOf(pid) >= 0) cap += FB.techBonus(state, 'devCap');
-    return cap;
-  };
-
-  FB.techAvailable = function (state) {
-    const done = FB.techList(state);
-    const out = [];
-    for (const id in FBDATA.tech) {
-      const def = FBDATA.tech[id];
-      if (!def.repeat && done.indexOf(id) >= 0) continue; // repeatables stay on offer
-      if (def.yearMin && state.date.year < def.yearMin) continue;
-      if (def.req && done.indexOf(def.req) < 0) continue;
-      out.push({ id: id, def: def, cost: FB.techCost(state, id) });
+  /* Signed modifiers are additive: -0.20 means twenty percent cheaper.
+     Legacy flat `build:0.20` remains a twenty-percent building discount. */
+  FB.techCostModifier = function (state, category, realmId) {
+    let sum = 0;
+    for (const id of FB.techList(state, realmId)) {
+      const def = FBDATA.tech[id], fx = def && def.fx;
+      if (!fx) continue;
+      if (fx.costs && fx.costs[category]) sum += Number(fx.costs[category]) || 0;
+      if (category === 'build' && fx.build) sum -= Number(fx.build) || 0;
     }
-    return out;
+    return sum;
+  };
+
+  FB.techCostFactor = function (state, category, realmId) {
+    return Math.max(0, 1 + FB.techCostModifier(state, category, realmId));
+  };
+
+  FB.techUnits = function (state, realmId) {
+    const units = { levy:0, arch:0, cav:0, ret:0 };
+    for (const id of FB.techList(state, realmId)) {
+      const def = FBDATA.tech[id], fx = def && def.fx;
+      if (!fx) continue;
+      if (fx.units) {
+        for (const key in units) units[key] += Number(fx.units[key]) || 0;
+      }
+      if (fx.retinue) units.ret += Number(fx.retinue) || 0;
+      if (fx.archers) units.arch += Number(fx.archers) || 0;
+    }
+    return units;
+  };
+
+  FB.techAIUnits = function (state, realmId) {
+    const units = { arch:0, cav:0, ret:0 };
+    for (const id of FB.techList(state, realmId)) {
+      const fx = FBDATA.tech[id] && FBDATA.tech[id].fx;
+      if (!fx || !fx.aiUnits) continue;
+      for (const key in units) units[key] += Number(fx.aiUnits[key]) || 0;
+    }
+    return units;
+  };
+
+  function techCompletion(state, rid) {
+    const record = rawTechRecord(state, rid);
+    const id = record.active;
+    const def = id && FBDATA.tech[id];
+    if (!def) { record.active = null; return false; }
+    const cost = FB.techCost(state, id);
+    const progress = record.progress[id] || 0;
+    if (progress + 0.0001 < cost) return false;
+    record.progress[id] = cost;
+    if (record.completed.indexOf(id) < 0) record.completed.push(id);
+    record.active = null;
+    record.reserve += Math.max(0, progress - cost);
+    const playerRealm = FB.techRealmId(state);
+    if (!(FB.game && FB.game.observe) && rid === playerRealm) {
+      const realm = state.realms && state.realms[rid];
+      FB.news(state, FB.msg('news.tech.completed',
+        '💡 {realm} completes {technology}.', {
+          realm:realm ? realm.name : rid,
+          technology:FB.dataParam('tech', id)
+        }));
+    }
+    return true;
+  }
+
+  FB.selectTechProject = function (state, id, realmId, force) {
+    const rid = FB.techRealmId(state, realmId);
+    if (!force && (rid !== 'player' || !FB.isPlayerSovereign(state))) return false;
+    let candidate = null;
+    for (const item of FB.techAvailable(state, rid)) {
+      if (item.id === id) { candidate = item; break; }
+    }
+    if (!candidate) return false;
+    const record = FB.realmTechRecord(state, rid);
+    if (record.active === id) return true;
+    record.active = id;
+    if (record.reserve) {
+      record.progress[id] = (record.progress[id] || 0) + record.reserve;
+      record.reserve = 0;
+      techCompletion(state, rid);
+    }
+    return true;
+  };
+
+  /* Compatibility name for mods and old callers: adoption now starts a
+     project rather than purchasing an innovation instantly. */
+  FB.adoptTech = function (state, id, realmId) {
+    return FB.selectTechProject(state, id, realmId, false);
+  };
+
+  FB.addResearch = function (state, amount, realmId) {
+    amount = Number(amount) || 0;
+    if (amount <= 0) return 0;
+    const rid = FB.techRealmId(state, realmId);
+    const record = FB.realmTechRecord(state, rid);
+    if (!record.active || !FBDATA.tech[record.active]) {
+      record.active = null;
+      record.reserve += amount;
+      return amount;
+    }
+    record.progress[record.active] = (record.progress[record.active] || 0) + amount;
+    techCompletion(state, rid);
+    return amount;
+  };
+
+  FB.techResearchRate = function (state, realmId) {
+    const rid = FB.techRealmId(state, realmId);
+    const dev = FB.realmStrength ? FB.realmStrength(state, rid) : 0;
+    return 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+  };
+
+  function aiTechChoice(state, rid) {
+    const available = FB.techAvailable(state, rid);
+    if (!available.length) return null;
+    const realm = state.realms[rid] || {};
+    const trait = realm.ruler && realm.ruler.trait;
+    const weights = { military:1, economy:1, administrative:1 };
+    weights.military += Math.max(0, Number(realm.aggression) || 0);
+    if (['ambitious', 'wrathful', 'proud'].indexOf(trait) >= 0) weights.military++;
+    if (['greedy', 'content', 'generous'].indexOf(trait) >= 0) weights.economy++;
+    if (['patient', 'honest', 'deceitful', 'humble'].indexOf(trait) >= 0) {
+      weights.administrative++;
+    }
+    let total = 0;
+    for (const item of available) total += weights[item.branch] || 1;
+    let roll = FB.rng() * total;
+    for (const item of available) {
+      roll -= weights[item.branch] || 1;
+      if (roll <= 0) return item;
+    }
+    return available[available.length - 1];
+  }
+
+  FB.autoResearch = function (state) {
+    if (!FB.isPlayerSovereign(state)) return false;
+    const record = FB.realmTechRecord(state, 'player');
+    if (record.active) return false;
+    const available = FB.techAvailable(state, 'player').slice();
+    available.sort(function (a, b) {
+      return a.cost - b.cost || TECH_BRANCHES.indexOf(a.branch) -
+        TECH_BRANCHES.indexOf(b.branch);
+    });
+    return available.length ?
+      FB.selectTechProject(state, available[0].id, 'player', true) : false;
+  };
+
+  /* One seasonal pass for every living sovereign. AI projects use the saved
+     RNG; the player sovereign is touched only when automation is enabled. */
+  FB.techSeason = function (state, autoPlayer) {
+    FB.ensureRealmTech(state);
+    for (const rid in state.realms) {
+      const realm = state.realms[rid];
+      if (!realm || !realm.alive || realm.liege) continue;
+      const record = FB.realmTechRecord(state, rid);
+      let guard = 0;
+      while (!record.active && guard++ < 8) {
+        let choice = null;
+        if (rid === 'player') {
+          if (!autoPlayer || !FB.isPlayerSovereign(state)) break;
+          const available = FB.techAvailable(state, rid).slice();
+          available.sort(function (a, b) {
+            return a.cost - b.cost || TECH_BRANCHES.indexOf(a.branch) -
+              TECH_BRANCHES.indexOf(b.branch);
+          });
+          choice = available[0] || null;
+        } else {
+          choice = aiTechChoice(state, rid);
+        }
+        if (!choice || !FB.selectTechProject(state, choice.id, rid, true)) break;
+      }
+      FB.addResearch(state, FB.techResearchRate(state, rid), rid);
+      /* A completion may have left a reserve large enough to finish the next
+         automated project immediately. Keep the one-project invariant while
+         allowing that banked knowledge to flow forward. */
+      guard = 0;
+      while (!record.active && guard++ < 8) {
+        let next = null;
+        if (rid === 'player') {
+          if (!autoPlayer || !FB.isPlayerSovereign(state)) break;
+          const choices = FB.techAvailable(state, rid).slice();
+          choices.sort(function (a, b) {
+            return a.cost - b.cost || TECH_BRANCHES.indexOf(a.branch) -
+              TECH_BRANCHES.indexOf(b.branch);
+          });
+          next = choices[0] || null;
+        } else {
+          next = aiTechChoice(state, rid);
+        }
+        if (!next || !FB.selectTechProject(state, next.id, rid, true)) break;
+      }
+    }
+  };
+
+  /* Merge political continuities without multiplying research shared before
+     the split. The surviving target keeps its own active project. */
+  FB.mergeRealmTech = function (state, targetRid, sourceRid) {
+    FB.ensureRealmTech(state);
+    if (!targetRid || !sourceRid || targetRid === sourceRid) return;
+    const target = rawTechRecord(state, targetRid);
+    const source = rawTechRecord(state, sourceRid);
+    for (const id of source.completed) {
+      if (target.completed.indexOf(id) < 0) target.completed.push(id);
+    }
+    for (const id in source.progress) {
+      target.progress[id] = Math.max(target.progress[id] || 0, source.progress[id] || 0);
+    }
+    target.reserve = Math.max(target.reserve || 0, source.reserve || 0);
+    if (target.active && target.completed.indexOf(target.active) >= 0) target.active = null;
+  };
+
+  /* Development belongs to the owning nation, including AI counties. */
+  FB.devCap = function (state, pid) {
+    const owner = state.owner && state.owner[pid];
+    return 10 + FB.techBonus(state, 'devCap', owner || undefined);
   };
 
   /* ---- automation (the ⚙ Automation dialog): one purchase per season ---- */
@@ -2121,28 +2500,6 @@ window.FB = window.FB || {};
     }
     // keep a prudent reserve so upkeep and events never find an empty chest
     if (best && state.player.gold >= best.cost + 25) FB.build(state, bestPid, bestIdx, best.id);
-  };
-
-  FB.autoResearch = function (state) {
-    let best = null;
-    for (const t of FB.techAvailable(state)) {
-      if (!best || t.cost < best.cost) best = t;
-    }
-    if (best && (state.player.research || 0) >= best.cost) FB.adoptTech(state, best.id);
-  };
-
-  FB.adoptTech = function (state, id) {
-    const def = FBDATA.tech[id];
-    const done = FB.techList(state);
-    if (!def || (!def.repeat && done.indexOf(id) >= 0)) return;
-    if (def.yearMin && state.date.year < def.yearMin) return;
-    if (def.req && done.indexOf(def.req) < 0) return;
-    const cost = FB.techCost(state, id);
-    if ((state.player.research || 0) < cost) return;
-    state.player.research -= cost;
-    done.push(id);
-    FB.news(state, FB.msg('news.action.tech_adopted',
-      '💡 {innovation} takes root in your lands.', { innovation: FB.dataParam('tech', id) }));
   };
 
   /* ================= demesne buildings =================
@@ -2218,7 +2575,8 @@ window.FB = window.FB || {};
     const def = FBDATA.buildings[id];
     const copies = FB.buildingCountIn(state, pid, id, true);
     let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
-      (1 - FB.techBonus(state, 'build') - (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
+      Math.max(0, FB.techCostFactor(state, 'build') -
+        (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     if (state.player.flags.mason_visit) c *= 0.75;
     return Math.round(c);
   };
@@ -2616,7 +2974,8 @@ window.FB = window.FB || {};
     else if (p.profession === 'priest') want = 'serve_church';
     else {
       want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
-        merchant: 'trade_run', soldier: 'drill', noble: 'train_arms' })[p.profession];
+        merchant: 'trade_run', administration:'market',
+        soldier: 'drill', noble: 'train_arms' })[p.profession];
       /* martial training is gated male: women are steered to the household or
          the court instead of drill/train_arms (validateFocus self-heals saves
          where a female heir still holds a now-hidden martial focus) */

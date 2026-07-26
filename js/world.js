@@ -1455,7 +1455,8 @@ window.FB = window.FB || {};
 
   FB.aiBaseHost = function (state, rid) {
     return Math.max(60, Math.round(FB.realmStrength(state, rid) *
-      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3)));
+      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+      (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
   };
 
   FB.alliedReinforcement = function (state, defenderId) {
@@ -1567,6 +1568,11 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return;
     if (FB.realmTerritory(state, rid).length) return;
+    if (FB.mergeRealmTech) {
+      const survivor = FB.playerRealmId ? FB.playerRealmId(state) :
+        FB.topRealm(state, r.liege || 'player');
+      FB.mergeRealmTech(state, survivor, rid);
+    }
     FB.markRealmDead(state, rid);
     for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
   };
@@ -1609,6 +1615,9 @@ window.FB = window.FB || {};
       if (!fr || !fr.alive) continue;
       const terr = FB.realmTerritory(state, rid);
       if (!terr.length) {
+        if (FB.mergeRealmTech) {
+          FB.mergeRealmTech(state, FB.topRealm(state, toRealm), rid);
+        }
         FB.markRealmDead(state, rid);
         for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = fr.liege || null;
         if (state.player && state.player.liege === rid) {
@@ -1701,6 +1710,9 @@ window.FB = window.FB || {};
           }));
         }
       }
+    }
+    if (FB.mergeRealmTech) {
+      FB.mergeRealmTech(state, FB.topRealm(state, liege || 'player'), rid);
     }
     FB.markRealmDead(state, rid);
     FB.invalidateRealmCache();
@@ -1859,6 +1871,7 @@ window.FB = window.FB || {};
       if (ev.newRealm) {
         rid = ev.newRealm.id;
         var cap = FB.world.byId[ev.newRealm.capital];
+        var formerSovereign = state.owner[ev.newRealm.capital];
         state.realms[rid] = {
           id: rid, name: ev.newRealm.name, color: ev.newRealm.color,
           capital: ev.newRealm.capital,
@@ -1869,6 +1882,10 @@ window.FB = window.FB || {};
             ev.newRealm.ruler, state.date.year), war: null, op: 0
         };
         FB.ensureRealmSuccession(state, rid);
+        if (!ev.newRealm.liege && formerSovereign && formerSovereign !== rid &&
+            FB.mergeRealmTech) {
+          FB.mergeRealmTech(state, rid, formerSovereign);
+        }
       }
       if (state.realms[rid] && state.realms[rid].alive) {
         for (var targetIndex = 0; targetIndex < ev.targets.length; targetIndex++) {
@@ -1897,7 +1914,8 @@ window.FB = window.FB || {};
       if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
       // ruler ages & dies
       r.ruler.age++;
-      const q = r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02;
+      const q = Math.max(0, (r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02) -
+        (FB.techBonus ? FB.techBonus(state, 'health', id) : 0));
       if (FB.chance(q)) {
         const succession = FB.refreshRealmSuccession(state, id);
         // Escheat is now the last resort for a genuinely exhausted count line.
@@ -1934,11 +1952,19 @@ window.FB = window.FB || {};
         const war = r.war;
         const enemy = state.realms[war.enemy];
         if (!enemy || !enemy.alive) { r.war = null; continue; }
-        const sa = FB.realmStrength(state, id) * (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
+        const sa = FB.realmStrength(state, id) *
+          (1 + (FB.techBonus ? FB.techBonus(state, 'levy', id) : 0)) *
+          (FB.aiHostQuality ? FB.aiHostQuality(state, id) : 1) *
+          (1 + (FB.techBonus ? FB.techBonus(state, 'battle', id) : 0)) *
+          (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
           (1 + 0.12 * ((war.fw || 0) - (war.fl || 0))); // field wins tilt the war
         const defenseRatio = FB.realmDefensiveStrength(state, war.enemy) /
           Math.max(1, FB.aiBaseHost(state, war.enemy));
-        const sd = FB.realmStrength(state, war.enemy) * defenseRatio *
+        const sd = FB.realmStrength(state, war.enemy) *
+          (1 + (FB.techBonus ? FB.techBonus(state, 'levy', war.enemy) : 0)) *
+          defenseRatio *
+          (FB.aiHostQuality ? FB.aiHostQuality(state, war.enemy) : 1) *
+          (1 + (FB.techBonus ? FB.techBonus(state, 'battle', war.enemy) : 0)) *
           (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
           (1 + 0.12 * ((war.fl || 0) - (war.fw || 0)));
         const winner = sa > sd ? id : war.enemy;
@@ -2046,6 +2072,7 @@ window.FB = window.FB || {};
       r.liege = null;
       for (const pid of terr) state.owner[pid] = id;
       FB.invalidateRealmCache();
+      if (FB.mergeRealmTech) FB.mergeRealmTech(state, id, top);
       const tr = state.realms[top];
       if (top === 'player') {
         // the player's own vassal rises: fought as a defensive war of the
@@ -2111,14 +2138,12 @@ window.FB = window.FB || {};
   /* ================= PLAYER WAR (seasonal) ================= */
 
   /* The player's host composition: the dev-driven muster is the levy (massed,
-     untrained foot); war buildings, the arms techs, and a landed baron's
-     standing household contribute a hard core of men-at-arms (ret) and
-     bowmen (arch). FB.playerLevy stays the total headcount for every caller
-     that only wants a number. */
+     untrained foot); buildings, national technology, positions, and a landed
+     baron's household add archers, cavalry, and men-at-arms. */
   FB.playerCompositionBreakdown = function (state) {
     const B = FBDATA.balance;
     const p = state.player;
-    const comp = { levy:0, arch:0, ret:0 };
+    const comp = { levy:0, arch:0, cav:0, ret:0 };
     const entries = [];
     function add(unit, kind, amount, data) {
       if (!amount) return;
@@ -2156,10 +2181,12 @@ window.FB = window.FB || {};
       buildingEntries('levy', 'levy');
       buildingEntries('retinue', 'ret');
       buildingEntries('archers', 'arch');
-      const techRet = FB.techBonus(state, 'retinue');
-      const techArch = FB.techBonus(state, 'archers');
-      if (techRet) add('ret', 'technology_flat', techRet, { key:'retinue' });
-      if (techArch) add('arch', 'technology_flat', techArch, { key:'archers' });
+      const techUnits = FB.techUnits ? FB.techUnits(state) :
+        { levy:0, arch:FB.techBonus(state, 'archers'), cav:0,
+          ret:FB.techBonus(state, 'retinue') };
+      for (const unit of ['levy', 'arch', 'cav', 'ret']) {
+        if (techUnits[unit]) add(unit, 'technology_flat', techUnits[unit], { key:unit });
+      }
 
       /* Technology and Council percentages share one multiplier in the
          historical calculation. Itemizing both against the same base keeps
@@ -2211,7 +2238,7 @@ window.FB = window.FB || {};
       }
     }
 
-    for (const unit of ['levy', 'arch', 'ret']) {
+    for (const unit of ['levy', 'arch', 'cav', 'ret']) {
       const rounded = Math.round(comp[unit]);
       const adjustment = rounded - comp[unit];
       if (Math.abs(adjustment) > 0.0001) {
@@ -2222,18 +2249,18 @@ window.FB = window.FB || {};
     return {
       units:comp,
       entries:entries,
-      total:comp.levy + comp.arch + comp.ret
+      total:comp.levy + comp.arch + comp.cav + comp.ret
     };
   };
 
   FB.playerComposition = function (state) {
     const c = FB.playerCompositionBreakdown(state).units;
-    return { levy:c.levy, arch:c.arch, ret:c.ret };
+    return { levy:c.levy, arch:c.arch, cav:c.cav, ret:c.ret };
   };
 
   FB.playerLevy = function (state) {
     const c = FB.playerComposition(state);
-    return c.levy + c.arch + c.ret;
+    return c.levy + c.arch + c.cav + c.ret;
   };
 
   /* Is the player personally caught up in a war? While true, only events
@@ -2438,6 +2465,7 @@ window.FB = window.FB || {};
         });
         u.color = old ? old.color : '#f0c840'; // the map barely ripples
         if (old) {
+          if (FB.mergeRealmTech) FB.mergeRealmTech(state, uid, 'player');
           FB.markRealmDead(state, 'player');
           FB.breakAlliance(state, 'player');
           if (old.rank >= 3) {
@@ -2459,6 +2487,9 @@ window.FB = window.FB || {};
           { ruler: u.ruler.name }));
       } else {
         // a vassal's fiefs escheat to his liege
+        if (FB.mergeRealmTech) {
+          FB.mergeRealmTech(state, FB.topRealm(state, p.liege), 'player');
+        }
         for (const pid of p.provs) {
           state.owner[pid] = FB.topRealm(state, p.liege);
           state.holder[pid] = p.liege;
@@ -2815,6 +2846,7 @@ window.FB = window.FB || {};
     for (const vid in state.realms) {
       if (vid !== 'player' && state.realms[vid].liege === rid) state.realms[vid].liege = 'player';
     }
+    if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
     inherited.war = null;
     for (const otherId in state.realms) {
       const other = state.realms[otherId];

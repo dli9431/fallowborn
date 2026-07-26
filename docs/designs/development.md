@@ -40,6 +40,11 @@ Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.has
 `state.buildings` is keyed by province id, so conquest moves buildings and ruins with the
 land.
 
+Library research is a national contribution: it enters the current sovereign's active
+technology project, or its reserve when no project is active. Completed national
+technology may raise `FB.devCap` above 10 and applies signed building-cost modifiers
+through `FB.techCostFactor`; development and buildings themselves remain county state.
+
 **Non-revenue buildings cost upkeep.** Granaries, Bridges, Walls, Temples, Libraries, and
 Archery Butts cost 1 gold each season; Keeps cost 2 and Barracks 3 (a barracks’ paid
 men-at-arms are the dearest of all to keep). Mills, Markets, and Harbors directly fund themselves

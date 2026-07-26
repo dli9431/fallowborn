@@ -42,6 +42,21 @@ window.FB = window.FB || {};
     }));
     return effects.join(' · ');
   }
+  function techBranchName(branch) {
+    if (branch === 'military') return FB.T('Military');
+    if (branch === 'economy') return FB.T('Economy');
+    return FB.T('Administrative');
+  }
+  function techLevelsText(s, realmId) {
+    const levels = FB.techLevels(s, realmId);
+    return FB.T('Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5', {
+      military:levels.military, economy:levels.economy,
+      administrative:levels.administrative
+    });
+  }
+  function researchNumber(value) {
+    return Math.round((Number(value) || 0) * 10) / 10;
+  }
   function councilSeatName(id) {
     return id === 'seneschal' ? FB.T('Seneschal')
       : id === 'constable' ? FB.T('Constable')
@@ -942,18 +957,13 @@ window.FB = window.FB || {};
         }
       }
       if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
-      const tk = FB.techList(s);
-      const tkRanks = {}, tkOrder = []; // collapse repeatable capstones: icon ×rank
-      for (const tid of tk) {
-        if (tkRanks[tid] === undefined) { tkRanks[tid] = 0; tkOrder.push(tid); }
-        tkRanks[tid]++;
-      }
-      h += '<div class="progressnote">' + esc(FB.T('📜 Scholarship {amount}',
-        { amount: Math.floor(s.player.research || 0) })) +
-        (tkOrder.length ? ' · ' + tkOrder.map(function (id) {
-          const d = FBDATA.tech[id];
-          return (d ? d.icon : '?') + (tkRanks[id] > 1 ? '×' + tkRanks[id] : '');
-        }).join('') : '') + '</div>';
+      const techRealm = FB.techRealmId(s);
+      const techRecord = FB.realmTechRecord(s, techRealm);
+      const techActive = techRecord.active && FBDATA.tech[techRecord.active];
+      h += '<div class="progressnote">💡 ' + esc(techLevelsText(s, techRealm)) +
+        (techActive ? ' · ' + esc(FB.T('Researching {technology}', {
+          technology:dt(s, 'tech', techRecord.active, techActive, 'name')
+        })) : '') + '</div>';
     }
     h += nextStepHint(s);
     let currentFocus = null;
@@ -1700,7 +1710,7 @@ window.FB = window.FB || {};
       }) : name;
     }
     if (entry.kind === 'technology_flat' || entry.kind === 'technology_rate') {
-      return FB.T('Military innovations');
+      return FB.T('National military technology');
     }
     if (entry.kind === 'council_rate') return FB.T('Royal Constable');
     if (entry.kind === 'martial_rate') return FB.T('Ruler’s Martial');
@@ -1725,6 +1735,7 @@ window.FB = window.FB || {};
 
   function networkUnitName(unit) {
     if (unit === 'arch') return FB.T('archers');
+    if (unit === 'cav') return FB.T('cavalry');
     if (unit === 'ret') return FB.T('men-at-arms');
     return FB.T('levy');
   }
@@ -2017,9 +2028,10 @@ window.FB = window.FB || {};
 
     h += '<div class="panelh">' + esc(FB.T('Levy ledger')) + '</div>';
     h += '<div class="progressnote">' + esc(FB.T(
-      '{total} total · {levy} levy · {archers} archers · {retinue} men-at-arms', {
+      '{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms', {
         total:composition.total, levy:composition.units.levy,
-        archers:composition.units.arch, retinue:composition.units.ret
+        archers:composition.units.arch, cavalry:composition.units.cav,
+        retinue:composition.units.ret
       })) + '</div>';
     let shownEntries = 0;
     for (const entry of composition.entries) {
@@ -2374,6 +2386,7 @@ window.FB = window.FB || {};
         const compKeys = [
           ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
           ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
+          ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
           ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
           ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
         ];
@@ -2831,6 +2844,7 @@ window.FB = window.FB || {};
 
   UI.showAutoResolve = function () {
     const a = FB.game.auto;
+    const s = FB.state;
     function cb(id, checked, label, desc) {
       return '<label class="autorow"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '> ' +
         label + (desc ? '<span class="adesc">' + desc + '</span>' : '') + '</label>';
@@ -2861,7 +2875,15 @@ window.FB = window.FB || {};
     h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
     h += '<div class="gm-body-text" style="margin-top:8px"><p>Stewardship (tier 3+, once a season):</p></div>';
     h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
-    h += cb('ar-research', a.research, 'Adopt innovations automatically', 'The cheapest innovation within reach of your scholarship.');
+    if (s && FB.isPlayerSovereign(s)) {
+      h += cb('ar-research', a.research,
+        esc(FB.T('Choose the next technology automatically')),
+        esc(FB.T('When the national project ends, begin the cheapest available next project.')));
+    } else if (s) {
+      h += '<div class="hint">' + esc(FB.T(
+        'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
+        '</div>';
+    }
     h += '<div class="gm-footer"><button class="btn primary" id="ar-done">Done</button></div>';
     openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal' });
     function sync() {
@@ -2870,7 +2892,8 @@ window.FB = window.FB || {};
       a.war = $('ar-war').checked;
       a.all = $('ar-all').checked;
       a.build = $('ar-build').checked;
-      a.research = $('ar-research').checked;
+      const research = $('ar-research');
+      if (research) a.research = research.checked;
       const r = document.querySelector('input[name=ar-style]:checked');
       if (r) a.style = r.value;
       const hsel = document.querySelector('input[name=ar-hosts]:checked');
@@ -2878,7 +2901,10 @@ window.FB = window.FB || {};
       FB.game.saveAuto();
       if (FB.state) UI.refresh();
     }
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build', 'ar-research'].forEach(function (id) { $(id).addEventListener('change', sync); });
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build', 'ar-research'].forEach(function (id) {
+      const control = $(id);
+      if (control) control.addEventListener('change', sync);
+    });
     document.querySelectorAll('input[name=ar-style]').forEach(function (r) { r.addEventListener('change', sync); });
     document.querySelectorAll('input[name=ar-hosts]').forEach(function (r) { r.addEventListener('change', sync); });
     $('ar-done').addEventListener('click', function () { sync(); UI.closeModal(); });
@@ -3984,7 +4010,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const lg = s.realms[s.player.liege];
     const top = FB.topRealm(s, s.player.liege);
-    const enMen = Math.round(FB.realmStrength(s, top) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
+    const enMen = FB.aiBaseHost(s, top);
     const sovereign = s.realms[top] ? s.realms[top].name : FB.T('Your sovereign');
     const independenceText = s.player.tier === 3 && FB.world.byId[s.player.provinceId]
       ? FB.T('You renounce {liege} and raise your own banner over {province}, seized as your own county. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.', {
@@ -4017,7 +4043,7 @@ window.FB = window.FB || {};
     const fx = [];
     if (d.tax) fx.push(FB.T('+{money:amount} each season', { amount: d.tax }));
     if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
-    if (d.research) fx.push(FB.T('+{amount} scholarship each season', { amount: d.research }));
+    if (d.research) fx.push(FB.T('+{amount} national research each season', { amount: d.research }));
     if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
     if (d.upkeep) fx.push(FB.T('−{money:amount} upkeep each season', { amount: d.upkeep }));
     if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
@@ -4355,7 +4381,7 @@ window.FB = window.FB || {};
     }
     for (const rid of targets) {
       const r = s.realms[rid];
-      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
+      const men = FB.aiBaseHost(s, rid);
       const opinion = FB.realmOpinionOf(s, rid);
       if (pactTargets.indexOf(rid) >= 0) {
         h += '<button class="actionbtn" data-envoy="' + esc(rid) + '"' +
@@ -4412,8 +4438,7 @@ window.FB = window.FB || {};
     for (const rid of targets) {
       const r = s.realms[rid];
       const opinion = FB.realmOpinionOf(s, rid);
-      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev *
-        (FBDATA.balance.aiHostPerDev || 0.3));
+      const men = FB.aiBaseHost(s, rid);
       h += '<button class="actionbtn" data-policy-target="' + esc(rid) + '">🕊 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.T(
           '{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}', {
@@ -4652,7 +4677,7 @@ window.FB = window.FB || {};
     let h = '<p class="hint">Kneel to a neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
     for (const rid of FB.fealtyTargets(s)) {
       const r = s.realms[rid];
-      const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
+      const men = FB.aiBaseHost(s, rid);
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🤝 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.T('{title} {ruler} · fields ~{men}', {
           title: FB.realmRankTitle(s, r), ruler: r.ruler.name, men: menText(s, men)
@@ -4677,12 +4702,15 @@ window.FB = window.FB || {};
     if (!r || !r.alive || !r.ruler) return;
     const cap = FB.world.byId[r.capital];
     const rel = cap ? FB.religionOf(cap.religion) : null;
-    const men = Math.round(FB.realmStrength(s, rid) * FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3));
+    const men = FB.aiBaseHost(s, rid);
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
     const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
     const succession = FB.ensureRealmSuccession(s, rid);
     const family = FB.realmFamily(s, rid);
+    const techRid = FB.techRealmId(s, rid);
+    const techRecord = FB.realmTechRecord(s, techRid);
+    const techDef = techRecord.active && FBDATA.tech[techRecord.active];
     const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
     const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player.rank >= 3 &&
       !r.liege && r.rank >= 3 && FB.realmsAdjacent(s, 'player', rid);
@@ -4716,6 +4744,14 @@ window.FB = window.FB || {};
       kv('Realm', esc(FB.L(r.name))) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
       kv('Realm host', '~' + esc(menText(s, men))) +
+      kv('Technology', esc(techLevelsText(s, techRid))) +
+      kv('Current research', esc(techDef
+        ? FB.T('{technology} — {progress}/{cost}', {
+          technology:dt(s, 'tech', techRecord.active, techDef, 'name'),
+          progress:researchNumber(techRecord.progress[techRecord.active] || 0),
+          cost:FB.techCost(s, techRecord.active)
+        })
+        : FB.T('No active project'))) +
       kv('Defensive alliance', esc(allianceText(s, rid))) +
       (liege ? kv('Overlord',
         '<button class="linklike" data-liege="' + esc(liege.id) + '">' +
@@ -5808,51 +5844,120 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.showLivelihoods);
   };
 
-  /* ================= innovation picker ================= */
+  /* ================= national technology ================= */
   UI.showTech = function () {
     const s = FB.state;
-    const pts = Math.floor(s.player.research || 0);
-    const done = FB.techList(s);
-    let h = '<p class="hint">' + esc(FB.T(
-      'Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations.',
-      { amount: pts })) + '</p><div class="gm-list">';
-    for (const t of FB.techAvailable(s)) {
-      const short = pts < t.cost;
-      let rank = 0; // ranks of a repeatable capstone already held
-      if (t.def.repeat) for (const id of done) if (id === t.id) rank++;
-      const label = rank > 0
-        ? FB.T('{icon} {name} ×{rank} — {cost} scholarship', {
-          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), rank: rank, cost: t.cost })
-        : FB.T('{icon} {name} — {cost} scholarship', {
-          icon: t.def.icon, name: dt(s, 'tech', t.id, t.def, 'name'), cost: t.cost });
-      h += '<button class="actionbtn" data-tech="' + esc(t.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(label) + '<span class="adesc">' + esc(dt(s, 'tech', t.id, t.def, 'desc')) +
-        (short ? ' ' + esc(FB.T('(not enough scholarship)')) : '') + '</span></button>';
+    const rid = FB.techRealmId(s);
+    const realm = s.realms[rid];
+    const record = FB.realmTechRecord(s, rid);
+    const done = FB.techList(s, rid);
+    const projects = FB.techProjects(s, rid);
+    const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
+    const activeDef = record.active && FBDATA.tech[record.active];
+    let h = '<div class="gm-body-text">' +
+      '<p>' + esc(FB.T(
+        'Technology belongs to the sovereign nation. Every vassal shares its completed advances and may add research to its one active project.')) +
+      '</p></div>' +
+      kv('Sovereign nation', esc(realm ? realm.name : rid)) +
+      kv('Branch levels', esc(techLevelsText(s, rid))) +
+      kv('National research each season', esc(FB.T('{amount} research', {
+        amount:researchNumber(FB.techResearchRate(s, rid))
+      }))) +
+      kv('Banked reserve', esc(FB.T('{amount} research', {
+        amount:researchNumber(record.reserve)
+      })));
+    if (activeDef) {
+      h += kv('Active project', esc(FB.T('{technology} — {progress}/{cost} research', {
+        technology:dt(s, 'tech', record.active, activeDef, 'name'),
+        progress:researchNumber(record.progress[record.active] || 0),
+        cost:FB.techCost(s, record.active)
+      })));
+    } else {
+      h += kv('Active project', esc(FB.T('None — new research is banked in reserve.')));
     }
-    h += '</div>';
-    if (done.length) {
-      /* repeatable capstones can appear several times in state.tech — collapse
-         them into one name with a rank badge */
-      const ranks = {}, order = [];
-      for (const id of done) {
-        if (ranks[id] === undefined) { ranks[id] = 0; order.push(id); }
-        ranks[id]++;
+    if (!canChoose) {
+      const ruler = realm && realm.ruler ? realm.ruler.name : FB.T('the sovereign ruler');
+      h += '<div class="hint">' + esc(FB.T(
+        '{ruler} chooses the national project. Your patronage, libraries, and learned contacts aid that work.',
+        { ruler:ruler })) + '</div>';
+    }
+
+    for (const branch of ['military', 'economy', 'administrative']) {
+      const branchLevel = FB.techBranchLevel(s, branch, rid);
+      h += '<div class="panelh">' + esc(FB.T('{branch} — level {level}/5', {
+        branch:techBranchName(branch), level:branchLevel
+      })) + '</div><div class="gm-list">';
+      for (let level = 1; level <= 5; level++) {
+        const item = FB.techForLevel(s, branch, level, rid);
+        if (!item) continue;
+        const id = item.id, def = item.def;
+        const completed = done.indexOf(id) >= 0;
+        const active = record.active === id;
+        const progress = researchNumber(record.progress[id] || 0);
+        let project = null;
+        for (const candidate of projects) if (candidate.id === id) project = candidate;
+        let status;
+        if (completed) {
+          status = FB.T('Completed');
+        } else if (active) {
+          status = FB.T('{progress}/{cost} research · active national project', {
+            progress:progress, cost:FB.techCost(s, id)
+          });
+        } else if (project && project.yearLocked) {
+          status = FB.T('Costs {cost} research · available in {year}', {
+            cost:project.cost, year:def.yearMin
+          });
+        } else if (project && project.reqLocked) {
+          const reqDef = FBDATA.tech[def.req];
+          status = FB.T('Costs {cost} research · requires {requirement}', {
+            cost:project.cost,
+            requirement:reqDef ? dt(s, 'tech', def.req, reqDef, 'name') : def.req
+          });
+        } else if (level > branchLevel + 1) {
+          status = def.yearMin && s.date.year < def.yearMin
+            ? FB.T('Costs {cost} research · available in {year} · requires {branch} level {level}', {
+              cost:FB.techCost(s, id), year:def.yearMin,
+              branch:techBranchName(branch), level:level - 1
+            })
+            : FB.T('Costs {cost} research · requires {branch} level {level}', {
+              cost:FB.techCost(s, id), branch:techBranchName(branch), level:level - 1
+            });
+        } else if (progress) {
+          status = FB.T('{progress}/{cost} research preserved · ready to resume', {
+            progress:progress, cost:FB.techCost(s, id)
+          });
+        } else {
+          status = FB.T('Costs {cost} research · ready to begin', {
+            cost:FB.techCost(s, id)
+          });
+        }
+        const label = FB.T('Level {level}: {icon} {name}', {
+          level:level, icon:def.icon, name:dt(s, 'tech', id, def, 'name')
+        });
+        if (canChoose && project && project.available && !active) {
+          h += '<button class="actionbtn" data-tech="' + esc(id) + '">' +
+            esc(record.active
+              ? FB.T('Switch to {technology}', { technology:label })
+              : FB.T('Begin {technology}', { technology:label })) +
+            '<span class="adesc">' + esc(dt(s, 'tech', id, def, 'desc')) +
+            ' ' + esc(status) + '</span></button>';
+        } else {
+          h += '<div class="progressnote">' +
+            (completed ? '✓ ' : active ? '◉ ' : '○ ') + esc(label) +
+            '<span class="adesc">' + esc(dt(s, 'tech', id, def, 'desc')) +
+            ' ' + esc(status) + '</span></div>';
+        }
       }
-      h += '<p class="hint">' + esc(FB.T('Already adopted:')) + ' ' + order.map(function (id) {
-        const d = FBDATA.tech[id];
-        if (!d) return esc(id);
-        return ranks[id] > 1
-          ? esc(FB.T('{icon} {name} ×{rank}', {
-            icon: d.icon, name: dt(s, 'tech', id, d, 'name'), rank: ranks[id] }))
-          : d.icon + ' ' + esc(dt(s, 'tech', id, d, 'name'));
-      }).join(' · ') + '</p>';
+      h += '</div>';
     }
-    h += '<button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Adopt an Innovation', h);
+    h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Technology'), h, { modalClass:'fullsheet-modal' });
     document.querySelectorAll('[data-tech]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.adoptTech(FB.state, btn.dataset.tech);
-        UI.closeModal(); UI.refresh();
+        if (!FB.selectTechProject(FB.state, btn.dataset.tech)) return;
+        UI.refresh();
+        UI.showTech();
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);

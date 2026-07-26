@@ -62,6 +62,16 @@ as base64 text (`FBS1.` prefix, same v3 payload) that wakes through the same
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
 and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
+National technology is additive version-3 state. `state.realmTech[realmId]` stores
+`{completed,active,progress,reserve}` for that sovereign identity; effective bonuses resolve
+through the top independent realm while dormant former-sovereign records remain intact.
+Secession and absorption merge records by completed-set union and the maximum partial
+progress/reserve rather than summing research that may once have been shared. On the first
+restore, `FB.ensureRealmTech` migrates legacy `state.tech` and `player.research` into the
+player's effective sovereign, collapses duplicate repeatable capstones, and refunds their
+additional historical costs to reserve. The `realmTechMigration` marker makes that repair
+one-shot without raising save format 3. See [tech.md](tech.md).
+
 `state.legends` records each player character at death (`js/main.js` `recordLegend`):
 id, name, born/died years, a semantic `titleData` snapshot, locale-neutral `causeMsg`
 and `quipMsg` descriptors, an exact frozen equipment `loadout`, and optional semantic
