@@ -23,6 +23,12 @@ FBDATA.careers = {
     ranks:{ apprentice:'Merchant’s clerk', journeyman:'Peddler', master:'Merchant' },
     desc:'Weights, ledgers, roads, and the trust that lets silver travel.'
   },
+  administration: {
+    name:'Administration', icon:'📜', skill:'ste', apprenticeAge:12, apprenticeCost:10,
+    tierMin:1, requiresTech:'royal_chancery', wage:2, masterWage:3.5,
+    ranks:{ apprentice:'Apprentice Clerk', journeyman:'Clerk', master:'Bailiff' },
+    desc:'Charters, accounts, judgments, and the written machinery of rule.'
+  },
   soldier: {
     name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1,
     wage:1.5, masterWage:2.5, maleOnly:true,

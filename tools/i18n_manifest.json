@@ -13,7 +13,7 @@
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "💡 Adopt an innovation…"
+        "text": "💡 Technology…"
       }
     },
     "action.appeal_lord.label.default": {
@@ -729,7 +729,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)"
+        "text": "Shelves of knowledge — and the people who argue over it. (+1 national research per season)"
       }
     },
     "building.library.name.default": {
@@ -812,6 +812,46 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Stone Walls"
+      }
+    },
+    "career.administration.desc.default": {
+      "context": "career administration, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Charters, accounts, judgments, and the written machinery of rule."
+      }
+    },
+    "career.administration.name.default": {
+      "context": "career administration, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Administration"
+      }
+    },
+    "career.administration.ranks.apprentice.default": {
+      "context": "career administration, rank apprentice, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Apprentice Clerk"
+      }
+    },
+    "career.administration.ranks.journeyman.default": {
+      "context": "career administration, rank journeyman, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Clerk"
+      }
+    },
+    "career.administration.ranks.master.default": {
+      "context": "career administration, rank master, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Bailiff"
       }
     },
     "career.craftsman.desc.default": {
@@ -24278,16 +24318,6 @@
         }
       }
     },
-    "news.action.tech_adopted": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "innovation"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "💡 {innovation} takes root in your lands."
-      }
-    },
     "news.action.war_declared": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -25978,6 +26008,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your quiet work costs {name} dearly, and no one can prove a thing."
+      }
+    },
+    "news.tech.completed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm",
+        "technology"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "💡 {realm} completes {technology}."
       }
     },
     "news.travel.cancelled": {
@@ -33075,6 +33116,17 @@
         "text": "The Patron Is Gone"
       }
     },
+    "src.03047986": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} cavalry"
+      }
+    },
     "src.031c75a0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33134,16 +33186,6 @@
       ],
       "source": {
         "text": "Received a settlement from the house of {late}."
-      }
-    },
-    "src.033ea220": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Shock riders who stay in the saddle. (+5% battle odds)"
       }
     },
     "src.034db87c": {
@@ -33234,6 +33276,16 @@
       ],
       "source": {
         "text": "A sweet prize for a sweet tongue — maybe."
+      }
+    },
+    "src.04263a9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "National technology"
       }
     },
     "src.042caac2": {
@@ -34059,6 +34111,16 @@
         "text": "Trade the village’s gain for your own chains broken."
       }
     },
+    "src.07c430bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Costs {cost} research · requires {requirement}"
+      }
+    },
     "src.07c89bef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34178,6 +34240,16 @@
       ],
       "source": {
         "text": "Bukhara"
+      }
+    },
+    "src.0858934a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "{realm}: Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5."
       }
     },
     "src.0866f2ef": {
@@ -34709,16 +34781,6 @@
       ],
       "source": {
         "text": "⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%"
-      }
-    },
-    "src.0a42af78": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations."
       }
     },
     "src.0a49959d": {
@@ -36134,6 +36196,16 @@
         "text": "Church Patron"
       }
     },
+    "src.107dea9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "the sovereign ruler"
+      }
+    },
     "src.10c3d811": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36795,6 +36867,16 @@
       ],
       "source": {
         "text": "Part ways without a wedding."
+      }
+    },
+    "src.134acf5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current research"
       }
     },
     "src.134fd493": {
@@ -38684,6 +38766,16 @@
         "text": "Beyond the Campfires"
       }
     },
+    "src.1c2f54aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Costs {cost} research · available in {year} · requires {branch} level {level}"
+      }
+    },
     "src.1c3b394c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39305,6 +39397,16 @@
         "text": "fabricated claim"
       }
     },
+    "src.1ee0efce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Fund learned people; their work is banked until the nation begins a technology."
+      }
+    },
     "src.1eee0dc9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39486,16 +39588,6 @@
         "text": "★★ fair"
       }
     },
-    "src.1fbf23e7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "💡 Adopt an innovation…"
-      }
-    },
     "src.1fc1f575": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39524,16 +39616,6 @@
       ],
       "source": {
         "text": "Vistulans"
-      }
-    },
-    "src.1ff551c6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Already adopted:"
       }
     },
     "src.1ffa3f13": {
@@ -39705,16 +39787,6 @@
       ],
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
-      }
-    },
-    "src.20a7a96b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{icon} {name} ×{rank} — {cost} scholarship"
       }
     },
     "src.20c28811": {
@@ -41609,6 +41681,16 @@
         "text": "Squeeze your vassals for four seasons’ taxes at once. They will not love it."
       }
     },
+    "src.28a019b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Military"
+      }
+    },
     "src.28a101b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42618,6 +42700,16 @@
       ],
       "source": {
         "text": "hop between neighboring provinces ·"
+      }
+    },
+    "src.2d60fadf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💡 Technology…"
       }
     },
     "src.2d6fdaba": {
@@ -45237,6 +45329,16 @@
         "text": "The feud finds a second wind — with your name tangled in it."
       }
     },
+    "src.3aa9f27c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Bailiff"
+      }
+    },
     "src.3aad9590": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45345,6 +45447,16 @@
       ],
       "source": {
         "text": "Pride keeps poor company at night."
+      }
+    },
+    "src.3b11509d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your nation"
       }
     },
     "src.3b12b842": {
@@ -45777,6 +45889,16 @@
         "text": "Won a rich bargain in {destination}."
       }
     },
+    "src.3cda5f03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Apprentice Clerk"
+      }
+    },
     "src.3ce30400": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45967,6 +46089,17 @@
       ],
       "source": {
         "text": "⚜ {name} is one county alone — no duke’s title to claim."
+      }
+    },
+    "src.3dc0ef7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} cavalryman"
       }
     },
     "src.3dc44776": {
@@ -46489,6 +46622,16 @@
       ],
       "source": {
         "text": "Judge with care and patience."
+      }
+    },
+    "src.3f9d7ea1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Shock riders who stay in the saddle. (+30 cavalry)"
       }
     },
     "src.3fa047ca": {
@@ -48068,6 +48211,16 @@
         "text": "Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee."
       }
     },
+    "src.4620eb2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "National research each season"
+      }
+    },
     "src.465e2b45": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48409,6 +48562,16 @@
       ],
       "source": {
         "text": "🕊 {realm} receives the gifts but refuses the defensive compact."
+      }
+    },
+    "src.47b61b7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Shelves of knowledge — and the people who argue over it. (+1 national research per season)"
       }
     },
     "src.47c59181": {
@@ -48851,6 +49014,16 @@
       ],
       "source": {
         "text": "Oaths in chorus are heavy to lift against."
+      }
+    },
+    "src.49d02bf5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Learned men against fevers and wounds. (−1.2% yearly ruler mortality)"
       }
     },
     "src.49ddacb8": {
@@ -49455,6 +49628,16 @@
         "text": "Was widowed — suddenly, conveniently."
       }
     },
+    "src.4c3cbd69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Bow, horse, and armored foot train as one host. (+20 archers, +20 cavalry, +3% battle odds)"
+      }
+    },
     "src.4c3dd01f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49534,6 +49717,16 @@
       ],
       "source": {
         "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready now"
+      }
+    },
+    "src.4c7a0803": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms"
       }
     },
     "src.4c8ab2de": {
@@ -50087,16 +50280,6 @@
         "text": "Name {name} your enemy. (spends the day)"
       }
     },
-    "src.4f18bdf0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{total} total · {levy} levy · {archers} archers · {retinue} men-at-arms"
-      }
-    },
     "src.4f1aecbb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50335,6 +50518,16 @@
       ],
       "source": {
         "text": "Choose Your Conquest"
+      }
+    },
+    "src.506794b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{progress}/{cost} research preserved · ready to resume"
       }
     },
     "src.50769973": {
@@ -50747,6 +50940,16 @@
         "text": "Both hear favoritism in your words. Both leave sulking."
       }
     },
+    "src.51d87331": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5"
+      }
+    },
     "src.51de9840": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50977,6 +51180,16 @@
         "text": "Hired master"
       }
     },
+    "src.52daa997": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Economy"
+      }
+    },
     "src.52e6f8db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51105,6 +51318,16 @@
       ],
       "source": {
         "text": "The host mends and your borders are relieved — but no ground is gained."
+      }
+    },
+    "src.5384cc95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Costs {cost} research · available in {year}"
       }
     },
     "src.53875036": {
@@ -51809,6 +52032,16 @@
         "text": "Duchy of Lower Lorraine"
       }
     },
+    "src.568e68c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{branch} — level {level}/5"
+      }
+    },
     "src.56a26802": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52430,16 +52663,6 @@
         "text": "The Lord’s Eye"
       }
     },
-    "src.59a4510b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "(not enough scholarship)"
-      }
-    },
     "src.59a6a514": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52630,6 +52853,16 @@
         "text": "{days} days remain · deadline {season} {day}, {year}"
       }
     },
+    "src.5a398deb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{progress}/{cost} research · active national project"
+      }
+    },
     "src.5a3db654": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52648,16 +52881,6 @@
       ],
       "source": {
         "text": "A respected go-between seats you and {rival} beneath the same roof and urges ṣulḥ: fair amends, named witnesses, and a binding end to the quarrel."
-      }
-    },
-    "src.5a505f56": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The cheapest innovation within reach of your scholarship."
       }
     },
     "src.5a5137c0": {
@@ -52839,6 +53062,16 @@
       ],
       "source": {
         "text": "The Claimant’s Challenge"
+      }
+    },
+    "src.5b21f553": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "When the national project ends, begin the cheapest available next project."
       }
     },
     "src.5b38cc4a": {
@@ -54778,16 +55011,6 @@
         "text": "Lyon"
       }
     },
-    "src.6359f92e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "💡 {innovation} takes root in your lands."
-      }
-    },
     "src.63680942": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55018,6 +55241,16 @@
       ],
       "source": {
         "text": "Take it, and remember."
+      }
+    },
+    "src.649c067f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Administrative"
       }
     },
     "src.64a37800": {
@@ -55259,6 +55492,16 @@
       ],
       "source": {
         "text": "A forged past is a dangerous foundation."
+      }
+    },
+    "src.65bab4f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Knowledge that outlives its keepers. (+1 research per season)"
       }
     },
     "src.65cdd174": {
@@ -56031,16 +56274,6 @@
         "text": "Bring Down {rival}"
       }
     },
-    "src.69296afe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{icon} {name} — {cost} scholarship"
-      }
-    },
     "src.692a7a89": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56641,6 +56874,16 @@
       ],
       "source": {
         "text": "Flattery is cheap; let him feel heard."
+      }
+    },
+    "src.6b7d5cbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Shield-wall practice through the winter months. (+3% battle odds)"
       }
     },
     "src.6b93b4a0": {
@@ -57643,16 +57886,6 @@
         "text": "His letters prove good as gold. The partnership pays handsomely."
       }
     },
-    "src.6fd0d46a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Better breeds, better folds, fuller barns. (+5% tax per rank)"
-      }
-    },
     "src.6fd6d2a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58616,6 +58849,16 @@
         "text": "duplicate strait"
       }
     },
+    "src.73dee77f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the next technology automatically"
+      }
+    },
     "src.73e51394": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58926,6 +59169,16 @@
         "text": "👑 You accept the campaign’s grant and take possession of the awarded lands."
       }
     },
+    "src.7506533f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{technology} — {progress}/{cost} research"
+      }
+    },
     "src.7507da5d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59125,16 +59378,6 @@
       ],
       "source": {
         "text": "See this realm’s ruler"
-      }
-    },
-    "src.75c3d604": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)"
       }
     },
     "src.75c67340": {
@@ -59448,6 +59691,16 @@
         "text": "Steady hands, steady coin."
       }
     },
+    "src.7729c44d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Level {level}: {icon} {name}"
+      }
+    },
     "src.772b9a81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59586,6 +59839,16 @@
       ],
       "source": {
         "text": "🔗 Swear brotherhood with {friend}"
+      }
+    },
+    "src.77f6421e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Every charter and cartulary copied, counted, and kept. (+0.5 research per season)"
       }
     },
     "src.77fa48d4": {
@@ -59827,16 +60090,6 @@
       ],
       "source": {
         "text": "Barns and talk. Let them meet."
-      }
-    },
-    "src.79053412": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Every charter and cartulary copied, counted, and kept. (+0.1 scholarship per season, per rank)"
       }
     },
     "src.79093bcb": {
@@ -60861,6 +61114,16 @@
         "text": "has invalid empire"
       }
     },
+    "src.7d165e5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Switch to {technology}"
+      }
+    },
     "src.7d2d9c00": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61029,6 +61292,16 @@
       ],
       "source": {
         "text": "🎓 {name} will be schooled in diplomacy."
+      }
+    },
+    "src.7dbcab90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "National military technology"
       }
     },
     "src.7dc1f8ce": {
@@ -61540,6 +61813,16 @@
       ],
       "source": {
         "text": "🗝 Hire a Retainer"
+      }
+    },
+    "src.7fa57885": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Fund learned people; their work aids the national project {technology}."
       }
     },
     "src.7fa6dcee": {
@@ -62102,16 +62385,6 @@
         "text": "Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you."
       }
     },
-    "src.81f02990": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Scholarship: {amount} — spend it on advances that outlive you."
-      }
-    },
     "src.81f1bf0f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62422,6 +62695,16 @@
         "text": "📜 Your fiefs escheat to {liege}."
       }
     },
+    "src.833a56ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Begin {technology}"
+      }
+    },
     "src.833e0bcb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62440,16 +62723,6 @@
       ],
       "source": {
         "text": "Cider Press"
-      }
-    },
-    "src.834b0bff": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Adopt an Innovation"
       }
     },
     "src.834fbc2b": {
@@ -62783,6 +63056,16 @@
         "text": "Patrols may quiet the songs — or give them a martyr."
       }
     },
+    "src.84674cda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "None — new research is banked in reserve."
+      }
+    },
     "src.846d963b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63052,6 +63335,16 @@
       ],
       "source": {
         "text": "Zoom out"
+      }
+    },
+    "src.85a62c87": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{ruler} chooses the national project. Your patronage, libraries, and learned contacts aid that work."
       }
     },
     "src.85b50a93": {
@@ -63594,6 +63887,16 @@
         "text": "Mods stay on until removed, and saves remember their world — a life begun with a mod continues only while that mod is active."
       }
     },
+    "src.87d1209a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount} research"
+      }
+    },
     "src.87dee7e1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63622,6 +63925,16 @@
       ],
       "source": {
         "text": "The dead deserve better than gulls."
+      }
+    },
+    "src.88285884": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💡 {realm} completes {technology}."
       }
     },
     "src.882a7fd6": {
@@ -63702,16 +64015,6 @@
       ],
       "source": {
         "text": "{level} — {name}"
-      }
-    },
-    "src.888b3637": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Shield-wall practice through the winter months. (+3% battle odds per rank)"
       }
     },
     "src.888ffdbc": {
@@ -64826,6 +65129,16 @@
         "text": "No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it."
       }
     },
+    "src.8d2d81c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Branch levels"
+      }
+    },
     "src.8d31387a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65449,6 +65762,16 @@
         "text": "👶 Your brother {parent} has a daughter, {baby}."
       }
     },
+    "src.8fd91fef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Administration"
+      }
+    },
     "src.8fdbb1af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65910,6 +66233,16 @@
         "text": "Hired mercenaries for the defense."
       }
     },
+    "src.91b40949": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Combined Arms"
+      }
+    },
     "src.91b80e09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65918,6 +66251,16 @@
       ],
       "source": {
         "text": "Let your mind wander to business."
+      }
+    },
+    "src.91ca809b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{amount} national research each season"
       }
     },
     "src.91e45132": {
@@ -66520,6 +66863,16 @@
         "text": "Raises farming output by 15%."
       }
     },
+    "src.94fbdccf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Technology"
+      }
+    },
     "src.95271b43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66731,16 +67084,6 @@
       ],
       "source": {
         "text": "Steady work that sharpens the mind."
-      }
-    },
-    "src.95f73bc4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Adopt innovations automatically"
       }
     },
     "src.96093d9f": {
@@ -67324,16 +67667,6 @@
         "text": "{relationship} · regard {regard}"
       }
     },
-    "src.985316ca": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Learned men against fevers and wounds. (you live longer)"
-      }
-    },
     "src.985d8dac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67363,6 +67696,16 @@
       ],
       "source": {
         "text": "Health"
+      }
+    },
+    "src.9863bf12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Chartered crafts and honest weights. (cheaper buildings, enterprises, and training)"
       }
     },
     "src.98642552": {
@@ -68528,16 +68871,6 @@
         "text": "“You ask much,” the liege says coldly, and turns to other petitioners. The courtiers’ smiles follow you out."
       }
     },
-    "src.9d9103b8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "📜 Scholarship {amount}"
-      }
-    },
     "src.9d923db3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68856,6 +69189,16 @@
       ],
       "source": {
         "text": "Exeter"
+      }
+    },
+    "src.9ee1c4cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Better breeds, better folds, fuller barns. (+5% tax)"
       }
     },
     "src.9ee40c73": {
@@ -69428,16 +69771,6 @@
         "text": "Master"
       }
     },
-    "src.a129ff10": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{icon} {name} ×{rank}"
-      }
-    },
     "src.a13269a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69446,6 +69779,16 @@
       ],
       "source": {
         "text": "🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season"
+      }
+    },
+    "src.a13db2a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "cavalry"
       }
     },
     "src.a140f474": {
@@ -70481,6 +70824,16 @@
         "text": "Keep calling, keep smiling."
       }
     },
+    "src.a5ac8ea2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Water, wind, and gearing turn labor into abundance. (+10% tax, higher development ceiling, cheaper buildings and enterprises)"
+      }
+    },
     "src.a5afcc3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70671,6 +71024,16 @@
       ],
       "source": {
         "text": "“Land of my own, someday.”"
+      }
+    },
+    "src.a6506289": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Costs {cost} research · ready to begin"
       }
     },
     "src.a653c2a3": {
@@ -72198,16 +72561,6 @@
         "text": "Temperate"
       }
     },
-    "src.adcce020": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "+{amount} scholarship each season"
-      }
-    },
     "src.ade2b8ae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72326,6 +72679,16 @@
       ],
       "source": {
         "text": "Rest and broth."
+      }
+    },
+    "src.ae54c1dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Charters, accounts, judgments, and the written machinery of rule."
       }
     },
     "src.ae55f27d": {
@@ -72516,6 +72879,16 @@
       ],
       "source": {
         "text": "{band} ({value})"
+      }
+    },
+    "src.af71adb0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Powered Mills"
       }
     },
     "src.af71f851": {
@@ -73428,6 +73801,16 @@
       ],
       "source": {
         "text": "East Francia"
+      }
+    },
+    "src.b326dbca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Tagmata"
       }
     },
     "src.b32b1d4f": {
@@ -74633,6 +75016,16 @@
         "text": "Arrows"
       }
     },
+    "src.b7d8971e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Banked reserve"
+      }
+    },
     "src.b7d96e35": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75192,16 +75585,6 @@
       ],
       "source": {
         "text": "A firm no may cow him — or spur his riders."
-      }
-    },
-    "src.bb03435b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Innovations"
       }
     },
     "src.bb053bae": {
@@ -76456,6 +76839,16 @@
         "text": "Northampton"
       }
     },
+    "src.c0e216c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Active project"
+      }
+    },
     "src.c0e6bd05": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77302,16 +77695,6 @@
         "text": "Send the flatterer off."
       }
     },
-    "src.c3e88d6e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Military innovations"
-      }
-    },
     "src.c3e9724c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77372,6 +77755,16 @@
         "text": "🕊 A pact of peace holds until {year} AD."
       }
     },
+    "src.c439b8c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Only a sovereign player chooses national technology; your sovereign selects the project."
+      }
+    },
     "src.c439f9f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77400,16 +77793,6 @@
       ],
       "source": {
         "text": "Spend {money:amount} and restore the coin"
-      }
-    },
-    "src.c4847e34": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Chartered crafts and honest weights. (+10% tax, buildings cost 20% less)"
       }
     },
     "src.c4880ae1": {
@@ -78756,6 +79139,16 @@
         "text": "Give thanks where thanks are due."
       }
     },
+    "src.cb265741": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Cavalry fodder and supplies"
+      }
+    },
     "src.cb268a47": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79630,16 +80023,6 @@
         "text": "Browse arms and useful goods."
       }
     },
-    "src.ceacdf14": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})"
-      }
-    },
     "src.ceb0be00": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79830,6 +80213,16 @@
         "text": "The townsfolk mutter that the council needs a man of sense — your name comes up more than once."
       }
     },
+    "src.cfeeb50e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Sovereign nation"
+      }
+    },
     "src.cff3aba8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80018,16 +80411,6 @@
       ],
       "source": {
         "text": "{stance} — suspended during war"
-      }
-    },
-    "src.d0d814ab": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Knowledge that outlives its keepers. (+1 scholarship per season)"
       }
     },
     "src.d0dc9f17": {
@@ -81401,6 +81784,16 @@
         "text": "Restore the crown of {title}"
       }
     },
+    "src.d72f224a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Professional imperial regiments of horse and steel. (+15 cavalry, +15 men-at-arms)"
+      }
+    },
     "src.d73aaa15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81702,6 +82095,16 @@
         "text": "A diadem of an empire nobody remembers — and everybody bows to."
       }
     },
+    "src.d85442d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{technology} — {progress}/{cost}"
+      }
+    },
     "src.d85f006c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81840,6 +82243,16 @@
       ],
       "source": {
         "text": "Drive them away."
+      }
+    },
+    "src.d92d0ce9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Royal Chancery"
       }
     },
     "src.d9471869": {
@@ -83475,6 +83888,16 @@
         "text": "Buy it. ({money:4})"
       }
     },
+    "src.e04d8b3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Costs {cost} research · requires {branch} level {level}"
+      }
+    },
     "src.e04dd123": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84441,6 +84864,16 @@
         "text": "Your host"
       }
     },
+    "src.e4a8214d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A permanent writing office carries the crown beyond one household. (+1 domain capacity, +0.5 research per season, unlocks Administration work)"
+      }
+    },
     "src.e4aa6387": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85130,6 +85563,16 @@
       ],
       "source": {
         "text": "The branch gives early. The water is shallower than it looked."
+      }
+    },
+    "src.e7cb3e3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Researching {technology}"
       }
     },
     "src.e7ccef1b": {
@@ -86123,16 +86566,6 @@
         "text": "Bowed to no one. The grave accepts all bows as given."
       }
     },
-    "src.ebaac492": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No new innovation is within reach — prerequisites, or the age itself."
-      }
-    },
     "src.ebeafb07": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86251,6 +86684,16 @@
       ],
       "source": {
         "text": "resolve {resolve} · {days} days before the deadline"
+      }
+    },
+    "src.ec88aab2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Completed"
       }
     },
     "src.ec89cd10": {
@@ -86762,6 +87205,16 @@
       ],
       "source": {
         "text": "Give it to the {temple}."
+      }
+    },
+    "src.ef1a8a7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Technology belongs to the sovereign nation. Every vassal shares its completed advances and may add research to its one active project."
       }
     },
     "src.ef1d2283": {
@@ -88657,6 +89110,16 @@
         "text": "Send him on his way."
       }
     },
+    "src.f76b4d2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No active project"
+      }
+    },
     "src.f76b8ac6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90101,6 +90564,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/economy.js",
         "js/economy.js"
       ],
       "source": {
@@ -90637,12 +91101,28 @@
         "text": "Your realm is not eligible to claim the Caliphate."
       }
     },
+    "tech.combined_arms.desc.default": {
+      "context": "tech combined_arms, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Bow, horse, and armored foot train as one host. (+20 archers, +20 cavalry, +3% battle odds)"
+      }
+    },
+    "tech.combined_arms.name.default": {
+      "context": "tech combined_arms, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Combined Arms"
+      }
+    },
     "tech.guild_charters.desc.default": {
       "context": "tech guild_charters, desc, faith branch default.",
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Chartered crafts and honest weights. (+10% tax, buildings cost 20% less)"
+        "text": "Chartered crafts and honest weights. (cheaper buildings, enterprises, and training)"
       }
     },
     "tech.guild_charters.name.default": {
@@ -90690,7 +91170,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Better breeds, better folds, fuller barns. (+5% tax per rank)"
+        "text": "Better breeds, better folds, fuller barns. (+5% tax)"
       }
     },
     "tech.improved_husbandry.name.default": {
@@ -90722,7 +91202,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Shield-wall practice through the winter months. (+3% battle odds per rank)"
+        "text": "Shield-wall practice through the winter months. (+3% battle odds)"
       }
     },
     "tech.martial_drill.name.default": {
@@ -90738,7 +91218,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Learned men against fevers and wounds. (you live longer)"
+        "text": "Learned men against fevers and wounds. (−1.2% yearly ruler mortality)"
       }
     },
     "tech.physicians.name.default": {
@@ -90747,6 +91227,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Court Physicians"
+      }
+    },
+    "tech.powered_mills.desc.default": {
+      "context": "tech powered_mills, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Water, wind, and gearing turn labor into abundance. (+10% tax, higher development ceiling, cheaper buildings and enterprises)"
+      }
+    },
+    "tech.powered_mills.name.default": {
+      "context": "tech powered_mills, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Powered Mills"
       }
     },
     "tech.ringworks.desc.default": {
@@ -90770,7 +91266,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Every charter and cartulary copied, counted, and kept. (+0.1 scholarship per season, per rank)"
+        "text": "Every charter and cartulary copied, counted, and kept. (+0.5 research per season)"
       }
     },
     "tech.royal_catalogue.name.default": {
@@ -90781,12 +91277,28 @@
         "text": "Royal Catalogue"
       }
     },
+    "tech.royal_chancery.desc.default": {
+      "context": "tech royal_chancery, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A permanent writing office carries the crown beyond one household. (+1 domain capacity, +0.5 research per season, unlocks Administration work)"
+      }
+    },
+    "tech.royal_chancery.name.default": {
+      "context": "tech royal_chancery, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Royal Chancery"
+      }
+    },
     "tech.scriptoria.desc.default": {
       "context": "tech scriptoria, desc, faith branch default.",
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Knowledge that outlives its keepers. (+1 scholarship per season)"
+        "text": "Knowledge that outlives its keepers. (+1 research per season)"
       }
     },
     "tech.scriptoria.name.default": {
@@ -90810,7 +91322,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Shock riders who stay in the saddle. (+5% battle odds)"
+        "text": "Shock riders who stay in the saddle. (+30 cavalry)"
       }
     },
     "tech.stirrups.name.default": {
@@ -90819,6 +91331,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Stirrup Cavalry"
+      }
+    },
+    "tech.tagmata.desc.default": {
+      "context": "tech tagmata, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Professional imperial regiments of horse and steel. (+15 cavalry, +15 men-at-arms)"
+      }
+    },
+    "tech.tagmata.name.default": {
+      "context": "tech tagmata, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Tagmata"
       }
     },
     "tech.three_field.desc.default": {
@@ -92276,14 +92804,6 @@
         "text": "(not enough money)"
       }
     },
-    "ui:(not enough scholarship)": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "(not enough scholarship)"
-      }
-    },
     "ui:({days} days’ weaving, roughly)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -92328,6 +92848,16 @@
         "text": "+{amount} development when raised"
       }
     },
+    "ui:+{amount} national research each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{amount} national research each season"
+      }
+    },
     "ui:+{amount} piety each season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -92356,16 +92886,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "+{amount} prestige when raised"
-      }
-    },
-    "ui:+{amount} scholarship each season": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "+{amount} scholarship each season"
       }
     },
     "ui:+{amount}% for {years} years": {
@@ -92727,6 +93247,14 @@
         "text": "Acolyte"
       }
     },
+    "ui:Administrative": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Administrative"
+      }
+    },
     "ui:After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -92799,14 +93327,6 @@
       "location": "js/economy.js",
       "source": {
         "text": "Almsgiver"
-      }
-    },
-    "ui:Already adopted:": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Already adopted:"
       }
     },
     "ui:Already occupying {settlement}:": {
@@ -93148,6 +93668,16 @@
         "text": "Begin"
       }
     },
+    "ui:Begin {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technology"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Begin {technology}"
+      }
+    },
     "ui:Believer": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -93401,6 +93931,14 @@
         "text": "Cash and item gifts share a recipient cooldown. Ready in {days} days."
       }
     },
+    "ui:Cavalry fodder and supplies": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Cavalry fodder and supplies"
+      }
+    },
     "ui:Chamberlain": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -93507,6 +94045,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
+      }
+    },
+    "ui:Choose the next technology automatically": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the next technology automatically"
       }
     },
     "ui:Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer.": {
@@ -93640,6 +94186,14 @@
         "text": "Commit {money:stake}…"
       }
     },
+    "ui:Completed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Completed"
+      }
+    },
     "ui:Confirm the contract": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -93678,6 +94232,63 @@
       "location": "js/actions.js",
       "source": {
         "text": "Control Baghdad, or both Mecca and Medina."
+      }
+    },
+    "ui:Costs {cost} research · available in {year}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Costs {cost} research · available in {year}"
+      }
+    },
+    "ui:Costs {cost} research · available in {year} · requires {branch} level {level}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "branch",
+        "cost",
+        "level",
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Costs {cost} research · available in {year} · requires {branch} level {level}"
+      }
+    },
+    "ui:Costs {cost} research · ready to begin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Costs {cost} research · ready to begin"
+      }
+    },
+    "ui:Costs {cost} research · requires {branch} level {level}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "branch",
+        "cost",
+        "level"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Costs {cost} research · requires {branch} level {level}"
+      }
+    },
+    "ui:Costs {cost} research · requires {requirement}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "requirement"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Costs {cost} research · requires {requirement}"
       }
     },
     "ui:Costs {money:15}.": {
@@ -94056,6 +94667,14 @@
         "text": "Each settlement keeps its own buildings — tap one to see them and raise more."
       }
     },
+    "ui:Economy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Economy"
+      }
+    },
     "ui:Either hand": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -94422,14 +95041,22 @@
         "text": "Full figure of {name}"
       }
     },
-    "ui:Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})": {
+    "ui:Fund learned people; their work aids the national project {technology}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "amount"
+        "technology"
       ],
       "location": "js/actions.js",
       "source": {
-        "text": "Fund learned men; scholarship accrues toward innovations. (Scholarship: {amount})"
+        "text": "Fund learned people; their work aids the national project {technology}."
+      }
+    },
+    "ui:Fund learned people; their work is banked until the nation begins a technology.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Fund learned people; their work is banked until the nation begins a technology."
       }
     },
     "ui:Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.": {
@@ -94802,14 +95429,6 @@
         "text": "Inherited debt:"
       }
     },
-    "ui:Innovations": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Innovations"
-      }
-    },
     "ui:It goes poorly.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -94938,6 +95557,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "Lessons begin at age 6."
+      }
+    },
+    "ui:Level {level}: {icon} {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "icon",
+        "level",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Level {level}: {icon} {name}"
       }
     },
     "ui:Level {level}: {name}": {
@@ -95116,12 +95747,24 @@
         "text": "Merchant advance"
       }
     },
-    "ui:Military innovations": {
+    "ui:Military": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Military innovations"
+        "text": "Military"
+      }
+    },
+    "ui:Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "administrative",
+        "economy",
+        "military"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5"
       }
     },
     "ui:Minimum age {age}": {
@@ -95261,6 +95904,22 @@
         "text": "Name {name} your enemy. (spends the day)"
       }
     },
+    "ui:National military technology": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "National military technology"
+      }
+    },
+    "ui:National technology": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "National technology"
+      }
+    },
     "ui:Neck": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -95294,6 +95953,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No active household obligations."
+      }
+    },
+    "ui:No active project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No active project"
       }
     },
     "ui:No apprenticeship chosen": {
@@ -95580,6 +96247,14 @@
         "text": "None"
       }
     },
+    "ui:None — new research is banked in reserve.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "None — new research is banked in reserve."
+      }
+    },
     "ui:None — this land feeds no duchy or crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -95692,6 +96367,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Only a sovereign may restore the Papacy."
+      }
+    },
+    "ui:Only a sovereign player chooses national technology; your sovereign selects the project.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Only a sovereign player chooses national technology; your sovereign selects the project."
       }
     },
     "ui:Only an adult can take to the road.": {
@@ -96571,6 +97254,16 @@
         "text": "Requires {standing} standing; currently {current}."
       }
     },
+    "ui:Researching {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technology"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Researching {technology}"
+      }
+    },
     "ui:Resolve the current event before changing equipment.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -96733,26 +97426,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ruler’s family and succession"
-      }
-    },
-    "ui:Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Scholarship: {amount} — earned by patronizing scholars, libraries, and learned guests. Innovations persist across the generations."
-      }
-    },
-    "ui:Scholarship: {amount} — spend it on advances that outlive you.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Scholarship: {amount} — spend it on advances that outlive you."
       }
     },
     "ui:Scutage — silver answers the summons": {
@@ -97129,6 +97802,16 @@
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
       }
     },
+    "ui:Switch to {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technology"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Switch to {technology}"
+      }
+    },
     "ui:Take a vow for the {side} camp of the {campaign}. {service}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -97187,6 +97870,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Teach them yourself"
+      }
+    },
+    "ui:Technology": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Technology"
+      }
+    },
+    "ui:Technology belongs to the sovereign nation. Every vassal shares its completed advances and may add research to its one active project.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Technology belongs to the sovereign nation. Every vassal shares its completed advances and may add research to its one active project."
       }
     },
     "ui:That county does not qualify for this journey.": {
@@ -97816,6 +98515,14 @@
         "text": "Well-made {item}"
       }
     },
+    "ui:When the national project ends, begin the cheapest available next project.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "When the national project ends, begin the cheapest available next project."
+      }
+    },
     "ui:When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -98306,6 +99013,14 @@
         "text": "Your mother"
       }
     },
+    "ui:Your nation": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your nation"
+      }
+    },
     "ui:Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -98508,6 +99223,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "blood feud"
+      }
+    },
+    "ui:cavalry": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "cavalry"
       }
     },
     "ui:church": {
@@ -99175,6 +99898,14 @@
         "text": "the realms play out on their own"
       }
     },
+    "ui:the sovereign ruler": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "the sovereign ruler"
+      }
+    },
     "ui:the town": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -99455,6 +100186,16 @@
         "text": "{amount} prestige a season"
       }
     },
+    "ui:{amount} research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount} research"
+      }
+    },
     "ui:{amount} {skill}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -99526,6 +100267,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{band} ({value})"
+      }
+    },
+    "ui:{branch} — level {level}/5": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "branch",
+        "level"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{branch} — level {level}/5"
       }
     },
     "ui:{building} upkeep": {
@@ -99832,31 +100584,6 @@
         "text": "{icon} level {level}"
       }
     },
-    "ui:{icon} {name} ×{rank}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "icon",
-        "name",
-        "rank"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{icon} {name} ×{rank}"
-      }
-    },
-    "ui:{icon} {name} ×{rank} — {cost} scholarship": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "cost",
-        "icon",
-        "name",
-        "rank"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{icon} {name} ×{rank} — {cost} scholarship"
-      }
-    },
     "ui:{icon} {name} — Raise Next for {money:cost}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -99867,18 +100594,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "{icon} {name} — Raise Next for {money:cost}"
-      }
-    },
-    "ui:{icon} {name} — {cost} scholarship": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "cost",
-        "icon",
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{icon} {name} — {cost} scholarship"
       }
     },
     "ui:{icon} {name} — {money:cost}": {
@@ -100307,6 +101022,28 @@
         "text": "{prestige} prestige"
       }
     },
+    "ui:{progress}/{cost} research preserved · ready to resume": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "progress"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{progress}/{cost} research preserved · ready to resume"
+      }
+    },
+    "ui:{progress}/{cost} research · active national project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "progress"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{progress}/{cost} research · active national project"
+      }
+    },
     "ui:{purpose} · {phase} · now in {location} · destination {destination}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -100433,6 +101170,19 @@
         "text": "{realm} — vassal levy"
       }
     },
+    "ui:{realm}: Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "administrative",
+        "economy",
+        "military",
+        "realm"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "{realm}: Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5."
+      }
+    },
     "ui:{relationship} · regard {regard}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -100500,6 +101250,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{relation} · {marital} · regard {regard}"
+      }
+    },
+    "ui:{ruler} chooses the national project. Your patronage, libraries, and learned contacts aid that work.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "ruler"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{ruler} chooses the national project. Your patronage, libraries, and learned contacts aid that work."
       }
     },
     "ui:{ruler} · dev {development} · {money:price}": {
@@ -100761,6 +101521,30 @@
         "text": "{summary} · {money:amount} each season"
       }
     },
+    "ui:{technology} — {progress}/{cost}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "progress",
+        "technology"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{technology} — {progress}/{cost}"
+      }
+    },
+    "ui:{technology} — {progress}/{cost} research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "progress",
+        "technology"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{technology} — {progress}/{cost} research"
+      }
+    },
     "ui:{title} of {place}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -100833,17 +101617,18 @@
         "text": "{title} — vacant for {days} days"
       }
     },
-    "ui:{total} total · {levy} levy · {archers} archers · {retinue} men-at-arms": {
+    "ui:{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "archers",
+        "cavalry",
         "levy",
         "retinue",
         "total"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{total} total · {levy} levy · {archers} archers · {retinue} men-at-arms"
+        "text": "{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms"
       }
     },
     "ui:{used} of {capacity}": {
@@ -101326,16 +102111,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "📜 Grant a get ({money:gold})"
-      }
-    },
-    "ui:📜 Scholarship {amount}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "📜 Scholarship {amount}"
       }
     },
     "ui:📯 Great holy-war objective · {status}": {

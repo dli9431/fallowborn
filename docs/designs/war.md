@@ -82,27 +82,30 @@ single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so t
 loops stay O(realms + armies) even with dozens of hosts on the map.
 
 **A host is a composition, not just a headcount.** Every host carries
-`units: { levy, arch, ret, mercs }` (with `men` always the total, so every place that only
+`units: { levy, arch, cav, ret, mercs }` (with `men` always the total, so every place that only
 reads a number is untouched). The levy is the dev-driven mass — untrained foot raised for
 the campaign; the **retinue** is the professional core of men-at-arms from war buildings
-(`keep`, `barracks`), the arms techs, and a landed baron's standing household
-(`balance.baronyRetinue`); **archers** come from archery-butts buildings and tech;
+(`keep`, `barracks`), military technology, and a landed baron's standing household
+(`balance.baronyRetinue`); **archers** come from archery-butts buildings and technology;
+**cavalry** comes from national military technology;
 **mercs** are the hired companies. `FB.playerComposition` (world.js) computes the player's
 split — `FB.playerLevy` remains the total for callers that want a number — and AI hosts
-get a simple era-based split (`balance.aiRetinueFrac`/`aiArcherFrac`, stepping up at
-`aiEraStepYear`), since AI realms keep no buildings. Each class fights at its own quality
-(`balance.qualityLevy`/`qualityArcher`/`qualityRetinue`/`qualityMerc`, read through
-`FB.compQuality`): men-at-arms punch far above their numbers, levy below. Battle
-casualties fall levy-first and men-at-arms last (`applyLosses` in armies.js), and a
+start from `balance.aiRetinueFrac`/`aiArcherFrac`, then add the effective sovereign's
+`fx.aiUnits` fractions; national `levy` bonuses also increase their muster, and there is
+no global era step. Each class fights at its own quality
+(`balance.qualityLevy`/`qualityArcher`/`qualityCavalry`/`qualityRetinue`/`qualityMerc`,
+read through `FB.compQuality`): cavalry has quality 2.0, men-at-arms punch far above their
+numbers, and levy below. Battle casualties fall in the fixed order levy → archers →
+mercenaries → cavalry → men-at-arms (`applyLosses` in armies.js), and a
 resting host refills with fresh levy only — slain professionals are not replaced
 mid-war, so a long campaign grinds a host down toward its peasant mass. Hosts from older
 saves migrate in place (`FB.hostUnits`): their men count as levy but the hired companies.
 
 **A raised host has composition-based seasonal logistics.**
 `FB.playerHostUpkeepParts(state)` returns
-`{base, levy, archers, retinue, mercenaries, total}` from the live player host:
+`{base, levy, archers, cavalry, retinue, mercenaries, total}` from the live player host:
 2 gold for the camp, then 0.5 per 100 levy, 1 per 100 archers, and 2 per 100
-men-at-arms. Hired companies retain their 4-gold contract each. The live unit counts
+cavalry or men-at-arms. Hired companies retain their 4-gold contract each. The live unit counts
 mean a great levy, defensive reinforcements, daily reinforcement, battle casualties,
 and re-mustering all change the non-mercenary bill without stored economic state.
 A missing host returns all zeroes, so a shattered or disbanded host costs nothing until
@@ -201,7 +204,7 @@ war's end pay into the lifetime `player.warService` tally, which gates the
 intra-realm petition deed and the escheat scramble (see [realms.md](realms.md)).
 
 **One computed levy ledger is authoritative.** `FB.playerCompositionBreakdown` returns
-the levy, archers, and retinue together with ordered source entries for direct counties,
+the levy, archers, cavalry, and retinue together with ordered source entries for direct counties,
 buildings, technology, Royal Constable, ruler Martial, domain penalty, each vassal,
 standing barony troops, and position or retainer contributions.
 `FB.playerComposition` and `FB.playerLevy` derive from that object; no second army total

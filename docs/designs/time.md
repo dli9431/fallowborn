@@ -89,9 +89,11 @@ silently (`UI.autoResolving`). A separate three-way host command (`G.auto.hosts`
 manual / defensive / offensive) automates the war host's marches — see
 [war.md](war.md). Death is never delegated: the succession screen takes
 no auto-focus, so a stray Space/Enter cannot sign the succession for the first heir.
-The mode can also auto-raise the cheapest building and auto-adopt the cheapest
-innovation each season (`FB.autoBuild`/`FB.autoResearch`). Event-data `cooldown`
-stays in seasons — the engine multiplies by 90.
+The mode can also auto-raise the cheapest building. A sovereign player may separately
+enable “Choose the next technology automatically”; `FB.autoResearch` selects among the
+three branches whenever no national project is active. Vassals cannot choose or automate
+their sovereign's project. Event-data `cooldown` stays in seasons — the engine multiplies
+by 90.
 
 Related: [events.md](events.md) for the event interpreter, [war.md](war.md) for the
 seasonal war tick, and [finance.md](finance.md) for contract and annual price processing.
@@ -104,6 +106,12 @@ service, and school fees in the disclosed order. Education records one quarter o
 arrangement's annual learning bonus for every paid term. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
+
+The same boundary runs `FB.techSeason` once for every living sovereign, including in
+Observe mode. Each nation adds `2 + min(4, realm development × 0.04)` research plus
+completed technology bonuses to its one active project, or holds direct contributions in
+reserve until a project is chosen. Patronage, libraries, and `research` event effects
+always resolve through the contributor's current top independent realm.
 
 For a tier-3+ player, the yearly livelihood tick freezes secular career experience
 and ordinary vocation work. Clerical vocational years continue solely so religious

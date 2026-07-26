@@ -649,7 +649,7 @@ FBDATA.buildings = {
   harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4,
     desc:'Every tide brings someone who owes you a toll.' },
   library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1,
-    desc:'Shelves of knowledge — and the men who argue over it. (+1 scholarship per season)' },
+    desc:'Shelves of knowledge — and the people who argue over it. (+1 national research per season)' },
   keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10,
     desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
   barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40,
@@ -826,47 +826,60 @@ FBDATA.plots = {
     desc:'Foxglove in the stew, a loose stair, a hunting mishap — and mourning clothes that fit you well.' }
 };
 
-/* Technology (tier 3+; adopted with scholarship via the "Adopt an
-   innovation…" deed) — modders welcome. Adopted innovations live in
-   state.tech and PERSIST across generations: the tall ruler's legacy.
-   cost: scholarship · yearMin: era gate · req: prerequisite tech id ·
-   repeat: may be adopted repeatedly, the cost growing per rank (FB.techCost) ·
-   fx keys (summed by FB.techBonus): tax/levy (fractional multipliers),
-   battle (added to war odds), build (fractional building discount),
-   devCap (+demesne development ceiling), health (lower yearly mortality),
-   research (+scholarship per season), retinue/archers (flat men added to
-   the host's composition at muster). */
+/* National technology. Each sovereign realm owns one record in
+   state.realmTech; vassals use and contribute to their sovereign's record.
+   branch/level define the three linear trees. cultures/notCultures select a
+   culture-specific alternative when a project begins. fx scalar keys are
+   summed by FB.techBonus; fx.costs holds signed category modifiers (negative
+   is cheaper), fx.units adds flat player troops, and fx.aiUnits changes the
+   professional fractions of AI hosts. Legacy flat build/retinue/archers
+   effects remain readable through the technology helpers. */
 FBDATA.tech = {
-  /* husbandry */
-  heavy_plough:  { name:'Heavy Plough', icon:'🌾', cost:30, yearMin:880,
+  /* economy */
+  heavy_plough:  { name:'Heavy Plough', icon:'🌾', branch:'economy', level:1, cost:30, yearMin:880,
     desc:'Iron shares turn the deep clays. (+10% tax)', fx:{ tax:0.10 } },
-  three_field:   { name:'Three-Field Rotation', icon:'🌱', cost:60, yearMin:920, req:'heavy_plough',
+  three_field:   { name:'Three-Field Rotation', icon:'🌱', branch:'economy', level:2, cost:60, yearMin:920, req:'heavy_plough',
     desc:'Two crops in the ground, one field at rest. (+10% tax, higher development ceiling)', fx:{ tax:0.10, devCap:1 } },
-  horse_collar:  { name:'Horse Collar', icon:'🐴', cost:100, yearMin:980, req:'three_field',
+  horse_collar:  { name:'Horse Collar', icon:'🐴', branch:'economy', level:3, cost:100, yearMin:980, req:'three_field',
     desc:'A horse ploughs twice as fast as an ox. (+15% tax, higher development ceiling)', fx:{ tax:0.15, devCap:1 } },
-  /* arms */
-  ringworks:     { name:'Ringworks', icon:'🛡', cost:30, yearMin:880,
+  improved_husbandry: { name:'Improved Husbandry', icon:'🐂', branch:'economy', level:4, cost:160, yearMin:1040, req:'horse_collar',
+    desc:'Better breeds, better folds, fuller barns. (+5% tax)', fx:{ tax:0.05 } },
+  powered_mills: { name:'Powered Mills', icon:'⚙', branch:'economy', level:5, cost:240, yearMin:1100, req:'improved_husbandry',
+    desc:'Water, wind, and gearing turn labor into abundance. (+10% tax, higher development ceiling, cheaper buildings and enterprises)',
+    fx:{ tax:0.10, devCap:1, costs:{ build:-0.10, enterprise:-0.10 } } },
+
+  /* military */
+  ringworks:     { name:'Ringworks', icon:'🛡', branch:'military', level:1, cost:30, yearMin:880,
     desc:'Earth and timber around every village. (+10% levy)', fx:{ levy:0.10 } },
-  stirrups:      { name:'Stirrup Cavalry', icon:'🐎', cost:60, yearMin:920, req:'ringworks',
-    desc:'Shock riders who stay in the saddle. (+5% battle odds)', fx:{ battle:0.05 } },
-  mail_hauberks: { name:'Mail Hauberks', icon:'⛓', cost:100, yearMin:980, req:'stirrups',
-    desc:'A shirt of rings for every serious man. (+15% levy, +3% battle odds, +20 men-at-arms)', fx:{ levy:0.15, battle:0.03, retinue:20 } },
-  /* learning */
-  scriptoria:    { name:{ default:'Scriptoria', muslim:'Paper Mills' }, icon:'📜', cost:30, yearMin:880,
-    desc:'Knowledge that outlives its keepers. (+1 scholarship per season)', fx:{ research:1 } },
-  physicians:    { name:'Court Physicians', icon:'🌿', cost:60, yearMin:920, req:'scriptoria',
-    desc:'Learned men against fevers and wounds. (you live longer)', fx:{ health:0.012 } },
-  guild_charters:{ name:'Guild Charters', icon:'📯', cost:100, yearMin:980, req:'physicians',
-    desc:'Chartered crafts and honest weights. (+10% tax, buildings cost 20% less)', fx:{ tax:0.10, build:0.20 } },
-  /* repeatable capstones (repeat:true): each may be adopted again and again,
-     the cost multiplying by balance.techRepeatCostGrowth per rank already
-     held (FB.techCost) — per-rank fx sized under its tree's total */
-  improved_husbandry: { name:'Improved Husbandry', icon:'🐂', cost:100, yearMin:980, req:'horse_collar', repeat:true,
-    desc:'Better breeds, better folds, fuller barns. (+5% tax per rank)', fx:{ tax:0.05 } },
-  martial_drill: { name:'Martial Drill', icon:'⚔', cost:100, yearMin:980, req:'mail_hauberks', repeat:true,
-    desc:'Shield-wall practice through the winter months. (+3% battle odds per rank)', fx:{ battle:0.03 } },
-  royal_catalogue: { name:'Royal Catalogue', icon:'📚', cost:100, yearMin:980, req:'guild_charters', repeat:true,
-    desc:'Every charter and cartulary copied, counted, and kept. (+0.1 scholarship per season, per rank)', fx:{ research:0.10 } }
+  stirrups:      { name:'Stirrup Cavalry', icon:'🐎', branch:'military', level:2, cost:60, yearMin:920, req:'ringworks',
+    notCultures:['greek'],
+    desc:'Shock riders who stay in the saddle. (+30 cavalry)', fx:{ units:{ cav:30 }, aiUnits:{ cav:0.05 } } },
+  tagmata:       { name:'Tagmata', icon:'🐎', branch:'military', level:2, cost:60, yearMin:920, req:'ringworks',
+    cultures:['greek'],
+    desc:'Professional imperial regiments of horse and steel. (+15 cavalry, +15 men-at-arms)',
+    fx:{ units:{ cav:15, ret:15 }, aiUnits:{ cav:0.025, ret:0.025 } } },
+  mail_hauberks: { name:'Mail Hauberks', icon:'⛓', branch:'military', level:3, cost:100, yearMin:980,
+    desc:'A shirt of rings for every serious man. (+15% levy, +3% battle odds, +20 men-at-arms)',
+    fx:{ levy:0.15, battle:0.03, units:{ ret:20 }, aiUnits:{ ret:0.04 } } },
+  martial_drill: { name:'Martial Drill', icon:'⚔', branch:'military', level:4, cost:160, yearMin:1040, req:'mail_hauberks',
+    desc:'Shield-wall practice through the winter months. (+3% battle odds)', fx:{ battle:0.03 } },
+  combined_arms: { name:'Combined Arms', icon:'⚔', branch:'military', level:5, cost:240, yearMin:1100, req:'martial_drill',
+    desc:'Bow, horse, and armored foot train as one host. (+20 archers, +20 cavalry, +3% battle odds)',
+    fx:{ battle:0.03, units:{ arch:20, cav:20 }, aiUnits:{ arch:0.03, cav:0.03 } } },
+
+  /* administrative */
+  scriptoria:    { name:{ default:'Scriptoria', muslim:'Paper Mills' }, icon:'📜', branch:'administrative', level:1, cost:30, yearMin:880,
+    desc:'Knowledge that outlives its keepers. (+1 research per season)', fx:{ research:1 } },
+  physicians:    { name:'Court Physicians', icon:'🌿', branch:'administrative', level:2, cost:60, yearMin:920, req:'scriptoria',
+    desc:'Learned men against fevers and wounds. (−1.2% yearly ruler mortality)', fx:{ health:0.012 } },
+  guild_charters:{ name:'Guild Charters', icon:'📯', branch:'administrative', level:3, cost:100, yearMin:980, req:'physicians',
+    desc:'Chartered crafts and honest weights. (cheaper buildings, enterprises, and training)',
+    fx:{ costs:{ build:-0.20, enterprise:-0.10, training:-0.10 } } },
+  royal_catalogue: { name:'Royal Catalogue', icon:'📚', branch:'administrative', level:4, cost:160, yearMin:1040, req:'guild_charters',
+    desc:'Every charter and cartulary copied, counted, and kept. (+0.5 research per season)', fx:{ research:0.5 } },
+  royal_chancery: { name:'Royal Chancery', icon:'📜', branch:'administrative', level:5, cost:240, yearMin:1100, req:'royal_catalogue',
+    desc:'A permanent writing office carries the crown beyond one household. (+1 domain capacity, +0.5 research per season, unlocks Administration work)',
+    fx:{ domain:1, research:0.5 } }
 };
 
 /* Currency presentation only. All authored and saved economic values remain
@@ -937,16 +950,17 @@ FBDATA.balance = {
   battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)
   /* host composition (levy tiers): a host's men split into classes, each with
      its own battle quality; casualties fall levy-first, men-at-arms last */
-  qualityLevy: 0.85, qualityArcher: 1.2, qualityRetinue: 2.5, qualityMerc: 1.5,
+  qualityLevy: 0.85, qualityArcher: 1.2, qualityCavalry: 2.0,
+  qualityRetinue: 2.5, qualityMerc: 1.5,
   mercCompanySize: 150, // men per hired company
   massLevyMult: 1.35, // the great levy swells the levy class by this
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
-  aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI hosts: this fraction of their men are men-at-arms / archers
-  aiEraStepYear: 1000, aiEraStepFrac: 0.04, // from this year AI professional fractions grow by this
+  aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI baseline before national military technology
   /* player host logistics per season: base camp cost, live soldiers per 100,
      and the existing contract cost per hired mercenary company */
   hostLogisticsBase: 2, hostLogisticsLevyPer100: 0.5,
-  hostLogisticsArcherPer100: 1, hostLogisticsRetinuePer100: 2,
+  hostLogisticsArcherPer100: 1, hostLogisticsCavalryPer100: 2,
+  hostLogisticsRetinuePer100: 2,
   hostLogisticsMercenaryCompany: 4,
   /* independent-ruler foreign policy (js/actions.js): capacity by rank,
      seasonal opinion pressure, and the two places foreign opinion matters */
@@ -1011,7 +1025,7 @@ FBDATA.balance = {
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,
   liegeGrantRepeatMult: 0.2, // each successful feudal grant this lifetime multiplies the next grant's odds
   buyCountyBase: 400, buyCountyPerDev: 120, settleGold: 250, settlePrestige: 50,
-  techRepeatCostGrowth: 1.6, // a repeatable innovation's cost multiplies by this per rank already held
+  techRepeatCostGrowth: 1.6, // legacy-save refund curve for removed repeatable capstones
   buildingRepeatCostGrowth: 1.5, // a building's 2nd/3rd/… copy in the same county costs cost × this^(copies standing)
   /* coin, credit, and fixed-term financial contracts (js/economy.js) */
   pricePressurePersistence: 0.55, priceRandomPressure: 0.015,

@@ -428,7 +428,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 |---|---|
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
 | `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
-| `professions` | any actively practiced vocation from `farmer craftsman merchant soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
+| `professions` | any actively practiced vocation from `farmer craftsman merchant administration soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
 | `seasons` | array of 0 spring … 3 winter |
 | `yearMin` / `yearMax` | calendar gate |
@@ -437,7 +437,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `healthMax` | player health at or below (0–10) |
 | `flags` / `notFlags` | player flags set by other events |
 | `buildings` / `notBuildings` | building ids standing (or not) anywhere in the player's demesne |
-| `techs` / `notTechs` | innovation ids adopted (or not) by the player's line |
+| `techs` / `notTechs` | technology ids completed (or not) by the player's effective sovereign nation |
 | `holdings` / `notHoldings` | household holding ids owned (or not) by the family |
 | `religionGroup` | `christian muslim pagan jewish` (player's) |
 | `religionGroups` | array form: any of the listed groups matches |
@@ -555,7 +555,8 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `tierSet` (raise rank), `tierUp`
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
-`convertToProvince` · `declareIndependence` · `devUp` · `research: n` (scholarship points) ·
+`convertToProvince` · `declareIndependence` · `devUp` · `research: n` (points added to
+the effective sovereign nation's active technology project, or its reserve) ·
 `travelReturn: true` (begin the saved route home once the minimum stay is complete) ·
 `travelSettle: true` (move the household to an eligible completed destination without
 converting culture/faith; limited to one permanent move per character life) ·
@@ -820,6 +821,8 @@ character can learn and perform:
 - `skill` is trained during apprenticeship and occasionally during adult work.
 - `apprenticeAge` / `apprenticeCost` gate a child's entry.
 - `tierMin` can keep a career closed until the household reaches sufficient station.
+- `requiresTech` optionally requires a completed technology in the household's effective
+  sovereign nation. Training costs honor national `fx.costs.training` modifiers.
 - `wage` / `masterWage` are seasonal contributions from resident non-player
   household workers who are not staffing an enterprise.
 - `guild: true` enables member → master → officer → guildmaster progression.
@@ -920,6 +923,8 @@ productive property:
   that career may staff the enterprise. `guildRank` optionally sets the minimum
   guild standing.
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
+- `requiresTech` optionally requires a completed technology in the household's effective
+  sovereign nation. Purchase costs honor national `fx.costs.enterprise` modifiers.
 - `yield` is the base seasonal gold before worker skill, local development, and guild
   rank modify it.
 - Instances live in `player.enterprises` as
@@ -1103,30 +1108,48 @@ attack the player and cannot be declared on.
 
 ## Technology
 
-`FBDATA.tech` (in `data/map_data.js`) defines innovations tier-3+ rulers adopt with
-**scholarship** (`player.research`, earned by the Patronize scholars focus, the library
-building, and events; spent via the "Adopt an innovation…" deed). Adopted ids live in
-`state.tech` and persist across generations — the backbone of playing tall:
+`FBDATA.tech` (in `data/map_data.js`, mod key `tech`) defines national technology.
+Each sovereign nation owns one saved `state.realmTech[realmId]` record; vassals use and
+contribute to the effective top independent realm's completed technology and active
+project. Only a sovereign player chooses a project, while AI sovereigns choose with saved
+RNG. A definition occupies one level of one linear branch:
 
 ```json
 { "tech": { "windmills": {
-  "name": "Windmills", "icon": "🌬", "cost": 80, "yearMin": 1000, "req": "heavy_plough",
-  "desc": "Grinding grain wherever the wind blows. (+10% tax)", "fx": { "tax": 0.10 } } } }
+  "name": "Windmills", "icon": "🌬",
+  "branch": "economy", "level": 4,
+  "cost": 160, "yearMin": 1040, "req": "horse_collar",
+  "desc": "Grinding grain wherever the wind blows.",
+  "fx": {
+    "tax": 0.10,
+    "costs": { "build": -0.10, "enterprise": -0.10 },
+    "units": { "arch": 20 },
+    "aiUnits": { "arch": 0.03 }
+  }
+} } }
 ```
 
-- `cost` scholarship · `yearMin` calendar gate · `req` prerequisite tech id.
-- `repeat: true` makes the innovation re-adoptable (the capstones of the three trees):
-  it stays in `FB.techAvailable` after adoption, each further rank appends the id to
-  `state.tech` again (so `FB.techBonus` sums it once more) and costs
-  `cost × balance.techRepeatCostGrowth^(ranks held)` via `FB.techCost`.
-- `fx` keys, summed across adopted techs by `FB.techBonus`: `tax`/`levy` (fractional
-  multipliers), `battle` (added to war odds), `build` (fractional building discount),
-  `devCap` (+development ceiling in the player's own provinces, past the usual 10),
-  `health` (lower yearly mortality for the ruler), `research` (+scholarship per season),
-  `retinue`/`archers` (flat men of that class mustered with the host).
+- Core branches are `military`, `economy`, and `administrative`, with levels 1–5.
+  `cost` is required research, `yearMin` is the calendar gate, and `req` is an optional
+  prerequisite technology id. There is one active project per sovereign and technologies
+  are never repeatable.
+- Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
+  that level begins. Once completed, the selected id remains valid after cultural
+  succession.
+- Scalar `fx` keys summed by `FB.techBonus` are `tax`/`levy` (fractional multipliers),
+  `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
+  mortality), `research` (national points each season), and `domain` (domain capacity).
+- `fx.costs` contains signed fractional modifiers for `build`, `enterprise`, and
+  `training`: `-0.20` is twenty percent cheaper and `0.20` is twenty percent dearer.
+- `fx.units` adds flat player-host `levy`, `arch`, `cav`, or `ret` troops.
+  `fx.aiUnits` adds AI host composition fractions for `arch`, `cav`, or `ret`. Compatibility
+  aliases remain readable: flat `build:0.20` means a twenty-percent building discount,
+  while flat `retinue` and `archers` add those player-host classes.
 - `name`/`desc` accept text tokens and religion-variant objects.
-- Events can grant scholarship with the `research` effect and gate on `techs`/`notTechs`.
-- Buildings may carry a `research` per-season key (see the library).
+- Events grant national progress with the `research` effect and gate on effective
+  completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
+  (see the library); contributions become reserve if no project is active.
+- Careers and enterprises may use `requiresTech:"technology_id"`.
 
 ## Cultures, religions, traits, titles, balance
 
@@ -1340,7 +1363,8 @@ this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the
 scales with how close the fight was).
 Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
 `hostLogisticsLevyPer100` (0.5), `hostLogisticsArcherPer100` (1), and
-`hostLogisticsRetinuePer100` (2) multiply each 100 live soldiers of that class;
+`hostLogisticsCavalryPer100` / `hostLogisticsRetinuePer100` (2 each) multiply each
+100 live soldiers of that class;
 `hostLogisticsMercenaryCompany` (4) is charged for each hired company. A missing
 player host produces no logistics cost. These rates apply equally to ordinary and
 sovereign great holy-war hosts.

@@ -170,6 +170,9 @@ window.FB = window.FB || {};
     if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(FB.state);
     backfillParents(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    /* Dynasty scholarship and innovations from older version-3 lives become
+       the effective sovereign nation's first technology record. */
+    if (FB.ensureRealmTech) FB.ensureRealmTech(FB.state);
     /* Save format 3 is deliberately stable. The equipment subsystem repairs
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) FB.ensureItems(FB.state);

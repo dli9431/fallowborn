@@ -1286,6 +1286,7 @@ window.FB = window.FB || {};
       const compKeys = [
         ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
         ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
+        ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
         ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }]
       ];
       const parts = [];
@@ -1474,9 +1475,12 @@ window.FB = window.FB || {};
           myQ = FB.compQuality ? FB.compQuality(host.units, host.men) : 1;
         } else {
           const comp = FB.playerComposition ? FB.playerComposition(state)
-            : { levy: FB.playerLevy(state), arch: 0, ret: 0 };
-          const units = { levy: comp.levy, arch: comp.arch, ret: comp.ret, mercs: (w.mercCos || 0) * cs };
-          let men = units.levy + units.arch + units.ret + units.mercs;
+            : { levy: FB.playerLevy(state), arch: 0, cav:0, ret: 0 };
+          const units = {
+            levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
+            mercs:(w.mercCos || 0) * cs
+          };
+          let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
           const fl = bal.armyMinMen || 40;
           if (men < fl) { units.levy += fl - men; men = fl; }
           myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
@@ -1485,12 +1489,13 @@ window.FB = window.FB || {};
         const myStr = myMen * myQ * (1 + FB.skillOf(me, 'mar') / (bal.battleMarPlayer || 14));
         const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
         const enMen = ehost ? ehost.men
-          : FB.realmStrength(state, w.enemy) * bal.levyPerDev * (bal.aiHostPerDev || 0.3) *
+          : FB.aiBaseHost(state, w.enemy) *
             (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
         const enQ = ehost
           ? (FB.compQuality ? FB.compQuality(ehost.units, ehost.men) : 1)
-          : (FB.aiHostQuality ? FB.aiHostQuality(state) : 1);
-        const enStr = enMen * enQ * (1 + (enemy ? enemy.ruler.mar : 5) / (bal.battleMarAI || 22));
+          : (FB.aiHostQuality ? FB.aiHostQuality(state, w.enemy) : 1);
+        const enStr = enMen * enQ * (1 + (enemy ? enemy.ruler.mar : 5) /
+          (bal.battleMarAI || 22)) * (1 + FB.techBonus(state, 'battle', w.enemy));
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
         c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations
@@ -2101,7 +2106,7 @@ window.FB = window.FB || {};
       const pid = (p.provs && p.provs[0]) || p.provinceId;
       state.dev[pid] = FB.clamp((state.dev[pid] || 1) + fx.devUp, 1, FB.devCap(state, pid));
     }
-    if (fx.research) p.research = (p.research || 0) + fx.research;
+    if (fx.research) FB.addResearch(state, fx.research);
     if (fx.holding) {
       const hl = FB.holdingList(state);
       if (hl.indexOf(fx.holding) < 0) hl.push(fx.holding);
@@ -2487,6 +2492,7 @@ window.FB = window.FB || {};
     p.liege = null;
     if (state.realms.player) state.realms.player.liege = null;
     FB.foundPlayerRealm(state);
+    if (oldLiege && FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', oldLiege);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0,
         defending: true, casus: { type: 'independence' } };
@@ -2541,6 +2547,9 @@ window.FB = window.FB || {};
         // his reattach upward, exactly as in FB.transferProvince
         const terr = FB.realmTerritory(state, old.id);
         if (!terr.length) {
+          if (FB.mergeRealmTech) {
+            FB.mergeRealmTech(state, FB.topRealm(state, p.liege || 'player'), old.id);
+          }
           FB.markRealmDead(state, old.id);
           for (const vid in state.realms) if (state.realms[vid].liege === old.id) state.realms[vid].liege = old.liege || null;
         } else if (old.capital === p.provinceId) {
@@ -2644,9 +2653,11 @@ window.FB = window.FB || {};
     // capture the territory BEFORE cutting the liege: once liege is null,
     // realmTerritory early-returns owner-keyed provs and a vassal owns none
     const terr = FB.realmTerritory(state, rid);
+    const formerSovereign = FB.topRealm(state, rid);
     r.liege = null;
     for (const pid of terr) state.owner[pid] = rid;
     FB.invalidateRealmCache();
+    if (FB.mergeRealmTech) FB.mergeRealmTech(state, rid, formerSovereign);
     FB.news(state, FB.msg('news.event.vassal_released',
       '🕊 {realm} goes its own way, released from your fealty.', { realm: r.name }));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
@@ -2663,9 +2674,11 @@ window.FB = window.FB || {};
     // without this the rebel's counties keep the old sovereign as owner and
     // war_can_siege (owner[target] === enemy) can never come true
     const terr = FB.realmTerritory(state, rid);
+    const formerSovereign = FB.topRealm(state, rid);
     r.liege = null;
     for (const pid of terr) state.owner[pid] = rid;
     FB.invalidateRealmCache();
+    if (FB.mergeRealmTech) FB.mergeRealmTech(state, rid, formerSovereign);
     const held = FB.realmHeldCounties(state, rid);
     p.war = { enemy: rid, target: held[0] || null, wins: 0, losses: 0, seasons: 0, defending: false };
     FB.warFooting(state);
@@ -2683,6 +2696,7 @@ window.FB = window.FB || {};
       state.holder[pid] = 'player';
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     }
+    if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
     FB.markRealmDead(state, rid);
     FB.invalidateRealmCache();
     if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes

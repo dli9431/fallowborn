@@ -40,7 +40,7 @@ value does not move. `FB.reliableGoldIncome` is the shared numeric seasonal net
 used by the gold ledger and credit capacity; windfalls, sales, other loans, and
 unmatured investments never count. Its recurring costs include resident-family upkeep,
 active maintained household standards, retainer contracts, wartime household scarcity,
-the live raised host's base/levy/archer/retinue/mercenary logistics, and the disclosed
+the live raised host's base/levy/archer/cavalry/retinue/mercenary logistics, and the disclosed
 fees of current schooling arrangements. The same components are itemized by
 `FB.incomeBreakdown`, with maintained standards separate from basic household and family
 costs, so the gold sheet, Finance net, credit capacity, and prudent building automation
