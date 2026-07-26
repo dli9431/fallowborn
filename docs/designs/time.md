@@ -53,7 +53,10 @@ order, including in Observe mode.
 
 At a season boundary the household receives normal income, pays station and resident-family
 upkeep, collects livelihood wages, and pays each active school term. Unaffordable schooling
-pauses for that term. Then
+pauses for that term. War in the player's sovereign realm adds its necessities surcharge
+to household upkeep; any live player host then pays composition-based logistics, clamped
+at an empty purse if unaffordable, before the ordinary war and great holy-war seasonal
+drivers run. Then
 `FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
 new year `FB.financeYear` then moves the price index and revalues the remaining purse before

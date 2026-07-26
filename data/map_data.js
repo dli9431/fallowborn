@@ -943,6 +943,11 @@ FBDATA.balance = {
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
   aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI hosts: this fraction of their men are men-at-arms / archers
   aiEraStepYear: 1000, aiEraStepFrac: 0.04, // from this year AI professional fractions grow by this
+  /* player host logistics per season: base camp cost, live soldiers per 100,
+     and the existing contract cost per hired mercenary company */
+  hostLogisticsBase: 2, hostLogisticsLevyPer100: 0.5,
+  hostLogisticsArcherPer100: 1, hostLogisticsRetinuePer100: 2,
+  hostLogisticsMercenaryCompany: 4,
   /* independent-ruler foreign policy (js/actions.js): capacity by rank,
      seasonal opinion pressure, and the two places foreign opinion matters */
   politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,
@@ -980,6 +985,7 @@ FBDATA.balance = {
   householdUpkeep: [1,1,2,4,6,9,14,20], // base seasonal cost of maintaining the player's station
   householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
+  wartimeNecessitiesSurcharge: 0.25, // added to base household upkeep + family provisions while the player's realm is at war
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
   socialGiftCooldownDays: 90, socialCashGiftOpinion: 4,

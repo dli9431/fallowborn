@@ -665,7 +665,9 @@ window.FB = window.FB || {};
 
   /* The old station-only upkeep remains the base cost. Extra resident family
      members add food, clothing, and quarters at the standard their station is
-     expected to maintain. Married children have their own households. */
+     expected to maintain. War in the player's sovereign realm makes those
+     necessities dearer without changing retainers, schooling, or other
+     authored costs. Married children have their own households. */
   FB.householdUpkeepParts = function (state) {
     const p = state.player;
     const baseScale = FBDATA.balance.householdUpkeep || [1,1,2,4,6,9,14,20];
@@ -681,7 +683,14 @@ window.FB = window.FB || {};
       family += (age < 6 ? memberScale[0] : age < 16 ? memberScale[1] : memberScale[2]) * mult;
       residents++;
     }
-    return { base:base, family:family, residents:residents, total:base + family };
+    const scarcityRate = FBDATA.balance.wartimeNecessitiesSurcharge === undefined
+      ? 0.25 : FBDATA.balance.wartimeNecessitiesSurcharge;
+    const wartime = FB.playerRealmAtWar && FB.playerRealmAtWar(state)
+      ? (base + family) * scarcityRate : 0;
+    return {
+      base:base, family:family, wartime:wartime, residents:residents,
+      total:base + family + wartime
+    };
   };
 
   FB.householdUpkeep = function (state) {
@@ -1714,7 +1723,7 @@ window.FB = window.FB || {};
     e.shocks = remain;
     const random = FB.rf(-(B.priceRandomPressure || 0.015),
       B.priceRandomPressure || 0.015);
-    const war = FB.atWarPersonally && FB.atWarPersonally(state)
+    const war = FB.playerRealmAtWar && FB.playerRealmAtWar(state)
       ? (B.priceWarPressure || 0.01) : 0;
     e.pressure = e.pressure * (B.pricePressurePersistence || 0.55) +
       random + war + shock;

@@ -1237,6 +1237,10 @@ no longer read; older mods that set it must migrate to `skillMasteryThreshold` a
 `skillMasteryPower`.
 `focusSkillGainRate` (default 0.75) multiplies only the authored seasonal skill-training
 chances of daily focuses before they are converted to daily rolls.
+`wartimeNecessitiesSurcharge` (default 0.25) is the fraction of station upkeep plus
+resident-family provisions added each season while the sovereign returned by
+`FB.playerRealmId` is at war. It does not multiply retainers, schooling, buildings, or
+other authored costs.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
 skill (traits and carried items included), on top of the per-development base, building
 `levy` bonuses, and the `levy` tech multiplier.
@@ -1254,3 +1258,9 @@ again), `armyReinforceRate` (the fraction of its mustered size a host resting on
 land refills per day), `aiHostPerDev` (AI host size = realm development × `levyPerDev` ×
 this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).
+Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
+`hostLogisticsLevyPer100` (0.5), `hostLogisticsArcherPer100` (1), and
+`hostLogisticsRetinuePer100` (2) multiply each 100 live soldiers of that class;
+`hostLogisticsMercenaryCompany` (4) is charged for each hired company. A missing
+player host produces no logistics cost. These rates apply equally to ordinary and
+sovereign great holy-war hosts.

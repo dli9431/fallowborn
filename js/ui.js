@@ -2369,6 +2369,8 @@ window.FB = window.FB || {};
         });
       h += '<div class="progressnote">' + esc(hostText) + '</div>';
       // what the host is made of (the same breakdown the war status shows)
+      const selectedHostUpkeep = FB.playerHostUpkeepParts
+        ? FB.playerHostUpkeepParts(s) : null;
       if (selA.units) {
         const u = selA.units;
         const compKeys = [
@@ -2393,6 +2395,12 @@ window.FB = window.FB || {};
               realm: ar ? ar.name : selA.allied.ally
             })) + '</div>';
         }
+      }
+      if (selectedHostUpkeep) {
+        h += '<div class="cmeta">' + esc(FB.T(
+          'Seasonal host logistics: {money:amount}', {
+            amount:financeAmount(selectedHostUpkeep.total)
+          })) + '</div>';
       }
     }
     if (pr.wasteland) {
@@ -3894,9 +3902,14 @@ window.FB = window.FB || {};
   UI.showWarTargets = function () {
     const s = FB.state;
     const causes = FB.warCauses(s);
+    const musterUpkeep = FB.playerMusterUpkeepParts
+      ? FB.playerMusterUpkeepParts(s) : { total:0 };
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
-      '</p></div><div class="gm-list">';
+      '</p><p class="hint">' + esc(FB.T(
+        'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
+          amount:financeAmount(musterUpkeep.total)
+        })) + '</p></div><div class="gm-list">';
     for (let ci = 0; ci < causes.length; ci++) {
       const cause = causes[ci];
       const pid = cause.target;

@@ -1062,6 +1062,12 @@ window.FB = window.FB || {};
         if (G.auto.build) FB.autoBuild(s);
         if (G.auto.research) FB.autoResearch(s);
       }
+      /* A raised host costs its live composition once per season, for both
+         ordinary and great holy wars. Shattered/disbanded hosts return zero. */
+      if (FB.playerHostUpkeepParts) {
+        const hostUpkeep = FB.playerHostUpkeepParts(s);
+        p.gold = Math.max(0, p.gold - hostUpkeep.total);
+      }
       FB.playerWarTick(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
       FB.tickForeignPolicy(s);

@@ -48,6 +48,9 @@ independence, and fealty/defection conflicts wait until every affected sovereign
 peace. On load, `FB.repairWars` restores the invariant without changing save version 3:
 it preserves a valid player war first, then accepts non-conflicting valid AI wars in
 stable realm-id order and removes later overlaps and hosts no longer attached to a war.
+`FB.playerRealmAtWar(state)` resolves the sovereign returned by `FB.playerRealmId` through
+that same test. Economic effects therefore follow the war of the realm the household
+belongs to, including a liege's war, rather than only the protagonist's personal campaign.
 
 Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
 canonical realm pairs with their source and both ruler-generation stamps, and each realm
@@ -94,6 +97,17 @@ casualties fall levy-first and men-at-arms last (`applyLosses` in armies.js), an
 resting host refills with fresh levy only — slain professionals are not replaced
 mid-war, so a long campaign grinds a host down toward its peasant mass. Hosts from older
 saves migrate in place (`FB.hostUnits`): their men count as levy but the hired companies.
+
+**A raised host has composition-based seasonal logistics.**
+`FB.playerHostUpkeepParts(state)` returns
+`{base, levy, archers, retinue, mercenaries, total}` from the live player host:
+2 gold for the camp, then 0.5 per 100 levy, 1 per 100 archers, and 2 per 100
+men-at-arms. Hired companies retain their 4-gold contract each. The live unit counts
+mean a great levy, defensive reinforcements, daily reinforcement, battle casualties,
+and re-mustering all change the non-mercenary bill without stored economic state.
+A missing host returns all zeroes, so a shattered or disbanded host costs nothing until
+it is raised again. The season boundary charges the same bill for ordinary and sovereign
+great holy-war hosts and clamps an underfunded purse to zero without disbanding the host.
 
 **Movement is daily and adjacency-based.** Orders set a BFS path (`FB.findPath` over
 `FB.world.adj`); every leg, the first included, costs `balance.armyMarchDays`, and the
@@ -168,9 +182,10 @@ and the exact final loadout into the legend before succession. The death sheet c
 therefore say where and against whom the character fell without saving rendered prose.
 No battlefield loss or looting of the dead character's equipment occurs in this release.
 
-**The seasonal layer remains, now grounded in the field.** `FB.playerWarTick` still
-charges upkeep and queues the `war_council`, whose options act through the `war_*` fns —
-but the enemy-advance clock (`war.enemySiege`) ticks only while a hostile host stands in
+**The seasonal layer remains, now grounded in the field.** The shared season boundary
+charges any live player host, while `FB.playerWarTick` queues the `war_council`, whose
+options act through the `war_*` fns — but the enemy-advance clock (`war.enemySiege`)
+ticks only while a hostile host stands in
 the player's lands (`FB.enemyHostInPlayerLands`), and `war_can_siege` requires the
 player's host standing in the target province. The council's abstract pitched battle
 (`war_battle` named chance, itself reading the fielded hosts' real men) is offered only

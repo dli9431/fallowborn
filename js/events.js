@@ -1307,6 +1307,11 @@ window.FB = window.FB || {};
         }
       }, { count: war.mercCos }));
     }
+    if (host && FB.playerHostUpkeepParts) {
+      clauses.push(FB.renderKey('fx.warstate.logistics',
+        { text: 'Seasonal host logistics: {money:amount}' },
+        { amount: Math.round(FB.playerHostUpkeepParts(state).total * 10) / 10 }));
+    }
     clauses.push(host
       ? FB.renderKey('fx.warstate.in_field', { text: 'In the field at {place}' },
         { place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
