@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.59.0';
+  FB.VERSION = '1.59.1';
   FB.CHANGELOG = [
+    { v: '1.59.1', date: '2026-07-25', changes: [
+      'Wealthier households now protect children from mortality and may improve their health, while childhood fevers offer three paid tiers of care.'
+    ] },
     { v: '1.59.0', date: '2026-07-25', changes: [
       'Events, tasks, and livelihoods now follow societal role, with new stories for gentry, lords, and crowned rulers.'
     ] },
@@ -1232,7 +1235,10 @@ window.FB = window.FB || {};
     // player mortality (curve scaled by the balance knob, 0.012 = as-authored)
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
     const age = FB.ageOf(me, year);
+    const station = FB.playerStation(s);
     let q = (age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28) * mortScale;
+    // a child ruler or rich merchant's heir is better fed than a serf's child
+    if (age < 16) q *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
     if (me.health <= 2) q += 0.12; else if (me.health <= 5) q += 0.03;
     if (p.flags.ill) q += 0.05;
     if (p.flags.plague_here) q += 0.06;
@@ -1255,7 +1261,8 @@ window.FB = window.FB || {};
       }));
       return;
     }
-    if (FB.chance(0.35) && me.health < 8 && !p.flags.ill) me.health++;
+    const healthChance = 0.35 + (age < 16 ? station * (FBDATA.balance.richChildHealthChance || 0) : 0);
+    if (FB.chance(FB.clamp(healthChance, 0, 1)) && me.health < 8 && !p.flags.ill) me.health++;
     if (!p.flags.ill && me.health >= 7) FB.cureAilments(me, 'wound', 1); // one old wound knits each year
 
     // everyone else ages & sometimes dies
@@ -1264,6 +1271,14 @@ window.FB = window.FB || {};
       if (c.dead || id === p.charId) continue;
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
+      /* the house's own young share its table: each station above serf means
+         better food and water — slightly fewer child deaths and slightly
+         hardier children (rulers and rich merchants alike) */
+      if (a < 16 && me.childrenIds.indexOf(c.id) >= 0) {
+        const station = FB.playerStation(s);
+        cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
+        if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
+      }
       if (p.flags.plague_here) cq += 0.05;
       cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {

@@ -903,6 +903,10 @@ FBDATA.balance = {
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
   childChance: 0.13, mortalityBase: 0.012,
+  /* a rich house keeps its children better fed, watered, and warmed: childhood
+     mortality falls by this fraction per station above serf, and each station
+     gives a yearly chance the child grows hardier (health +1, up to 8) */
+  richChildMortalityBonus: 0.07, richChildHealthChance: 0.1,
   kinMarryChance: 0.22, kinChildChance: 0.10,
   /* age → conception multiplier, [age, mult] points read by FB.ageFert:
      flat before the first point, linear between, flat past the last.

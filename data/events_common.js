@@ -113,12 +113,18 @@ FBDATA.events.push(
   trigger:{ hasYoungChild:true, chance:0.3 }, weight:8, cooldown:8,
   text:'Your child {childname} lies shivering, skin like a stove-stone. The old women shake their heads.',
   options:[
-    { label:'Pay for a physician.', require:{ goldMin:10 }, desc:'Silver for the best chance a child can have.', chance:0.75,
+    { label:'Pay for a physician.', require:{ goldMin:10 }, desc:'Silver for a trained leech and his strong medicines.', chance:0.75,
       success:{ text:'The fever breaks. The child will live.', effects:{ gold:-10 } },
       failure:{ text:'Coin could not buy what {god} would not give. The child is gone.', effects:{ gold:-10, killChild:true, health:-1 } } },
     { label:'Pray through the night.', chance:0.55, desc:'Put the child in {god}’s hands and keep vigil.',
       success:{ text:'By dawn the fever breaks. A small miracle.', effects:{ piety:8 } },
-      failure:{ text:'By dawn the little body is still. You dig a small grave.', effects:{ piety:3, killChild:true, health:-1 } } }
+      failure:{ text:'By dawn the little body is still. You dig a small grave.', effects:{ piety:3, killChild:true, health:-1 } } },
+    { label:'Call the wise woman.', require:{ goldMin:3 }, desc:'A few coins for herbs, charms, and a cool cloth.', chance:0.6,
+      success:{ text:'Her simples do their work. The fever breaks; the child will live.', effects:{ gold:-3 } },
+      failure:{ text:'Herbs and charms were not enough. The child is gone.', effects:{ gold:-3, killChild:true, health:-1 } } },
+    { label:'Summon a renowned physician.', require:{ goldMin:30 }, desc:'The finest leechcraft in the land, at a lordly price.', chance:0.9,
+      success:{ text:'The great physician doses, bleeds, and waits — and the fever breaks. The child will live.', effects:{ gold:-30 } },
+      failure:{ text:'Even the great physician bows his head. The child is gone.', effects:{ gold:-30, killChild:true, health:-1 } } }
   ]},
 { id:'child_comes_of_age', title:'Coming of Age', trigger:{ never:true },
   text:'{childname} is sixteen — no longer a child. No tutor shaped their years, so what has your household taught them?',
