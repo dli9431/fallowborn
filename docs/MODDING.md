@@ -451,7 +451,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
 
 The same trigger keys may be used in an option's `require` object. Societal role does
@@ -595,6 +595,11 @@ pressure, negative lowers it) ·
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
 war_hunt war_supply war_thin war_terms war_accept_tribute war_press_on` (and the `war_can_siege` / `war_no_enemy_host` /
 `war_can_hunt` triggers) live in `js/world.js`; the
+great-holy-war field handlers `ghw_recruit_volunteers ghw_recruit_mercenaries
+ghw_recruit_knights ghw_recruit_adventurers` (and the `ghw_has_field_host` trigger)
+live in `js/holywar.js`; they add only to the current live host, increasing its unit
+class, `men`, and reinforcement ceiling `size`, so nothing survives dispersal or a later
+remuster; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant
 record_liege_grant` and the
@@ -1626,6 +1631,15 @@ Do not render occupation as ownership or change `state.owner` during the campaig
 `js/holywar.js` freezes objectives, maintains temporary occupation, collects settlement
 awards, and applies the complete owner/holder map only after the council resolves.
 
+The core random field events `ghw_pilgrims_under_arms` and
+`ghw_swords_seeking_banner` use `ghw_has_field_host`, so they are available only to a
+valid sovereign attacker or defender during the active phase with a living player host.
+Their custom handlers migrate old host composition through `FB.hostUnits`, then update
+the selected unit class, `host.men`, and `host.size` together and request a map redraw.
+The event effects pay any recruitment price separately. Recruits therefore affect
+normal composition quality, siege strength, reinforcement, and logistics immediately,
+but are not saved anywhere outside that exact host.
+
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
 Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
 
@@ -1645,7 +1659,9 @@ Religious-office tuning uses `religiousHeadWarOpinion`,
 `religiousHeadClaimPrestige`, and `religiousHeadClaimPiety`.
 Great holy-war tuning uses the `greatHolyWar*` keys beside them: preparation,
 resolution/collapse cooldowns, deadline, volunteer cap, siege requirement/rate/decay,
-resolve shifts, and withdrawal costs. Settlement weighting uses
+resolve shifts, withdrawal costs, and field-recruit sizes
+(`greatHolyWarVolunteerMen`, `greatHolyWarKnightMen`, and
+`greatHolyWarAdventurerMen`; mercenary recruits use `mercCompanySize`). Settlement weighting uses
 `settlementContributionWeight`, `settlementVowWeight`,
 `settlementOccupationWeight`, `settlementRightWeight`,
 `settlementSupportWeight`, and `settlementOfficeWeight` (defaults `.25`, `.20`, `.20`,

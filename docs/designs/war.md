@@ -263,6 +263,23 @@ Two code-queued wartime events make those transitions unmissable without automat
 has raised the gathered sovereign hosts. They are informational events; joining and
 campaign review remain in the Deeds tab.
 
+Sovereign attackers and defenders with a live player-controlled campaign host may also
+draw two ordinary wartime events. `ghw_pilgrims_under_arms` is a rare, effectively
+once-per-campaign offer of 120 free levy volunteers. `ghw_swords_seeking_banner` may
+return after four seasons and offers one 150-man mercenary company for 15 gold, 75
+landless cavalry for 20, or 100 adventuring men-at-arms for 25. Its cavalry label is
+knights by default, horsemen for Muslims, and champions for pagans. Refusal is free.
+Both events require `ghw_has_field_host`: the campaign must be active, the protagonist
+must be validly participating in sovereign host mode, and the player host must still
+be alive. Expedition and liege-service participants never receive them.
+
+These recruits change only the current host. Their class count, `men`, and `size` rise
+together, so battle power, siege rate, map display, and the host's home-territory
+reinforcement ceiling update immediately. They use the normal live-composition logistics:
+the default additions cost about 0.6, 4, 1.5, and 2 gold per season respectively before
+campaign supply modifiers. No bonus is written to the vow or base muster; dispersal or
+disbanding loses the recruits, and a later remuster starts from the ordinary composition.
+
 Objectives are the target kingdom's counties controlled by another religion group at
 the call. They keep their normal owner and holder throughout the campaign.
 `campaign.occupations[provinceId]` holds only temporary occupation, siege progress,

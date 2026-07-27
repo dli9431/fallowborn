@@ -2678,6 +2678,51 @@ window.FB = window.FB || {};
   };
 
   FB.fns = FB.fns || {};
+  function playerGreatHolyWarFieldHost(state) {
+    var campaign = state && state.greatHolyWar;
+    if (!campaign || campaign.phase !== 'active' ||
+        !FB.playerGreatHolyWarHostActive ||
+        !FB.playerGreatHolyWarHostActive(state) ||
+        !FB.playerHost) return null;
+    var host = FB.playerHost(state);
+    return host && host.realm === 'player' && host.men > 0 ? host : null;
+  }
+
+  /* Random campaign recruits belong to this exact raised host. Increasing
+     size lets ordinary home-territory reinforcement restore the enlarged
+     muster, while a shattered/disbanded host loses them with the host. */
+  function reinforcePlayerGreatHolyWarHost(state, unit, men) {
+    var host = playerGreatHolyWarFieldHost(state);
+    var add = Math.max(0, Math.round(Number(men) || 0));
+    if (!host || !add || !FB.hostUnits) return false;
+    var units = FB.hostUnits(host);
+    units[unit] = (units[unit] || 0) + add;
+    host.men += add;
+    host.size = host.size === undefined ? host.men : host.size + add;
+    if (FB.map) FB.map.request();
+    return true;
+  }
+
+  FB.fns.ghw_has_field_host = function (state) {
+    return !!playerGreatHolyWarFieldHost(state);
+  };
+  FB.fns.ghw_recruit_volunteers = function (state) {
+    return reinforcePlayerGreatHolyWarHost(state, 'levy',
+      B('greatHolyWarVolunteerMen', 120));
+  };
+  FB.fns.ghw_recruit_mercenaries = function (state) {
+    return reinforcePlayerGreatHolyWarHost(state, 'mercs',
+      B('mercCompanySize', 150));
+  };
+  FB.fns.ghw_recruit_knights = function (state) {
+    return reinforcePlayerGreatHolyWarHost(state, 'cav',
+      B('greatHolyWarKnightMen', 75));
+  };
+  FB.fns.ghw_recruit_adventurers = function (state) {
+    return reinforcePlayerGreatHolyWarHost(state, 'ret',
+      B('greatHolyWarAdventurerMen', 100));
+  };
+
   FB.fns.ghw_service_safe = function (state) {
     var campaign = state.greatHolyWar;
     if (campaign) addContribution(state, campaign, 'player', 1);

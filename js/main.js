@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.75.1';
+  FB.VERSION = '1.76.0';
   FB.CHANGELOG = [
+    { v: '1.76.0', date: '2026-07-27', changes: [
+      'Great holy-war leaders can now reinforce a live field host with pilgrims, mercenaries, landless cavalry, or adventurers through wartime events.'
+    ] },
     { v: '1.75.1', date: '2026-07-27', changes: [
       'Great holy-war settlement text, temporary modifier labels, and Roadwise guidance now read more clearly.'
     ] },

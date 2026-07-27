@@ -3249,6 +3249,8 @@ window.FB = window.FB || {};
      every season and an automated war could never take land */
   const CUSTOM_FX_SCORE = {
     war_siege:12, war_win:8, war_hunt:6, war_loss:-8,
+    ghw_recruit_volunteers:8, ghw_recruit_mercenaries:22,
+    ghw_recruit_knights:20, ghw_recruit_adventurers:21,
     academy_introduction:3, academy_student_focus:1.5,
     academy_student_dip:1.5, academy_student_ste:1.5,
     academy_student_int:1.5, academy_student_lea:1.5,

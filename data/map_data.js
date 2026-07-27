@@ -924,6 +924,8 @@ FBDATA.balance = {
   greatHolyWarPreparationDays: 180, greatHolyWarCooldownDays: 6480,
   greatHolyWarCollapseCooldownDays: 2880, greatHolyWarDeadlineDays: 2880,
   greatHolyWarVolunteersPerCamp: 8,
+  greatHolyWarVolunteerMen: 120, greatHolyWarKnightMen: 75,
+  greatHolyWarAdventurerMen: 100,
   greatHolyWarSiegeBase: 120, greatHolyWarSiegePerDev: 10,
   greatHolyWarSiegeMenPerDev: 27, greatHolyWarSiegeMinRate: 0.5,
   greatHolyWarSiegeMaxRate: 2, greatHolyWarSiegeDecay: 1,

@@ -8434,6 +8434,200 @@
         "text": "Let the armies march."
       }
     },
+    "event.ghw_pilgrims_under_arms.options.0.desc.default": {
+      "context": "Event ghw_pilgrims_under_arms, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:0.6"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "120 volunteers join as levy without a recruitment fee. Their supplies still add about {money:0.6} to seasonal logistics."
+      }
+    },
+    "event.ghw_pilgrims_under_arms.options.0.effects.log.default": {
+      "context": "Durable event log for ghw_pilgrims_under_arms, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Accepted armed pilgrims into the great holy-war host."
+      }
+    },
+    "event.ghw_pilgrims_under_arms.options.0.label.default": {
+      "context": "Event ghw_pilgrims_under_arms, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Give them a place in the line."
+      }
+    },
+    "event.ghw_pilgrims_under_arms.text.default": {
+      "context": "Event ghw_pilgrims_under_arms, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Pilgrims, penitents, and younger sons come straggling beneath the sacred banners. They have brought their own spears and little else, asking only for a place in the line."
+      }
+    },
+    "event.ghw_pilgrims_under_arms.title.default": {
+      "context": "Event ghw_pilgrims_under_arms, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Pilgrims Under Arms"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.0.desc.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:4"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "150 mercenaries join the current host; their contract adds {money:4} to seasonal logistics."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.0.effects.log.default": {
+      "context": "Durable event log for ghw_swords_seeking_banner, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Hired a mercenary company for the great holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.0.label.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 0, label, branch default.",
+      "glossary": [
+        "money:15"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Hire the mercenary company. ({money:15})"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.desc.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 1, desc, branch default.",
+      "glossary": [
+        "money:1.5"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "75 seasoned cavalry join the current host, adding about {money:1.5} to seasonal logistics."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.effects.log.default": {
+      "context": "Durable event log for ghw_swords_seeking_banner, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Took landless knights into service for the great holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.effects.log.muslim": {
+      "context": "Durable event log for ghw_swords_seeking_banner, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Took landless horsemen into service for the great holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.effects.log.pagan": {
+      "context": "Durable event log for ghw_swords_seeking_banner, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Took landless champions into service for the great holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.label.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 1, label, branch default.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take the landless knights into service. ({money:20})"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.label.muslim": {
+      "context": "Event ghw_swords_seeking_banner, authored option 1, label, branch muslim.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take the landless horsemen into service. ({money:20})"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.1.label.pagan": {
+      "context": "Event ghw_swords_seeking_banner, authored option 1, label, branch pagan.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take the landless champions into service. ({money:20})"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.2.desc.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 2, desc, branch default.",
+      "glossary": [
+        "money:2"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "100 men-at-arms join the current host, adding about {money:2} to seasonal logistics."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.2.effects.log.default": {
+      "context": "Durable event log for ghw_swords_seeking_banner, authored option 2, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Took a band of adventurers into service for the great holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.2.label.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 2, label, branch default.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take on the adventurers. ({money:25})"
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.3.desc.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Keep your coin and the host you already have."
+      }
+    },
+    "event.ghw_swords_seeking_banner.options.3.label.default": {
+      "context": "Event ghw_swords_seeking_banner, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Send them in search of another banner."
+      }
+    },
+    "event.ghw_swords_seeking_banner.text.default": {
+      "context": "Event ghw_swords_seeking_banner, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The great camp draws fighting men who own no banner of their own. Three companies send captains to your fire, each naming a different price for service in the holy war."
+      }
+    },
+    "event.ghw_swords_seeking_banner.title.default": {
+      "context": "Event ghw_swords_seeking_banner, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Swords Seeking a Banner"
+      }
+    },
     "event.good_omen.options.0.desc.default": {
       "context": "Event good_omen, authored option 0, desc, branch default.",
       "glossary": [],
@@ -34911,6 +35105,16 @@
         "text": "The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)"
       }
     },
+    "src.04025717": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Keep your coin and the host you already have."
+      }
+    },
     "src.0423af4e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41500,6 +41704,16 @@
         "text": "He blusters, bows, and yields. The hall takes note."
       }
     },
+    "src.1b8ddfb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "100 men-at-arms join the current host, adding about {money:2} to seasonal logistics."
+      }
+    },
     "src.1baa4378": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43281,6 +43495,16 @@
       ],
       "source": {
         "text": "Trebizond"
+      }
+    },
+    "src.22bedda3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The great camp draws fighting men who own no banner of their own. Three companies send captains to your fire, each naming a different price for service in the holy war."
       }
     },
     "src.22c27c83": {
@@ -45497,6 +45721,16 @@
         "text": "Hard weather closes around the road outside {location}; every rut fills and every mile lengthens."
       }
     },
+    "src.2ad98ea7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "75 seasoned cavalry join the current host, adding about {money:1.5} to seasonal logistics."
+      }
+    },
     "src.2ae02fc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47618,6 +47852,16 @@
       ],
       "source": {
         "text": "Samarkand"
+      }
+    },
+    "src.33437dda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Swords Seeking a Banner"
       }
     },
     "src.334e74bb": {
@@ -49774,6 +50018,16 @@
       ],
       "source": {
         "text": "is a life-and-dynasty game. You begin in an authored medieval world — most likely poor — and try to raise your family through the ranks of society before old age claims each generation."
+      }
+    },
+    "src.3bef9052": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Hire the mercenary company. ({money:15})"
       }
     },
     "src.3bf7969b": {
@@ -55108,6 +55362,16 @@
         "text": "Poison for poison, and yours brewed better."
       }
     },
+    "src.4ef8b6d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "120 volunteers join as levy without a recruitment fee. Their supplies still add about {money:0.6} to seasonal logistics."
+      }
+    },
     "src.4efe624f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55936,6 +56200,16 @@
       ],
       "source": {
         "text": "Both hear favoritism in your words. Both leave sulking."
+      }
+    },
+    "src.51d8646b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Accepted armed pilgrims into the great holy-war host."
       }
     },
     "src.51de9840": {
@@ -58703,6 +58977,16 @@
         "text": "One of your councillors — all smiles and low bows — waylays you after the sitting with a small gift and large praise: your wisdom, your justice, your very profile on the coinage. He wants something, of course. They always do."
       }
     },
+    "src.5c5f8a5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "150 mercenaries join the current host; their contract adds {money:4} to seasonal logistics."
+      }
+    },
     "src.5c618ff5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59539,6 +59823,16 @@
         "text": "Adds national research slot {slot}."
       }
     },
+    "src.5f872403": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take the landless knights into service. ({money:20})"
+      }
+    },
     "src.5f87da58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59587,6 +59881,16 @@
       ],
       "source": {
         "text": "your vows forbid it."
+      }
+    },
+    "src.5fa78529": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take on the adventurers. ({money:25})"
       }
     },
     "src.5fb21162": {
@@ -67554,6 +67858,16 @@
         "text": "A blade kept sharp."
       }
     },
+    "src.7c9638da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Give them a place in the line."
+      }
+    },
     "src.7c9dd80a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71918,6 +72232,16 @@
         "text": "Crucible Steel"
       }
     },
+    "src.8ba57009": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take the landless champions into service. ({money:20})"
+      }
+    },
     "src.8bb1c4a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72567,6 +72891,16 @@
       ],
       "source": {
         "text": "A heartbeat of flight, a mighty splash, and the other children’s awe."
+      }
+    },
+    "src.8df752d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take the landless horsemen into service. ({money:20})"
       }
     },
     "src.8e0b64d5": {
@@ -73702,6 +74036,16 @@
       ],
       "source": {
         "text": "Jarl"
+      }
+    },
+    "src.9210c723": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Pilgrims Under Arms"
       }
     },
     "src.92114a5e": {
@@ -81344,6 +81688,16 @@
         "text": "{days} days living and working here"
       }
     },
+    "src.afc08c71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Took landless horsemen into service for the great holy war."
+      }
+    },
     "src.afd1351f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83198,6 +83552,16 @@
       ],
       "source": {
         "text": ") cycles five ways to color the map:"
+      }
+    },
+    "src.b5ce5f50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Send them in search of another banner."
       }
     },
     "src.b5eaa249": {
@@ -87792,6 +88156,16 @@
         "text": "Excommunicated"
       }
     },
+    "src.c73b68a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Pilgrims, penitents, and younger sons come straggling beneath the sacred banners. They have brought their own spears and little else, asking only for a place in the line."
+      }
+    },
     "src.c73f060e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91639,6 +92013,16 @@
         "text": "Press"
       }
     },
+    "src.d672e472": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Hired a mercenary company for the great holy war."
+      }
+    },
     "src.d675885f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93501,6 +93885,16 @@
       ],
       "source": {
         "text": "Deliberate trials join reasoned argument to repeatable observation."
+      }
+    },
+    "src.ddd1b808": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Took landless champions into service for the great holy war."
       }
     },
     "src.ddd94522": {
@@ -99826,6 +100220,16 @@
         "text": "In-game effects"
       }
     },
+    "src.f537a1fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Took landless knights into service for the great holy war."
+      }
+    },
     "src.f53e1bcf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101456,6 +101860,16 @@
       ],
       "source": {
         "text": "Gwynedd and Powys"
+      }
+    },
+    "src.fb960158": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Took a band of adventurers into service for the great holy war."
       }
     },
     "src.fb96f908": {

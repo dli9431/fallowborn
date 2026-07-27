@@ -178,7 +178,49 @@ FBDATA.events.push(
       deathProvenance:{ kind:'battle', province:'context', enemy:'war' } } }
   ]},
 
-/* ---------- great holy wars (queued by js/holywar.js) ---------- */
+/* ---------- great holy wars: field offers and queued campaign reports ---------- */
+{ id:'ghw_pilgrims_under_arms', title:'Pilgrims Under Arms',
+  trigger:{ custom:'ghw_has_field_host', chance:0.01 },
+  wartime:true, weight:2, cooldown:36,
+  text:'Pilgrims, penitents, and younger sons come straggling beneath the sacred banners. They have brought their own spears and little else, asking only for a place in the line.',
+  options:[
+    { label:'Give them a place in the line.',
+      desc:'120 volunteers join as levy without a recruitment fee. Their supplies still add about {money:0.6} to seasonal logistics.',
+      effects:{ custom:'ghw_recruit_volunteers',
+        log:'Accepted armed pilgrims into the great holy-war host.' } }
+  ]},
+{ id:'ghw_swords_seeking_banner', title:'Swords Seeking a Banner',
+  trigger:{ custom:'ghw_has_field_host', goldMin:15, chance:0.25 },
+  wartime:true, weight:10, cooldown:4,
+  text:'The great camp draws fighting men who own no banner of their own. Three companies send captains to your fire, each naming a different price for service in the holy war.',
+  options:[
+    { label:'Hire the mercenary company. ({money:15})',
+      require:{ goldMin:15 },
+      desc:'150 mercenaries join the current host; their contract adds {money:4} to seasonal logistics.',
+      effects:{ gold:-15, custom:'ghw_recruit_mercenaries',
+        log:'Hired a mercenary company for the great holy war.' } },
+    { label:{
+        default:'Take the landless knights into service. ({money:20})',
+        muslim:'Take the landless horsemen into service. ({money:20})',
+        pagan:'Take the landless champions into service. ({money:20})'
+      },
+      require:{ goldMin:20 },
+      desc:'75 seasoned cavalry join the current host, adding about {money:1.5} to seasonal logistics.',
+      effects:{ gold:-20, custom:'ghw_recruit_knights',
+        log:{
+          default:'Took landless knights into service for the great holy war.',
+          muslim:'Took landless horsemen into service for the great holy war.',
+          pagan:'Took landless champions into service for the great holy war.'
+        } } },
+    { label:'Take on the adventurers. ({money:25})',
+      require:{ goldMin:25 },
+      desc:'100 men-at-arms join the current host, adding about {money:2} to seasonal logistics.',
+      effects:{ gold:-25, custom:'ghw_recruit_adventurers',
+        log:'Took a band of adventurers into service for the great holy war.' } },
+    { label:'Send them in search of another banner.',
+      desc:'Keep your coin and the host you already have.',
+      effects:{} }
+  ]},
 { id:'ghw_called',
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Pope Calls a Crusade',

@@ -27,6 +27,16 @@ queues `ghw_called` on the call day, and the first active-day tick queues
 war-event automation off, both open normally and stop fast-forward; war-event
 automation may resolve them into the Chronicle like other wartime notices.
 
+Great holy-war field recruitment instead uses the ordinary random-event path.
+`ghw_pilgrims_under_arms` has a 1% slot-day gate, low weight, and a 36-season
+cooldown. `ghw_swords_seeking_banner` has a 25% gate, requires at least 15 gold,
+and has a four-season cooldown; its individual paid options repeat their own purse
+requirements, so filtering and automation cannot overspend. Both also use the
+`ghw_has_field_host` custom trigger, excluding preparation, personal expeditions,
+liege service, and a shattered or absent player host. The custom outcomes reinforce
+the live host immediately, while non-`first` automation scores every recruit above
+refusal and prefers the larger mercenary package by default.
+
 **Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
 to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
 `crowned`. Event triggers and option requirements may use `societalRoles`; vassal,
