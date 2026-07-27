@@ -221,10 +221,14 @@ tier-2 manor without raising the save-format version.
 
 Childhood instruction is additive too. `character.edu.school` optionally names an
 `FBDATA.schooling` arrangement, `lessonBoost` stores the fractional yearly chance earned by
-completed seasonal terms, and `schoolUnpaid` suppresses repeated notices while fees cannot
-be met. Missing fields mean home instruction and zero completed paid terms. A legacy
-generated hired tutor is recognized by its character role and lazily gains
-`school:'master'`; no save-version migration is required.
+completed seasonal terms, `schoolTerms` maps schooling ids to completed terms awaiting the
+next New Year, and `schoolUnpaid` suppresses repeated notices while fees cannot be met.
+Switching arrangements leaves `schoolTerms` intact; the annual schooling pass consumes and
+resets the map after resolving moddable mortality and story fields. `state.schoolingLastEvent`
+stores the last annual schooling event id solely to prevent an immediate story repeat across
+years and protagonist succession. Missing fields mean home instruction, no exposure, and no
+previous story. A legacy generated hired tutor is recognized by its character role and
+lazily gains `school:'master'`; no save-version migration is required.
 
 Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
 price index, persistent pressure and shocks, loans, trade investments, stable contract ids,

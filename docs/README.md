@@ -111,9 +111,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    divorce, some let a man keep several wives, and a Christian match can only be unmade by
    the church. The desperate have been known to plot darker exits.
    Choose each child's education focus, then arrange home teaching, charity or merchant
-   school, a known tutor, or a personal learned master. Better instruction raises the
-   yearly learning chance, while schools and masters charge every season. From age twelve
-   you can also arrange a child's match from
+   school, a known tutor, the Noble Academy, or a personal learned master. Better
+   instruction raises the yearly learning chance, while schools and masters charge every
+   season. Gentry households whose realm knows Scholarly Networks may pay dearly for the
+   academy's broad 75% instruction and noble connections, but each completed term adds a
+   small fatality risk at New Year—four terms reach 2%. From age twelve you can also arrange
+   a child's match from
    their sheet: three families stand ready to hear an offer — a daughter's dowry is paid when
    the pledge is sealed, a son's bride brings hers to the wedding, and the vows follow once
    both are sixteen. Left alone, grown children find their own (unremarkable) matches —

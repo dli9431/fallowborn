@@ -1022,6 +1022,7 @@ window.FB = window.FB || {};
   FB.schoolingAvailable = function (state, c, id) {
     const def = FBDATA.schooling[id];
     if (!def || !FB.educationStudentEligible(state, c)) return false;
+    if (def.tierMin !== undefined && state.player.tier < def.tierMin) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) return false;
     if (def.focuses && (!c.edu || def.focuses.indexOf(c.edu.focus) < 0)) return false;
@@ -1074,7 +1075,8 @@ window.FB = window.FB || {};
 
   /* Four paid seasonal terms build one year's instruction bonus. A missed
      fee pauses only that term; earlier lessons remain useful and the school
-     retries next season. Free named tutors accrue terms through the same path. */
+     retries next season. Institutions also keep a per-school term ledger for
+     annual risks and stories; switching arrangements never erases it. */
   FB.educationSeason = function (state) {
     const B = FBDATA.balance;
     const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
@@ -1082,8 +1084,8 @@ window.FB = window.FB || {};
       if (!c.edu || !c.edu.focus) continue;
       const id = FB.schoolingId(state, c);
       if (c.edu.tutorId && !FB.educationTutor(state, c, true)) continue;
+      const activeSchool = id && FB.schoolingAvailable(state, c, id);
       const chance = FB.educationInstructionChance(state, c);
-      if (chance <= base) continue;
       const cost = FB.schoolingCost(state, c);
       if (cost && state.player.gold + 0.0001 < cost) {
         if (!c.edu.schoolUnpaid) {
@@ -1101,8 +1103,145 @@ window.FB = window.FB || {};
       }
       if (cost) state.player.gold -= cost;
       delete c.edu.schoolUnpaid;
-      c.edu.lessonBoost = (c.edu.lessonBoost || 0) + (chance - base) / 4;
+      if (chance > base) {
+        c.edu.lessonBoost = (c.edu.lessonBoost || 0) + (chance - base) / 4;
+      }
+      if (activeSchool) {
+        if (!c.edu.schoolTerms || typeof c.edu.schoolTerms !== 'object' ||
+            Array.isArray(c.edu.schoolTerms)) c.edu.schoolTerms = {};
+        c.edu.schoolTerms[id] = Math.min(4, Math.max(0,
+          Math.floor(Number(c.edu.schoolTerms[id]) || 0)) + 1);
+      }
     }
+  };
+
+  function schoolAnnualEventList(def) {
+    if (!def || !def.annualEvents) return [];
+    const events = Array.isArray(def.annualEvents) ?
+      def.annualEvents.slice() : [def.annualEvents];
+    return events.filter(function (id) {
+      return typeof id === 'string' && !!id;
+    });
+  }
+
+  function weightedSchoolStory(entries, total) {
+    let roll = FB.rng() * total;
+    for (let i = 0; i < entries.length; i++) {
+      roll -= entries[i].terms;
+      if (roll < 0) return entries[i];
+    }
+    return entries[entries.length - 1] || null;
+  }
+
+  /* Consume completed institutional terms before ordinary yearly education
+     and coming-of-age rewards. annualMortality is the full four-term risk;
+     annualEvents supplies queued event ids. Missing ledgers in old saves are
+     empty, and consumed ledgers reset without a migration. */
+  FB.schoolingYear = function (state) {
+    const snapshots = [];
+    const playerId = state.player.charId;
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (!c || !c.edu || !c.edu.schoolTerms ||
+          typeof c.edu.schoolTerms !== 'object' || Array.isArray(c.edu.schoolTerms)) continue;
+      const schools = [];
+      for (const schoolId in c.edu.schoolTerms) {
+        const terms = Math.min(4, Math.max(0,
+          Math.floor(Number(c.edu.schoolTerms[schoolId]) || 0)));
+        if (terms && FBDATA.schooling[schoolId]) {
+          schools.push({ id:schoolId, terms:terms, def:FBDATA.schooling[schoolId] });
+        }
+      }
+      c.edu.schoolTerms = {};
+      if (schools.length && !c.dead) snapshots.push({ c:c, schools:schools });
+    }
+    snapshots.sort(function (a, b) {
+      if (a.c.id === playerId) return -1;
+      if (b.c.id === playerId) return 1;
+      return String(a.c.id).localeCompare(String(b.c.id));
+    });
+
+    const storyEntries = [];
+    for (let i = 0; i < snapshots.length; i++) {
+      const entry = snapshots[i];
+      let died = false;
+      for (let j = 0; j < entry.schools.length; j++) {
+        const school = entry.schools[j];
+        const annualMortality = Math.min(1,
+          Math.max(0, Number(school.def.annualMortality) || 0));
+        if (annualMortality &&
+            FB.chance(Math.min(1, annualMortality * school.terms / 4))) {
+          const age = FB.ageOf(entry.c, state.date.year);
+          if (entry.c.id === playerId) {
+            FB.game.die(FB.msg('legend.death.academy',
+              '{name} dies in {year} AD, aged {age} — the rigors of {school} prove fatal.',
+              {
+                name:entry.c.name, year:state.date.year, age:age,
+                school:FB.dataParam('schooling', school.id)
+              }));
+            return false;
+          }
+          FB.killChar(state, entry.c);
+          FB.news(state, FB.msg('news.education.academy_death',
+            '🕯 {name} dies after the rigors of {school}, aged {age}.', {
+              name:entry.c.name, age:age,
+              school:FB.dataParam('schooling', school.id)
+            }));
+          died = true;
+          break;
+        }
+      }
+      if (died) continue;
+      for (let j = 0; j < entry.schools.length; j++) {
+        const school = entry.schools[j];
+        const events = schoolAnnualEventList(school.def);
+        if (!events.length) continue;
+        storyEntries.push({
+          c:entry.c, schoolId:school.id, terms:school.terms, events:events
+        });
+      }
+    }
+
+    return { entries:storyEntries, queueIndex:(state.eventQueue || []).length };
+  };
+
+  /* Queue the story only after the rest of yearly mortality has run, so an
+     ordinary death cannot leave a decision pointing at a dead student. */
+  FB.schoolingYearEvents = function (state, annual) {
+    if (!annual || !annual.entries) return false;
+    const survivors = annual.entries.filter(function (entry) {
+      return entry.c && !entry.c.dead;
+    });
+    let storyTerms = 0;
+    for (let i = 0; i < survivors.length; i++) storyTerms += survivors[i].terms;
+    if (storyTerms && FB.chance(Math.min(1, storyTerms / 4))) {
+      const selected = weightedSchoolStory(survivors, storyTerms);
+      if (selected) {
+        const events = selected.events.filter(function (id) {
+          return id && id !== state.schoolingLastEvent;
+        });
+        if (events.length) {
+          const eventId = FB.pick(events);
+          const item = FB.queueEvent(state, eventId, {
+            studentId:selected.c.id,
+            studentFocus:selected.c.edu && selected.c.edu.focus,
+            schoolId:selected.schoolId
+          });
+          /* Preserve events already waiting before New Year, but put this
+             term-ending story before coming-of-age notices queued later in
+             the same annual pass. */
+          const last = state.eventQueue.length - 1;
+          const at = Math.max(0, Math.min(last, Number(annual.queueIndex) || 0));
+          if (at < last) {
+            state.eventQueue.pop();
+            state.eventQueue.splice(at, 0, item);
+          }
+          state.schoolingLastEvent = eventId;
+          return true;
+        }
+      }
+    }
+    return false;
   };
 
   FB.enterpriseList = function (state) {

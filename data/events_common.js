@@ -7,7 +7,7 @@
    cooldown: seasons before it can repeat.
    effects: gold/prestige/piety/health, skills:{mar:1}, addTrait, setFlag,
             opinion:{role,amt}, queue:'next_event_id', profession, tier...
-   Text tokens: {name} {spouse} {lord} {priest} {friend} {rival} {suitor}
+   Text tokens: {name} {spouse} {lord} {priest} {friend} {rival} {suitor} {student}
             {province} {realm} {god} {holy} {year}
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
@@ -153,6 +153,79 @@ FBDATA.events.push(
   options:[
     { label:'I will do the family proud.', desc:'The lessons are yours to spend now.', effects:{ prestige:5 } },
     { label:'Now my true education begins.', desc:'The world is the last and hardest tutor.', effects:{ } }
+  ]},
+
+/* ---------- Noble Academy ---------- */
+{ id:'academy_patron_notice', title:'A Patron’s Notice', trigger:{ never:true },
+  text:'At the Noble Academy, {student} catches the notice of a patron whose table gathers ambitious heirs and useful names. An introduction could open a door, but patrons admire silver almost as much as promise.',
+  options:[
+    { label:'Secure the introduction with a gift. ({money:8})',
+      require:{ goldMin:8 },
+      desc:'The patron will remember both the student and the household’s generosity.',
+      effects:{ gold:-8, prestige:4, custom:'academy_introduction',
+        log:'Secured an academy patron’s introduction for {student}.' } },
+    { label:'Let merit make the introduction.', chance:0.55,
+      desc:'Talent may speak loudly enough without coin.',
+      success:{ text:'The patron asks {student} to remain after the lecture. Merit has opened the door.',
+        effects:{ custom:'academy_introduction',
+          log:'Won an academy patron’s notice through {student}’s merit.' } },
+      failure:{ text:'The patron praises the exercise, then turns to an heir whose family name needs no introduction.',
+        effects:{ log:'Trusted {student}’s merit at the academy, but no patron came forward.' } } },
+    { label:'Remain at study.', desc:'A lesson mastered is worth more than a favor chased.',
+      effects:{ custom:'academy_student_focus',
+        log:'Kept {student} at their academy studies.' } }
+  ]},
+
+{ id:'academy_purse', title:'The Academy Purse', trigger:{ never:true },
+  text:'The Noble Academy names the books, instruments, and formal dress expected for the coming term. {student} can continue without them, but every better-equipped rival will notice.',
+  options:[
+    { label:'Provide everything requested. ({money:10})',
+      require:{ goldMin:10 },
+      desc:'Fine tools and books make a visible investment in the student.',
+      effects:{ gold:-10, prestige:5, custom:'academy_student_focus',
+        log:'Equipped {student} handsomely for the academy.' } },
+    { label:'Make do with what the household has.',
+      desc:'Careful accounts can stretch a thin purse, though appearances suffer.',
+      effects:{ prestige:-2, custom:'academy_student_ste',
+        log:'Sent {student} back to the academy with a carefully managed purse.' } },
+    { label:'Withdraw from the academy.',
+      desc:'End the expense and continue the child’s instruction elsewhere.',
+      effects:{ custom:'academy_withdraw',
+        log:'Withdrew {student} from the Noble Academy.' } }
+  ]},
+
+{ id:'academy_disputation', title:'The Great Disputation', trigger:{ never:true },
+  text:'The academy hall fills for a public disputation. {student} must choose whether to win the judges through graceful argument, expose an opponent’s hidden weakness, or ground every claim in learned authority.',
+  options:[
+    { label:'Win the room with graceful argument.',
+      desc:'A polished answer can carry both judgment and audience.',
+      effects:{ prestige:2, custom:'academy_student_dip',
+        log:'{student} distinguished the household in the academy disputation.' } },
+    { label:'Find the weakness no one else sees.',
+      desc:'A quiet observation can undo the loudest rival.',
+      effects:{ prestige:1, custom:'academy_student_int',
+        log:'{student} unmade a rival’s case in the academy disputation.' } },
+    { label:'Answer from law, scripture, and authority.',
+      desc:'Let close study give the argument its foundation.',
+      effects:{ piety:2, custom:'academy_student_lea',
+        log:'{student} answered the academy disputation with learned authority.' } }
+  ]},
+
+{ id:'academy_houses_compete', title:'Houses in Competition', trigger:{ never:true },
+  text:'Two great houses turn an academy exercise into a contest of precedence. {student} is asked to help arrange the household, observe the maneuvering, or represent the family before the assembled patrons.',
+  options:[
+    { label:'Set the competing households in order.',
+      desc:'Servants, stores, and schedules decide whether grandeur holds together.',
+      effects:{ prestige:2, custom:'academy_student_ste',
+        log:'{student} managed the household contest at the Noble Academy.' } },
+    { label:'Watch the politics behind the contest.',
+      desc:'The true lesson lies in who yields, who whispers, and who profits.',
+      effects:{ prestige:1, custom:'academy_student_int',
+        log:'{student} studied the politics behind the academy’s rival houses.' } },
+    { label:'Represent the household before the patrons.',
+      desc:'Courtesy and confidence can turn a school exercise into reputation.',
+      effects:{ prestige:3, custom:'academy_student_dip',
+        log:'{student} represented the household before the academy’s patrons.' } }
   ]},
 
 /* ---------- leaving a former station ---------- */

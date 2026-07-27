@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.67.0';
+  FB.VERSION = '1.68.0';
   FB.CHANGELOG = [
+    { v: '1.68.0', date: '2026-07-26', changes: [
+      'Gentry households can now send young family members to a Noble Academy for advanced lessons, noble connections, and new school events.'
+    ] },
     { v: '1.67.0', date: '2026-07-26', changes: [
       'Unmarried grandchildren now join the managed household, with the same education, work, equipment, upkeep, and arranged-marriage controls as children.'
     ] },
@@ -1272,6 +1275,10 @@ window.FB = window.FB || {};
     const me = s.chars[p.charId];
     const year = s.date.year;
 
+    // paid-term risks resolve now; surviving story candidates wait through mortality
+    const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
+    if (schoolingAnnual === false) return;
+
     // managed descendants: schooling, then coming of age
     educationTick(s);
     FB.livelihoodYearly(s);
@@ -1452,6 +1459,8 @@ window.FB = window.FB || {};
         }, { relation: kinRel[c.id].toLowerCase(), name: c.name, age: a }));
       }
     }
+
+    if (FB.schoolingYearEvents) FB.schoolingYearEvents(s, schoolingAnnual);
 
     // popular opinion drifts toward 0
     p.pop = Math.round(p.pop * 0.85);

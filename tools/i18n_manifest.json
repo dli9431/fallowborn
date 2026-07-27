@@ -1438,6 +1438,422 @@
         "text": "Workshop"
       }
     },
+    "event.academy_disputation.options.0.desc.default": {
+      "context": "Event academy_disputation, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A polished answer can carry both judgment and audience."
+      }
+    },
+    "event.academy_disputation.options.0.effects.log.default": {
+      "context": "Durable event log for academy_disputation, authored option 0, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} distinguished the household in the academy disputation."
+      }
+    },
+    "event.academy_disputation.options.0.label.default": {
+      "context": "Event academy_disputation, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Win the room with graceful argument."
+      }
+    },
+    "event.academy_disputation.options.1.desc.default": {
+      "context": "Event academy_disputation, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A quiet observation can undo the loudest rival."
+      }
+    },
+    "event.academy_disputation.options.1.effects.log.default": {
+      "context": "Durable event log for academy_disputation, authored option 1, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} unmade a rival’s case in the academy disputation."
+      }
+    },
+    "event.academy_disputation.options.1.label.default": {
+      "context": "Event academy_disputation, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Find the weakness no one else sees."
+      }
+    },
+    "event.academy_disputation.options.2.desc.default": {
+      "context": "Event academy_disputation, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let close study give the argument its foundation."
+      }
+    },
+    "event.academy_disputation.options.2.effects.log.default": {
+      "context": "Durable event log for academy_disputation, authored option 2, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} answered the academy disputation with learned authority."
+      }
+    },
+    "event.academy_disputation.options.2.label.default": {
+      "context": "Event academy_disputation, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Answer from law, scripture, and authority."
+      }
+    },
+    "event.academy_disputation.text.default": {
+      "context": "Event academy_disputation, text, faith branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The academy hall fills for a public disputation. {student} must choose whether to win the judges through graceful argument, expose an opponent’s hidden weakness, or ground every claim in learned authority."
+      }
+    },
+    "event.academy_disputation.title.default": {
+      "context": "Event academy_disputation, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Great Disputation"
+      }
+    },
+    "event.academy_houses_compete.options.0.desc.default": {
+      "context": "Event academy_houses_compete, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Servants, stores, and schedules decide whether grandeur holds together."
+      }
+    },
+    "event.academy_houses_compete.options.0.effects.log.default": {
+      "context": "Durable event log for academy_houses_compete, authored option 0, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} managed the household contest at the Noble Academy."
+      }
+    },
+    "event.academy_houses_compete.options.0.label.default": {
+      "context": "Event academy_houses_compete, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Set the competing households in order."
+      }
+    },
+    "event.academy_houses_compete.options.1.desc.default": {
+      "context": "Event academy_houses_compete, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The true lesson lies in who yields, who whispers, and who profits."
+      }
+    },
+    "event.academy_houses_compete.options.1.effects.log.default": {
+      "context": "Durable event log for academy_houses_compete, authored option 1, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} studied the politics behind the academy’s rival houses."
+      }
+    },
+    "event.academy_houses_compete.options.1.label.default": {
+      "context": "Event academy_houses_compete, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Watch the politics behind the contest."
+      }
+    },
+    "event.academy_houses_compete.options.2.desc.default": {
+      "context": "Event academy_houses_compete, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Courtesy and confidence can turn a school exercise into reputation."
+      }
+    },
+    "event.academy_houses_compete.options.2.effects.log.default": {
+      "context": "Durable event log for academy_houses_compete, authored option 2, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{student} represented the household before the academy’s patrons."
+      }
+    },
+    "event.academy_houses_compete.options.2.label.default": {
+      "context": "Event academy_houses_compete, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Represent the household before the patrons."
+      }
+    },
+    "event.academy_houses_compete.text.default": {
+      "context": "Event academy_houses_compete, text, faith branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Two great houses turn an academy exercise into a contest of precedence. {student} is asked to help arrange the household, observe the maneuvering, or represent the family before the assembled patrons."
+      }
+    },
+    "event.academy_houses_compete.title.default": {
+      "context": "Event academy_houses_compete, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Houses in Competition"
+      }
+    },
+    "event.academy_patron_notice.options.0.desc.default": {
+      "context": "Event academy_patron_notice, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The patron will remember both the student and the household’s generosity."
+      }
+    },
+    "event.academy_patron_notice.options.0.effects.log.default": {
+      "context": "Durable event log for academy_patron_notice, authored option 0, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Secured an academy patron’s introduction for {student}."
+      }
+    },
+    "event.academy_patron_notice.options.0.label.default": {
+      "context": "Event academy_patron_notice, authored option 0, label, branch default.",
+      "glossary": [
+        "money:8"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Secure the introduction with a gift. ({money:8})"
+      }
+    },
+    "event.academy_patron_notice.options.1.desc.default": {
+      "context": "Event academy_patron_notice, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Talent may speak loudly enough without coin."
+      }
+    },
+    "event.academy_patron_notice.options.1.failure.effects.log.default": {
+      "context": "Durable event log for academy_patron_notice, authored option 1, failure.effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Trusted {student}’s merit at the academy, but no patron came forward."
+      }
+    },
+    "event.academy_patron_notice.options.1.failure.text.default": {
+      "context": "Event academy_patron_notice, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The patron praises the exercise, then turns to an heir whose family name needs no introduction."
+      }
+    },
+    "event.academy_patron_notice.options.1.label.default": {
+      "context": "Event academy_patron_notice, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let merit make the introduction."
+      }
+    },
+    "event.academy_patron_notice.options.1.success.effects.log.default": {
+      "context": "Durable event log for academy_patron_notice, authored option 1, success.effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Won an academy patron’s notice through {student}’s merit."
+      }
+    },
+    "event.academy_patron_notice.options.1.success.text.default": {
+      "context": "Event academy_patron_notice, authored option 1, success text, branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The patron asks {student} to remain after the lecture. Merit has opened the door."
+      }
+    },
+    "event.academy_patron_notice.options.2.desc.default": {
+      "context": "Event academy_patron_notice, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A lesson mastered is worth more than a favor chased."
+      }
+    },
+    "event.academy_patron_notice.options.2.effects.log.default": {
+      "context": "Durable event log for academy_patron_notice, authored option 2, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Kept {student} at their academy studies."
+      }
+    },
+    "event.academy_patron_notice.options.2.label.default": {
+      "context": "Event academy_patron_notice, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Remain at study."
+      }
+    },
+    "event.academy_patron_notice.text.default": {
+      "context": "Event academy_patron_notice, text, faith branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "At the Noble Academy, {student} catches the notice of a patron whose table gathers ambitious heirs and useful names. An introduction could open a door, but patrons admire silver almost as much as promise."
+      }
+    },
+    "event.academy_patron_notice.title.default": {
+      "context": "Event academy_patron_notice, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A Patron’s Notice"
+      }
+    },
+    "event.academy_purse.options.0.desc.default": {
+      "context": "Event academy_purse, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Fine tools and books make a visible investment in the student."
+      }
+    },
+    "event.academy_purse.options.0.effects.log.default": {
+      "context": "Durable event log for academy_purse, authored option 0, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Equipped {student} handsomely for the academy."
+      }
+    },
+    "event.academy_purse.options.0.label.default": {
+      "context": "Event academy_purse, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Provide everything requested. ({money:10})"
+      }
+    },
+    "event.academy_purse.options.1.desc.default": {
+      "context": "Event academy_purse, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Careful accounts can stretch a thin purse, though appearances suffer."
+      }
+    },
+    "event.academy_purse.options.1.effects.log.default": {
+      "context": "Durable event log for academy_purse, authored option 1, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Sent {student} back to the academy with a carefully managed purse."
+      }
+    },
+    "event.academy_purse.options.1.label.default": {
+      "context": "Event academy_purse, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Make do with what the household has."
+      }
+    },
+    "event.academy_purse.options.2.desc.default": {
+      "context": "Event academy_purse, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "End the expense and continue the child’s instruction elsewhere."
+      }
+    },
+    "event.academy_purse.options.2.effects.log.default": {
+      "context": "Durable event log for academy_purse, authored option 2, effects.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Withdrew {student} from the Noble Academy."
+      }
+    },
+    "event.academy_purse.options.2.label.default": {
+      "context": "Event academy_purse, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Withdraw from the academy."
+      }
+    },
+    "event.academy_purse.text.default": {
+      "context": "Event academy_purse, text, faith branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Noble Academy names the books, instruments, and formal dress expected for the coming term. {student} can continue without them, but every better-equipped rival will notice."
+      }
+    },
+    "event.academy_purse.title.default": {
+      "context": "Event academy_purse, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Academy Purse"
+      }
+    },
     "event.after_reapers.options.0.desc.default": {
       "context": "Event after_reapers, authored option 0, desc, branch default.",
       "glossary": [],
@@ -23641,6 +24057,19 @@
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
       }
     },
+    "legend.death.academy": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "age",
+        "name",
+        "school",
+        "year"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age} — the rigors of {school} prove fatal."
+      }
+    },
     "legend.death.age": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -24476,6 +24905,38 @@
       "location": "js/council.js",
       "source": {
         "text": "💰 The council grants a war subsidy of {money:gold} — and notes the precedent."
+      }
+    },
+    "news.education.academy_death": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "age",
+        "name",
+        "school"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🕯 {name} dies after the rigors of {school}, aged {age}."
+      }
+    },
+    "news.education.academy_introduction": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "contact",
+        "regard",
+        "student"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "existing": "🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} regard.",
+            "new": "🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} regard.",
+            "other": "🤝 The promised academy introduction finds no noble contact still able to receive it."
+          },
+          "param": "result",
+          "select": "value"
+        }
       }
     },
     "news.education.fee_missed": {
@@ -32638,6 +33099,22 @@
         "text": "Town merchant’s school"
       }
     },
+    "schooling.noble_academy.desc.default": {
+      "context": "schooling noble_academy, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "A costly education among noble houses, rich in opportunity and harsh in its demands."
+      }
+    },
+    "schooling.noble_academy.name.default": {
+      "context": "schooling noble_academy, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Noble Academy"
+      }
+    },
     "settlement.city.default": {
       "context": "Structured war-status display message.",
       "glossary": [],
@@ -36723,6 +37200,16 @@
         "text": "The campaign is not decided by one bloody day."
       }
     },
+    "src.106b5d6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Noble Academy names the books, instruments, and formal dress expected for the coming term. {student} can continue without them, but every better-equipped rival will notice."
+      }
+    },
     "src.1075ba1a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37275,6 +37762,16 @@
         "text": "The Last Bed"
       }
     },
+    "src.128b550a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Withdraw from the academy."
+      }
+    },
     "src.128b9d13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37474,6 +37971,16 @@
       ],
       "source": {
         "text": "Caliph"
+      }
+    },
+    "src.131a5bb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The academy hall fills for a public disputation. {student} must choose whether to win the judges through graceful argument, expose an opponent’s hidden weakness, or ground every claim in learned authority."
       }
     },
     "src.1342649b": {
@@ -37694,6 +38201,16 @@
       ],
       "source": {
         "text": "Under One Roof"
+      }
+    },
+    "src.13e44906": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "End the expense and continue the child’s instruction elsewhere."
       }
     },
     "src.13e9a378": {
@@ -38074,6 +38591,16 @@
       ],
       "source": {
         "text": "{skill} {value} · {chance}% yearly"
+      }
+    },
+    "src.1517c357": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Great Disputation"
       }
     },
     "src.151ec801": {
@@ -38953,6 +39480,16 @@
         "text": "☠ The Line is Ended"
       }
     },
+    "src.18eb29b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Sent {student} back to the academy with a carefully managed purse."
+      }
+    },
     "src.18ee5b89": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39493,6 +40030,16 @@
         "text": "Make your case."
       }
     },
+    "src.1adb76f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age} — the rigors of {school} prove fatal."
+      }
+    },
     "src.1b06fe0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39671,6 +40218,16 @@
       ],
       "source": {
         "text": "Your scheming is uncovered and named for what it is."
+      }
+    },
+    "src.1c770358": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} represented the household before the academy’s patrons."
       }
     },
     "src.1c7b8d1e": {
@@ -40794,6 +41351,16 @@
       ],
       "source": {
         "text": "Deceitful"
+      }
+    },
+    "src.20fdbed3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "A costly education among noble houses, rich in opportunity and harsh in its demands."
       }
     },
     "src.21069760": {
@@ -42692,7 +43259,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js"
+        "js/economy.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Requires the national technology {technology}."
@@ -43347,6 +43915,16 @@
       ],
       "source": {
         "text": "kinsman"
+      }
+    },
+    "src.2b672443": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Secure the introduction with a gift. ({money:8})"
       }
     },
     "src.2b760001": {
@@ -46645,6 +47223,16 @@
       ],
       "source": {
         "text": "Niebla"
+      }
+    },
+    "src.39aa3bbe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires the national technologies {technologies}."
       }
     },
     "src.39c03f63": {
@@ -50442,6 +51030,16 @@
         "text": "Books find other roofs."
       }
     },
+    "src.4800bcb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Houses in Competition"
+      }
+    },
     "src.480ca9c2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51014,6 +51612,16 @@
       ],
       "source": {
         "text": "Bourges"
+      }
+    },
+    "src.4a938cd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A polished answer can carry both judgment and audience."
       }
     },
     "src.4a9db838": {
@@ -51616,6 +52224,16 @@
       ],
       "source": {
         "text": "Alba"
+      }
+    },
+    "src.4ccc3fdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🤝 The promised academy introduction finds no noble contact still able to receive it."
       }
     },
     "src.4ccc6eb6": {
@@ -52338,6 +52956,16 @@
         "text": "The kin of {spouse} never let you forget the height from which they stooped. Now a cousin writes: the family expects a favor of its new… relation."
       }
     },
+    "src.4fbdb748": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The patron will remember both the student and the household’s generosity."
+      }
+    },
     "src.4fc184aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52446,6 +53074,16 @@
       ],
       "source": {
         "text": "Choose Your Conquest"
+      }
+    },
+    "src.507547ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let merit make the introduction."
       }
     },
     "src.50769973": {
@@ -53386,6 +54024,16 @@
       ],
       "source": {
         "text": "Avignon"
+      }
+    },
+    "src.542e0812": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} studied the politics behind the academy’s rival houses."
       }
     },
     "src.5432a508": {
@@ -54689,6 +55337,16 @@
       ],
       "source": {
         "text": "Keep vigil by the grave until dawn."
+      }
+    },
+    "src.598e81c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Secured an academy patron’s introduction for {student}."
       }
     },
     "src.598fe83a": {
@@ -57049,6 +57707,16 @@
         "text": "☪ {realm} claims the vacant office of {title}."
       }
     },
+    "src.62af1c6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": ", then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16."
+      }
+    },
     "src.62b3daa2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57277,6 +57945,16 @@
       ],
       "source": {
         "text": "menu / back / close ·"
+      }
+    },
+    "src.63dd3f99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} regard."
       }
     },
     "src.63f48b23": {
@@ -59274,6 +59952,16 @@
         "text": "West Francia"
       }
     },
+    "src.6bfa60e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Withdrew {student} from the Noble Academy."
+      }
+    },
     "src.6bfc418b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59362,6 +60050,16 @@
       ],
       "source": {
         "text": "Kairouan"
+      }
+    },
+    "src.6c58d998": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚠ Each completed term at {school} adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms)."
       }
     },
     "src.6c619965": {
@@ -60464,6 +61162,16 @@
         "text": "You win their coin and, better, their stories."
       }
     },
+    "src.7082295c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Talent may speak loudly enough without coin."
+      }
+    },
     "src.7082ab30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60923,6 +61631,16 @@
       ],
       "source": {
         "text": "🚩 The host holds at {province}."
+      }
+    },
+    "src.726bdc85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Let close study give the argument its foundation."
       }
     },
     "src.7270e53f": {
@@ -61495,6 +62213,16 @@
       ],
       "source": {
         "text": "No risk, no profit, no stories."
+      }
+    },
+    "src.749a1b9d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year"
       }
     },
     "src.74a58aca": {
@@ -62790,6 +63518,16 @@
         "text": "Never Again"
       }
     },
+    "src.79ab5d04": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} distinguished the household in the academy disputation."
+      }
+    },
     "src.79ad420b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62928,6 +63666,16 @@
       ],
       "source": {
         "text": "+ w +"
+      }
+    },
+    "src.79f405c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The true lesson lies in who yields, who whispers, and who profits."
       }
     },
     "src.79f8263d": {
@@ -63078,6 +63826,16 @@
       ],
       "source": {
         "text": "Szczecin"
+      }
+    },
+    "src.7ab0a2fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Kept {student} at their academy studies."
       }
     },
     "src.7ab16f9e": {
@@ -63268,6 +64026,16 @@
       ],
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
+      }
+    },
+    "src.7b588302": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Fine tools and books make a visible investment in the student."
       }
     },
     "src.7b5d669a": {
@@ -63702,6 +64470,16 @@
         "text": "has invalid empire"
       }
     },
+    "src.7d0f7cce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Find the weakness no one else sees."
+      }
+    },
     "src.7d2d9c00": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64062,6 +64840,16 @@
         "text": "Merchant’s Ledger"
       }
     },
+    "src.7e4b1cf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Equipped {student} handsomely for the academy."
+      }
+    },
     "src.7e4c0d39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64391,6 +65179,16 @@
       ],
       "source": {
         "text": ": invalid"
+      }
+    },
+    "src.7f435519": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Provide everything requested. ({money:10})"
       }
     },
     "src.7f473564": {
@@ -64923,6 +65721,16 @@
         "text": "💔 Break off the courtship"
       }
     },
+    "src.810d72f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} unmade a rival’s case in the academy disputation."
+      }
+    },
     "src.8118262b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65431,6 +66239,16 @@
       ],
       "source": {
         "text": "📜 Your fiefs escheat to {liege}."
+      }
+    },
+    "src.832fe6d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Set the competing households in order."
       }
     },
     "src.833e0bcb": {
@@ -69082,6 +69900,16 @@
         "text": "{title} · {realm}"
       }
     },
+    "src.910d1ee7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Remain at study."
+      }
+    },
     "src.91135285": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69302,6 +70130,16 @@
         "text": "Jarl"
       }
     },
+    "src.92114a5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A lesson mastered is worth more than a favor chased."
+      }
+    },
     "src.9214e8b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69432,6 +70270,16 @@
         "text": "The mill wheel shudders to a stop with half the village’s grain waiting and rain in the air. Spoiled grain feeds nobody, but the miller still speaks of his toll."
       }
     },
+    "src.9299f451": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A quiet observation can undo the loudest rival."
+      }
+    },
     "src.92c30d58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69490,6 +70338,16 @@
       ],
       "source": {
         "text": "Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent."
+      }
+    },
+    "src.932de978": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The patron praises the exercise, then turns to an heir whose family name needs no introduction."
       }
     },
     "src.9332ba2b": {
@@ -69820,16 +70678,6 @@
       ],
       "source": {
         "text": "Level {level}: {name}"
-      }
-    },
-    "src.94df41f3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": ", then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. A Learning education grants literacy at 16."
       }
     },
     "src.94e2fc90": {
@@ -70394,6 +71242,16 @@
       ],
       "source": {
         "text": "Pay a clerk for a clean copy. ({money:8})"
+      }
+    },
+    "src.9752a4c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Make do with what the household has."
       }
     },
     "src.9759ebda": {
@@ -73021,6 +73879,16 @@
         "text": "Pilgrimage"
       }
     },
+    "src.a144a913": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Trusted {student}’s merit at the academy, but no patron came forward."
+      }
+    },
     "src.a1450f43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73400,6 +74268,16 @@
       ],
       "source": {
         "text": "Portolan Charts"
+      }
+    },
+    "src.a2daab34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lessons end at age 16."
       }
     },
     "src.a2dbfe47": {
@@ -74689,6 +75567,16 @@
         "text": "Trap him into speaking his master’s secrets."
       }
     },
+    "src.a86cb201": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Watch the politics behind the contest."
+      }
+    },
     "src.a870c990": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75452,6 +76340,16 @@
         "text": "Lord by lord, the benches shake their heads. The steward folds his tally. The demand dies in the hall — and the liege marks who led the “no.”"
       }
     },
+    "src.abbc86c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} managed the household contest at the Noble Academy."
+      }
+    },
     "src.abbe8889": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75570,6 +76468,16 @@
       ],
       "source": {
         "text": "The first man through finds himself back in the mud. The rest decide another roof is easier."
+      }
+    },
+    "src.ac0fbfdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Servants, stores, and schedules decide whether grandeur holds together."
       }
     },
     "src.ac17653e": {
@@ -76724,6 +77632,16 @@
         "text": "📜 The successor inherits {count} active obligations, now worth {money:amount}."
       }
     },
+    "src.b0aa8618": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The patron asks {student} to remain after the lecture. Merit has opened the door."
+      }
+    },
     "src.b0c67ed6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77142,6 +78060,16 @@
       ],
       "source": {
         "text": "Head"
+      }
+    },
+    "src.b29a006b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Courtesy and confidence can turn a school exercise into reputation."
       }
     },
     "src.b2ad7e14": {
@@ -78676,6 +79604,16 @@
       ],
       "source": {
         "text": "Mercy now may preserve a good tenant."
+      }
+    },
+    "src.b7fe3391": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Two great houses turn an academy exercise into a contest of precedence. {student} is asked to help arrange the household, observe the maneuvering, or represent the family before the assembled patrons."
       }
     },
     "src.b7ffb17e": {
@@ -80883,6 +81821,16 @@
         "text": "Nishapur"
       }
     },
+    "src.c15f7017": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "At the Noble Academy, {student} catches the notice of a patron whose table gathers ambitious heirs and useful names. An introduction could open a door, but patrons admire silver almost as much as promise."
+      }
+    },
     "src.c1679f62": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81224,6 +82172,16 @@
       ],
       "source": {
         "text": "A higher lord’s favor — or a letter home."
+      }
+    },
+    "src.c2800d69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires {rank} rank or higher."
       }
     },
     "src.c28a6ca4": {
@@ -81685,6 +82643,16 @@
       ],
       "source": {
         "text": "A magnetized direction indicator gives a heading in cloud or poor visibility."
+      }
+    },
+    "src.c479e807": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Won an academy patron’s notice through {student}’s merit."
       }
     },
     "src.c4880ae1": {
@@ -84565,6 +85533,16 @@
         "text": "Santarém"
       }
     },
+    "src.d07d14cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🕯 {name} dies after the rigors of {school}, aged {age}."
+      }
+    },
     "src.d07e3e3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86016,6 +86994,16 @@
         "text": "Full barns were built for days like this."
       }
     },
+    "src.d6f530c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Answer from law, scripture, and authority."
+      }
+    },
     "src.d6fc8a83": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86676,6 +87664,16 @@
       ],
       "source": {
         "text": "📂 Load game"
+      }
+    },
+    "src.d99d2780": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Represent the household before the patrons."
       }
     },
     "src.d9b59766": {
@@ -87438,6 +88436,16 @@
       ],
       "source": {
         "text": "No lasting effects — only a story people tell about you."
+      }
+    },
+    "src.dd2b1461": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Academy Purse"
       }
     },
     "src.dd2e3aa3": {
@@ -91219,6 +92227,16 @@
         "text": "🕯 The lord {name} is dead. Another will take his seat."
       }
     },
+    "src.ebedbb29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms)."
+      }
+    },
     "src.ec060e38": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91699,6 +92717,16 @@
         "text": "Spear, shield, and command."
       }
     },
+    "src.edefddb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A Patron’s Notice"
+      }
+    },
     "src.ee1682bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91878,6 +92906,16 @@
       ],
       "source": {
         "text": "Paper Workshops"
+      }
+    },
+    "src.eeee4a89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Noble Academy"
       }
     },
     "src.eeeeaf05": {
@@ -92528,6 +93566,16 @@
       ],
       "source": {
         "text": "A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery."
+      }
+    },
+    "src.f101ffdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} regard."
       }
     },
     "src.f1063c42": {
@@ -93392,6 +94440,16 @@
         "text": "Improved Husbandry"
       }
     },
+    "src.f4de3275": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Win the room with graceful argument."
+      }
+    },
     "src.f4e002fe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93630,6 +94688,16 @@
       ],
       "source": {
         "text": "the realm"
+      }
+    },
+    "src.f5b9dae4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Careful accounts can stretch a thin purse, though appearances suffer."
       }
     },
     "src.f5c55563": {
@@ -95141,6 +96209,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} buys back the claim for {money:gold}."
+      }
+    },
+    "src.fbce1e50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{student} answered the academy disputation with learned authority."
       }
     },
     "src.fbe05d62": {
@@ -103722,6 +104800,14 @@
         "text": "Lessons begin at age 6."
       }
     },
+    "ui:Lessons end at age 16.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lessons end at age 16."
+      }
+    },
     "ui:Level {level}: {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -105603,12 +106689,22 @@
         "text": "Requires the first seasonal pay of {money:pay}."
       }
     },
+    "ui:Requires the national technologies {technologies}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technologies"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires the national technologies {technologies}."
+      }
+    },
     "ui:Requires the national technology {technology}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "technology"
       ],
-      "location": "js/economy.js",
+      "location": "js/ui.js",
       "source": {
         "text": "Requires the national technology {technology}."
       }
@@ -105623,6 +106719,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Requires {money:cost}; you have {money:current}. It grants +{regard} Regard."
+      }
+    },
+    "ui:Requires {rank} rank or higher.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires {rank} rank or higher."
       }
     },
     "ui:Requires {rank} rank.": {
@@ -110479,6 +111585,41 @@
       "location": "js/ui.js",
       "source": {
         "text": "⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own."
+      }
+    },
+    "ui:⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "annualRisk",
+        "termRisk"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms)."
+      }
+    },
+    "ui:⚠ Each completed term at {school} adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "annualRisk",
+        "school",
+        "termRisk"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚠ Each completed term at {school} adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms)."
+      }
+    },
+    "ui:⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "risk",
+        "school",
+        "terms"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year"
       }
     },
     "ui:⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go.": {
