@@ -254,6 +254,9 @@ window.FB = window.FB || {};
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
     state.armies.push(host);
+    if (greatHost && FB.greatHolyWarMarkMuster) {
+      FB.greatHolyWarMarkMuster(state, 'player');
+    }
     FB.news(state, FB.msg('news.army.player_musters',
       '🚩 The host musters at {province} — {men} men take the field.',
       { province: provName(home), men: men }));
@@ -292,6 +295,9 @@ window.FB = window.FB || {};
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
     state.armies.push(host);
+    if (FB.greatHolyWarMarkMuster) {
+      FB.greatHolyWarMarkMuster(state, rid);
+    }
     if (state.player.war && state.player.war.enemy === rid) {
       FB.news(state, FB.msg('news.army.enemy_musters',
         '🚩 {realm} takes the field — some {men} spears against you.',

@@ -297,9 +297,23 @@ silently convert county culture or religion. Fresh authored realms and generated
 vassals initialize the field from their capital when no explicit value is supplied.
 
 Great holy-war occupations are not realms and never alter ownership during combat.
-Final settlement uses `FB.transferProvince` only for occupied objectives. Uncaptured
-counties retain their old sovereigns, holders, capitals, and vassal chains. New
-campaign sovereigns and vassals receive the calling religion explicitly, plus a
-sponsor-derived culture and dynasty identity. Ordinary province transfer remains
-responsible for relocating a dispossessed capital, marking a landless house dead,
-and vacating any centralized religious office it held.
+Final settlement collects every award before changing an owner or holder, then applies
+the captured set once in crown-to-county order. Uncaptured counties retain their old
+sovereigns, holders, capitals, and vassal chains. New campaign sovereigns and vassals
+receive the calling religion explicitly, plus a sponsor-derived culture and dynasty
+identity. Empty displaced realms are buried and surviving capitals relocate only after
+the complete ownership pass.
+
+A same-faith local holder may be confirmed only when their entire vassal subtree lies
+inside the awarded package. Confirmation reparents that realm intact beneath the new
+campaign sovereign. A ruler crossing the captured boundary cannot carry uncaptured
+land into the settlement; their right and local support instead belong to a generated
+local cadet. `FB.assignRealmRulerCharacter(state, realmId, charId)` installs a living,
+non-reigning ordinary character on a generated realm while retaining personal parents,
+spouse, children, dynasty, and any existing royal-line identity. This is the route for
+named holy-war beneficiaries.
+
+An awarded realm may carry additive
+`sacredCustody:{religion,siteIds,campaignId,grantTurn}`. Custody changes no population
+faith and grants seasonal piety only while a listed site remains in the custodian's
+sovereign bloc.

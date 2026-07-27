@@ -1414,23 +1414,92 @@ The active campaign is saved in `state.greatHolyWar`; scheduler clocks, cooldown
 the compact campaign record live in `state.greatHolyWarHistory`. A protagonist's vow
 is `state.player.greatHolyWar`. These are additive fields and do not change save format
 3. Campaign-generated rulers set `realm.religion` explicitly, while old saves and
-authored realms without it fall back to the capital population faith.
+authored realms without it fall back to the capital population faith. Player vow terms
+are:
+
+```js
+{
+  seasons: 4 | 8 | 12,
+  desire: { kind:"crown"|"sacred"|"duchy"|"county"|"honor"|"neutral", id:null|"..." },
+  beneficiary: null | charId,
+  served: 0,
+  mustered: false
+}
+```
+
+AI attacker participant records add `vowSeasons`, `desire`, `served`, `mustered`, and
+`vowOutcome`. Completed history uses locale-neutral `vowOutcome`, `desire`, `vows`,
+`settlementContested`, `objections`, and compact award summaries.
+
+New attacker settlements store
+`{schema:2,case,captured,applied,pendingPlayer,awardRealms,mainRealmId?}`. The
+consumer-neutral case shape is:
+
+```js
+{
+  schema: 1,
+  kind: "holy_war",
+  seats: [realmId],
+  assets: [{ id, kind, ids, awardIds, rank, land }],
+  claims: [{
+    claimant, asset,
+    basis: { contribution, vow, occupation, right, support, office },
+    weight, blessing, beneficiary, confirmation, localCadet, sourceRealm
+  }],
+  awards: [{
+    asset, claimant, form, terms, beneficiary, runnerUp, move,
+    confirmation, localCadet, sourceRealm
+  }],
+  step: 0,
+  status: "open" | "resolved",
+  standing: 2,
+  nextClaimBoost: 0,
+  blessingUsed: false,
+  blessed: null,
+  objections: 0,
+  contested: false,
+  playerHead: false,
+  playerDiplomacy: 0
+}
+```
+
+Asset kinds currently are `crown`, `sacred`, `duchy`, and `county`, but the settlement
+engine does not hard-code consumer transfer behavior. Basis objects and asset kinds may
+be extended. The holy-war consumer alone mutates realms after every award is collected.
 
 Public campaign APIs are:
 
 - `FB.greatHolyWarTargets(state, religionId)`
 - `FB.canCallGreatHolyWar(state, religionId, kingdomId?, callerRealm?)`
 - `FB.callGreatHolyWar(state, religionId, kingdomId, callerRealm?)`
-- `FB.joinGreatHolyWar(state, camp, realmId?)`
+- `FB.joinGreatHolyWar(state, camp, realmId?, vowTerms?)`
 - `FB.withdrawGreatHolyWar(state)`
 - `FB.greatHolyWarCamp(state, realmId)` and
   `FB.greatHolyWarEnemies(state, realmId)`
 - `FB.resolveGreatHolyWar(state, "attackers"|"defenders", reason?)`
+- `FB.greatHolyWarSettlementMove(state, move)`
+- `FB.greatHolyWarSettlementChoice(state, accept)`
+- `FB.greatHolyWarPlayerRewardBand(state)` (deprecated projection over the new
+  likely/actual award; it does not use the old contribution thresholds)
 - `FB.repairGreatHolyWar(state)`
 
+The generic engine loaded from `js/settlement.js` exposes:
+
+- `FB.settlement.create(spec)`
+- `FB.settlement.current(settlementCase)`
+- `FB.settlement.act(state, settlementCase, move)`
+- `FB.settlement.repair(settlementCase, spec)`
+
+Moves are `acquiesce`, `press`, `endorse`, `terms`, `object`, and the non-resolving
+`bless`; selection-bearing moves use `{kind,claimant}`. The engine scores and records
+awards but never transfers a province. Realm consumers may use
+`FB.assignRealmRulerCharacter(state, realmId, charId)` to put a living non-reigning
+character on a generated realm without replacing personal family links. Awarded realms
+may store `sacredCustody:{religion,siteIds,campaignId,grantTurn}`.
+
 Do not render occupation as ownership or change `state.owner` during the campaign.
-`js/holywar.js` freezes objectives, maintains temporary occupation, and performs the
-final transfers with `FB.transferProvince`.
+`js/holywar.js` freezes objectives, maintains temporary occupation, collects settlement
+awards, and applies the complete owner/holder map only after the council resolves.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
 Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
@@ -1451,7 +1520,13 @@ Religious-office tuning uses `religiousHeadWarOpinion`,
 `religiousHeadClaimPrestige`, and `religiousHeadClaimPiety`.
 Great holy-war tuning uses the `greatHolyWar*` keys beside them: preparation,
 resolution/collapse cooldowns, deadline, volunteer cap, siege requirement/rate/decay,
-resolve shifts, withdrawal costs, and crown/duchy/county contribution shares.
+resolve shifts, and withdrawal costs. Settlement weighting uses
+`settlementContributionWeight`, `settlementVowWeight`,
+`settlementOccupationWeight`, `settlementRightWeight`,
+`settlementSupportWeight`, and `settlementOfficeWeight` (defaults `.25`, `.20`, `.20`,
+`.15`, `.10`, `.10`). The legacy `greatHolyWarCrownShare`,
+`greatHolyWarDuchyShare`, and `greatHolyWarCountyShare` keys remain readable for old
+mods but no longer decide an award.
 `religiousHeadWarPietyRetained` is a multiplier on the attacker's current piety
 (the core value `0` forfeits it all); the opinion fields are signed changes.
 The top-level `currency` presentation schema is documented above. The deprecated

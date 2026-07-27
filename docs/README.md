@@ -259,8 +259,26 @@ Adult freeholders and higher ranks may answer from the Deeds tab. Sovereigns com
 own host; vassals and unlanded volunteers serve through campaign events. Attackers must
 occupy every lost holy objective, at least half the frozen target counties, and 60% of
 their development within eight years. Battles, occupations, and seasons of service build
-dynasty-persistent contribution, which determines crowns, duchies, counties, or piety and
-prestige when the occupied land is partitioned.
+dynasty-persistent contribution.
+
+When you answer an attacking call, you promise four, eight, or twelve seasons and name
+what you seek: the target crown, sacred custody, an exact objective duchy or county, or
+honor. A duchy or county may be promised to a living adult close relative. Service already
+given survives succession; the heir may renew it or decline without penalty. Leaving
+before the term is fulfilled costs 200 piety and 100 prestige and records a broken vow.
+After the promised term, withdrawal costs the ordinary 100 piety and 50 prestige. Staying
+enrolled until an earlier campaign resolution also fulfills the vow.
+
+An attacker victory pauses at a non-dismissable settlement council before any occupied
+land changes hands. The council weighs contribution alongside the vow, occupation,
+existing rights, local culture and faith, and religious standing. You may accept the
+leading claim, press your own, endorse a rival, offer vassalage or 50 gold in close cases,
+or spend one of two standing points to object. A player religious head may bless one
+non-player claim. Local same-faith lords can be confirmed intact when their whole realm
+fits inside the award; otherwise a local cadet represents their claim without taking
+uncaptured land. A personal land award still ends with an accept-or-decline choice.
+Sacred custody pays 2 piety each season while your realm or one of its vassals holds it
+and the same sovereign bloc controls at least one named site.
 
 ### Starts
 

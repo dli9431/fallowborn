@@ -267,16 +267,57 @@ Contribution is keyed by participant realm, with the protagonist recorded as
 `5 + floor(enemy casualties / 100)`, surviving losers one; an occupation or recapture
 pays `10 + development × 2` divided by friendly strength present. Every completed
 campaign season gives one service point, and personal expedition events add one or
-three. A successor must renew the inherited vow to resume service and land
-eligibility. Ordinary withdrawal costs 100 piety and 50 prestige and forfeits land
-eligibility.
+three.
 
-Attacker settlement orders captured land by contribution. The sacred or
-highest-development county anchors the new sovereign result, then complete duchies
-and individual counties are awarded where the 35% crown, 25% duchy, and 15% county
-bands allow. A kingdom is never created without the existing de jure majority;
-otherwise the highest complete duchy or county result is used. AI grants create new
-cadet rulers based on the sponsoring realm's culture and dynasty identity, leaving
-that sponsor's old realm intact. Player choices can found a realm, exchange and
-relocate a vassal demesne, attach a secondary grant to an existing sovereign realm,
-unite a won crown with existing lands, or decline for non-land honor.
+Attacking volunteers carry explicit vows. `vowTerms` promises 4, 8, or 12 seasons and
+names a `crown`, `sacred`, exact `duchy`, exact `county`, or `honor` desire, with an
+optional close-kin beneficiary for duchy/county land. Launch marks valid liege and
+expedition service as mustered; sovereign service is mustered only after a host
+successfully rises. Service credit and terms survive succession. Renewal resumes both;
+an inherited refusal records `declined` without a penalty. Remaining enrolled and
+mustered until an earlier resolution fulfills the promise. Withdrawal before
+fulfillment doubles the normal piety/prestige loss and records `broken`; later broken
+vows reduce the vow basis by 15% each, floored at 50%. AI attackers receive personality-
+shaped desires and terms; old records repair to deterministic defaults without drawing
+RNG.
+
+Only attacker victories open a settlement council. `js/settlement.js` owns the generic
+serializable case and move resolution, while `js/holywar.js` discovers holy-war assets,
+computes claim bases, and applies awards. Assets resolve in order: sovereign crown, one
+captured sacred-site custody, complete duchies, then counties. The sovereign seat prefers
+a captured sacred/high-development county without an intact local confirmation. A
+kingdom still requires the de jure majority; otherwise a complete duchy makes a duchy,
+and the fallback is a county. A duchy package excludes the seat and is split into
+counties if any member has an intact local-confirmation claim.
+
+Claims use the balance weights contribution `.25`, vow `.20`, occupation `.20`, right
+`.15`, support `.10`, and office `.10`. Contribution is normalized within the attacker
+camp. A fulfilled exact desire scores 1, a county inside the desired duchy `.75`,
+unrelated land `.25`, and repaired neutral vows `.5`. Occupation is exact for a county
+and fractional for a package. Rights cover exact fabricated claims, restoration
+territory, and local confirmation. Development-weighted support is half faith and half
+culture; office is 60% religious standing and 40% host/liege/expedition service. An
+optional `FB.traitBonus(c, "vow", "claim")` scales the player's vow basis.
+
+Each claimant may win at most one land asset, with the crown consuming that allowance;
+custody remains available afterward. The leading weight may be accepted with
+`acquiesce`. `press` rolls
+`clamp(.35 + Diplomacy*.02 + margin*.75, .10, .85)`. `endorse` awards a named rival,
+adds 15 player-relative opinion, and saves +.10 for the player's next eligible claim.
+`terms` is available within a .15 deficit and guarantees the player either as a vassal
+of a strictly higher-ranked proposed liege or for a one-time 50-gold payment. `object`
+spends one of two standing points and rolls
+`clamp(.30 + Diplomacy*.015 - leaderMargin*.75, .10, .75)` for the runner-up; the
+challenged realm loses 10 opinion. A current AI religious head pre-blesses its preferred
+sacred (or crown) claim; a player head may use `bless` once on a non-player claim.
+
+Awards are collected before any ownership mutation and then applied crown-to-county in
+one pass. AI winners receive campaign cadets. A same-faith current holder whose entire
+vassal subtree fits the package is preserved and reparented; cross-boundary rulers
+instead support a new local cadet and cannot pull uncaptured counties into the result.
+Player awards reuse realm founding/relocation, and a still-eligible named beneficiary
+is installed with `FB.assignRealmRulerCharacter`. A personal, beneficiary-free land
+award retains the final accept/decline choice; decline creates the cadet and converts
+service to honor. Sacred custody is stored on its awarded realm and pays the player
+2 piety per season while their realm or a vassal holds it and its sovereign bloc still
+controls a listed site.

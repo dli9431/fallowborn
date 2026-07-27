@@ -1407,6 +1407,75 @@ window.FB = window.FB || {};
     return c;
   };
 
+  /* Install an existing ordinary character as the ruler of a generated
+     realm. Settlement beneficiaries keep their personal parents, spouse,
+     children, dynasty, and any prior royal-line identity; only the compact
+     realm root is replaced. */
+  FB.assignRealmRulerCharacter = function (state, realmId, charId) {
+    const realm = state && state.realms && state.realms[realmId];
+    const c = state && state.chars && state.chars[charId];
+    if (!realm || !realm.alive || !realm.generated || realmId === 'player' ||
+        !c || c.dead || FB.isReigningRealmRuler(state, c)) return false;
+    const generation = realm.ruler && realm.ruler.generation !== undefined
+      ? realm.ruler.generation : 1;
+    const rootId = 'royal_' + realmId + '_' + c.id;
+    const root = {
+      id:rootId, name:c.name, sex:c.sex, born:c.born, alive:true,
+      parentId:null, childIds:[], charId:c.id
+    };
+    const succession = {
+      rulerGeneration:generation,
+      rulerMemberId:rootId,
+      members:{},
+      order:[],
+      heirId:null
+    };
+    succession.members[rootId] = root;
+    const children = FB.childrenOf ? FB.childrenOf(state, c).filter(function (child) {
+      return child && !child.dead;
+    }) : [];
+    children.sort(function (a, b) {
+      if (a.sex !== b.sex) return a.sex === 'm' ? -1 : 1;
+      return a.born - b.born;
+    });
+    for (const child of children) {
+      const memberId = 'royal_' + realmId + '_' + child.id;
+      succession.members[memberId] = {
+        id:memberId,
+        name:child.name,
+        sex:child.sex,
+        born:child.born,
+        alive:true,
+        parentId:rootId,
+        childIds:[],
+        charId:child.id
+      };
+      root.childIds.push(memberId);
+      succession.order.push(memberId);
+      if (!child.royalLine) {
+        child.royalLine = { realmId:realmId, memberId:memberId };
+      }
+    }
+    succession.heirId = succession.order.length ? succession.order[0] : null;
+    realm.succession = succession;
+    realm.ruler = {
+      name:c.name,
+      sex:c.sex,
+      culture:c.culture,
+      born:c.born,
+      age:FB.ageOf(c, state.date.year),
+      mar:FB.skillOf(c, 'mar'),
+      trait:c.traits && c.traits.length ? c.traits[0] : null,
+      generation:generation
+    };
+    realm.religion = c.religion || realm.religion;
+    realm.dynasty = c.dyn || c.name;
+    c.station = Math.max(c.station || 0, realm.rank <= 2 ? 3 : 4);
+    if (!c.royalLine) c.royalLine = { realmId:realmId, memberId:rootId };
+    FB.refreshRealmSuccession(state, realmId);
+    return realm;
+  };
+
   /* Personal Regard and the existing player-relative political standing are
      two views of one score while this exact character reigns. The marker
      lets direct legacy writes on either side reconcile without losing the

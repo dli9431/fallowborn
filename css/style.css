@@ -335,6 +335,11 @@ a.actionbtn { text-decoration: none; }
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start;
   gap: 0 10px; font-size: 13px; padding: 2px 0;
 }
+.settblock.council-claim > b { text-align: right; }
+.settblock.council-claim > small {
+  grid-column: 1 / -1; color: #9f9279; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
 .settlist {
   display: flex; flex-wrap: wrap; justify-content: flex-end;
   gap: 2px 12px; min-width: 0;

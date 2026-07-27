@@ -1078,9 +1078,8 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
     if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
-    if (!G.observe && s.greatHolyWar && s.greatHolyWar.phase === 'settlement' &&
-        s.greatHolyWar.settlement &&
-        s.greatHolyWar.settlement.pendingPlayer) {
+    if (!G.observe && FB.greatHolyWarSettlementNeedsPlayer &&
+        FB.greatHolyWarSettlementNeedsPlayer(s)) {
       G.setPaused(true);
       if (FB.ui.showGreatHolyWarSettlement) FB.ui.showGreatHolyWarSettlement();
       return undefined;
@@ -1159,6 +1158,7 @@ window.FB = window.FB || {};
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
+      if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);
       FB.financeSeason(s);
       FB.tickRivalry(s);

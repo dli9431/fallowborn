@@ -931,6 +931,9 @@ FBDATA.balance = {
   greatHolyWarWithdrawPiety: 100, greatHolyWarWithdrawPrestige: 50,
   greatHolyWarCrownShare: 0.35, greatHolyWarDuchyShare: 0.25,
   greatHolyWarCountyShare: 0.15,
+  settlementContributionWeight: 0.25, settlementVowWeight: 0.20,
+  settlementOccupationWeight: 0.20, settlementRightWeight: 0.15,
+  settlementSupportWeight: 0.10, settlementOfficeWeight: 0.10,
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
   /* domain limit: counties the player may hold DIRECTLY before overload.
