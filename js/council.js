@@ -161,19 +161,12 @@ window.FB = window.FB || {};
       { ruler: r ? r.ruler.name : '?', realm: r ? r.name : '?' }));
   };
 
-  /* a gold gift to a sworn man — the universal solvent of court politics */
+  /* Compatibility entry point: Council callers use the same rank-priced,
+     recipient-cooled ruler gift as every ruler sheet. */
   FB.councilGift = function (state, rid) {
-    const p = state.player;
-    const B = FBDATA.balance;
-    const cost = B.councilGiftCost || 25;
     const r = rid && state.realms[rid];
-    if (!r || !r.alive || r.liege !== 'player' || p.gold < cost) return false;
-    p.gold -= cost;
-    FB.adjustLiegeOp(state, rid, B.councilGiftOpinion || 15);
-    FB.news(state, FB.msg('news.council.gift',
-      '🎁 {ruler} of {realm} receives your gift with many thanks.',
-      { ruler: r.ruler.name, realm: r.name }));
-    return true;
+    if (!r || !r.alive || r.liege !== 'player' || !FB.giveRulerCashGift) return false;
+    return FB.giveRulerCashGift(state, rid);
   };
 
   /* ---------- event helpers (FB.fns.council_* — triggers & effects) ---------- */

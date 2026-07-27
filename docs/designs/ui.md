@@ -177,8 +177,11 @@ and **Stop cultivating** assign or withdraw the one social-attention slot withou
 a day; while courting, the suitor holds that slot until the courtship ends. The assigned
 person's sheet repeats their Regard, fixed daily rate, and estimated days to +40. **Call
 friend** and **Propose marriage** remain visibly disabled below the shared threshold.
-Cash-gift controls show their +Regard value and either readiness or recipient-specific days
-remaining on the shared cash/item gift cooldown.
+**Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
+object show their +Regard value and either readiness or recipient-specific days remaining
+on the shared cash/item gift cooldown. Equipped and pledged objects remain visible but
+disabled with the blocking reason. Managed household recipients see cash only and an
+explanation that their objects remain under shared-armory management.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
@@ -227,6 +230,13 @@ Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobi
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show opinion and the current direction.
 
+Every living AI ruler sheet also exposes **Offer a gift…**. Its numbered picker uses the
+rank price for cash, lists exact influence for each armory object, and labels the result
+Favor for lieges/vassals or Opinion for foreign rulers. The Royal Council opens this same
+picker for seated vassals. Its Back/Close behavior uses generic-modal history, and all
+choices are native buttons, retaining number-key selection, Tab/Enter/Space, and mobile
+bottom-sheet navigation.
+
 The contextual **Network** panel (`N`) answers who is tied to the current household and
 what that relationship does. Its four sections are Household (resident family,
 capacity-limited retainers, office, pay, work assignment, and maintained-standard
@@ -237,11 +247,12 @@ guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Roy
 Council summary/link, and the computed levy ledger). Empty sections explain what is
 absent rather than inventing placeholder people.
 
-Connections begins with the same personal-attention summary as Deeds. Item-gift recipient
-buttons show the exact +Regard tier and are disabled with the remaining cooldown days when
-that person has already received either cash or an item gift. All assignment, friendship,
-courtship, and gift buttons are native focusable controls, so the same labels and disabled
-state remain available to keyboard and mobile users.
+Connections begins with the same personal-attention summary as Deeds. The item card's
+compatibility recipient picker still shows exact +Regard and disables a person for the
+remaining shared cooldown; character and ruler sheets are the primary unified gifting
+surface. All assignment, friendship, courtship, and gift buttons are native focusable
+controls, so the same labels and disabled state remain available to keyboard and mobile
+users.
 
 The panel summarizes other systems and links to their focused controls. Character sheets
 remain the place to call a friend or manage one retainer; Work & Enterprises remains the

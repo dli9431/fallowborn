@@ -1463,6 +1463,68 @@ window.FB = window.FB || {};
     FB.adjustLiegeOp(state, rid, amt);
   };
 
+  /* A ruler inside the player's upward or downward feudal chain tracks
+     Favor. Everyone else is a foreign court and tracks Opinion. Both use the
+     historical player-relative realm opinion store above. */
+  FB.rulerGiftUsesFavor = function (state, rid) {
+    if (!rid || rid === 'player') return false;
+    const p = state.player;
+    const upward = p.liege ? FB.liegeChain(state, p.liege) : [];
+    if (upward.indexOf(rid) >= 0) return true;
+    let cur = state.realms[rid];
+    const seen = {};
+    while (cur && cur.liege && !seen[cur.id]) {
+      seen[cur.id] = 1;
+      if (cur.liege === 'player') return true;
+      cur = state.realms[cur.liege];
+    }
+    return false;
+  };
+
+  FB.rulerCashGiftCost = function (state, rid) {
+    const fallback = [0, 10, 15, 25, 40];
+    const costs = FBDATA.balance.rulerCashGiftCostByRank || fallback;
+    const r = state.realms && state.realms[rid];
+    const rank = FB.clamp(r && r.rank || 1, 1, 4);
+    const value = costs[rank] === undefined ? fallback[rank] : costs[rank];
+    return Math.max(0, Number(value) || 0);
+  };
+
+  FB.rulerCashGiftOpinion = function () {
+    const value = FBDATA.balance.rulerCashGiftOpinion;
+    return value === undefined ? 15 : value;
+  };
+
+  FB.giveRulerCashGift = function (state, rid) {
+    const p = state.player;
+    const r = rid && state.realms[rid];
+    const cost = r ? FB.rulerCashGiftCost(state, rid) : 0;
+    if (!r || !r.alive || !r.ruler || rid === 'player' || p.gold < cost ||
+      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid))) return false;
+    const boost = FB.rulerCashGiftOpinion();
+    p.gold -= cost;
+    FB.adjustRealmOpinion(state, rid, boost);
+    if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
+    if (FB.rulerGiftUsesFavor(state, rid)) {
+      FB.news(state, FB.msg('news.realm.cash_gift_favor',
+        '🎁 You offer {money:gold} to {ruler} of {realm}. (favor {favor})', {
+          gold:cost,
+          ruler:r.ruler.name,
+          realm:r.name,
+          favor:Math.round(FB.realmOpinionOf(state, rid))
+        }));
+    } else {
+      FB.news(state, FB.msg('news.realm.cash_gift_opinion',
+        '🎁 You offer {money:gold} to {ruler} of {realm}. (opinion {opinion})', {
+          gold:cost,
+          ruler:r.ruler.name,
+          realm:r.name,
+          opinion:Math.round(FB.realmOpinionOf(state, rid))
+        }));
+    }
+    return true;
+  };
+
   FB.payHomage = function (state, rid) {
     const p = state.player;
     const r = state.realms[rid];

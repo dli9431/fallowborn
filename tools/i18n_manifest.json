@@ -24457,17 +24457,6 @@
         "text": "👑 The great officers of the crown gather — your royal council now sits. Magnates will serve you, flatter you, and weigh your every act."
       }
     },
-    "news.council.gift": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "realm",
-        "ruler"
-      ],
-      "location": "js/council.js",
-      "source": {
-        "text": "🎁 {ruler} of {realm} receives your gift with many thanks."
-      }
-    },
     "news.council.scheme_punished": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -25717,6 +25706,58 @@
       "location": "js/parliament.js",
       "source": {
         "text": "💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
+      }
+    },
+    "news.realm.cash_gift_favor": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "favor",
+        "money:gold",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🎁 You offer {money:gold} to {ruler} of {realm}. (favor {favor})"
+      }
+    },
+    "news.realm.cash_gift_opinion": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:gold",
+        "opinion",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🎁 You offer {money:gold} to {ruler} of {realm}. (opinion {opinion})"
+      }
+    },
+    "news.realm.item_gift_favor": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "favor",
+        "item",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "🎁 You give {item} to {ruler} of {realm}. (favor {favor})"
+      }
+    },
+    "news.realm.item_gift_opinion": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item",
+        "opinion",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "🎁 You give {item} to {ruler} of {realm}. (opinion {opinion})"
       }
     },
     "news.realm.vassal_levy_favor": {
@@ -32943,6 +32984,16 @@
         "text": "(made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it)."
       }
     },
+    "src.01b3176a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days."
+      }
+    },
     "src.01b4638d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33686,6 +33737,16 @@
         "text": "Responsibility is a slower way to die."
       }
     },
+    "src.054b466b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose what to offer {title} {ruler} of {realm}."
+      }
+    },
     "src.054d7e58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33834,6 +33895,16 @@
       ],
       "source": {
         "text": "The ledger records one thin goat. The fat one chews safely in the wood."
+      }
+    },
+    "src.05c50c09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 You offer {money:gold} to {ruler} of {realm}. (opinion {opinion})"
       }
     },
     "src.05c72bbc": {
@@ -34398,6 +34469,16 @@
       ],
       "source": {
         "text": "envoy compact"
+      }
+    },
+    "src.08326f00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
       }
     },
     "src.0832ec51": {
@@ -35661,6 +35742,16 @@
         "text": "a curiosity"
       }
     },
+    "src.0ccb47d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Offer a gift…"
+      }
+    },
     "src.0cd0a733": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36050,6 +36141,16 @@
       ],
       "source": {
         "text": "🏛 The Estates…"
+      }
+    },
+    "src.0e59d14d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pledged to a lender; clear the loan before gifting it."
       }
     },
     "src.0e79119e": {
@@ -38541,6 +38642,16 @@
         "text": "If he cannot be given to you, go and take your place at his side — in a man’s clothes."
       }
     },
+    "src.17b3374e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{wearer}. Return it to the armory before gifting it."
+      }
+    },
     "src.17c15c3d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39843,16 +39954,6 @@
         "text": "Wheels and bucket chains raise water to higher fields."
       }
     },
-    "src.1df09f39": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days"
-      }
-    },
     "src.1df8c133": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40072,6 +40173,16 @@
       ],
       "source": {
         "text": "Rayy"
+      }
+    },
+    "src.1eca0627": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days."
       }
     },
     "src.1edb250a": {
@@ -41555,6 +41666,16 @@
       ],
       "source": {
         "text": "Your liege’s favor must be 65 or more (now {current})."
+      }
+    },
+    "src.245b26b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎁 You give {item} to {ruler} of {realm}. (opinion {opinion})"
       }
     },
     "src.245d5f2d": {
@@ -45795,6 +45916,16 @@
         "text": "A Tally With Your Name On It"
       }
     },
+    "src.36caaf65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 You offer {money:gold} to {ruler} of {realm}. (favor {favor})"
+      }
+    },
     "src.36ce0d90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46585,6 +46716,16 @@
       ],
       "source": {
         "text": "The feud finds a second wind — with your name tangled in it."
+      }
+    },
+    "src.3a9e0fe7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🎁 You give {item} to {ruler} of {realm}. (favor {favor})"
       }
     },
     "src.3aa41f35": {
@@ -51297,16 +51438,6 @@
         "text": "A burning fever"
       }
     },
-    "src.4c72951a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready now"
-      }
-    },
     "src.4c7a0803": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52026,6 +52157,16 @@
       ],
       "source": {
         "text": ": missing default adoption window."
+      }
+    },
+    "src.4f702601": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The family armory holds no item to offer."
       }
     },
     "src.4f788a33": {
@@ -54001,16 +54142,6 @@
         "text": "Look to your own hearth."
       }
     },
-    "src.57512529": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
-      }
-    },
     "src.57595d4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54399,6 +54530,16 @@
       ],
       "source": {
         "text": "Stand in the line."
+      }
+    },
+    "src.5945ae63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎁 Offer a gift…"
       }
     },
     "src.596a9922": {
@@ -57422,16 +57563,6 @@
         "text": "Old tales are lessons wearing cloaks."
       }
     },
-    "src.659af4b5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/council.js"
-      ],
-      "source": {
-        "text": "🎁 {ruler} of {realm} receives your gift with many thanks."
-      }
-    },
     "src.65a0fcbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57630,6 +57761,16 @@
       ],
       "source": {
         "text": "Walled roadside inns protect merchants, animals, and cargo."
+      }
+    },
+    "src.6686f4a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)"
       }
     },
     "src.668bf271": {
@@ -57970,6 +58111,16 @@
       ],
       "source": {
         "text": "Nothing. So enjoy the wine."
+      }
+    },
+    "src.67de49c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose cash or an unequipped, unpledged item from the family armory."
       }
     },
     "src.67f4fe57": {
@@ -58532,6 +58683,16 @@
       ],
       "source": {
         "text": "Duchy"
+      }
+    },
+    "src.69bde060": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally."
       }
     },
     "src.69d31dc7": {
@@ -61919,6 +62080,16 @@
         "text": "Realm size"
       }
     },
+    "src.772c14ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{regard} Regard. This exact object leaves family ownership. (spends the day)"
+      }
+    },
     "src.772ea79a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63630,6 +63801,16 @@
       ],
       "source": {
         "text": "The church is exactly where they went first."
+      }
+    },
+    "src.7dd0016e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires {money:cost}; you have {money:current}. It grants +{regard} Regard."
       }
     },
     "src.7de60e28": {
@@ -66285,6 +66466,16 @@
         "text": "Your old master dies with a commission unfinished, debts in the ledger, and a widow facing men who have already begun measuring the workshop."
       }
     },
+    "src.8787327e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Offer a gift to {name}"
+      }
+    },
     "src.87890a1e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66934,6 +67125,16 @@
       ],
       "source": {
         "text": "📜 A lender advances {money:principal} to the household; the signed obligation is worth {money:due} today."
+      }
+    },
+    "src.8a1f1b74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cash costs {money:cost} at this rank for +{amount} {standing}; armory items grant their quality value. (spends the day)"
       }
     },
     "src.8a27dfb5": {
@@ -69563,6 +69764,16 @@
         "text": "Technology"
       }
     },
+    "src.951943c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Offer {money:gold} in cash"
+      }
+    },
     "src.95271b43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70536,6 +70747,16 @@
       ],
       "source": {
         "text": "Silver buys another man’s courage, and the village’s contempt."
+      }
+    },
+    "src.98c97b57": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Offer a gift to {ruler}"
       }
     },
     "src.98d79276": {
@@ -74710,6 +74931,16 @@
         "text": "Send to {lord} for soldiers."
       }
     },
+    "src.a9b7638f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cash and item gifts share this ruler’s cooldown. Ready in {days} days."
+      }
+    },
     "src.a9be3ec1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74818,6 +75049,16 @@
       ],
       "source": {
         "text": "A blessing on the fields. (30 piety)"
+      }
+    },
+    "src.aa6a0658": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep your gifts"
       }
     },
     "src.aa86ca78": {
@@ -77064,16 +77305,6 @@
         "text": "Ravenna"
       }
     },
-    "src.b3a856b3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🎁 Send a gift ({money:5})"
-      }
-    },
     "src.b3ae117a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78447,6 +78678,16 @@
         "text": "Nearness to the throne is yours to grant or deny."
       }
     },
+    "src.b8a882a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)"
+      }
+    },
     "src.b8b6afa4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78595,16 +78836,6 @@
       ],
       "source": {
         "text": "Kingdom of Hungary"
-      }
-    },
-    "src.b9891c4e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Send a gift ({money:cost})"
       }
     },
     "src.b98e9361": {
@@ -78916,6 +79147,16 @@
       ],
       "source": {
         "text": "Dust may yet yield what memory cannot."
+      }
+    },
+    "src.bb3d63bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Opinion"
       }
     },
     "src.bb404e81": {
@@ -79730,6 +79971,16 @@
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
       }
     },
+    "src.be466527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Favor"
+      }
+    },
     "src.be59bc20": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80178,6 +80429,16 @@
       ],
       "source": {
         "text": "Tudela"
+      }
+    },
+    "src.c09280c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cash and item gifts share this recipient’s cooldown. Ready in {days} days."
       }
     },
     "src.c097e181": {
@@ -81765,6 +82026,16 @@
       ],
       "source": {
         "text": "Steel bites before help comes. You survive — barely."
+      }
+    },
+    "src.c6a79504": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Items from the family armory"
       }
     },
     "src.c6c4a059": {
@@ -84575,6 +84846,16 @@
         "text": "Practice your calling and earn a place in the day’s work."
       }
     },
+    "src.d2f02533": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{regard} Regard · unavailable: {reason}"
+      }
+    },
     "src.d2fb3927": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86478,6 +86759,16 @@
         "text": "No plot in motion."
       }
     },
+    "src.da9cba1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rank price: {money:cost}; you have {money:current}. It grants +{amount} {standing}."
+      }
+    },
     "src.daa5cf24": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86797,6 +87088,16 @@
       ],
       "source": {
         "text": "Linger in the bath-houses."
+      }
+    },
+    "src.dc41fc19": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{amount} {standing}. Cash and item gifts share this ruler’s cooldown; ready in {days} days."
       }
     },
     "src.dc446899": {
@@ -87957,6 +88258,16 @@
       ],
       "source": {
         "text": "Dormant: no upkeep or benefit right now."
+      }
+    },
+    "src.e0bcb775": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a cash gift. Household equipment remains in the shared family armory."
       }
     },
     "src.e0c0bc62": {
@@ -91906,6 +92217,16 @@
       ],
       "source": {
         "text": "Keep current projects, but leave future slots for you to choose."
+      }
+    },
+    "src.f0ca5207": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{amount} {standing} · unavailable: {reason}"
       }
     },
     "src.f0cd5723": {
@@ -100152,6 +100473,41 @@
         "text": "+{amount} research each season"
       }
     },
+    "ui:+{amount} {standing} · unavailable: {reason}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "reason",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{amount} {standing} · unavailable: {reason}"
+      }
+    },
+    "ui:+{amount} {standing}. Cash and item gifts share this ruler’s cooldown; ready in {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "days",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{amount} {standing}. Cash and item gifts share this ruler’s cooldown; ready in {days} days."
+      }
+    },
+    "ui:+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)"
+      }
+    },
     "ui:+{amount}% for {years} years": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -100232,6 +100588,49 @@
       "location": "js/ui.js",
       "source": {
         "text": "+{percent}% personal tax"
+      }
+    },
+    "ui:+{regard} Regard · unavailable: {reason}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "reason",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{regard} Regard · unavailable: {reason}"
+      }
+    },
+    "ui:+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
+      }
+    },
+    "ui:+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days."
+      }
+    },
+    "ui:+{regard} Regard. This exact object leaves family ownership. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{regard} Regard. This exact object leaves family ownership. (spends the day)"
       }
     },
     "ui:+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)": {
@@ -101318,6 +101717,38 @@
         "text": "Cash and item gifts share a recipient cooldown. Ready in {days} days."
       }
     },
+    "ui:Cash and item gifts share this recipient’s cooldown. Ready in {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cash and item gifts share this recipient’s cooldown. Ready in {days} days."
+      }
+    },
+    "ui:Cash and item gifts share this ruler’s cooldown. Ready in {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cash and item gifts share this ruler’s cooldown. Ready in {days} days."
+      }
+    },
+    "ui:Cash costs {money:cost} at this rank for +{amount} {standing}; armory items grant their quality value. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "money:cost",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cash costs {money:cost} at this rank for +{amount} {standing}; armory items grant their quality value. (spends the day)"
+      }
+    },
     "ui:Caucasian": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -101392,6 +101823,14 @@
         "text": "Choose Your Beginning — Anno Domini {year}"
       }
     },
+    "ui:Choose a cash gift. Household equipment remains in the shared family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a cash gift. Household equipment remains in the shared family armory."
+      }
+    },
     "ui:Choose a destination for {purpose}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -101434,6 +101873,14 @@
         "text": "Choose an education focus first."
       }
     },
+    "ui:Choose cash or an unequipped, unpledged item from the family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose cash or an unequipped, unpledged item from the family armory."
+      }
+    },
     "ui:Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -101458,6 +101905,29 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
+      }
+    },
+    "ui:Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days."
+      }
+    },
+    "ui:Choose what to offer {title} {ruler} of {realm}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm",
+        "ruler",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose what to offer {title} {ruler} of {realm}."
       }
     },
     "ui:Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer.": {
@@ -102263,6 +102733,14 @@
         "text": "Family provisions and quarters"
       }
     },
+    "ui:Favor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Favor"
+      }
+    },
     "ui:Favor {favor}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -102899,6 +103377,14 @@
         "text": "It goes well."
       }
     },
+    "ui:Items from the family armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Items from the family armory"
+      }
+    },
     "ui:Keep current projects, but leave future slots for you to choose.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102945,6 +103431,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Keep your dynasty’s contribution and territorial eligibility under its new leader."
+      }
+    },
+    "ui:Keep your gifts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep your gifts"
       }
     },
     "ui:Keep {seat}": {
@@ -103908,6 +104402,44 @@
         "text": "Off"
       }
     },
+    "ui:Offer a gift to {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Offer a gift to {name}"
+      }
+    },
+    "ui:Offer a gift to {ruler}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "ruler"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Offer a gift to {ruler}"
+      }
+    },
+    "ui:Offer a gift…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Offer a gift…"
+      }
+    },
+    "ui:Offer {money:gold} in cash": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Offer {money:gold} in cash"
+      }
+    },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -104040,6 +104572,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Open your character sheet"
+      }
+    },
+    "ui:Opinion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Opinion"
       }
     },
     "ui:Opinion {opinion}": {
@@ -104308,6 +104848,14 @@
         "text": "Pledged to a lender"
       }
     },
+    "ui:Pledged to a lender; clear the loan before gifting it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Pledged to a lender; clear the loan before gifting it."
+      }
+    },
     "ui:Pledged: {asset}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -104545,6 +105093,32 @@
         "text": "Random name"
       }
     },
+    "ui:Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "days",
+        "money:cost",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)"
+      }
+    },
+    "ui:Rank price: {money:cost}; you have {money:current}. It grants +{amount} {standing}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "money:cost",
+        "money:current",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rank price: {money:cost}; you have {money:current}. It grants +{amount} {standing}."
+      }
+    },
     "ui:Reach the destination first.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -104561,17 +105135,6 @@
       "location": "js/travel.js",
       "source": {
         "text": "Ready in {days} days."
-      }
-    },
-    "ui:Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "days",
-        "regard"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)"
       }
     },
     "ui:Receive {money:principal} · {money:due} due {date}": {
@@ -104857,6 +105420,18 @@
       "location": "js/economy.js",
       "source": {
         "text": "Requires the national technology {technology}."
+      }
+    },
+    "ui:Requires {money:cost}; you have {money:current}. It grants +{regard} Regard.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:current",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires {money:cost}; you have {money:current}. It grants +{regard} Regard."
       }
     },
     "ui:Requires {rank} rank.": {
@@ -105245,16 +105820,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
-      }
-    },
-    "ui:Send a gift ({money:cost})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Send a gift ({money:cost})"
       }
     },
     "ui:Seneschal": {
@@ -105717,6 +106282,14 @@
         "text": "The excommunicated may not seek a blessing."
       }
     },
+    "ui:The family armory holds no item to offer.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The family armory holds no item to offer."
+      }
+    },
     "ui:The fatal event unfolded at {province}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -105867,6 +106440,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "The ± beside the stat is last season’s real change — events and deeds included."
+      }
+    },
+    "ui:Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally."
       }
     },
     "ui:There is no compatible object in the armory.": {
@@ -109081,29 +109662,6 @@
         "text": "{relation} · regard {regard} · gift ready now"
       }
     },
-    "ui:{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "days",
-        "regard",
-        "relation"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days"
-      }
-    },
-    "ui:{relation} · regard {regard} · your lord’s favor rises with it · gift ready now": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "regard",
-        "relation"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{relation} · regard {regard} · your lord’s favor rises with it · gift ready now"
-      }
-    },
     "ui:{relation} · {marital} · regard {regard}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -109530,6 +110088,16 @@
         "text": "{used}/{slots} occupied"
       }
     },
+    "ui:{wearer}. Return it to the armory before gifting it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "wearer"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{wearer}. Return it to the armory before gifting it."
+      }
+    },
     "ui:{year} AD": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -109818,14 +110386,12 @@
         "text": "🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season"
       }
     },
-    "ui:🎁 Send a gift ({money:5})": {
+    "ui:🎁 Offer a gift…": {
       "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:5"
-      ],
+      "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "🎁 Send a gift ({money:5})"
+        "text": "🎁 Offer a gift…"
       }
     },
     "ui:🎓 Education of {name}": {

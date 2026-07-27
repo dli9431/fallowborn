@@ -4987,6 +4987,207 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  function giftArmoryRefs(s) {
+    return FB.itemList(s).slice().sort(function (a, b) {
+      return FB.itemName(s, a).localeCompare(FB.itemName(s, b));
+    });
+  }
+
+  function giftItemUnavailableText(s, ref, days) {
+    const assigned = FB.itemAssignment(s, ref);
+    if (assigned) {
+      return FB.T('{wearer}. Return it to the armory before gifting it.', {
+        wearer:itemWearerText(s, ref)
+      });
+    }
+    if (FB.financeCollateralPledged &&
+      FB.financeCollateralPledged(s, 'item', ref)) {
+      return FB.T('Pledged to a lender; clear the loan before gifting it.');
+    }
+    if (days) {
+      return FB.T('Cash and item gifts share this recipient’s cooldown. Ready in {days} days.', {
+        days:days
+      });
+    }
+    return '';
+  }
+
+  UI.showCharacterGiftModal = function (cid) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!s || !c || c.dead || c.id === s.player.charId) return;
+    const household = FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, cid);
+    const days = FB.socialGiftDaysRemaining(s, cid);
+    const cashCost = 5;
+    const cashBoost = FBDATA.balance.socialCashGiftOpinion === undefined
+      ? 4 : FBDATA.balance.socialCashGiftOpinion;
+    const cashBlocked = days || s.player.gold < cashCost;
+    let cashDetail;
+    if (days) {
+      cashDetail = FB.T(
+        '+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days.', {
+          regard:cashBoost, days:days
+        });
+    } else if (s.player.gold < cashCost) {
+      cashDetail = FB.T('Requires {money:cost}; you have {money:current}. It grants +{regard} Regard.', {
+        cost:cashCost, current:s.player.gold, regard:cashBoost
+      });
+    } else {
+      cashDetail = FB.T(
+        '+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
+          regard:cashBoost, days:FB.socialGiftCooldownDays()
+        });
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days.', {
+        name:c.name, days:FB.socialGiftCooldownDays()
+      })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="gift-character-cash"' +
+      (cashBlocked ? ' disabled' : '') + '>💰 ' +
+      esc(FB.T('Offer {money:gold} in cash', { gold:cashCost })) +
+      '<span class="adesc">' + esc(cashDetail) + '</span></button>';
+    if (household) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally.')) +
+        '</div>';
+    } else {
+      const refs = giftArmoryRefs(s);
+      h += '<div class="panelh">' + esc(FB.T('Items from the family armory')) + '</div>';
+      if (!refs.length) {
+        h += '<div class="progressnote">' + esc(FB.T(
+          'The family armory holds no item to offer.')) + '</div>';
+      }
+      for (const ref of refs) {
+        const item = FB.resolveItem(s, ref);
+        if (!item) continue;
+        const blocked = giftItemUnavailableText(s, ref, days);
+        const boost = FB.giftOpinion(item);
+        const detail = blocked
+          ? FB.T('+{regard} Regard · unavailable: {reason}', {
+            regard:boost, reason:blocked
+          })
+          : FB.T(
+            '+{regard} Regard. This exact object leaves family ownership. (spends the day)', {
+              regard:boost
+            });
+        h += '<button class="actionbtn" data-character-gift-item="' + esc(ref) + '"' +
+          (blocked ? ' disabled' : '') + '>' + item.def.icon + ' ' +
+          esc(FB.itemName(s, ref)) +
+          '<span class="adesc">' + esc(detail) + '</span></button>';
+      }
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Keep your gifts')) + '</button>';
+    openModal(FB.T('Offer a gift to {name}', { name:FB.fullName(c) }), h, {
+      historyView:true,
+      historyBackRender:function () { UI.showCharModal(cid); }
+    });
+    const cash = $('gift-character-cash');
+    if (cash) cash.addEventListener('click', function () {
+      if (!FB.giveSocialCashGift(s, cid)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    document.querySelectorAll('[data-character-gift-item]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.giveItem(s, button.dataset.characterGiftItem, cid)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCharModal(cid); });
+    });
+  };
+
+  UI.showRulerGiftModal = function (rid, returnView) {
+    const s = FB.state;
+    const r = s && rid && s.realms[rid];
+    if (!s || !r || !r.alive || !r.ruler || rid === 'player') return;
+    const days = FB.rulerGiftDaysRemaining(s, rid);
+    const cashCost = FB.rulerCashGiftCost(s, rid);
+    const cashBoost = FB.rulerCashGiftOpinion();
+    const usesFavor = FB.rulerGiftUsesFavor(s, rid);
+    const standing = usesFavor ? FB.T('Favor') : FB.T('Opinion');
+    const cashBlocked = days || s.player.gold < cashCost;
+    let cashDetail;
+    if (days) {
+      cashDetail = FB.T(
+        '+{amount} {standing}. Cash and item gifts share this ruler’s cooldown; ready in {days} days.', {
+          amount:cashBoost, standing:standing, days:days
+        });
+    } else if (s.player.gold < cashCost) {
+      cashDetail = FB.T(
+        'Rank price: {money:cost}; you have {money:current}. It grants +{amount} {standing}.', {
+          cost:cashCost, current:s.player.gold, amount:cashBoost, standing:standing
+        });
+    } else {
+      cashDetail = FB.T(
+        'Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)', {
+          cost:cashCost, amount:cashBoost, standing:standing,
+          days:FB.socialGiftCooldownDays()
+        });
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose what to offer {title} {ruler} of {realm}.', {
+        title:FB.realmRankTitle(s, r), ruler:r.ruler.name, realm:r.name
+      })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="gift-ruler-cash"' +
+      (cashBlocked ? ' disabled' : '') + '>💰 ' +
+      esc(FB.T('Offer {money:gold} in cash', { gold:cashCost })) +
+      '<span class="adesc">' + esc(cashDetail) + '</span></button>' +
+      '<div class="panelh">' + esc(FB.T('Items from the family armory')) + '</div>';
+    const refs = giftArmoryRefs(s);
+    if (!refs.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'The family armory holds no item to offer.')) + '</div>';
+    }
+    for (const ref of refs) {
+      const item = FB.resolveItem(s, ref);
+      if (!item) continue;
+      const blocked = giftItemUnavailableText(s, ref, days);
+      const boost = FB.giftOpinion(item);
+      const detail = blocked
+        ? FB.T('+{amount} {standing} · unavailable: {reason}', {
+          amount:boost, standing:standing, reason:blocked
+        })
+        : FB.T(
+          '+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)', {
+            amount:boost, standing:standing
+          });
+      h += '<button class="actionbtn" data-ruler-gift-item="' + esc(ref) + '"' +
+        (blocked ? ' disabled' : '') + '>' + item.def.icon + ' ' +
+        esc(FB.itemName(s, ref)) +
+        '<span class="adesc">' + esc(detail) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Keep your gifts')) + '</button>';
+    openModal(FB.T('Offer a gift to {ruler}', { ruler:r.ruler.name }), h, {
+      historyView:true,
+      historyBackRender:function () {
+        if (returnView === 'council') UI.showCouncil();
+        else UI.showLiegeModal(rid);
+      }
+    });
+    const cash = $('gift-ruler-cash');
+    if (cash) cash.addEventListener('click', function () {
+      if (!FB.giveRulerCashGift(s, rid)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    document.querySelectorAll('[data-ruler-gift-item]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.giveRulerItemGift(s, button.dataset.rulerGiftItem, rid)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        if (returnView === 'council') UI.showCouncil();
+        else UI.showLiegeModal(rid);
+      });
+    });
+  };
+
   /* the liege lord's sheet — AI rulers are lightweight realm.ruler objects,
      not full chars, so this renders the realm rather than a character card */
   UI.showLiegeModal = function (rid) {
@@ -4999,6 +5200,7 @@ window.FB = window.FB || {};
     const op = Math.round(FB.liegeOpOf(s, rid));
     const liege = r.liege && s.realms[r.liege];
     const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
+    const rulerUsesFavor = FB.rulerGiftUsesFavor(s, rid);
     const succession = FB.ensureRealmSuccession(s, rid);
     const family = FB.realmFamily(s, rid);
     const techRid = FB.techRealmId(s, rid);
@@ -5028,7 +5230,7 @@ window.FB = window.FB || {};
         ? FB.T('Himself a vassal of {liege}', { liege: liege.name })
         : FB.T('Sovereign — kneels to no one')) + '</div>' +
       '<div class="ccmeta ' + FB.opClass(op) + '">' +
-      esc(foreignSovereign
+      esc(!rulerUsesFavor
         ? FB.T('⚔ martial {martial} · opinion {opinion} ({band})', {
           martial: r.ruler.mar, opinion: signedOpinion(op), band: opinionBand(op)
         })
@@ -5054,6 +5256,22 @@ window.FB = window.FB || {};
         esc(FB.L(liege.name)) + '</button>') : '') +
       (cap ? kv('Capital', esc(FB.L(cap.name))) : '') +
       '</div>';
+    if (rid !== 'player') {
+      const giftDays = FB.rulerGiftDaysRemaining(s, rid);
+      const giftStanding = rulerUsesFavor ? FB.T('Favor') : FB.T('Opinion');
+      h += '<button class="actionbtn" id="rm-gift">🎁 ' +
+        esc(FB.T('Offer a gift…')) +
+        '<span class="adesc">' + esc(giftDays
+          ? FB.T('Cash and item gifts share this ruler’s cooldown. Ready in {days} days.', {
+            days:giftDays
+          })
+          : FB.T(
+            'Cash costs {money:cost} at this rank for +{amount} {standing}; armory items grant their quality value. (spends the day)', {
+              cost:FB.rulerCashGiftCost(s, rid),
+              amount:FB.rulerCashGiftOpinion(),
+              standing:giftStanding
+            })) + '</span></button>';
+    }
     if (family.length) {
       h += '<div class="panelh">' + esc(FB.T('Ruler’s family and succession')) + '</div>';
       for (const child of family) {
@@ -5099,6 +5317,9 @@ window.FB = window.FB || {};
     FB.drawCrest($('liegecrest'), rid);
     if ($('gm-policy')) $('gm-policy').addEventListener('click', function () {
       UI.showForeignPolicyStance(rid);
+    });
+    if ($('rm-gift')) $('rm-gift').addEventListener('click', function () {
+      UI.showRulerGiftModal(rid, 'ruler');
     });
     document.querySelectorAll('[data-royal-child]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -5192,8 +5413,8 @@ window.FB = window.FB || {};
           '<div class="ccmeta ' + FB.opClass(op) + '">' +
           esc(FB.T('favor {favor}', { favor: (op > 0 ? '+' : '') + Math.round(op) })) + '</div>' +
           '<div style="margin-top:6px">' +
-          '<button class="btn" data-gift="' + esc(rid) + '"' + (s.player.gold < (B.councilGiftCost || 25) ? ' disabled' : '') + '>🎁 ' +
-          esc(FB.T('Send a gift ({money:cost})', { cost: B.councilGiftCost || 25 })) + '</button> ' +
+          '<button class="btn" data-council-gift="' + esc(rid) + '">🎁 ' +
+          esc(FB.T('Offer a gift…')) + '</button> ' +
           '<button class="btn" data-dismiss="' + esc(seat.id) + '">' + esc(FB.T('Dismiss')) + '</button>' +
           '</div></div></div>';
       } else {
@@ -5218,9 +5439,9 @@ window.FB = window.FB || {};
       const cv = $('crest_' + seat.id);
       if (cv && c.seats[seat.id]) FB.drawCrest(cv, c.seats[seat.id]);
     }
-    document.querySelectorAll('[data-gift]').forEach(function (btn) {
+    document.querySelectorAll('[data-council-gift]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (FB.councilGift(FB.state, btn.dataset.gift)) UI.showCouncil(); // redraw in place
+        UI.showRulerGiftModal(btn.dataset.councilGift, 'council');
       });
     });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
@@ -7017,18 +7238,16 @@ window.FB = window.FB || {};
           '</span></button>';
       }
       const giftDays = FB.socialGiftDaysRemaining(s, c.id);
-      const cashGiftOpinion = FBDATA.balance.socialCashGiftOpinion === undefined
-        ? 4 : FBDATA.balance.socialCashGiftOpinion;
-      h += '<button class="actionbtn" id="cm-gift"' +
-        (s.player.gold < 5 || giftDays ? ' disabled' : '') + '>' +
-        esc(FB.T('🎁 Send a gift ({money:5})')) +
+      h += '<button class="actionbtn" id="cm-gift">' +
+        esc(FB.T('🎁 Offer a gift…')) +
         '<span class="adesc">' + esc(giftDays
           ? FB.T('Cash and item gifts share a recipient cooldown. Ready in {days} days.', {
             days:giftDays
           })
-          : FB.T('Ready now: +{regard} regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
-            regard:cashGiftOpinion, days:FB.socialGiftCooldownDays()
-          })) + '</span></button>';
+          : (isHousehold
+            ? FB.T('Choose a cash gift. Household equipment remains in the shared family armory.')
+            : FB.T('Choose cash or an unequipped, unpledged item from the family armory.'))) +
+        '</span></button>';
       const isMySpouse = c.spouseId === me.id || c.id === me.spouseId;
       if (isMySpouse) {
         const doc = FB.marriageDoctrine(me.religion);
@@ -7201,9 +7420,7 @@ window.FB = window.FB || {};
     });
     const gf = $('cm-gift');
     if (gf) gf.addEventListener('click', function () {
-      if (!FB.giveSocialCashGift(s, c.id)) return;
-      UI.closeModal();
-      FB.game.passDay({ skipFocus:true });
+      UI.showCharacterGiftModal(c.id);
     });
     const ct = $('cm-court');
     if (ct) ct.addEventListener('click', function () {
@@ -7637,16 +7854,9 @@ window.FB = window.FB || {};
       const detailParams = {
         relation:e.rel, regard:(op > 0 ? '+' : '') + op, days:giftDays
       };
-      let details;
-      if (s.roles.lord === e.c.id) {
-        details = giftDays
-          ? FB.T('{relation} · regard {regard} · your lord’s favor rises with it · gift ready in {days} days', detailParams)
-          : FB.T('{relation} · regard {regard} · your lord’s favor rises with it · gift ready now', detailParams);
-      } else {
-        details = giftDays
-          ? FB.T('{relation} · regard {regard} · gift ready in {days} days', detailParams)
-          : FB.T('{relation} · regard {regard} · gift ready now', detailParams);
-      }
+      const details = giftDays
+        ? FB.T('{relation} · regard {regard} · gift ready in {days} days', detailParams)
+        : FB.T('{relation} · regard {regard} · gift ready now', detailParams);
       h += '<button class="actionbtn" data-give="' + e.c.id + '"' +
         (giftDays ? ' disabled' : '') + '>🎁 ' + esc(FB.fullName(e.c)) +
         '<span class="adesc ' + FB.opClass(op) + '">' + esc(details) + '</span></button>';

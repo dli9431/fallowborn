@@ -35,9 +35,12 @@ stay archetypal (no named tokens) and let the effect fns pick the councillor inv
 
 **Interaction** runs through the 🏛 Royal Council deed (tier ≥ 6) and its modal
 (`UI.showCouncil`): the authority meter, every seat with its holder's trait and favor,
-and the levers — send a gift (`balance.councilGiftCost` gold → favor), dismiss, appoint
-to vacant seats. Opinion itself is the existing `player.liegeOps` store, so every older
-mechanism that moves vassal opinion (grants, demands, revolts) feeds the council for free.
+and the levers — offer a gift, dismiss, appoint to vacant seats. Gifting opens the same
+rank-priced cash-or-armory picker as the councillor's ruler sheet and uses the same
+generation-stamped 90-day recipient cooldown; the Council cannot provide a second gift
+path. `FB.councilGift` remains as a compatibility wrapper around the shared cash helper.
+Opinion itself is the existing `player.liegeOps` store, so every older mechanism that
+moves vassal opinion (grants, demands, revolts) feeds the council for free.
 
 The Network Realm section is a summary and route into this interface, not another Council
 screen. It names occupied seats, active bonuses, vacancies, and the Constable contribution

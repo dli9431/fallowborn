@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.8';
+  FB.VERSION = '1.66.0';
   FB.CHANGELOG = [
+    { v: '1.66.0', date: '2026-07-26', changes: [
+      'Character and ruler sheets now offer cash and armory gifts, with recipient cooldowns and rank-based ruler prices.'
+    ] },
     { v: '1.65.8', date: '2026-07-26', changes: [
       'The Land tab’s Notable folk list now shows the county holder, direct vassals, and liege chain.'
     ] },
@@ -847,7 +850,7 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
-        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
@@ -989,7 +992,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
-        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
@@ -1858,6 +1861,7 @@ window.FB = window.FB || {};
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.socialAttention = {};
     p.socialGiftTurns = {};
+    p.realmGiftTurns = {};
     p.plot = null; // plots die with their plotter
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};

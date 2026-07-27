@@ -177,7 +177,7 @@ window.FB = window.FB || {};
   };
 
   /* Cash and item gifts share one per-recipient, current-life clock. Authored
-     event, council, realm, and wedding gifts do not call this API. */
+     event and wedding gifts do not call this API. */
   FB.socialGiftTurns = function (state) {
     const p = state.player;
     if (!p.socialGiftTurns || typeof p.socialGiftTurns !== 'object' ||
@@ -206,6 +206,45 @@ window.FB = window.FB || {};
 
   FB.noteSocialGift = function (state, cid) {
     FB.socialGiftTurns(state)[cid] = state.turn;
+  };
+
+  /* Lightweight rulers need a recipient identity beyond the realm id: a
+     successor is a new person and may receive a gift immediately. */
+  FB.realmGiftTurns = function (state) {
+    const p = state.player;
+    if (!p.realmGiftTurns || typeof p.realmGiftTurns !== 'object' ||
+      Array.isArray(p.realmGiftTurns)) p.realmGiftTurns = {};
+    for (const rid in p.realmGiftTurns) {
+      const r = state.realms && state.realms[rid];
+      const entry = p.realmGiftTurns[rid];
+      const generation = r && r.ruler &&
+        (r.ruler.generation === undefined ? 1 : r.ruler.generation);
+      if (!r || !r.alive || !r.ruler || rid === 'player' || !entry ||
+        typeof entry !== 'object' || !isFinite(entry.turn) ||
+        entry.generation !== generation) delete p.realmGiftTurns[rid];
+    }
+    return p.realmGiftTurns;
+  };
+
+  FB.rulerGiftDaysRemaining = function (state, rid) {
+    const turns = FB.realmGiftTurns(state);
+    const entry = turns[rid];
+    if (!entry) return 0;
+    return Math.max(0, FB.socialGiftCooldownDays() - (state.turn - entry.turn));
+  };
+
+  FB.rulerGiftReady = function (state, rid) {
+    return FB.rulerGiftDaysRemaining(state, rid) <= 0;
+  };
+
+  FB.noteRulerGift = function (state, rid) {
+    const r = state.realms && state.realms[rid];
+    if (!r || !r.ruler || rid === 'player') return false;
+    FB.realmGiftTurns(state)[rid] = {
+      turn:state.turn,
+      generation:r.ruler.generation === undefined ? 1 : r.ruler.generation
+    };
+    return true;
   };
 
   FB.giveSocialCashGift = function (state, cid) {
