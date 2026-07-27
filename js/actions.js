@@ -557,18 +557,37 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'claim_caliphate', label: '☪ Claim the Caliphate…', noConsume: true,
-    desc: function () {
-      return FB.T('Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety.', {
+    desc: function (s) {
+      if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
+        const cause = FB.caliphateWarCause(s);
+        const enemy = cause && s.realms[cause.enemy];
+        if (enemy) {
+          return FB.T('Wrest the Sunni office from {realm} in a succession war — the Caliphate passes to the victor, the loser keeps his lands.', {
+            realm:enemy.name
+          });
+        }
+      }
+      return FB.T('Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety.', {
         prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+        counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6),
         piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300)
       });
     },
     show: function (s) {
       return adult(s) && me(s).religion === 'sunni' && s.player.tier >= 6 &&
-        !!FB.religiousHeadVacancy(s, 'sunni');
+        (!!FB.religiousHeadVacancy(s, 'sunni') || !!FB.caliphateWarCause(s));
     },
     can: function (s) {
       if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim the Caliphate.');
+      if (!FB.religiousHeadVacancy(s, 'sunni')) {
+        const cause = FB.caliphateWarCause(s);
+        if (!cause) return FB.T('The sitting Caliph cannot be contested from this world state.');
+        const blocked = diplomacyBlocksWar(s, cause.enemy);
+        if (blocked === 'war') return FB.T('At war with another realm');
+        if (blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the Caliph’s realm.');
+        if (blocked === 'pact') return FB.T('A sworn peace pact protects the Caliph’s realm.');
+        return true;
+      }
       if (s.player.prestige < FB.religiousHeadBalance('religiousHeadClaimPrestige', 500)) {
         return FB.T('You need {needed} prestige (now {current}).', {
           needed:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
@@ -581,6 +600,12 @@ window.FB = window.FB || {};
           current:Math.round(s.player.piety)
         });
       }
+      if ((s.player.provs ? s.player.provs.length : 0) < FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)) {
+        return FB.T('Your demesne needs at least {needed} counties (now {current}).', {
+          needed:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6),
+          current:s.player.provs ? s.player.provs.length : 0
+        });
+      }
       if (!FB.controlsReligiousHeadClaim(s, 'sunni', 'player')) {
         return FB.T('Control Baghdad, or both Mecca and Medina.');
       }
@@ -588,6 +613,13 @@ window.FB = window.FB || {};
         ? true : FB.T('Your realm is not eligible to claim the Caliphate.');
     },
     run: function () {
+      const s = FB.state;
+      if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
+        if (FB.ui && FB.ui.showCaliphateWarConfirmation) {
+          FB.ui.showCaliphateWarConfirmation();
+        }
+        return;
+      }
       if (FB.ui && FB.ui.showReligiousHeadClaim) {
         FB.ui.showReligiousHeadClaim('sunni');
       }
@@ -2561,6 +2593,24 @@ window.FB = window.FB || {};
     return claim;
   };
 
+  /* The one religious succession war: a sovereign Sunni king or emperor may
+     contest a sitting Caliph. The stake is the office, not land, so no shared
+     border is required — victory transfers the Caliphate, the loser keeps his
+     realm. Returns a warCauses-shaped record or null. */
+  FB.caliphateWarCause = function (state) {
+    const p = state.player;
+    const c = state.chars[p.charId];
+    if (!c || !adult(state) || c.religion !== 'sunni' || p.tier < 6) return null;
+    if (!FB.isPlayerSovereign(state)) return null;
+    const head = FB.religiousHeadOf(state, 'sunni');
+    if (!head) return null;
+    const enemy = FB.topRealm(state, head.id);
+    if (!enemy || enemy === 'player' || enemy === FB.playerRealmId(state)) return null;
+    const enemyRealm = state.realms[enemy];
+    if (!enemyRealm || !enemyRealm.alive || !enemyRealm.capital) return null;
+    return { type: 'caliphate', enemy: enemy, target: enemyRealm.capital };
+  };
+
   function diplomacyBlocksWar(state, enemy) {
     if (FB.isRealmAtWar(state, enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
@@ -2601,6 +2651,14 @@ window.FB = window.FB || {};
             blocked: blocked
           }));
         }
+      }
+    }
+    const caliphate = FB.caliphateWarCause(state);
+    if (caliphate) {
+      const blocked = diplomacyBlocksWar(state, caliphate.enemy);
+      if (!blocked || includeBlocked) {
+        caliphate.blocked = blocked;
+        out.push(annotateReligiousWarCause(state, caliphate));
       }
     }
     const mine = playerBorderLands(state);
