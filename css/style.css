@@ -396,7 +396,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   display: flex; align-items: flex-start; gap: 8px;
 }
 .gm-heading h3, .equip-picker-heading h3 { flex: 1 1 auto; min-width: 0; }
-.gm-history-back, .equip-picker-history-back { display: none; flex: 0 0 auto; white-space: nowrap; }
+.equip-picker-history-back { display: none; flex: 0 0 auto; white-space: nowrap; }
 .modalcard h3 { color: #e0c060; margin-bottom: 10px; font-size: 19px; }
 .evtext { color: #ddcfae; margin-bottom: 14px; font-size: 15px; }
 .evname { display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 12px; }
@@ -765,12 +765,11 @@ textarea.modjson, textarea.savetext {
     border: 2px solid #7a6234; border-radius: 14px;
     padding: 16px;
   }
-  #genmodal.embedded-history-back .gm-heading,
   .equip-picker-overlay.embedded-history-back .equip-picker-heading {
     position: sticky; top: 0; z-index: 2;
     background: linear-gradient(180deg, #2c2418 82%, rgba(44,36,24,.92));
   }
-  .gm-history-back:not(.hidden), .equip-picker-history-back:not(.hidden) {
+  .equip-picker-history-back:not(.hidden) {
     display: inline-flex; align-items: center; justify-content: center;
     min-height: 44px; padding: 8px 10px;
   }

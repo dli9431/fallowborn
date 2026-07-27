@@ -40,9 +40,10 @@ entry. Browser/device Back unwinds one state at a time, returning through previo
 panels before leaving the game, and visible Close/Back controls consume the same owned entry
 so dead entries do not accumulate. This uses only the game's own frame history and never
 reaches into an embed's parent page. Android consumes physical Back to leave itch's
-browser-owned iframe fullscreen before it traverses that history, so reversible generic
-dialogs and nested equipment pickers show a sticky in-game Back control on embedded mobile
-layouts; it invokes the same owned history entry and keeps fullscreen active. Direct play on
+browser-owned iframe fullscreen before it traverses that history, so nested equipment
+pickers show a sticky in-game Back control on embedded mobile layouts; it invokes the same
+owned history entry and keeps fullscreen active. Generic dialogs do not add a shared header
+control and instead rely on their modal-specific visible controls. Direct play on
 `play.fallowborn.com` continues to use device Back normally. Entries carry UI descriptors
 only; gameplay actions and mandatory event decisions are never made undoable. If the History
 API is unavailable or rejects an entry, all existing visible controls remain the fallback.

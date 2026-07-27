@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.4';
+  FB.VERSION = '1.65.5';
   FB.CHANGELOG = [
+    { v: '1.65.5', date: '2026-07-26', changes: [
+      'Generic dialogs no longer show a shared Back button in their headers on embedded mobile layouts.'
+    ] },
     { v: '1.65.4', date: '2026-07-26', changes: [
       'The Land tab now shows county economic development and its sovereign’s technological development.'
     ] },

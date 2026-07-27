@@ -349,8 +349,8 @@ window.FB = window.FB || {};
   }
 
   /* Android consumes the physical Back button to leave itch's browser-owned
-     iframe fullscreen before history traversal. Embedded mobile dialogs
-     therefore expose the same history action as an in-game control. */
+     iframe fullscreen before history traversal. Embedded mobile equipment
+     pickers therefore expose the same history action as an in-game control. */
   function mobileNavSyncBackControls() {
     const layer = mobileNavLayers[mobileNavDepth];
     const eventModal = $('eventmodal');
@@ -358,14 +358,6 @@ window.FB = window.FB || {};
     const canUse = mobileNavEmbedded && mobileLayoutNow() && mobileNavReady &&
       mobileNavDepth > 0 && !mobileNavPendingBack && !eventBlocking &&
       mobileNavCanBack(layer);
-    const gm = $('gm-history-back');
-    const genmodal = $('genmodal');
-    const showGeneric = !!canUse && !!genmodal &&
-      !genmodal.classList.contains('hidden') &&
-      (layer.kind === 'generic-modal' || layer.kind === 'modal-view');
-    if (gm) gm.classList.toggle('hidden', !showGeneric);
-    if (genmodal) genmodal.classList.toggle('embedded-history-back', showGeneric);
-
     const equipment = $('equip-picker-history-back');
     const overlay = $('equip-picker-overlay');
     const showEquipment = !!canUse && !!overlay && layer.kind === 'equipment-picker';
@@ -8693,7 +8685,6 @@ window.FB = window.FB || {};
       if (FB.state) UI.showTab('char');
     });
     $('btn-closeself').addEventListener('click', closeSelfDrawer);
-    $('gm-history-back').addEventListener('click', mobileNavRequestBack);
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const hot = {
