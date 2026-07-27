@@ -433,6 +433,8 @@ window.FB = window.FB || {};
     const out = [], seen = {}, married = {};
     function add(c) {
       if (!c || c.dead || seen[c.id]) return;
+      if (c.id !== me.id && FB.isReigningRealmRuler &&
+          FB.isReigningRealmRuler(state, c)) return;
       seen[c.id] = 1;
       out.push(c);
     }
@@ -711,6 +713,7 @@ window.FB = window.FB || {};
       const c = record && state.chars[record.charId];
       const def = record && FB.positionDef(record.office);
       if (!record || !c || c.dead || !def || def.kind !== 'retainer' ||
+          (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) ||
           seen[record.charId] || seenOffice[record.office]) continue;
       seen[record.charId] = 1;
       seenOffice[record.office] = 1;
@@ -772,6 +775,7 @@ window.FB = window.FB || {};
     function add(id) {
       const c = id && state.chars[id];
       if (!c || c.dead || c.id === state.player.charId || seen[id] ||
+          (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) ||
           FB.retainerRecord(state, id)) return;
       seen[id] = 1;
       ids.push(id);

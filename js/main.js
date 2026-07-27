@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.71.1';
+  FB.VERSION = '1.72.0';
   FB.CHANGELOG = [
+    { v: '1.72.0', date: '2026-07-27', changes: [
+      'Living rulers can now be cultivated through capital visits, and gifts sent beyond the household’s realm travel by courier with visible delivery or return times.',
+      'Gift choices remain readable in narrow dialogs.'
+    ] },
     { v: '1.71.1', date: '2026-07-27', changes: [
       'Travel destination and trade venture screens now calculate large route lists faster, while relationship visits and ruler standing labels stay consistent as circumstances change.'
     ] },
@@ -869,6 +873,7 @@ window.FB = window.FB || {};
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
+        giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
@@ -1012,6 +1017,7 @@ window.FB = window.FB || {};
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
+        giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
@@ -1081,6 +1087,9 @@ window.FB = window.FB || {};
         else FB.validateFocus(s);
       }
       FB.tickSocialAttention(s);
+      if (FB.syncMaterializedRealmRulers) {
+        FB.syncMaterializedRealmRulers(s);
+      }
     }
 
     // advance date: 90-day seasons, 360-day years
@@ -1175,6 +1184,7 @@ window.FB = window.FB || {};
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
+    if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
@@ -1275,6 +1285,9 @@ window.FB = window.FB || {};
   G.afterEvents = function () {
     const s = FB.state;
     if (!s || s.player.dead) return;
+    if (FB.syncMaterializedRealmRulers) {
+      FB.syncMaterializedRealmRulers(s);
+    }
     const me = s.chars[s.player.charId];
     if (me.health <= 0) {
       const provenance = s.player.pendingDeathProvenance || null;
@@ -1387,6 +1400,9 @@ window.FB = window.FB || {};
     for (const id in s.chars) {
       const c = s.chars[id];
       if (c.dead || id === p.charId) continue;
+      /* The compact realm yearly roll is authoritative for a reigning ruler,
+         including a materialized ruler married to the player. */
+      if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, c)) continue;
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
       /* the house's resident descendants share its table: each station above serf means
@@ -1687,6 +1703,12 @@ window.FB = window.FB || {};
     const mates = me.sex === 'f' || FB.marriageDoctrine(me.religion).wives <= 1
       ? (sp ? [sp] : []) : FB.spousesOf(s, me);
     for (const mate of mates) {
+      if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, mate)) {
+        const rulerResidence = FB.characterResidence(s, mate);
+        const playerLocation = FB.travelLocation
+          ? FB.travelLocation(s) : FB.world.byId[p.provinceId];
+        if (!playerLocation || playerLocation.id !== rulerResidence) continue;
+      }
       const mother = me.sex === 'f' ? me : mate;
       const father = me.sex === 'f' ? mate : me;
       const mAge = FB.ageOf(mother, s.date.year);

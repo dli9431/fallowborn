@@ -276,11 +276,29 @@ window.FB = window.FB || {};
   FB.giveSocialCashGift = function (state, cid) {
     const p = state.player;
     const c = state.chars[cid];
+    const rulerId = c && FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(state, c);
+    if (rulerId && FB.giveRulerCashGift) {
+      return FB.giveRulerCashGift(state, rulerId);
+    }
     const cost = 5;
     if (!c || c.dead || c.id === p.charId || p.gold < cost ||
-      !FB.socialGiftReady(state, cid)) return false;
+      !FB.socialGiftReady(state, cid) ||
+      (FB.giftDeliveryPending &&
+        FB.giftDeliveryPending(state, 'character', cid))) return false;
     const value = FBDATA.balance.socialCashGiftOpinion;
     const boost = value === undefined ? 4 : value;
+    const delivery = FB.giftDeliveryPreview &&
+      FB.giftDeliveryPreview(state, 'character', cid);
+    if (delivery && delivery.foreign) {
+      return FB.dispatchGiftDelivery(state, {
+        recipientKind:'character',
+        recipientId:cid,
+        giftKind:'cash',
+        amount:cost,
+        effect:boost
+      });
+    }
     p.gold -= cost;
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
     FB.noteSocialGift(state, cid);
@@ -632,6 +650,7 @@ window.FB = window.FB || {};
     sp.opinion = FB.clamp(sp.opinion - 50, -100, 100);
     FB.noteRivalContact(state, sp, 2, 'divorce');
     FB.promoteSpouse(state);
+    if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, sp.id);
   };
 
   FB.clearCourtship = function (state, opts) {
@@ -691,6 +710,7 @@ window.FB = window.FB || {};
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
+    if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, c.id);
     if (FB.royalCharDied) FB.royalCharDied(state, c);
     if (c.betrothedId && c.dowryAsk) {
       state.player.gold += c.dowryAsk;
@@ -2367,8 +2387,14 @@ window.FB = window.FB || {};
     /* An object given during courtship was external character property.
        Once its owner enters the household, move that exact object into the
        shared armory so the household ownership invariant continues to hold. */
-    if (FB.reclaimCharacterItems) FB.reclaimCharacterItems(state, s.id);
-    if (FB.receiveMarriageLivelihood) FB.receiveMarriageLivelihood(state, s);
+    const reigningSpouse = FB.isReigningRealmRuler &&
+      FB.isReigningRealmRuler(state, s);
+    if (!reigningSpouse && FB.reclaimCharacterItems) {
+      FB.reclaimCharacterItems(state, s.id);
+    }
+    if (!reigningSpouse && FB.receiveMarriageLivelihood) {
+      FB.receiveMarriageLivelihood(state, s);
+    }
     s.role = 'spouse';
     // a spouse cannot stay your lord, priest, friend, or rival — those seats
     // empty and are lazily refilled where the game next needs them
@@ -2385,20 +2411,29 @@ window.FB = window.FB || {};
     p.marriedAt = state.turn;
     if (s.royalLine) {
       const rs = FB.ensureRealmSuccession(state, s.royalLine.realmId);
+      const reigningRoyal = FB.isReigningRealmRuler &&
+        FB.isReigningRealmRuler(state, s);
       p.royalCompact = {
         realmId: s.royalLine.realmId,
         memberId: s.royalLine.memberId,
         charId: s.id,
-        transmitsCrown: !!(rs && rs.heirId === s.royalLine.memberId),
+        transmitsCrown: !!(reigningRoyal ||
+          (rs && rs.heirId === s.royalLine.memberId)),
         madeTurn: state.turn
       };
       if (FB.maybeRoyalMarriageAlliance) FB.maybeRoyalMarriageAlliance(state, s.royalLine.realmId);
-      FB.news(state, FB.msg('news.event.royal_marriage',
-        '👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown.',
-        {
-          name: s.name,
-          realm: state.realms[s.royalLine.realmId] ? state.realms[s.royalLine.realmId].name : ''
-        }));
+      const royalParams = {
+        name:s.name,
+        realm:state.realms[s.royalLine.realmId]
+          ? state.realms[s.royalLine.realmId].name : ''
+      };
+      FB.news(state, reigningRoyal
+        ? FB.msg('news.event.reigning_royal_marriage',
+          '👑 Your marriage to {name}, ruler of {realm}, binds the two dynasties; your shared children enter the royal succession.',
+          royalParams)
+        : FB.msg('news.event.royal_marriage',
+          '👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown.',
+          royalParams));
     }
     // the match settles a dowry, and rank rubs off both ways
     const B = FBDATA.balance;

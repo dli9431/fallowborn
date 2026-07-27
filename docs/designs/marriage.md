@@ -24,8 +24,10 @@ Beginning courtship requires county co-location. A remote ordinary or royal
 candidate opens the relationship-visit review; departure begins the suit and
 attention assignment atomically, road days pause progress, and Regard starts at
 the target’s residence. Materialized royal children reside at their realm’s
-current capital, so the visit always follows capital movement. Proposals remain
-deliverable at distance once Regard reaches the threshold.
+current capital. A ruler can likewise be materialized from their realm sheet and
+courted through the same visit, centralized `FB.canCourt` gates, and proposal flow,
+so either visit always follows capital movement. Proposals remain deliverable at
+distance once Regard reaches the threshold.
 
 Marriage to any listed child forms a dynastic tie, but only the visibly designated heir
 currently transmits the crown. The spouse succeeds first. Shared children form that
@@ -35,6 +37,14 @@ them; the title joins player control only when that rightful character becomes t
 protagonist. Divorce, the royal spouse's death, or the protagonist's death ends the
 marriage-based military alliance, but already-born descendants keep their succession
 position.
+
+A reigning ruler who marries the player does not join the managed household. The ordinary
+spouse links, station effects, royal compact, alliance, and children remain, but
+`FB.characterResidence` keeps that spouse at the realm’s current capital. They provide no
+household work or upkeep and cannot use the family armory. The player and ruler may
+conceive only when the player’s physical travel location is the capital; every shared
+child is registered beneath the reigning compact member and therefore enters the realm’s
+normal succession.
 
 **Marriage is station-gated.** Characters carry a social rank `station` 0–4
 (`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps

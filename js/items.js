@@ -69,7 +69,9 @@ window.FB = window.FB || {};
        career dealings, but remain distinct from resident family upkeep. */
     for (let i = 0; i < ((state.player && state.player.retainers) || []).length; i++) {
       const record = state.player.retainers[i];
-      if (record) add(state.chars[record.charId], false);
+      const retainer = record && state.chars[record.charId];
+      if (retainer && (!FB.isReigningRealmRuler ||
+          !FB.isReigningRealmRuler(state, retainer))) add(retainer, false);
     }
     return out;
   }
@@ -87,6 +89,9 @@ window.FB = window.FB || {};
        boundary; every other household member must still be living. */
     if (c.id === me.id) return true;
     if (c.dead) return false;
+    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+      return false;
+    }
     if (c.spouseId === me.id || me.spouseId === c.id) return true;
     const retainers = state.player.retainers || [];
     for (let i = 0; i < retainers.length; i++) {
@@ -409,6 +414,14 @@ window.FB = window.FB || {};
     for (const cid in state.chars) {
       const list = state.chars[cid].items || [];
       if (list.indexOf(ref) >= 0) return { kind:'character', id:cid };
+    }
+    const deliveries = state.player.giftDeliveries || [];
+    for (let i = 0; i < deliveries.length; i++) {
+      const delivery = deliveries[i];
+      if (delivery && delivery.giftKind === 'item' &&
+          delivery.itemRef === ref) {
+        return { kind:'delivery', id:delivery.id };
+      }
     }
     return null;
   };
@@ -872,11 +885,27 @@ window.FB = window.FB || {};
   FB.giveItem = function (state, ref, cid) {
     const item = FB.resolveItem(state, ref);
     const c = state.chars[cid];
+    const rulerId = c && FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(state, c);
+    if (rulerId) return FB.giveRulerItemGift(state, ref, rulerId);
     if (!item || !c || c.dead || state.player.items.indexOf(ref) < 0 ||
       loanPledgesRef(state, ref) || assignmentForRaw(state, ref) ||
       FB.isHouseholdCharacter(state, cid) ||
-      (FB.socialGiftReady && !FB.socialGiftReady(state, cid))) return false;
+      (FB.socialGiftReady && !FB.socialGiftReady(state, cid)) ||
+      (FB.giftDeliveryPending &&
+        FB.giftDeliveryPending(state, 'character', cid))) return false;
     const boost = FB.giftOpinion(item);
+    const delivery = FB.giftDeliveryPreview &&
+      FB.giftDeliveryPreview(state, 'character', cid);
+    if (delivery && delivery.foreign) {
+      return FB.dispatchGiftDelivery(state, {
+        recipientKind:'character',
+        recipientId:cid,
+        giftKind:'item',
+        itemRef:ref,
+        effect:boost
+      });
+    }
     if (!FB.transferItem(state, ref, cid)) return false;
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
     if (FB.noteSocialGift) FB.noteSocialGift(state, cid);
@@ -895,8 +924,21 @@ window.FB = window.FB || {};
     if (!item || !r || !r.alive || !r.ruler || rid === 'player' ||
       state.player.items.indexOf(ref) < 0 || loanPledgesRef(state, ref) ||
       assignmentForRaw(state, ref) ||
-      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid))) return false;
+      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid)) ||
+      (FB.giftDeliveryPending &&
+        FB.giftDeliveryPending(state, 'ruler', rid))) return false;
     const boost = FB.giftOpinion(item);
+    const delivery = FB.giftDeliveryPreview &&
+      FB.giftDeliveryPreview(state, 'ruler', rid);
+    if (delivery && delivery.foreign) {
+      return FB.dispatchGiftDelivery(state, {
+        recipientKind:'ruler',
+        recipientId:rid,
+        giftKind:'item',
+        itemRef:ref,
+        effect:boost
+      });
+    }
     const itemParam = FB.itemParam(state, ref, true);
     if (!FB.destroyItem(state, ref, { force:true })) return false;
     FB.adjustRealmOpinion(state, rid, boost);

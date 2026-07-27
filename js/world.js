@@ -1274,8 +1274,173 @@ window.FB = window.FB || {};
     return c;
   };
 
+  function storedRealmStanding(state, rid) {
+    const p = state.player;
+    if (rid === p.liege) return p.liegeOp || 0;
+    return (p.liegeOps && p.liegeOps[rid]) || 0;
+  }
+
+  function writeStoredRealmStanding(state, rid, value) {
+    const p = state.player;
+    value = FB.clamp(Number(value) || 0, -100, 100);
+    if (rid === p.liege) p.liegeOp = value;
+    else {
+      p.liegeOps = p.liegeOps || {};
+      p.liegeOps[rid] = value;
+    }
+    return value;
+  }
+
+  /* A compact founding ruler has no member record until play needs the
+     person. Materialization installs that durable root without disturbing
+     the existing ordered children, then creates one ordinary character for
+     all personal relationship, marriage, and family behavior. */
+  function ensureRealmRulerMember(state, rid) {
+    const r = state.realms[rid];
+    const s = FB.ensureRealmSuccession(state, rid);
+    if (!r || !s || !r.ruler) return null;
+    let m = s.rulerMemberId && s.members[s.rulerMemberId];
+    if (!m) {
+      m = {
+        id:'royal_' + r.id + '_' + FB.uid(),
+        name:r.ruler.name,
+        sex:r.ruler.sex || 'm',
+        born:r.ruler.born !== undefined
+          ? r.ruler.born : state.date.year - Math.max(0, r.ruler.age || 0),
+        alive:true,
+        parentId:null,
+        childIds:[],
+        charId:null
+      };
+      s.members[m.id] = m;
+      s.rulerMemberId = m.id;
+      for (const id in s.members) {
+        const child = s.members[id];
+        if (id === m.id || (child.parentId || null) !== null) continue;
+        child.parentId = m.id;
+        m.childIds.push(id);
+      }
+    }
+    m.name = r.ruler.name;
+    m.sex = r.ruler.sex || m.sex || 'm';
+    m.born = r.ruler.born !== undefined
+      ? r.ruler.born : (m.born !== undefined
+        ? m.born : state.date.year - Math.max(0, r.ruler.age || 0));
+    m.alive = true;
+    m.childIds = m.childIds || [];
+    return m;
+  }
+
+  FB.realmRulerCharacter = function (state, rid) {
+    const r = state && state.realms && state.realms[rid];
+    const s = r && r.succession;
+    const m = s && s.rulerMemberId && s.members &&
+      s.members[s.rulerMemberId];
+    const c = m && m.charId && state.chars && state.chars[m.charId];
+    if (!r || !r.alive || rid === 'player' || !c || c.dead) return null;
+    r.ruler.name = c.name;
+    r.ruler.sex = c.sex;
+    r.ruler.culture = c.culture;
+    r.ruler.born = c.born;
+    r.ruler.age = Math.max(0, FB.ageOf(c, state.date.year));
+    r.ruler.mar = c.skills && c.skills.mar !== undefined
+      ? c.skills.mar : r.ruler.mar;
+    r.ruler.trait = c.traits && c.traits.length ? c.traits[0] : null;
+    return c;
+  };
+
+  FB.realmIdForRulerCharacter = function (state, value) {
+    const c = typeof value === 'string'
+      ? state && state.chars && state.chars[value] : value;
+    if (!state || !c || c.dead || !c.royalLine) return null;
+    const rid = c.royalLine.realmId;
+    const r = state.realms && state.realms[rid];
+    const s = r && r.succession;
+    const m = s && s.rulerMemberId && s.members &&
+      s.members[s.rulerMemberId];
+    return r && r.alive && rid !== 'player' && m &&
+      m.id === c.royalLine.memberId && m.charId === c.id ? rid : null;
+  };
+
+  FB.isReigningRealmRuler = function (state, value) {
+    return !!FB.realmIdForRulerCharacter(state, value);
+  };
+
+  FB.materializeRealmRuler = function (state, rid) {
+    const r = state && state.realms && state.realms[rid];
+    if (!r || !r.alive || !r.ruler || rid === 'player') return null;
+    const m = ensureRealmRulerMember(state, rid);
+    if (!m) return null;
+    let c = m.charId && state.chars[m.charId];
+    if (c && !c.dead) return FB.realmRulerCharacter(state, rid);
+    const cap = FB.world.byId[r.capital];
+    const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
+      ? [r.ruler.trait] : [];
+    const standing = storedRealmStanding(state, rid);
+    c = FB.makeCharacter(state, {
+      name:r.ruler.name,
+      sex:r.ruler.sex || 'm',
+      culture:r.ruler.culture || (cap && cap.culture),
+      religion:r.religion || (cap && cap.religion) ||
+        state.chars[state.player.charId].religion,
+      born:m.born,
+      dyn:'of ' + r.name,
+      station:r.rank <= 2 ? 3 : 4,
+      quality:Math.max(2, r.rank + 1),
+      traits:trait,
+      opinion:standing
+    });
+    c.health = 8;
+    c.skills.mar = Math.max(0, Number(r.ruler.mar) || 0);
+    c.royalLine = { realmId:rid, memberId:m.id };
+    c.realmStanding = standing;
+    m.charId = c.id;
+    return c;
+  };
+
+  /* Personal Regard and the existing player-relative political standing are
+     two views of one score while this exact character reigns. The marker
+     lets direct legacy writes on either side reconcile without losing the
+     other side's change. */
+  FB.syncRealmRulerStanding = function (state, rid) {
+    const c = FB.realmRulerCharacter(state, rid);
+    const stored = storedRealmStanding(state, rid);
+    if (!c) return stored;
+    let marker = Number(c.realmStanding);
+    if (!isFinite(marker)) marker = stored;
+    const personal = FB.clamp(Number(c.opinion) || 0, -100, 100);
+    let value;
+    if (stored !== marker && personal === marker) value = stored;
+    else if (personal !== marker && stored === marker) value = personal;
+    else if (personal !== marker && stored !== marker) value = stored;
+    else value = marker;
+    value = writeStoredRealmStanding(state, rid, value);
+    c.opinion = value;
+    c.realmStanding = value;
+    return value;
+  };
+
+  FB.setRealmRulerStanding = function (state, rid, value) {
+    value = writeStoredRealmStanding(state, rid, value);
+    const c = FB.realmRulerCharacter(state, rid);
+    if (c) {
+      c.opinion = value;
+      c.realmStanding = value;
+    }
+    return value;
+  };
+
+  FB.syncMaterializedRealmRulers = function (state) {
+    if (!state || !state.realms) return;
+    for (const rid in state.realms) {
+      if (FB.realmRulerCharacter(state, rid)) {
+        FB.syncRealmRulerStanding(state, rid);
+      }
+    }
+  };
+
   /* The compact tree still enforces the ordinary close-blood marriage bar.
-     Root members share the unmaterialized founding ruler (parentId null);
+     Sibling members share one parent (including a materialized ruler root);
      cousins remain eligible, matching the full-character kin rules. */
   FB.royalCloseKin = function (state, a, b) {
     if (!a || !b || !a.royalLine || !b.royalLine ||
@@ -1398,9 +1563,14 @@ window.FB = window.FB || {};
       generation: (s.rulerGeneration || 1) + 1
     };
     s.rulerGeneration = r.ruler.generation;
+    if (c) {
+      c.realmStanding = writeStoredRealmStanding(state, rid, c.opinion);
+      c.opinion = c.realmStanding;
+    }
     makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
     FB.repairAlliances(state);
+    if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
     if (c && c.id === state.player.charId && FB.absorbRealm) FB.absorbRealm(state, rid, c);
     return heir;
   };
@@ -1954,10 +2124,21 @@ window.FB = window.FB || {};
         const rulerChar = rulerMember && rulerMember.charId &&
           state.chars[rulerMember.charId];
         if (rulerChar && !rulerChar.dead && FB.killChar) {
+          const playerChar = state.chars[state.player.charId];
+          const wasPlayerSpouse = playerChar &&
+            (playerChar.spouseId === rulerChar.id ||
+              rulerChar.spouseId === playerChar.id);
           // A courted royal remains a full character after taking the throne.
           // Use the normal death path so marriage and role links also close;
           // royalCharDied advances the realm exactly once.
           FB.killChar(state, rulerChar);
+          if (wasPlayerSpouse) {
+            FB.news(state, FB.msg('news.life.spouse_died',
+              '🕯 Your spouse {name} has died. The house is quieter, and colder.',
+              { name:rulerChar.name }));
+            if (FB.spouseDied) FB.spouseDied(state, rulerChar);
+            if (FB.promoteSpouse) FB.promoteSpouse(state);
+          }
         } else {
           if (rulerMember) rulerMember.alive = false;
           FB.advanceRealmSuccession(state, id);

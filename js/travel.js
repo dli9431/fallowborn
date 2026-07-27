@@ -169,6 +169,442 @@ window.FB = window.FB || {};
     return Math.ceil(base * mult);
   };
 
+  /* ================= GIFT COURIERS =================
+     Gifts crossing the sovereign border travel from the permanent household
+     home. Their route, effect, exact object/cash, and leg duration are frozen
+     at dispatch; only a failed courier's return destination follows a later
+     permanent move of the household. */
+
+  function deliveryRecipientKind(state, kind, id) {
+    if (kind === 'character' && FB.realmIdForRulerCharacter) {
+      const rid = FB.realmIdForRulerCharacter(state, id);
+      if (rid) return { kind:'ruler', id:rid };
+    }
+    return { kind:kind, id:id };
+  }
+
+  function giftRecipientData(state, kind, id) {
+    const normalized = deliveryRecipientKind(state, kind, id);
+    kind = normalized.kind;
+    id = normalized.id;
+    if (kind === 'ruler') {
+      const r = state.realms && state.realms[id];
+      if (!r || !r.alive || !r.ruler || id === 'player' ||
+          !r.capital || !settled(r.capital)) return null;
+      return {
+        kind:kind,
+        id:id,
+        name:r.ruler.name,
+        destinationId:r.capital,
+        generation:r.ruler.generation === undefined ? 1 : r.ruler.generation
+      };
+    }
+    if (kind === 'character') {
+      const c = state.chars && state.chars[id];
+      if (!c || c.dead || id === state.player.charId) return null;
+      const destinationId = FB.characterResidence
+        ? FB.characterResidence(state, c) : FB.homeOf(state, c);
+      if (!destinationId || !settled(destinationId)) return null;
+      return {
+        kind:kind,
+        id:id,
+        name:FB.fullName(c),
+        destinationId:destinationId,
+        generation:null
+      };
+    }
+    return null;
+  }
+
+  function provinceSovereign(state, pid) {
+    if (!pid) return null;
+    if (state.owner && state.owner[pid]) return state.owner[pid];
+    const holder = state.holder && state.holder[pid];
+    return holder && FB.topRealm ? FB.topRealm(state, holder) : holder || null;
+  }
+
+  function deliveryEta(delivery) {
+    const route = delivery.remainingRoute || [];
+    if (!route.length) return 0;
+    const legDays = Math.max(1, Number(delivery.legDays) || 1);
+    const left = Math.max(0, Number(delivery.legDaysLeft) || 0);
+    return left + Math.max(0, route.length - 1) * legDays;
+  }
+
+  FB.giftDeliveryEnsure = function (state) {
+    const p = state.player;
+    if (!Array.isArray(p.giftDeliveries)) p.giftDeliveries = [];
+    const kept = [];
+    for (let i = 0; i < p.giftDeliveries.length; i++) {
+      const d = p.giftDeliveries[i];
+      if (!d || (d.recipientKind !== 'ruler' &&
+          d.recipientKind !== 'character') ||
+          (d.giftKind !== 'cash' && d.giftKind !== 'item') ||
+          (d.phase !== 'outbound' && d.phase !== 'return') ||
+          typeof d.recipientId !== 'string' ||
+          typeof d.currentId !== 'string' ||
+          !Array.isArray(d.remainingRoute)) continue;
+      d.legDays = Math.max(1, Number(d.legDays) || balance('travelLegDays', 3));
+      d.legDaysLeft = Math.max(0, Number(d.legDaysLeft) || 0);
+      d.effect = Number(d.effect) || 0;
+      if (d.giftKind === 'cash') d.amount = Math.max(0, Number(d.amount) || 0);
+      kept.push(d);
+    }
+    p.giftDeliveries = kept;
+    return kept;
+  };
+
+  FB.giftDeliveryPending = function (state, kind, id) {
+    const normalized = deliveryRecipientKind(state, kind, id);
+    const deliveries = FB.giftDeliveryEnsure(state);
+    const currentRuler = normalized.kind === 'ruler' &&
+      FB.realmRulerCharacter
+      ? FB.realmRulerCharacter(state, normalized.id) : null;
+    const realm = normalized.kind === 'ruler' &&
+      state.realms && state.realms[normalized.id];
+    const generation = realm && realm.ruler &&
+      (realm.ruler.generation === undefined ? 1 : realm.ruler.generation);
+    for (let i = 0; i < deliveries.length; i++) {
+      const d = deliveries[i];
+      if (d.recipientKind === 'ruler' && normalized.kind === 'ruler' &&
+          d.recipientId === normalized.id &&
+          d.recipientGeneration === generation) return d;
+      if (d.recipientKind === 'character' && currentRuler &&
+          d.recipientId === currentRuler.id) return d;
+      if (d.recipientKind === normalized.kind &&
+          d.recipientKind !== 'ruler' &&
+          d.recipientId === normalized.id) return d;
+    }
+    return null;
+  };
+
+  FB.giftDeliveryPreview = function (state, kind, id) {
+    const recipient = giftRecipientData(state, kind, id);
+    const pending = FB.giftDeliveryPending(state, kind, id);
+    const out = {
+      eligible:false,
+      pending:pending,
+      phase:pending ? pending.phase : null,
+      eta:pending ? deliveryEta(pending) : 0
+    };
+    if (pending) {
+      out.eligible = false;
+      out.recipientKind = pending.recipientKind;
+      out.recipientId = pending.recipientId;
+      out.destinationId = pending.phase === 'return'
+        ? pending.returnHomeId : pending.destinationId;
+      out.foreign = true;
+      return out;
+    }
+    if (!recipient) {
+      out.reason = FB.T('That recipient cannot receive a gift.');
+      return out;
+    }
+    const homeId = state.player.provinceId;
+    const homeSovereign = provinceSovereign(state, homeId);
+    const destinationSovereign = provinceSovereign(state,
+      recipient.destinationId);
+    const foreign = !!(homeSovereign && destinationSovereign &&
+      homeSovereign !== destinationSovereign);
+    out.recipientKind = recipient.kind;
+    out.recipientId = recipient.id;
+    out.recipientName = recipient.name;
+    out.recipientGeneration = recipient.generation;
+    out.homeId = homeId;
+    out.homeSovereign = homeSovereign;
+    out.destinationId = recipient.destinationId;
+    out.destinationSovereign = destinationSovereign;
+    out.foreign = foreign;
+    const route = foreign
+      ? FB.travelRoute(homeId, recipient.destinationId) : [];
+    if (foreign && (!route || !route.length)) {
+      out.reason = FB.T('No settled overland courier route reaches the recipient.');
+      return out;
+    }
+    const legDays = FB.travelLegDays(state);
+    out.eligible = true;
+    out.route = route || [];
+    out.legs = out.route.length;
+    out.legDays = legDays;
+    out.days = out.legs * legDays;
+    out.eta = out.days;
+    return out;
+  };
+
+  FB.dispatchGiftDelivery = function (state, spec) {
+    spec = spec || {};
+    const preview = FB.giftDeliveryPreview(state,
+      spec.recipientKind, spec.recipientId);
+    if (!preview.eligible || !preview.foreign || preview.pending) return false;
+    const p = state.player;
+    const giftKind = spec.giftKind;
+    const effect = Number(spec.effect) || 0;
+    let itemSnapshot = null;
+    if (giftKind === 'cash') {
+      const amount = Math.max(0, Number(spec.amount) || 0);
+      if (p.gold < amount) return false;
+    } else if (giftKind === 'item') {
+      if (!spec.itemRef || !FB.resolveItem ||
+          !FB.resolveItem(state, spec.itemRef) ||
+          p.items.indexOf(spec.itemRef) < 0 ||
+          (FB.itemAssignment && FB.itemAssignment(state, spec.itemRef)) ||
+          (FB.financeCollateralPledged &&
+            FB.financeCollateralPledged(state, 'item', spec.itemRef))) {
+        return false;
+      }
+      itemSnapshot = FB.itemParam(state, spec.itemRef, true);
+    } else {
+      return false;
+    }
+    if (preview.recipientKind === 'ruler') {
+      if (FB.rulerGiftReady && !FB.rulerGiftReady(
+          state, preview.recipientId)) return false;
+    } else if (FB.socialGiftReady &&
+        !FB.socialGiftReady(state, preview.recipientId)) {
+      return false;
+    }
+
+    const delivery = {
+      id:'gift_delivery_' + FB.uid(),
+      senderCharId:p.charId,
+      recipientKind:preview.recipientKind,
+      recipientId:preview.recipientId,
+      recipientGeneration:preview.recipientGeneration,
+      recipientName:preview.recipientName,
+      giftKind:giftKind,
+      amount:giftKind === 'cash' ? Math.max(0, Number(spec.amount) || 0) : 0,
+      itemRef:giftKind === 'item' ? spec.itemRef : null,
+      item:itemSnapshot,
+      effect:effect,
+      dispatchHomeId:preview.homeId,
+      destinationId:preview.destinationId,
+      destinationSovereign:preview.destinationSovereign,
+      currentId:preview.homeId,
+      phase:'outbound',
+      remainingRoute:preview.route.slice(),
+      outboundRoute:preview.route.slice(),
+      legDays:preview.legDays,
+      legDaysLeft:preview.legDays,
+      startedTurn:state.turn,
+      outboundArrivalTurn:state.turn + preview.days,
+      failedReason:null
+    };
+    if (giftKind === 'cash') p.gold -= delivery.amount;
+    else if (!FB.transferItem(state, delivery.itemRef, null)) return false;
+    FB.giftDeliveryEnsure(state).push(delivery);
+
+    const destination = FB.world.byId[delivery.destinationId];
+    if (giftKind === 'cash') {
+      FB.news(state, FB.msg('news.gift.courier_dispatched_cash',
+        '📯 A courier leaves {home} carrying {money:amount} for {recipient} in {destination}; the road should take {days} days.', {
+          home:FB.world.byId[delivery.dispatchHomeId].name,
+          amount:delivery.amount,
+          recipient:delivery.recipientName,
+          destination:destination ? destination.name : '',
+          days:preview.days
+        }));
+    } else {
+      FB.news(state, FB.msg('news.gift.courier_dispatched_item',
+        '📯 A courier leaves {home} carrying {item} for {recipient} in {destination}; the road should take {days} days.', {
+          home:FB.world.byId[delivery.dispatchHomeId].name,
+          item:delivery.item,
+          recipient:delivery.recipientName,
+          destination:destination ? destination.name : '',
+          days:preview.days
+        }));
+    }
+    return true;
+  };
+
+  function deliveryFailureReason(state, d) {
+    if (state.player.charId !== d.senderCharId) return 'sender';
+    if (d.recipientKind === 'ruler') {
+      const r = state.realms && state.realms[d.recipientId];
+      if (!r || !r.alive || !r.ruler ||
+          (r.ruler.generation === undefined ? 1 : r.ruler.generation) !==
+            d.recipientGeneration) return 'recipient';
+      if (r.capital !== d.destinationId) return 'moved';
+      return null;
+    }
+    const c = state.chars && state.chars[d.recipientId];
+    if (!c || c.dead) return 'recipient';
+    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+      return 'succeeded';
+    }
+    const residence = FB.characterResidence
+      ? FB.characterResidence(state, c) : FB.homeOf(state, c);
+    return residence === d.destinationId ? null : 'moved';
+  }
+
+  function removeDelivery(state, delivery) {
+    const deliveries = FB.giftDeliveryEnsure(state);
+    const at = deliveries.indexOf(delivery);
+    if (at >= 0) deliveries.splice(at, 1);
+  }
+
+  function deliveryReturnRoute(delivery, homeId) {
+    if (delivery.currentId === homeId) return [];
+    return FB.travelRoute(delivery.currentId, homeId);
+  }
+
+  function finishGiftReturn(state, delivery) {
+    if (delivery.giftKind === 'cash') {
+      state.player.gold += delivery.amount;
+      FB.news(state, FB.msg('news.gift.courier_returned_cash',
+        '📯 The courier reaches your home and restores the undelivered {money:amount} to the household purse.', {
+          amount:delivery.amount
+        }));
+    } else {
+      FB.transferItem(state, delivery.itemRef, 'armory', { force:true });
+      FB.news(state, FB.msg('news.gift.courier_returned_item',
+        '📯 The courier reaches your home and returns {item} to the family armory.', {
+          item:delivery.item
+        }));
+    }
+    removeDelivery(state, delivery);
+  }
+
+  function beginGiftReturn(state, delivery) {
+    delivery.phase = 'return';
+    delivery.returnHomeId = state.player.provinceId;
+    delivery.remainingRoute =
+      deliveryReturnRoute(delivery, delivery.returnHomeId) || [];
+    delivery.legDaysLeft = delivery.remainingRoute.length
+      ? delivery.legDays : 0;
+    delivery.returnStartedTurn = state.turn;
+    delivery.returnArrivalTurn = state.turn + deliveryEta(delivery);
+    const destination = FB.world.byId[delivery.destinationId];
+    FB.news(state, FB.msg('news.gift.courier_return_begins', {
+      forms:{
+        select:'value', param:'reason', cases:{
+          sender:'📯 The courier reaches {destination}, but the sender is dead; the undelivered gift begins its return journey.',
+          recipient:'📯 The courier reaches {destination}, but the recipient is gone; the undelivered gift begins its return journey.',
+          succeeded:'📯 The courier reaches {destination}, but the recipient now wears a crown and the old personal offer cannot be delivered; the gift begins its return journey.',
+          moved:'📯 The courier reaches {destination}, but the recipient has moved; the undelivered gift begins its return journey.',
+          other:'📯 The gift cannot be delivered at {destination}; the courier begins the return journey.'
+        }
+      }
+    }, {
+      reason:delivery.failedReason || 'other',
+      destination:destination ? destination.name : ''
+    }));
+    if (!delivery.remainingRoute.length &&
+        delivery.currentId === delivery.returnHomeId) {
+      finishGiftReturn(state, delivery);
+    }
+  }
+
+  function finishGiftDelivery(state, delivery) {
+    if (delivery.recipientKind === 'ruler') {
+      const r = state.realms[delivery.recipientId];
+      FB.adjustRealmOpinion(state, delivery.recipientId, delivery.effect);
+      if (FB.noteRulerGift) FB.noteRulerGift(state, delivery.recipientId);
+      const usesFavor = FB.rulerGiftUsesFavor(state, delivery.recipientId);
+      const rulerParams = {
+        amount:delivery.amount,
+        item:delivery.item,
+        recipient:r.ruler.name,
+        realm:r.name,
+        value:Math.round(FB.realmOpinionOf(state, delivery.recipientId))
+      };
+      if (delivery.giftKind === 'cash') {
+        FB.news(state, FB.msg(usesFavor
+          ? 'news.gift.courier_delivered_ruler_cash_favor'
+          : 'news.gift.courier_delivered_ruler_cash_opinion',
+        usesFavor
+          ? '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (favor {value})'
+          : '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (opinion {value})',
+        rulerParams));
+      } else {
+        FB.news(state, FB.msg(usesFavor
+          ? 'news.gift.courier_delivered_ruler_item_favor'
+          : 'news.gift.courier_delivered_ruler_item_opinion',
+        usesFavor
+          ? '🎁 Your courier delivers {item} to {recipient} of {realm}. (favor {value})'
+          : '🎁 Your courier delivers {item} to {recipient} of {realm}. (opinion {value})',
+        rulerParams));
+      }
+    } else {
+      const c = state.chars[delivery.recipientId];
+      if (delivery.giftKind === 'item') {
+        FB.transferItem(state, delivery.itemRef, c.id, { force:true });
+      }
+      c.opinion = FB.clamp(c.opinion + delivery.effect, -100, 100);
+      if (FB.noteSocialGift) FB.noteSocialGift(state, c.id);
+      const characterParams = {
+        amount:delivery.amount,
+        item:delivery.item,
+        recipient:FB.fullName(c),
+        regard:Math.round(c.opinion)
+      };
+      FB.news(state, delivery.giftKind === 'cash'
+        ? FB.msg('news.gift.courier_delivered_character_cash',
+          '🎁 Your courier delivers {money:amount} to {recipient}. (regard {regard})',
+          characterParams)
+        : FB.msg('news.gift.courier_delivered_character_item',
+          '🎁 Your courier delivers {item} to {recipient}. (regard {regard})',
+          characterParams));
+    }
+    removeDelivery(state, delivery);
+  }
+
+  function giftDeliveryArrive(state, delivery) {
+    if (!delivery.failedReason) {
+      delivery.failedReason = deliveryFailureReason(state, delivery);
+    }
+    if (delivery.failedReason) beginGiftReturn(state, delivery);
+    else finishGiftDelivery(state, delivery);
+  }
+
+  function rerouteGiftReturn(state, delivery) {
+    const homeId = state.player.provinceId;
+    if (delivery.returnHomeId === homeId && delivery.remainingRoute.length) return;
+    if (delivery.currentId === homeId) {
+      delivery.returnHomeId = homeId;
+      delivery.remainingRoute = [];
+      delivery.legDaysLeft = 0;
+      finishGiftReturn(state, delivery);
+      return;
+    }
+    const route = deliveryReturnRoute(delivery, homeId);
+    if (!route || !route.length) return;
+    delivery.returnHomeId = homeId;
+    delivery.remainingRoute = route;
+    delivery.legDaysLeft = delivery.legDays;
+    delivery.returnArrivalTurn = state.turn + deliveryEta(delivery);
+  }
+
+  FB.giftDeliveryTick = function (state) {
+    const deliveries = FB.giftDeliveryEnsure(state).slice();
+    for (let i = 0; i < deliveries.length; i++) {
+      const d = deliveries[i];
+      if (FB.giftDeliveryEnsure(state).indexOf(d) < 0) continue;
+      if (d.phase === 'outbound' && !d.failedReason) {
+        d.failedReason = deliveryFailureReason(state, d);
+      } else if (d.phase === 'return') {
+        rerouteGiftReturn(state, d);
+        if (FB.giftDeliveryEnsure(state).indexOf(d) < 0) continue;
+      }
+      if (!d.remainingRoute.length) {
+        if (d.phase === 'outbound') giftDeliveryArrive(state, d);
+        else if (d.currentId === state.player.provinceId) {
+          finishGiftReturn(state, d);
+        }
+        continue;
+      }
+      d.legDaysLeft--;
+      if (d.legDaysLeft > 0) continue;
+      d.currentId = d.remainingRoute.shift();
+      d.legDaysLeft = d.remainingRoute.length ? d.legDays : 0;
+      if (!d.remainingRoute.length) {
+        if (d.phase === 'outbound') giftDeliveryArrive(state, d);
+        else if (d.currentId === state.player.provinceId) {
+          finishGiftReturn(state, d);
+        }
+      }
+    }
+  };
+
   function purposeTierRange(def) {
     const explicit = !!(def &&
       (def.minTier !== undefined || def.maxTier !== undefined));
@@ -400,6 +836,10 @@ window.FB = window.FB || {};
     if (venture) p.travel.venture = venture;
     if (opts.targetCharId) p.travel.targetCharId = opts.targetCharId;
     if (opts.targetCourtship) p.travel.targetCourtship = true;
+    if (opts.targetRulerRealm) {
+      p.travel.targetRulerRealm = opts.targetRulerRealm;
+      p.travel.targetRulerGeneration = opts.targetRulerGeneration;
+    }
     p.travel.seenCultures[me(state).culture] = 1;
     clearQueued(state);
     if (venture) {
@@ -510,6 +950,8 @@ window.FB = window.FB || {};
       return false;
     }
 
+    const targetRulerRealm = FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(state, c) : null;
     const started = beginJourney(state, 'relationship', {
       destinationId:preview.destinationId,
       destinationRealm:c.royalLine ? c.royalLine.realmId : null,
@@ -518,7 +960,10 @@ window.FB = window.FB || {};
       cost:preview.cost
     }, {
       targetCharId:c.id,
-      targetCourtship:!!options.courtship
+      targetCourtship:!!options.courtship,
+      targetRulerRealm:targetRulerRealm,
+      targetRulerGeneration:targetRulerRealm && state.realms[targetRulerRealm].ruler
+        .generation
     });
     if (started && options.courtship) {
       FB.news(state, FB.msg('news.social.courting_visit_begins',
@@ -647,6 +1092,13 @@ window.FB = window.FB || {};
     if (!t || !t.targetCharId) return true;
     const c = state.chars[t.targetCharId];
     if (!c || c.dead) return false;
+    if (t.targetRulerRealm) {
+      const r = state.realms[t.targetRulerRealm];
+      if (!r || !r.alive || !r.ruler ||
+          r.ruler.generation !== t.targetRulerGeneration ||
+          !FB.isReigningRealmRuler ||
+          !FB.isReigningRealmRuler(state, c)) return false;
+    }
     const residence = FB.characterResidence ?
       FB.characterResidence(state, c) : FB.homeOf(state, c);
     if (residence !== t.destinationId) return false;
@@ -695,6 +1147,13 @@ window.FB = window.FB || {};
     if (!t.remainingRoute.length) finishAtHome(state);
     if (FB.map) FB.map.request();
   }
+
+  FB.invalidateSocialVisit = function (state, cid) {
+    const t = FB.travelEnsure(state);
+    if (!t || !cid || t.targetCharId !== cid) return false;
+    endInvalidTargetVisit(state, t);
+    return true;
+  };
 
   FB.travelTick = function (state) {
     const p = state.player;

@@ -5479,7 +5479,25 @@ window.FB = window.FB || {};
     });
   }
 
-  function giftItemUnavailableText(s, ref, days) {
+  function giftDeliveryText(s, kind, id) {
+    if (!FB.giftDeliveryPreview) return '';
+    const preview = FB.giftDeliveryPreview(s, kind, id);
+    const pending = preview && preview.pending;
+    if (!pending) return '';
+    const destination = FB.world.byId[preview.destinationId];
+    if (pending.phase === 'return') {
+      return FB.T('Courier returning to {destination} · {days} days remain.', {
+        destination:destination ? destination.name : FB.T('your permanent home'),
+        days:preview.eta
+      });
+    }
+    return FB.T('Gift courier bound for {destination} · {days} days remain.', {
+      destination:destination ? destination.name : FB.T('the recipient'),
+      days:preview.eta
+    });
+  }
+
+  function giftItemUnavailableText(s, ref, days, deliveryText) {
     const assigned = FB.itemAssignment(s, ref);
     if (assigned) {
       return FB.T('{wearer}. Return it to the armory before gifting it.', {
@@ -5490,6 +5508,7 @@ window.FB = window.FB || {};
       FB.financeCollateralPledged(s, 'item', ref)) {
       return FB.T('Pledged to a lender; clear the loan before gifting it.');
     }
+    if (deliveryText) return deliveryText;
     if (days) {
       return FB.T('Cash and item gifts share this recipient’s cooldown. Ready in {days} days.', {
         days:days
@@ -5502,14 +5521,28 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!s || !c || c.dead || c.id === s.player.charId) return;
+    const rulerId = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(s, c);
+    if (rulerId) {
+      UI.showRulerGiftModal(rulerId, 'character:' + c.id);
+      return;
+    }
     const household = FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, cid);
     const days = FB.socialGiftDaysRemaining(s, cid);
+    const deliveryPreview = FB.giftDeliveryPreview
+      ? FB.giftDeliveryPreview(s, 'character', cid) : null;
+    const deliveryText = giftDeliveryText(s, 'character', cid);
+    const deliveryUnavailable = deliveryPreview && deliveryPreview.foreign &&
+      !deliveryPreview.eligible ? deliveryPreview.reason : '';
     const cashCost = 5;
     const cashBoost = FBDATA.balance.socialCashGiftOpinion === undefined
       ? 4 : FBDATA.balance.socialCashGiftOpinion;
-    const cashBlocked = days || s.player.gold < cashCost;
+    const cashBlocked = days || deliveryText || deliveryUnavailable ||
+      s.player.gold < cashCost;
     let cashDetail;
-    if (days) {
+    if (deliveryText || deliveryUnavailable) {
+      cashDetail = deliveryText || deliveryUnavailable;
+    } else if (days) {
       cashDetail = FB.T(
         '+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days.', {
           regard:cashBoost, days:days
@@ -5519,15 +5552,24 @@ window.FB = window.FB || {};
         cost:cashCost, current:s.player.gold, regard:cashBoost
       });
     } else {
-      cashDetail = FB.T(
-        '+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
-          regard:cashBoost, days:FB.socialGiftCooldownDays()
-        });
+      cashDetail = deliveryPreview && deliveryPreview.foreign
+        ? FB.T(
+          '+{regard} Regard on arrival after {travelDays} courier days; the {cooldown}-day cooldown begins then. (spends the day)', {
+            regard:cashBoost,
+            travelDays:deliveryPreview.days,
+            cooldown:FB.socialGiftCooldownDays()
+          })
+        : FB.T(
+          '+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
+            regard:cashBoost, days:FB.socialGiftCooldownDays()
+          });
     }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days.', {
         name:c.name, days:FB.socialGiftCooldownDays()
-      })) + '</p></div><div class="gm-list">' +
+      })) + '</p>' + (deliveryText
+        ? '<p>' + esc(deliveryText) + '</p>' : '') +
+      '</div><div class="gm-list">' +
       '<button class="actionbtn" id="gift-character-cash"' +
       (cashBlocked ? ' disabled' : '') + '>💰 ' +
       esc(FB.T('Offer {money:gold} in cash', { gold:cashCost })) +
@@ -5546,16 +5588,22 @@ window.FB = window.FB || {};
       for (const ref of refs) {
         const item = FB.resolveItem(s, ref);
         if (!item) continue;
-        const blocked = giftItemUnavailableText(s, ref, days);
+        const blocked = giftItemUnavailableText(s, ref, days,
+          deliveryText || deliveryUnavailable);
         const boost = FB.giftOpinion(item);
         const detail = blocked
           ? FB.T('+{regard} Regard · unavailable: {reason}', {
             regard:boost, reason:blocked
           })
-          : FB.T(
-            '+{regard} Regard. This exact object leaves family ownership. (spends the day)', {
-              regard:boost
-            });
+          : (deliveryPreview && deliveryPreview.foreign
+            ? FB.T(
+              '+{regard} Regard on arrival after {days} courier days. This exact object remains in transit until delivery. (spends the day)', {
+                regard:boost, days:deliveryPreview.days
+              })
+            : FB.T(
+              '+{regard} Regard. This exact object leaves family ownership. (spends the day)', {
+                regard:boost
+              }));
         h += '<button class="actionbtn" data-character-gift-item="' + esc(ref) + '"' +
           (blocked ? ' disabled' : '') + '>' + item.def.icon + ' ' +
           esc(FB.itemName(s, ref)) +
@@ -5590,13 +5638,21 @@ window.FB = window.FB || {};
     const r = s && rid && s.realms[rid];
     if (!s || !r || !r.alive || !r.ruler || rid === 'player') return;
     const days = FB.rulerGiftDaysRemaining(s, rid);
+    const deliveryPreview = FB.giftDeliveryPreview
+      ? FB.giftDeliveryPreview(s, 'ruler', rid) : null;
+    const deliveryText = giftDeliveryText(s, 'ruler', rid);
+    const deliveryUnavailable = deliveryPreview && deliveryPreview.foreign &&
+      !deliveryPreview.eligible ? deliveryPreview.reason : '';
     const cashCost = FB.rulerCashGiftCost(s, rid);
     const cashBoost = FB.rulerCashGiftOpinion();
     const usesFavor = FB.rulerGiftUsesFavor(s, rid);
     const standing = usesFavor ? FB.T('Favor') : FB.T('Opinion');
-    const cashBlocked = days || s.player.gold < cashCost;
+    const cashBlocked = days || deliveryText || deliveryUnavailable ||
+      s.player.gold < cashCost;
     let cashDetail;
-    if (days) {
+    if (deliveryText || deliveryUnavailable) {
+      cashDetail = deliveryText || deliveryUnavailable;
+    } else if (days) {
       cashDetail = FB.T(
         '+{amount} {standing}. Cash and item gifts share this ruler’s cooldown; ready in {days} days.', {
           amount:cashBoost, standing:standing, days:days
@@ -5607,16 +5663,25 @@ window.FB = window.FB || {};
           cost:cashCost, current:s.player.gold, amount:cashBoost, standing:standing
         });
     } else {
-      cashDetail = FB.T(
-        'Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)', {
-          cost:cashCost, amount:cashBoost, standing:standing,
-          days:FB.socialGiftCooldownDays()
-        });
+      cashDetail = deliveryPreview && deliveryPreview.foreign
+        ? FB.T(
+          'Rank price: {money:cost} for +{amount} {standing} on arrival after {travelDays} courier days; the {cooldown}-day cooldown begins then. (spends the day)', {
+            cost:cashCost, amount:cashBoost, standing:standing,
+            travelDays:deliveryPreview.days,
+            cooldown:FB.socialGiftCooldownDays()
+          })
+        : FB.T(
+          'Rank price: {money:cost} for +{amount} {standing}. Cash and items share a {days}-day cooldown. (spends the day)', {
+            cost:cashCost, amount:cashBoost, standing:standing,
+            days:FB.socialGiftCooldownDays()
+          });
     }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose what to offer {title} {ruler} of {realm}.', {
         title:FB.realmRankTitle(s, r), ruler:r.ruler.name, realm:r.name
-      })) + '</p></div><div class="gm-list">' +
+      })) + '</p>' + (deliveryText
+        ? '<p>' + esc(deliveryText) + '</p>' : '') +
+      '</div><div class="gm-list">' +
       '<button class="actionbtn" id="gift-ruler-cash"' +
       (cashBlocked ? ' disabled' : '') + '>💰 ' +
       esc(FB.T('Offer {money:gold} in cash', { gold:cashCost })) +
@@ -5630,16 +5695,22 @@ window.FB = window.FB || {};
     for (const ref of refs) {
       const item = FB.resolveItem(s, ref);
       if (!item) continue;
-      const blocked = giftItemUnavailableText(s, ref, days);
+      const blocked = giftItemUnavailableText(s, ref, days,
+        deliveryText || deliveryUnavailable);
       const boost = FB.giftOpinion(item);
       const detail = blocked
         ? FB.T('+{amount} {standing} · unavailable: {reason}', {
           amount:boost, standing:standing, reason:blocked
         })
-        : FB.T(
-          '+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)', {
-            amount:boost, standing:standing
-          });
+        : (deliveryPreview && deliveryPreview.foreign
+          ? FB.T(
+            '+{amount} {standing} on arrival after {days} courier days. This exact object remains in transit until delivery. (spends the day)', {
+              amount:boost, standing:standing, days:deliveryPreview.days
+            })
+          : FB.T(
+            '+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)', {
+              amount:boost, standing:standing
+            }));
       h += '<button class="actionbtn" data-ruler-gift-item="' + esc(ref) + '"' +
         (blocked ? ' disabled' : '') + '>' + item.def.icon + ' ' +
         esc(FB.itemName(s, ref)) +
@@ -5650,6 +5721,9 @@ window.FB = window.FB || {};
       historyView:true,
       historyBackRender:function () {
         if (returnView === 'council') UI.showCouncil();
+        else if (returnView && returnView.indexOf('character:') === 0) {
+          UI.showCharModal(returnView.slice('character:'.length));
+        }
         else UI.showLiegeModal(rid);
       }
     });
@@ -5669,13 +5743,16 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () {
       modalHistoryBack(function () {
         if (returnView === 'council') UI.showCouncil();
+        else if (returnView && returnView.indexOf('character:') === 0) {
+          UI.showCharModal(returnView.slice('character:'.length));
+        }
         else UI.showLiegeModal(rid);
       });
     });
   };
 
-  /* the liege lord's sheet — AI rulers are lightweight realm.ruler objects,
-     not full chars, so this renders the realm rather than a character card */
+  /* The realm sheet remains the primary view for an AI ruler. Cultivation
+     can materialize that ruler into an ordinary character sheet as needed. */
   UI.showLiegeModal = function (rid) {
     const s = FB.state;
     const r = rid && s.realms[rid];
@@ -5687,6 +5764,8 @@ window.FB = window.FB || {};
     const liege = r.liege && s.realms[r.liege];
     const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
     const rulerUsesFavor = FB.rulerGiftUsesFavor(s, rid);
+    const rulerCharacter = FB.realmRulerCharacter
+      ? FB.realmRulerCharacter(s, rid) : null;
     const succession = FB.ensureRealmSuccession(s, rid);
     const family = FB.realmFamily(s, rid);
     const techRid = FB.techRealmId(s, rid);
@@ -5744,10 +5823,11 @@ window.FB = window.FB || {};
       '</div>';
     if (rid !== 'player') {
       const giftDays = FB.rulerGiftDaysRemaining(s, rid);
+      const deliveryText = giftDeliveryText(s, 'ruler', rid);
       const giftStanding = rulerUsesFavor ? FB.T('Favor') : FB.T('Opinion');
       h += '<button class="actionbtn" id="rm-gift">🎁 ' +
         esc(FB.T('Offer a gift…')) +
-        '<span class="adesc">' + esc(giftDays
+        '<span class="adesc">' + esc(deliveryText || (giftDays
           ? FB.T('Cash and item gifts share this ruler’s cooldown. Ready in {days} days.', {
             days:giftDays
           })
@@ -5756,7 +5836,21 @@ window.FB = window.FB || {};
               cost:FB.rulerCashGiftCost(s, rid),
               amount:FB.rulerCashGiftOpinion(),
               standing:giftStanding
-            })) + '</span></button>';
+            }))) + '</span></button>' +
+        '<button class="actionbtn" id="rm-cultivate">🤝 ' +
+        esc(FB.T('Cultivate relationship…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Visit {name} at the capital and remain at least {days} days; Regard advances only while you are there.', {
+            name:r.ruler.name,
+            days:FBDATA.balance.travelMinStayDays || 90
+          })) + '</span></button>';
+      if (rulerCharacter) {
+        h += '<button class="actionbtn" id="rm-character">' +
+          esc(FB.T('Open full character sheet')) +
+          '<span class="adesc">' + esc(FB.T(
+            'View personal relationships, courtship, marriage, and other applicable dealings.')) +
+          '</span></button>';
+      }
     }
     if (family.length) {
       h += '<div class="panelh">' + esc(FB.T('Ruler’s family and succession')) + '</div>';
@@ -5814,6 +5908,17 @@ window.FB = window.FB || {};
     });
     if ($('rm-gift')) $('rm-gift').addEventListener('click', function () {
       UI.showRulerGiftModal(rid, 'ruler');
+    });
+    if ($('rm-cultivate')) $('rm-cultivate').addEventListener('click', function () {
+      const c = FB.materializeRealmRuler(s, rid);
+      if (!c) return;
+      const presence = FB.socialAttentionPresence(s, c);
+      if (presence.status === 'active') UI.showCharModal(c.id);
+      else UI.showSocialVisit(c.id, { returnRealmId:rid });
+    });
+    if ($('rm-character')) $('rm-character').addEventListener('click', function () {
+      const c = FB.realmRulerCharacter(s, rid);
+      if (c) UI.showCharModal(c.id);
     });
     document.querySelectorAll('[data-royal-child]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -7801,6 +7906,11 @@ window.FB = window.FB || {};
     const c = s.chars[cid];
     if (!c) return;
     const me = s.chars[s.player.charId];
+    const reigningRealmId = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(s, c);
+    if (reigningRealmId && FB.syncRealmRulerStanding) {
+      FB.syncRealmRulerStanding(s, reigningRealmId);
+    }
     const descendantKind = FB.playerDescendantKind(s, c.id);
     const isHousehold = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
@@ -7925,16 +8035,31 @@ window.FB = window.FB || {};
               }))) +
           '</span></button>';
       }
-      const giftDays = FB.socialGiftDaysRemaining(s, c.id);
+      const giftDays = reigningRealmId
+        ? FB.rulerGiftDaysRemaining(s, reigningRealmId)
+        : FB.socialGiftDaysRemaining(s, c.id);
+      const deliveryText = giftDeliveryText(s,
+        reigningRealmId ? 'ruler' : 'character',
+        reigningRealmId || c.id);
+      let giftDetail = deliveryText;
+      if (!giftDetail && giftDays) {
+        giftDetail = FB.T(
+          'Cash and item gifts share a recipient cooldown. Ready in {days} days.', {
+            days:giftDays
+          });
+      } else if (!giftDetail && reigningRealmId) {
+        giftDetail = FB.T(
+          'Uses this ruler’s rank price, realm standing, and ruler-generation cooldown.');
+      } else if (!giftDetail && isHousehold) {
+        giftDetail = FB.T(
+          'Choose a cash gift. Household equipment remains in the shared family armory.');
+      } else if (!giftDetail) {
+        giftDetail = FB.T(
+          'Choose cash or an unequipped, unpledged item from the family armory.');
+      }
       h += '<button class="actionbtn" id="cm-gift">' +
         esc(FB.T('🎁 Offer a gift…')) +
-        '<span class="adesc">' + esc(giftDays
-          ? FB.T('Cash and item gifts share a recipient cooldown. Ready in {days} days.', {
-            days:giftDays
-          })
-          : (isHousehold
-            ? FB.T('Choose a cash gift. Household equipment remains in the shared family armory.')
-            : FB.T('Choose cash or an unequipped, unpledged item from the family armory.'))) +
+        '<span class="adesc">' + esc(giftDetail) +
         '</span></button>';
       const isMySpouse = c.spouseId === me.id || c.id === me.spouseId;
       if (isMySpouse) {
@@ -8133,7 +8258,9 @@ window.FB = window.FB || {};
     });
     const gf = $('cm-gift');
     if (gf) gf.addEventListener('click', function () {
-      UI.showCharacterGiftModal(c.id);
+      if (reigningRealmId) {
+        UI.showRulerGiftModal(reigningRealmId, 'character:' + c.id);
+      } else UI.showCharacterGiftModal(c.id);
     });
     const ct = $('cm-court');
     if (ct) ct.addEventListener('click', function () {

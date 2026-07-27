@@ -9,6 +9,14 @@ heir dies, that child's living descendants retain the branch's place before the 
 siblings. These people remain compact records until the player courts one;
 `FB.materializeRoyalChild` then creates the ordinary `state.chars` character used by
 courtship, marriage, births, and mortality while retaining its `royalLine` identity.
+The ruler remains compact until **Cultivate relationship…** is chosen on the realm
+sheet. `FB.materializeRealmRuler` then creates or reuses the current
+`succession.rulerMemberId`, reparents the existing compact children beneath that member,
+and attaches one ordinary character with the ruler’s saved identity, culture, faith,
+age, Martial, trait, station, and current political standing. `FB.realmRulerCharacter`,
+`FB.realmIdForRulerCharacter`, and `FB.isReigningRealmRuler` preserve that identity
+through sheets, gifts, marriage, and succession. Personal Regard and the existing
+player-relative realm standing are one synchronized score while the character reigns.
 
 The special `state.realms.player` node is the player's landed realm, not a synonym for
 independence. It may have a `liege`; `state.owner` continues to name the top sovereign
@@ -151,10 +159,13 @@ count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearl
 tick): the fief escheats to the liege unless a bordering player of the same sovereign
 wins the scramble (liege opinion, prestige, service) — and heirless fiefs of the
 player's own vassals simply return to the player's hand.
-AI rulers stay lightweight `realm.ruler` objects (name, culture, age, martial, and a
-`trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads at
-king tier and up), not full chars — the Deeds banner's "vassal of X" links to their sheet via
-`UI.showLiegeModal` (`data-liege` click delegation), not `UI.showCharModal`. See
+AI rulers ordinarily stay lightweight `realm.ruler` objects (name, culture, age, martial,
+and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads
+at king tier and up). The Deeds banner's "vassal of X" links to their realm sheet via
+`UI.showLiegeModal` (`data-liege` click delegation); after cultivation materializes the
+ruler, that sheet also links to the full character sheet. The cultivation action uses
+the ordinary relationship visit to the current capital, including normal route cost and
+the 90-day minimum stay; attention advances only while the player is physically there. See
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great
 officers of the crown.
 
@@ -168,7 +179,21 @@ feudal chain gain Opinion. Both write the existing player-relative realm-opinion
 Cash and items share one 90-day ruler-recipient clock in `player.realmGiftTurns`. Each
 entry stores the gift turn and `realm.ruler.generation`, so succession makes the new ruler
 a fresh recipient without erasing unrelated clocks. Every accepted ruler gift spends one
-day.
+day. A gift stays immediate inside the sovereign realm containing the player’s permanent
+home. Across a sovereign border it travels by saved courier from that home to the current
+capital; standing and cooldown apply only on successful arrival. A dead or succeeded
+recipient, moved capital, or dead sender makes the courier finish outbound and return the
+exact cash or item without a cooldown.
+
+A materialized reigning ruler uses the compact realm’s yearly mortality roll, never
+ordinary character mortality. If married to the player they remain resident at the current
+capital and are excluded from household enumeration, work, upkeep, standards, retainers,
+equipment, and armory reclamation. Ordinary spouse links, marriage standing, the royal
+compact/alliance, and shared children remain intact. Conception is possible only while the
+player’s physical travel location is that capital, and each shared birth is registered
+beneath the reigning member in the compact succession tree. Realm death advances
+succession through the normal character death/spouse cleanup exactly once; divorce and
+succession also invalidate an active ruler visit.
 
 **Tiers** 0–7 (serf…emperor) feed the five broader societal roles documented in
 [events.md](events.md). Runtime changes use `FB.setPlayerTier`, which preserves the

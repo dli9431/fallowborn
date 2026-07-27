@@ -35,6 +35,12 @@ arrival only when the target resides in the traveler’s current county. The rem
 focus is accepted only as old-save input: restore converts it to attention on the current
 suitor and selects a normal valid focus.
 
+Gift couriers are independent of the player’s personal journey and focus. After the
+calendar advances, `FB.giftDeliveryTick` runs exactly once beside `FB.travelTick` on each
+ordinary player day. It advances every in-flight recipient concurrently, including a day
+spent dispatching another gift. Observe mode never ticks, delivers, fails, or returns a
+player courier.
+
 The campaign's origin is saved as
 `state.start:{id,year,season,day}` and its current calendar remains
 `state.date:{year,season,day}`. New lives copy both from the selected bookmark; old

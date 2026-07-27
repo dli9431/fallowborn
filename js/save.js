@@ -187,6 +187,7 @@ window.FB = window.FB || {};
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);
     if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
     if (FB.realmGiftTurns) FB.realmGiftTurns(FB.state);
+    if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);
     return FB.state;
   };
 })();

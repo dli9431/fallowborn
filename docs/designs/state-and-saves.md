@@ -26,7 +26,10 @@ moment; rendering it later does not consult the live assignment.
 
 Dynastic diplomacy is additive and does not change save version 3.
 `realm.succession` holds lightweight royal members and a ruler-generation identity;
-materialized characters point back through `char.royalLine`.
+materialized children and rulers point back through `char.royalLine`. Materializing a
+founding ruler may add the current `rulerMemberId` and reparent existing root children
+without changing their member ids or order. A materialized current ruler also carries
+`realmStanding`, the last synchronized Regard/political-standing marker.
 `state.alliances` holds canonical, generation-stamped defensive realm pairs.
 `player.royalCompact` identifies the current protagonist's one royal marriage compact,
 and `player.fabricatedClaim` holds the single `{pid, madeTurn}` county claim.
@@ -162,8 +165,9 @@ encounter counters, seen cultures/events, and optional destination-stay timing/w
 fields. An accompanied self-founded trade venture adds a JSON-only `venture` child
 containing its stake, separately paid overhead, destination/route snapshot, status,
 and any settled outcome/payout. It has no duplicate finance record.
-A character-targeted visit additionally stores optional `targetCharId`
-and a courtship marker. Restore validates the live target and their current
+A character-targeted visit additionally stores optional `targetCharId`, a courtship
+marker, and a realm/generation stamp when the target is a reigning ruler. Restore
+validates the live target and their current
 `FB.characterResidence`; a dead, unavailable, or moved target clears invalid
 relationship state and starts the saved traveler home without a minimum stay.
 `player.travelHistory` stores completed purpose/destination pairs for the
@@ -224,6 +228,15 @@ favors, but retains paid service contracts with a loyalty penalty. Permanent rel
 also clears friendship, contacts, courtship, and attention. Restore converts an old active
 `court_suitor` focus into attention on its living suitor and selects an ordinary valid
 focus. All missing or invalid fields self-heal without a save-version migration.
+
+`player.giftDeliveries` is also additive save-format-3 state. Each record freezes the
+sender, ruler generation or character recipient, exact cash/item and semantic item
+snapshot, standing effect, dispatch home/destination/sovereign, phase, current county,
+route, leg clock, arrival turns, and optional failure/return metadata described in
+[travel.md](travel.md). Missing state means no couriers. Succession deliberately retains
+the array: a record whose `senderCharId` is no longer the protagonist completes outbound,
+then returns its exact payload to the new household head’s current permanent home.
+Cooldown maps still clear normally and a failed delivery creates no new entry.
 
 Position definitions and the levy ledger are derived data. Earned offices continue to
 read compatibility flags, retainer contributions read live contracts, and

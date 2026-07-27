@@ -127,9 +127,11 @@ whose existing Regard gains `balance.socialAttentionDailyOpinion` (+0.2 by defau
 ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does not change
 that fixed rate. `FB.characterResidence(state, character)` is the authoritative
 county for social presence: managed household members and retainers live at the
-household home, foreign notables in their saved roster county, royal children at
-their realm’s current capital, and explicitly relocated contacts at their recorded
-home. `FB.socialAttentionPresence` reports `active`, `remote`, or `on-road`.
+household home, foreign notables in their saved roster county, royal children and
+materialized reigning rulers at their realm’s current capital, and explicitly relocated
+contacts at their recorded home. A reigning ruler’s capital residence takes precedence
+over marriage to the player. `FB.socialAttentionPresence` reports `active`, `remote`, or
+`on-road`.
 Attention advances only when active, pauses on outbound/return roads or in another
 county, and continues alongside work, study, war, destination residence, and deeds
 that consume a day. Observe mode never advances it.
@@ -142,8 +144,17 @@ an unequipped, unpledged armory object grants the quality-tier value from
 `balance.socialGiftCooldownDays` (90 by default), and every accepted gift spends one day.
 Spouses, dependent children, retainers, and other managed household members may receive
 cash, but not an armory object: their equipment remains family property managed through the
-shared loadouts. These are ordinary-character gifts and change only Regard; lightweight
-realm rulers use the realm gift rules in [realms.md](realms.md).
+shared loadouts. A materialized reigning ruler is never an ordinary recipient: both their
+realm and full-character sheets use ruler rank pricing, ruler-generation cooldowns, and
+Favor/Opinion rules. These are ordinary-character gifts and change only Regard; realm
+rulers use the realm gift rules in [realms.md](realms.md).
+
+Character gifts remain immediate when the recipient’s residence belongs to the same
+sovereign realm as the player’s permanent home. Otherwise the paid cash or exact armory
+object enters `player.giftDeliveries` and travels home-to-residence. Regard and the
+recipient cooldown begin only on arrival. Death, succession to a crown, or a change of
+residence makes the courier complete the outbound road and return the gift to the
+household’s then-current permanent home without starting a cooldown.
 
 **Rivalries grow out of contact.** The rival seat remains `state.roles.rival`, so old saves,
 events, and mods keep one canonical personal enemy. The player may deliberately name any
@@ -215,8 +226,8 @@ A remote assignment remains saved but paused. Its character sheet offers a
 repeatable targeted journey whose confirmation assigns attention and spends the
 road cost atomically. The quoted visit keeps the traveler at least 90 days;
 Regard starts on arrival, stops during the return, and resumes on a later visit.
-Gifts, naming a qualified friend, and marriage proposals remain deliverable at
-distance.
+Naming a qualified friend and marriage proposals remain deliverable at distance. Gifts
+may instead require the saved courier journey described above.
 
 **Paid retainers are managed people, not family members.** `player.retainers` stores
 compact contracts pointing to ordinary characters. The office is additive to the

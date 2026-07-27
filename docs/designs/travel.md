@@ -74,8 +74,9 @@ home/destination/current county ids, optional service realm, phase
 (`outbound`, `arrived`, or `return`), remaining and original routes, visited
 counties, leg clock, departure turn/cost, encounter counts, seen cultures/events,
 and additive destination-stay fields (`stayStartTurn`, `nextWorkTurn`, `workEvents`,
-and last work event). A targeted journey also saves optional `targetCharId` and
-whether departure initiated courtship. `player.travelHistory` is an array of completed
+and last work event). A targeted journey also saves optional `targetCharId`, whether
+departure initiated courtship, and a reigning-ruler realm/generation stamp when
+applicable. `player.travelHistory` is an array of completed
 `{purpose,destinationId,turn}` records. `player.travelSettlement` is `null` or the
 current character’s completed `{turn,destinationId}` permanent move. All initialize
 lazily, so version-3 saves need no migration.
@@ -117,6 +118,31 @@ Commoner destination stays retain local-work choices. Tier-3+ stays use guest
 quarters and court-residence events, and relationship journeys use personal-visit
 events at every rank.
 
+## Gift couriers
+
+`FB.giftDeliveryPreview` compares the sovereign owning `player.provinceId` with the
+sovereign owning the recipient’s destination. Same-sovereign gifts retain the immediate
+path. A foreign ruler’s destination is the current capital; an ordinary character’s is
+`FB.characterResidence`. Foreign dispatch uses `FB.travelRoute` from the permanent home
+and freezes the route, `FB.travelLegDays` result, exact cash/item, effect, recipient
+identity, and outbound ETA.
+
+`player.giftDeliveries` is an additive array of JSON-only records. Each record saves its
+sender character, ruler-generation or character recipient, gift kind and exact payload,
+semantic item snapshot, effect, dispatch home, destination and sovereign, current county,
+phase (`outbound` or `return`), remaining/original route, leg clock, start/arrival turns,
+and any failure reason/return home. Multiple recipients may have couriers, but
+`FB.giftDeliveryPending` permits only one record per recipient.
+
+`FB.giftDeliveryTick` runs once beside `FB.travelTick` on every ordinary player day and
+never in Observe mode. Delivery applies standing and starts the existing recipient
+cooldown only on successful arrival. A dead sender, dead or succeeded recipient, moved
+recipient, or moved capital marks failure without reversing the outbound road. At the
+original destination the courier starts a new route to the player’s current permanent
+home; a later permanent move reroutes that return. Cash is refunded or the exact item is
+restored only on reaching that home. Dispatch, delivery, failed return, and restoration
+write durable localized Chronicle descriptors.
+
 ## Settlement
 
 `FB.travelSettle` is restricted to freeholders and gentry and moves
@@ -147,6 +173,8 @@ The public surface is `FB.travelLocation`, `FB.travelRoute`,
 `FB.socialVisitStart`, `FB.travelTick`, `FB.travelStayDays`,
 `FB.travelReturnEligible`, `FB.travelSettlementEligible`,
 `FB.travelTurnBack`, `FB.travelReturn`, `FB.travelSettle`, and `FB.travelCancel`.
+The courier surface is `FB.giftDeliveryEnsure`, `FB.giftDeliveryPreview`,
+`FB.giftDeliveryPending`, `FB.dispatchGiftDelivery`, and `FB.giftDeliveryTick`.
 `FB.socialVisitPreview(state, character)` returns an object with `eligible` and
 an optional localized `reason`, or the resolved destination, route, legs, leg
 duration, one-way days, cost, minimum stay, daily Regard rate, active days to

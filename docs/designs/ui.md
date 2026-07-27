@@ -57,6 +57,8 @@ centered `.gm-footer`, so its terminal controls remain at the bottom middle whil
 content scrolls behind them. Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
 and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
+Action buttons never flex-shrink inside these columns, so wrapped descriptions and expanded
+translations remain inside their button borders and contribute their full height to scrolling.
 Ordinary modals (including event, settlement, and resource dialogs), the nested equipment
 picker, and the travel destination picker float above the device's bottom safe area with a
 complete rounded frame. Only deliberate full-screen sheets and the Self/Kin drawer meet the
@@ -193,7 +195,10 @@ friend** and **Propose marriage** remain visibly disabled below the shared thres
 object show their +Regard value and either readiness or recipient-specific days remaining
 on the shared cash/item gift cooldown. Equipped and pledged objects remain visible but
 disabled with the blocking reason. Managed household recipients see cash only and an
-explanation that their objects remain under shared-armory management.
+explanation that their objects remain under shared-armory management. A cross-sovereign
+recipient instead shows the frozen courier days and explains that Regard/cooldown begin
+on arrival. While a delivery is outbound or returning, both the character button and
+picker show its destination, phase, and remaining ETA and disable another gift.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
@@ -253,12 +258,16 @@ Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobi
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show opinion and the current direction.
 
-Every living AI ruler sheet also exposes **Offer a gift…**. Its numbered picker uses the
-rank price for cash, lists exact influence for each armory object, and labels the result
-Favor for lieges/vassals or Opinion for foreign rulers. The Royal Council opens this same
-picker for seated vassals. Its Back/Close behavior uses generic-modal history, and all
-choices are native buttons, retaining number-key selection, Tab/Enter/Space, and mobile
-bottom-sheet navigation.
+Every living AI ruler sheet exposes **Cultivate relationship…** and **Offer a gift…**.
+Cultivation materializes that ruler only when chosen and opens the ordinary capital-visit
+review; once materialized, **Open full character sheet** exposes applicable friendship,
+rivalry, courtship, marriage, and spouse actions. Both sheets route gifts back through the
+ruler picker, so its numbered cash choice uses the rank price, exact armory influence, and
+Favor/Opinion plus ruler-generation cooldown rather than the ordinary five-gold path.
+Foreign-sovereign choices preview courier time and later show outbound/return ETA. The
+Royal Council opens this same picker for seated vassals. Its Back/Close behavior uses
+generic-modal history, and all choices are native buttons, retaining number-key selection,
+Tab/Enter/Space, and mobile bottom-sheet navigation.
 
 The contextual **Network** panel (`N`) answers who is tied to the current household and
 what that relationship does. Its four sections are Household (resident family,

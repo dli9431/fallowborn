@@ -59,6 +59,14 @@ powers that mechanically apply to its wearer and shows them beneath the full-bod
 head-only battle and seasonal-resource powers are omitted when another household member is
 shown.
 
+Cross-sovereign gifts are not transferred at dispatch. The exact reference is removed from
+usable armory ownership and held by a `player.giftDeliveries` record; `FB.itemOwner`
+reports `{kind:'delivery'}` so the object cannot be sold, equipped, duplicated, or
+regenerated while in transit. A successful character delivery transfers that reference to
+the recipient; a successful ruler delivery leaves family ownership permanently. A failed
+delivery retains the same reference through its return journey and restores it to the
+armory only when the courier reaches the household’s then-current permanent home.
+
 At death, the legend freezes the head's loadout and optional battle/event provenance.
 The succession dialog shows that final paper doll and “Worn at death” list. This release
 does not remove, damage, loot, or steal any object: succession clears the dead wearer and

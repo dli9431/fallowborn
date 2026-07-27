@@ -1495,6 +1495,9 @@ window.FB = window.FB || {};
   /* opinion of any realm toward the player: the direct liege lives on
      p.liegeOp, the rest of the chain and the player's own vassals on liegeOps */
   FB.liegeOpOf = function (state, rid) {
+    if (FB.syncRealmRulerStanding) {
+      return FB.syncRealmRulerStanding(state, rid);
+    }
     const p = state.player;
     if (rid === p.liege) return p.liegeOp || 0;
     return (p.liegeOps && p.liegeOps[rid]) || 0;
@@ -1502,10 +1505,16 @@ window.FB = window.FB || {};
   FB.adjustLiegeOp = function (state, rid, amt) {
     const p = state.player;
     if (!rid) return;
-    if (rid === p.liege) p.liegeOp = FB.clamp((p.liegeOp || 0) + amt, -100, 100);
+    const current = FB.liegeOpOf(state, rid);
+    const value = FB.clamp(current + amt, -100, 100);
+    if (FB.setRealmRulerStanding) {
+      FB.setRealmRulerStanding(state, rid, value);
+      return;
+    }
+    if (rid === p.liege) p.liegeOp = value;
     else {
       p.liegeOps = p.liegeOps || {};
-      p.liegeOps[rid] = FB.clamp((p.liegeOps[rid] || 0) + amt, -100, 100);
+      p.liegeOps[rid] = value;
     }
   };
   /* Clearer names for the player-relative opinion store. Keep the historical
@@ -1554,8 +1563,21 @@ window.FB = window.FB || {};
     const r = rid && state.realms[rid];
     const cost = r ? FB.rulerCashGiftCost(state, rid) : 0;
     if (!r || !r.alive || !r.ruler || rid === 'player' || p.gold < cost ||
-      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid))) return false;
+      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid)) ||
+      (FB.giftDeliveryPending &&
+        FB.giftDeliveryPending(state, 'ruler', rid))) return false;
     const boost = FB.rulerCashGiftOpinion();
+    const delivery = FB.giftDeliveryPreview &&
+      FB.giftDeliveryPreview(state, 'ruler', rid);
+    if (delivery && delivery.foreign) {
+      return FB.dispatchGiftDelivery(state, {
+        recipientKind:'ruler',
+        recipientId:rid,
+        giftKind:'cash',
+        amount:cost,
+        effect:boost
+      });
+    }
     p.gold -= cost;
     FB.adjustRealmOpinion(state, rid, boost);
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);

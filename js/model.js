@@ -436,6 +436,14 @@ window.FB = window.FB || {};
      an explicit homeProvinceId keeps relocated contacts such as rivals behind. */
   FB.characterResidence = function (state, c) {
     if (!state || !state.player || !c) return null;
+    /* A reigning spouse keeps the court and person at the realm's current
+       capital; marriage never turns that sovereign household into a managed
+       member of the player's permanent home. */
+    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+      const reigningRealm = state.realms[c.royalLine.realmId];
+      if (reigningRealm && reigningRealm.capital && FB.world &&
+          FB.world.byId[reigningRealm.capital]) return reigningRealm.capital;
+    }
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
       return state.player.provinceId;
