@@ -5,6 +5,9 @@ must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
 code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
+Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
+`[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
+text; touch layouts keep the ordinary localized labels because keyboard hints do not apply.
 `UI.openModal` also takes `{modalClass}` to tag `#genmodal` with a per-dialog CSS modifier
 (cleared on the next open): the Changelog uses `changelog-modal`, and the Menu, Automation,
 and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below).

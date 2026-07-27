@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.0';
+  FB.VERSION = '1.65.1';
   FB.CHANGELOG = [
+    { v: '1.65.1', date: '2026-07-26', changes: [
+      'Desktop panel tabs now fold their keyboard shortcuts into compact keycap labels.'
+    ] },
     { v: '1.65.0', date: '2026-07-26', changes: [
       'Technology research now offers automatic cheapest or domain-priority project selection, clearer project details, and faster realm processing.',
       'Later innovations and Patronize Scholars now follow a longer historical research curve.'

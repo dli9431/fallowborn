@@ -8694,8 +8694,14 @@ window.FB = window.FB || {};
       };
       document.querySelectorAll('#sidetabs .tab, #lefttabs .tab').forEach(function (t) {
         const item = hot[t.dataset.tab];
-        if (item) t.innerHTML = '<span class="keyhint">' + item.key + '</span> ' +
-          esc(FB.T(item.label));
+        if (item) {
+          const label = FB.T(item.label);
+          const keyAt = label.toUpperCase().indexOf(item.key);
+          const before = keyAt >= 0 ? label.slice(0, keyAt) : '';
+          const after = keyAt >= 0 ? label.slice(keyAt + 1) : label;
+          t.innerHTML = esc(before) + '<span class="keyhint tabkeyhint">' +
+            item.key + '</span>' + esc(after);
+        }
       });
     }
     $('btn-endturn').addEventListener('click', function () {

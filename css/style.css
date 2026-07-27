@@ -49,6 +49,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-size: 11px; line-height: 16px; color: #c9a24a; text-align: center;
   vertical-align: 1px;
 }
+.tabkeyhint { margin-right: 0; }
 /* no keyboard, no keyboard hints */
 @media (pointer: coarse) { .keyhint { display: none; } }
 /* live counters: monospace digits so changing numbers never change width */
