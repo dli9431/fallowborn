@@ -133,8 +133,9 @@ that total. These surfaces read `FB.playerMusterUpkeepParts` and
 companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
 
 **Managed household sheets keep compact bust portraits and open equipment separately.**
-The Self sheet and the sheets for living spouses and resident unmarried children each offer
-an **Equip items…** button. It opens a dedicated modal with one deterministic full-body
+The Self sheet and the sheets for living spouses, resident unmarried children and
+grandchildren, and paid retainers each offer an **Equip items…** button. It opens a
+dedicated modal with one deterministic full-body
 figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
 Its centered title stacks the character's full name above **Equipment**, keeping the heading
@@ -166,11 +167,15 @@ readable equipment cues such as a helmet, pendant, crown, or armor edge. The suc
 modal is the other full-body surface: it paints the frozen final loadout beside the
 “Worn at death” list before any heir may be selected.
 
-Minor character sheets separate the education-focus picker from the instruction picker.
+Managed minor character sheets — the protagonist, children, and resident unmarried
+grandchildren — separate the education-focus picker from the instruction picker.
 Every school/tutor row shows the projected full-year directed-learning chance and exact
 seasonal fee; unavailable town/focus/age combinations remain visible with their reason.
 The upbringing summary repeats the current arrangement, projected chance, fee, and paused
-payment state.
+payment state. From age 12, child and grandchild sheets also expose the same arranged-match
+picker. Career, guild, religious-standing, enterprise, and equipment controls use managed
+household eligibility at both render and action time, so a stale sheet cannot manage someone
+who has married out or otherwise left.
 
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending

@@ -53,14 +53,18 @@ every wife can conceive, the first holds the spouse role). The spouse sheet carr
 unaffected. The `widow_veil` plot
 (map_data.js → `plot_spouse_end`) murders the current spouse.
 
-Parents arrange child matches: from age 12 an unwed child's sheet offers three
-sounded-out families (`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in
-events.js, picker in ui.js; the candidates persist on the child as `matchIds`). A pledge
+The household head arranges descendant matches: from age 12 an unwed resident child or
+grandchild's sheet offers three sounded-out families
+(`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in events.js, picker in
+ui.js; the candidates persist on the descendant as `matchIds`). A pledge
 sets `betrothedId` and the yearly `kinLifeTick` weds the pair once both are 16 —
 unpledged kin still auto-wed at `balance.kinMarryChance`. A daughter's dowry is paid at
-the pledge and refunded by `FB.killChar` if death unmakes it; a son's bride brings hers
-to the wedding; both swing prestige at half the player's own `marryUpPrestige` rates, and
-matches above the player's station gate on prestige (20 per step).
+the pledge, and the same rule applies to a granddaughter; death before the wedding refunds
+it through `FB.killChar`. A son's or grandson's bride brings hers to the wedding. All four
+relationships swing prestige at half the player's own `marryUpPrestige` rates, and matches
+above the player's station gate on prestige (20 per step). Marriage removes that descendant
+from the managed household, clears work and equipment assignments, and leaves their outfit
+in the shared armory.
 
 Related: [characters.md](characters.md) for the rest of the character lifecycle,
 [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for the plot system.

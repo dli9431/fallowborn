@@ -24746,6 +24746,25 @@
         "text": "📜 The fief returns to your demesne. {realm} is no more."
       }
     },
+    "news.event.grandchild_wedding": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "child",
+        "spouse"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "f": "💒 Your granddaughter {child} weds {spouse}, as was pledged.",
+            "m": "💒 Your grandson {child} weds {spouse}, as was pledged.",
+            "other": "💒 Your grandchild {child} weds {spouse}, as was pledged."
+          },
+          "param": "sex",
+          "select": "value"
+        }
+      }
+    },
     "news.event.grudging_inheritance": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -25454,6 +25473,25 @@
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
       }
     },
+    "news.life.close_grandchild_wedding": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "spouse"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "f": "💍 Your granddaughter {name} weds {spouse}.",
+            "m": "💍 Your grandson {name} weds {spouse}.",
+            "other": "💍 Your grandchild {name} weds {spouse}."
+          },
+          "param": "sex",
+          "select": "value"
+        }
+      }
+    },
     "news.life.close_kin_birth": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -25518,6 +25556,27 @@
       "location": "js/main.js",
       "source": {
         "text": "☠ {cause}"
+      }
+    },
+    "news.life.grandchild_betrothed_died": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "child",
+        "name"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "daughter": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding.",
+            "daughter_refund": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding. The dowry returns to your coffers.",
+            "other": "🕯 {name}, betrothed to your grandchild {child}, has died before the wedding.",
+            "son": "🕯 {name}, betrothed to your grandson {child}, has died before the wedding.",
+            "son_refund": "🕯 {name}, betrothed to your grandson {child}, has died before the wedding. The dowry returns to your coffers."
+          },
+          "param": "case",
+          "select": "value"
+        }
       }
     },
     "news.life.heir_named": {
@@ -36203,6 +36262,16 @@
         "text": "Many recover, blessing your name."
       }
     },
+    "src.0ea9e635": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding."
+      }
+    },
     "src.0ead5d2c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40655,6 +40724,16 @@
       ],
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
+      }
+    },
+    "src.20bd7337": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "💒 Your grandchild {child} weds {spouse}, as was pledged."
       }
     },
     "src.20c28811": {
@@ -45876,6 +45955,16 @@
         "text": "🎓 {name} is left to their own devices."
       }
     },
+    "src.36815e60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🕯 {name}, betrothed to your grandson {child}, has died before the wedding. The dowry returns to your coffers."
+      }
+    },
     "src.3682ecb2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49878,6 +49967,16 @@
       ],
       "source": {
         "text": "Loans"
+      }
+    },
+    "src.468b98f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "💒 Your grandson {child} weds {spouse}, as was pledged."
       }
     },
     "src.468d471e": {
@@ -59265,6 +59364,16 @@
         "text": "Kairouan"
       }
     },
+    "src.6c619965": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💍 Your grandchild {name} weds {spouse}."
+      }
+    },
     "src.6c715510": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61346,6 +61455,16 @@
       ],
       "source": {
         "text": "Screw Wine Press"
+      }
+    },
+    "src.748572f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🕯 {name}, betrothed to your grandson {child}, has died before the wedding."
       }
     },
     "src.748bc86d": {
@@ -70578,6 +70697,16 @@
         "text": "Keep every stalk."
       }
     },
+    "src.98377d47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💍 Your granddaughter {name} weds {spouse}."
+      }
+    },
     "src.983bf1cc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76053,6 +76182,16 @@
         "text": "· dormant — no upkeep or benefit"
       }
     },
+    "src.aee19533": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "💒 Your granddaughter {child} weds {spouse}, as was pledged."
+      }
+    },
     "src.aef2e453": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77045,6 +77184,16 @@
         "text": "🕯 Your nephew {name} has died, aged {age}."
       }
     },
+    "src.b2c91a47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💍 Your grandson {name} weds {spouse}."
+      }
+    },
     "src.b2d2bfef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77741,6 +77890,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/main.js",
         "js/model.js"
       ],
       "source": {
@@ -80853,6 +81003,16 @@
       ],
       "source": {
         "text": "Kingdom of"
+      }
+    },
+    "src.c1e8e222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding. The dowry returns to your coffers."
       }
     },
     "src.c1ecd48e": {
@@ -85276,6 +85436,16 @@
         "text": "{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}"
       }
     },
+    "src.d4f434e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your granddaughter"
+      }
+    },
     "src.d4f99acd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87700,6 +87870,16 @@
         "text": "Some gifts cost more than they pay."
       }
     },
+    "src.dea08148": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your grandson"
+      }
+    },
     "src.dea97a81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88378,6 +88558,16 @@
       ],
       "source": {
         "text": "Limoges"
+      }
+    },
+    "src.e1013921": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🕯 {name}, betrothed to your grandchild {child}, has died before the wedding."
       }
     },
     "src.e1121e8e": {
@@ -90591,6 +90781,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/main.js",
         "js/model.js"
       ],
       "source": {

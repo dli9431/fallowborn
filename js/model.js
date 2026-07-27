@@ -518,6 +518,35 @@ window.FB = window.FB || {};
   FB.childrenOf = childrenOf;
   FB.siblingsOf = siblingsOf;
 
+  /* Relationship to the current protagonist, independent of life or marital
+     status. Callers layer those residence gates on top so the same rule can
+     drive household membership, character actions, and relationship text. */
+  FB.playerDescendantKind = function (state, cid) {
+    if (!state || !state.player || !state.chars) return null;
+    const me = state.chars[state.player.charId];
+    const c = state.chars[cid];
+    if (!me || !c || c.id === me.id) return null;
+    function directChildOf(parent, child) {
+      return !!(parent && child &&
+        ((parent.childrenIds || []).indexOf(child.id) >= 0 ||
+          child.fatherId === parent.id || child.motherId === parent.id));
+    }
+    if (directChildOf(me, c)) return 'child';
+    const parents = [], seen = {};
+    function addParent(parent) {
+      if (!parent || seen[parent.id]) return;
+      seen[parent.id] = 1;
+      parents.push(parent);
+    }
+    for (const id of (me.childrenIds || [])) addParent(state.chars[id]);
+    addParent(c.fatherId && state.chars[c.fatherId]);
+    addParent(c.motherId && state.chars[c.motherId]);
+    for (const parent of parents) {
+      if (directChildOf(me, parent) && directChildOf(parent, c)) return 'grandchild';
+    }
+    return null;
+  };
+
   /* The player's living and dead kin, grouped by closeness. Each group is a
      list of {c, rel}; byId maps charId → rel for news and death notices. */
   FB.kinOf = function (state) {

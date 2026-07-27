@@ -20,13 +20,21 @@ unaffected.
 **Equipment bonuses belong to the wearer.** `FB.skillOf` adds skill effects from that
 character's household loadout, not from every object the dynasty owns. Equipped health
 protection likewise lowers that wearer's yearly mortality, including spouses and resident
-children. Battle odds and seasonal gold/prestige/piety remain head-of-household effects
-and count only the current protagonist's outfit. AI rulers, strangers, siblings, and
-married-away children do not simulate equipment. See [items.md](items.md).
+children and grandchildren. Battle odds and seasonal gold/prestige/piety remain
+head-of-household effects and count only the current protagonist's outfit. AI rulers,
+strangers, siblings, and married-away descendants do not simulate equipment. See
+[items.md](items.md).
 
 **Children are players too.** When a minor heir succeeds (age < 16), the daily picker
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.
+
+**Unmarried grandchildren share the managed household.** `FB.playerDescendantKind`
+is the common relationship test for a current protagonist's children and grandchildren.
+Every living unmarried grandchild derives resident status from family links, needs no save
+migration, and receives the same age-gated education, work, equipment, health, upkeep, and
+marriage management as a child. Marriage ends that residence even when the grandchild's
+parents remain elsewhere.
 
 **Focus and instruction are separate choices.** A child aged 6–15 chooses the skill being
 studied, then learns at home, from a named household/neighbour tutor, at a religious charity
@@ -84,11 +92,11 @@ is back at 7+ and the character is not ill; sicknesses clear only with
 `scarred` and `one_eyed` trait marks are drawn for every character, NPCs included.
 
 **A rich table protects the young.** Each station above serf trims the yearly
-mortality of the household's own children (and of a child protagonist) by
-`balance.richChildMortalityBonus` (7%), and each station gives a
-`balance.richChildHealthChance` (10%) yearly chance that a resident child under
-16 gains a point of health, up to 8 — so the children of rulers and rich
-merchants die a little less often and grow a little hardier than a serf's.
+mortality of the household's resident children and grandchildren (and of a child
+protagonist) by `balance.richChildMortalityBonus` (7%), and each station gives a
+`balance.richChildHealthChance` (10%) yearly chance that a resident descendant
+under 16 gains a point of health, up to 8 — so the young descendants of rulers
+and rich merchants die a little less often and grow a little hardier than a serf's.
 Paid care in the `child_fever` event follows the schooling ladder: the wise
 woman (3 gold, 60%), a physician (10, 75%), a renowned physician (30, 90%),
 beside free prayer (55%).
@@ -151,10 +159,10 @@ At tier 3+, that career is biography rather than daily employment. The player ca
 change occupation, seek guild advancement, earn ordinary career experience, or staff
 an enterprise personally. Existing rank, guild standing, and history remain available
 to flavor and return if the character becomes landless gentry again. Spouses, dependent
-children, and retainers continue their normal work and enterprise progression. Landed
-monks and priests keep gaining the vocational years required for religious-office
-advancement, and office-derived seasonal piety remains active, but their hands-on
-scriptorium and parish work stops.
+children and grandchildren, and retainers continue their normal work and enterprise
+progression. Landed monks and priests keep gaining the vocational years required for
+religious-office advancement, and office-derived seasonal piety remains active, but their
+hands-on scriptorium and parish work stops.
 
 **Guild standing is separate from career rank.** Guild careers display their standing as
 Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
@@ -185,20 +193,22 @@ an heir with a regard penalty, keeping inherited service distinct from inherited
 friendship. Each office has one holder; two unpaid seasons or regard at −40 ends service,
 and marriage replaces a paid contract with ordinary spouse membership.
 
-**Apprenticeship complements tutoring.** A child old enough for a career's
-`apprenticeAge` may be placed with that trade from their sheet. It costs the career's
-entry fee, adds vocational experience and the career skill during the yearly life tick,
-and becomes journeyman work at sixteen. The ordinary education focus and instruction continue
-in parallel. Family wage contributions remain limited to the player, spouses, and
-unmarried dependent children; distant kin and paid retainers do not send invisible wages
-home.
+**Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
+career's `apprenticeAge` may be placed with that trade from their sheet. It costs the
+career's entry fee, adds vocational experience and the career skill during the yearly life
+tick, and becomes journeyman work at sixteen. The ordinary education focus and instruction
+continue in parallel. Family wage contributions remain limited to the player, spouses, and
+unmarried dependent children and grandchildren; other kin and paid retainers do not send
+invisible wages home.
 
 **Resident family members cost coin as well as earning it.** The station-based household
 upkeep remains the cost of the player's own establishment. Every resident spouse and
-unmarried child adds a smaller age-weighted provisions-and-quarters charge, multiplied by
-the household's station standard. Married children leave this managed household. This is
-an expense model, not a room-capacity simulation: births are never blocked for lack of a
-housing slot.
+unmarried child or grandchild adds a smaller age-weighted provisions-and-quarters charge,
+multiplied by the household's station standard. With no separate residence field in saves,
+all living unmarried grandchildren are resident even when their parents have established
+another household. Marriage removes a descendant from this managed household. This is an
+expense model, not a room-capacity simulation: births are never blocked for lack of a housing
+slot.
 
 **Religious standing belongs to characters too.** Catholic and Muslim household members
 lazily carry `c.religiousRanks`, a map from path id to attained step. Changing occupations

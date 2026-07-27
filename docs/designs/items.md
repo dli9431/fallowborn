@@ -3,8 +3,8 @@
 **The family owns an armory; characters wear loadouts.** `player.items` is the shared
 list of exact item references. `player.loadouts[characterId]` maps Head, Neck, Body,
 Waist, Feet, Left hand, Right hand, and Ring to those references. The managed wearers
-are the current head, living spouses, resident unmarried children, and paid retainers.
-An object can
+are the current head, living spouses, paid retainers, and resident unmarried children
+and grandchildren. An object can
 appear in only one loadout, and a two-handed object writes the same reference into both
 hand slots. Marriage out, divorce, departure, and non-player death clear the assignment
 but leave the object in the armory.
@@ -62,7 +62,8 @@ shown.
 At death, the legend freezes the head's loadout and optional battle/event provenance.
 The succession dialog shows that final paper doll and “Worn at death” list. This release
 does not remove, damage, loot, or steal any object: succession clears the dead wearer and
-any former-household assignments that do not belong to the new head's household. The
+any former-household assignments that do not belong to the new head's household, whose
+membership is recomputed through children and grandchildren without double-counting. The
 successor then automatically takes the strongest age-valid, unpledged gear from the shared
 armory in every slot. Mechanical effects outrank value, and the two hand slots compare the
 best one-handed pair against every two-handed object without consuming RNG.

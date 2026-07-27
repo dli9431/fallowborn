@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.66.0';
+  FB.VERSION = '1.67.0';
   FB.CHANGELOG = [
+    { v: '1.67.0', date: '2026-07-26', changes: [
+      'Unmarried grandchildren now join the managed household, with the same education, work, equipment, upkeep, and arranged-marriage controls as children.'
+    ] },
     { v: '1.66.0', date: '2026-07-26', changes: [
       'Character and ruler sheets now offer cash and armory gifts, with recipient cooldowns and rank-based ruler prices.'
     ] },
@@ -1269,18 +1272,17 @@ window.FB = window.FB || {};
     const me = s.chars[p.charId];
     const year = s.date.year;
 
-    // children: schooling, then coming of age
+    // managed descendants: schooling, then coming of age
     educationTick(s);
     FB.livelihoodYearly(s);
-    for (const cid of me.childrenIds) {
-      const c = s.chars[cid];
-      if (c && !c.dead && FB.ageOf(c, year) === 16) {
+    for (const c of FB.householdMembers(s)) {
+      if (FB.playerDescendantKind(s, c.id) && FB.ageOf(c, year) === 16) {
         if (c.edu && c.edu.focus) {
           FB.gainSkill(c, c.edu.focus, 2);
           if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
-          FB.queueEvent(s, 'child_educated', { childId:cid });
+          FB.queueEvent(s, 'child_educated', { childId:c.id });
         } else {
-          FB.queueEvent(s, 'child_comes_of_age', { childId:cid });
+          FB.queueEvent(s, 'child_comes_of_age', { childId:c.id });
         }
       }
     }
@@ -1361,10 +1363,11 @@ window.FB = window.FB || {};
       if (c.dead || id === p.charId) continue;
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
-      /* the house's own young share its table: each station above serf means
+      /* the house's resident descendants share its table: each station above serf means
          better food and water — slightly fewer child deaths and slightly
          hardier children (rulers and rich merchants alike) */
-      if (a < 16 && me.childrenIds.indexOf(c.id) >= 0) {
+      if (a < 16 && FB.playerDescendantKind(s, c.id) &&
+          FB.isHouseholdCharacter(s, c.id)) {
         const station = FB.playerStation(s);
         cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
         if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
@@ -1377,8 +1380,11 @@ window.FB = window.FB || {};
         const wasChild = me.childrenIds.indexOf(c.id) >= 0;
         const wasLord = s.roles.lord === c.id;
         const wasCourted = s.player.courtingId === c.id;
-        const pledgedChild = c.betrothedId && me.childrenIds.indexOf(c.betrothedId) >= 0 ?
+        const pledgedChild = c.betrothedId &&
+          FB.playerDescendantKind(s, c.betrothedId) ?
           s.chars[c.betrothedId] : null;
+        const pledgedKind = pledgedChild ?
+          FB.playerDescendantKind(s, pledgedChild.id) : null;
         const refund = pledgedChild && c.dowryAsk ? c.dowryAsk : 0;
         FB.killChar(s, c);
         if (wasSpouse) {
@@ -1394,17 +1400,31 @@ window.FB = window.FB || {};
         else if (pledgedChild) {
           const pledgeCase = (pledgedChild.sex === 'f' ? 'daughter' : 'son') +
             (refund ? '_refund' : '');
-          FB.news(s, FB.msg('news.life.betrothed_died', {
-            forms: {
-              select: 'value', param: 'case', cases: {
-                daughter: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding.',
-                daughter_refund: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding. The dowry returns to your coffers.',
-                son: '🕯 {name}, betrothed to your son {child}, has died before the wedding.',
-                son_refund: '🕯 {name}, betrothed to your son {child}, has died before the wedding. The dowry returns to your coffers.',
-                other: '🕯 {name}, betrothed to your child {child}, has died before the wedding.'
+          if (pledgedKind === 'grandchild') {
+            FB.news(s, FB.msg('news.life.grandchild_betrothed_died', {
+              forms: {
+                select: 'value', param: 'case', cases: {
+                  daughter: '🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding.',
+                  daughter_refund: '🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding. The dowry returns to your coffers.',
+                  son: '🕯 {name}, betrothed to your grandson {child}, has died before the wedding.',
+                  son_refund: '🕯 {name}, betrothed to your grandson {child}, has died before the wedding. The dowry returns to your coffers.',
+                  other: '🕯 {name}, betrothed to your grandchild {child}, has died before the wedding.'
+                }
               }
-            }
-          }, { case: pledgeCase, name: c.name, child: pledgedChild.name }));
+            }, { case:pledgeCase, name:c.name, child:pledgedChild.name }));
+          } else {
+            FB.news(s, FB.msg('news.life.betrothed_died', {
+              forms: {
+                select: 'value', param: 'case', cases: {
+                  daughter: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding.',
+                  daughter_refund: '🕯 {name}, betrothed to your daughter {child}, has died before the wedding. The dowry returns to your coffers.',
+                  son: '🕯 {name}, betrothed to your son {child}, has died before the wedding.',
+                  son_refund: '🕯 {name}, betrothed to your son {child}, has died before the wedding. The dowry returns to your coffers.',
+                  other: '🕯 {name}, betrothed to your child {child}, has died before the wedding.'
+                }
+              }
+            }, { case:pledgeCase, name:c.name, child:pledgedChild.name }));
+          }
         }
         else if (wasLord) FB.news(s, FB.msg('news.life.lord_died',
           '🕯 The lord {name} is dead. Another will take his seat.', { name: c.name }));
@@ -1442,13 +1462,11 @@ window.FB = window.FB || {};
   }
 
   /* ---------- education (yearly) ----------
-     A child aged 6-15 with an education focus gains that skill at a rate built
-     by completed school/tutor terms; a named tutor's habits can also rub off.
-     Covers the player's children and the player themselves when still a child. */
+     A managed descendant aged 6-15 with an education focus gains that skill
+     at a rate built by completed school/tutor terms; a named tutor's habits
+     can also rub off. Covers the player themselves when still a child. */
   function educationTick(s) {
-    const me = s.chars[s.player.charId];
-    for (const cid of me.childrenIds) educateChar(s, s.chars[cid]);
-    educateChar(s, me);
+    for (const c of FB.educationStudents(s)) educateChar(s, c);
   }
   function educateChar(s, c) {
     const me = s.chars[s.player.charId];
@@ -1512,7 +1530,8 @@ window.FB = window.FB || {};
       if (k.dead || k.id === s.player.charId) continue;
       const age = FB.ageOf(k, year);
       if (age < 16 || age > 55) continue;
-      const close = ['Son', 'Daughter', 'Brother', 'Sister'].indexOf(e.rel) >= 0;
+      const close = ['Son', 'Daughter', 'Grandson', 'Granddaughter',
+        'Brother', 'Sister'].indexOf(e.rel) >= 0;
       let sp = FB.spouseOf(s, k);
       // a sealed betrothal weds as soon as both are of age — before chance
       // gets a say
@@ -1535,22 +1554,37 @@ window.FB = window.FB || {};
           role: 'kinspouse'
         });
         sp.health = 8;
-        /* A close child establishing a household through the unscripted
-           yearly match leaves their equipped outfit in the family armory,
-           just as a pledged wedding does through FB.doKinWedding. */
+        /* A managed descendant establishing a household through the
+           unscripted yearly match leaves work and equipment assignments
+           behind, just as a pledged wedding does through FB.doKinWedding. */
+        if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
-        if (close) FB.news(s, FB.msg('news.life.close_kin_wedding', {
-          forms: {
-            select: 'value', param: 'relation', cases: {
-              Son: '💍 Your son {name} weds {spouse}.',
-              Daughter: '💍 Your daughter {name} weds {spouse}.',
-              Brother: '💍 Your brother {name} weds {spouse}.',
-              Sister: '💍 Your sister {name} weds {spouse}.',
-              other: '💍 Your kinsman {name} weds {spouse}.'
-            }
+        if (close) {
+          if (e.rel === 'Grandson' || e.rel === 'Granddaughter') {
+            FB.news(s, FB.msg('news.life.close_grandchild_wedding', {
+              forms: {
+                select:'value', param:'sex', cases:{
+                  f:'💍 Your granddaughter {name} weds {spouse}.',
+                  m:'💍 Your grandson {name} weds {spouse}.',
+                  other:'💍 Your grandchild {name} weds {spouse}.'
+                }
+              }
+            }, { sex:k.sex, name:k.name, spouse:sp.name }));
+          } else {
+            FB.news(s, FB.msg('news.life.close_kin_wedding', {
+              forms: {
+                select: 'value', param: 'relation', cases: {
+                  Son: '💍 Your son {name} weds {spouse}.',
+                  Daughter: '💍 Your daughter {name} weds {spouse}.',
+                  Brother: '💍 Your brother {name} weds {spouse}.',
+                  Sister: '💍 Your sister {name} weds {spouse}.',
+                  other: '💍 Your kinsman {name} weds {spouse}.'
+                }
+              }
+            }, { relation:e.rel, name:k.name, spouse:sp.name }));
           }
-        }, { relation: e.rel, name: k.name, spouse: sp.name }));
+        }
       }
       if (!sp) continue;
       const mother = k.sex === 'f' ? k : sp;
@@ -1853,6 +1887,7 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (FB.cleanupManagedMatches) FB.cleanupManagedMatches(s);
     if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
     p.dead = false;
     p.gold = Math.round(p.gold * 0.9); // death dues
@@ -1879,6 +1914,7 @@ window.FB = window.FB || {};
     else if (FB.clearLoadout) FB.clearLoadout(s, old.id);
     if (FB.autoEquipBest) FB.autoEquipBest(s, heir.id);
     if (FB.retainerSuccession) FB.retainerSuccession(s);
+    if (FB.enterpriseList) FB.enterpriseList(s);
 
     // only property passes; personal standing must be rebuilt somewhat
     FB.landPlots(s); // normalize a legacy farm before its old flag is discarded
