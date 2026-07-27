@@ -14,6 +14,13 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+The `guild_monopoly_petition` event is one such code-queued contract. Its JSON-safe
+context freezes the selected profession, grantor/scope identity, tier-scaled terms, and
+display percentages before the event opens. The deed stamps its 360-day cooldown and
+spends the day before any option resolves, so paying, persuading, or withdrawing cannot
+avoid either cost. Its choice hints intentionally disclose exact contract costs, odds,
+and failure penalties.
+
 Great holy-war transitions use that same blocking path. The religious head's call
 queues `ghw_called` on the call day, and the first active-day tick queues
 `ghw_muster_complete` after the campaign hosts have had their raising pass. With

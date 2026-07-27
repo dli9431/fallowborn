@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.69.0';
+  FB.VERSION = '1.70.0';
   FB.CHANGELOG = [
+    { v: '1.70.0', date: '2026-07-26', changes: [
+      'Guildmasters can now petition for time-limited monopolies, while barons and higher rulers can grant local charters with enterprise and tax effects.'
+    ] },
     { v: '1.69.0', date: '2026-07-26', changes: [
       'Adult freeholders and gentry can now found trade ventures, choose a market, stake, and strategy, then dispatch the venture or accompany it on the road.'
     ] },
@@ -863,6 +866,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
+        guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
         landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null
@@ -1005,6 +1009,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
+        guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null
       },
@@ -1082,6 +1087,7 @@ window.FB = window.FB || {};
     }
     FB.scriptedTick(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
+    if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1161,6 +1167,7 @@ window.FB = window.FB || {};
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
+    if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
@@ -2000,6 +2007,7 @@ window.FB = window.FB || {};
       s.realms.player.religion = heir.religion;
     }
 
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(s);
     FB.news(s, FB.msg('news.life.succession',
       '👤 {name} takes up the family’s story. Generation {generation}.',
       { name: FB.fullName(heir), generation: s.generation }));

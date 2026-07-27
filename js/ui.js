@@ -833,9 +833,11 @@ window.FB = window.FB || {};
   };
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
+    petition_monopoly:'work',
     buy_freedom:'realm', buy_land:'realm', declare_manor:'realm',
     build:'realm', adopt_tech:'realm',
     squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
+    grant_monopoly:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
     settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
     revoke_county:'realm', royal_council:'realm', coin_credit:'work',
@@ -1955,6 +1957,83 @@ window.FB = window.FB || {};
     /* Trade & Guild: show the already-live multipliers, gates and standings
        before offering the bounded commission favor. */
     h += panelh('Trade & Guild');
+    function monopolyTierName(tier) {
+      if (tier === 4) return FB.T('Count');
+      if (tier === 5) return FB.T('Duke');
+      if (tier === 6) return FB.T('King');
+      if (tier === 7) return FB.T('Emperor');
+      return FB.T('Baron');
+    }
+    function monopolyProfessionName(record) {
+      const def = record && FBDATA.careers[record.profession];
+      return def ? dt(s, 'career', record.profession, def, 'name') :
+        FB.T('Unknown profession');
+    }
+    const incomingMonopoly = FB.guildMonopolyActive(s, 'incoming');
+    if (incomingMonopoly) {
+      const incomingProvince = incomingMonopoly.scope === 'province' &&
+        FB.world.byId[incomingMonopoly.scopeId];
+      const incomingScope = incomingMonopoly.scope === 'province'
+        ? FB.T('Local to {province}', {
+          province:incomingProvince ? incomingProvince.name : incomingMonopoly.scopeId
+        })
+        : FB.T('Bound to the direct liege relationship with {grantor}', {
+          grantor:incomingMonopoly.grantorName ||
+            incomingMonopoly.grantorRulerName
+        });
+      h += '<div class="progressnote"><b>' +
+        esc(FB.T('Incoming monopoly — {profession}', {
+          profession:monopolyProfessionName(incomingMonopoly)
+        })) + '</b><br>' +
+        esc(FB.T(
+          'Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain',
+          {
+            issuer:incomingMonopoly.grantorName ||
+              incomingMonopoly.grantorRulerName,
+            tier:monopolyTierName(incomingMonopoly.tier),
+            enterprise:Math.round(incomingMonopoly.enterpriseBonus * 100),
+            tax:Math.round(incomingMonopoly.taxBonus * 100),
+            days:FB.guildMonopolyRemainingDays(s, incomingMonopoly)
+          })) + '<br><span class="cmeta">' + esc(incomingScope) +
+        '</span></div>';
+    } else {
+      h += kv('Incoming monopoly', esc(FB.T('None')));
+    }
+    const outgoingMonopoly = FB.guildMonopolyActive(s, 'outgoing');
+    if (outgoingMonopoly) {
+      const recipient = outgoingMonopoly.advocateName
+        ? FB.T('Local {profession} guild, represented by {advocate}', {
+          profession:monopolyProfessionName(outgoingMonopoly),
+          advocate:outgoingMonopoly.advocateName
+        })
+        : FB.T('Local {profession} guild', {
+          profession:monopolyProfessionName(outgoingMonopoly)
+        });
+      h += '<div class="progressnote"><b>' +
+        esc(FB.T('Outgoing monopoly — {profession}', {
+          profession:monopolyProfessionName(outgoingMonopoly)
+        })) + '</b><br>' +
+        esc(FB.T(
+          'Issuer: {issuer} · Recipient: {recipient} · {tier} terms · +{enterprise}% matching enterprise profit · your tax +{tax}% · {days} days remain',
+          {
+            issuer:outgoingMonopoly.grantorName ||
+              outgoingMonopoly.grantorRulerName,
+            recipient:recipient,
+            tier:monopolyTierName(outgoingMonopoly.tier),
+            enterprise:Math.round(outgoingMonopoly.enterpriseBonus * 100),
+            tax:Math.round(outgoingMonopoly.taxBonus * 100),
+            days:FB.guildMonopolyRemainingDays(s, outgoingMonopoly)
+          })) + '<br><span class="cmeta">' + esc(FB.T(
+            'Valid while the dynasty retains landed authority.')) +
+          '</span></div>';
+    } else {
+      h += kv('Outgoing monopoly', esc(FB.T('None')));
+    }
+    if (incomingMonopoly || outgoingMonopoly) {
+      h += '<div class="hint">' + esc(FB.T(
+        'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +
+        '</div>';
+    }
     let anyGuild = false;
     for (const c of FB.householdWorkers(s)) {
       const career = FB.careerOf(s, c);
@@ -5627,6 +5706,100 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* Grant one abstract local Craft or Trade guild a monopoly. The first
+     sheet is the profession picker; the second repeats every frozen term
+     before the deed spends its day. Generic action buttons keep number-key
+     selection and the narrow mobile sheet behavior. */
+  UI.showGuildMonopolyGrant = function (profession) {
+    const s = FB.state;
+    const status = FB.guildMonopolyIssueStatus(s);
+    if (!status.ready) {
+      UI.toast(status.reason);
+      return;
+    }
+    function professionName(id) {
+      const def = FBDATA.careers[id];
+      return dt(s, 'career', id, def, 'name');
+    }
+    function termsSummary() {
+      return FB.T(
+        '{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion',
+        {
+          years:status.terms.years,
+          fee:status.terms.rulerFee,
+          tax:Math.round(status.terms.taxBonus * 100),
+          enterprise:Math.round(status.terms.enterpriseBonus * 100),
+          opinion:status.terms.popularOpinion
+        });
+    }
+    if (profession !== 'craftsman' && profession !== 'merchant') {
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household.')) +
+        '</p></div><div class="gm-list">';
+      for (const id of ['craftsman', 'merchant']) {
+        const def = FBDATA.careers[id];
+        h += '<button class="actionbtn" data-monopoly-profession="' + id + '">' +
+          esc(def.icon + ' ' + professionName(id)) +
+          '<span class="adesc">' + esc(termsSummary()) + '</span></button>';
+      }
+      h += '</div><button class="btn" id="gm-cancel">' +
+        esc(FB.T('Not now')) + '</button>';
+      openModal(FB.T('Grant a Guild Monopoly'), h);
+      document.querySelectorAll('[data-monopoly-profession]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          UI.showGuildMonopolyGrant(btn.dataset.monopolyProfession);
+        });
+      });
+      $('gm-cancel').addEventListener('click', UI.closeModal);
+      return;
+    }
+
+    const advocate = FB.householdWorkers(s).filter(function (c) {
+      if (c.id === s.player.charId || c.dead) return false;
+      const career = FB.careerOf(s, c);
+      return career && career.profession === profession &&
+        career.guildRank === 'guildmaster';
+    })[0];
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Grant the local {profession} guild exclusive privilege?', {
+        profession:professionName(profession)
+      })) + '</p>' +
+      (advocate ? '<p>' + esc(FB.T(
+        '{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person.', {
+          advocate:FB.fullName(advocate)
+        })) + '</p>' : '') +
+      '<p>' + esc(FB.T(
+        'The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}.',
+        {
+          fee:status.terms.rulerFee,
+          years:status.terms.years,
+          tax:Math.round(status.terms.taxBonus * 100),
+          enterprise:Math.round(status.terms.enterpriseBonus * 100),
+          opinion:status.terms.popularOpinion > 0
+            ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
+        })) + '</p><p class="hint">' + esc(FB.T(
+          'The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.')) +
+      '</p></div><button class="btn primary" id="gm-confirm-monopoly">' +
+      esc(FB.T('Grant the {profession} monopoly', {
+        profession:professionName(profession)
+      })) + '</button> <button class="btn" id="gm-back">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('{profession} Monopoly', {
+      profession:professionName(profession)
+    }), h, {
+      historyView:true,
+      historyBackRender:function () { UI.showGuildMonopolyGrant(); }
+    });
+    $('gm-confirm-monopoly').addEventListener('click', function () {
+      if (!FB.issueGuildMonopoly(FB.state, profession)) return;
+      UI.closeModal();
+      if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showGuildMonopolyGrant(); });
+    });
   };
 
   /* give a demesne county — or a whole duchy — to a sworn man */
@@ -9378,6 +9551,8 @@ window.FB = window.FB || {};
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +
       '<p>Resident spouses and unmarried children add provisions and quarters to seasonal household upkeep. Working family members can offset that cost with wages or enterprise income.</p>' +
+      '<h4>Guild monopoly charters</h4>' +
+      '<p>Once the sovereign nation completes <b>Guild Charters</b>, a Craft or Trade guildmaster with 60 standing and 40 favor may petition the local lord—or a landed vassal’s direct liege—for a profession-wide monopoly. Baron and greater rulers may instead grant one local Craft or Trade monopoly from <b>Rank &amp; Realm</b>. Incoming and outgoing charters can coexist; matching enterprise bonuses add together up to +50%. See their exact terms and remaining days in <b>Network → Trade &amp; Guild</b>. Charters cannot be renewed or revoked early.</p>' +
       '<h4>Rivalries</h4>' +
       '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
       '<h4>De jure</h4>' +

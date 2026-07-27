@@ -1661,6 +1661,9 @@ window.FB = window.FB || {};
     if (state.player && state.player.provs && state.player.provs.indexOf(pid) >= 0 && toRealm !== 'player') {
       state.player.provs.splice(state.player.provs.indexOf(pid), 1);
     }
+    if (state.player && FB.invalidateGuildMonopolies) {
+      FB.invalidateGuildMonopolies(state);
+    }
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
 
@@ -2451,6 +2454,7 @@ window.FB = window.FB || {};
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
       if (!p.provs.length) {
         FB.setPlayerTier(state, 2); p.liege = null;
+        if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
         if (state.realms.player) FB.markRealmDead(state, 'player');
         FB.news(state, FB.msg('news.war.landless',
           '⬇ Landless once more. The banners are folded away.', {}));
@@ -2540,6 +2544,7 @@ window.FB = window.FB || {};
     }
     FB.setPlayerTier(state, 2);
     p.liege = null; p.liegeOp = 0; p.liegeOps = {};
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     p.pop = 0;
     p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
     FB.invalidateRealmCache();
@@ -3058,6 +3063,7 @@ window.FB = window.FB || {};
         p.liege = state.realms[p.liege].liege;
       }
     }
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (!n) return; // landless: playerShare is 0 everywhere, nothing can promote
     let newTier = p.tier;
     if (p.tier < 4) newTier = 4;

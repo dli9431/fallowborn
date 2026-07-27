@@ -225,6 +225,17 @@ hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuc
 `pd_<did>`, holding all its counties directly), who then renders `vassalTaxRate` of its
 counties' tax and `vassalLevyRate` of their levy back to you.
 
+**Guild monopolies run in both feudal directions.** Guild Charters lets a landed vassal
+petition only the exact direct liege; changing or ending that relationship invalidates
+the incoming charter immediately. Tier 0–2 charters are scoped to the household's home
+province and end on permanent relocation. Baron and greater players may grant one local
+Craft or Trade monopoly using their current tier's frozen
+`balance.guildMonopolyTerms`. Issuance pays the disclosed fee immediately, applies the
+popular-opinion loss, and adds the outgoing charter's tax percentage inside
+`FB.playerTax`. The local guild is abstract; a household guildmaster may be named as its
+advocate but does not own the right. An outgoing charter survives promotion and
+succession but ends if the dynasty falls below landed authority.
+
 **Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
 give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a
 rival's claim, and a murder conspiracy (tier 3+, a rival with deep hatred) — each three

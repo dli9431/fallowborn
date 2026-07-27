@@ -177,6 +177,8 @@ window.FB = window.FB || {};
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.ensureHouseholdStandards) FB.ensureHouseholdStandards(FB.state);
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(FB.state);
+    else if (FB.ensureGuildMonopolies) FB.ensureGuildMonopolies(FB.state);
     if (FB.repairGreatHolyWar) FB.repairGreatHolyWar(FB.state);
     if (FB.repairWars) FB.repairWars(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);

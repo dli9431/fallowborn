@@ -168,6 +168,14 @@
         "text": "🎁 Grant land…"
       }
     },
+    "action.grant_monopoly.label.default": {
+      "context": "action grant_monopoly, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 Grant a guild monopoly…"
+      }
+    },
     "action.great_holy_war_settlement.label.default": {
       "context": "action great_holy_war_settlement, visible label.",
       "glossary": [],
@@ -270,6 +278,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "👑 Petition the liege for title"
+      }
+    },
+    "action.petition_monopoly.label.default": {
+      "context": "action petition_monopoly, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 Petition for a guild monopoly"
       }
     },
     "action.poach.label.default": {
@@ -8614,6 +8630,100 @@
       "location": "data/events_paths.js",
       "source": {
         "text": "The Guild Bench"
+      }
+    },
+    "event.guild_monopoly_petition.options.0.desc.default": {
+      "context": "Event guild_monopoly_petition, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Spend {money:25}; the charter is guaranteed."
+      }
+    },
+    "event.guild_monopoly_petition.options.0.label.default": {
+      "context": "Event guild_monopoly_petition, authored option 0, label, branch default.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Pay {money:25} for the seal."
+      }
+    },
+    "event.guild_monopoly_petition.options.1.desc.default": {
+      "context": "Event guild_monopoly_petition, authored option 1, desc, branch default.",
+      "glossary": [
+        "persuasionPercent"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "A {persuasionPercent}% Diplomacy chance: success grants the charter and 5 prestige; failure costs 5 prestige and 8 grantor favor."
+      }
+    },
+    "event.guild_monopoly_petition.options.1.failure.text.default": {
+      "context": "Event guild_monopoly_petition, authored option 1, failure text, branch default.",
+      "glossary": [
+        "grantor"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "The court is unmoved, and {grantor} takes the pressure as an insult."
+      }
+    },
+    "event.guild_monopoly_petition.options.1.label.default": {
+      "context": "Event guild_monopoly_petition, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Persuade the grantor."
+      }
+    },
+    "event.guild_monopoly_petition.options.1.success.text.default": {
+      "context": "Event guild_monopoly_petition, authored option 1, success text, branch default.",
+      "glossary": [
+        "grantor"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Your case carries the hall. {grantor} orders the charter sealed."
+      }
+    },
+    "event.guild_monopoly_petition.options.2.desc.default": {
+      "context": "Event guild_monopoly_petition, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Keep your resources; the day and 360-day petition interval remain spent."
+      }
+    },
+    "event.guild_monopoly_petition.options.2.label.default": {
+      "context": "Event guild_monopoly_petition, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Withdraw the petition."
+      }
+    },
+    "event.guild_monopoly_petition.text.default": {
+      "context": "Event guild_monopoly_petition, text, faith branch default.",
+      "glossary": [
+        "enterprisePercent",
+        "grantor",
+        "years"
+      ],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise."
+      }
+    },
+    "event.guild_monopoly_petition.title.default": {
+      "context": "Event guild_monopoly_petition, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_paths.js",
+      "source": {
+        "text": "A Monopoly Petition"
       }
     },
     "event.harsh_winter.options.0.desc.default": {
@@ -25684,6 +25794,83 @@
         "text": "🏅 {name}’s guild family sponsors you at the masters’ bench."
       }
     },
+    "news.guild_monopoly.authority_ended": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 The local {profession} guild’s monopoly ends with the dynasty’s landed authority."
+      }
+    },
+    "news.guild_monopoly.incoming_expired": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "grantor",
+        "profession"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 The {profession} monopoly granted by {grantor} expires; its exclusive privilege ends."
+      }
+    },
+    "news.guild_monopoly.incoming_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "grantor",
+        "profession",
+        "years"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 {grantor} grants the household a {profession} monopoly for {years} years."
+      }
+    },
+    "news.guild_monopoly.liege_ended": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "grantor",
+        "profession"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
+      }
+    },
+    "news.guild_monopoly.outgoing_expired": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 The local {profession} guild’s monopoly expires; its toll privilege returns to the ordinary law."
+      }
+    },
+    "news.guild_monopoly.outgoing_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:fee",
+        "profession",
+        "years"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 You grant the local {profession} guild a {years}-year monopoly; its fee adds {money:fee} to the treasury."
+      }
+    },
+    "news.guild_monopoly.relocation_ended": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "profession",
+        "province"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 The household’s {profession} monopoly ends when it leaves {province}."
+      }
+    },
     "news.holywar.battle": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -33706,6 +33893,16 @@
         "text": "The Papacy is vacant; no Pope can absolve you."
       }
     },
+    "src.021ac3e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unknown profession"
+      }
+    },
     "src.0233cbc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33877,6 +34074,16 @@
         "text": "{count} cavalry"
       }
     },
+    "src.03174b1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 Petition for a guild monopoly"
+      }
+    },
     "src.031c75a0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34026,6 +34233,16 @@
       ],
       "source": {
         "text": "Cultivate hostility at this court every season, inviting greater danger."
+      }
+    },
+    "src.03d8924a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain"
       }
     },
     "src.03f5c01a": {
@@ -36093,6 +36310,16 @@
         "text": "Standardized Coinage"
       }
     },
+    "src.0b3cf4ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Ask {grantor} for a {years}-year monopoly: +{enterprise}% matching enterprise profit. Pay {money:25} or rely on Diplomacy."
+      }
+    },
     "src.0b3d4df2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36643,6 +36870,16 @@
         "text": "Hard labor, and a little peace beside it."
       }
     },
+    "src.0d8bdd15": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": ", a Craft or Trade guildmaster with 60 standing and 40 favor may petition the local lord—or a landed vassal’s direct liege—for a profession-wide monopoly. Baron and greater rulers may instead grant one local Craft or Trade monopoly from"
+      }
+    },
     "src.0d947417": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36667,7 +36904,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/technology.js"
+        "data/technology.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Guild Charters"
@@ -37657,6 +37895,16 @@
         "text": "Blood of the House"
       }
     },
+    "src.11e7f152": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority."
+      }
+    },
     "src.11ead8bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38478,6 +38726,16 @@
         "text": "Childhood is short. Spend it well."
       }
     },
+    "src.143672bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{grantor} must hold at least 40 favor toward you; currently {favor}."
+      }
+    },
     "src.143d4a3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39150,6 +39408,16 @@
       ],
       "source": {
         "text": "Your spear takes the boar before the lord’s. Bold — perhaps too bold. But men saw it."
+      }
+    },
+    "src.16f420bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{profession} Monopoly"
       }
     },
     "src.16faf94b": {
@@ -41718,6 +41986,16 @@
         "text": "Your bird stoops first and truest. Bold — perhaps too bold. But men saw it."
       }
     },
+    "src.21d50603": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Bound to the direct liege relationship with {grantor}"
+      }
+    },
     "src.21da2524": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43780,6 +44058,16 @@
       ],
       "source": {
         "text": "🏅 {name} calls in guild commissions worth {money:amount}."
+      }
+    },
+    "src.29e4957f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
       }
     },
     "src.2a078088": {
@@ -46299,7 +46587,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Emperor"
@@ -46514,6 +46803,16 @@
       ],
       "source": {
         "text": "cycle panels ·"
+      }
+    },
+    "src.354d0a16": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Outgoing monopoly — {profession}"
       }
     },
     "src.3560eb8c": {
@@ -48160,6 +48459,16 @@
         "text": "Alembic Distillation"
       }
     },
+    "src.3c960f46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion"
+      }
+    },
     "src.3ca4bc2e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49289,7 +49598,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "King"
@@ -49363,6 +49673,16 @@
       ],
       "source": {
         "text": "Weaver"
+      }
+    },
+    "src.41398c45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Public charters define corporate privileges and monopolies: guildmasters may petition a superior, while barons and greater rulers may grant one local Craft or Trade monopoly."
       }
     },
     "src.4141d66b": {
@@ -53221,6 +53541,16 @@
         "text": "Read more books than the parish owned."
       }
     },
+    "src.4fd4fcd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only a guildmaster of the Craft or Trade profession may petition."
+      }
+    },
     "src.4fe59259": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53975,7 +54305,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Duke"
@@ -54359,6 +54690,16 @@
       ],
       "source": {
         "text": "Genius"
+      }
+    },
+    "src.54ab0a71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "A {persuasionPercent}% Diplomacy chance: success grants the charter and 5 prestige; failure costs 5 prestige and 8 grantor favor."
       }
     },
     "src.54b1a46a": {
@@ -54963,6 +55304,16 @@
         "text": "Zeila"
       }
     },
+    "src.56d45ff5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 {grantor} grants the household a {profession} monopoly for {years} years."
+      }
+    },
     "src.56d6adf9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55051,6 +55402,16 @@
       ],
       "source": {
         "text": "Good profit, poor prayers — and his mill if he fails."
+      }
+    },
+    "src.5712b9ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Incoming monopoly — {profession}"
       }
     },
     "src.5731445d": {
@@ -55522,6 +55883,16 @@
       ],
       "source": {
         "text": "🎁 Offer a gift…"
+      }
+    },
+    "src.5965768a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Incoming monopoly"
       }
     },
     "src.596a9922": {
@@ -56991,6 +57362,16 @@
         "text": "They double down, and the crowd murmurs against you."
       }
     },
+    "src.5f1689ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The local {profession} guild’s monopoly expires; its toll privilege returns to the ordinary law."
+      }
+    },
     "src.5f1b75ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57151,6 +57532,16 @@
         "text": " · highest level"
       }
     },
+    "src.5f8e3e6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Pay {money:25} for the seal."
+      }
+    },
     "src.5fa20a78": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57215,7 +57606,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Baron"
@@ -57369,6 +57761,16 @@
       ],
       "source": {
         "text": "🤰 {name} is with child."
+      }
+    },
+    "src.60605b76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise."
       }
     },
     "src.60622afa": {
@@ -59797,6 +60199,16 @@
         "text": "Refusal heard by many is hard to punish quietly."
       }
     },
+    "src.6a0f7b3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Once the sovereign nation completes"
+      }
+    },
     "src.6a17079e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60245,6 +60657,16 @@
       ],
       "source": {
         "text": "First miss: 10% face penalty and two more seasons. Default: {consequence}"
+      }
+    },
+    "src.6c066259": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No monopoly terms are defined for this grantor’s tier."
       }
     },
     "src.6c0e40ea": {
@@ -63522,6 +63944,16 @@
         "text": "By dawn the sacks are hidden and the ledger is none the wiser. Winter holds no fear this year."
       }
     },
+    "src.78785c72": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Grant one local Craft or Trade monopoly for {years} years: receive {money:fee}, gain +{tax}% tax, and change popular opinion by {opinion}."
+      }
+    },
     "src.787bc240": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64041,16 +64473,6 @@
       ],
       "source": {
         "text": "Learned scholar"
-      }
-    },
-    "src.7a12a67c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/technology.js"
-      ],
-      "source": {
-        "text": "Public charters define corporate privileges, duties, and jurisdiction."
       }
     },
     "src.7a3d12d4": {
@@ -64985,6 +65407,16 @@
         "text": "Goldsmith’s daughter"
       }
     },
+    "src.7da95828": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Outgoing monopoly"
+      }
+    },
     "src.7db2b59b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65824,6 +66256,16 @@
       ],
       "source": {
         "text": "Hire them to thresh. ({money:2})"
+      }
+    },
+    "src.804fb4f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The household’s {profession} monopoly ends when it leaves {province}."
       }
     },
     "src.80512539": {
@@ -66746,6 +67188,16 @@
         "text": "Sulayhid Yemen"
       }
     },
+    "src.839677ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 You grant the local {profession} guild a {years}-year monopoly; its fee adds {money:fee} to the treasury."
+      }
+    },
     "src.83a406c5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67246,6 +67698,16 @@
       ],
       "source": {
         "text": "A keen blade close at hand is worth more than the coppers it costs."
+      }
+    },
+    "src.853f460a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Grant a Guild Monopoly"
       }
     },
     "src.8551d3f1": {
@@ -67969,6 +68431,16 @@
         "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
       }
     },
+    "src.882e83bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "The court is unmoved, and {grantor} takes the pressure as an insult."
+      }
+    },
     "src.883356c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68037,6 +68509,16 @@
       ],
       "source": {
         "text": "{level} — {name}"
+      }
+    },
+    "src.8865d350": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Withdraw the petition."
       }
     },
     "src.888ffdbc": {
@@ -69854,6 +70336,16 @@
         "text": "Can read and write — rare gift."
       }
     },
+    "src.8f8ed790": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The household already holds an incoming guild monopoly."
+      }
+    },
     "src.8f994f84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71399,6 +71891,16 @@
         "text": "Held the shield-wall and lived."
       }
     },
+    "src.961bc951": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Your case carries the hall. {grantor} orders the charter sealed."
+      }
+    },
     "src.961d017c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71589,6 +72091,16 @@
         "text": "Little stock, little profit — but a start."
       }
     },
+    "src.970e0670": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Network → Trade & Guild"
+      }
+    },
     "src.971346fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71607,6 +72119,16 @@
       ],
       "source": {
         "text": "Maritime Loans"
+      }
+    },
+    "src.971737a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Local {profession} guild"
       }
     },
     "src.971d1bbe": {
@@ -74324,6 +74846,16 @@
         "text": "Stone walls rally the defense of your home county."
       }
     },
+    "src.a14514d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Grant the {profession} monopoly"
+      }
+    },
     "src.a150d29e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74695,6 +75227,16 @@
         "text": "Suzdal"
       }
     },
+    "src.a2ab3784": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No monopoly terms are defined for your current tier."
+      }
+    },
     "src.a2bc65cf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74843,6 +75385,16 @@
       ],
       "source": {
         "text": "The token is yielded without haggling. The witnesses murmur approval, and the oath is made."
+      }
+    },
+    "src.a37d87b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only a baron or higher ruler may grant a monopoly."
       }
     },
     "src.a3830c5a": {
@@ -75590,6 +76142,16 @@
         "text": "“Land of my own, someday.”"
       }
     },
+    "src.a6512b83": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Spend {money:25}; the charter is guaranteed."
+      }
+    },
     "src.a653c2a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75738,6 +76300,16 @@
       ],
       "source": {
         "text": "Came home from the liege’s war."
+      }
+    },
+    "src.a716fdce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Local {profession} guild, represented by {advocate}"
       }
     },
     "src.a7230813": {
@@ -76351,6 +76923,16 @@
       ],
       "source": {
         "text": "No one is hiring swords this season."
+      }
+    },
+    "src.a9704dcc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Valid while the dynasty retains landed authority."
       }
     },
     "src.a9719f75": {
@@ -77153,6 +77735,16 @@
       ],
       "source": {
         "text": "Maintained trade tools that improve paid craft work and workshops, but are not saleable property."
+      }
+    },
+    "src.ad02144d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household."
       }
     },
     "src.ad18c98b": {
@@ -79660,6 +80252,16 @@
         "text": "Kneel until the kneeling feels true again."
       }
     },
+    "src.b67bad1f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 Grant a guild monopoly…"
+      }
+    },
     "src.b68ab621": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80219,6 +80821,16 @@
       ],
       "source": {
         "text": "This text"
+      }
+    },
+    "src.b88384ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%."
       }
     },
     "src.b8847408": {
@@ -80910,6 +81522,16 @@
       ],
       "source": {
         "text": "Your dynasty keeps contribution through succession. Withdrawal normally costs 100 piety and 50 prestige and forfeits land eligibility."
+      }
+    },
+    "src.bbccaf15": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}."
       }
     },
     "src.bbd00645": {
@@ -81694,6 +82316,16 @@
         "text": "Earth-and-timber circuits provide quickly raised local strongholds."
       }
     },
+    "src.be935853": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Guild monopoly tolls"
+      }
+    },
     "src.beb74de3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81862,6 +82494,16 @@
       ],
       "source": {
         "text": "Only a sovereign may restore the Papacy."
+      }
+    },
+    "src.bfa58276": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No valid local grantor can hear this petition."
       }
     },
     "src.bfc383b5": {
@@ -83170,6 +83812,16 @@
         "text": "A bent knee may soften the sentence — or not."
       }
     },
+    "src.c44480f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person."
+      }
+    },
     "src.c44a0dcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83299,6 +83951,16 @@
       ],
       "source": {
         "text": "Accepting founds a new playable landed realm for your household."
+      }
+    },
+    "src.c4e759e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "An independent landed ruler has no superior to petition."
       }
     },
     "src.c4ed99ea": {
@@ -83679,6 +84341,16 @@
       ],
       "source": {
         "text": "The retainer leaves immediately and remembers the slight."
+      }
+    },
+    "src.c69102f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Your sovereign nation has not completed Guild Charters."
       }
     },
     "src.c6934c11": {
@@ -85244,6 +85916,16 @@
       ],
       "source": {
         "text": "Let braver fools go."
+      }
+    },
+    "src.cc96233c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Your realm has already granted a local guild monopoly."
       }
     },
     "src.cc9752e8": {
@@ -87950,6 +88632,16 @@
         "text": "Your reply cuts twice as deep. The gathering roars; his shame will outlive him."
       }
     },
+    "src.d81d436a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Keep your resources; the day and 360-day petition interval remain spent."
+      }
+    },
     "src.d81f0399": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88441,6 +89133,16 @@
         "text": "Dyrrachion"
       }
     },
+    "src.da295332": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Grant the local {profession} guild exclusive privilege?"
+      }
+    },
     "src.da2a801f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88891,6 +89593,16 @@
       ],
       "source": {
         "text": "Linger in the bath-houses."
+      }
+    },
+    "src.dc305e7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Issuer: {issuer} · Recipient: {recipient} · {tier} terms · +{enterprise}% matching enterprise profit · your tax +{tax}% · {days} days remain"
       }
     },
     "src.dc41fc19": {
@@ -89453,6 +90165,16 @@
         "text": "dynastic compact"
       }
     },
+    "src.de686f3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rank & Realm"
+      }
+    },
     "src.de691dfa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89481,6 +90203,16 @@
       ],
       "source": {
         "text": "Go the long way round."
+      }
+    },
+    "src.de772185": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "A Monopoly Petition"
       }
     },
     "src.de793471": {
@@ -90407,7 +91139,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Count"
@@ -92812,6 +93545,16 @@
         "text": "Bought off a rising against the house."
       }
     },
+    "src.eb93186b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Guild monopoly charters"
+      }
+    },
     "src.eb967319": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94011,6 +94754,16 @@
       ],
       "source": {
         "text": "Fair of face."
+      }
+    },
+    "src.f0570e1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Persuade the grantor."
       }
     },
     "src.f057a696": {
@@ -95745,6 +96498,16 @@
         "text": "A richer man with poorer Arabic is chosen."
       }
     },
+    "src.f7571d02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A petition requires 60 guild standing; currently {standing}."
+      }
+    },
     "src.f75c9ef3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96534,6 +97297,16 @@
       ],
       "source": {
         "text": "The motion carries, to the relief of every manor with a leaking hall. Henceforth the liege’s summons can be answered with a purse — and the aid creeps up to pay for the privilege."
+      }
+    },
+    "src.faba6f07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Local to {province}"
       }
     },
     "src.fabee0a3": {
@@ -97578,6 +98351,16 @@
         "text": "🧭 The household’s venture to {destination} is resolved."
       }
     },
+    "src.fe746439": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The {profession} monopoly granted by {grantor} expires; its exclusive privilege ends."
+      }
+    },
     "src.fe7fb598": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97906,6 +98689,16 @@
       ],
       "source": {
         "text": "Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb."
+      }
+    },
+    "src.ffa4cff6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 The local {profession} guild’s monopoly ends with the dynasty’s landed authority."
       }
     },
     "src.ffa96080": {
@@ -98883,7 +99676,7 @@
       "glossary": [],
       "location": "data/technology.js",
       "source": {
-        "text": "Public charters define corporate privileges, duties, and jurisdiction."
+        "text": "Public charters define corporate privileges and monopolies: guildmasters may petition a superior, while barons and greater rulers may grant one local Craft or Trade monopoly."
       }
     },
     "tech.guild_charters.name.default": {
@@ -102689,6 +103482,16 @@
         "text": "A permanent home is not yet possible here."
       }
     },
+    "ui:A petition requires 60 guild standing; currently {standing}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standing"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A petition requires 60 guild standing; currently {standing}."
+      }
+    },
     "ui:A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102937,6 +103740,14 @@
         "text": "Active"
       }
     },
+    "ui:Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%."
+      }
+    },
     "ui:Adds national research slot {slot}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -103137,6 +103948,14 @@
         "text": "An idle enterprise produces no seasonal income."
       }
     },
+    "ui:An independent landed ruler has no superior to petition.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "An independent landed ruler has no superior to petition."
+      }
+    },
     "ui:An inherited campaign vow": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103233,6 +104052,19 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ask witnesses or a mediator to make a peace that binds you both. (spends the day)"
+      }
+    },
+    "ui:Ask {grantor} for a {years}-year monopoly: +{enterprise}% matching enterprise profit. Pay {money:25} or rely on Diplomacy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "grantor",
+        "money:25",
+        "years"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Ask {grantor} for a {years}-year monopoly: +{enterprise}% matching enterprise profit. Pay {money:25} or rely on Diplomacy."
       }
     },
     "ui:Ask {lord} for lands and a banner.": {
@@ -103471,6 +104303,14 @@
         "text": "Banner service"
       }
     },
+    "ui:Baron": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Baron"
+      }
+    },
     "ui:Baseline": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103603,6 +104443,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Both hands"
+      }
+    },
+    "ui:Bound to the direct liege relationship with {grantor}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "grantor"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Bound to the direct liege relationship with {grantor}"
       }
     },
     "ui:Bread and coin for the poor at the {temple} gate. ({money:10})": {
@@ -104032,6 +104882,14 @@
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
       }
     },
+    "ui:Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household."
+      }
+    },
     "ui:Choose what to offer {name}. Only one cash or item gift may be given to this person every {days} days.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -104222,6 +105080,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Costs {money:15}."
+      }
+    },
+    "ui:Count": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Count"
       }
     },
     "ui:Counties ({count})": {
@@ -104624,6 +105490,14 @@
         "text": "Drawing the known world…"
       }
     },
+    "ui:Duke": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Duke"
+      }
+    },
     "ui:Each season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -104646,6 +105520,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Either hand"
+      }
+    },
+    "ui:Emperor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Emperor"
       }
     },
     "ui:Empty": {
@@ -105158,12 +106040,53 @@
         "text": "Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication."
       }
     },
+    "ui:Grant a Guild Monopoly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Grant a Guild Monopoly"
+      }
+    },
     "ui:Grant a single county": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Grant a single county"
+      }
+    },
+    "ui:Grant one local Craft or Trade monopoly for {years} years: receive {money:fee}, gain +{tax}% tax, and change popular opinion by {opinion}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:fee",
+        "opinion",
+        "tax",
+        "years"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Grant one local Craft or Trade monopoly for {years} years: receive {money:fee}, gain +{tax}% tax, and change popular opinion by {opinion}."
+      }
+    },
+    "ui:Grant the local {profession} guild exclusive privilege?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Grant the local {profession} guild exclusive privilege?"
+      }
+    },
+    "ui:Grant the {profession} monopoly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Grant the {profession} monopoly"
       }
     },
     "ui:Grant {seat} and restore the Papacy": {
@@ -105202,6 +106125,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Guarded"
+      }
+    },
+    "ui:Guild monopoly tolls": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Guild monopoly tolls"
       }
     },
     "ui:Guild standing brings commissions, enterprise access, and better profits.": {
@@ -105482,6 +106413,16 @@
         "text": "In-game effects"
       }
     },
+    "ui:Incoming monopoly — {profession}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Incoming monopoly — {profession}"
+      }
+    },
     "ui:Inherited debt:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -105506,6 +106447,35 @@
       "location": "js/ui.js",
       "source": {
         "text": "Islamic Mediterranean"
+      }
+    },
+    "ui:Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "enterprise",
+        "issuer",
+        "tax",
+        "tier"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain"
+      }
+    },
+    "ui:Issuer: {issuer} · Recipient: {recipient} · {tier} terms · +{enterprise}% matching enterprise profit · your tax +{tax}% · {days} days remain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "enterprise",
+        "issuer",
+        "recipient",
+        "tax",
+        "tier"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Issuer: {issuer} · Recipient: {recipient} · {tier} terms · +{enterprise}% matching enterprise profit · your tax +{tax}% · {days} days remain"
       }
     },
     "ui:It goes poorly.": {
@@ -105612,6 +106582,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Kin and gossips name three who would hear your suit:"
+      }
+    },
+    "ui:King": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "King"
       }
     },
     "ui:Language": {
@@ -105763,6 +106741,37 @@
       "location": "js/ui.js",
       "source": {
         "text": "Loan against revenues"
+      }
+    },
+    "ui:Local to {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Local to {province}"
+      }
+    },
+    "ui:Local {profession} guild": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Local {profession} guild"
+      }
+    },
+    "ui:Local {profession} guild, represented by {advocate}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "advocate",
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Local {profession} guild, represented by {advocate}"
       }
     },
     "ui:Locked until +{threshold} regard; currently {regard}.": {
@@ -106305,6 +107314,22 @@
         "text": "No mechanical effect"
       }
     },
+    "ui:No monopoly terms are defined for this grantor’s tier.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No monopoly terms are defined for this grantor’s tier."
+      }
+    },
+    "ui:No monopoly terms are defined for your current tier.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No monopoly terms are defined for your current tier."
+      }
+    },
     "ui:No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -106457,6 +107482,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No unseated vassal remains to raise — grant land to loyal men, and offices will follow."
+      }
+    },
+    "ui:No valid local grantor can hear this petition.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No valid local grantor can hear this petition."
       }
     },
     "ui:None": {
@@ -106635,6 +107668,22 @@
         "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
       }
     },
+    "ui:Only a baron or higher ruler may grant a monopoly.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only a baron or higher ruler may grant a monopoly."
+      }
+    },
+    "ui:Only a guildmaster of the Craft or Trade profession may petition.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only a guildmaster of the Craft or Trade profession may petition."
+      }
+    },
     "ui:Only a sovereign may restore the Papacy.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -106803,6 +107852,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Out of reach"
+      }
+    },
+    "ui:Outgoing monopoly — {profession}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Outgoing monopoly — {profession}"
       }
     },
     "ui:Over your limit — your own income and levy are cut until you grant land away.": {
@@ -108537,6 +109596,14 @@
         "text": "The campaign’s partition"
       }
     },
+    "ui:The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority."
+      }
+    },
     "ui:The council now outweighs the crown: extraordinary taxes and revocations are beyond you until authority mends (below {limit}).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -108629,6 +109696,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "The household already has an active self-founded venture."
+      }
+    },
+    "ui:The household already holds an incoming guild monopoly.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The household already holds an incoming guild monopoly."
       }
     },
     "ui:The household is at its retainer capacity.": {
@@ -108756,6 +109831,20 @@
       "location": "js/ui.js",
       "source": {
         "text": "The territorial partition awaits a decision."
+      }
+    },
+    "ui:The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "money:fee",
+        "opinion",
+        "tax",
+        "years"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}."
       }
     },
     "ui:The ± beside the stat is last season’s real change — events and deeds included.": {
@@ -109006,6 +110095,14 @@
         "text": "Unequip it before selling, gifting, or pledging it."
       }
     },
+    "ui:Unknown profession": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unknown profession"
+      }
+    },
     "ui:Unrecorded": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109028,6 +110125,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Vacant."
+      }
+    },
+    "ui:Valid while the dynasty retains landed authority.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Valid while the dynasty retains landed authority."
       }
     },
     "ui:Vassal dues": {
@@ -109682,6 +110787,14 @@
         "text": "Your realm"
       }
     },
+    "ui:Your realm has already granted a local guild monopoly.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Your realm has already granted a local guild monopoly."
+      }
+    },
     "ui:Your realm is not eligible to claim the Caliphate.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109712,6 +110825,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your sovereign"
+      }
+    },
+    "ui:Your sovereign nation has not completed Guild Charters.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Your sovereign nation has not completed Guild Charters."
       }
     },
     "ui:Your spouse": {
@@ -110908,6 +112029,16 @@
         "text": "your vows forbid it."
       }
     },
+    "ui:{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "advocate"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person."
+      }
+    },
     "ui:{amount} gold a season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -111380,6 +112511,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{from}–{to}"
+      }
+    },
+    "ui:{grantor} must hold at least 40 favor toward you; currently {favor}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "favor",
+        "grantor"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{grantor} must hold at least 40 favor toward you; currently {favor}."
       }
     },
     "ui:{icon} level {level}": {
@@ -111906,6 +113048,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{prestige} prestige"
+      }
+    },
+    "ui:{profession} Monopoly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{profession} Monopoly"
       }
     },
     "ui:{progress}/{cost}": {
@@ -112580,6 +113732,20 @@
       "location": "js/ui.js",
       "source": {
         "text": "{wearer}. Return it to the armory before gifting it."
+      }
+    },
+    "ui:{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "money:fee",
+        "opinion",
+        "tax",
+        "years"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion"
       }
     },
     "ui:{year} AD": {

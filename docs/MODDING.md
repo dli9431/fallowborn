@@ -480,7 +480,9 @@ alongside their normal triggers and serve both pools.
 
 `label`, optional `desc` (a short hint shown beneath the label in the event dialog —
 every option should carry one: vague flavor pointing at the thrust of the choice,
-never exact numbers), optional `require` (same syntax as triggers — hides the option),
+normally not exact numbers; confirmations and contract offers such as a monopoly petition
+should disclose their exact costs, odds, and penalties), optional `require` (same syntax
+as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
@@ -586,7 +588,9 @@ academy_withdraw` target the queued `ctx.studentId` and also live in `js/events.
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
-partnership at the given base stake) live in `js/economy.js`; targeted-plot handlers
+partnership at the given base stake) and guild-monopoly petition handlers
+`guild_monopoly_paid guild_monopoly_persuade_success
+guild_monopoly_persuade_failure` live in `js/economy.js`; targeted-plot handlers
 `fabricate_claim_success fabricate_claim_failure plot_discovery_success
 plot_discovery_failure` live in `js/actions.js`; mods may register their own before use).
 
@@ -833,6 +837,8 @@ character can learn and perform:
 - `wage` / `masterWage` are seasonal contributions from resident non-player
   household workers who are not staffing an enterprise.
 - `guild: true` enables member → master → officer → guildmaster progression.
+  Core monopoly petitions are intentionally limited to the `craftsman` and `merchant`
+  profession ids; adding `guild:true` to another career does not make it charter-eligible.
 - `maleOnly: true` is reserved for historically sex-gated training such as arms.
 - `religionGroups` limits a career to characters whose faith belongs to one of the listed
   groups; core Clerical Service uses `christian` and `muslim`.
@@ -948,8 +954,9 @@ productive property:
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `requiresTech` optionally requires a completed technology in the household's effective
   sovereign nation. Purchase costs honor national `fx.costs.enterprise` modifiers.
-- `yield` is the base seasonal gold before worker skill, local development, and guild
-  rank modify it.
+- `yield` is the base seasonal gold before worker skill, local development, guild
+  rank, and any matching active guild-monopoly percentages modify it. Incoming and
+  outgoing percentages add, capped at +50%.
 - Instances live in `player.enterprises` as
   `{uid,type,provinceId,settlement,workerId}`. One type may stand once per settlement,
   but the family may own further copies elsewhere; repeat cost grows by
@@ -1097,7 +1104,10 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   define the shared relationship threshold. Wedding and authored event gifts do not use
   the explicit-recipient cooldowns. Other Network
   tunables include `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
-  `vassalLevyFavorRate`, and `vassalLevyFavorDays`.
+  `vassalLevyFavorRate`, and `vassalLevyFavorDays`. `guildMonopolyTerms` maps grantor
+  tiers `3`–`7` to `{years,enterpriseBonus,rulerFee,taxBonus,popularOpinion}`. A new
+  charter copies those numeric values into its save record, so a later mod or balance
+  edit does not rewrite an active charter.
 
 ## Settlements
 
@@ -1409,6 +1419,16 @@ Do not render occupation as ownership or change `state.owner` during the campaig
 final transfers with `FB.transferProvince`.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
+
+| Grantor tier | `years` | `enterpriseBonus` | `rulerFee` | `taxBonus` | `popularOpinion` |
+|---|---:|---:|---:|---:|---:|
+| Baron (`3`) | 3 | 0.15 | 25 | 0.02 | -5 |
+| Count (`4`) | 4 | 0.18 | 40 | 0.03 | -6 |
+| Duke (`5`) | 5 | 0.21 | 60 | 0.04 | -8 |
+| King (`6`) | 7 | 0.25 | 90 | 0.05 | -10 |
+| Emperor (`7`) | 10 | 0.30 | 140 | 0.06 | -12 |
+
 Religious-office tuning uses `religiousHeadWarOpinion`,
 `religiousHeadWarPietyRetained`, `religiousHeadAbsolutionGold`,
 `religiousHeadAbsolutionPiety`, `religiousHeadAbsolutionOpinion`,

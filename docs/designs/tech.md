@@ -191,6 +191,12 @@ knowledge does not overwhelm the starting balance. Historical `practice:*`, `rul
 Per-entry confidence and source references remain in the research catalogue rather than
 the play UI.
 
+Guild Charters is a consumed `rule:*` exception with a concrete deed surface: it unlocks
+Craft/Trade guildmaster petitions and the baron+ local-monopoly grant picker. Eligibility
+always follows the effective sovereign nation's completed record, so a vassal gains or
+loses access with the sovereign technology relationship; an already issued charter keeps
+its frozen numeric terms until expiry or scope invalidation.
+
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
 composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,
