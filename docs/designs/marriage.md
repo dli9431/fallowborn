@@ -20,6 +20,13 @@ realm opinion. Starting another suit ends the former one with −20 Regard and r
 same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
 and permanent-relocation cleanup release the assignment.
 
+Beginning courtship requires county co-location. A remote ordinary or royal
+candidate opens the relationship-visit review; departure begins the suit and
+attention assignment atomically, road days pause progress, and Regard starts at
+the target’s residence. Materialized royal children reside at their realm’s
+current capital, so the visit always follows capital movement. Proposals remain
+deliverable at distance once Regard reaches the threshold.
+
 Marriage to any listed child forms a dynastic tie, but only the visibly designated heir
 currently transmits the crown. The spouse succeeds first. Shared children form that
 spouse's branch, and if the spouse dies they retain the branch's place before royal

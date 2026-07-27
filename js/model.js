@@ -427,21 +427,38 @@ window.FB = window.FB || {};
   };
   FB.playerStation = function (state) { return FB.clamp(state.player.tier, 0, 4); };
 
-  /* A character's home county. A retained nonlocal contact may carry an
-     explicit homeProvinceId; roles otherwise come from the player's home,
-     while notables of other provinces persist in state.provChars. Cards use
-     this to say whose banner a stranger marches under. */
-  FB.homeOf = function (state, c) {
-    if (!c) return null;
+  /* Authoritative NPC residence. Household members and paid retainers remain
+     at the household home while its head travels. A materialized royal child
+     lives at their realm's current capital until marriage brings them into the
+     player's household. Foreign notables remain in their saved county roster;
+     an explicit homeProvinceId keeps relocated contacts such as rivals behind. */
+  FB.characterResidence = function (state, c) {
+    if (!state || !state.player || !c) return null;
+    if (c.id === state.player.charId ||
+        (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
+      return state.player.provinceId;
+    }
+    if (c.royalLine && state.realms) {
+      const royalRealm = state.realms[c.royalLine.realmId];
+      if (royalRealm && royalRealm.capital && FB.world &&
+          FB.world.byId[royalRealm.capital]) return royalRealm.capital;
+    }
     if (c.homeProvinceId && FB.world && FB.world.byId[c.homeProvinceId]) {
       return c.homeProvinceId;
     }
     if (state.provChars) {
       for (const pid in state.provChars) {
-        if (state.provChars[pid].indexOf(c.id) >= 0) return pid;
+        if (Array.isArray(state.provChars[pid]) &&
+            state.provChars[pid].indexOf(c.id) >= 0) return pid;
       }
     }
     return state.player.provinceId;
+  };
+
+  /* Compatibility name retained for cards and mods that asked where a
+     character was based before residence became mechanically authoritative. */
+  FB.homeOf = function (state, c) {
+    return FB.characterResidence(state, c);
   };
 
   FB.inheritTraits = function (father, mother) {

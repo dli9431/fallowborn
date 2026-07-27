@@ -946,7 +946,8 @@ by key, and site objects replace by their required stable `id`.
     "embassy": {
       "name": "Private embassy", "icon": "🕊",
       "desc": "Carry a message to an authored court.",
-      "cost": 4, "mode": "sites"
+      "cost": 4, "mode": "sites", "minTier": 1, "maxTier": 5,
+      "repeatable": true
     }
   },
   "travelSites": [
@@ -959,6 +960,17 @@ by key, and site objects replace by their required stable `id`.
 - A purpose carries localized `name`/`desc`, optional `icon`, added upfront
   `cost`, and one destination `mode`: `sites`, `developed` (with `minDev`), or
   `capitals` (the current capitals of living realms).
+- Optional `minTier`/`maxTier` bound rank access. With neither field, an
+  existing mod purpose keeps the historical freeholder/gentry range (1–2).
+  Supplying either field opts into an explicit range; the omitted lower bound
+  is 1 and omitted upper bound is 7. Serfs remain unable to travel.
+  `FB.travelEligible(state, purposeId)` applies those gates, while the
+  no-purpose call preserves its tier-1/2 compatibility behavior.
+- Optional `repeatable:true` permits revisiting a completed destination.
+  Optional `targeted:true` removes the purpose from the generic county picker
+  for a purpose-specific character or object flow. Core relationship visits
+  use `FB.socialVisitPreview`/`FB.socialVisitStart`; other targeted purposes
+  need their own UI and start integration.
 - A site carries `id`, `purpose`, and `provinceId`; optional `religions` and
   `religionGroups` restrict it to the traveler’s faith.
 - Routes use settled, non-wasteland adjacency. Entries in `straits` therefore
@@ -972,7 +984,9 @@ by key, and site objects replace by their required stable `id`.
   top-level `travel:{"kind":"culture|road|capstone|decision|work"}`. A capstone
   or work event may add `"purpose":"id"`. Culture/road events are drawn without
   repetition up to the journey caps; destination work events repeat but never
-  immediately repeat the last story. The core driver queues a purpose’s capstone
+  immediately repeat the last story. A work event may add `minTier`/`maxTier`
+  inside `travel` to separate commoner work from ruler guest-residence stories.
+  The core driver queues a purpose’s capstone
   by the id `travel_capstone_<purpose id>`.
 - `balance.travelLegDays`, `travelCooldownDays`, `travelCultureEventCap`, and
   `travelRoadEventCap` tune the road. `travelMinStayDays`,

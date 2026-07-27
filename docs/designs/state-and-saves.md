@@ -159,7 +159,11 @@ Overland travel is additive and save-safe. `player.travel` is `null` or the
 JSON-only journey record described in [travel.md](travel.md): purpose,
 home/destination/current county, phase, routes and leg clock, departure turn,
 encounter counters, seen cultures/events, and optional destination-stay timing/work
-fields. `player.travelHistory` stores completed purpose/destination pairs for the
+fields. A character-targeted visit additionally stores optional `targetCharId`
+and a courtship marker. Restore validates the live target and their current
+`FB.characterResidence`; a dead, unavailable, or moved target clears invalid
+relationship state and starts the saved traveler home without a minimum stay.
+`player.travelHistory` stores completed purpose/destination pairs for the
 current character. `player.travelSettlement` records the current character’s one
 completed permanent move as `{turn,destinationId}`. All initialize lazily without
 changing the save version. Succession cancels an active journey and clears both the

@@ -16,10 +16,13 @@ window.FB = window.FB || {};
   function queueItem(state, id, travel) {
     const loc = FB.world.byId[travel.currentId];
     const dest = FB.world.byId[travel.destinationId];
-    FB.queueEvent(state, id, {
+    const ctx = {
       locationId:loc ? loc.id : travel.currentId,
       destinationId:dest ? dest.id : travel.destinationId
-    }, { travel:true });
+    };
+    const target = travel.targetCharId && state.chars[travel.targetCharId];
+    if (target) ctx.visitname = FB.fullName(target);
+    FB.queueEvent(state, id, ctx, { travel:true });
   }
   function clearQueued(state) {
     state.eventQueue = (state.eventQueue || []).filter(function (item) {
@@ -44,6 +47,7 @@ window.FB = window.FB || {};
     const t = state.player.travel;
     if (!t || t.completed) return;
     t.completed = true;
+    if (purpose(t.purpose) && purpose(t.purpose).targeted) return;
     if (!historyHas(state, t.purpose, t.destinationId)) {
       history(state).push({
         purpose:t.purpose,
@@ -85,6 +89,11 @@ window.FB = window.FB || {};
     }
     if (t && (!isFinite(Number(t.legDaysLeft)) || Number(t.legDaysLeft) < 0)) {
       t.legDaysLeft = t.remainingRoute && t.remainingRoute.length ? t.legDays : 0;
+    }
+    if (t && t.targetCharId !== undefined &&
+        typeof t.targetCharId !== 'string') delete t.targetCharId;
+    if (t && t.targetCourtship !== undefined) {
+      t.targetCourtship = !!t.targetCourtship;
     }
     return t;
   };
@@ -141,16 +150,48 @@ window.FB = window.FB || {};
     return Math.ceil(base * mult);
   };
 
-  FB.travelEligible = function (state) {
+  function purposeTierRange(def) {
+    const explicit = !!(def &&
+      (def.minTier !== undefined || def.maxTier !== undefined));
+    let min = explicit && def.minTier !== undefined ? Math.floor(def.minTier) : 1;
+    let max = explicit && def.maxTier !== undefined ? Math.floor(def.maxTier) :
+      (explicit ? 7 : 2);
+    if (!isFinite(min)) min = 1;
+    if (!isFinite(max)) max = explicit ? 7 : 2;
+    return {
+      min:FB.clamp(min, 1, 7),
+      max:FB.clamp(max, 1, 7)
+    };
+  }
+
+  function purposeTierAllowed(state, def) {
+    const range = purposeTierRange(def);
+    return state.player.tier >= range.min && state.player.tier <= range.max;
+  }
+
+  FB.travelEligible = function (state, purposeId) {
     const p = state.player;
     const c = me(state);
+    const def = purposeId === undefined ? null :
+      (typeof purposeId === 'string' ? purpose(purposeId) : purposeId);
     FB.travelEnsure(state);
     if (p.travel) return FB.T('Already on the road.');
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can take to the road.');
     }
-    if (p.tier < 1 || p.tier > 2) {
+    if (purposeId !== undefined && !def) {
+      return FB.T('That travel purpose is unavailable.');
+    }
+    if (purposeId === undefined && (p.tier < 1 || p.tier > 2)) {
       return FB.T('The road is open to freeholders and gentry.');
+    }
+    if (purposeId !== undefined && !purposeTierAllowed(state, def)) {
+      if (p.tier < 1) return FB.T('Serfs cannot take to the road.');
+      const range = purposeTierRange(def);
+      if (range.min === 1 && range.max === 2) {
+        return FB.T('This journey is open to freeholders and gentry.');
+      }
+      return FB.T('This travel purpose is not open at your rank.');
     }
     if (p.flags && p.flags.in_prison) return FB.T('A prisoner cannot leave.');
     if (FB.atWarPersonally(state)) return FB.T('You cannot leave while personally at war.');
@@ -160,6 +201,18 @@ window.FB = window.FB || {};
       return FB.T('Ready in {days} days.', {days:cd - (state.turn - last)});
     }
     return true;
+  };
+
+  FB.travelAnyPurposeEligible = function (state) {
+    let reason = null;
+    for (const id in (FBDATA.travelPurposes || {})) {
+      const def = purpose(id);
+      if (!def || def.targeted) continue;
+      const eligible = FB.travelEligible(state, id);
+      if (eligible === true) return true;
+      if (!reason) reason = eligible;
+    }
+    return reason || FB.T('No travel purpose is available.');
   };
 
   function siteAllowed(state, site) {
@@ -172,10 +225,12 @@ window.FB = window.FB || {};
 
   function addDestination(state, out, seen, purposeId, pid, realmId) {
     const p = state.player;
+    const def = purpose(purposeId);
     if (!pid || pid === p.provinceId || seen[pid] || !settled(pid)) return;
     if (purposeId === 'pilgrimage' &&
       (historyHas(state, 'pilgrimage') || me(state).traits.indexOf('pilgrim') >= 0)) return;
-    if (purposeId !== 'pilgrimage' && historyHas(state, purposeId, pid)) return;
+    if (purposeId !== 'pilgrimage' && !(def && def.repeatable) &&
+        historyHas(state, purposeId, pid)) return;
     const route = FB.travelRoute(p.provinceId, pid);
     if (!route || !route.length) return;
     const legDays = FB.travelLegDays(state);
@@ -196,7 +251,7 @@ window.FB = window.FB || {};
     const def = purpose(purposeId);
     const out = [];
     const seen = {};
-    if (!def || FB.travelEligible(state) !== true) return out;
+    if (!def || def.targeted || FB.travelEligible(state, purposeId) !== true) return out;
 
     if (def.mode === 'sites') {
       const sites = FBDATA.travelSites || [];
@@ -231,21 +286,8 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.travelStart = function (state, purposeId, destinationId, destinationRealm) {
-    if (FB.travelEligible(state) !== true) return false;
-    const def = purpose(purposeId);
-    if (!def) return false;
-    const choices = FB.travelDestinations(state, purposeId);
-    let choice = null;
-    for (let i = 0; i < choices.length; i++) {
-      if (choices[i].destinationId === destinationId &&
-        (!destinationRealm || choices[i].destinationRealm === destinationRealm)) {
-        choice = choices[i];
-        break;
-      }
-    }
-    if (!choice || state.player.gold < choice.cost) return false;
-
+  function beginJourney(state, purposeId, choice, opts) {
+    opts = opts || {};
     const p = state.player;
     const legDays = choice.legDays || FB.travelLegDays(state);
     p.gold -= choice.cost;
@@ -254,7 +296,7 @@ window.FB = window.FB || {};
       purpose:purposeId,
       homeId:p.provinceId,
       destinationId:choice.destinationId,
-      destinationRealm:choice.destinationRealm,
+      destinationRealm:choice.destinationRealm || null,
       currentId:p.provinceId,
       phase:'outbound',
       remainingRoute:choice.route.slice(),
@@ -269,6 +311,8 @@ window.FB = window.FB || {};
       seenEvents:{},
       completed:false
     };
+    if (opts.targetCharId) p.travel.targetCharId = opts.targetCharId;
+    if (opts.targetCourtship) p.travel.targetCourtship = true;
     p.travel.seenCultures[me(state).culture] = 1;
     clearQueued(state);
     FB.news(state, FB.msg('news.travel.departed',
@@ -283,16 +327,124 @@ window.FB = window.FB || {};
     }
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
     return true;
+  }
+
+  FB.travelStart = function (state, purposeId, destinationId, destinationRealm) {
+    if (FB.travelEligible(state, purposeId) !== true) return false;
+    const def = purpose(purposeId);
+    if (!def || def.targeted) return false;
+    const choices = FB.travelDestinations(state, purposeId);
+    let choice = null;
+    for (let i = 0; i < choices.length; i++) {
+      if (choices[i].destinationId === destinationId &&
+        (!destinationRealm || choices[i].destinationRealm === destinationRealm)) {
+        choice = choices[i];
+        break;
+      }
+    }
+    if (!choice || state.player.gold < choice.cost) return false;
+    return beginJourney(state, purposeId, choice);
   };
 
-  function eventPool(kind, travel) {
+  FB.socialVisitPreview = function (state, c) {
+    const out = {
+      eligible:false,
+      characterId:c && c.id || null,
+      purpose:'relationship'
+    };
+    if (!c || c.dead || c.id === state.player.charId) {
+      out.reason = FB.T('That character cannot receive a visit.');
+      return out;
+    }
+    const eligible = FB.travelEligible(state, 'relationship');
+    if (eligible !== true) {
+      out.reason = eligible;
+      return out;
+    }
+    const destinationId = FB.characterResidence ?
+      FB.characterResidence(state, c) : FB.homeOf(state, c);
+    if (!destinationId || !settled(destinationId)) {
+      out.reason = FB.T('Their residence cannot be reached by road.');
+      return out;
+    }
+    if (destinationId === state.player.provinceId) {
+      out.reason = FB.T('{name} is already resident in your county.', {
+        name:FB.fullName(c)
+      });
+      return out;
+    }
+    const route = FB.travelRoute(state.player.provinceId, destinationId);
+    if (!route || !route.length) {
+      out.reason = FB.T('No settled overland route reaches their county.');
+      return out;
+    }
+    const legDays = FB.travelLegDays(state);
+    const activeDays = FB.socialAttentionDaysToThreshold ?
+      FB.socialAttentionDaysToThreshold(state, c) : null;
+    out.eligible = true;
+    out.destinationId = destinationId;
+    out.route = route;
+    out.legs = route.length;
+    out.legDays = legDays;
+    out.days = route.length * legDays;
+    out.cost = FB.travelCost('relationship', route, state);
+    out.minimumStay = balance('travelMinStayDays', 90);
+    out.dailyRate = FB.socialAttentionDailyOpinion ?
+      FB.socialAttentionDailyOpinion() : 0;
+    out.daysToThreshold = activeDays;
+    out.daysFromDeparture = activeDays === null ? null : out.days + activeDays;
+    return out;
+  };
+
+  FB.socialVisitStart = function (state, c, options) {
+    options = options || {};
+    const preview = FB.socialVisitPreview(state, c);
+    if (!preview.eligible || state.player.gold < preview.cost) return false;
+
+    if (options.courtship) {
+      const alreadyCourting = state.player.courtingId === c.id;
+      if (!alreadyCourting && (!FB.canCourt || !FB.canCourt(state, c))) return false;
+      if (!FB.beginCourtship ||
+          !FB.beginCourtship(state, c, { visitDeparture:true })) return false;
+    } else if (!FB.socialAttentionAssign ||
+        !FB.socialAttentionAssign(state, c)) {
+      return false;
+    }
+
+    const started = beginJourney(state, 'relationship', {
+      destinationId:preview.destinationId,
+      destinationRealm:c.royalLine ? c.royalLine.realmId : null,
+      route:preview.route,
+      legDays:preview.legDays,
+      cost:preview.cost
+    }, {
+      targetCharId:c.id,
+      targetCourtship:!!options.courtship
+    });
+    if (started && options.courtship) {
+      FB.news(state, FB.msg('news.social.courting_visit_begins',
+        '🌷 You set out to court {name} in person.', {
+          name:FB.fullName(c)
+        }));
+    }
+    return started;
+  };
+
+  function eventPool(state, kind, travel) {
     const out = [];
     const events = FBDATA.events || [];
+    const def = purpose(travel.purpose);
     for (let i = 0; i < events.length; i++) {
       const ev = events[i];
       if (!ev.travel || ev.travel.kind !== kind) continue;
       if (kind !== 'work' && travel.seenEvents[ev.id]) continue;
       if (ev.travel.purpose && ev.travel.purpose !== travel.purpose) continue;
+      if (kind === 'work' && def && def.targeted &&
+          ev.travel.purpose !== travel.purpose) continue;
+      if (ev.travel.minTier !== undefined &&
+          state.player.tier < ev.travel.minTier) continue;
+      if (ev.travel.maxTier !== undefined &&
+          state.player.tier > ev.travel.maxTier) continue;
       out.push(ev);
     }
     return out;
@@ -305,7 +457,7 @@ window.FB = window.FB || {};
       ? balance('travelCultureEventCap', 3)
       : balance('travelRoadEventCap', 4);
     if ((t.encounters[kind] || 0) >= cap) return false;
-    const pool = eventPool(kind, t);
+    const pool = eventPool(state, kind, t);
     if (!pool.length) return false;
     const ev = FB.pick(pool);
     t.seenEvents[ev.id] = 1;
@@ -316,7 +468,7 @@ window.FB = window.FB || {};
   function queueWork(state) {
     const t = state.player.travel;
     if (!t) return false;
-    let pool = eventPool('work', t);
+    let pool = eventPool(state, 'work', t);
     if (pool.length > 1 && t.lastWorkEventId) {
       pool = pool.filter(function (ev) { return ev.id !== t.lastWorkEventId; });
     }
@@ -392,11 +544,74 @@ window.FB = window.FB || {};
     if (FB.map) FB.map.request();
   }
 
+  function targetStillValid(state, t) {
+    if (!t || !t.targetCharId) return true;
+    const c = state.chars[t.targetCharId];
+    if (!c || c.dead) return false;
+    const residence = FB.characterResidence ?
+      FB.characterResidence(state, c) : FB.homeOf(state, c);
+    if (residence !== t.destinationId) return false;
+    if (!t.targetCourtship) return true;
+    const p = state.player;
+    const traveler = me(state);
+    if (p.courtingId !== c.id || !p.flags || !p.flags.courting) return false;
+    if (!traveler || FB.ageOf(traveler, state.date.year) < 16 ||
+        FB.ageOf(c, state.date.year) < 16 || traveler.sex === c.sex) return false;
+    if ((FB.spouseOf && FB.spouseOf(state, c)) || c.betrothedId) return false;
+    return true;
+  }
+
+  function endInvalidTargetVisit(state, t) {
+    const targetId = t.targetCharId;
+    const c = targetId && state.chars[targetId];
+    if (state.player.courtingId === targetId) {
+      if (c && FB.clearCourtship) FB.clearCourtship(state);
+      else {
+        state.player.courtingId = null;
+        if (state.player.flags) delete state.player.flags.courting;
+      }
+    }
+    if (FB.socialAttentionWithdraw) {
+      FB.socialAttentionWithdraw(state, targetId, true);
+    }
+    clearQueued(state);
+    delete t.targetCharId;
+    delete t.targetCourtship;
+    FB.news(state, FB.msg('news.travel.relationship_visit_ended', {
+      forms: {
+        select:'value', param:'known', cases:{
+          yes:'🧭 The visit to {name} can no longer continue; you turn toward home.',
+          no:'🧭 The planned visit can no longer continue; you turn toward home.',
+          other:'🧭 The relationship visit ends; you turn toward home.'
+        }
+      }
+    }, {
+      known:c ? 'yes' : 'no',
+      name:c ? FB.fullName(c) : ''
+    }));
+    if (t.currentId === t.homeId) {
+      finishAtHome(state);
+      return;
+    }
+    const route = FB.travelRoute(t.currentId, t.homeId);
+    t.phase = 'return';
+    t.remainingRoute = route || [];
+    t.legDaysLeft = t.remainingRoute.length ? t.legDays : 0;
+    if (!t.remainingRoute.length) finishAtHome(state);
+    if (FB.map) FB.map.request();
+  }
+
   FB.travelTick = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
     if (!t) return;
-    if (p.dead || p.tier < 1 || p.tier > 2 || (p.flags && p.flags.in_prison) ||
+    if (!targetStillValid(state, t)) {
+      endInvalidTargetVisit(state, t);
+      return;
+    }
+    if (p.dead || !purpose(t.purpose) ||
+      !purposeTierAllowed(state, purpose(t.purpose)) ||
+      (p.flags && p.flags.in_prison) ||
       FB.atWarPersonally(state)) {
       FB.travelCancel(state);
       return;
@@ -430,16 +645,29 @@ window.FB = window.FB || {};
     if (t.phase === 'return') return FB.T('Already returning home.');
     if (t.phase !== 'arrived') return true;
     const remaining = balance('travelMinStayDays', 90) - stayDays(state, t);
-    return remaining <= 0 ? true : FB.T(
-      'Stay and work here for {days} more days before returning home.', {
+    if (remaining <= 0) return true;
+    if (t.purpose === 'relationship') {
+      return FB.T('Remain on the visit for {days} more days before returning home.', {
         days:remaining
       });
+    }
+    if (state.player.tier >= 3) {
+      return FB.T('Remain in guest residence for {days} more days before returning home.', {
+        days:remaining
+      });
+    }
+    return FB.T('Stay and work here for {days} more days before returning home.', {
+      days:remaining
+    });
   };
 
   FB.travelSettlementEligible = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
+    if (p.tier < 1 || p.tier > 2) {
+      return FB.T('Only freeholders and gentry may relocate the household this way.');
+    }
     if (p.travelSettlement) {
       return FB.T('{name} has already made the one permanent move allowed in this lifetime.', {
         name:FB.fullName(me(state))
@@ -548,7 +776,13 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t) return true;
     const p = state.player;
-    if (p.dead || p.tier < 1 || p.tier > 2 || (p.flags && p.flags.in_prison) ||
+    if (!targetStillValid(state, t)) {
+      endInvalidTargetVisit(state, t);
+      return false;
+    }
+    if (p.dead || !purpose(t.purpose) ||
+      !purposeTierAllowed(state, purpose(t.purpose)) ||
+      (p.flags && p.flags.in_prison) ||
       FB.atWarPersonally(state)) {
       FB.travelCancel(state);
       return false;
@@ -566,7 +800,10 @@ window.FB = window.FB || {};
     t.workEvents = 0;
     t.nextWorkTurn = state.turn + nextWorkDelay();
     clearQueued(state);
-    queueItem(state, 'travel_arrival_choice', t);
+    queueItem(state, t.purpose === 'relationship'
+      ? 'travel_arrival_choice_relationship'
+      : (state.player.tier >= 3
+        ? 'travel_arrival_choice_ruler' : 'travel_arrival_choice'), t);
   };
 
   FB.fns = FB.fns || {};

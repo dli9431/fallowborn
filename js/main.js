@@ -1055,9 +1055,11 @@ window.FB = window.FB || {};
     }
     const p = s.player;
 
-    if (!G.observe && !p.travel) {
-      if (!(opts && opts.skipFocus)) FB.tickFocus(s);
-      else FB.validateFocus(s);
+    if (!G.observe) {
+      if (!p.travel) {
+        if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+        else FB.validateFocus(s);
+      }
       FB.tickSocialAttention(s);
     }
 

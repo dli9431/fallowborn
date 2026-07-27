@@ -7,6 +7,7 @@ FBDATA.travelPurposes = {
     icon:'🕯',
     desc:'Visit a holy place of your faith and return with a pilgrim’s standing.',
     cost:5,
+    maxTier:7,
     mode:'sites'
   },
   trade: {
@@ -23,6 +24,7 @@ FBDATA.travelPurposes = {
     icon:'📚',
     desc:'Seek instruction in one of the great learned or urban centers.',
     cost:8,
+    maxTier:7,
     mode:'sites'
   },
   service: {
@@ -31,6 +33,15 @@ FBDATA.travelPurposes = {
     desc:'Offer your hands and talents at the court of a living realm.',
     cost:0,
     mode:'capitals'
+  },
+  relationship: {
+    name:'Relationship visit',
+    icon:'🤝',
+    desc:'Visit a named character and cultivate the relationship in person.',
+    cost:0,
+    maxTier:7,
+    targeted:true,
+    repeatable:true
   }
 };
 

@@ -174,8 +174,13 @@ payment state.
 
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending
-a day; while courting, the suitor holds that slot until the courtship ends. The assigned
-person's sheet repeats their Regard, fixed daily rate, and estimated days to +40. **Call
+a day when the character is local; while courting, the suitor holds that slot until the
+courtship ends. A distant character instead offers **Travel to cultivate…**, or
+**Travel to continue cultivating…** beside Stop for an existing paused assignment.
+The review names the person and county, route, days, cost, 90-day minimum stay,
+fixed daily rate, and estimated time to +40. Confirming assigns attention and
+departs as one operation. The assigned person's sheet repeats their Regard,
+fixed daily rate, and estimated active days to +40. **Call
 friend** and **Propose marriage** remain visibly disabled below the shared threshold.
 **Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
 object show their +Regard value and either readiness or recipient-specific days remaining
@@ -203,7 +208,8 @@ Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
 confirmation sheets. A Catholic Papal conquest is marked as sacrilege in the war list
 and uses its own second confirmation; no penalty is applied until that final button.
 A separate personal-attention summary names the assigned character, current Regard, fixed
-daily rate, estimated days to the relationship threshold, and travel-pause state; attention
+daily rate, estimated active days to the relationship threshold, and whether progress is
+active, paused while on the road, or paused because the target is in another county; attention
 never replaces the work focus.
 Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
@@ -262,12 +268,16 @@ patterns. Guild and vassal favors are direct focusable Network actions whose but
 their full cost and duration before activation. Network is hidden in observe mode alongside
 other protagonist-only panels.
 
-The tier-1/2 **Take to the road…** deed opens a purpose dialog, then a map picker
+The **Take to the road…** deed opens a purpose dialog filtered by the traveler’s
+rank, then a map picker
 with marked valid destinations and a synchronized, focusable destination list.
 Map taps and list buttons select the same county and preview the settled-only
 route; the final confirmation states county legs, days each way, and exact cost.
 It also states the 90-day destination stay and whether this character’s one lifetime
-permanent move remains available.
+permanent move remains available. Freeholders and gentry see every ordinary
+purpose; barons and higher see pilgrimage and study, while relationship travel
+begins from a named character sheet. Ruler reviews describe guest residence and
+never expose permanent-settlement controls.
 The picker pauses time, supports the normal map keyboard navigation, number keys,
 Tab, Enter, and Escape, and becomes a bottom sheet on narrow screens. During a
 journey the map keeps the gold household flag at home, draws a separate traveler

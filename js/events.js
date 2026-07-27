@@ -119,6 +119,31 @@ window.FB = window.FB || {};
     return ids.length ? state.chars[ids[0]] : null;
   };
 
+  FB.socialAttentionPresence = function (state, c) {
+    const residenceId = FB.characterResidence ?
+      FB.characterResidence(state, c) : FB.homeOf(state, c);
+    const travel = state.player.travel;
+    if (travel) {
+      if (travel.phase !== 'arrived') {
+        return {
+          status:'on-road',
+          residenceId:residenceId,
+          locationId:travel.currentId
+        };
+      }
+      return {
+        status:travel.currentId === residenceId ? 'active' : 'remote',
+        residenceId:residenceId,
+        locationId:travel.currentId
+      };
+    }
+    return {
+      status:state.player.provinceId === residenceId ? 'active' : 'remote',
+      residenceId:residenceId,
+      locationId:state.player.provinceId
+    };
+  };
+
   FB.socialAttentionAssign = function (state, c, opts) {
     opts = opts || {};
     const p = state.player;
@@ -171,6 +196,7 @@ window.FB = window.FB || {};
     for (let i = 0; i < ids.length; i++) {
       const c = state.chars[ids[i]];
       if (!c || c.dead) continue;
+      if (FB.socialAttentionPresence(state, c).status !== 'active') continue;
       c.opinion = FB.clamp(c.opinion + rate, -100, 100);
       state.player.socialAttention[c.id].lastTurn = state.turn;
     }
@@ -625,9 +651,12 @@ window.FB = window.FB || {};
     return c;
   };
 
-  FB.beginCourtship = function (state, c) {
+  FB.beginCourtship = function (state, c, opts) {
+    opts = opts || {};
     const p = state.player;
     if (!c || c.dead || c.id === p.charId || !FB.socialAttentionCapacity()) return false;
+    if (!opts.visitDeparture && FB.socialAttentionPresence &&
+        FB.socialAttentionPresence(state, c).status !== 'active') return false;
     if (p.courtingId && p.courtingId !== c.id) {
       /* Redirecting a suit carries the same slight as a deliberate breakoff. */
       FB.clearCourtship(state, { penalty:true, news:true });

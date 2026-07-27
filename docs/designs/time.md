@@ -29,7 +29,9 @@ also ends tier-1–2 travel immediately.
 Personal social attention is independent of the daily focus. On every ordinary player day,
 `FB.tickSocialAttention` adds the fixed `balance.socialAttentionDailyOpinion` to the
 assigned character's existing Regard, including a day filled by an instant deed. It does
-not tick in Observe mode or while `player.travel` is active. The removed `court_suitor`
+not tick in Observe mode. At home it advances only for a locally resident target;
+while traveling it remains paused on outbound and return roads and advances after
+arrival only when the target resides in the traveler’s current county. The removed `court_suitor`
 focus is accepted only as old-save input: restore converts it to attention on the current
 suitor and selects a normal valid focus.
 
@@ -130,8 +132,10 @@ specifically staffed by the traveling player produces
 nothing, while other household work, enterprises, contracts, pregnancy, aging,
 armies, and world simulation continue. Travel arrivals queue their own encounters;
 ordinary random home slot events are consumed but suppressed until the traveler is
-home or settled. Personal social attention is paused for every travel day; a permanent
-move clears local cultivated relationships, an active courtship, and its assignment.
+home or settled. Personal social attention is presence-aware during the journey:
+road days pause it, a co-located destination stay advances it, and returning home
+pauses a remote assignment without deleting it. A permanent move still clears
+local cultivated relationships, an active courtship, and its assignment.
 
 For an independent count or higher, season boundaries also run
 `FB.tickForeignPolicy`. Saved Improve/Provoke assignments adjust neighboring sovereigns’
