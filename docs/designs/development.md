@@ -9,6 +9,11 @@ center. The authored `dev` in `FBDATA.provinces` initializes `state.dev` only
 for a fresh game. Loaded saves keep their stored `state.dev` values, including
 development gained or lost during play.
 
+The Land tab labels this county value **Economic development** and shows the
+effective sovereign's separate 0–10 **Technological development** rating beside
+it. The technology rating is informational; it does not replace county
+development or change development-driven calculations.
+
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent

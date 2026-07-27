@@ -79,6 +79,16 @@ window.FB = window.FB || {};
       }).length
     });
   }
+  function techDevelopmentScore(s, realmId) {
+    const completed = FB.realmTechRecord(s, FB.techRealmId(s, realmId)).completed;
+    let known = 0, total = 0;
+    for (const id in (FBDATA.tech || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.tech, id)) continue;
+      total++;
+      if (completed.indexOf(id) >= 0) known++;
+    }
+    return total ? Math.round(FB.clamp(known / total, 0, 1) * 10) : 0;
+  }
   function researchNumber(value) {
     return Math.round((Number(value) || 0) * 10) / 10;
   }
@@ -2535,7 +2545,9 @@ window.FB = window.FB || {};
         kv('Culture', esc(cultureName(s, pr.culture))) +
         kv('Faith', rel.icon + ' ' + esc(religionName(s, pr.religion))) +
         kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
-        kv('Development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
+        kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
+        (realm ? kv('Technological development',
+          techDevelopmentScore(s, rid) + ' / 10') : '') +
         kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
       const great = s.greatHolyWar;
       if (great && great.objectiveCounties &&
