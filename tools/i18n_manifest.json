@@ -22107,6 +22107,24 @@
         }
       }
     },
+    "fx.ui.tech_cost_estimate": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "cost",
+        "seasons"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "{cost} · about {seasons} season",
+            "other": "{cost} · about {seasons} seasons"
+          },
+          "param": "seasons",
+          "select": "plural"
+        }
+      }
+    },
     "fx.warstate.advance": {
       "context": "Structured war-status display message.",
       "glossary": [
@@ -33508,6 +33526,16 @@
         "text": "Elevated to bishop!"
       }
     },
+    "src.047f37fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Automatic research fills every open national slot now and whenever a project completes. Existing projects are never cancelled."
+      }
+    },
     "src.04871f65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35914,6 +35942,16 @@
         "text": "city"
       }
     },
+    "src.0dc6b4aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Off"
+      }
+    },
     "src.0dfccea1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36586,6 +36624,16 @@
       ],
       "source": {
         "text": "Decline."
+      }
+    },
+    "src.10dc3711": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fill research slots automatically"
       }
     },
     "src.10fa1139": {
@@ -38301,16 +38349,6 @@
       ],
       "source": {
         "text": "No coin is committed to distant trade."
-      }
-    },
-    "src.171ddb46": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "476–799"
       }
     },
     "src.172228ff": {
@@ -41359,16 +41397,6 @@
         "text": "Improved Ox Yokes"
       }
     },
-    "src.23e29a5f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "After 1300"
-      }
-    },
     "src.23e6defc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43640,16 +43668,6 @@
       ],
       "source": {
         "text": "Answer with your fists."
-      }
-    },
-    "src.2d254619": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "800–999"
       }
     },
     "src.2d28bbd2": {
@@ -47160,6 +47178,16 @@
         "text": "Appeal over the dog to the hand that feeds it."
       }
     },
+    "src.3ccecda8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{percent}% discount"
+      }
+    },
     "src.3cd96da5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48133,6 +48161,16 @@
       ],
       "source": {
         "text": "The Banners Meet"
+      }
+    },
+    "src.40bbd6e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Automatic research"
       }
     },
     "src.40df5f38": {
@@ -50667,6 +50705,16 @@
       ],
       "source": {
         "text": "Hooped wooden vessels store and move liquids, grain, and salted food."
+      }
+    },
+    "src.4a6e0755": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cheapest available first"
       }
     },
     "src.4a7a2c3a": {
@@ -54775,16 +54823,6 @@
         "text": "The Claimant’s Challenge"
       }
     },
-    "src.5b21f553": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "When the national project ends, begin the cheapest available next project."
-      }
-    },
     "src.5b38cc4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55294,6 +55332,16 @@
       ],
       "source": {
         "text": "{amount} gold a season"
+      }
+    },
+    "src.5d1011d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains."
       }
     },
     "src.5d199cff": {
@@ -56732,6 +56780,16 @@
         "text": "Pay the amercement. ({money:8})"
       }
     },
+    "src.62cc4d80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manual research"
+      }
+    },
     "src.62dddd36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56940,6 +56998,16 @@
       ],
       "source": {
         "text": "🏛 The Royal Council…"
+      }
+    },
+    "src.63f9ed6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Research priority"
       }
     },
     "src.640b509f": {
@@ -60888,16 +60956,6 @@
       ],
       "source": {
         "text": "duplicate strait"
-      }
-    },
-    "src.73dee77f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Choose the next technology automatically"
       }
     },
     "src.73e51394": {
@@ -72434,16 +72492,6 @@
         "text": "Water-driven stocks scour and thicken wool cloth at workshop scale."
       }
     },
-    "src.a0f3ecf7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Inherited foundations"
-      }
-    },
     "src.a0f5b17b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75195,16 +75243,6 @@
         "text": "Licensed Scholar"
       }
     },
-    "src.acad9393": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Permanent · research cost multiplied by 0.65"
-      }
-    },
     "src.acba1976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77138,6 +77176,16 @@
         "text": "someone"
       }
     },
+    "src.b454846f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{domain} first"
+      }
+    },
     "src.b459950a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78340,16 +78388,6 @@
         "text": "Hannover"
       }
     },
-    "src.b8e8fb99": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Not yet exposed through contact"
-      }
-    },
     "src.b8f594a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79310,16 +79348,6 @@
       ],
       "source": {
         "text": "requires a stable id."
-      }
-    },
-    "src.bd3ab8aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{base} base × {history} historical × {exposure} exposure = {total}"
       }
     },
     "src.bd4acea6": {
@@ -80395,16 +80423,6 @@
         "text": "🌱 fertility {percent}%"
       }
     },
-    "src.c1752f77": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "1150–1300"
-      }
-    },
     "src.c1791dde": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81390,6 +81408,16 @@
         "text": "Coin and prices this year"
       }
     },
+    "src.c5917b9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{cost} · about {seasons} season"
+      }
+    },
     "src.c5a4c167": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82220,6 +82248,16 @@
       ],
       "source": {
         "text": "Craft"
+      }
+    },
+    "src.c8ff15e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain."
       }
     },
     "src.c905610a": {
@@ -85558,6 +85596,16 @@
         "text": "Plzeň"
       }
     },
+    "src.d787fb82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Fill slots with the eligible technologies that currently cost the least research."
+      }
+    },
     "src.d791104e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85957,16 +86005,6 @@
       ],
       "source": {
         "text": "Royal Chancery"
-      }
-    },
-    "src.d9380950": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "1000–1149"
       }
     },
     "src.d944dc2f": {
@@ -87800,6 +87838,16 @@
       ],
       "source": {
         "text": "Dormant: no upkeep or benefit right now."
+      }
+    },
+    "src.e0c0bc62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Automatic research: {mode}"
       }
     },
     "src.e0c4a0e2": {
@@ -90550,6 +90598,16 @@
         "text": "🕯 The lord {name} is dead. Another will take his seat."
       }
     },
+    "src.ec060e38": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{cost} · about {seasons} seasons"
+      }
+    },
     "src.ec260eb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91719,6 +91777,16 @@
       ],
       "source": {
         "text": "Tahirid Khorasan"
+      }
+    },
+    "src.f0c23d85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep current projects, but leave future slots for you to choose."
       }
     },
     "src.f0cd5723": {
@@ -93582,6 +93650,16 @@
       ],
       "source": {
         "text": "Run the race."
+      }
+    },
+    "src.f89f7cf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Open slots are filled immediately and whenever a project completes."
       }
     },
     "src.f8a0125d": {
@@ -100045,38 +100123,6 @@
         "text": "10% is added to the signed face and the deadline moves two seasons."
       }
     },
-    "ui:1000–1149": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "1000–1149"
-      }
-    },
-    "ui:1150–1300": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "1150–1300"
-      }
-    },
-    "ui:476–799": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "476–799"
-      }
-    },
-    "ui:800–999": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "800–999"
-      }
-    },
     "ui:A Match for {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -100154,6 +100200,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery."
+      }
+    },
+    "ui:A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain."
       }
     },
     "ui:A prisoner cannot leave.": {
@@ -100372,14 +100426,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Advocate · {money:20} · 15 favor"
-      }
-    },
-    "ui:After 1300": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "After 1300"
       }
     },
     "ui:After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.": {
@@ -100731,6 +100777,32 @@
       "location": "js/ui.js",
       "source": {
         "text": "Attackers"
+      }
+    },
+    "ui:Automatic research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Automatic research"
+      }
+    },
+    "ui:Automatic research fills every open national slot now and whenever a project completes. Existing projects are never cancelled.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Automatic research fills every open national slot now and whenever a project completes. Existing projects are never cancelled."
+      }
+    },
+    "ui:Automatic research: {mode}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "mode"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Automatic research: {mode}"
       }
     },
     "ui:Available": {
@@ -101156,6 +101228,14 @@
         "text": "Change occupation or training…"
       }
     },
+    "ui:Cheapest available first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cheapest available first"
+      }
+    },
     "ui:Chief Imam": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -101224,6 +101304,16 @@
         "text": "Choose an education focus first."
       }
     },
+    "ui:Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "domain"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains."
+      }
+    },
     "ui:Choose the Target": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -101238,14 +101328,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution."
-      }
-    },
-    "ui:Choose the next technology automatically": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Choose the next technology automatically"
       }
     },
     "ui:Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer.": {
@@ -102119,6 +102201,22 @@
         "text": "Fields at {settlement}"
       }
     },
+    "ui:Fill research slots automatically": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fill research slots automatically"
+      }
+    },
+    "ui:Fill slots with the eligible technologies that currently cost the least research.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Fill slots with the eligible technologies that currently cost the least research."
+      }
+    },
     "ui:Final equipment worn by the deceased": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102621,14 +102719,6 @@
         "text": "Inherited debt:"
       }
     },
-    "ui:Inherited foundations": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Inherited foundations"
-      }
-    },
     "ui:Islamic Mediterranean": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102651,6 +102741,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "It goes well."
+      }
+    },
+    "ui:Keep current projects, but leave future slots for you to choose.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep current projects, but leave future slots for you to choose."
       }
     },
     "ui:Keep in service": {
@@ -102956,6 +103054,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Manage {name}…"
+      }
+    },
+    "ui:Manual research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manual research"
       }
     },
     "ui:Map filter: {mode} (R)": {
@@ -103588,14 +103694,6 @@
         "text": "Not yet"
       }
     },
-    "ui:Not yet exposed through contact": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Not yet exposed through contact"
-      }
-    },
     "ui:Nothing of note.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103626,6 +103724,14 @@
       "location": "js/model.js",
       "source": {
         "text": "Nun"
+      }
+    },
+    "ui:Off": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Off"
       }
     },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
@@ -103720,6 +103826,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Open an enterprise in {settlement}…"
+      }
+    },
+    "ui:Open slots are filled immediately and whenever a project completes.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Open slots are filled immediately and whenever a project completes."
       }
     },
     "ui:Open the full figure and choose equipment from the family armory.": {
@@ -103914,14 +104028,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Permanent household property"
-      }
-    },
-    "ui:Permanent · research cost multiplied by 0.65": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Permanent · research cost multiplied by 0.65"
       }
     },
     "ui:Persianate": {
@@ -104593,6 +104699,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Requires {standing} standing; currently {current}."
+      }
+    },
+    "ui:Research priority": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Research priority"
       }
     },
     "ui:Researching {technology}": {
@@ -105884,14 +105998,6 @@
       "location": "js/items.js",
       "source": {
         "text": "Well-made {item}"
-      }
-    },
-    "ui:When the national project ends, begin the cheapest available next project.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "When the national project ends, begin the cheapest available next project."
       }
     },
     "ui:When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.": {
@@ -107718,19 +107824,6 @@
         "text": "{band} ({value})"
       }
     },
-    "ui:{base} base × {history} historical × {exposure} exposure = {total}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "base",
-        "exposure",
-        "history",
-        "total"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{base} base × {history} historical × {exposure} exposure = {total}"
-      }
-    },
     "ui:{building} upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -108033,6 +108126,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{destination}: {legs} legs, {days} days each way, {money:cost}."
+      }
+    },
+    "ui:{domain} first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "domain"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{domain} first"
       }
     },
     "ui:{from}–{to}": {
@@ -108404,6 +108507,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{pct}% of your noble revenue"
+      }
+    },
+    "ui:{percent}% discount": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{percent}% discount"
       }
     },
     "ui:{percent}% higher {category} cost": {

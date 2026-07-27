@@ -90,10 +90,13 @@ manual / defensive / offensive) automates the war host's marches — see
 [war.md](war.md). Death is never delegated: the succession screen takes
 no auto-focus, so a stray Space/Enter cannot sign the succession for the first heir.
 The mode can also auto-raise the cheapest building. A sovereign player may separately
-enable “Choose the next technology automatically”; `FB.autoResearch` deterministically
-fills each open national research slot with the highest-scoring eligible project without
-consuming RNG. Vassals cannot choose or automate their sovereign's projects, though
-eligible vassals can advocate one project annually. Event-data `cooldown` stays in
+enable automatic research and choose either cheapest-first or a preferred domain;
+`FB.autoResearch` fills every open national slot immediately and after completions
+without consuming RNG. A preferred domain falls back to the cheapest eligible technology
+elsewhere when necessary. The enabled state and priority live in the existing
+`fb_automation` localStorage preference. Vassals cannot choose or automate their
+sovereign's projects, though eligible vassals can advocate one project annually.
+Event-data `cooldown` stays in
 seasons — the engine multiplies by 90.
 
 Related: [events.md](events.md) for the event interpreter, [war.md](war.md) for the

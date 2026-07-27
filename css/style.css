@@ -588,12 +588,22 @@ textarea.modjson, textarea.savetext {
 .autorow { display: block; margin: 7px 0; cursor: pointer; }
 .autorow input { margin-right: 7px; }
 .autorow .adesc { display: block; font-size: 12px; opacity: 0.7; margin: 2px 0 0 26px; }
+.autorow.auto-select { margin-left: 26px; cursor: default; }
+.autorow.auto-select > span:first-child { display: block; margin-bottom: 4px; }
+.autorow.auto-select select {
+  width: min(100%, 420px); min-height: 38px; padding: 7px 8px;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #211a12; color: #eadbb6; font: inherit;
+}
+.autorow.auto-select .adesc { margin-left: 0; }
 
 /* ---------- historical technology catalogue ---------- */
 .tech-summary {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 18px; margin-bottom: 8px;
 }
+.tech-auto-bar { display: flex; justify-content: flex-end; margin: 2px 0 10px; }
+.tech-auto-bar .btn { min-width: min(100%, 260px); }
 .tech-active-strip {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px; margin: 8px 0 12px;
@@ -617,8 +627,8 @@ textarea.modjson, textarea.savetext {
   border: 1px solid #66522f; border-radius: 6px;
   background: #211a12; color: #eadbb6; font: inherit;
 }
-.tech-era { margin: 0 0 13px; }
-.tech-era h4 {
+.tech-domain-group { margin: 0 0 13px; }
+.tech-domain-group h4 {
   margin: 8px 0 5px; color: #d3ac4e; font-size: 13px;
   letter-spacing: .04em;
 }
@@ -642,10 +652,7 @@ textarea.modjson, textarea.savetext {
 .tech-entry-copy small { display: block; color: #9f8e6d; font-size: 11px; margin-top: 2px; }
 .tech-entry-cost { color: #d0ad54; font-size: 12px; text-align: right; }
 .tech-empty { padding: 22px 8px; color: #9f8e6d; text-align: center; }
-.tech-detail-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
-.tech-detail-head > span { flex: 0 0 auto; font-size: 34px; }
-.tech-detail-head h4 { color: #e3c66d; font-size: 19px; margin: 0 0 2px; }
-.tech-detail-head small { color: #9f8e6d; }
+.tech-detail-meta { margin-bottom: 8px; color: #9f8e6d; font-size: 12px; }
 .tech-prereq-line { margin: 8px 0; color: #ad9b78; font-size: 12px; }
 .tech-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
 .tech-chip {

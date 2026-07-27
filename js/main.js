@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.64.1';
+  FB.VERSION = '1.65.0';
   FB.CHANGELOG = [
+    { v: '1.65.0', date: '2026-07-26', changes: [
+      'Technology research now offers automatic cheapest or domain-priority project selection, clearer project details, and faster realm processing.',
+      'Later innovations and Patronize Scholars now follow a longer historical research curve.'
+    ] },
     { v: '1.64.1', date: '2026-07-26', changes: [
       'Technology screens now open reliably from saved games and restore the correct menu when closed.',
       'Technology details now name concrete gameplay effects, and every prerequisite technology grants a modest direct benefit.'
@@ -1186,7 +1190,10 @@ window.FB = window.FB || {};
   /* ---------- autoresolve (the Z button) ----------
      While days flow or fast-forward, selected event categories resolve
      themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
-  G.auto = { minor: false, major: false, war: false, all: false, style: 'safe', hosts: 'manual', build: false, research: false };
+  G.auto = {
+    minor:false, major:false, war:false, all:false, style:'safe',
+    hosts:'manual', build:false, research:false, researchMode:'cheapest'
+  };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
   try {
@@ -1197,6 +1204,7 @@ window.FB = window.FB || {};
       if (storedAuto.on !== undefined && storedAuto.minor === undefined) G.auto.minor = !!storedAuto.on;
     }
   } catch (e) { /* keep defaults */ }
+  if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
   G.saveAuto = function () {
     try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };

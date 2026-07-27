@@ -75,7 +75,10 @@ Nordic, Slavic, Steppe, and other realms without treating a single calendar as u
 ## Soft historical cost
 
 Prerequisites are hard. Dates are not. `FB.techCostBreakdown` starts from the authored
-base cost and applies the sovereign's regional historical window:
+base cost and applies the sovereign's regional historical window. Core default base costs
+rise by first-attestation era: 10 before 476, 24 for 476–799, 50 for 800–999,
+75 for 1000–1149, and 100 from 1150 onward. The later tiers keep a dedicated scholarly
+realm from exhausting the thirteenth-century catalogue several centuries early.
 
 ```text
 before first attestation:
@@ -94,8 +97,15 @@ permanent exposure:
   multiply the resulting cost by 0.65
 ```
 
-The UI displays the base, historical multiplier, exposure multiplier, effective cost, and
-remaining progress exactly. A far-ahead project is therefore possible but expensive.
+The main catalogue groups entries by domain and leaves dates off the scanning view. Each
+detail sheet displays the attestation and regional-adoption windows alongside the
+effective research cost, exposure discount, and remaining progress. The historical and
+exposure multipliers remain engine inputs rather than UI arithmetic. A far-ahead project
+is therefore possible but expensive. Eligible and active projects also estimate completion
+seasons from remaining progress, current research rate, the active-project share, and any
+reserve the project would receive on the next seasonal distribution. The estimate does not
+include time spent completing missing prerequisites and may shorten when another active
+project completes.
 
 ## Research slots, reserve, and completion
 
@@ -113,13 +123,22 @@ The total, including reserve, is divided evenly among active projects. Each proj
 share is applied independently; completion overflow returns to reserve. If fewer slots
 are occupied, unused research remains reserve. Direct `research` effects, building
 research, and Patronize Scholars enter the same pool.
+Patronize Scholars contributes `2 + min(3, Learning / 10)` research per season, capped at
+5, in exchange for its continuing focus and gold cost. It accelerates a national project
+without overwhelming the passive realm rate or the historical cost curve.
 
-Only a sovereign player chooses projects. The player automation switch deterministically
-selects the highest-scoring eligible project and consumes no random rolls. AI sovereigns
-fill every slot and use saved RNG to choose from a weighted score. Exposure,
+Only a sovereign player chooses projects. Player automation may select the cheapest
+eligible technologies or prioritize one domain. A domain preference fills from that
+domain first and falls back to the cheapest eligible projects elsewhere, so cross-domain
+prerequisites cannot leave slots idle. It fills open slots immediately and after each
+completion, deterministically and without consuming random rolls.
+
+AI sovereigns fill every slot and use saved RNG to choose from a weighted score. Exposure,
 affordability, historical currency, ruler traits, contextual military/economic needs,
 and useful unlocks raise that score; projects still at 4× or more receive a strong
-penalty.
+penalty. A seasonal pass builds each AI realm's eligible-project and scoring context once;
+additional open slots reuse that context because selecting a project does not change
+completed knowledge, research rate, or historical cost.
 
 ## Exposure and diffusion
 
@@ -135,6 +154,9 @@ it has not completed. Exposure may precede the prerequisites needed to research 
 
 The combined annual chance is capped at 50%, and all rolls use the saved game RNG.
 Exposure is not completion: it is a durable contact record and the 0.65 cost multiplier.
+The annual pass snapshots sovereign records and contact networks once, then preserves the
+realm/technology iteration and RNG-roll order while evaluating diffusion from those
+snapshots.
 
 ## Vassal advocacy
 
@@ -178,7 +200,9 @@ completed id, progress value, and reserve, historically backfills every living s
 through the current year and derived traditions, and then unions the legacy state. Old
 `state.tech` and `player.research` are still imported into the effective player
 sovereign. After that one-time migration, records normalize lazily at their individual
-access boundary; ordinary technology lookups do not rescan every sovereign record.
+access boundary and are remembered outside serialized state for the lifetime of that
+loaded record; ordinary technology lookups neither rescan every sovereign record nor
+renormalize an unchanged record on every bonus query.
 
 Runtime mods are normalized before validation: `branch` becomes `domain`, scalar or array
 `req` is accepted, and `yearMin` becomes an inferred soft history window rather than a

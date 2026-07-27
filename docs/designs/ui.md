@@ -183,16 +183,22 @@ never replaces the work focus.
 Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
 rate, reserve, occupied slots, and active projects. The catalogue supports domain,
-status, and text filters; Active/Available/Exposed/Completed/All views; and chronological
-grouping from inherited foundations through the thirteenth century and beyond. Entries
-open keyboard-focusable details with clickable prerequisite chips, attestation and
+status, and text filters; Active/Available/Exposed/Completed/All views; and stable domain
+sections rather than historical-era headings. Entries open keyboard-focusable details
+with clickable prerequisite chips, attestation and
 regional-adoption windows, historical context, effects, unlocks, exposure, and an exact
-base/history/exposure/progress cost breakdown. The effects section names only concrete
+effective research cost and progress. The modal title is the sole icon/name heading;
+exposure is presented as its percentage discount. Eligible and active projects put an
+estimated number of research seasons beside the cost. The effects section names only concrete
 gameplay changes—numeric modifiers and content actually gated by the technology—and is
 omitted when there are none; historical practice/rule tags and per-entry bibliography stay
-in the design/research documentation. Sovereigns receive start controls for free
-slots; eligible tier-3+ vassals receive advocacy controls. Foreign ruler sheets show the
-same nation's completed/exposed totals and active projects read-only.
+in the design/research documentation. Sovereigns receive start controls for free slots;
+a successful start returns to the catalogue so its active-project strip and updated status
+are immediately visible. The catalogue's Automatic research button selects manual,
+cheapest-first, or a preferred domain and fills open slots as soon as an automatic mode
+is chosen; the general Automation sheet exposes the same linked setting. Eligible tier-3+
+vassals receive advocacy controls. Foreign ruler sheets show the same nation's
+completed/exposed totals and active projects read-only.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile

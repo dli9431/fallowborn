@@ -21,6 +21,11 @@ window.FB = window.FB || {};
   var COST_KEYS = { build:1, enterprise:1, training:1 };
   var UNIT_KEYS = { levy:1, arch:1, cav:1, ret:1 };
   var AI_UNIT_KEYS = { arch:1, cav:1, ret:1 };
+  /* Technology records are engine-owned after their first access. Remember
+     that access outside saved state so hot gameplay queries do not repeatedly
+     deduplicate and rewrite the same arrays. A loaded save creates new record
+     objects and is therefore normalized once again. */
+  var NORMALIZED_RECORDS = typeof WeakSet === 'function' ? new WeakSet() : null;
 
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
@@ -54,6 +59,15 @@ window.FB = window.FB || {};
   }
 
   function normalizeRecord(record) {
+    if (record && typeof record === 'object' && !Array.isArray(record) &&
+        NORMALIZED_RECORDS && NORMALIZED_RECORDS.has(record) &&
+        Array.isArray(record.completed) && Array.isArray(record.exposed) &&
+        Array.isArray(record.active) && record.progress &&
+        typeof record.progress === 'object' && !Array.isArray(record.progress) &&
+        record.priorities && typeof record.priorities === 'object' &&
+        !Array.isArray(record.priorities)) {
+      return record;
+    }
     if (!record || typeof record !== 'object' || Array.isArray(record)) {
       record = emptyTechRecord();
     }
@@ -82,6 +96,7 @@ window.FB = window.FB || {};
     record.active = record.active.filter(function (id) {
       return !!FBDATA.tech[id] && record.completed.indexOf(id) < 0;
     });
+    if (NORMALIZED_RECORDS) NORMALIZED_RECORDS.add(record);
     return record;
   }
 
@@ -165,12 +180,9 @@ window.FB = window.FB || {};
     };
   }
 
-  FB.techHistoricalWindow = function (state, id, realmId) {
-    var def = FBDATA.tech[id];
-    if (!def) return null;
+  function historicalWindowForTraditions(def, traditions) {
     var attested = def.history && def.history.attested || [0,0];
-    var regional = adoptionWindowForTraditions(
-      def, FB.techTraditionsForRealm(state, realmId));
+    var regional = adoptionWindowForTraditions(def, traditions);
     var from = Number(attested[0]), to = Number(attested[1]);
     if (!isFinite(from)) from = 0;
     if (!isFinite(to)) to = from;
@@ -180,6 +192,13 @@ window.FB = window.FB || {};
       widespread:regional.widespread,
       tradition:regional.tradition
     };
+  }
+
+  FB.techHistoricalWindow = function (state, id, realmId) {
+    var def = FBDATA.tech[id];
+    if (!def) return null;
+    return historicalWindowForTraditions(
+      def, FB.techTraditionsForRealm(state, realmId));
   };
 
   function cloneRecord(record) {
@@ -420,10 +439,31 @@ window.FB = window.FB || {};
     return false;
   };
 
+  function listLookup(list) {
+    var out = {};
+    for (var i = 0; i < (list || []).length; i++) out[list[i]] = 1;
+    return out;
+  }
+
+  function prerequisitesMetFromLookup(def, completed) {
+    if (!def) return false;
+    var req = def.req || [];
+    for (var i = 0; i < req.length; i++) {
+      if (!completed[req[i]]) return false;
+    }
+    var reqAny = def.reqAny || [];
+    if (!reqAny.length) return true;
+    for (i = 0; i < reqAny.length; i++) {
+      if (completed[reqAny[i]]) return true;
+    }
+    return false;
+  }
+
   FB.techPrerequisitesMet = function (state, id, realmId) {
     var def = FBDATA.tech[id];
-    return !!def && FB.techRequirementMet(state, def.req, realmId) &&
-      FB.techAnyRequirementMet(state, def.reqAny, realmId);
+    if (!def) return false;
+    var record = FB.realmTechRecord(state, realmId);
+    return prerequisitesMetFromLookup(def, listLookup(record.completed));
   };
 
   function techMatchesCulture(def, culture) {
@@ -432,11 +472,9 @@ window.FB = window.FB || {};
     return true;
   }
 
-  FB.techCostBreakdown = function (state, id, realmId) {
-    var def = FBDATA.tech[id];
-    if (!def) return null;
+  function techCostBreakdownFor(state, def, traditions, exposed) {
     var year = Number(state.date && state.date.year) || 0;
-    var history = FB.techHistoricalWindow(state, id, realmId);
+    var history = historicalWindowForTraditions(def, traditions);
     var attested = history.attested[0];
     var emergence = Math.max(attested, history.emergence);
     var widespread = Math.max(emergence, history.widespread);
@@ -456,7 +494,6 @@ window.FB = window.FB || {};
       multiplier = 1 - Math.min(0.3, (year - widespread) / 1000);
       phase = multiplier > 0.7001 ? 'catch_up' : 'mature';
     }
-    var exposed = FB.techExposed(state, id, realmId);
     var exposureFactor = exposed ? 0.65 : 1;
     var base = Number(def.cost) || 0;
     var total = Math.max(1, Math.round(base * multiplier * exposureFactor * 10) / 10);
@@ -472,6 +509,19 @@ window.FB = window.FB || {};
       widespread:widespread,
       tradition:history.tradition
     };
+  }
+
+  FB.techCostBreakdown = function (state, id, realmId) {
+    var def = FBDATA.tech[id];
+    if (!def) return null;
+    var rid = FB.techRealmId(state, realmId);
+    var record = FB.realmTechRecord(state, rid);
+    return techCostBreakdownFor(
+      state,
+      def,
+      FB.techTraditionsForRealm(state, rid),
+      record.exposed.indexOf(id) >= 0 || record.completed.indexOf(id) >= 0
+    );
   };
 
   FB.techBaseCost = function (id) {
@@ -483,37 +533,71 @@ window.FB = window.FB || {};
     return breakdown ? breakdown.total : 0;
   };
 
-  FB.techCandidates = function (state, realmId) {
+  function techCandidateFromContext(state, id, def, record, culture, traditions,
+    completedLookup, exposedLookup, activeLookup) {
+    var completed = !!completedLookup[id];
+    var active = !!activeLookup[id];
+    var exposed = !!exposedLookup[id] || completed;
+    var cultureLocked = !techMatchesCulture(def, culture);
+    var reqLocked = !prerequisitesMetFromLookup(def, completedLookup);
+    var breakdown = techCostBreakdownFor(state, def, traditions, exposed);
+    return {
+      id:id,
+      def:def,
+      domain:def.domain,
+      cost:breakdown.total,
+      breakdown:breakdown,
+      progress:record.progress[id] || 0,
+      completed:completed,
+      exposed:exposed,
+      active:active,
+      reqLocked:reqLocked,
+      cultureLocked:cultureLocked,
+      available:!completed && !active && !reqLocked && !cultureLocked
+    };
+  }
+
+  FB.techCandidate = function (state, id, realmId) {
+    var def = FBDATA.tech[id];
+    if (!def) return null;
+    var rid = FB.techRealmId(state, realmId);
+    var record = FB.realmTechRecord(state, rid);
+    return techCandidateFromContext(
+      state,
+      id,
+      def,
+      record,
+      FB.techCulture(state, rid),
+      FB.techTraditionsForRealm(state, rid),
+      listLookup(record.completed),
+      listLookup(record.exposed),
+      listLookup(record.active)
+    );
+  };
+
+  FB.techCandidates = function (state, realmId, skipSort) {
     var rid = FB.techRealmId(state, realmId);
     var record = FB.realmTechRecord(state, rid);
     var culture = FB.techCulture(state, rid);
+    var traditions = FB.techTraditionsForRealm(state, rid);
+    var completedLookup = listLookup(record.completed);
+    var exposedLookup = listLookup(record.exposed);
+    var activeLookup = listLookup(record.active);
     var out = [];
     for (var id in FBDATA.tech) {
       if (!own(FBDATA.tech, id)) continue;
       var def = FBDATA.tech[id];
-      var completed = record.completed.indexOf(id) >= 0;
-      var active = record.active.indexOf(id) >= 0;
-      var cultureLocked = !techMatchesCulture(def, culture);
-      var reqLocked = !FB.techPrerequisitesMet(state, id, rid);
-      out.push({
-        id:id,
-        def:def,
-        domain:def.domain,
-        cost:FB.techCost(state, id, rid),
-        progress:record.progress[id] || 0,
-        completed:completed,
-        exposed:record.exposed.indexOf(id) >= 0 || completed,
-        active:active,
-        reqLocked:reqLocked,
-        cultureLocked:cultureLocked,
-        available:!completed && !active && !reqLocked && !cultureLocked
+      out.push(techCandidateFromContext(
+        state, id, def, record, culture, traditions,
+        completedLookup, exposedLookup, activeLookup));
+    }
+    if (!skipSort) {
+      out.sort(function (a, b) {
+        var da = DOMAIN_ORDER.indexOf(a.domain), db = DOMAIN_ORDER.indexOf(b.domain);
+        var aa = a.def.history.attested[0], ab = b.def.history.attested[0];
+        return da - db || aa - ab || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
       });
     }
-    out.sort(function (a, b) {
-      var da = DOMAIN_ORDER.indexOf(a.domain), db = DOMAIN_ORDER.indexOf(b.domain);
-      var aa = a.def.history.attested[0], ab = b.def.history.attested[0];
-      return da - db || aa - ab || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-    });
     return out;
   };
 
@@ -698,9 +782,10 @@ window.FB = window.FB || {};
     var record = FB.realmTechRecord(state, rid);
     if (record.active.indexOf(id) >= 0) return true;
     if (record.active.length >= FB.techSlotCount(state, rid)) return false;
-    var available = FB.techAvailable(state, rid), found = false;
-    for (var i = 0; i < available.length; i++) if (available[i].id === id) found = true;
-    if (!found) return false;
+    var def = FBDATA.tech[id];
+    if (!def || record.completed.indexOf(id) >= 0 ||
+        !techMatchesCulture(def, FB.techCulture(state, rid)) ||
+        !prerequisitesMetFromLookup(def, listLookup(record.completed))) return false;
     record.active.push(id);
     delete record.priorities[id];
     return true;
@@ -745,19 +830,39 @@ window.FB = window.FB || {};
     return false;
   }
 
-  FB.techAIScore = function (state, id, realmId) {
-    var rid = FB.techRealmId(state, realmId);
-    var def = FBDATA.tech[id], record = FB.realmTechRecord(state, rid);
-    if (!def || !FB.techPrerequisitesMet(state, id, rid)) return 0;
-    var breakdown = FB.techCostBreakdown(state, id, rid);
+  function techAIScoreContext(state, rid, record, researchRate) {
+    var realm = state.realms[rid] || {};
+    cleanupPriorities(state, record);
+    if (researchRate === undefined) researchRate = FB.techResearchRate(state, rid);
+    return {
+      state:state,
+      rid:rid,
+      record:record,
+      realm:realm,
+      trait:realm.ruler && realm.ruler.trait,
+      annual:Math.max(1, researchRate * 4),
+      coastal:undefined
+    };
+  }
+
+  function techAIRealmCoastal(context) {
+    if (context.coastal === undefined) {
+      context.coastal = realmCoastal(context.state, context.rid);
+    }
+    return context.coastal;
+  }
+
+  function techAIScoreFor(item, context) {
+    var id = item.id, def = item.def, record = context.record;
+    var breakdown = item.breakdown;
     var score = 10;
-    if (record.exposed.indexOf(id) >= 0) score *= 2.25;
+    if (item.exposed) score *= 2.25;
     score *= Math.max(0.25, 1.5 - breakdown.historicalMultiplier * 0.18);
-    var annual = Math.max(1, FB.techResearchRate(state, rid) * 4);
-    score *= Math.max(0.35, Math.min(2, annual / Math.max(1, breakdown.total) * 3));
+    score *= Math.max(0.35, Math.min(2,
+      context.annual / Math.max(1, breakdown.total) * 3));
     if (breakdown.historicalMultiplier >= 4) score *= 0.12;
     else if (breakdown.historicalMultiplier <= 1) score *= 1.35;
-    var realm = state.realms[rid] || {}, trait = realm.ruler && realm.ruler.trait;
+    var realm = context.realm, trait = context.trait;
     if (def.domain === 'warfare') {
       score *= 1 + Math.max(0, Number(realm.aggression) || 0) * 0.4;
       if (realm.war) score *= 2;
@@ -770,10 +875,10 @@ window.FB = window.FB || {};
       score *= 1 + Math.max(0, (realm.rank || 1) - 2) * 0.2;
       if (['ambitious','patient','deceitful'].indexOf(trait) >= 0) score *= 1.3;
     } else if (def.domain === 'commerce') {
-      if (realmCoastal(state, rid)) score *= 1.2;
+      if (techAIRealmCoastal(context)) score *= 1.2;
       if (trait === 'greedy') score *= 1.4;
     } else if (def.domain === 'seafaring') {
-      score *= realmCoastal(state, rid) ? 1.8 : 0.45;
+      score *= techAIRealmCoastal(context) ? 1.8 : 0.45;
     }
     var unlockWeight = 1;
     for (var unlockIndex = 0; unlockIndex < (def.unlocks || []).length; unlockIndex++) {
@@ -786,47 +891,115 @@ window.FB = window.FB || {};
       else if (unlock.indexOf('practice:') === 0) unlockWeight = Math.max(unlockWeight, 1.03);
     }
     score *= unlockWeight;
-    cleanupPriorities(state, record);
     if (record.priorities[id] !== undefined) score *= 6;
     return Math.max(0, score);
+  }
+
+  FB.techAIScore = function (state, id, realmId) {
+    var rid = FB.techRealmId(state, realmId);
+    var def = FBDATA.tech[id], record = FB.realmTechRecord(state, rid);
+    var completed = listLookup(record.completed);
+    if (!def || !prerequisitesMetFromLookup(def, completed)) return 0;
+    var exposed = record.exposed.indexOf(id) >= 0 || !!completed[id];
+    var item = {
+      id:id,
+      def:def,
+      exposed:exposed,
+      breakdown:techCostBreakdownFor(
+        state, def, FB.techTraditionsForRealm(state, rid), exposed)
+    };
+    return techAIScoreFor(item, techAIScoreContext(state, rid, record));
   };
 
-  function aiTechChoice(state, rid, deterministic) {
-    var available = FB.techAvailable(state, rid);
-    if (!available.length) return null;
+  function scoredTechChoices(state, rid, record, researchRate) {
+    var candidates = FB.techCandidates(state, rid, true);
+    var available = [];
+    for (var candidateIndex = 0; candidateIndex < candidates.length; candidateIndex++) {
+      if (candidates[candidateIndex].available) available.push(candidates[candidateIndex]);
+    }
+    if (!available.length) return [];
+    var context = techAIScoreContext(state, rid, record, researchRate);
     var scored = [];
     for (var i = 0; i < available.length; i++) {
-      var score = FB.techAIScore(state, available[i].id, rid);
+      var score = techAIScoreFor(available[i], context);
       if (score > 0) scored.push({ item:available[i], score:score });
     }
-    if (!scored.length) return null;
     scored.sort(function (a, b) {
       return b.score - a.score || (a.item.id < b.item.id ? -1 : 1);
     });
-    if (deterministic) return scored[0].item;
+    return scored;
+  }
+
+  function scoredChoiceIndex(scored, deterministic) {
+    if (!scored.length) return -1;
+    if (deterministic) return 0;
     var total = 0;
-    for (i = 0; i < scored.length; i++) total += scored[i].score;
+    for (var i = 0; i < scored.length; i++) total += scored[i].score;
     var roll = FB.rng() * total;
     for (i = 0; i < scored.length; i++) {
       roll -= scored[i].score;
-      if (roll <= 0) return scored[i].item;
+      if (roll <= 0) return i;
     }
-    return scored[scored.length - 1].item;
+    return scored.length - 1;
   }
 
-  function fillSlots(state, rid, deterministic) {
-    var record = FB.realmTechRecord(state, rid), guard = 0;
-    while (record.active.length < FB.techSlotCount(state, rid) && guard++ < 8) {
-      var choice = aiTechChoice(state, rid, deterministic);
-      if (!choice || !FB.selectTechProject(state, choice.id, rid, true)) break;
+  function fillSlots(state, rid, deterministic, researchRate) {
+    var record = FB.realmTechRecord(state, rid);
+    var slots = FB.techSlotCount(state, rid);
+    if (record.active.length >= slots) return;
+    var scored = scoredTechChoices(state, rid, record, researchRate), guard = 0;
+    while (record.active.length < slots && scored.length && guard++ < 8) {
+      var index = scoredChoiceIndex(scored, deterministic);
+      if (index < 0) break;
+      var choice = scored[index].item;
+      scored.splice(index, 1);
+      record.active.push(choice.id);
+      delete record.priorities[choice.id];
     }
   }
 
-  FB.autoResearch = function (state) {
+  FB.techAutomationMode = function (mode) {
+    return mode && mode !== 'cheapest' && own(FBDATA.techDomains || {}, mode)
+      ? mode : 'cheapest';
+  };
+
+  function playerAutomatedChoices(state, rid, mode) {
+    mode = FB.techAutomationMode(mode);
+    var candidates = FB.techCandidates(state, rid, true);
+    var available = [];
+    for (var i = 0; i < candidates.length; i++) {
+      if (candidates[i].available) available.push(candidates[i]);
+    }
+    available.sort(function (a, b) {
+      var aPreferred = mode !== 'cheapest' && a.domain === mode ? 0 : 1;
+      var bPreferred = mode !== 'cheapest' && b.domain === mode ? 0 : 1;
+      var aYear = a.def.history.attested[0], bYear = b.def.history.attested[0];
+      return aPreferred - bPreferred || a.cost - b.cost || aYear - bYear ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    });
+    return available;
+  }
+
+  function fillPlayerSlots(state, rid, mode) {
+    var record = FB.realmTechRecord(state, rid);
+    var slots = FB.techSlotCount(state, rid);
+    if (record.active.length >= slots) return false;
+    var choices = playerAutomatedChoices(state, rid, mode);
+    var changed = false;
+    for (var i = 0; i < choices.length && record.active.length < slots; i++) {
+      record.active.push(choices[i].id);
+      delete record.priorities[choices[i].id];
+      changed = true;
+    }
+    return changed;
+  }
+
+  FB.autoResearch = function (state, mode) {
     if (!FB.isPlayerSovereign(state)) return false;
-    var before = FB.realmTechRecord(state, 'player').active.length;
-    fillSlots(state, 'player', true);
-    return FB.realmTechRecord(state, 'player').active.length > before;
+    if (mode === undefined && FB.game && FB.game.auto) {
+      mode = FB.game.auto.researchMode;
+    }
+    return fillPlayerSlots(state, 'player', mode);
   };
 
   function sovereignIds(state) {
@@ -874,38 +1047,105 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function anyRealmKnows(state, realmMap, techId) {
+  function ensureDiffusionRealm(state, snapshot, rid) {
+    rid = FB.techRealmId(state, rid);
+    if (snapshot.records[rid]) return rid;
+    var record = FB.realmTechRecord(state, rid);
+    snapshot.records[rid] = record;
+    snapshot.completed[rid] = listLookup(record.completed);
+    snapshot.exposed[rid] = listLookup(record.exposed);
+    snapshot.traditions[rid] = FB.techTraditionsForRealm(state, rid);
+    snapshot.faiths[rid] = realmFaith(state, rid);
+    return rid;
+  }
+
+  function ensureDiffusionContacts(state, snapshot, rid) {
+    rid = ensureDiffusionRealm(state, snapshot, rid);
+    if (snapshot.contactsReady[rid]) return rid;
+    snapshot.adjacent[rid] = adjacentSovereigns(state, rid);
+    snapshot.opponents[rid] = warOpponents(state, rid);
+    var ally = FB.alliedRealm ? FB.alliedRealm(state, rid) : null;
+    snapshot.allies[rid] = ally ? FB.techRealmId(state, ally) : null;
+    snapshot.contactsReady[rid] = 1;
+    return rid;
+  }
+
+  function diffusionSnapshot(state, sovereigns, includeContacts) {
+    var snapshot = {
+      records:{},
+      completed:{},
+      exposed:{},
+      traditions:{},
+      faiths:{},
+      adjacent:{},
+      opponents:{},
+      allies:{},
+      contactsReady:{},
+      knownByTech:{}
+    };
+    for (var i = 0; i < sovereigns.length; i++) {
+      var rid = ensureDiffusionRealm(state, snapshot, sovereigns[i]);
+      var completed = snapshot.records[rid].completed;
+      for (var j = 0; j < completed.length; j++) {
+        var id = completed[j];
+        if (!snapshot.knownByTech[id]) snapshot.knownByTech[id] = [];
+        snapshot.knownByTech[id].push(rid);
+      }
+    }
+    if (includeContacts) {
+      for (i = 0; i < sovereigns.length; i++) {
+        ensureDiffusionContacts(state, snapshot, sovereigns[i]);
+      }
+    }
+    return snapshot;
+  }
+
+  function mappedRealmKnows(state, snapshot, realmMap, id) {
     for (var rid in realmMap) {
-      if (own(realmMap, rid) && FB.hasTech(state, techId, rid)) return true;
+      if (!own(realmMap, rid)) continue;
+      var effective = ensureDiffusionRealm(state, snapshot, rid);
+      if (snapshot.completed[effective][id]) return true;
     }
     return false;
   }
 
-  FB.techDiffusionChance = function (state, id, realmId) {
-    var rid = FB.techRealmId(state, realmId), def = FBDATA.tech[id];
-    if (!def || FB.hasTech(state, id, rid) || FB.techExposed(state, id, rid)) return 0;
+  function techDiffusionChanceFrom(state, id, rid, snapshot) {
+    var def = FBDATA.tech[id];
+    rid = ensureDiffusionContacts(state, snapshot, rid);
+    if (!def || snapshot.completed[rid][id] || snapshot.exposed[rid][id]) return 0;
     var chance = 0;
-    if (anyRealmKnows(state, adjacentSovereigns(state, rid), id)) chance += 0.12;
-    var ally = FB.alliedRealm ? FB.alliedRealm(state, rid) : null;
-    if (ally && FB.hasTech(state, id, ally)) chance += 0.15;
-    if (anyRealmKnows(state, warOpponents(state, rid), id)) {
+    if (mappedRealmKnows(state, snapshot, snapshot.adjacent[rid], id)) chance += 0.12;
+    var ally = snapshot.allies[rid];
+    if (ally && snapshot.completed[ensureDiffusionRealm(state, snapshot, ally)][id]) {
+      chance += 0.15;
+    }
+    if (mappedRealmKnows(state, snapshot, snapshot.opponents[rid], id)) {
       chance += def.domain === 'warfare' ? 0.20 : 0.05;
     }
-    var traditions = FB.techTraditionsForRealm(state, rid);
-    var faith = realmFaith(state, rid);
-    var sovereigns = sovereignIds(state), sameTradition = false, sameFaith = false;
-    for (var i = 0; i < sovereigns.length; i++) {
-      var other = sovereigns[i];
-      if (other === rid || !FB.hasTech(state, id, other)) continue;
-      var otherTraditions = FB.techTraditionsForRealm(state, other);
+    var traditions = snapshot.traditions[rid];
+    var faith = snapshot.faiths[rid];
+    var knowers = snapshot.knownByTech[id] || [];
+    var sameTradition = false, sameFaith = false;
+    for (var i = 0; i < knowers.length; i++) {
+      var other = knowers[i];
+      if (other === rid) continue;
+      var otherTraditions = snapshot.traditions[other];
       for (var t = 0; t < traditions.length; t++) {
         if (otherTraditions.indexOf(traditions[t]) >= 0) sameTradition = true;
       }
-      if (faith && realmFaith(state, other) === faith) sameFaith = true;
+      if (faith && snapshot.faiths[other] === faith) sameFaith = true;
     }
     if (sameTradition) chance += 0.04;
     if (sameFaith) chance += 0.03;
     return Math.min(0.50, chance);
+  }
+
+  FB.techDiffusionChance = function (state, id, realmId) {
+    FB.ensureRealmTech(state);
+    var sovereigns = sovereignIds(state);
+    var snapshot = diffusionSnapshot(state, sovereigns, false);
+    return techDiffusionChanceFrom(
+      state, id, FB.techRealmId(state, realmId), snapshot);
   };
 
   FB.diffuseTechnologies = function (state) {
@@ -913,11 +1153,13 @@ window.FB = window.FB || {};
     if (state.techDiffusionYear === year) return 0;
     state.techDiffusionYear = year;
     var exposed = 0, sovereigns = sovereignIds(state);
+    FB.ensureRealmTech(state);
+    var snapshot = diffusionSnapshot(state, sovereigns, true);
     for (var r = 0; r < sovereigns.length; r++) {
       var rid = sovereigns[r];
       for (var id in FBDATA.tech) {
         if (!own(FBDATA.tech, id)) continue;
-        var chance = FB.techDiffusionChance(state, id, rid);
+        var chance = techDiffusionChanceFrom(state, id, rid, snapshot);
         if (chance > 0 && FB.rng() < chance && FB.exposeTech(state, id, rid)) exposed++;
       }
     }
@@ -929,16 +1171,25 @@ window.FB = window.FB || {};
   FB.techSeason = function (state, autoPlayer) {
     FB.ensureRealmTech(state);
     var sovereigns = sovereignIds(state);
+    var playerAutoMode = autoPlayer
+      ? FB.techAutomationMode(typeof autoPlayer === 'string' ? autoPlayer :
+        (FB.game && FB.game.auto && FB.game.auto.researchMode))
+      : null;
     for (var i = 0; i < sovereigns.length; i++) {
       var rid = sovereigns[i], isPlayer = rid === 'player';
-      if (!isPlayer) fillSlots(state, rid, false);
-      else if (autoPlayer && FB.isPlayerSovereign(state)) fillSlots(state, rid, true);
       var record = FB.realmTechRecord(state, rid);
-      var pool = FB.techResearchRate(state, rid) + record.reserve;
+      var researchRate = FB.techResearchRate(state, rid);
+      if (!isPlayer) fillSlots(state, rid, false, researchRate);
+      else if (playerAutoMode && FB.isPlayerSovereign(state)) {
+        fillPlayerSlots(state, rid, playerAutoMode);
+      }
+      var pool = researchRate + record.reserve;
       record.reserve = 0;
       FB.addResearch(state, pool, rid);
       if (!isPlayer) fillSlots(state, rid, false);
-      else if (autoPlayer && FB.isPlayerSovereign(state)) fillSlots(state, rid, true);
+      else if (playerAutoMode && FB.isPlayerSovereign(state)) {
+        fillPlayerSlots(state, rid, playerAutoMode);
+      }
     }
     if (state.date && state.date.season === 0 && state.date.day === 1) {
       FB.diffuseTechnologies(state);

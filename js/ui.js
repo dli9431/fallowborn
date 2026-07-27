@@ -82,6 +82,32 @@ window.FB = window.FB || {};
   function researchNumber(value) {
     return Math.round((Number(value) || 0) * 10) / 10;
   }
+  function techEstimatedSeasons(s, rid, record, item, cost) {
+    if (item.completed || (!item.active && !item.available)) return null;
+    const slots = FB.techSlotCount(s, rid);
+    const sharing = item.active
+      ? Math.max(1, record.active.length)
+      : Math.max(1, Math.min(slots, record.active.length + 1));
+    const rate = FB.techResearchRate(s, rid);
+    if (rate <= 0) return null;
+    const remaining = Math.max(0, cost.total - (record.progress[item.id] || 0));
+    const mayUseReserve = item.active || record.active.length < slots;
+    const firstShare = (rate + (mayUseReserve ? record.reserve : 0)) / sharing;
+    if (remaining <= firstShare + 0.0001) return 1;
+    return 1 + Math.ceil((remaining - firstShare) / (rate / sharing));
+  }
+  function techCostEstimateText(s, cost, seasons) {
+    return FB.renderMessage(FB.msg('fx.ui.tech_cost_estimate', {
+      forms: {
+        select:'plural', param:'seasons', cases:{
+          one:'{cost} · about {seasons} season',
+          other:'{cost} · about {seasons} seasons'
+        }
+      }
+    }, { cost:researchNumber(cost), seasons:seasons }), {
+      state:s, viewer:s.player.charId
+    });
+  }
   function councilSeatName(id) {
     return id === 'seneschal' ? FB.T('Seneschal')
       : id === 'constable' ? FB.T('Constable')
@@ -2921,8 +2947,13 @@ window.FB = window.FB || {};
     h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
     if (s && FB.isPlayerSovereign(s)) {
       h += cb('ar-research', a.research,
-        esc(FB.T('Choose the next technology automatically')),
-        esc(FB.T('When the national project ends, begin the cheapest available next project.')));
+        esc(FB.T('Fill research slots automatically')),
+        esc(FB.T('Open slots are filled immediately and whenever a project completes.')));
+      h += '<label class="autorow auto-select"><span>' +
+        esc(FB.T('Research priority')) + '</span><select id="ar-research-mode">' +
+        techAutomationOptions(a.researchMode) + '</select><span class="adesc">' +
+        esc(FB.T('A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain.')) +
+        '</span></label>';
     } else if (s) {
       h += '<div class="hint">' + esc(FB.T(
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
@@ -2938,14 +2969,20 @@ window.FB = window.FB || {};
       a.build = $('ar-build').checked;
       const research = $('ar-research');
       if (research) a.research = research.checked;
+      const researchMode = $('ar-research-mode');
+      if (researchMode) a.researchMode = techAutomationMode(researchMode.value);
       const r = document.querySelector('input[name=ar-style]:checked');
       if (r) a.style = r.value;
       const hsel = document.querySelector('input[name=ar-hosts]:checked');
       if (hsel) a.hosts = hsel.value;
       FB.game.saveAuto();
+      if (research && a.research && FB.state && FB.autoResearch) {
+        FB.autoResearch(FB.state, a.researchMode);
+      }
       if (FB.state) UI.refresh();
     }
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build', 'ar-research'].forEach(function (id) {
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build',
+      'ar-research', 'ar-research-mode'].forEach(function (id) {
       const control = $(id);
       if (control) control.addEventListener('change', sync);
     });
@@ -6182,6 +6219,32 @@ window.FB = window.FB || {};
     return names[id] || id;
   }
 
+  function techAutomationMode(mode) {
+    return FB.techAutomationMode ? FB.techAutomationMode(mode) :
+      (mode && FBDATA.techDomains[mode] ? mode : 'cheapest');
+  }
+
+  function techAutomationModeName(mode) {
+    mode = techAutomationMode(mode);
+    return mode === 'cheapest'
+      ? FB.T('Cheapest available first')
+      : FB.T('{domain} first', { domain:techDomainName(mode) });
+  }
+
+  function techAutomationOptions(selected) {
+    selected = techAutomationMode(selected);
+    let h = '<option value="cheapest"' +
+      (selected === 'cheapest' ? ' selected' : '') + '>' +
+      esc(FB.T('Cheapest available first')) + '</option>';
+    for (const domain in (FBDATA.techDomains || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.techDomains, domain)) continue;
+      h += '<option value="' + esc(domain) + '"' +
+        (selected === domain ? ' selected' : '') + '>' +
+        esc(FB.T('{domain} first', { domain:techDomainName(domain) })) + '</option>';
+    }
+    return h;
+  }
+
   function techTraditionName(id) {
     const names = {
       latin:FB.T('Latin West'),
@@ -6202,19 +6265,6 @@ window.FB = window.FB || {};
     return year < 0
       ? FB.T('{year} BC', { year:Math.abs(year) })
       : FB.T('{year} AD', { year:year });
-  }
-
-  function techEra(item) {
-    const year = item.def.history.attested[0];
-    const baseAdoption = item.def.history.adoption.default;
-    if (baseAdoption[1] <= 476) {
-      return { id:'foundation', label:FB.T('Inherited foundations') };
-    }
-    if (year < 800) return { id:'early', label:FB.T('476–799') };
-    if (year < 1000) return { id:'ninth', label:FB.T('800–999') };
-    if (year < 1150) return { id:'high', label:FB.T('1000–1149') };
-    if (year <= 1300) return { id:'late', label:FB.T('1150–1300') };
-    return { id:'after', label:FB.T('After 1300') };
   }
 
   function techItemStatus(item) {
@@ -6411,10 +6461,9 @@ window.FB = window.FB || {};
     const realm = s.realms[rid];
     const record = FB.realmTechRecord(s, rid);
     const traditions = FB.techTraditionsForRealm(s, rid).map(techTraditionName);
-    const projects = FB.techCandidates(s, rid).slice().sort(function (a, b) {
-      return a.def.history.attested[0] - b.def.history.attested[0] ||
-        (a.id < b.id ? -1 : 1);
-    });
+    const projects = FB.techCandidates(s, rid);
+    const canControlResearch = rid === 'player' && FB.isPlayerSovereign(s);
+    const researchAuto = FB.game.auto || {};
     let h = '<div class="tech-summary">' +
       kv('Sovereign nation', esc(realm ? realm.name : rid)) +
       kv('Traditions', esc(traditions.join(' · '))) +
@@ -6423,6 +6472,13 @@ window.FB = window.FB || {};
       kv('Research slots', esc(FB.T('{used}/{slots} occupied', {
         used:record.active.length, slots:FB.techSlotCount(s, rid)
       }))) + '</div>';
+    if (canControlResearch) {
+      const autoLabel = researchAuto.research
+        ? techAutomationModeName(researchAuto.researchMode) : FB.T('Off');
+      h += '<div class="tech-auto-bar"><button class="btn" id="tech-auto">' +
+        esc(FB.T('Automatic research: {mode}', { mode:autoLabel })) +
+        '</button></div>';
+    }
     if (record.active.length) {
       h += '<div class="tech-active-strip">';
       for (const activeId of record.active) {
@@ -6455,14 +6511,13 @@ window.FB = window.FB || {};
       '<option value="exposed">' + esc(FB.T('Exposed')) + '</option>' +
       '<option value="completed">' + esc(FB.T('Completed')) + '</option>' +
       '</select></label></div><div id="tech-catalogue">';
-    let lastEra = null;
+    let lastDomain = null;
     for (const item of projects) {
-      const era = techEra(item);
-      if (era.id !== lastEra) {
-        if (lastEra !== null) h += '</section>';
-        lastEra = era.id;
-        h += '<section class="tech-era" data-tech-era="' + esc(era.id) +
-          '"><h4>' + esc(era.label) + '</h4>';
+      if (item.domain !== lastDomain) {
+        if (lastDomain !== null) h += '</section>';
+        lastDomain = item.domain;
+        h += '<section class="tech-domain-group" data-tech-domain-group="' +
+          esc(item.domain) + '"><h4>' + esc(techDomainName(item.domain)) + '</h4>';
       }
       const name = dt(s, 'tech', item.id, item.def, 'name');
       const desc = dt(s, 'tech', item.id, item.def, 'desc');
@@ -6473,12 +6528,12 @@ window.FB = window.FB || {};
         '" data-status="' + esc(techItemStatus(item)) + '" data-search="' + esc(search) + '">' +
         '<span class="tech-entry-icon">' + esc(item.def.icon) + '</span>' +
         '<span class="tech-entry-copy"><b>' + esc(name) + '</b><small>' +
-        esc(techDomainName(item.domain)) + ' · ' + esc(techStatusText(item)) +
+        esc(techStatusText(item)) +
         '</small></span><span class="tech-entry-cost">' +
         (item.completed ? '✓' : item.active ? '◉' : esc(researchNumber(item.cost))) +
         '</span></button>';
     }
-    if (lastEra !== null) h += '</section>';
+    if (lastDomain !== null) h += '</section>';
     h += '</div><div class="tech-empty hidden" id="tech-empty">' +
       esc(FB.T('No technologies match these filters.')) +
       '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
@@ -6501,7 +6556,7 @@ window.FB = window.FB || {};
         entry.classList.toggle('hidden', !(domainMatch && statusMatch && queryMatch));
         if (domainMatch && statusMatch && queryMatch) visible++;
       });
-      document.querySelectorAll('.tech-era').forEach(function (section) {
+      document.querySelectorAll('.tech-domain-group').forEach(function (section) {
         section.classList.toggle('hidden', !section.querySelector('.tech-entry:not(.hidden)'));
       });
       $('tech-empty').classList.toggle('hidden', visible > 0);
@@ -6514,8 +6569,55 @@ window.FB = window.FB || {};
         UI.showTechDetail(button.dataset.techOpen);
       });
     });
+    const autoButton = $('tech-auto');
+    if (autoButton) autoButton.addEventListener('click', UI.showTechAutomation);
     $('gm-cancel').addEventListener('click', UI.closeModal);
     applyFilters();
+  };
+
+  UI.showTechAutomation = function () {
+    const s = FB.state;
+    if (!s || !FB.isPlayerSovereign(s)) return UI.showTech();
+    const auto = FB.game.auto;
+    const current = auto.research ? techAutomationMode(auto.researchMode) : 'off';
+    function choice(mode, label, desc) {
+      return '<button class="actionbtn" data-tech-auto-mode="' + esc(mode) + '">' +
+        (current === mode ? '&#9673; ' : '&#9675; ') + esc(label) +
+        '<span class="adesc">' + esc(desc) + '</span></button>';
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Automatic research fills every open national slot now and whenever a project completes. Existing projects are never cancelled.')) +
+      '</p></div><div class="gm-list">';
+    h += choice('off', FB.T('Manual research'),
+      FB.T('Keep current projects, but leave future slots for you to choose.'));
+    h += choice('cheapest', FB.T('Cheapest available first'),
+      FB.T('Fill slots with the eligible technologies that currently cost the least research.'));
+    for (const domain in (FBDATA.techDomains || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.techDomains, domain)) continue;
+      h += choice(domain,
+        FB.T('{domain} first', { domain:techDomainName(domain) }),
+        FB.T('Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains.', {
+          domain:techDomainName(domain)
+        }));
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="tech-auto-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Automatic research'), h,
+      { modalClass:'fullsheet-modal technology-modal' });
+    document.querySelectorAll('[data-tech-auto-mode]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const mode = button.dataset.techAutoMode;
+        auto.research = mode !== 'off';
+        if (auto.research) {
+          auto.researchMode = techAutomationMode(mode);
+          FB.autoResearch(s, auto.researchMode);
+        }
+        FB.game.saveAuto();
+        UI.refresh();
+        UI.showTech();
+      });
+    });
+    $('tech-auto-back').addEventListener('click', UI.showTech);
   };
 
   UI.showTechDetail = function (id) {
@@ -6523,15 +6625,18 @@ window.FB = window.FB || {};
     if (!def) return UI.showTech();
     const rid = FB.techRealmId(s);
     const record = FB.realmTechRecord(s, rid);
-    let item = null;
-    for (const candidate of FB.techCandidates(s, rid)) if (candidate.id === id) item = candidate;
+    const item = FB.techCandidate(s, id, rid);
     if (!item) return UI.showTech();
-    const cost = FB.techCostBreakdown(s, id, rid);
+    const cost = item.breakdown || FB.techCostBreakdown(s, id, rid);
     const tradition = techTraditionName(cost.tradition);
-    let h = '<div class="tech-detail-head"><span>' + esc(def.icon) + '</span><div><h4>' +
-      esc(dt(s, 'tech', id, def, 'name')) + '</h4><small>' +
+    const exposureDiscount = Math.round((1 - cost.exposureMultiplier) * 100);
+    const estimatedSeasons = techEstimatedSeasons(s, rid, record, item, cost);
+    const researchCostText = estimatedSeasons
+      ? techCostEstimateText(s, cost.total, estimatedSeasons)
+      : researchNumber(cost.total);
+    let h = '<div class="tech-detail-meta">' +
       esc(techDomainName(def.domain)) + ' · ' + esc(techStatusText(item)) +
-      '</small></div></div><div class="gm-body-text"><p>' +
+      '</div><div class="gm-body-text"><p>' +
       esc(dt(s, 'tech', id, def, 'desc')) + '</p></div>' +
       kv('First attested', esc(FB.T('{from}–{to}', {
         from:techYear(cost.attested[0]), to:techYear(cost.attested[1])
@@ -6539,15 +6644,10 @@ window.FB = window.FB || {};
       kv('Regional adoption', esc(FB.T('{tradition}: {from}–{to}', {
         tradition:tradition, from:techYear(cost.emergence), to:techYear(cost.widespread)
       }))) +
-      kv('Exposure', esc(item.exposed
-        ? FB.T('Permanent · research cost multiplied by 0.65')
-        : FB.T('Not yet exposed through contact'))) +
-      kv('Research cost', esc(FB.T('{base} base × {history} historical × {exposure} exposure = {total}', {
-        base:researchNumber(cost.base),
-        history:cost.historicalMultiplier.toFixed(3),
-        exposure:cost.exposureMultiplier.toFixed(2),
-        total:researchNumber(cost.total)
+      kv('Exposure', esc(FB.T('{percent}% discount', {
+        percent:exposureDiscount
       }))) +
+      kv('Research cost', esc(researchCostText)) +
       (record.progress[id] ? kv('Progress', esc(FB.T('{progress}/{cost}', {
         progress:researchNumber(record.progress[id]), cost:researchNumber(cost.total)
       }))) : '') +
@@ -6585,8 +6685,11 @@ window.FB = window.FB || {};
     const start = $('tech-start');
     if (start) start.addEventListener('click', function () {
       if (FB.selectTechProject(s, id)) {
+        if (FB.game.auto && FB.game.auto.research) {
+          FB.autoResearch(s, FB.game.auto.researchMode);
+        }
         UI.refresh();
-        UI.showTechDetail(id);
+        UI.showTech();
       }
     });
     const advocate = $('tech-advocate');

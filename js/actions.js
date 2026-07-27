@@ -53,6 +53,9 @@ window.FB = window.FB || {};
       }
     }, { skill: key, value: FB.skillOf(m, key) }));
   }
+  function patronageResearch(state) {
+    return 2 + Math.min(3, FB.skillOf(me(state), 'lea') / 10);
+  }
 
   /* ================= FOCUSES (daily) =================
      gain (optional): the focus's expected per-season gold/prestige/piety,
@@ -340,7 +343,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier >= 3 && adult(s); },
     tick: function (s) {
-      FB.addResearch(s, (4 + FB.skillOf(me(s), 'lea') / 3) / D);
+      FB.addResearch(s, patronageResearch(s) / D);
       s.player.gold = Math.max(0, s.player.gold - 2 / D);
       if (skillDch(0.3)) skillUp(s, 'lea');
     },
