@@ -30,7 +30,10 @@ window.FB = window.FB || {};
        levy-first and men-at-arms last, and a resting host refills with fresh
        levy only — the slain professionals are not replaced mid-war.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
-       only after balance.armyRearmDays. */
+       only after balance.armyRearmDays.
+     state.player.war.musterPool: { levy, arch, cav, ret } — the men a
+       voluntary de-muster sent home; the war's next muster is capped at
+       them, so a beaten player cannot re-raise a full levy. */
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
@@ -247,6 +250,18 @@ window.FB = window.FB || {};
       levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
       mercs: (w && w.mercCos || 0) * cs
     };
+    /* a voluntary de-muster sent only part of the standing host home: the
+       war's next muster fields no more of each own class than returned
+       (the great levy still swells what is left; hired companies and
+       allied reinforcements are raised fresh) */
+    if (w && w.musterPool) {
+      const pool = w.musterPool;
+      units.levy = Math.min(units.levy, pool.levy || 0);
+      units.arch = Math.min(units.arch, pool.arch || 0);
+      units.cav = Math.min(units.cav, pool.cav || 0);
+      units.ret = Math.min(units.ret, pool.ret || 0);
+      delete w.musterPool;
+    }
     if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
     const allied = w && w.defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
@@ -318,6 +333,76 @@ window.FB = window.FB || {};
     if (selId === army.id) selId = null;
     requestMap();
   }
+
+  /* ---------- voluntary de-muster ----------
+     The player may send a standing host home mid-war. Only part of it
+     returns to the muster rolls, by where it stands: everything on the
+     player's own county, a share elsewhere in the player's sovereign
+     realm, nothing on foreign soil (balance.armyDemusterKeepOwn/Realm/
+     Other). The returned men are kept on the war as musterPool and cap
+     the war's next muster (see FB.raisePlayerHost), and the de-muster
+     starts the same rearm wait as a shattering — so a beaten player
+     cannot de-muster and immediately re-raise a full levy. Great-holy-
+     war hosts are vow-bound: the deed never offers this for them. */
+
+  /* the kept share and a location label at the host's current province */
+  function demusterTerms(state, host) {
+    const p = state.player, bal = B(), at = host.at;
+    const own = (p.provs && p.provs.indexOf(at) >= 0) ||
+      (state.holder && state.holder[at] === 'player');
+    if (own) {
+      return { where: 'own',
+        frac: bal.armyDemusterKeepOwn === undefined ? 1 : bal.armyDemusterKeepOwn };
+    }
+    const rid = FB.playerRealmId(state);
+    if (rid && state.owner[at] === rid) {
+      return { where: 'realm',
+        frac: bal.armyDemusterKeepRealm === undefined ? 0.5 : bal.armyDemusterKeepRealm };
+    }
+    return { where: 'other',
+      frac: bal.armyDemusterKeepOther === undefined ? 0 : bal.armyDemusterKeepOther };
+  }
+
+  /* the composition that would return home: own classes scaled by the
+     kept share — allied spears and hired companies are not preserved */
+  function demusterPool(host, frac) {
+    const u = FB.hostUnits(host);
+    const allied = (host.allied && host.allied.men) || 0;
+    return {
+      levy: Math.max(0, Math.round((u.levy - allied) * frac)),
+      arch: Math.max(0, Math.round(u.arch * frac)),
+      cav: Math.max(0, Math.round((u.cav || 0) * frac)),
+      ret: Math.max(0, Math.round(u.ret * frac))
+    };
+  }
+
+  /* preview for the deed description: { where, frac, men } at the host's
+     current location — null while no ordinary-war host stands */
+  FB.demusterPreview = function (state) {
+    if (!state.player.war) return null;
+    const host = FB.playerHost(state);
+    if (!host) return null;
+    const t = demusterTerms(state, host);
+    const pool = demusterPool(host, t.frac);
+    return { where: t.where, frac: t.frac,
+      men: pool.levy + pool.arch + pool.cav + pool.ret };
+  };
+
+  FB.demusterPlayerHost = function (state) {
+    const w = state.player.war;
+    const host = FB.playerHost(state);
+    if (!w || !host) return false;
+    const t = demusterTerms(state, host);
+    const pool = demusterPool(host, t.frac);
+    w.musterPool = pool;
+    state.armyDown['player'] = state.turn; // the same rearm wait as a shattering
+    const at = host.at;
+    disband(state, host);
+    FB.news(state, FB.msg('news.army.demusters',
+      '🏳 The host de-musters at {province} — {men} men return to the muster rolls.',
+      { province: provName(at), men: pool.levy + pool.arch + pool.cav + pool.ret }));
+    return true;
+  };
 
   /* ---------- pathing (BFS over province adjacency) ----------
      Returns the route excluding the start, including the goal; null when

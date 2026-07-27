@@ -75,7 +75,16 @@ raises it — and the muster events that follow only decide whether it takes the
 with hired companies (`war_mercs`, `balance.mercCompanySize` men each) or a great levy
 (`war_mass`, swelling the levy class by `balance.massLevyMult`) behind
 it. A shattered host may muster again only after `balance.armyRearmDays`
-(`state.armyDown`). Hosts exist only while their sovereign
+(`state.armyDown`). A standing player host may also **de-muster** mid-war (Deeds tab):
+it disperses where it stands and only part of it returns to the muster rolls —
+`balance.armyDemusterKeepOwn` (all, by default) on the player's own county,
+`balance.armyDemusterKeepRealm` (half) elsewhere in the player's sovereign realm,
+`balance.armyDemusterKeepOther` (nothing) anywhere else. The returned men are kept on
+the war as `state.player.war.musterPool` and cap each own class of the war's next
+muster (the great levy still swells what is left; hired companies and allied
+reinforcements are raised fresh), and the de-muster itself starts the same rearm wait
+as a shattering — so a beaten player cannot de-muster and immediately re-raise a full
+levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
 single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so the daily

@@ -1043,6 +1043,29 @@ window.FB = window.FB || {};
       return down === undefined || s.turn - down >= FBDATA.balance.armyRearmDays;
     },
     run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
+  { id: 'demuster_host', label: '🏳 De-muster the host',
+    desc: function (s) {
+      const prev = FB.demusterPreview ? FB.demusterPreview(s) : null;
+      if (!prev) return FB.T('Send the field host home.');
+      const days = FBDATA.balance.armyRearmDays || 60;
+      if (prev.where === 'own') {
+        return FB.T('Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days.',
+          { men: prev.men, days: days });
+      }
+      if (prev.where === 'realm') {
+        return FB.T('Send the host home where it stands. On your realm’s land only {pct}% return to the rolls — {men} preserved; the next muster must wait {days} days.',
+          { men: prev.men, pct: Math.round(prev.frac * 100), days: days });
+      }
+      return FB.T('Send the host home where it stands. On foreign soil the host scatters — no men return to the rolls, and the next muster must wait {days} days.',
+        { days: days });
+    },
+    show: function (s) {
+      if (!s.player.war) return false;
+      // a great-holy-war host is vow-bound — withdrawal runs its own path
+      if (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s)) return false;
+      return !!(FB.playerHost && FB.playerHost(s));
+    },
+    run: function (s) { if (FB.demusterPlayerHost) FB.demusterPlayerHost(s); } },
   { id: 'hire_mercs', label: '⚔ Hire a mercenary company', cd: 45,
     desc: function (s) {
       const w = s.player.war;
