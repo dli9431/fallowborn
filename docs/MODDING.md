@@ -135,6 +135,7 @@ A JSON mod is one object with any of these keys:
   },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
+  "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."] },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
@@ -404,6 +405,7 @@ Provide any of these to reshape or replace the whole map — e.g. a fantasy cont
 ```json
 { "events": [ {
   "id": "lucky_cow", "title": "A Lucky Cow",
+  "tags": ["livestock"],
   "text": "A fine cow wanders onto your land, ownerless. {lord} has not noticed.",
   "trigger": { "tierMax": 1, "seasons": [1, 2], "chance": 0.2 },
   "weight": 6, "cooldown": 12,
@@ -446,7 +448,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
 | `rivalHeatMin` / `rivalHeatMax` | active rivalry heat at or above/below the number (0–100) |
-| `popularOpinionBelow` | the commons' view of you |
+| `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
+| `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
 | `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
@@ -459,8 +462,9 @@ distinction matters.
 seasons (a season lasts 90 in-game days — the engine converts). Random events land on 1–2
 random days per season (one extra in wartime); queued events (`queue`) fire the next day.
 Core code queues through `FB.queueEvent`, which snapshots `societalRole`, `profession`,
-and `formerProfession` into the JSON-safe event context for exact-value localization
-selectors. Mods should use the effect-level `queue` field whenever possible.
+`formerProfession`, and `locationId` into the JSON-safe event context for exact-value
+localization selectors and county targeting. Mods should use the effect-level `queue`
+field whenever possible.
 
 `wartime: true` (top-level, next to `weight`) marks an event as fit for a war footing. While
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,
@@ -470,6 +474,12 @@ life waits for peace. Queued events always fire regardless.
 `warStatus: true` adds the current localized host, enemy, siege, and advance summary as a
 separate paragraph below the event text. Use this instead of embedding a `{warstate}` token:
 the summary has its own grammar and may contain several clauses.
+
+`tags: ["famine", "unrest"]` is an optional top-level array. Active modifiers in the
+event's snapshotted county (and compatible estate-trait bonuses) sum each named tag.
+`max(0, 1 + summedBonus)` scales only negative numeric gold, prestige, piety, health,
+war-service, research, popular-opinion, liege/role-opinion, and skill effects. Positive
+rewards, chance formulas, custom handlers, flags, and metadata are unchanged.
 
 `childhood: true` works the same way for minor heirs: while the player is **under 16**,
 random picks draw only from childhood events. Give child-only events a `maxAge: 15` trigger
@@ -563,8 +573,11 @@ banked as reserve) ·
 `travelReturn: true` (begin the saved route home once the minimum stay is complete) ·
 `travelSettle: true` (move the household to an eligible completed destination without
 converting culture/faith; limited to one permanent move per character life) ·
-`holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
-`giveItem: "id"` (grant one definition from `FBDATA.items`; repeatable definitions create
+  `holding: "id"` / `loseHolding: "id"` (grant or take household property) ·
+  `addModifier: {"id":"modifier_id","pid":"optional_county_id"}` (or a bare id string;
+  county targeting falls back to the queued `locationId` and then the player's home,
+  while campaign modifiers target the matching active great holy war) ·
+  `giveItem: "id"` (grant one definition from `FBDATA.items`; repeatable definitions create
 a fresh exact instance, while random finds use `custom: "loot_item"`) ·
 `deathProvenance: {kind:"battle|event", province:"context", enemy:"war|liegeWar|realmWar"}`
 (optional semantic origin for a lethal effect; ids are materialized only if the resolved
@@ -663,6 +676,55 @@ An event with `"nameChild": true` (used by `child_born_flavor`, queued with `ctx
 shows a name field above its options, prefilled with the child's generated name and a dice
 button that rerolls from the child's culture. Whichever option is chosen applies the edited
 name (an empty field keeps the old one); an autoresolved event keeps the generated name.
+
+## Temporary modifiers
+
+Runtime mods may add or replace complete records under the top-level `modifiers` key:
+
+```json
+{
+  "modifiers": {
+    "market_charter": {
+      "name": "Market Charter",
+      "icon": "📜",
+      "desc": "A temporary grant encourages tolls and construction.",
+      "scope": "county",
+      "days": 720,
+      "upkeep": { "gold": 1 },
+      "fx": { "tax": 0.10, "buildingCost": -0.10, "unrest": -0.15 }
+    }
+  }
+}
+```
+
+`name`, `icon`, `desc`, `scope`, and `fx` are required by convention. `scope` is
+`"county"` or `"campaign"`. `days` is an optional positive day duration; omitting it
+creates a record with no fixed turn expiry. `upkeep.gold` is an optional seasonal charge
+and is paid only while the affected county is directly held. A later mod replaces a
+same-id definition as one atomic record.
+
+Supported county `fx` keys are fractional `tax`, `levy`, and `buildingCost`; flat
+`commonVoice`; and fractional event-tag keys such as `famine` and `unrest`. Supported
+campaign keys are fractional `supplyUse`, `contribution`, `withdrawalPenalty`,
+`marchSpeed`, `battleOdds`, and seasonal `desertion`. Campaign values affect only the
+protagonist's valid participation in the active great holy war—never AI parties or an
+ordinary-war modifier array.
+
+County instances are saved as
+`state.modifiers.county[provinceId] = [{"id":"...","endTurn":123}]`; campaign instances
+use `state.greatHolyWar.modifiers`. Do not write these arrays directly. Use:
+
+- `FB.addModifier(state,id,pid?)`, `FB.removeModifier(state,id,pid?)`, and
+  `FB.hasModifier(state,id,pid?)`
+- `FB.countyModifierRecords(state,pid)` / `FB.campaignModifierRecords(state)`
+- `FB.modBonus(state,key,pid)` / `FB.campaignModBonus(state,key)`
+- `FB.modifierUpkeep(state,key?)`, `FB.modifierRemainingDays(state,record)`, and
+  `FB.popEffective(state)`
+
+Re-adding an id refreshes its catalog duration without stacking. County records remain
+with the county when ownership changes. Unknown saved ids and malformed records are
+removed by additive save repair. Core definitions and the full lifecycle are documented
+in `docs/designs/modifiers.md`.
 
 ## Buildings
 
@@ -1423,6 +1485,8 @@ Public campaign APIs are:
 - `FB.callGreatHolyWar(state, religionId, kingdomId, callerRealm?)`
 - `FB.joinGreatHolyWar(state, camp, realmId?)`
 - `FB.withdrawGreatHolyWar(state)`
+- `FB.greatHolyWarWithdrawalCost(state)` and
+  `FB.addGreatHolyWarContribution(state, realmId, points)`
 - `FB.greatHolyWarCamp(state, realmId)` and
   `FB.greatHolyWarEnemies(state, realmId)`
 - `FB.resolveGreatHolyWar(state, "attackers"|"defenders", reason?)`

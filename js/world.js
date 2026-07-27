@@ -2389,7 +2389,19 @@ window.FB = window.FB || {};
 
     if (p.provs && p.provs.length) {
       for (const pid of p.provs) {
-        add('levy', 'county', (state.dev[pid] || 1) * B.levyPerDev, { pid:pid });
+        const countyLevy = (state.dev[pid] || 1) * B.levyPerDev;
+        add('levy', 'county', countyLevy, { pid:pid });
+        if (FB.countyModifierRecords) {
+          for (const record of FB.countyModifierRecords(state, pid)) {
+            const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+            const rate = def && def.fx && Number(def.fx.levy);
+            if (isFinite(rate) && rate) {
+              add('levy', 'modifier', countyLevy * rate, {
+                modifierId:record.id, pid:pid, rate:rate
+              });
+            }
+          }
+        }
       }
     } else if (p.tier >= 3) {
       add('ret', 'barony_retinue', B.baronyRetinue || 120);
@@ -2437,7 +2449,9 @@ window.FB = window.FB || {};
           ? FB.vassalLevyRate(state, vid) : (B.vassalLevyRate || 0);
         let amount = 0;
         for (const pid of FB.realmHeldCounties(state, vid)) {
-          amount += (state.dev[pid] || 1) * B.levyPerDev * rate;
+          const modifier = FB.modBonus
+            ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
+          amount += (state.dev[pid] || 1) * B.levyPerDev * modifier * rate;
         }
         add('levy', 'vassal', amount, {
           rid:vid, rate:rate,

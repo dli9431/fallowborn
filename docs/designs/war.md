@@ -106,7 +106,8 @@ saves migrate in place (`FB.hostUnits`): their men count as levy but the hired c
 
 **A raised host has composition-based seasonal logistics.**
 `FB.playerHostUpkeepParts(state)` returns
-`{base, levy, archers, cavalry, retinue, mercenaries, total}` from the live player host:
+`{base, levy, archers, cavalry, retinue, mercenaries, campaignModifier, total}` from the
+live player host:
 2 gold for the camp, then 0.5 per 100 levy, 1 per 100 archers, and 2 per 100
 cavalry or men-at-arms. Hired companies retain their 4-gold contract each. The live unit counts
 mean a great levy, defensive reinforcements, daily reinforcement, battle casualties,
@@ -114,9 +115,12 @@ and re-mustering all change the non-mercenary bill without stored economic state
 A missing host returns all zeroes, so a shattered or disbanded host costs nothing until
 it is raised again. The season boundary charges the same bill for ordinary and sovereign
 great holy-war hosts and clamps an underfunded purse to zero without disbanding the host.
+`campaignModifier` is zero for ordinary-war-only hosts and records the signed supply
+adjustment for a player host serving in a great holy war.
 
 **Movement is daily and adjacency-based.** Orders set a BFS path (`FB.findPath` over
-`FB.world.adj`); every leg, the first included, costs `balance.armyMarchDays`, and the
+`FB.world.adj`); every leg, the first included, uses `FB.armyMarchDays` (the
+technology-adjusted base, then any valid player campaign-speed adjustment), and the
 host steps into the next province only when the leg completes (its marker stays
 on the province it stands in) — so battle contact and sieges begin on arrival,
 not on departure. Ordering a host's own province halts it, mid-road included; an unreachable
@@ -268,8 +272,8 @@ Contribution is keyed by participant realm, with the protagonist recorded as
 pays `10 + development × 2` divided by friendly strength present. Every completed
 campaign season gives one service point, and personal expedition events add one or
 three. A successor must renew the inherited vow to resume service and land
-eligibility. Ordinary withdrawal costs 100 piety and 50 prestige and forfeits land
-eligibility.
+eligibility. Ordinary withdrawal has a base cost of 100 piety and 50 prestige, modified
+by active player campaign effects, and forfeits land eligibility.
 
 Attacker settlement orders captured land by contribution. The sacred or
 highest-development county anchors the new sovereign result, then complete duchies
@@ -280,3 +284,11 @@ cadet rulers based on the sponsoring realm's culture and dynasty identity, leavi
 that sponsor's old realm intact. Player choices can found a realm, exchange and
 relocate a vassal demesne, attach a secondary grant to an existing sovereign realm,
 unite a won crown with existing lands, or decline for non-land honor.
+
+Player-participation campaign modifiers are detailed in
+[modifiers.md](modifiers.md). A valid or renewed great-holy-war vow synchronizes
+`Oathbound Host`; succession pending renewal, withdrawal, and settlement suspend or
+remove it. The shared contribution award and withdrawal-cost APIs apply campaign
+bonuses consistently. The live player host also applies campaign supply use, march
+speed, battle power, and seeded daily desertion; AI participants and ordinary-war
+modifiers remain out of scope.

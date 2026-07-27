@@ -127,14 +127,19 @@ window.FB = window.FB || {};
     if (!host) {
       return {
         base:0, levy:0, archers:0, cavalry:0, retinue:0,
-        mercenaries:0, total:0
+        mercenaries:0, campaignModifier:0, total:0
       };
     }
     const units = FB.hostUnits(host);
     const companySize = B().mercCompanySize || 150;
     const contracted = state.player.war && state.player.war.mercCos;
     const companies = contracted || Math.ceil((units.mercs || 0) / companySize);
-    return hostUpkeepParts(units, companies);
+    const parts = hostUpkeepParts(units, companies);
+    const rate = FB.campaignHostModBonus
+      ? FB.campaignHostModBonus(state, 'supplyUse') : 0;
+    parts.campaignModifier = parts.total * rate;
+    parts.total = Math.max(0, parts.total + parts.campaignModifier);
+    return parts;
   };
 
   /* Declaration preview: the present peacetime composition at an ordinary
@@ -337,6 +342,14 @@ window.FB = window.FB || {};
      (mid-road included). A failed order leaves no stale route behind, and a
      standing host starts its first leg at once — every leg, first included,
      costs balance.armyMarchDays. */
+  FB.armyMarchDays = function (state, realmId) {
+    const base = FB.techArmyMarchDays
+      ? FB.techArmyMarchDays(state, realmId) : B().armyMarchDays;
+    const speed = realmId === 'player' && FB.campaignHostModBonus
+      ? FB.campaignHostModBonus(state, 'marchSpeed') : 0;
+    return Math.max(1, Math.round(base / Math.max(0.05, 1 + speed)));
+  };
+
   FB.orderArmy = function (state, army, destPid) {
     if (!destPid) return false;
     if (destPid === army.at) {
@@ -354,8 +367,7 @@ window.FB = window.FB || {};
     army.goal = destPid;
     if (army.moveLeft <= 0) {
       army.from = army.at;
-      army.moveLeft = FB.techArmyMarchDays
-        ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
+      army.moveLeft = FB.armyMarchDays(state, army.realm);
     }
     requestMap();
     return true;
@@ -371,8 +383,7 @@ window.FB = window.FB || {};
         army.from = army.at;
         army.at = army.path.shift();
         if (army.path.length) {
-          army.moveLeft = FB.techArmyMarchDays
-            ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
+          army.moveLeft = FB.armyMarchDays(state, army.realm);
         }
         requestMap();
       }
@@ -381,8 +392,7 @@ window.FB = window.FB || {};
     // standing with a route but no clock (old save): begin the next leg
     if (army.path && army.path.length) {
       army.from = army.at;
-      army.moveLeft = FB.techArmyMarchDays
-        ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
+      army.moveLeft = FB.armyMarchDays(state, army.realm);
     }
   }
 
@@ -458,6 +468,9 @@ window.FB = window.FB || {};
       // the same edges the war council grants carry onto the field
       pw *= 1 + FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
         FB.itemBonus(state, 'battle') + (state.player.flags.blessed_war ? 0.06 : 0);
+      if (FB.campaignHostModBonus) {
+        pw *= Math.max(0, 1 + FB.campaignHostModBonus(state, 'battleOdds'));
+      }
     } else {
       const r = state.realms[army.realm];
       pw = army.men * q * (1 + (r && r.ruler ? r.ruler.mar : 5) / (B().battleMarAI || 22));
@@ -622,6 +635,22 @@ window.FB = window.FB || {};
         else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
       }
       march(state, a);
+    }
+
+    /* Campaign desertion is expressed as a seasonal fraction but resolved
+       daily. Fractional expected losses use the saved RNG stream. */
+    const playerHost = FB.playerHost(state);
+    const desertion = playerHost && FB.campaignHostModBonus
+      ? Math.max(0, FB.campaignHostModBonus(state, 'desertion')) : 0;
+    if (playerHost && playerHost.men > 0 && desertion) {
+      const expected = playerHost.men * desertion / 90;
+      let lost = Math.floor(expected);
+      const fraction = expected - lost;
+      if (fraction > 0 && FB.rng() < fraction) lost++;
+      if (lost > 0) {
+        applyLosses(playerHost, Math.min(playerHost.men, lost));
+        requestMap();
+      }
     }
 
     // levies trickle back while a host rests on its sovereign's own land —

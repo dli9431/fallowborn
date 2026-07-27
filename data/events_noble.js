@@ -13,7 +13,7 @@ FBDATA.events.push(
     { label:'Judge swiftly and harshly.', desc:'Quick judgments are feared more than loved.', effects:{ prestige:3, skills:{int:1}, popularOpinion:-5 } },
     { label:'Let the reeve sort it out.', desc:'Small troubles, small minds — and a small fee.', effects:{ popularOpinion:-3, gold:2 } }
   ]},
-{ id:'peasant_revolt', title:'The Commons Rise',
+{ id:'peasant_revolt', title:'The Commons Rise', tags:['unrest'],
   trigger:{ tierMin:3, popularOpinionBelow:-30, chance:0.3 }, weight:12, cooldown:8,
   text:'Torches in the night. Your taxmen beaten, your granary seized — the peasants of {province} have risen, led by a man they call the Ploughman King.',
   options:[
@@ -83,12 +83,14 @@ FBDATA.events.push(
     { label:'A meal and a bed for the night.', require:{ goldMin:1 }, desc:'Small charity, small return.', effects:{ gold:-1, research:3 } },
     { label:'Turn him away.', desc:'Books find other roofs.', effects:{ } }
   ]},
-{ id:'famine_relief', title:'Empty Granaries',
+{ id:'famine_relief', title:'Empty Granaries', tags:['famine'],
   trigger:{ tierMin:3, seasons:[3], chance:0.12 }, weight:8, cooldown:12,
   text:'The harvest failed across {province}, and now the roads fill with hollow-eyed families drifting toward your keep.',
   options:[
     { label:'Open the granary reserves.', desc:'Full barns were built for days like this.', require:{ buildings:['granary'] },
-      effects:{ popularOpinion:25, piety:10, prestige:10, log:'The granary fed {province} through the famine.' } },
+      effects:{ popularOpinion:25, piety:10, prestige:10,
+        addModifier:{id:'granaries_opened'},
+        log:'The granary fed {province} through the famine.' } },
     { label:'Buy grain to give out. ({money:20})', require:{ goldMin:20 }, desc:'Bread bought dear is loyalty bought cheap.',
       effects:{ gold:-20, popularOpinion:25, piety:10, prestige:10, log:'Fed the hungry in famine.' } },
     { label:'Sell grain at famine prices.', desc:'Hunger pays well, and remembers longer.', effects:{ gold:25, popularOpinion:-25, piety:-10 } },

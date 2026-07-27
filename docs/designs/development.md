@@ -82,3 +82,8 @@ walls in battle.
 the 867 and 1066 snapshots can value the same enduring county differently without
 pre-building holdings, granting technologies, or changing the building rules.
 After initialization, development lives only in state and advances normally.
+
+County modifiers are applied at their local boundaries. `levy` adjusts the county's base
+levy before technology, Martial, and domain changes and appears as a named composition
+ledger row. `buildingCost` multiplies the final construction quote in the selected county.
+The catalog and stacking rules are in [modifiers.md](modifiers.md).

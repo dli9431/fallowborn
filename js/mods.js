@@ -208,6 +208,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];
+    if (mod.modifiers) for (const k in mod.modifiers) FBDATA.modifiers[k] = mod.modifiers[k];
     if (mod.buildings) for (const k in mod.buildings) FBDATA.buildings[k] = mod.buildings[k];
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
     if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];

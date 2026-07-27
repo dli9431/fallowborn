@@ -46,3 +46,8 @@ the unnamed benches, exactly as AI realms stay lightweight elsewhere.
 Related: [council.md](council.md) for the king-side mirror,
 [realms.md](realms.md) for the liege chain and favor, [events.md](events.md)
 for the interpreter.
+
+A successful player motion for redress also grants `Custom Confirmed` to the event's
+snapshotted home county for 3,600 days. Its Common Voice is demesne-wide only while that
+county remains directly held; the levy and unrest effects remain attached to the county.
+See [modifiers.md](modifiers.md).

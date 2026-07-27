@@ -657,10 +657,13 @@ window.FB = window.FB || {};
     } },
   { id: 'withdraw_great_holy_war', label: '🏳 Withdraw from great holy war…', noConsume: true,
     desc: function (s) {
-      const pledge = s.player.greatHolyWar;
-      return pledge && pledge.renewalRequired
+      const cost = FB.greatHolyWarWithdrawalCost
+        ? FB.greatHolyWarWithdrawalCost(s) : { piety:100, prestige:50, inherited:false };
+      return cost.inherited
         ? FB.T('Decline the inherited vow without a personal penalty, but surrender territorial eligibility.')
-        : FB.T('Abandon the vow for 100 piety and 50 prestige, surrendering territorial eligibility.');
+        : FB.T('Abandon the vow for {piety} piety and {prestige} prestige, surrendering territorial eligibility.', {
+          piety:cost.piety, prestige:cost.prestige
+        });
     },
     show: function (s) {
       const campaign = s.greatHolyWar, pledge = s.player.greatHolyWar;
@@ -1173,27 +1176,47 @@ window.FB = window.FB || {};
 
   /* ================= shared helpers ================= */
 
-  FB.playerTax = function (state) {
+  function countyTaxBase(state, pid, rate) {
+    const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
+    return (state.dev[pid] || 1) * rate * Math.max(0, 1 + local);
+  }
+
+  /* One calculation feeds settlement, reliable income, and the displayed
+     ledger. County rates are applied before domain and national modifiers. */
+  FB.playerTaxParts = function (state) {
     const B = FBDATA.balance;
     const p = state.player;
-    // the player's own demesne — overload past the domain limit lets tax leak away
-    let demesne = 0;
-    for (const pid of (p.provs || [])) demesne += (state.dev[pid] || 1) * B.taxPerDev;
-    if (p.tier === 3) demesne = Math.max(demesne, 6); // barony rents
-    demesne *= FB.domainPenalty(state);
-    // vassals render their seasonal due (never touched by the overload penalty)
-    let vassal = 0;
-    for (const vid of FB.playerVassals(state)) {
-      for (const pid of FB.realmHeldCounties(state, vid)) vassal += (state.dev[pid] || 1) * B.vassalTaxRate;
+    let rents = 0;
+    for (const pid of (p.provs || [])) {
+      rents += countyTaxBase(state, pid, B.taxPerDev);
     }
-    let t = demesne + vassal;
-    t += FB.buildingBonus(state, 'tax');
-    t *= 1 + FB.techBonus(state, 'tax') +
-      (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0) +
-      (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0) +
+    if (p.tier === 3) rents = Math.max(rents, 6);
+    rents *= FB.domainPenalty(state);
+    let dues = 0;
+    for (const vid of FB.playerVassals(state)) {
+      for (const pid of FB.realmHeldCounties(state, vid)) {
+        dues += countyTaxBase(state, pid, B.vassalTaxRate);
+      }
+    }
+    const tolls = FB.buildingBonus(state, 'tax');
+    const taxable = rents + dues + tolls;
+    const national = taxable * FB.techBonus(state, 'tax');
+    const council = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
+    const positions = taxable * (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0);
+    const monopoly = taxable *
       (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
-    if (p.liege) t *= 1 - (FB.parliamentAid ? FB.parliamentAid(state) : 0.25); // liege's cut — haggled in the estates
-    return Math.round(t);
+    const beforeLiege = taxable + national + council + positions + monopoly;
+    const liege = p.liege
+      ? -beforeLiege * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
+    return {
+      rents:rents, dues:dues, tolls:tolls, taxable:taxable,
+      national:national, council:council, positions:positions,
+      monopoly:monopoly, liege:liege, total:beforeLiege + liege
+    };
+  };
+
+  FB.playerTax = function (state) {
+    return Math.round(FB.playerTaxParts(state).total);
   };
 
   /* ===== domain limit: how much land the player may hold in his own hand =====
@@ -1247,6 +1270,7 @@ window.FB = window.FB || {};
     let total = -FB.householdUpkeep(state);
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
+    if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
     if (p.tier >= 3) {
       total += FB.playerTax(state);
       total -= FB.buildingBonus(state, 'upkeep');
@@ -1274,7 +1298,7 @@ window.FB = window.FB || {};
      locale. Mirrors the season-boundary ledger in main.js and playerTax
      above; a change there wants a change here. */
   FB.incomeBreakdown = function (state) {
-    const p = state.player, B = FBDATA.balance;
+    const p = state.player;
     if (FB.enterpriseList) FB.enterpriseList(state); // normalize legacy business holdings first
     const lines = { gold: [], prestige: [], piety: [] };
     function add(stat, label, amount) {
@@ -1311,34 +1335,18 @@ window.FB = window.FB || {};
        demesne rents, vassal dues, tolls — grown by national technology,
        cut by a liege */
     if (p.tier >= 3) {
-      let rents = 0;
-      for (const pid of (p.provs || [])) rents += (state.dev[pid] || 1) * B.taxPerDev;
-      if (p.tier === 3) rents = Math.max(rents, 6); // barony rents
-      rents *= FB.domainPenalty(state); // overload past the domain limit lets tax leak away
-      add('gold', FB.T('Rents from your lands'), rents);
-      let dues = 0;
-      for (const vid of FB.playerVassals(state)) {
-        for (const pid of FB.realmHeldCounties(state, vid)) {
-          dues += (state.dev[pid] || 1) * B.vassalTaxRate;
-        }
-      }
-      add('gold', FB.T('Vassal dues'), dues);
-      const tolls = addBuildings('gold', 'tax');
-      const taxable = rents + dues + tolls;
-      const nationalTech = taxable * FB.techBonus(state, 'tax');
-      add('gold', FB.T('National technology'), nationalTech);
-      const councilTax = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
-      add('gold', FB.T('Royal Seneschal'), councilTax);
-      const monopolyTax = taxable *
-        (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
-      add('gold', FB.T('Guild monopoly tolls'), monopolyTax);
-      let positionTax = 0;
+      const tax = FB.playerTaxParts(state);
+      add('gold', FB.T('Rents from your lands'), tax.rents);
+      add('gold', FB.T('Vassal dues'), tax.dues);
+      addBuildings('gold', 'tax');
+      add('gold', FB.T('National technology'), tax.national);
+      add('gold', FB.T('Royal Seneschal'), tax.council);
+      add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
           const def = FBDATA.positions[source.id];
           if (!def) continue;
-          const amount = taxable * source.amount;
-          positionTax += amount;
+          const amount = tax.taxable * source.amount;
           const holder = source.charId && state.chars[source.charId];
           const name = FB.dataText(state, p.charId, 'position', source.id, def, 'name');
           add('gold', holder ? FB.T('{position} — {name}', {
@@ -1347,9 +1355,7 @@ window.FB = window.FB || {};
         }
       }
       if (p.liege) {
-        add('gold', FB.T('Liege’s cut'),
-          -(taxable + nationalTech + councilTax + monopolyTax + positionTax) *
-          (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
+        add('gold', FB.T('Liege’s cut'), tax.liege);
       }
       addBuildings('gold', 'upkeep', -1, true);
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
@@ -1418,6 +1424,18 @@ window.FB = window.FB || {};
         FB.householdStandardEffect(state, 'prestige'));
     }
     add('gold', FB.T('Wartime scarcity for household necessities'), -upkeep.wartime);
+    if (FB.modifierUpkeepEntries) {
+      for (const entry of FB.modifierUpkeepEntries(state, 'gold')) {
+        const def = FBDATA.modifiers[entry.id];
+        const province = FB.world.byId[entry.pid];
+        if (!def) continue;
+        add('gold', FB.T('{modifier} — {county}', {
+          modifier:def.icon + ' ' +
+            FB.dataText(state, p.charId, 'modifier', entry.id, def, 'name'),
+          county:province ? province.name : entry.pid
+        }), -entry.amount);
+      }
+    }
     if (FB.playerHostUpkeepParts) {
       const hostUpkeep = FB.playerHostUpkeepParts(state);
       add('gold', FB.T('Raised-host base logistics'), -hostUpkeep.base);
@@ -1426,6 +1444,9 @@ window.FB = window.FB || {};
       add('gold', FB.T('Cavalry fodder and supplies'), -hostUpkeep.cavalry);
       add('gold', FB.T('Men-at-arms food and supplies'), -hostUpkeep.retinue);
       add('gold', FB.T('Mercenary company contracts'), -hostUpkeep.mercenaries);
+      if (hostUpkeep.campaignModifier) {
+        add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
+      }
     }
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {
@@ -2380,6 +2401,8 @@ window.FB = window.FB || {};
     let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       Math.max(0, FB.techCostFactor(state, 'build') -
         (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
+    c *= Math.max(0, 1 +
+      (FB.modBonus ? FB.modBonus(state, 'buildingCost', pid) : 0));
     if (state.player.flags.mason_visit) c *= 0.75;
     return Math.round(c);
   };
