@@ -222,9 +222,16 @@ window.FB = window.FB || {};
       rate:rate,
       progress:progress
     };
-    return s.player.travel
-      ? FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling', params)
-      : FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}', params);
+    const presence = FB.socialAttentionPresence(s, target);
+    if (presence.status === 'on-road') {
+      return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while on the road', params);
+    }
+    if (presence.status === 'remote') {
+      const residence = presence.residenceId && FB.world.byId[presence.residenceId];
+      params.province = residence ? residence.name : FB.T('another county');
+      return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused—target is in {province}', params);
+    }
+    return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}', params);
   }
   function opinionBand(value) {
     if (value >= 60) return FB.T('Warm');
@@ -887,6 +894,15 @@ window.FB = window.FB || {};
       const days = travel.remainingRoute && travel.remainingRoute.length
         ? travel.legDaysLeft + Math.max(0, travel.remainingRoute.length - 1) * travel.legDays
         : 0;
+      let stayText = '';
+      if (travel.phase === 'arrived' && FB.travelStayDays) {
+        const stayed = FB.travelStayDays(s);
+        stayText = travel.purpose === 'relationship'
+          ? FB.T('{days} days into the visit', { days:stayed })
+          : (s.player.tier >= 3
+            ? FB.T('{days} days in guest residence', { days:stayed })
+            : FB.T('{days} days living and working here', { days:stayed }));
+      }
       h += '<div class="progressnote">🧭 ' + esc(FB.T(
         '{purpose} · {phase} · now in {location} · destination {destination}', {
           purpose:purposeName,
@@ -894,10 +910,7 @@ window.FB = window.FB || {};
           location:here ? here.name : '?',
           destination:destination ? destination.name : '?'
         })) + (days ? ' · ' + esc(FB.T('{days} travel days remain', {days:days})) : '') +
-        (travel.phase === 'arrived' && FB.travelStayDays
-          ? ' · ' + esc(FB.T('{days} days living and working here', {
-              days:FB.travelStayDays(s)
-            })) : '') +
+        (stayText ? ' · ' + esc(stayText) : '') +
         (travel.venture
           ? '<br><span class="hint">' + esc(
             travel.venture.status === 'resolved'
@@ -3734,13 +3747,14 @@ window.FB = window.FB || {};
 
   UI.showTravelPurposes = function () {
     const s = FB.state;
-    const eligible = FB.travelEligible(s);
+    const eligible = FB.travelAnyPurposeEligible(s);
     if (eligible !== true) { UI.toast(eligible); return; }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map.')) +
       '</p></div><div class="gm-list">';
     for (const id in FBDATA.travelPurposes) {
       const def = FBDATA.travelPurposes[id];
+      if (def.targeted || FB.travelEligible(s, id) !== true) continue;
       const destinations = id === 'trade'
         ? FB.tradeVentureMarkets(s) : FB.travelDestinations(s, id);
       const stakes = id === 'trade' ? FB.tradeVentureStakes() : [];
@@ -4115,13 +4129,18 @@ window.FB = window.FB || {};
           outbound:item.days,
           returnDays:item.days
         })) + '</p>' +
-      '<p>' + esc(FB.T(
-        'At the destination you must stay and find local work for at least {days} days before returning home.', {
+      '<p>' + esc(s.player.tier >= 3
+        ? FB.T('At the destination you must remain in guest residence for at least {days} days before returning home.', {
+          days:FBDATA.balance.travelMinStayDays || 90
+        })
+        : FB.T('At the destination you must stay and find local work for at least {days} days before returning home.', {
           days:FBDATA.balance.travelMinStayDays || 90
         })) + '</p>' +
-      '<p>' + esc(s.player.travelSettlement
-        ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
-        : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>' +
+      (s.player.tier >= 3
+        ? '<p>' + esc(FB.T('This is a temporary ruler’s journey; it cannot relocate your court or household.')) + '</p>'
+        : '<p>' + esc(s.player.travelSettlement
+          ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
+          : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>') +
       '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {cost:item.cost})) +
       '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
       '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
@@ -4141,6 +4160,99 @@ window.FB = window.FB || {};
       if (selected) selected.focus();
     });
   }
+
+  UI.showSocialVisit = function (cid, options) {
+    options = options || {};
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!s || !c || c.dead || !FB.socialVisitPreview) return;
+    const preview = FB.socialVisitPreview(s, c);
+    if (!preview.eligible) {
+      UI.toast(preview.reason || FB.T('That visit cannot begin.'));
+      return;
+    }
+    const destination = FB.world.byId[preview.destinationId];
+    if (!destination) return;
+    const cultivated = FB.socialAttentionTarget(s);
+    const continuing = !!(cultivated && cultivated.id === c.id);
+    let estimate;
+    if (preview.daysToThreshold === null) {
+      estimate = FB.T('At the current daily rate, Regard is not advancing toward +{threshold}.', {
+        threshold:FB.relationshipOpinionThreshold()
+      });
+    } else if (!preview.daysToThreshold) {
+      estimate = FB.T('{name} is already at the +{threshold} Regard threshold.', {
+        name:c.name, threshold:FB.relationshipOpinionThreshold()
+      });
+    } else {
+      estimate = FB.T(
+        'At +{rate} Regard per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure.', {
+          rate:preview.dailyRate,
+          threshold:FB.relationshipOpinionThreshold(),
+          activeDays:preview.daysToThreshold,
+          totalDays:preview.daysFromDeparture
+        });
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      '{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way.', {
+        name:FB.fullName(c),
+        destination:destination.name,
+        legs:preview.legs,
+        days:preview.days
+      })) + '</p><p>' + esc(FB.T(
+      'After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Regard.', {
+        days:preview.minimumStay
+      })) + '</p><p>' + esc(estimate) + '</p>' +
+      (options.courtship
+        ? '<p>' + esc(FB.T(
+          'Departure begins the courtship and assigns your personal attention to {name}.', {
+            name:c.name
+          })) + '</p>'
+        : '<p>' + esc(continuing
+          ? FB.T(
+            'Departure keeps your personal attention on {name}; progress resumes only once you arrive.',
+            { name:c.name })
+          : FB.T(
+            'Departure assigns your personal attention to {name}; progress begins only once you arrive.',
+            { name:c.name })) + '</p>') +
+      '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {
+        cost:preview.cost
+      })) + '</b>' + (preview.cost > s.player.gold
+        ? ' ' + esc(FB.T('You have only {money:gold}.', {
+          gold:Math.floor(s.player.gold)
+        }))
+        : '') + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="social-visit-depart"' +
+      (preview.cost > s.player.gold ? ' disabled' : '') + '>🧭 ' +
+      esc(options.courtship
+        ? FB.T('Depart to court {name}', { name:c.name })
+        : (continuing
+          ? FB.T('Depart to continue cultivating {name}', { name:c.name })
+          : FB.T('Depart to cultivate {name}', { name:c.name }))) +
+      '</button><button class="actionbtn" id="social-visit-cancel">' +
+      esc(FB.T('Not now')) + '</button></div>';
+    openModal(options.courtship
+      ? FB.T('Travel to court {name}', { name:c.name })
+      : FB.T('Travel to cultivate {name}', { name:c.name }), h, {
+        historyView:true,
+        historyBack:true
+      });
+    const depart = $('social-visit-depart');
+    if (depart) depart.addEventListener('click', function () {
+      if (!FB.socialVisitStart(s, c, { courtship:!!options.courtship })) {
+        UI.toast(FB.T('Circumstances changed before the visit could begin.'));
+        return;
+      }
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('social-visit-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        if (options.returnRealmId) UI.showLiegeModal(options.returnRealmId);
+        else UI.showCharModal(c.id);
+      });
+    });
+  };
 
   function closeTravelPicker(restorePause) {
     const closed = travelPicker;
@@ -5669,8 +5781,16 @@ window.FB = window.FB || {};
           })) &&
           station - FB.playerStation(s) < 3;
         if (canTry) {
-          h += '<button class="actionbtn" data-royal-child="' + esc(child.id) + '">🌷 ' +
-            esc(FB.T('Approach {name} for courtship', { name: child.name })) +
+          const royalTogether = s.player.travel
+            ? s.player.travel.phase === 'arrived' &&
+              s.player.travel.currentId === r.capital
+            : s.player.provinceId === r.capital;
+          h += '<button class="actionbtn" data-royal-child="' + esc(child.id) + '">' +
+            esc(royalTogether
+              ? FB.T('🌷 Approach {name} for courtship', { name:child.name })
+              : FB.T('🧭 Travel to approach {name} for courtship…', {
+                name:child.name
+              })) +
             '<span class="adesc">' + esc(isHeir
               ? FB.T('The designated heir can transmit the crown to your shared branch.')
               : FB.T('This creates a dynastic tie, but this child does not currently transmit the crown.')) +
@@ -5698,6 +5818,11 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         const c = FB.materializeRoyalChild(s, rid, btn.dataset.royalChild);
         if (!c || !FB.canCourt(s, c)) return;
+        const presence = FB.socialAttentionPresence(s, c);
+        if (presence.status !== 'active') {
+          UI.showSocialVisit(c.id, { courtship:true, returnRealmId:rid });
+          return;
+        }
         UI.closeModal();
         if (!FB.beginCourtship(s, c)) return;
         FB.news(s, FB.msg('news.social.royal_courting_begins',
@@ -7709,6 +7834,10 @@ window.FB = window.FB || {};
     }
     if (c.id !== me.id) {
       const cultivated = !!(attentionTarget && attentionTarget.id === c.id);
+      const attentionPresence = FB.socialAttentionPresence(s, c);
+      const together = attentionPresence.status === 'active';
+      const visitPreview = !together && FB.socialVisitPreview
+        ? FB.socialVisitPreview(s, c) : null;
       const courtAttentionBlocked = !!(s.player.courtingId &&
         s.player.courtingId !== c.id);
       const courtAttentionHeld = s.player.courtingId === c.id && cultivated;
@@ -7721,7 +7850,28 @@ window.FB = window.FB || {};
             ? FB.T('End the courtship to release this personal-attention assignment.')
             : FB.T('Withdraw personal attention. This costs no day.')) +
           '</span></button>';
-      } else {
+        if (!together) {
+          const visitReady = visitPreview && visitPreview.eligible &&
+            visitPreview.cost <= s.player.gold;
+          h += '<button class="actionbtn" id="cm-attention-visit"' +
+            (visitReady ? '' : ' disabled') + '>' +
+            esc(FB.T('🧭 Travel to continue cultivating…')) +
+            '<span class="adesc">' + esc(visitReady
+              ? FB.T('Visit {name} in {province}; Regard resumes after {days} travel days.', {
+                name:c.name,
+                province:FB.world.byId[visitPreview.destinationId].name,
+                days:visitPreview.days
+              })
+              : (visitPreview && visitPreview.eligible
+                ? FB.T('Requires {money:cost}; you have {money:gold}.', {
+                  cost:visitPreview.cost,
+                  gold:Math.floor(s.player.gold)
+                })
+                : (visitPreview ? visitPreview.reason :
+                  FB.T('A targeted visit is unavailable.')))) +
+            '</span></button>';
+        }
+      } else if (together) {
         h += '<button class="actionbtn" id="cm-attention"' +
           (courtAttentionBlocked ? ' disabled' : '') + '>' +
           esc(FB.T('🤝 Cultivate relationship')) +
@@ -7730,6 +7880,27 @@ window.FB = window.FB || {};
             : FB.T('Assign personal attention for +{rate} regard each ordinary day. This costs no day.', {
               rate:attentionRate
             })) + '</span></button>';
+      } else {
+        const visitReady = !courtAttentionBlocked && visitPreview &&
+          visitPreview.eligible && visitPreview.cost <= s.player.gold;
+        h += '<button class="actionbtn" id="cm-attention-visit"' +
+          (visitReady ? '' : ' disabled') + '>' +
+          esc(FB.T('🧭 Travel to cultivate…')) +
+          '<span class="adesc">' + esc(courtAttentionBlocked
+            ? FB.T('End your current courtship before cultivating someone else.')
+            : (visitPreview && visitPreview.eligible
+              ? (visitPreview.cost <= s.player.gold
+                ? FB.T('Visit {name} in {province}; the assignment begins at departure and Regard advances after arrival.', {
+                  name:c.name,
+                  province:FB.world.byId[visitPreview.destinationId].name
+                })
+                : FB.T('Requires {money:cost}; you have {money:gold}.', {
+                  cost:visitPreview.cost,
+                  gold:Math.floor(s.player.gold)
+                }))
+              : (visitPreview ? visitPreview.reason :
+                FB.T('A targeted visit is unavailable.')))) +
+          '</span></button>';
       }
       if (FB.friendContactEligible && FB.friendContactEligible(s, c) &&
         s.roles.friend !== c.id) {
@@ -7802,13 +7973,33 @@ window.FB = window.FB || {};
       }
       if (FB.canCourt(s, c)) {
         const switching = s.player.courtingId && s.player.courtingId !== c.id;
-        h += '<button class="actionbtn" id="cm-court">' +
-          esc(FB.T(switching
-            ? '🌷 Begin courtship (abandon your current suit)'
-            : '🌷 Begin courtship')) +
-          '<span class="adesc">' + esc(FB.T(
-            'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard.',
-            { name:c.name, threshold:FB.relationshipOpinionThreshold() })) + '</span></button>';
+        const courtVisitReady = together || (visitPreview && visitPreview.eligible &&
+          visitPreview.cost <= s.player.gold);
+        h += '<button class="actionbtn" id="' +
+          (together ? 'cm-court' : 'cm-court-visit') + '"' +
+          (courtVisitReady ? '' : ' disabled') + '>' +
+          esc(together
+            ? FB.T(switching
+              ? '🌷 Begin courtship (abandon your current suit)'
+              : '🌷 Begin courtship')
+            : (switching
+              ? FB.T('🧭 Travel to begin courtship (abandon your current suit)…')
+              : FB.T('🧭 Travel to begin courtship…'))) +
+          '<span class="adesc">' + esc(together
+            ? FB.T(
+              'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard.',
+              { name:c.name, threshold:FB.relationshipOpinionThreshold() })
+            : (visitPreview && visitPreview.eligible
+              ? (visitPreview.cost <= s.player.gold
+                ? FB.T(
+                  'Travel to {province}; courtship and personal attention begin together when you depart.',
+                  { province:FB.world.byId[visitPreview.destinationId].name })
+                : FB.T('Requires {money:cost}; you have {money:gold}.', {
+                  cost:visitPreview.cost,
+                  gold:Math.floor(s.player.gold)
+                }))
+              : (visitPreview ? visitPreview.reason :
+                FB.T('A targeted visit is unavailable.')))) + '</span></button>';
         if (FB.stationOf(c) - FB.playerStation(s) > 0) {
           h += '<div class="progressnote">' + esc(FB.T(
             '⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match.',
@@ -7921,6 +8112,10 @@ window.FB = window.FB || {};
       UI.showCharModal(c.id);
       UI.refresh();
     });
+    const visitCultivate = $('cm-attention-visit');
+    if (visitCultivate) visitCultivate.addEventListener('click', function () {
+      UI.showSocialVisit(c.id);
+    });
     const stopCultivating = $('cm-attention-stop');
     if (stopCultivating) stopCultivating.addEventListener('click', function () {
       if (!FB.socialAttentionWithdraw(s, c.id)) return;
@@ -7946,6 +8141,10 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.social.courting_begins',
         '🌷 You begin courting {name}.', { name:FB.fullName(c) }));
       FB.game.passDay({ skipFocus:true });
+    });
+    const courtVisit = $('cm-court-visit');
+    if (courtVisit) courtVisit.addEventListener('click', function () {
+      UI.showSocialVisit(c.id, { courtship:true });
     });
     const pp = $('cm-propose');
     if (pp) pp.addEventListener('click', function () {

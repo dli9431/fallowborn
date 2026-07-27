@@ -82,16 +82,23 @@ Time passes **day by day** (90-day seasons, 360-day years).
    gold. Miss one loan deadline and its face grows; miss the extension and the disclosed
    pledge or revenue assignment is enforced. Debt passes to heirs.
    Adult freeholders and gentry can **🧭 Take to the road…** for pilgrimage, trade,
-   study, or paid service. Choose a marked county from the map/list, then let days
+   study, or paid service; barons and higher may travel for pilgrimage or study.
+   Choose a marked county from the map/list, then let days
    pass as the traveler crosses each county; maintained transport changes the quoted
    cost and leg duration when departure begins, and that quote stays fixed for the
    whole journey. Their focus and personally staffed
    enterprise pause while the household continues at home. At the destination,
-   finish the purpose, stay at least three months, and keep taking local work for
+   finish the purpose, stay at least three months, and keep living there for
    as long as you wish. After a year of building a life there, you may make that
-   county the household’s permanent home—but each character can relocate only once.
+   county the household’s permanent home—but only as a freeholder or gentry
+   traveler, and each character can relocate only once. Rulers remain temporary
+   guests and receive court-residence stories instead of looking for local wages.
    Named characters remember personal encounters. Assign your one **personal-attention**
-   slot to cultivate a character’s Regard each day alongside your ordinary focus. At
+   slot to cultivate a local character’s Regard each day alongside your ordinary
+   focus. A distant character offers a targeted visit: review the route, cost,
+   three-month stay, daily rate, and time to +40, then travel to them. Road days
+   pause the relationship; Regard starts after arrival, pauses again on the
+   return, and a later visit can resume the same assignment. At
    sufficient Regard you may explicitly name an eligible contact as your friend; events that
    call for a friend use that canonical relationship. Friendship belongs to the current life
    rather than the dynasty.
@@ -123,7 +130,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    and when the nursery is full enough, a 🛑 No more children toggle on your spouse's
    sheet stops further conceptions.
    Realm-ruler sheets show their sons and daughters and the one designated heir. Courting
-   one materializes that royal child into the ordinary character and marriage rules. Any
+   one materializes that royal child at the realm capital and uses the same
+   targeted visit before courtship begins. Any
    listed child makes a dynastic tie, but only the designated heir's branch can transmit
    the crown: the royal spouse succeeds first, shared descendants follow that branch, and
    the realms join only when the rightful ruler becomes your protagonist.

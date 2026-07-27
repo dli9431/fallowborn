@@ -166,6 +166,14 @@ FBDATA.events.push(
       effects:{gold:12, prestige:12, skills:{mar:2},
         custom:'travel_capstone_done', log:'Served in the warband at {destination}.'} }
   ]},
+{ id:'travel_capstone_relationship', title:'The Visit Begins', trigger:{never:true},
+  travel:{kind:'capstone', purpose:'relationship'},
+  text:'At last you reach {destination}, where {visitname} receives you in person. The miles no longer stand between conversation and intent.',
+  options:[
+    { label:'Begin the visit.', desc:'Remain nearby and give the relationship your daily attention.',
+      effects:{custom:'travel_capstone_done',
+        log:'Began a personal visit with {visitname} in {destination}.'} }
+  ]},
 { id:'travel_patron_gone', title:'The Patron Is Gone', trigger:{never:true},
   travel:{kind:'capstone', purpose:'service'},
   text:'You reach {destination}, but the court that promised service has vanished—conquered, scattered, or moved beyond your reach.',
@@ -183,8 +191,22 @@ FBDATA.events.push(
     { label:'Find work and lodging.', desc:'Time will pass normally, with local work stories while you remain.',
       effects:{log:'Began a season of work in {destination}.'} }
   ]},
+{ id:'travel_arrival_choice_relationship', title:'A Season as a Guest', trigger:{never:true},
+  travel:{kind:'decision', purpose:'relationship'},
+  text:'A meaningful visit cannot be hurried. You will remain near {visitname} for at least three months, sharing the ordinary days in which regard is won.',
+  options:[
+    { label:'Stay as their guest.', desc:'Time passes normally, and personal attention advances while you remain together.',
+      effects:{log:'Began an extended visit with {visitname} in {destination}.'} }
+  ]},
+{ id:'travel_arrival_choice_ruler', title:'Residence Away from Home', trigger:{never:true},
+  travel:{kind:'decision'},
+  text:'Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home.',
+  options:[
+    { label:'Take up guest quarters.', desc:'Time passes normally, with court and household stories while you remain.',
+      effects:{log:'Began a season in residence at {destination}.'} }
+  ]},
 { id:'travel_work_board', title:'Board Earned at Dusk', trigger:{never:true},
-  travel:{kind:'work'},
+  travel:{kind:'work', maxTier:2},
   text:'A household in {destination} needs another pair of hands. The work is ordinary, but so are bread, a dry corner, and being expected tomorrow.',
   options:[
     { label:'Take the wage in coin.', desc:'Work hard, keep your distance, and add to the purse.',
@@ -193,7 +215,7 @@ FBDATA.events.push(
       effects:{health:1, prestige:1} }
   ]},
 { id:'travel_work_neighbors', title:'Known in the Lane', trigger:{never:true},
-  travel:{kind:'work'},
+  travel:{kind:'work', maxTier:2},
   text:'People in {destination} have begun to greet you before asking who you are. A neighbor offers work that comes with conversation and obligations.',
   options:[
     { label:'Learn how things are done here.', desc:'Local habits sharpen your judgment of people.',
@@ -202,7 +224,7 @@ FBDATA.events.push(
       effects:{custom:'travel_work_career'} }
   ]},
 { id:'travel_work_pilgrimage', title:'Work at the Pilgrim House', trigger:{never:true},
-  travel:{kind:'work', purpose:'pilgrimage'},
+  travel:{kind:'work', purpose:'pilgrimage', maxTier:2},
   text:'The pilgrim house in {destination} never lacks for tired feet, empty bowls, and names that must be entered correctly.',
   options:[
     { label:'Carry water and tend the weary.', desc:'Service keeps the journey’s purpose alive.',
@@ -211,7 +233,7 @@ FBDATA.events.push(
       effects:{skills:{ste:1}, gold:1} }
   ]},
 { id:'travel_work_trade', title:'Work Between the Stalls', trigger:{never:true},
-  travel:{kind:'work', purpose:'trade'},
+  travel:{kind:'work', purpose:'trade', maxTier:2},
   text:'A broker in {destination} needs someone who can watch a delivery, remember a promise, and recognize a false weight.',
   options:[
     { label:'Take a commission on the delivery.', desc:'Careful work brings a modest return.',
@@ -220,7 +242,7 @@ FBDATA.events.push(
       effects:{skills:{ste:1}, prestige:1} }
   ]},
 { id:'travel_work_study', title:'Work Beneath the Lectern', trigger:{never:true},
-  travel:{kind:'work', purpose:'study'},
+  travel:{kind:'work', purpose:'study', maxTier:2},
   text:'The masters in {destination} need pages copied, younger pupils corrected, and lamps watched long after respectable people sleep.',
   options:[
     { label:'Copy the difficult pages.', desc:'Slow work fixes the lesson in memory.',
@@ -229,12 +251,48 @@ FBDATA.events.push(
       effects:{gold:2, skills:{dip:1}} }
   ]},
 { id:'travel_work_service', title:'Work Beyond the Hall', trigger:{never:true},
-  travel:{kind:'work', purpose:'service'},
+  travel:{kind:'work', purpose:'service', maxTier:2},
   text:'The hall in {destination} has endless work below the notice of great people: stores to count, messages to carry, and disputes to calm.',
   options:[
     { label:'Set the stores in order.', desc:'Reliable service earns wages and sharper stewardship.',
       effects:{gold:3, skills:{ste:1}} },
     { label:'Carry messages between households.', desc:'Become known as someone who arrives with the right words.',
       effects:{prestige:2, skills:{dip:1}} }
+  ]},
+{ id:'travel_work_relationship_days', title:'Days in Company', trigger:{never:true},
+  travel:{kind:'work', purpose:'relationship'},
+  text:'Life beside {visitname} in {destination} settles into meals, errands, conversations, and companionable silences that no letter could have carried.',
+  options:[
+    { label:'Listen closely.', desc:'Let familiarity grow through attention rather than display.',
+      effects:{skills:{dip:1}} },
+    { label:'Share the day’s burdens.', desc:'Practical help makes the visit part of ordinary life.',
+      effects:{prestige:1, health:1} }
+  ]},
+{ id:'travel_work_relationship_household', title:'A Place in the Household', trigger:{never:true},
+  travel:{kind:'work', purpose:'relationship'},
+  text:'Those around {visitname} now make room for you without ceremony. Their ease says the visit has become part of the household’s rhythm.',
+  options:[
+    { label:'Honor their confidence.', desc:'Good manners preserve what daily closeness has built.',
+      effects:{prestige:2} },
+    { label:'Join the conversation.', desc:'Practice finding the words that bring people nearer.',
+      effects:{skills:{dip:1}} }
+  ]},
+{ id:'travel_residence_court', title:'An Evening at Court', trigger:{never:true},
+  travel:{kind:'work', minTier:3},
+  text:'The court at {destination} draws you into an evening of petitions, precedence, and carefully measured hospitality.',
+  options:[
+    { label:'Attend to the petitions.', desc:'Another ruler’s business sharpens your judgment.',
+      effects:{skills:{ste:1}} },
+    { label:'Honor the host’s table.', desc:'Courtly ease brings notice without turning the visit into service.',
+      effects:{prestige:3, skills:{dip:1}} }
+  ]},
+{ id:'travel_residence_household', title:'Guest Right', trigger:{never:true},
+  travel:{kind:'work', minTier:3},
+  text:'Your hosts in {destination} renew the forms of guest right: quarters, table, escort, and the expectation that generosity will be remembered.',
+  options:[
+    { label:'Return the courtesy.', desc:'A suitable gift affirms both houses.',
+      effects:{gold:-2, prestige:4} },
+    { label:'Offer counsel instead.', desc:'A ruler’s experience can repay hospitality without coin.',
+      effects:{skills:{dip:1,ste:1}} }
   ]}
 );

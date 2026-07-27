@@ -425,10 +425,11 @@ window.FB = window.FB || {};
   { id: 'take_road', label: '🧭 Take to the road…', noConsume: true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
-      return !s.player.travel && s.player.tier >= 1 && s.player.tier <= 2 && adult(s);
+      return !s.player.travel && s.player.tier >= 1 && adult(s);
     },
     can: function (s) {
-      return FB.travelEligible ? FB.travelEligible(s) : FB.T('The roads are not ready.');
+      return FB.travelAnyPurposeEligible
+        ? FB.travelAnyPurposeEligible(s) : FB.T('The roads are not ready.');
     },
     run: function () {
       if (FB.ui && FB.ui.showTravelPurposes) FB.ui.showTravelPurposes();
@@ -438,7 +439,11 @@ window.FB = window.FB || {};
       return s.player.travel && s.player.travel.phase === 'return'
         ? FB.T('You are already traveling home.')
         : (s.player.travel && s.player.travel.phase === 'arrived'
-          ? FB.T('Return along the saved route after the required stay. You may remain and keep finding local work as long as you like.')
+          ? (s.player.travel.purpose === 'relationship'
+            ? FB.T('Return along the saved route after the required visit. You may remain together as long as you like.')
+            : (s.player.tier >= 3
+              ? FB.T('Return along the saved route after the required residence. You may remain as a guest as long as you like.')
+              : FB.T('Return along the saved route after the required stay. You may remain and keep finding local work as long as you like.')))
           : FB.T('Abandon the journey and retrace the road. Nothing is refunded.'));
     },
     show: function (s) { return !!s.player.travel; },
@@ -455,6 +460,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
+        s.player.tier >= 1 && s.player.tier <= 2 &&
         !s.player.travelSettlement);
     },
     can: function (s) {

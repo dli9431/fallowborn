@@ -162,6 +162,10 @@ encounter counters, seen cultures/events, and optional destination-stay timing/w
 fields. An accompanied self-founded trade venture adds a JSON-only `venture` child
 containing its stake, separately paid overhead, destination/route snapshot, status,
 and any settled outcome/payout. It has no duplicate finance record.
+A character-targeted visit additionally stores optional `targetCharId`
+and a courtship marker. Restore validates the live target and their current
+`FB.characterResidence`; a dead, unavailable, or moved target clears invalid
+relationship state and starts the saved traveler home without a minimum stay.
 `player.travelHistory` stores completed purpose/destination pairs for the
 current character. `player.travelSettlement` records the current character’s one
 completed permanent move as `{turn,destinationId}`. All initialize lazily without

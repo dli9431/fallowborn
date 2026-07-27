@@ -125,8 +125,14 @@ add the target's `opinion/500` to success — a trusting victim is easier to und
 `player.socialAttention` is not another relationship meter: it names the one character
 whose existing Regard gains `balance.socialAttentionDailyOpinion` (+0.2 by default) each
 ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does not change
-that fixed rate. Attention pauses during overland travel and Observe mode but continues
-alongside work, study, war, and deeds that consume a day.
+that fixed rate. `FB.characterResidence(state, character)` is the authoritative
+county for social presence: managed household members and retainers live at the
+household home, foreign notables in their saved roster county, royal children at
+their realm’s current capital, and explicitly relocated contacts at their recorded
+home. `FB.socialAttentionPresence` reports `active`, `remote`, or `on-road`.
+Attention advances only when active, pauses on outbound/return roads or in another
+county, and continues alongside work, study, war, destination residence, and deeds
+that consume a day. Observe mode never advances it.
 
 **Explicit gifts are recipient-bound.** Every living non-player character sheet offers one
 gift picker. Cash costs 5 gold for `balance.socialCashGiftOpinion` Regard (+4 by default);
@@ -204,6 +210,13 @@ is explicit and clears sworn-friend state. Friendship, its cultivated contacts, 
 personal attention clear on succession or permanent relocation; none is inherited by the
 next head. `balance.friendOpinionThreshold` is a deprecated fallback for older mods whose
 data does not define the shared relationship threshold.
+
+A remote assignment remains saved but paused. Its character sheet offers a
+repeatable targeted journey whose confirmation assigns attention and spends the
+road cost atomically. The quoted visit keeps the traveler at least 90 days;
+Regard starts on arrival, stops during the return, and resumes on a later visit.
+Gifts, naming a qualified friend, and marriage proposals remain deliverable at
+distance.
 
 **Paid retainers are managed people, not family members.** `player.retainers` stores
 compact contracts pointing to ordinary characters. The office is additive to the

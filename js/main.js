@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.70.0';
+  FB.VERSION = '1.71.0';
   FB.CHANGELOG = [
+    { v: '1.71.0', date: '2026-07-26', changes: [
+      'Relationship cultivation and courtship now follow character residence, with personal visits to distant contacts and royal courts.'
+    ] },
     { v: '1.70.0', date: '2026-07-26', changes: [
       'Guildmasters can now petition for time-limited monopolies, while barons and higher rulers can grant local charters with enterprise and tax effects.'
     ] },
@@ -1069,9 +1072,11 @@ window.FB = window.FB || {};
     }
     const p = s.player;
 
-    if (!G.observe && !p.travel) {
-      if (!(opts && opts.skipFocus)) FB.tickFocus(s);
-      else FB.validateFocus(s);
+    if (!G.observe) {
+      if (!p.travel) {
+        if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+        else FB.validateFocus(s);
+      }
       FB.tickSocialAttention(s);
     }
 

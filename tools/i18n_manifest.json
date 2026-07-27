@@ -18070,6 +18070,95 @@
         "text": "A Season in a New Place"
       }
     },
+    "event.travel_arrival_choice_relationship.options.0.desc.default": {
+      "context": "Event travel_arrival_choice_relationship, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Time passes normally, and personal attention advances while you remain together."
+      }
+    },
+    "event.travel_arrival_choice_relationship.options.0.effects.log.default": {
+      "context": "Durable event log for travel_arrival_choice_relationship, authored option 0, effects.",
+      "glossary": [
+        "destination",
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Began an extended visit with {visitname} in {destination}."
+      }
+    },
+    "event.travel_arrival_choice_relationship.options.0.label.default": {
+      "context": "Event travel_arrival_choice_relationship, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Stay as their guest."
+      }
+    },
+    "event.travel_arrival_choice_relationship.text.default": {
+      "context": "Event travel_arrival_choice_relationship, text, faith branch default.",
+      "glossary": [
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A meaningful visit cannot be hurried. You will remain near {visitname} for at least three months, sharing the ordinary days in which regard is won."
+      }
+    },
+    "event.travel_arrival_choice_relationship.title.default": {
+      "context": "Event travel_arrival_choice_relationship, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A Season as a Guest"
+      }
+    },
+    "event.travel_arrival_choice_ruler.options.0.desc.default": {
+      "context": "Event travel_arrival_choice_ruler, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Time passes normally, with court and household stories while you remain."
+      }
+    },
+    "event.travel_arrival_choice_ruler.options.0.effects.log.default": {
+      "context": "Durable event log for travel_arrival_choice_ruler, authored option 0, effects.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Began a season in residence at {destination}."
+      }
+    },
+    "event.travel_arrival_choice_ruler.options.0.label.default": {
+      "context": "Event travel_arrival_choice_ruler, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Take up guest quarters."
+      }
+    },
+    "event.travel_arrival_choice_ruler.text.default": {
+      "context": "Event travel_arrival_choice_ruler, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home."
+      }
+    },
+    "event.travel_arrival_choice_ruler.title.default": {
+      "context": "Event travel_arrival_choice_ruler, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Residence Away from Home"
+      }
+    },
     "event.travel_capstone_pilgrimage.options.0.desc.default": {
       "context": "Event travel_capstone_pilgrimage, authored option 0, desc, branch default.",
       "glossary": [],
@@ -18112,6 +18201,52 @@
       "location": "data/events_travel.js",
       "source": {
         "text": "At the Holy Place"
+      }
+    },
+    "event.travel_capstone_relationship.options.0.desc.default": {
+      "context": "Event travel_capstone_relationship, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Remain nearby and give the relationship your daily attention."
+      }
+    },
+    "event.travel_capstone_relationship.options.0.effects.log.default": {
+      "context": "Durable event log for travel_capstone_relationship, authored option 0, effects.",
+      "glossary": [
+        "destination",
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Began a personal visit with {visitname} in {destination}."
+      }
+    },
+    "event.travel_capstone_relationship.options.0.label.default": {
+      "context": "Event travel_capstone_relationship, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Begin the visit."
+      }
+    },
+    "event.travel_capstone_relationship.text.default": {
+      "context": "Event travel_capstone_relationship, text, faith branch default.",
+      "glossary": [
+        "destination",
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "At last you reach {destination}, where {visitname} receives you in person. The miles no longer stand between conversation and intent."
+      }
+    },
+    "event.travel_capstone_relationship.title.default": {
+      "context": "Event travel_capstone_relationship, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The Visit Begins"
       }
     },
     "event.travel_capstone_service.options.0.desc.default": {
@@ -18710,6 +18845,106 @@
         "text": "The Patron Is Gone"
       }
     },
+    "event.travel_residence_court.options.0.desc.default": {
+      "context": "Event travel_residence_court, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Another ruler’s business sharpens your judgment."
+      }
+    },
+    "event.travel_residence_court.options.0.label.default": {
+      "context": "Event travel_residence_court, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Attend to the petitions."
+      }
+    },
+    "event.travel_residence_court.options.1.desc.default": {
+      "context": "Event travel_residence_court, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Courtly ease brings notice without turning the visit into service."
+      }
+    },
+    "event.travel_residence_court.options.1.label.default": {
+      "context": "Event travel_residence_court, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Honor the host’s table."
+      }
+    },
+    "event.travel_residence_court.text.default": {
+      "context": "Event travel_residence_court, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "The court at {destination} draws you into an evening of petitions, precedence, and carefully measured hospitality."
+      }
+    },
+    "event.travel_residence_court.title.default": {
+      "context": "Event travel_residence_court, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "An Evening at Court"
+      }
+    },
+    "event.travel_residence_household.options.0.desc.default": {
+      "context": "Event travel_residence_household, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A suitable gift affirms both houses."
+      }
+    },
+    "event.travel_residence_household.options.0.label.default": {
+      "context": "Event travel_residence_household, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Return the courtesy."
+      }
+    },
+    "event.travel_residence_household.options.1.desc.default": {
+      "context": "Event travel_residence_household, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A ruler’s experience can repay hospitality without coin."
+      }
+    },
+    "event.travel_residence_household.options.1.label.default": {
+      "context": "Event travel_residence_household, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Offer counsel instead."
+      }
+    },
+    "event.travel_residence_household.text.default": {
+      "context": "Event travel_residence_household, text, faith branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Your hosts in {destination} renew the forms of guest right: quarters, table, escort, and the expectation that generosity will be remembered."
+      }
+    },
+    "event.travel_residence_household.title.default": {
+      "context": "Event travel_residence_household, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Guest Right"
+      }
+    },
     "event.travel_road_bandits.options.0.desc.default": {
       "context": "Event travel_road_bandits, authored option 0, desc, branch default.",
       "glossary": [],
@@ -19144,6 +19379,107 @@
       "location": "data/events_travel.js",
       "source": {
         "text": "Work at the Pilgrim House"
+      }
+    },
+    "event.travel_work_relationship_days.options.0.desc.default": {
+      "context": "Event travel_work_relationship_days, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Let familiarity grow through attention rather than display."
+      }
+    },
+    "event.travel_work_relationship_days.options.0.label.default": {
+      "context": "Event travel_work_relationship_days, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Listen closely."
+      }
+    },
+    "event.travel_work_relationship_days.options.1.desc.default": {
+      "context": "Event travel_work_relationship_days, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Practical help makes the visit part of ordinary life."
+      }
+    },
+    "event.travel_work_relationship_days.options.1.label.default": {
+      "context": "Event travel_work_relationship_days, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Share the day’s burdens."
+      }
+    },
+    "event.travel_work_relationship_days.text.default": {
+      "context": "Event travel_work_relationship_days, text, faith branch default.",
+      "glossary": [
+        "destination",
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Life beside {visitname} in {destination} settles into meals, errands, conversations, and companionable silences that no letter could have carried."
+      }
+    },
+    "event.travel_work_relationship_days.title.default": {
+      "context": "Event travel_work_relationship_days, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Days in Company"
+      }
+    },
+    "event.travel_work_relationship_household.options.0.desc.default": {
+      "context": "Event travel_work_relationship_household, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Good manners preserve what daily closeness has built."
+      }
+    },
+    "event.travel_work_relationship_household.options.0.label.default": {
+      "context": "Event travel_work_relationship_household, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Honor their confidence."
+      }
+    },
+    "event.travel_work_relationship_household.options.1.desc.default": {
+      "context": "Event travel_work_relationship_household, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Practice finding the words that bring people nearer."
+      }
+    },
+    "event.travel_work_relationship_household.options.1.label.default": {
+      "context": "Event travel_work_relationship_household, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Join the conversation."
+      }
+    },
+    "event.travel_work_relationship_household.text.default": {
+      "context": "Event travel_work_relationship_household, text, faith branch default.",
+      "glossary": [
+        "visitname"
+      ],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "Those around {visitname} now make room for you without ceremony. Their ease says the visit has become part of the household’s rhythm."
+      }
+    },
+    "event.travel_work_relationship_household.title.default": {
+      "context": "Event travel_work_relationship_household, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_travel.js",
+      "source": {
+        "text": "A Place in the Household"
       }
     },
     "event.travel_work_service.options.0.desc.default": {
@@ -26688,6 +27024,16 @@
         "text": "🌷 You begin courting {name}."
       }
     },
+    "news.social.courting_visit_begins": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🌷 You set out to court {name} in person."
+      }
+    },
     "news.social.courtship_ended": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -26849,6 +27195,24 @@
       "location": "js/travel.js",
       "source": {
         "text": "🧭 Set out from {home} for {destination}."
+      }
+    },
+    "news.travel.relationship_visit_ended": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "no": "🧭 The planned visit can no longer continue; you turn toward home.",
+            "other": "🧭 The relationship visit ends; you turn toward home.",
+            "yes": "🧭 The visit to {name} can no longer continue; you turn toward home."
+          },
+          "param": "known",
+          "select": "value"
+        }
       }
     },
     "news.travel.returned": {
@@ -34905,6 +35269,16 @@
         "text": "Collectors arrive from {liege} with tallies and wax: the lord calls an extraordinary aid upon all his vassals — your chest included."
       }
     },
+    "src.065a2c94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Residence Away from Home"
+      }
+    },
     "src.065b2aa4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35143,6 +35517,16 @@
       ],
       "source": {
         "text": "A slow market day. You barely cover the road."
+      }
+    },
+    "src.0753e869": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home."
       }
     },
     "src.075f92de": {
@@ -35537,6 +35921,16 @@
       ],
       "source": {
         "text": "Masterwork"
+      }
+    },
+    "src.08b8067a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "This travel purpose is not open at your rank."
       }
     },
     "src.08bb60b1": {
@@ -36330,6 +36724,16 @@
         "text": "Children"
       }
     },
+    "src.0b3e8333": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "At last you reach {destination}, where {visitname} receives you in person. The miles no longer stand between conversation and intent."
+      }
+    },
     "src.0b4b1aae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36982,6 +37386,16 @@
         "text": "Barghawata"
       }
     },
+    "src.0e087f70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Relationship visit"
+      }
+    },
     "src.0e0acc4f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37323,6 +37737,16 @@
         "text": "🎓 You begin lessons at {school}."
       }
     },
+    "src.0fa752de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At +{rate} Regard per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure."
+      }
+    },
     "src.0faab747": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37653,6 +38077,16 @@
       ],
       "source": {
         "text": "Fill research slots automatically"
+      }
+    },
+    "src.10f069e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Attend to the petitions."
       }
     },
     "src.10fa1139": {
@@ -38306,6 +38740,16 @@
         "text": "has an invalid ruler profile."
       }
     },
+    "src.12f3d556": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{days} days in guest residence"
+      }
+    },
     "src.12f7d8fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38796,6 +39240,16 @@
         "text": "Permanent household property"
       }
     },
+    "src.1481097c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Began an extended visit with {visitname} in {destination}."
+      }
+    },
     "src.148f67ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38804,6 +39258,16 @@
       ],
       "source": {
         "text": "Answer with a counter-plot."
+      }
+    },
+    "src.14937ae0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Let familiarity grow through attention rather than display."
       }
     },
     "src.1497f759": {
@@ -39418,6 +39882,16 @@
       ],
       "source": {
         "text": "{profession} Monopoly"
+      }
+    },
+    "src.16f99901": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Travel to begin courtship…"
       }
     },
     "src.16faf94b": {
@@ -40163,6 +40637,16 @@
         "text": "Gravity-powered throwing arms hurl heavy stones with repeatable force."
       }
     },
+    "src.19d4ad60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The planned visit can no longer continue; you turn toward home."
+      }
+    },
     "src.19e7d6c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40351,6 +40835,16 @@
       ],
       "source": {
         "text": "Pay him. ({money:8})"
+      }
+    },
+    "src.1a7ea2a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Departure begins the courtship and assigns your personal attention to {name}."
       }
     },
     "src.1a81c50e": {
@@ -41252,6 +41746,16 @@
       ],
       "source": {
         "text": "Fund learned people; their work is banked until the nation begins a technology."
+      }
+    },
+    "src.1eea5dca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Circumstances changed before the visit could begin."
       }
     },
     "src.1eee0dc9": {
@@ -42867,6 +43371,16 @@
         "text": "No household is ready to trade."
       }
     },
+    "src.24ceead6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Stay as their guest."
+      }
+    },
     "src.24d3a8dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43256,6 +43770,16 @@
       ],
       "source": {
         "text": "Martial"
+      }
+    },
+    "src.267313fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Remain on the visit for {days} more days before returning home."
       }
     },
     "src.26752a8e": {
@@ -44340,6 +44864,16 @@
         "text": "The reeve arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger."
       }
     },
+    "src.2b0741b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Your hosts in {destination} renew the forms of guest right: quarters, table, escort, and the expectation that generosity will be remembered."
+      }
+    },
     "src.2b09bb7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44930,6 +45464,16 @@
         "text": "Harsh boundaries may save the wider realm."
       }
     },
+    "src.2d36a142": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Serfs cannot take to the road."
+      }
+    },
     "src.2d3d09af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45318,6 +45862,16 @@
       ],
       "source": {
         "text": "Watch the dust settle, and let him go."
+      }
+    },
+    "src.2f18a4db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The court at {destination} draws you into an evening of petitions, precedence, and carefully measured hospitality."
       }
     },
     "src.2f1de7e7": {
@@ -46865,6 +47419,16 @@
         "text": "Wounded by an assassin."
       }
     },
+    "src.35a4c40e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Travel to court {name}"
+      }
+    },
     "src.35aa2f58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46907,6 +47471,16 @@
         "text": "🏪 The household acquires {enterprise}."
       }
     },
+    "src.35d232ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Remain in guest residence for {days} more days before returning home."
+      }
+    },
     "src.35e346bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46937,6 +47511,16 @@
         "text": "Share news at the well."
       }
     },
+    "src.35f67a53": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused—target is in {province}"
+      }
+    },
     "src.36177840": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46955,6 +47539,16 @@
       ],
       "source": {
         "text": "{money:cost}"
+      }
+    },
+    "src.363ac852": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A meaningful visit cannot be hurried. You will remain near {visitname} for at least three months, sharing the ordinary days in which regard is won."
       }
     },
     "src.364364b9": {
@@ -47799,6 +48393,16 @@
         "text": "Bloomery Ironworking"
       }
     },
+    "src.3a0c707c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A Season as a Guest"
+      }
+    },
     "src.3a2f0d1e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48387,6 +48991,16 @@
       ],
       "source": {
         "text": "The piece bears your name, and buyers begin asking after it."
+      }
+    },
+    "src.3c58af82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Visit a named character and cultivate the relationship in person."
       }
     },
     "src.3c639cf0": {
@@ -49163,6 +49777,16 @@
         "text": "Volodymyr"
       }
     },
+    "src.3f2a0dda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Their residence cannot be reached by road."
+      }
+    },
     "src.3f2a5451": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49665,6 +50289,16 @@
         "text": "Unnamed mod"
       }
     },
+    "src.41355ec0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A ruler’s experience can repay hospitality without coin."
+      }
+    },
     "src.41385add": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49894,6 +50528,16 @@
       ],
       "source": {
         "text": "Rigid saddles stabilize mounted fighters and spread a rider’s weight."
+      }
+    },
+    "src.42305b66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Began a season in residence at {destination}."
       }
     },
     "src.423ea7e5": {
@@ -51543,6 +52187,16 @@
       ],
       "source": {
         "text": "The Storyteller"
+      }
+    },
+    "src.47db863c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Return the courtesy."
       }
     },
     "src.47e0dc10": {
@@ -53301,6 +53955,16 @@
         "text": "Financial contract"
       }
     },
+    "src.4ed0004a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Days in Company"
+      }
+    },
     "src.4ed34540": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53369,6 +54033,16 @@
       ],
       "source": {
         "text": "Ask one token of good faith."
+      }
+    },
+    "src.4f20d1be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "That travel purpose is unavailable."
       }
     },
     "src.4f292a60": {
@@ -53769,6 +54443,16 @@
       ],
       "source": {
         "text": "Current level"
+      }
+    },
+    "src.50da503e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Share the day’s burdens."
       }
     },
     "src.50dd14af": {
@@ -55024,6 +55708,16 @@
         "text": "The false ledger is perfect — every hide and hearth accounted for, and a fifth of it quietly missing."
       }
     },
+    "src.55fc6141": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Time passes normally, with court and household stories while you remain."
+      }
+    },
     "src.55fdc97c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55875,6 +56569,16 @@
         "text": "Stand in the line."
       }
     },
+    "src.593e36f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Regard."
+      }
+    },
     "src.5945ae63": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56434,6 +57138,16 @@
       ],
       "source": {
         "text": "A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
+      }
+    },
+    "src.5b81778b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{days} days into the visit"
       }
     },
     "src.5b8313d7": {
@@ -57944,6 +58658,16 @@
         "text": "Purge the household."
       }
     },
+    "src.611170b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Departure assigns your personal attention to {name}; progress begins only once you arrive."
+      }
+    },
     "src.611f1ad8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58402,6 +59126,16 @@
       ],
       "source": {
         "text": "Manual research"
+      }
+    },
+    "src.62d7b35c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Travel to cultivate {name}"
       }
     },
     "src.62dddd36": {
@@ -58965,6 +59699,16 @@
       ],
       "source": {
         "text": "Trade & Guild"
+      }
+    },
+    "src.6581198f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Remain nearby and give the relationship your daily attention."
       }
     },
     "src.658885cd": {
@@ -60159,6 +60903,16 @@
         "text": "You come home dragging a grey carcass. The village feasts you as a hero."
       }
     },
+    "src.69d66f5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Travel to approach {name} for courtship…"
+      }
+    },
     "src.69e1ad7c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60589,6 +61343,16 @@
         "text": "Pay {money:amount} now and clear this obligation. There is no early-payment penalty."
       }
     },
+    "src.6badd112": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Depart to cultivate {name}"
+      }
+    },
     "src.6bb6da6e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60787,6 +61551,16 @@
       ],
       "source": {
         "text": "Raises craft output by 10%."
+      }
+    },
+    "src.6c819a90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Depart to court {name}"
       }
     },
     "src.6c88702e": {
@@ -61007,6 +61781,16 @@
       ],
       "source": {
         "text": "Offer your sword and your lands to a neighboring sovereign."
+      }
+    },
+    "src.6d3e8d08": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Courtly ease brings notice without turning the visit into service."
       }
     },
     "src.6d40b903": {
@@ -62040,6 +62824,16 @@
         "text": "{name} ({role})"
       }
     },
+    "src.711a81ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🌷 You set out to court {name} in person."
+      }
+    },
     "src.711a9f81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62501,6 +63295,16 @@
         "text": "Renew the right already held by your house."
       }
     },
+    "src.72f85e0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This is a temporary ruler’s journey; it cannot relocate your court or household."
+      }
+    },
     "src.7307442a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62579,6 +63383,16 @@
       ],
       "source": {
         "text": "Let the claim sleep. The child needs no feud."
+      }
+    },
+    "src.734c4193": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "No travel purpose is available."
       }
     },
     "src.734d4953": {
@@ -62680,6 +63494,16 @@
       ],
       "source": {
         "text": "The Taxman Cometh"
+      }
+    },
+    "src.73a937f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A suitable gift affirms both houses."
       }
     },
     "src.73ad4fcf": {
@@ -62820,6 +63644,16 @@
       ],
       "source": {
         "text": "📜 Witnesses and ink establish your claim to {province}."
+      }
+    },
+    "src.74207e8b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🌷 Approach {name} for courtship"
       }
     },
     "src.7421d014": {
@@ -64055,6 +64889,16 @@
         "text": "Opposite of"
       }
     },
+    "src.78cddd47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Another ruler’s business sharpens your judgment."
+      }
+    },
     "src.78d451dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64695,6 +65539,16 @@
         "text": "Thematic Administration"
       }
     },
+    "src.7adfd7a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A targeted visit is unavailable."
+      }
+    },
     "src.7ae9f3e3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65165,6 +66019,16 @@
       ],
       "source": {
         "text": "Shibam"
+      }
+    },
+    "src.7cc8813a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Take up guest quarters."
       }
     },
     "src.7cdaa223": {
@@ -65808,6 +66672,16 @@
         "text": "Portable Service Chest"
       }
     },
+    "src.7ed563da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Visit {name} in {province}; the assignment begins at departure and Regard advances after arrival."
+      }
+    },
     "src.7eeb2320": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66296,6 +67170,16 @@
       ],
       "source": {
         "text": "Summon a renowned physician."
+      }
+    },
+    "src.80678cef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Departure keeps your personal attention on {name}; progress resumes only once you arrive."
       }
     },
     "src.80754c3c": {
@@ -67479,6 +68363,16 @@
         "text": "Generous but shrewd."
       }
     },
+    "src.8479acf2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Offer counsel instead."
+      }
+    },
     "src.847b4fba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68641,6 +69535,16 @@
         "text": "Religious head"
       }
     },
+    "src.890b210b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "That character cannot receive a visit."
+      }
+    },
     "src.890c9d73": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69703,6 +70607,16 @@
         "text": "Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)"
       }
     },
+    "src.8d152a40": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "A Place in the Household"
+      }
+    },
     "src.8d28ca74": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69711,6 +70625,16 @@
       ],
       "source": {
         "text": "No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it."
+      }
+    },
+    "src.8d295277": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At the destination you must remain in guest residence for at least {days} days before returning home."
       }
     },
     "src.8d2be821": {
@@ -70151,6 +71075,16 @@
       ],
       "source": {
         "text": "Found a new holding on empty land bordering your demesne."
+      }
+    },
+    "src.8edb69dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} is already at the +{threshold} Regard threshold."
       }
     },
     "src.8ee03a08": {
@@ -70656,6 +71590,16 @@
         "text": "Explain your true standing."
       }
     },
+    "src.90a67e98": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while on the road"
+      }
+    },
     "src.90a69ed3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70674,6 +71618,16 @@
       ],
       "source": {
         "text": "Ruled an empire; the empire has been formally notified."
+      }
+    },
+    "src.90c770d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Guest Right"
       }
     },
     "src.90d09f0e": {
@@ -73515,6 +74469,16 @@
         "text": "The ore caravans have not come — war or weather, nobody knows. Every smith and joiner in town is bidding for the same scraps."
       }
     },
+    "src.9c3507e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "The Visit Begins"
+      }
+    },
     "src.9c3b0c04": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73533,6 +74497,16 @@
       ],
       "source": {
         "text": "Scarred"
+      }
+    },
+    "src.9c3d9385": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Honor their confidence."
       }
     },
     "src.9c52fe2d": {
@@ -76202,6 +77176,16 @@
         "text": "The potter’s wheel makes vessels quickly and to regular shapes."
       }
     },
+    "src.a69d1f4c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "No settled overland route reaches their county."
+      }
+    },
     "src.a69eb846": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76470,6 +77454,16 @@
       ],
       "source": {
         "text": "Feared in life; the mourning is largely procedural."
+      }
+    },
+    "src.a7b59930": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Return along the saved route after the required visit. You may remain together as long as you like."
       }
     },
     "src.a7c1ceab": {
@@ -77135,6 +78129,16 @@
         "text": "Keep your gifts"
       }
     },
+    "src.aa855fde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Practice finding the words that bring people nearer."
+      }
+    },
     "src.aa86ca78": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77665,16 +78669,6 @@
       ],
       "source": {
         "text": "Take service in the court."
-      }
-    },
-    "src.acc0c514": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling"
       }
     },
     "src.acdcb19d": {
@@ -78529,6 +79523,16 @@
         "text": "The birds keep; hunger is patient too."
       }
     },
+    "src.b0356df7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "That visit cannot begin."
+      }
+    },
     "src.b041fd22": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78557,6 +79561,16 @@
       ],
       "source": {
         "text": "Throw yourself into the training."
+      }
+    },
+    "src.b0466f61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way."
       }
     },
     "src.b0530f83": {
@@ -78857,6 +79871,16 @@
       ],
       "source": {
         "text": "Renounce {liege} and raise your own banner — it means war."
+      }
+    },
+    "src.b1581982": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Travel to begin courtship (abandon your current suit)…"
       }
     },
     "src.b16005da": {
@@ -79299,6 +80323,16 @@
         "text": "row on any province, and the 🗺 map filters ("
       }
     },
+    "src.b2fbd354": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Good manners preserve what daily closeness has built."
+      }
+    },
     "src.b2fca5d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79317,6 +80351,16 @@
       ],
       "source": {
         "text": "East Francia"
+      }
+    },
+    "src.b307e56c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Honor the host’s table."
       }
     },
     "src.b326dbca": {
@@ -79831,6 +80875,16 @@
         "text": "Blois"
       }
     },
+    "src.b4f749f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Join the conversation."
+      }
+    },
     "src.b500d721": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80020,6 +81074,16 @@
       ],
       "source": {
         "text": "Final equipment worn by the deceased"
+      }
+    },
+    "src.b5a5ab46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "{name} is already resident in your county."
       }
     },
     "src.b5a5b118": {
@@ -80252,6 +81316,16 @@
         "text": "Kneel until the kneeling feels true again."
       }
     },
+    "src.b6789a0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Only freeholders and gentry may relocate the household this way."
+      }
+    },
     "src.b67bad1f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80400,6 +81474,16 @@
       ],
       "source": {
         "text": "🕯 Your cousin {name} has died, aged {age}."
+      }
+    },
+    "src.b6e5b15c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The visit to {name} can no longer continue; you turn toward home."
       }
     },
     "src.b6f0cb6a": {
@@ -81144,6 +82228,16 @@
         "text": "Quick judgments are feared more than loved."
       }
     },
+    "src.ba008dff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Those around {visitname} now make room for you without ceremony. Their ease says the visit has become part of the household’s rhythm."
+      }
+    },
     "src.ba0664ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81432,6 +82526,16 @@
       ],
       "source": {
         "text": "🌷 You begin courting {name} of {realm}."
+      }
+    },
+    "src.bb74dbd5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Time passes normally, and personal attention advances while you remain together."
       }
     },
     "src.bb87f699": {
@@ -81944,6 +83048,16 @@
       ],
       "source": {
         "text": "You have watched the older boys set snares along the hedgerow. Your fingers know the knots now, and supper is thin."
+      }
+    },
+    "src.bd58f706": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Visit {name} in {province}; Regard resumes after {days} travel days."
       }
     },
     "src.bd745bea": {
@@ -83058,6 +84172,16 @@
         "text": "Wounds and sickness prove too much. {name} does not see another season."
       }
     },
+    "src.c182c05b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Began a personal visit with {visitname} in {destination}."
+      }
+    },
     "src.c18f13cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83076,6 +84200,16 @@
       ],
       "source": {
         "text": "Holy Relic"
+      }
+    },
+    "src.c1963a2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Travel to continue cultivating…"
       }
     },
     "src.c1bdd495": {
@@ -83158,6 +84292,16 @@
       ],
       "source": {
         "text": "Ikonion"
+      }
+    },
+    "src.c1f60265": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At the current daily rate, Regard is not advancing toward +{threshold}."
       }
     },
     "src.c1f930e5": {
@@ -83510,6 +84654,16 @@
       ],
       "source": {
         "text": "Completed a pilgrimage to {destination}."
+      }
+    },
+    "src.c2f659e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Life beside {visitname} in {destination} settles into meals, errands, conversations, and companionable silences that no letter could have carried."
       }
     },
     "src.c2f826b6": {
@@ -85657,16 +86811,6 @@
         "text": "Demand a fief back into your own hand. A contented vassal yields; a bitter one answers with spears."
       }
     },
-    "src.cbcf07a0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Approach {name} for courtship"
-      }
-    },
     "src.cbd023af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87020,6 +88164,16 @@
         "text": "Price pressure"
       }
     },
+    "src.d1da8191": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The relationship visit ends; you turn toward home."
+      }
+    },
     "src.d1de6650": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87429,6 +88583,16 @@
       ],
       "source": {
         "text": "open"
+      }
+    },
+    "src.d3860c88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Begin the visit."
       }
     },
     "src.d3873458": {
@@ -88121,6 +89285,16 @@
         "text": "Mufti"
       }
     },
+    "src.d64f80bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "An Evening at Court"
+      }
+    },
     "src.d64f9c8f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88199,6 +89373,16 @@
       ],
       "source": {
         "text": "Your agents bring you names, letters, witnesses. The spider sits at your own board — and now the whole court knows it."
+      }
+    },
+    "src.d688ad8c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires {money:cost}; you have {money:gold}."
       }
     },
     "src.d6949f75": {
@@ -88429,6 +89613,16 @@
       ],
       "source": {
         "text": "Settled the succession."
+      }
+    },
+    "src.d76a89de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You have only {money:gold}."
       }
     },
     "src.d76ea55d": {
@@ -89955,6 +91149,16 @@
         "text": "A bold sowing could fill the granary — or empty it."
       }
     },
+    "src.ddd9e0ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "another county"
+      }
+    },
     "src.dddda5a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90393,6 +91597,16 @@
       ],
       "source": {
         "text": "Lying awake, you wonder: does {god} see you at all? Has any of it mattered?"
+      }
+    },
+    "src.df110394": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Depart to continue cultivating {name}"
       }
     },
     "src.df16b154": {
@@ -91113,6 +92327,16 @@
       ],
       "source": {
         "text": "Amiens"
+      }
+    },
+    "src.e1d08c28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Return along the saved route after the required residence. You may remain as a guest as long as you like."
       }
     },
     "src.e1d28f04": {
@@ -92253,6 +93477,16 @@
         "text": "Name {name} as your friend? Events and oaths that call on your friend will now use this exact person."
       }
     },
+    "src.e680d768": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Practical help makes the visit part of ordinary life."
+      }
+    },
     "src.e6828f36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92911,6 +94145,16 @@
       ],
       "source": {
         "text": "What the Old Folk Remember"
+      }
+    },
+    "src.e86e02f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_travel.js"
+      ],
+      "source": {
+        "text": "Listen closely."
       }
     },
     "src.e86f5ed5": {
@@ -94324,6 +95568,16 @@
       ],
       "source": {
         "text": "Letters and numbers."
+      }
+    },
+    "src.eeef9a91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "This journey is open to freeholders and gentry."
       }
     },
     "src.eef50182": {
@@ -95968,6 +97222,16 @@
         "text": "Kneel and swear."
       }
     },
+    "src.f52f03bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Travel to {province}; courtship and personal attention begin together when you depart."
+      }
+    },
     "src.f530151d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96336,6 +97600,16 @@
       ],
       "source": {
         "text": "De jure right through {title}"
+      }
+    },
+    "src.f6b544a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🧭 Travel to cultivate…"
       }
     },
     "src.f6bbaaf6": {
@@ -102935,6 +104209,22 @@
         "text": "Pilgrimage"
       }
     },
+    "travelPurpose.relationship.desc.default": {
+      "context": "travelPurpose relationship, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Visit a named character and cultivate the relationship in person."
+      }
+    },
+    "travelPurpose.relationship.name.default": {
+      "context": "travelPurpose relationship, name, faith branch default.",
+      "glossary": [],
+      "location": "data/travel.js",
+      "source": {
+        "text": "Relationship visit"
+      }
+    },
     "travelPurpose.service.desc.default": {
       "context": "travelPurpose service, desc, faith branch default.",
       "glossary": [],
@@ -103548,6 +104838,14 @@
         "text": "A sworn peace pact protects the only realm you have cause against."
       }
     },
+    "ui:A targeted visit is unavailable.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A targeted visit is unavailable."
+      }
+    },
     "ui:A traveler cannot organize another venture.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103776,6 +105074,16 @@
         "text": "After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime."
       }
     },
+    "ui:After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Regard.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Regard."
+      }
+    },
     "ui:Age {age}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -103990,16 +105298,6 @@
         "text": "Any direction chosen here remains assigned but is suspended until the war ends."
       }
     },
-    "ui:Approach {name} for courtship": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Approach {name} for courtship"
-      }
-    },
     "ui:Archer food and supplies": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -104087,6 +105385,19 @@
         "text": "Assign personal attention for +{rate} regard each ordinary day. This costs no day."
       }
     },
+    "ui:At +{rate} Regard per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "activeDays",
+        "rate",
+        "threshold",
+        "totalDays"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At +{rate} Regard per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure."
+      }
+    },
     "ui:At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -104096,6 +105407,26 @@
       "location": "js/ui.js",
       "source": {
         "text": "At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success)."
+      }
+    },
+    "ui:At the current daily rate, Regard is not advancing toward +{threshold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At the current daily rate, Regard is not advancing toward +{threshold}."
+      }
+    },
+    "ui:At the destination you must remain in guest residence for at least {days} days before returning home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At the destination you must remain in guest residence for at least {days} days before returning home."
       }
     },
     "ui:At the destination you must stay and find local work for at least {days} days before returning home.": {
@@ -104968,6 +106299,14 @@
         "text": "Church Patron"
       }
     },
+    "ui:Circumstances changed before the visit could begin.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Circumstances changed before the visit could begin."
+      }
+    },
     "ui:Claim the Caliphate": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -105369,6 +106708,66 @@
       "location": "js/ui.js",
       "source": {
         "text": "Depart for {destination}"
+      }
+    },
+    "ui:Depart to continue cultivating {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Depart to continue cultivating {name}"
+      }
+    },
+    "ui:Depart to court {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Depart to court {name}"
+      }
+    },
+    "ui:Depart to cultivate {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Depart to cultivate {name}"
+      }
+    },
+    "ui:Departure assigns your personal attention to {name}; progress begins only once you arrive.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Departure assigns your personal attention to {name}; progress begins only once you arrive."
+      }
+    },
+    "ui:Departure begins the courtship and assigns your personal attention to {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Departure begins the courtship and assigns your personal attention to {name}."
+      }
+    },
+    "ui:Departure keeps your personal attention on {name}; progress resumes only once you arrive.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Departure keeps your personal attention on {name}; progress resumes only once you arrive."
       }
     },
     "ui:Direct vassal of {realm}": {
@@ -107460,6 +108859,14 @@
         "text": "No self-founded venture is active."
       }
     },
+    "ui:No settled overland route reaches their county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "No settled overland route reaches their county."
+      }
+    },
     "ui:No steady sources yet — deeds and events still move it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107474,6 +108881,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No technologies match these filters."
+      }
+    },
+    "ui:No travel purpose is available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "No travel purpose is available."
       }
     },
     "ui:No unseated vassal remains to raise — grant land to loyal men, and offices will follow.": {
@@ -107730,6 +109145,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Only freeholders and gentry can form a trade venture."
+      }
+    },
+    "ui:Only freeholders and gentry may relocate the household this way.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Only freeholders and gentry may relocate the household this way."
       }
     },
     "ui:Only one guild favor may be called each year.": {
@@ -108472,6 +109895,26 @@
         "text": "Reduce {standard}?"
       }
     },
+    "ui:Remain in guest residence for {days} more days before returning home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Remain in guest residence for {days} more days before returning home."
+      }
+    },
+    "ui:Remain on the visit for {days} more days before returning home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Remain on the visit for {days} more days before returning home."
+      }
+    },
     "ui:Renew the vow": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -108716,6 +110159,17 @@
         "text": "Requires {money:cost}; you have {money:current}. It grants +{regard} Regard."
       }
     },
+    "ui:Requires {money:cost}; you have {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Requires {money:cost}; you have {money:gold}."
+      }
+    },
     "ui:Requires {rank} rank or higher.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -108836,12 +110290,28 @@
         "text": "Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile regard ends service."
       }
     },
+    "ui:Return along the saved route after the required residence. You may remain as a guest as long as you like.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Return along the saved route after the required residence. You may remain as a guest as long as you like."
+      }
+    },
     "ui:Return along the saved route after the required stay. You may remain and keep finding local work as long as you like.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Return along the saved route after the required stay. You may remain and keep finding local work as long as you like."
+      }
+    },
+    "ui:Return along the saved route after the required visit. You may remain together as long as you like.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Return along the saved route after the required visit. You may remain together as long as you like."
       }
     },
     "ui:Return it to the armory": {
@@ -109152,6 +110622,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Serf"
+      }
+    },
+    "ui:Serfs cannot take to the road.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Serfs cannot take to the road."
       }
     },
     "ui:Service of {name}": {
@@ -109472,6 +110950,14 @@
         "text": "Technology"
       }
     },
+    "ui:That character cannot receive a visit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "That character cannot receive a visit."
+      }
+    },
     "ui:That county does not qualify for this journey.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109504,12 +110990,28 @@
         "text": "That stake or market is not available."
       }
     },
+    "ui:That travel purpose is unavailable.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "That travel purpose is unavailable."
+      }
+    },
     "ui:That venture is no longer available.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "That venture is no longer available."
+      }
+    },
+    "ui:That visit cannot begin.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "That visit cannot begin."
       }
     },
     "ui:The Estates": {
@@ -109863,6 +111365,14 @@
         "text": "Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally."
       }
     },
+    "ui:Their residence cannot be reached by road.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Their residence cannot be reached by road."
+      }
+    },
     "ui:There is no compatible object in the armory.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109943,6 +111453,14 @@
         "text": "This household office is already filled."
       }
     },
+    "ui:This is a temporary ruler’s journey; it cannot relocate your court or household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This is a temporary ruler’s journey; it cannot relocate your court or household."
+      }
+    },
     "ui:This is the highest guild rank.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109979,6 +111497,14 @@
         "text": "This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again."
       }
     },
+    "ui:This journey is open to freeholders and gentry.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "This journey is open to freeholders and gentry."
+      }
+    },
     "ui:This school does not teach the chosen focus.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109993,6 +111519,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "This standard is already at its highest level."
+      }
+    },
+    "ui:This travel purpose is not open at your rank.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "This travel purpose is not open at your rank."
       }
     },
     "ui:This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.": {
@@ -110035,6 +111569,36 @@
       "location": "js/economy.js",
       "source": {
         "text": "Trade partnership"
+      }
+    },
+    "ui:Travel to court {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Travel to court {name}"
+      }
+    },
+    "ui:Travel to cultivate {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Travel to cultivate {name}"
+      }
+    },
+    "ui:Travel to {province}; courtship and personal attention begin together when you depart.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Travel to {province}; courtship and personal attention begin together when you depart."
       }
     },
     "ui:Treasurer": {
@@ -110152,6 +111716,29 @@
       "location": "js/ui.js",
       "source": {
         "text": "Venture settled: {money:payout} returned from a {money:stake} stake."
+      }
+    },
+    "ui:Visit {name} in {province}; Regard resumes after {days} travel days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "name",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Visit {name} in {province}; Regard resumes after {days} travel days."
+      }
+    },
+    "ui:Visit {name} in {province}; the assignment begins at departure and Regard advances after arrival.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Visit {name} in {province}; the assignment begins at departure and Regard advances after arrival."
       }
     },
     "ui:Waist": {
@@ -110421,6 +112008,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared."
+      }
+    },
+    "ui:You have only {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You have only {money:gold}."
       }
     },
     "ui:You hold no landed realm from which to wage war.": {
@@ -110938,6 +112535,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "also above"
+      }
+    },
+    "ui:another county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "another county"
       }
     },
     "ui:another realm": {
@@ -112362,6 +113967,26 @@
         "text": "{date} · {days} days"
       }
     },
+    "ui:{days} days in guest residence": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{days} days in guest residence"
+      }
+    },
+    "ui:{days} days into the visit": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{days} days into the visit"
+      }
+    },
     "ui:{days} days living and working here": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -112844,6 +114469,40 @@
       "location": "js/travel.js",
       "source": {
         "text": "{name} has already made the one permanent move allowed in this lifetime."
+      }
+    },
+    "ui:{name} is already at the +{threshold} Regard threshold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name",
+        "threshold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} is already at the +{threshold} Regard threshold."
+      }
+    },
+    "ui:{name} is already resident in your county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "{name} is already resident in your county."
+      }
+    },
+    "ui:{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "destination",
+        "legs",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way."
       }
     },
     "ui:{name} · {relation}, age {age}{heir}": {
@@ -114038,6 +115697,16 @@
         "text": "🌳 See the family tree"
       }
     },
+    "ui:🌷 Approach {name} for courtship": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🌷 Approach {name} for courtship"
+      }
+    },
     "ui:🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -114456,7 +116125,7 @@
         "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}"
       }
     },
-    "ui:🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling": {
+    "ui:🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while on the road": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "capacity",
@@ -114467,7 +116136,22 @@
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while traveling"
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while on the road"
+      }
+    },
+    "ui:🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused—target is in {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity",
+        "name",
+        "progress",
+        "province",
+        "rate",
+        "regard"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused—target is in {province}"
       }
     },
     "ui:🤝 Stop cultivating": {
@@ -114547,6 +116231,48 @@
       "location": "js/ui.js",
       "source": {
         "text": "🧑‍🏫 Your schooling"
+      }
+    },
+    "ui:🧭 Travel to approach {name} for courtship…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧭 Travel to approach {name} for courtship…"
+      }
+    },
+    "ui:🧭 Travel to begin courtship (abandon your current suit)…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧭 Travel to begin courtship (abandon your current suit)…"
+      }
+    },
+    "ui:🧭 Travel to begin courtship…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧭 Travel to begin courtship…"
+      }
+    },
+    "ui:🧭 Travel to continue cultivating…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧭 Travel to continue cultivating…"
+      }
+    },
+    "ui:🧭 Travel to cultivate…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🧭 Travel to cultivate…"
       }
     },
     "ui:🧰 Former calling — {career}": {
