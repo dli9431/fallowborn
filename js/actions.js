@@ -1198,6 +1198,17 @@ window.FB = window.FB || {};
     }
     if (p.tier === 3) rents = Math.max(rents, 6);
     rents *= FB.domainPenalty(state);
+    const rentBase = rents;
+    const rentTraits = [];
+    const me = state.chars[p.charId];
+    for (const tid of (me ? me.traits : [])) {
+      const trait = FBDATA.traits[tid];
+      const rate = trait && trait.estate && Number(trait.estate.rent);
+      if (!isFinite(rate) || !rate) continue;
+      const amount = rentBase * rate;
+      rentTraits.push({ id:tid, amount:amount });
+      rents += amount;
+    }
     let dues = 0;
     for (const vid of FB.playerVassals(state)) {
       for (const pid of FB.realmHeldCounties(state, vid)) {
@@ -1215,7 +1226,8 @@ window.FB = window.FB || {};
     const liege = p.liege
       ? -beforeLiege * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
     return {
-      rents:rents, dues:dues, tolls:tolls, taxable:taxable,
+      rents:rents, rentBase:rentBase, rentTraits:rentTraits,
+      dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
       monopoly:monopoly, liege:liege, total:beforeLiege + liege
     };
@@ -1342,7 +1354,14 @@ window.FB = window.FB || {};
        cut by a liege */
     if (p.tier >= 3) {
       const tax = FB.playerTaxParts(state);
-      add('gold', FB.T('Rents from your lands'), tax.rents);
+      add('gold', FB.T('Rents from your lands'), tax.rentBase);
+      for (const source of tax.rentTraits) {
+        const trait = FBDATA.traits[source.id];
+        if (!trait) continue;
+        add('gold', FB.T('{trait} — direct rent', {
+          trait:FB.dataText(state, p.charId, 'trait', source.id, trait, 'name', {})
+        }), source.amount);
+      }
       add('gold', FB.T('Vassal dues'), tax.dues);
       addBuildings('gold', 'tax');
       add('gold', FB.T('National technology'), tax.national);
@@ -1945,6 +1964,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
         '💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while.',
         { gold: gold }));
+      if (FB.noteTraitProgress) FB.noteTraitProgress(state, 'rent_shrewd', 1);
     }
   };
 

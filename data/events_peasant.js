@@ -521,9 +521,9 @@ FBDATA.events.push(
     { label:'Grant them a season’s grace.', desc:'Mercy now may preserve a good tenant.',
       effects:{ gold:-3, piety:5, popularOpinion:5 } },
     { label:'Take labor in place of coin.', desc:'A fair debt can be paid by willing hands.',
-      effects:{ gold:2, popularOpinion:2, skills:{ste:1} } },
+      effects:{ gold:2, popularOpinion:2, skills:{ste:1}, traitProgress:{id:'rent_shrewd'} } },
     { label:'Order the reeve to collect in full.', desc:'A manor cannot run upon excuses.',
-      effects:{ gold:6, popularOpinion:-5, prestige:2 } }
+      effects:{ gold:6, popularOpinion:-5, prestige:2, traitProgress:{id:'rent_shrewd'} } }
   ]},
 { id:'gentry_guest_right', title:'A Guest at the Manor',
   trigger:{ societalRoles:['gentry'], minAge:16, chance:0.14 }, weight:6, cooldown:14,

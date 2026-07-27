@@ -55,6 +55,7 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     let c = 0.30 + ([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0);
     c += FB.skillOf(me, 'dip') * 0.02 + p.prestige / 1200 + (p.liegeOp || 0) / 400;
+    c += FB.traitBonus ? FB.traitBonus(me, 'assembly', 'voteChance') : 0;
     return FB.clamp(c, 0.1, 0.85);
   };
 

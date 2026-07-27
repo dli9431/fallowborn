@@ -26893,6 +26893,17 @@
         "text": "👤 {name} takes up the family’s story. Generation {generation}."
       }
     },
+    "news.life.trait_earned": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "trait"
+      ],
+      "location": "js/model.js",
+      "source": {
+        "text": "🏅 {name} earns {trait}."
+      }
+    },
     "news.life.tutor_died": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -36985,6 +36996,16 @@
         "text": "Reed Pen and Paper"
       }
     },
+    "src.0afe2aeb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Earn six points of service in your liege’s wars."
+      }
+    },
     "src.0b07c838": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37223,6 +37244,16 @@
       ],
       "source": {
         "text": "Every weight, promise, and delivery falls into place. The venture returns handsomely."
+      }
+    },
+    "src.0bde00d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Direct levy base"
       }
     },
     "src.0be6c3a1": {
@@ -38698,6 +38729,16 @@
       ],
       "source": {
         "text": "Capital"
+      }
+    },
+    "src.11d2d78c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Class: {className}"
       }
     },
     "src.11d8761e": {
@@ -44444,6 +44485,16 @@
         "text": "Legume Rotation"
       }
     },
+    "src.26af5c1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Survive the shield-wall or return from distinguished war service."
+      }
+    },
     "src.26b65c8b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47349,6 +47400,16 @@
         "text": "Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount."
       }
     },
+    "src.324699c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{trait} — direct levy"
+      }
+    },
     "src.3246df88": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48331,6 +48392,16 @@
       ],
       "source": {
         "text": "Uphold the forest law."
+      }
+    },
+    "src.367e74de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Moot-Speaker"
       }
     },
     "src.3680760c": {
@@ -51853,6 +51924,16 @@
         "text": "Home instruction (free)"
       }
     },
+    "src.43b96027": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Directly cause the death of a spouse or blood relative."
+      }
+    },
     "src.43c4b6b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51923,6 +52004,26 @@
       ],
       "source": {
         "text": "Under pressure, the witnesses remember different gifts."
+      }
+    },
+    "src.4407c07d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Miles have taught which roads to trust."
+      }
+    },
+    "src.440cadcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{effect}: {value}"
       }
     },
     "src.440dc4b7": {
@@ -52839,6 +52940,16 @@
       ],
       "source": {
         "text": "Trust the spears that answered the first call."
+      }
+    },
+    "src.470827ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Reputation"
       }
     },
     "src.470875f2": {
@@ -55517,6 +55628,16 @@
         "text": "Settlements"
       }
     },
+    "src.50f97d9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Class"
+      }
+    },
     "src.51129b7d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55655,6 +55776,16 @@
       ],
       "source": {
         "text": "🕊 Exhaustion ends the war with nothing gained."
+      }
+    },
+    "src.519381b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Learn letters through education or sustained study."
       }
     },
     "src.51a55806": {
@@ -58683,6 +58814,16 @@
         "text": "🕯 Your kinsman {name} has died, aged {age}."
       }
     },
+    "src.5cbec96d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Few dues escape a well-kept tally."
+      }
+    },
     "src.5cca4dba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58975,6 +59116,16 @@
       ],
       "source": {
         "text": "Little glory, but no one drowns for your pride."
+      }
+    },
+    "src.5e3c36bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "The levy’s habits have become second nature."
       }
     },
     "src.5e3e7062": {
@@ -61924,6 +62075,16 @@
         "text": "Endorse {claimant} · +15 opinion, +0.10 next claim"
       }
     },
+    "src.6966f8e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Profit from three Rent Days or extraordinary tax collections."
+      }
+    },
     "src.696798fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61942,6 +62103,16 @@
       ],
       "source": {
         "text": "Answer with sharper verses of your own."
+      }
+    },
+    "src.6969dbe9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Choose three supportive outcomes for spouse or child."
       }
     },
     "src.696c8b89": {
@@ -62223,6 +62394,16 @@
       ],
       "source": {
         "text": "Dorylaion"
+      }
+    },
+    "src.6a40b1c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "🏅 {name} earns {trait}."
       }
     },
     "src.6a5766f6": {
@@ -63363,6 +63544,16 @@
       ],
       "source": {
         "text": "This character has already completed a trade journey to that market."
+      }
+    },
+    "src.6e38ff95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Other"
       }
     },
     "src.6e40214e": {
@@ -64708,6 +64899,16 @@
         "text": "once your story begins, the ☰ menu holds the full start code to share."
       }
     },
+    "src.737edba4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{trait}, {className}"
+      }
+    },
     "src.737fc444": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65888,6 +66089,16 @@
       ],
       "source": {
         "text": "Ring"
+      }
+    },
+    "src.778c7338": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Rent-Shrewd"
       }
     },
     "src.77a12c51": {
@@ -67143,6 +67354,16 @@
         "text": "Cagliari"
       }
     },
+    "src.7bd0a9d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "A practiced voice among the assembled estates."
+      }
+    },
     "src.7bd55482": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67863,6 +68084,16 @@
         "text": "Time will pass normally, with local work stories while you remain."
       }
     },
+    "src.7e53558c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Win three contested votes in the estates."
+      }
+    },
     "src.7e5e7791": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68242,6 +68473,16 @@
       ],
       "source": {
         "text": "The knife finds you as you scramble."
+      }
+    },
+    "src.7f644e0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Hearth-Steady"
       }
     },
     "src.7f84f770": {
@@ -69304,6 +69545,16 @@
         "text": "📜 Your fiefs escheat to {liege}."
       }
     },
+    "src.8323c831": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Assembly vote chance"
+      }
+    },
     "src.832fe6d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69522,6 +69773,16 @@
       ],
       "source": {
         "text": "First option — take the default"
+      }
+    },
+    "src.83d86f21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Complete three distinct non-targeted journeys."
       }
     },
     "src.83e29c6f": {
@@ -69793,6 +70054,16 @@
       ],
       "source": {
         "text": "Another strip under the plough. It pays only while someone works it."
+      }
+    },
+    "src.849a01b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "travel.legDays"
       }
     },
     "src.84a01b3c": {
@@ -71216,6 +71487,16 @@
         "text": "📜 A lender advances {money:principal} to the household; the signed obligation is worth {money:due} today."
       }
     },
+    "src.8a171b72": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Direct demesne rent"
+      }
+    },
     "src.8a1f1b74": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71867,6 +72148,16 @@
         "text": "Safe service is service nonetheless."
       }
     },
+    "src.8c7221d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Disposition"
+      }
+    },
     "src.8c78a244": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72146,6 +72437,16 @@
       ],
       "source": {
         "text": "greatHolyWar has invalid crisisShare."
+      }
+    },
+    "src.8d8366ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Lose an eye to violence or misfortune."
       }
     },
     "src.8d8cd796": {
@@ -74134,6 +74435,16 @@
         "text": "{name} · {relation}, age {age}{heir}"
       }
     },
+    "src.957825b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Days per county leg"
+      }
+    },
     "src.957cbbe5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74948,6 +75259,16 @@
         "text": "✒ Copy manuscripts"
       }
     },
+    "src.98454078": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "assembly.popularOpinion"
+      }
+    },
     "src.9848c37f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75460,6 +75781,16 @@
         "text": "Glory or dirt, before the whole village."
       }
     },
+    "src.9a6444b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "travel.roadIncident"
+      }
+    },
     "src.9a65c67a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75731,6 +76062,16 @@
         "text": "The lord waves you off with a fine and a warning."
       }
     },
+    "src.9b273786": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Earned"
+      }
+    },
     "src.9b46d5d4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75939,6 +76280,16 @@
       ],
       "source": {
         "text": "Withdraw from the {campaign}?"
+      }
+    },
+    "src.9c1e68d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "{trait} — direct rent"
       }
     },
     "src.9c306400": {
@@ -76249,6 +76600,16 @@
       ],
       "source": {
         "text": "Choose the Target"
+      }
+    },
+    "src.9d52cdcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Positive Common Voice gains"
       }
     },
     "src.9d58ef81": {
@@ -76730,6 +77091,16 @@
       ],
       "source": {
         "text": "Three households hear the same words and agree upon them."
+      }
+    },
+    "src.9f29a81b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Muster-Bred"
       }
     },
     "src.9f29b419": {
@@ -77401,6 +77772,16 @@
       ],
       "source": {
         "text": "Livonians"
+      }
+    },
+    "src.a16ed6a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Complete a pilgrimage to a holy place."
       }
     },
     "src.a170b70b": {
@@ -78162,6 +78543,16 @@
       ],
       "source": {
         "text": "This is you"
+      }
+    },
+    "src.a48ebf5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "assembly.voteChance"
       }
     },
     "src.a490263c": {
@@ -79118,6 +79509,16 @@
       ],
       "source": {
         "text": "⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own."
+      }
+    },
+    "src.a84e0dee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Kin find a sure hand at the household fire."
       }
     },
     "src.a8532270": {
@@ -80393,6 +80794,16 @@
         "text": "Salé"
       }
     },
+    "src.ad4b5a4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Roadwise"
+      }
+    },
     "src.ad4cb0f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81003,6 +81414,16 @@
         "text": "Your purpose in {destination} is complete, but a traveler cannot know a place in a day. You will stay and find local work for at least three months before choosing the road home."
       }
     },
+    "src.afdf4d1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Earned: {guidance}"
+      }
+    },
     "src.afe4bb60": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81253,6 +81674,16 @@
       ],
       "source": {
         "text": "Levy ledger"
+      }
+    },
+    "src.b08ae58c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Formation"
       }
     },
     "src.b08fefdd": {
@@ -85003,6 +85434,16 @@
         "text": "The household is at its retainer capacity."
       }
     },
+    "src.be21ed1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Suffer formal condemnation by your faith’s religious authority."
+      }
+    },
     "src.be221292": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86828,6 +87269,16 @@
       ],
       "source": {
         "text": "imam"
+      }
+    },
+    "src.c4da9808": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Survive a wound that leaves a lasting scar."
       }
     },
     "src.c4dcde2d": {
@@ -88785,6 +89236,16 @@
         "text": "The stars have never yet held a shield."
       }
     },
+    "src.cc6b15ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Positive spouse and blood-kin Regard"
+      }
+    },
     "src.cc79b32f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88863,6 +89324,16 @@
       ],
       "source": {
         "text": "You know no one to honor with it."
+      }
+    },
+    "src.cca3205e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Condition"
       }
     },
     "src.ccacd166": {
@@ -93712,6 +94183,16 @@
         "text": "Demolish {building}"
       }
     },
+    "src.dfc7627a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount} percentage points"
+      }
+    },
     "src.dfccab6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95290,6 +95771,16 @@
         "text": "Treason heard and kept is treason half-owned."
       }
     },
+    "src.e5c36164": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ordinary road incidents"
+      }
+    },
     "src.e5cf0644": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95328,6 +95819,16 @@
       ],
       "source": {
         "text": "Guards burst in; the assassin dives through the window into the night."
+      }
+    },
+    "src.e5f125ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Survive a ruinous injury."
       }
     },
     "src.e6058ea2": {
@@ -105923,6 +106424,14 @@
         "text": "Cast out by the church."
       }
     },
+    "trait.excommunicated.earned.default": {
+      "context": "trait excommunicated, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Suffer formal condemnation by your faith’s religious authority."
+      }
+    },
     "trait.excommunicated.name.default": {
       "context": "trait excommunicated, name, faith branch default.",
       "glossary": [],
@@ -106011,6 +106520,30 @@
         "text": "Greedy"
       }
     },
+    "trait.hearth_steady.desc.default": {
+      "context": "trait hearth_steady, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Kin find a sure hand at the household fire."
+      }
+    },
+    "trait.hearth_steady.earned.default": {
+      "context": "trait hearth_steady, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Choose three supportive outcomes for spouse or child."
+      }
+    },
+    "trait.hearth_steady.name.default": {
+      "context": "trait hearth_steady, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Hearth-Steady"
+      }
+    },
     "trait.homely.desc.default": {
       "context": "trait homely, desc, faith branch default.",
       "glossary": [],
@@ -106083,6 +106616,14 @@
         "text": "Blood of their own blood."
       }
     },
+    "trait.kinslayer.earned.default": {
+      "context": "trait kinslayer, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Directly cause the death of a spouse or blood relative."
+      }
+    },
     "trait.kinslayer.name.default": {
       "context": "trait kinslayer, name, faith branch default.",
       "glossary": [],
@@ -106097,6 +106638,14 @@
       "location": "data/traits.js",
       "source": {
         "text": "Can read and write — rare gift."
+      }
+    },
+    "trait.literate.earned.default": {
+      "context": "trait literate, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Learn letters through education or sustained study."
       }
     },
     "trait.literate.name.default": {
@@ -106131,6 +106680,14 @@
         "text": "Broken in body."
       }
     },
+    "trait.maimed.earned.default": {
+      "context": "trait maimed, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Survive a ruinous injury."
+      }
+    },
     "trait.maimed.name.default": {
       "context": "trait maimed, name, faith branch default.",
       "glossary": [],
@@ -106139,12 +106696,68 @@
         "text": "Maimed"
       }
     },
+    "trait.moot_speaker.desc.default": {
+      "context": "trait moot_speaker, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "A practiced voice among the assembled estates."
+      }
+    },
+    "trait.moot_speaker.earned.default": {
+      "context": "trait moot_speaker, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Win three contested votes in the estates."
+      }
+    },
+    "trait.moot_speaker.name.default": {
+      "context": "trait moot_speaker, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Moot-Speaker"
+      }
+    },
+    "trait.muster_bred.desc.default": {
+      "context": "trait muster_bred, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "The levy’s habits have become second nature."
+      }
+    },
+    "trait.muster_bred.earned.default": {
+      "context": "trait muster_bred, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Earn six points of service in your liege’s wars."
+      }
+    },
+    "trait.muster_bred.name.default": {
+      "context": "trait muster_bred, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Muster-Bred"
+      }
+    },
     "trait.one_eyed.desc.default": {
       "context": "trait one_eyed, desc, faith branch default.",
       "glossary": [],
       "location": "data/traits.js",
       "source": {
         "text": "Lost an eye — gained a story."
+      }
+    },
+    "trait.one_eyed.earned.default": {
+      "context": "trait one_eyed, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Lose an eye to violence or misfortune."
       }
     },
     "trait.one_eyed.name.default": {
@@ -106177,6 +106790,14 @@
       "location": "data/traits.js",
       "source": {
         "text": "Walked the holy roads."
+      }
+    },
+    "trait.pilgrim.earned.default": {
+      "context": "trait pilgrim, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Complete a pilgrimage to a holy place."
       }
     },
     "trait.pilgrim.name.default": {
@@ -106219,6 +106840,54 @@
         "text": "Quick"
       }
     },
+    "trait.rent_shrewd.desc.default": {
+      "context": "trait rent_shrewd, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Few dues escape a well-kept tally."
+      }
+    },
+    "trait.rent_shrewd.earned.default": {
+      "context": "trait rent_shrewd, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Profit from three Rent Days or extraordinary tax collections."
+      }
+    },
+    "trait.rent_shrewd.name.default": {
+      "context": "trait rent_shrewd, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Rent-Shrewd"
+      }
+    },
+    "trait.roadwise.desc.default": {
+      "context": "trait roadwise, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Miles have taught which roads to trust."
+      }
+    },
+    "trait.roadwise.earned.default": {
+      "context": "trait roadwise, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Complete three distinct non-targeted journeys."
+      }
+    },
+    "trait.roadwise.name.default": {
+      "context": "trait roadwise, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Roadwise"
+      }
+    },
     "trait.robust.desc.default": {
       "context": "trait robust, desc, faith branch default.",
       "glossary": [],
@@ -106241,6 +106910,14 @@
       "location": "data/traits.js",
       "source": {
         "text": "Marked by battle."
+      }
+    },
+    "trait.scarred.earned.default": {
+      "context": "trait scarred, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Survive a wound that leaves a lasting scar."
       }
     },
     "trait.scarred.name.default": {
@@ -106305,6 +106982,14 @@
       "location": "data/traits.js",
       "source": {
         "text": "Survived the shield-wall."
+      }
+    },
+    "trait.veteran.earned.default": {
+      "context": "trait veteran, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Survive the shield-wall or return from distinguished war service."
       }
     },
     "trait.veteran.name.default": {
@@ -108697,6 +109382,16 @@
         "text": "Claim the Caliphate?"
       }
     },
+    "ui:Class: {className}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "className"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Class: {className}"
+      }
+    },
     "ui:Clerk": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -109371,6 +110066,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Each settlement keeps its own buildings — tap one to see them and raise more."
+      }
+    },
+    "ui:Earned: {guidance}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "guidance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Earned: {guidance}"
       }
     },
     "ui:Effects": {
@@ -116820,6 +117525,16 @@
         "text": "{amount} gold a season"
       }
     },
+    "ui:{amount} percentage points": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount} percentage points"
+      }
+    },
     "ui:{amount} piety a season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -117422,6 +118137,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{domain} first"
+      }
+    },
+    "ui:{effect}: {value}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "effect",
+        "value"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{effect}: {value}"
       }
     },
     "ui:{from}–{to}": {
@@ -118793,6 +119519,37 @@
       "location": "js/ui.js",
       "source": {
         "text": "{tradition}: {from}–{to}"
+      }
+    },
+    "ui:{trait} — direct levy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "trait"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{trait} — direct levy"
+      }
+    },
+    "ui:{trait} — direct rent": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "trait"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "{trait} — direct rent"
+      }
+    },
+    "ui:{trait}, {className}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "className",
+        "trait"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{trait}, {className}"
       }
     },
     "ui:{used} of {capacity}": {

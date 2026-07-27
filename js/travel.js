@@ -54,6 +54,7 @@ window.FB = window.FB || {};
         destinationId:t.destinationId,
         turn:state.turn
       });
+      if (FB.noteTraitProgress) FB.noteTraitProgress(state, 'roadwise', 1);
     }
   }
   function stayDays(state, travel) {
@@ -153,11 +154,15 @@ window.FB = window.FB || {};
   };
 
   FB.travelLegDays = function (state) {
+    let days = Math.max(1, balance('travelLegDays', 3));
     if (state && FB.householdStandardEffects) {
       const modified = FB.householdStandardEffects(state).travelLegDays;
-      if (modified !== null && modified !== undefined) return Math.max(1, modified);
+      if (modified !== null && modified !== undefined) days = Math.max(1, modified);
     }
-    return Math.max(1, balance('travelLegDays', 3));
+    const traveler = state && state.chars && state.player
+      ? state.chars[state.player.charId] : null;
+    if (FB.traitBonus) days += FB.traitBonus(traveler, 'travel', 'legDays');
+    return Math.max(1, days);
   };
 
   FB.travelRouteOverhead = function (routeOrLegs, state) {
@@ -1079,8 +1084,10 @@ window.FB = window.FB || {};
       queueEncounter(state, 'culture');
     }
     if (pr && pr.culture) t.seenCultures[pr.culture] = 1;
+    const roadChance = 0.38 * (1 + (FB.traitBonus
+      ? FB.traitBonus(c, 'travel', 'roadIncident') : 0));
     if (!destination && t.encounters.road < balance('travelRoadEventCap', 4) &&
-      FB.chance(0.38)) {
+      FB.chance(FB.clamp(roadChance, 0, 1))) {
       queueEncounter(state, 'road');
     }
     if (destination) arriveDestination(state);

@@ -38,6 +38,18 @@ allowing saved events and autoresolve to retain the wording with which they bega
 Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 [time.md](time.md)).
 
+Earned traits use ordinary declarative effects. `traitProgress:{id,amount?}` adds
+progress for the current protagonist (default one), clamps it at the trait definition's
+`earn.threshold`, and awards the trait with a durable localized Chronicle notice when
+the threshold is first reached. Removing an earned trait with `removeTrait` resets that
+trait's progress only when a trait was actually removed, so a later acquisition can
+start again. A failed pre-award removal therefore does not erase accumulated progress.
+
+`kinslayer:true` is a qualifier for `killRole`; it records that the player directly
+caused the resolved role's death and grants Kinslayer only if that character was the
+protagonist's spouse or blood relative. It has no independent effect and does not make
+ordinary `killRole`, `killChild`, or incidental lethal effects culpable.
+
 Road content in `data/events_travel.js` is still ordinary declarative event data,
 but carries top-level `travel:{kind}` metadata. `kind` is `culture`, `road`,
 `capstone`, `decision`, or repeatable destination `work`; a capstone or work story

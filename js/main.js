@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.74.0';
+  FB.VERSION = '1.75.0';
   FB.CHANGELOG = [
+    { v: '1.75.0', date: '2026-07-27', changes: [
+      'Character traits are now grouped as dispositions, formations, reputations, and conditions, with five new traits earned through votes, journeys, war service, rents, and family choices.'
+    ] },
     { v: '1.74.0', date: '2026-07-27', changes: [
       'Great holy wars now end in settlement councils where vows, service, occupation, rights, and local support shape claims to captured land and sacred-site custody.'
     ] },
@@ -884,6 +887,7 @@ window.FB = window.FB || {};
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
@@ -1029,6 +1033,7 @@ window.FB = window.FB || {};
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
@@ -1966,6 +1971,7 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    p.traitProgress = {};
     if (FB.cleanupManagedMatches) FB.cleanupManagedMatches(s);
     if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
     p.dead = false;

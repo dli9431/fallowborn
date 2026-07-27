@@ -37,11 +37,21 @@ for `balance.parliamentMotionCost` gold, one motion per calendar year
 **Votes are decided by the `parliament_vote` named chance**
 (`FB.parliamentVoteChance`): a 30% base plus a rank bonus (baron +5, count
 +12, duke +20 — a duke's word outweighs a baron's), diplomacy ×2%, prestige,
-and the liege's own favor, clamped 10–85%. Every vote moves `liegeOp` as well
+the liege's own favor, and grouped `assembly.voteChance` trait effects, clamped
+10–85%. Moot-Speaker contributes +5 percentage points in addition to its +1
+Diplomacy. Every vote moves `liegeOp` as well
 as the terms: consenting to a demand buys the crown's notice, leading a
 refusal is remembered, and winning redress binds the liege while displeasing
 him. Only the player's own terms are simulated; AI vassals of the realm are
 the unnamed benches, exactly as AI realms stay lightweight elsewhere.
+
+Every successful contested `parliament_vote` adds one Moot-Speaker progress point;
+three wins award the reputation and write its localized Chronicle notice. A failed
+contested vote removes an existing Moot-Speaker and resets its progress. Because
+event-driven progress resets only when removal actually occurred, failures before the
+first award do not erase accumulated wins. Moot-Speaker also multiplies only positive
+`popularOpinion` event effects by 1.2; losses and non-event Common Voice changes remain
+unchanged.
 
 Related: [council.md](council.md) for the king-side mirror,
 [realms.md](realms.md) for the liege chain and favor, [events.md](events.md)

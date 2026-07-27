@@ -94,6 +94,34 @@ means to actually *fight* is the *Sweet Polly Oliver* event chain (events_peasan
 her hair and following the war levy in disguise, which trains martial across about a year; see
 [events.md](events.md).
 
+**Traits describe four different layers of a life.** Every core entry in
+`FBDATA.traits` declares `class:'disposition'|'formation'|'reputation'|'condition'`.
+Disposition is persistent character (including the opposing personality pairs);
+formation is education, service, or learned practice; reputation is what courts and
+communities believe; condition is a lasting physical circumstance. Inheritance remains
+orthogonal and uses the existing `inherit` probability. Event-earned entries declare
+`noRandom:true` and `inherit:0`; mods without `class` remain generation-compatible and
+display under Other. There is no trait cap.
+
+Root skill, health, fertility, and general-Regard fields retain their existing
+`FB.traitAgg` behavior. System-specific numeric effects live under named groups and are
+read with `FB.traitBonus(character, group, key)`. The first consumers are assembly
+votes/Common Voice, travel leg time/road incidents, direct levy, direct rent, and
+family Regard. `player.traitProgress` holds current-protagonist acquisition counters,
+is repaired additively in old version-3 saves, and clears on succession. Definitions
+with `earn:{threshold:n}` are awarded by `FB.noteTraitProgress`; the resulting Chronicle
+notice stores a locale-neutral trait data reference. Event-driven removal resets the
+counter only when the earned trait was actually present, so a pre-award failure cannot
+erase earlier progress.
+
+The first progress traits are Moot-Speaker (three won estates votes), Roadwise (three
+distinct completed non-targeted journeys), Muster-Bred (six war-service points),
+Rent-Shrewd (three profitable Rent Days or extraordinary tax collections), and
+Hearth-Steady (three supportive marriage/child outcomes). Hearth-Steady adds 25% to
+positive event Regard only when the target is a spouse or blood relative. It adds to
+the existing root trait-Regard multiplier before the one final rounding; losses and
+unrelated characters do not use it.
+
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
 `c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).
 Hard blows (`fx.health` ≤ −2) add a random wound, severity 2 at −4 or worse;
@@ -105,6 +133,9 @@ is back at 7+ and the character is not ill; sicknesses clear only with
 `clearFlag:'ill'` (the recovery event). Portraits read `c.ails`/`c.health` directly
 (`opts.ill` covers pre-ailment saves), so marks come and go with the condition;
 `scarred` and `one_eyed` trait marks are drawn for every character, NPCs included.
+Ailments remain the transient physical layer and are neither traits nor condition-class
+entries. A wound may leave a permanent condition such as Scarred, One-Eyed, or Maimed,
+but ailment caps, healing, sickness flags, and mortality behavior are unchanged.
 
 **A rich table protects the young.** Each station above serf trims the yearly
 mortality of the household's resident children and grandchildren (and of a child

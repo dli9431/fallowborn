@@ -40,7 +40,10 @@ ordinary valid adjacency. The unmodified cost is
 two-argument compatibility path; passing the optional state applies the active maintained
 transport multiplier to the complete cost and rounds up. `FB.travelLegDays(state)` is the
 shared preview/departure helper: a leg takes `balance.travelLegDays` (three by default),
-or the active transport level's three, two, or one days.
+or the active transport level's three, two, or one days. The current protagonist's
+grouped `travel.legDays` trait effect is then added and the result is clamped to at
+least one day. Roadwise supplies −1 day, so it changes only journeys whose departure
+snapshot is taken after the trait is earned.
 `FB.travelRouteOverhead` applies the same transport multiplier to the route portion
 alone. Self-founded ventures use that helper so their selected 10/20/50-gold stake is
 always charged in full. `FB.developedMarketDestinations` supplies the same reachable
@@ -91,6 +94,9 @@ was deferred, not that the decision has expired. `player.travelHistory` is an ar
 `{purpose,destinationId,turn}` records. `player.travelSettlement` is `null` or the
 current character’s completed `{turn,destinationId}` permanent move. All initialize
 lazily, so version-3 saves need no migration.
+Recording a new unique non-targeted history entry adds one Roadwise acquisition point;
+targeted relationship visits do not count. Three entries award the trait through the
+shared life-local trait-progress API.
 
 Cost and `legDays` are copied into the journey when departure spends the purse.
 Return travel uses that saved leg duration. Reducing, upgrading, losing, or dormancy of
@@ -115,6 +121,10 @@ capstone then introduces the required stay. Once 90 days have passed the
 **Turn back toward home** deed follows the saved outbound route; turning back
 before reaching the destination still reverses the counties already reached and
 refunds nothing. Staying longer keeps producing destination stories.
+The ordinary non-destination road roll starts at 38% and multiplies
+`1 + FB.traitBonus(protagonist,'travel','roadIncident')`; Roadwise's −15% rate
+therefore makes it 32.3%. Culture encounters, destination guarantees, and option
+success chances are separate and unchanged.
 
 Death, succession, imprisonment, personal war, or moving outside the current
 purpose’s tier range cancels the journey and removes queued travel events. If a

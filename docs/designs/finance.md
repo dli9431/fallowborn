@@ -46,6 +46,15 @@ fees of current schooling arrangements. The same components are itemized by
 costs, so the gold sheet, Finance net, credit capacity, and prudent building automation
 share one result.
 
+Landed income keeps one calculation order in `FB.playerTax` and its displayed mirror.
+Direct demesne rent first takes the domain penalty, then grouped `estate.rent` trait
+bonuses are added as localized named ledger lines. Rent-Shrewd contributes +10%.
+The enlarged rent participates in the later national-technology, Royal Council,
+position, guild-monopoly, and liege-aid arithmetic; vassal dues are never included in
+the trait base. The two profitable Rent-Day choices and each extraordinary-tax
+collection that actually yields coin add one Rent-Shrewd acquisition point; three
+award the reputation.
+
 Loans mature as lump sums at season boundaries. An affordable maturity repays
 automatically. The first miss adds the signed 10% face penalty and grants two
 seasons; the second enforces the disclosed default. Pledged property is taken

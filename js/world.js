@@ -2499,6 +2499,15 @@ window.FB = window.FB || {};
       });
 
       const me = state.chars[p.charId];
+      for (const tid of (me ? me.traits : [])) {
+        const trait = FBDATA.traits[tid];
+        const traitRate = trait && trait.war && Number(trait.war.levy);
+        if (isFinite(traitRate) && traitRate) {
+          add('levy', 'trait_rate', ownBase * traitRate, {
+            rate:traitRate, traitId:tid
+          });
+        }
+      }
       const martialRate = (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0);
       if (martialRate) {
         const beforeMartial = comp.levy;

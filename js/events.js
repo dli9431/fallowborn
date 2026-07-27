@@ -2190,7 +2190,12 @@ window.FB = window.FB || {};
     }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
-    if (fx.warService) p.warService = Math.max(0, (p.warService || 0) + fx.warService);
+    if (fx.warService) {
+      p.warService = Math.max(0, (p.warService || 0) + fx.warService);
+      if (fx.warService > 0 && FB.noteTraitProgress) {
+        FB.noteTraitProgress(state, 'muster_bred', fx.warService);
+      }
+    }
     if (fx.health) me.health = FB.clamp((me.health === undefined ? 8 : me.health) + fx.health, 0, 10);
     // a hard blow leaves a named wound; an explicit ailment names it precisely
     // (an illness effect speaks for itself — no gash for a fever)
@@ -2207,7 +2212,16 @@ window.FB = window.FB || {};
     }
     if (fx.addTrait) FB.addTrait(me, fx.addTrait);
     if (fx.addTraitOnce) FB.addTrait(me, fx.addTraitOnce);
-    if (fx.removeTrait) FB.removeTrait(me, fx.removeTrait);
+    if (fx.removeTrait && FB.removeTrait(me, fx.removeTrait)) {
+      const removed = FBDATA.traits[fx.removeTrait];
+      if (removed && removed.earn && FB.ensureTraitProgress) {
+        FB.ensureTraitProgress(state)[fx.removeTrait] = 0;
+      }
+    }
+    if (fx.traitProgress && FB.noteTraitProgress) {
+      FB.noteTraitProgress(state, fx.traitProgress.id,
+        fx.traitProgress.amount === undefined ? 1 : fx.traitProgress.amount);
+    }
     if (fx.setFlag) p.flags[fx.setFlag] = 1;
     if (fx.setFlag2) p.flags[fx.setFlag2] = 1;
     if (fx.clearFlag) delete p.flags[fx.clearFlag];
@@ -2229,9 +2243,20 @@ window.FB = window.FB || {};
     }
     if (fx.opinion) {
       const c = FB.getRole(state, fx.opinion.role, fx.opinion.role !== 'rival');
-      // a likeable name speeds the warming: trait opinion scales gains (never losses)
+      /* A likeable name speeds every warming. Hearth effects join that same
+         multiplier only for a spouse or blood relative, then round once. */
       let amt = fx.opinion.amt;
-      if (amt > 0) amt = Math.max(1, Math.round(amt * (1 + FB.traitAgg(me).opinion / 200)));
+      if (amt > 0) {
+        let multiplier = 1 + FB.traitAgg(me).opinion / 200;
+        const spouse = c && FB.spousesOf(state, me).some(function (other) {
+          return other.id === c.id;
+        });
+        const blood = c && !!FB.kinOf(state).byId[c.id];
+        if ((spouse || blood) && FB.traitBonus) {
+          multiplier += FB.traitBonus(me, 'household', 'regard');
+        }
+        amt = Math.max(1, Math.round(amt * multiplier));
+      }
       if (c) c.opinion = FB.clamp(c.opinion + amt, -100, 100);
     }
     if (fx.rivalContact) {
@@ -2242,7 +2267,13 @@ window.FB = window.FB || {};
     if (fx.rivalHeat) FB.changeRivalHeat(state, fx.rivalHeat);
     if (fx.endRivalry) FB.endRivalry(state);
     if (fx.opinionLiege) p.liegeOp = FB.clamp((p.liegeOp || 0) + fx.opinionLiege, -100, 100);
-    if (fx.popularOpinion) p.pop = FB.clamp(p.pop + fx.popularOpinion, -100, 100);
+    if (fx.popularOpinion) {
+      var amount = fx.popularOpinion;
+      if (amount > 0 && FB.traitBonus) {
+        amount = amount * (1 + FB.traitBonus(me, 'assembly', 'popularOpinion'));
+      }
+      p.pop = FB.clamp(p.pop + amount, -100, 100);
+    }
     if (fx.profession) {
       if (!p.professionBack && p.profession !== 'soldier') p.professionBack = p.profession;
       p.profession = fx.profession;
@@ -2317,7 +2348,12 @@ window.FB = window.FB || {};
     if (fx.killRole) {
       const c = FB.getRole(state, fx.killRole, false);
       if (c) {
+        const spouse = fx.kinslayer && FB.spousesOf(state, me).some(function (other) {
+          return other.id === c.id;
+        });
+        const blood = fx.kinslayer && !!FB.kinOf(state).byId[c.id];
         FB.killChar(state, c);
+        if ((spouse || blood) && FB.addTrait) FB.addTrait(me, 'kinslayer');
         if (fx.killRole === 'spouse') { FB.spouseDied(state, c); FB.promoteSpouse(state); }
       }
     }

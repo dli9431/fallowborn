@@ -43,14 +43,14 @@ FBDATA.events.push(
   trigger:{ married:true, maxSeasonsSinceMarriage:4, custom:'wed_above_station', chance:0.6 }, weight:16, cooldown:40,
   text:'The kin of {spouse} never let you forget the height from which they stooped. Now a cousin writes: the family expects a favor of its new… relation.',
   options:[
-    { label:'Oblige them handsomely.', require:{ goldMin:6 }, desc:'A favor bought now is peace kept at the high table.', effects:{ gold:-6, prestige:4, opinion:{role:'spouse', amt:8} } },
+    { label:'Oblige them handsomely.', require:{ goldMin:6 }, desc:'A favor bought now is peace kept at the high table.', effects:{ gold:-6, prestige:4, opinion:{role:'spouse', amt:8}, traitProgress:{id:'hearth_steady'} } },
     { label:'You wed {spouse}, not the whole house.', desc:'Stand your ground, and let the marriage weather it.', effects:{ opinion:{role:'spouse', amt:-8}, prestige:1 } }
   ]},
 { id:'wed_below', title:'Tongues Wag',
   trigger:{ married:true, maxSeasonsSinceMarriage:4, custom:'wed_below_station', chance:0.6 }, weight:16, cooldown:40,
   text:'At the well and in the hall they whisper it: you married beneath yourself. {spouse} pretends not to hear.',
   options:[
-    { label:'Let them talk. You chose well.', desc:'Gossip fades; a good marriage does not.', effects:{ opinion:{role:'spouse', amt:10}, prestige:-3 } },
+    { label:'Let them talk. You chose well.', desc:'Gossip fades; a good marriage does not.', effects:{ opinion:{role:'spouse', amt:10}, prestige:-3, traitProgress:{id:'hearth_steady'} } },
     { label:'Grease the loudest tongues.', require:{ goldMin:5 }, desc:'A little silver buys a little silence.', effects:{ gold:-5 } }
   ]},
 { id:'wedding_gift', title:'A Wedding Gift',
@@ -58,7 +58,7 @@ FBDATA.events.push(
   text:{ default:'Well-wishers bring gifts to the new couple — a pig, a bolt of cloth, a few coins pressed into your palm.',
     muslim:'Well-wishers bring gifts to the new couple — a lamb, a bolt of cloth, a few coins pressed into your palm.',
     jewish:'Well-wishers bring gifts to the new couple — a lamb, a bolt of cloth, a few coins pressed into your palm.' },
-  options:[ { label:'Fortune smiles.', desc:'Begin the marriage as you mean to go on.', effects:{ gold:8, opinion:{role:'spouse', amt:10} } } ]},
+  options:[ { label:'Fortune smiles.', desc:'Begin the marriage as you mean to go on.', effects:{ gold:8, opinion:{role:'spouse', amt:10}, traitProgress:{id:'hearth_steady'} } } ]},
 
 /* ---------- widowhood: what a grand house owes ----------
    Queued by FB.spouseDied when a spouse of higher station dies —
@@ -114,16 +114,16 @@ FBDATA.events.push(
   text:'Your child {childname} lies shivering, skin like a stove-stone. The old women shake their heads.',
   options:[
     { label:'Pay for a physician.', require:{ goldMin:10 }, desc:'Silver for a trained leech and his strong medicines.', chance:0.75,
-      success:{ text:'The fever breaks. The child will live.', effects:{ gold:-10 } },
+      success:{ text:'The fever breaks. The child will live.', effects:{ gold:-10, traitProgress:{id:'hearth_steady'} } },
       failure:{ text:'Coin could not buy what {god} would not give. The child is gone.', effects:{ gold:-10, killChild:true, health:-1 } } },
     { label:'Pray through the night.', chance:0.55, desc:'Put the child in {god}’s hands and keep vigil.',
-      success:{ text:'By dawn the fever breaks. A small miracle.', effects:{ piety:8 } },
+      success:{ text:'By dawn the fever breaks. A small miracle.', effects:{ piety:8, traitProgress:{id:'hearth_steady'} } },
       failure:{ text:'By dawn the little body is still. You dig a small grave.', effects:{ piety:3, killChild:true, health:-1 } } },
     { label:'Call the wise woman.', require:{ goldMin:3 }, desc:'A few coins for herbs, charms, and a cool cloth.', chance:0.6,
-      success:{ text:'Her simples do their work. The fever breaks; the child will live.', effects:{ gold:-3 } },
+      success:{ text:'Her simples do their work. The fever breaks; the child will live.', effects:{ gold:-3, traitProgress:{id:'hearth_steady'} } },
       failure:{ text:'Herbs and charms were not enough. The child is gone.', effects:{ gold:-3, killChild:true, health:-1 } } },
     { label:'Summon a renowned physician.', require:{ goldMin:30 }, desc:'The finest leechcraft in the land, at a lordly price.', chance:0.9,
-      success:{ text:'The great physician doses, bleeds, and waits — and the fever breaks. The child will live.', effects:{ gold:-30 } },
+      success:{ text:'The great physician doses, bleeds, and waits — and the fever breaks. The child will live.', effects:{ gold:-30, traitProgress:{id:'hearth_steady'} } },
       failure:{ text:'Even the great physician bows his head. The child is gone.', effects:{ gold:-30, killChild:true, health:-1 } } }
   ]},
 { id:'child_comes_of_age', title:'Coming of Age', trigger:{ never:true },
@@ -504,7 +504,7 @@ FBDATA.events.push(
   options:[
     { label:'Give the word.', chance:'plot', desc:'One nod, and the house mourns on cue.',
       success:{ text:'A sudden illness, the neighbors say. The house mourns, and none mourn louder than you.',
-        effects:{ killRole:'spouse', custom:'plot_end', piety:-15, log:'Was widowed — suddenly, conveniently.' } },
+        effects:{ killRole:'spouse', kinslayer:true, custom:'plot_end', piety:-15, log:'Was widowed — suddenly, conveniently.' } },
       failure:{ text:'The cup is knocked aside — {spouse} reads your face and knows. What lives in your house now is not a marriage but a watch.',
         effects:{ custom:'plot_end', prestige:-15, piety:-10, popularOpinion:-10, opinion:{role:'spouse', amt:-80} } } },
     { label:'Stay your hand.', desc:'Some doors, once opened, never close.', effects:{ custom:'plot_end', piety:5, log:'Abandoned a dark design.' } }
