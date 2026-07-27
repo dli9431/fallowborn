@@ -105,6 +105,17 @@ ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does n
 that fixed rate. Attention pauses during overland travel and Observe mode but continues
 alongside work, study, war, and deeds that consume a day.
 
+**Explicit gifts are recipient-bound.** Every living non-player character sheet offers one
+gift picker. Cash costs 5 gold for `balance.socialCashGiftOpinion` Regard (+4 by default);
+an unequipped, unpledged armory object grants the quality-tier value from
+`balance.socialItemGiftOpinion` (+4/+8/+12). Cash and items share the character-id clock in
+`player.socialGiftTurns`, so the same person may receive only one explicit gift every
+`balance.socialGiftCooldownDays` (90 by default), and every accepted gift spends one day.
+Spouses, dependent children, retainers, and other managed household members may receive
+cash, but not an armory object: their equipment remains family property managed through the
+shared loadouts. These are ordinary-character gifts and change only Regard; lightweight
+realm rulers use the realm gift rules in [realms.md](realms.md).
+
 **Rivalries grow out of contact.** The rival seat remains `state.roles.rival`, so old saves,
 events, and mods keep one canonical personal enemy. The player may deliberately name any
 non-family character at opinion ≤ −40. An NPC may claim the seat only if that exact,

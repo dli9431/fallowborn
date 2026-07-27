@@ -948,6 +948,8 @@ FBDATA.balance = {
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
   socialGiftCooldownDays: 90, socialCashGiftOpinion: 4,
   socialItemGiftOpinion: [4,8,12], // Plain/common, Well-made/fine, Masterwork/famed
+  rulerCashGiftCostByRank: [0,10,15,25,40], // count, duke, king, emperor
+  rulerCashGiftOpinion: 15,
   retainerCapacity: [0,1,2,2,3,3,4,5], // paid non-family household servants by player tier
   guildFavorStandingCost: 20, guildFavorCooldown: 360,
   vassalLevyFavorRate: 0.05, vassalLevyFavorDays: 360,
@@ -956,7 +958,6 @@ FBDATA.balance = {
   /* the royal council (tier 6+, js/council.js) */
   councilConsentBelow: 35, // below this crown authority the council blocks extraordinary taxes & revocations
   councilCharterAbove: 70, // authority above this with a sour council invites the charter of liberties
-  councilGiftCost: 25, councilGiftOpinion: 15, // a gift to a sworn man: gold out, favor in
   /* the estates / parliament (vassal tiers 3-5, js/parliament.js): the terms
      of service a vassal can haggle over in the liege's assembly */
   parliamentAidBase: 0.25, // the liege's customary cut of a vassal's noble revenue

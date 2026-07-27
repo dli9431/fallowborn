@@ -192,12 +192,16 @@ Network state is additive and lazily validated. `player.friendContacts` maps kno
 character ids to current-life contact timestamps; the canonical friend remains
 `state.roles.friend` for events and mods. `player.socialAttention` is a character-id-keyed
 assignment map (one entry with core balance) and `player.socialGiftTurns` stores the last
-explicit cash-or-item gift turn per recipient for the current life. Invalid and dead
-references are discarded lazily. `player.retainers` stores compact
+explicit cash-or-item gift turn per character recipient for the current life.
+`player.realmGiftTurns[realmId] = {turn,generation}` stores the corresponding ruler clock;
+the generation is compared with `realm.ruler.generation`, so a newly succeeded ruler is a
+fresh recipient while save/restore preserves a living ruler's cooldown. Invalid, dead,
+self, malformed, and stale-generation references are discarded lazily. `player.retainers`
+stores compact
 `{charId,office,pay,startedTurn,unpaid}` contracts, while every personal attribute
 remains on the referenced character. `player.guildFavorTurns` bounds guild calls by
 character and `player.vassalLevyFavors` maps realm ids to expiry turns. Succession clears
-friendship, cultivated contacts, social attention, gift clocks, and exceptional vassal
+friendship, cultivated contacts, social attention, both gift-clock maps, and exceptional vassal
 favors, but retains paid service contracts with a loyalty penalty. Permanent relocation
 also clears friendship, contacts, courtship, and attention. Restore converts an old active
 `court_suitor` focus into attention on its living suitor and selects an ordinary valid

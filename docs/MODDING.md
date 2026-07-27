@@ -1014,9 +1014,14 @@ player-originated loan families and the trade partnership:
   `relationshipOpinionThreshold` (shared Call friend / proposal gate; core 40),
   `socialGiftCooldownDays` (one explicit cash or item gift per recipient; core 90),
   `socialCashGiftOpinion` (core 4), and the three-entry `socialItemGiftOpinion`
-  array (core `[4,8,12]`). `friendOpinionThreshold` is a deprecated fallback for older
-  data sets; new mods should define the shared relationship threshold. Council, realm,
-  wedding, and authored event gifts do not use the personal-gift cooldown. Other Network
+  array (core `[4,8,12]`). Ruler cash gifts use
+  `rulerCashGiftCostByRank` (rank-indexed core `[0,10,15,25,40]`) and
+  `rulerCashGiftOpinion` (core 15). Character and ruler recipients use separate saved maps,
+  but each recipient's cash and item choices share `socialGiftCooldownDays`; ruler entries
+  are generation-stamped, and Council gifting uses the same ruler clock.
+  `friendOpinionThreshold` is a deprecated fallback for older data sets; new mods should
+  define the shared relationship threshold. Wedding and authored event gifts do not use
+  the explicit-recipient cooldowns. Other Network
   tunables include `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
   `vassalLevyFavorRate`, and `vassalLevyFavorDays`.
 
@@ -1069,12 +1074,14 @@ unmarried children:
   `state.itemInstances` resolves generated references and `player.loadouts` assigns them.
   Never push/splice those arrays from a mod custom function. Use `FB.grantItem`,
   `FB.transferItem`, `FB.equipItem`, `FB.unequipItem`, `FB.pledgeItem`,
-  `FB.sellItem`, `FB.giveItem`, and `FB.destroyItem`.
+  `FB.sellItem`, `FB.giveItem`, `FB.giveRulerItemGift`, and `FB.destroyItem`.
 - Item cards list actual quality-adjusted powers, value, wearer, and valid actions.
   Ordinary Plain/Well-made/Masterwork gifts and unique common/fine/famed items map their
   three tiers through `balance.socialItemGiftOpinion` (core: +4/+8/+12 Regard). Explicit
-  personal item gifts share the recipient cooldown described above. An equipped item must
-  be removed before gift, sale, or pledge.
+  personal and ruler item gifts share their recipient's cash-gift cooldown described
+  above. A ruler has no inventory: `FB.giveRulerItemGift` removes the object from family
+  ownership while retaining the semantic item record used by Chronicle messages. An
+  equipped item must be removed before gift, sale, or pledge.
 - Event hooks (`custom` effects): `offer_item` (the full eligible table) and
   `offer_gear` (ordinary gear only) put an exact object on sale through `item_offer`;
   `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),

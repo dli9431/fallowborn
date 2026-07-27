@@ -149,6 +149,18 @@ king tier and up), not full chars — the Deeds banner's "vassal of X" links to 
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great
 officers of the crown.
 
+Every living AI ruler sheet offers the same cash-or-armory gift picker. Cash prices follow
+realm rank through `balance.rulerCashGiftCostByRank` (Count 10, Duke 15, King 25, Emperor
+40 by default) and grant `balance.rulerCashGiftOpinion` (+15). Unequipped, unpledged items
+grant the same +4/+8/+12 quality-tier influence as personal item gifts and permanently
+leave the family armory; their semantic snapshot remains in the Chronicle. Direct and
+higher lieges and all vassals beneath the player gain Favor, while rulers outside that
+feudal chain gain Opinion. Both write the existing player-relative realm-opinion store.
+Cash and items share one 90-day ruler-recipient clock in `player.realmGiftTurns`. Each
+entry stores the gift turn and `realm.ruler.generation`, so succession makes the new ruler
+a fresh recipient without erasing unrelated clocks. Every accepted ruler gift spends one
+day.
+
 **Tiers** 0–7 (serf…emperor) feed the five broader societal roles documented in
 [events.md](events.md). Runtime changes use `FB.setPlayerTier`, which preserves the
 gentry-generation rule while immediately revalidating travel, focus, livelihood

@@ -877,15 +877,44 @@ window.FB = window.FB || {};
     if (!FB.transferItem(state, ref, cid)) return false;
     c.opinion = FB.clamp(c.opinion + boost, -100, 100);
     if (FB.noteSocialGift) FB.noteSocialGift(state, cid);
-    if (state.roles.lord === cid) {
-      state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) + boost, -100, 100);
-    }
     FB.news(state, FB.msg('news.item.given',
       '🎁 You give {item} to {name}. (regard {regard})', {
         item:FB.itemParam(state, ref, true),
         name:c.name,
         regard:Math.round(c.opinion)
       }));
+    return true;
+  };
+
+  FB.giveRulerItemGift = function (state, ref, rid) {
+    const item = FB.resolveItem(state, ref);
+    const r = rid && state.realms[rid];
+    if (!item || !r || !r.alive || !r.ruler || rid === 'player' ||
+      state.player.items.indexOf(ref) < 0 || loanPledgesRef(state, ref) ||
+      assignmentForRaw(state, ref) ||
+      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid))) return false;
+    const boost = FB.giftOpinion(item);
+    const itemParam = FB.itemParam(state, ref, true);
+    if (!FB.destroyItem(state, ref, { force:true })) return false;
+    FB.adjustRealmOpinion(state, rid, boost);
+    if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
+    if (FB.rulerGiftUsesFavor(state, rid)) {
+      FB.news(state, FB.msg('news.realm.item_gift_favor',
+        '🎁 You give {item} to {ruler} of {realm}. (favor {favor})', {
+          item:itemParam,
+          ruler:r.ruler.name,
+          realm:r.name,
+          favor:Math.round(FB.realmOpinionOf(state, rid))
+        }));
+    } else {
+      FB.news(state, FB.msg('news.realm.item_gift_opinion',
+        '🎁 You give {item} to {ruler} of {realm}. (opinion {opinion})', {
+          item:itemParam,
+          ruler:r.ruler.name,
+          realm:r.name,
+          opinion:Math.round(FB.realmOpinionOf(state, rid))
+        }));
+    }
     return true;
   };
 

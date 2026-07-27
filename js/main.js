@@ -839,7 +839,7 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
-        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
@@ -981,7 +981,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
-        socialAttention: {}, friendContacts: {}, socialGiftTurns: {},
+        socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
@@ -1850,6 +1850,7 @@ window.FB = window.FB || {};
     p.suitorIds = null; // the dead parent's prospects do not follow the heir
     p.socialAttention = {};
     p.socialGiftTurns = {};
+    p.realmGiftTurns = {};
     p.plot = null; // plots die with their plotter
     p.royalCompact = null; // the dead ruler's marriage alliance ends
     p.rivalContacts = {};
