@@ -30,20 +30,35 @@ age-neutral events like sickness and plague) until they come of age.
 
 **Focus and instruction are separate choices.** A child aged 6–15 chooses the skill being
 studied, then learns at home, from a named household/neighbour tutor, at a religious charity
-school, at a town merchant's school, or from a personal learned master. Named tutors use
-their actual focused skill. The lord fosters only gentle children — the instruction picker
-offers him only at `FB.playerStation(state) >= 2` (gentry and up); a serf's child is never
-sent to his hall. Merchant schools require local development 2 and do not teach martial.
-Personal masters remain generated characters, so they can pass on traits or die.
+school, at a town merchant's school, at the Noble Academy, or from a personal learned master.
+Named tutors use their actual focused skill. The lord fosters only gentle children — the
+instruction picker offers him only at `FB.playerStation(state) >= 2` (gentry and up); a
+serf's child is never sent to his hall. Merchant schools require local development 2 and do
+not teach martial. The Noble Academy instead requires household tier 2 (gentry) and the
+effective sovereign's Scholarly Networks technology, has no development gate, and teaches
+all five education focuses. Personal masters remain generated characters, so their focused
+skill can exceed the academy's fixed chance; they can also pass on traits or die.
 
-**Paid schooling is seasonal.** Charity schools, merchant schools, and personal masters
-charge the exact `FBDATA.schooling` fee at every 90-day boundary. An unaffordable fee pauses
-that term without cancelling the arrangement; the household retries next season. Each
-completed term saves one quarter of the difference between home instruction and the
-arrangement's full-year chance in `c.edu.lessonBoost`. The yearly education roll consumes
-and clears that saved bonus, so changing teachers just before winter cannot buy a full
-year's result. Old saves with a generated hired tutor lazily identify it as the recurring
-personal-master arrangement.
+**Paid schooling is seasonal.** Charity schools, merchant schools, the Noble Academy, and
+personal masters charge the exact training-cost-modified `FBDATA.schooling` fee at every
+90-day boundary. An unaffordable fee pauses that term without cancelling the arrangement;
+the household retries next season. Each completed term saves one quarter of the difference
+between home instruction and the arrangement's full-year chance in `c.edu.lessonBoost`.
+Institutional terms also increment the matching id in `c.edu.schoolTerms`. Missed fees add
+no term, and changing schools preserves every earlier entry. The New Year pass consumes and
+clears both ledgers, so changing teachers just before winter cannot buy a full year's result
+or erase a dangerous term already attended. Old saves with a generated hired tutor lazily
+identify it as the recurring personal-master arrangement.
+
+**Academy opportunity has a cost beyond coin.** Each completed Noble Academy term adds
+0.5% extra mortality at the next New Year, up to 2% after four terms. This roll happens
+before directed learning and coming-of-age rewards. A dependent student's death uses the
+ordinary character cleanup; a minor protagonist's death ends yearly processing and records
+an academy-specific legend. Surviving academy terms give the household at most one annual
+academy decision, with probability `min(1, total terms / 4)` and the named student selected
+in proportion to their terms. The immediately previous academy story is excluded. Patron
+introductions create or warm a life-local noble Network contact for the current protagonist,
+not a permanent relationship owned by the student.
 
 **Childhood pacing.** A child's total skill income (Study focus, education tick,
 childhood events) is tuned to land only modestly above an adult's (~5/yr vs ~3–4/yr):
@@ -51,9 +66,9 @@ Study starts from a 0.5 seasonal chance before the shared 0.75 focus-training
 multiplier — below the best adult focus's 0.7 base chance — and childhood lesson
 events carry 6–8-season cooldowns so the same lesson can't recur constantly.
 Home instruction has an 18% yearly directed-learning chance, charity school 35%, merchant
-school 60%, and a named tutor or personal master `30% + 4%` per point of focused tutor
-skill, capped at 90%. The family Letters holding adds its existing 8 percentage points.
-Keep new childhood content inside that envelope.
+school 60%, Noble Academy 75%, and a named tutor or personal master `30% + 4%` per point of
+focused tutor skill, capped at 90%. National technology and the family Letters holding add
+their existing education bonuses. Keep new childhood content inside that envelope.
 
 **Arms training is male; command is not.** No formal arms training for girls in the
 867+ world: the martial *training* foci (`militia`, `drill`, `stand_guard`,

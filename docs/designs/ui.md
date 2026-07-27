@@ -161,9 +161,11 @@ modal is the other full-body surface: it paints the frozen final loadout beside 
 
 Minor character sheets separate the education-focus picker from the instruction picker.
 Every school/tutor row shows the projected full-year directed-learning chance and exact
-seasonal fee; unavailable town/focus/age combinations remain visible with their reason.
-The upbringing summary repeats the current arrangement, projected chance, fee, and paused
-payment state.
+training-cost-modified seasonal fee; unavailable rank, technology, town, focus, and age
+combinations remain visible with their exact reason. A school with annual mortality states
+its per-term and four-term danger in the picker. The upbringing summary repeats the current
+arrangement, projected chance, fee, paused payment state, and any completed dangerous terms
+even after the child switches to another arrangement.
 
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending

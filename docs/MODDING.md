@@ -580,6 +580,9 @@ vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petit
 record_liege_grant` and the
 disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{suitor}` role) /
 `polly_rout` (the small mortal-wound roll on a lost shield-wall) live in `js/events.js`;
+the Noble Academy handlers `academy_introduction academy_student_focus
+academy_student_dip academy_student_ste academy_student_int academy_student_lea
+academy_withdraw` target the queued `ctx.studentId` and also live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
@@ -599,7 +602,7 @@ key is `ailments`.
 
 ### Text tokens
 
-`{name} {dyn} {title} {spouse} {suitor} {late} {lord} {priest} {friend} {rival} {childname}
+`{name} {dyn} {title} {spouse} {suitor} {late} {lord} {priest} {friend} {rival} {childname} {student}
 {province} {location} {destination} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
 enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
@@ -609,6 +612,9 @@ liege realm; `{rname}` / `{rulername}` are the realm and ruler named by `ctx.rid
 appeal/revoke pickers and vassal events); `{cname}` is the county named by `ctx.pid`.
 `{location}` is the traveler’s current county (or `ctx.locationId`) and
 `{destination}` is the journey destination (or `ctx.destinationId`).
+`{student}` is the exact character named by queued-event `ctx.studentId`; mentioning it
+also gives that student a character card in the event modal. Annual schooling queues also
+provide `ctx.studentFocus` and `ctx.schoolId` for custom effects.
 `{god}`/`{holy}`/`{temple}` adapt to the player's faith (God/priest/church,
 Allah/imam/mosque, the gods/godi/shrine…) — prefer them over hard-coded religious words so
 events read correctly for every culture.
@@ -888,23 +894,39 @@ instruction arrangements:
 ```json
 { "schooling": { "grammar_school": {
   "name": "Grammar School", "icon": "📚",
-  "cost": 1, "chance": 0.5, "devMin": 2,
+  "cost": 1, "chance": 0.5, "tierMin": 1, "devMin": 2,
   "focuses": ["dip", "ste", "lea"],
+  "annualMortality": 0.01,
+  "annualEvents": ["grammar_prize", "grammar_debate"],
   "desc": "Letters, figures, rhetoric, and law."
 } } }
 ```
 
-- `cost` is gold charged at each 90-day season boundary.
+- `cost` is base gold charged at each 90-day season boundary before national
+  training-cost modifiers.
 - `chance` is the full four-term yearly chance of gaining the directed focus skill,
   before household education bonuses and the global cap.
+- `tierMin` optionally requires that minimum household tier (0 Serf through 7 Emperor).
 - `devMin` optionally requires that development in the home county.
 - `focuses` optionally limits the education focuses the school can teach.
+- `requiresTech` optionally requires completed technology in the household's effective
+  sovereign nation.
+- `annualMortality` optionally adds a full four-term mortality probability at New Year.
+  Risk scales linearly with completed terms (`annualMortality × terms / 4`) and resolves
+  before education and coming-of-age.
+- `annualEvents` optionally lists queued event ids. Surviving terms across the household
+  produce at most one annual story with probability `min(1, terms / 4)`; the student is
+  selected in proportion to completed terms, and the immediately previous schooling story
+  is excluded.
 - `name`/`desc` accept the same localization tokens and faith-variant objects as
   other structured data.
 - The built-in `master` id is special: its chance comes from the attached tutor
   character's focused skill rather than a fixed `chance`.
 - Current instruction lives in `character.edu.school`; the accumulated value of
-  completed terms lives in `character.edu.lessonBoost`.
+  completed learning terms lives in `character.edu.lessonBoost`. Completed institutional
+  terms also accumulate by schooling id in `character.edu.schoolTerms`; missed fees do not
+  add exposure, switching schools does not erase it, and the New Year pass resets consumed
+  entries. Missing maps in old saves are treated as empty.
 
 ## Family enterprises
 

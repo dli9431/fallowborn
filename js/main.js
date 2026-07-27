@@ -1263,6 +1263,10 @@ window.FB = window.FB || {};
     const me = s.chars[p.charId];
     const year = s.date.year;
 
+    // paid-term risks resolve now; surviving story candidates wait through mortality
+    const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
+    if (schoolingAnnual === false) return;
+
     // children: schooling, then coming of age
     educationTick(s);
     FB.livelihoodYearly(s);
@@ -1426,6 +1430,8 @@ window.FB = window.FB || {};
         }, { relation: kinRel[c.id].toLowerCase(), name: c.name, age: a }));
       }
     }
+
+    if (FB.schoolingYearEvents) FB.schoolingYearEvents(s, schoolingAnnual);
 
     // popular opinion drifts toward 0
     p.pop = Math.round(p.pop * 0.85);

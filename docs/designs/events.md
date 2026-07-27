@@ -72,6 +72,15 @@ A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename fiel
 modal — prefilled with the generated name, applied when any option is chosen; autoresolve
 keeps the generated name.
 
+Annual schooling stories are also ordinary queued event data. A schooling definition's
+`annualEvents` ids are considered at New Year after its `schoolTerms` mortality rolls.
+Across the household, surviving terms produce at most one story; `ctx.studentId`,
+`ctx.studentFocus`, and `ctx.schoolId` freeze the selected student and arrangement. The
+`{student}` token resolves that exact character and automatically adds their character card
+to the modal. Noble Academy effects in `js/events.js` train that student rather than the
+protagonist, can withdraw their current academy arrangement, and can introduce a generated
+or existing noble through the current protagonist's normal Network contact API.
+
 **Rival events require a real rival.** `FB.prepareEvent` and `FB.applyEffects` never create
 the `rival` role from a `{rival}` token or `opinion:{role:'rival'}`. The random picker must
 gate such events with `hasRole:'rival'`; code-queued rivalry events assign the exact

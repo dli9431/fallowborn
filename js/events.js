@@ -1173,6 +1173,12 @@ window.FB = window.FB || {};
             (semantic ? neutralParam('fx.param.your_child') : FB.T('your child'));
           break;
         }
+        case 'student': {
+          const student = ctx && ctx.studentId ? state.chars[ctx.studentId] : null;
+          out[k] = student ? student.name :
+            (semantic ? neutralParam('fx.param.your_child') : FB.T('your child'));
+          break;
+        }
         case 'late':
           out[k] = (ctx && ctx.lateName) ||
             (semantic ? neutralParam('fx.param.your_late_spouse') : FB.T('your late spouse'));
@@ -2331,6 +2337,125 @@ window.FB = window.FB || {};
     const sp = FB.spouseOf(state, state.chars[state.player.charId]);
     return !!sp && sp.station != null && sp.station < FB.playerStation(state);
   };
+
+  /* ---------- Noble Academy decisions (events_common.js) ---------- */
+  function academyStudent(state, ctx) {
+    const c = ctx && ctx.studentId ? state.chars[ctx.studentId] : null;
+    return c && !c.dead ? c : null;
+  }
+
+  function academyTrain(state, ctx, skill) {
+    const c = academyStudent(state, ctx);
+    if (!c) return false;
+    if (!skill) skill = (ctx && ctx.studentFocus) || (c.edu && c.edu.focus);
+    if (FB.SKILLS.indexOf(skill) < 0) return false;
+    FB.gainSkill(c, skill, 1);
+    return true;
+  }
+
+  function academyNoble(state, pids, contacts) {
+    const existing = [];
+    const ungenerated = [];
+    state.provChars = state.provChars || {};
+    for (let i = 0; i < pids.length; i++) {
+      const ids = state.provChars[pids[i]];
+      if (!ids || !ids.length) {
+        ungenerated.push(pids[i]);
+        continue;
+      }
+      let hasLivingNoble = false;
+      for (let j = 0; j < ids.length; j++) {
+        const c = state.chars[ids[j]];
+        if (!c || c.dead || c.role !== 'notable' || FB.stationOf(c) < 3) continue;
+        hasLivingNoble = true;
+        if (!contacts[c.id] && c.id !== state.player.charId) existing.push(c);
+      }
+      if (!hasLivingNoble) ungenerated.push(pids[i]);
+    }
+    if (existing.length) return FB.pick(existing);
+    if (!ungenerated.length) return null;
+    const generated = FB.provNotables(state, FB.pick(ungenerated)).filter(function (c) {
+      return c && !c.dead && c.role === 'notable' && FB.stationOf(c) >= 3 &&
+        !contacts[c.id] && c.id !== state.player.charId;
+    });
+    return generated.length ? FB.pick(generated) : null;
+  }
+
+  function academyIntroductionCandidate(state, contacts) {
+    const home = state.player.provinceId;
+    const realmId = state.owner[home];
+    const other = FB.world.provs.filter(function (pr) {
+      return pr && !pr.wasteland && pr.id !== home;
+    });
+    const sameRealm = other.filter(function (pr) {
+      return state.owner[pr.id] === realmId;
+    }).map(function (pr) { return pr.id; });
+    let c = academyNoble(state, sameRealm, contacts);
+    if (c) return c;
+    const elsewhere = other.filter(function (pr) {
+      return state.owner[pr.id] !== realmId;
+    }).map(function (pr) { return pr.id; });
+    return academyNoble(state, elsewhere, contacts);
+  }
+
+  FB.fns.academy_introduction = function (state, ctx) {
+    const student = academyStudent(state, ctx);
+    if (!student) return false;
+    const contacts = FB.friendContacts(state);
+    let c = academyIntroductionCandidate(state, contacts);
+    let result = 'new';
+    if (!c) {
+      const warm = FB.friendConnections(state).filter(function (candidate) {
+        return FB.stationOf(candidate) >= 3;
+      });
+      c = warm.length ? warm[0] : null;
+      result = c ? 'existing' : 'none';
+    }
+    if (c) {
+      FB.noteFriendContact(state, c);
+      c.opinion = FB.clamp(c.opinion + 15, -100, 100);
+      ctx.contact = FB.fullName(c);
+      ctx.regard = Math.round(c.opinion);
+    }
+    FB.news(state, FB.msg('news.education.academy_introduction', {
+      forms: {
+        select:'value', param:'result', cases:{
+          new:'🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} regard.',
+          existing:'🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} regard.',
+          other:'🤝 The promised academy introduction finds no noble contact still able to receive it.'
+        }
+      }
+    }, {
+      result:result, student:student.name,
+      contact:c ? FB.fullName(c) : '', regard:c ? Math.round(c.opinion) : 0
+    }));
+    return !!c;
+  };
+
+  FB.fns.academy_student_focus = function (state, ctx) {
+    return academyTrain(state, ctx, null);
+  };
+  FB.fns.academy_student_dip = function (state, ctx) {
+    return academyTrain(state, ctx, 'dip');
+  };
+  FB.fns.academy_student_ste = function (state, ctx) {
+    return academyTrain(state, ctx, 'ste');
+  };
+  FB.fns.academy_student_int = function (state, ctx) {
+    return academyTrain(state, ctx, 'int');
+  };
+  FB.fns.academy_student_lea = function (state, ctx) {
+    return academyTrain(state, ctx, 'lea');
+  };
+  FB.fns.academy_withdraw = function (state, ctx) {
+    const c = academyStudent(state, ctx);
+    if (!c || !c.edu || c.edu.school !== 'noble_academy') return false;
+    c.edu.school = null;
+    c.edu.tutorId = null;
+    delete c.edu.schoolUnpaid;
+    return true;
+  };
+
   /* the church grants the annulment plea (annulment_plea event) */
   FB.fns.annul_granted = function (state) {
     const me = state.chars[state.player.charId];

@@ -1197,9 +1197,38 @@ window.FB = window.FB || {};
     if (c.edu && c.edu.schoolUnpaid) {
       note = FB.T('{summary} · fee unpaid; this term is paused', { summary:note });
     }
-    return '<div class="progressnote">' + esc(note) +
+    let h = '<div class="progressnote">' + esc(note) +
       (FB.ageOf(c, s.date.year) < 6 ? ' <span class="cmeta">' +
       esc(FB.T('(lessons begin at age 6)')) + '</span>' : '') + '</div>';
+    const terms = c.edu && c.edu.schoolTerms && typeof c.edu.schoolTerms === 'object' &&
+      !Array.isArray(c.edu.schoolTerms) ? c.edu.schoolTerms : {};
+    const warned = {};
+    for (const id in terms) {
+      const def = FBDATA.schooling[id];
+      const count = Math.min(4, Math.max(0, Math.floor(Number(terms[id]) || 0)));
+      const annualMortality = def ? Math.min(1,
+        Math.max(0, Number(def.annualMortality) || 0)) : 0;
+      if (!annualMortality || !count) continue;
+      warned[id] = 1;
+      const risk = Math.round(annualMortality * count / 4 * 1000) / 10;
+      h += '<div class="progressnote">' + esc(FB.T(
+        '⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year', {
+          school:dt(s, 'schooling', id, def, 'name'), terms:count, risk:risk
+        })) + '</div>';
+    }
+    const activeDef = schoolId && FBDATA.schooling[schoolId];
+    const activeMortality = activeDef ? Math.min(1,
+      Math.max(0, Number(activeDef.annualMortality) || 0)) : 0;
+    if (activeMortality && !warned[schoolId]) {
+      const termRisk = Math.round(activeMortality / 4 * 1000) / 10;
+      const annualRisk = Math.round(activeMortality * 1000) / 10;
+      h += '<div class="progressnote">' + esc(FB.T(
+        '⚠ Each completed term at {school} adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).', {
+          school:dt(s, 'schooling', schoolId, activeDef, 'name'),
+          termRisk:termRisk, annualRisk:annualRisk
+        })) + '</div>';
+    }
+    return h;
   }
 
   function livelihoodNote(s, c) {
@@ -2807,7 +2836,13 @@ window.FB = window.FB || {};
   /* the war-council customs carry no numbers for fxScore to read — without
      these, "Fall back and refit" (health +1) outscored "Press the siege"
      every season and an automated war could never take land */
-  const CUSTOM_FX_SCORE = { war_siege: 12, war_win: 8, war_hunt: 6, war_loss: -8 };
+  const CUSTOM_FX_SCORE = {
+    war_siege:12, war_win:8, war_hunt:6, war_loss:-8,
+    academy_introduction:3, academy_student_focus:1.5,
+    academy_student_dip:1.5, academy_student_ste:1.5,
+    academy_student_int:1.5, academy_student_lea:1.5,
+    academy_withdraw:-1
+  };
   function fxScore(fx) {
     if (!fx) return 0;
     let v = 0;
@@ -3029,9 +3064,9 @@ window.FB = window.FB || {};
   /* every soul an event names gets a card — face, house arms, home, and
      allegiance — so "Reginbald insulted me" never arrives as a bare name.
      Scans the raw strings (title, text variants, option labels, branch
-     texts) for {role} tokens; prepareEvent creates those roles before any
-     localized rendering begins. */
-  function eventCharCards(s, ev, carded) {
+     texts) for {role} tokens and the queued {student}; prepareEvent creates
+     roles before any localized rendering begins. */
+  function eventCharCards(s, ev, ctx, carded) {
     let raw = ' ';
     function add(x) {
       if (!x) return;
@@ -3049,6 +3084,13 @@ window.FB = window.FB || {};
       if (raw.indexOf('{' + role + '}') < 0) continue;
       const c = FB.getRole(s, role, false);
       if (c && !carded[c.id]) { carded[c.id] = 1; h += UI.charCardHtml(s, c); }
+    }
+    if (raw.indexOf('{student}') >= 0 && ctx && ctx.studentId) {
+      const student = s.chars[ctx.studentId];
+      if (student && !student.dead && !carded[student.id]) {
+        carded[student.id] = 1;
+        h += UI.charCardHtml(s, student);
+      }
     }
     return h;
   }
@@ -3069,7 +3111,7 @@ window.FB = window.FB || {};
       const cc = FB.getRole(s, ev.charCard, false);
       if (cc) { bodyHtml += UI.charCardHtml(s, cc); carded[cc.id] = 1; }
     }
-    bodyHtml += eventCharCards(s, ev, carded);
+    bodyHtml += eventCharCards(s, ev, ctx, carded);
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
     const box = $('ev-options');
@@ -7831,8 +7873,57 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     function yearlyChance(chance) {
       return Math.round(Math.min(B.educationChanceCap || 0.9,
-        chance + FB.holdingBonus(s, 'edu') +
+        chance + (FB.techBonus ? FB.techBonus(s, 'education') : 0) +
+        FB.holdingBonus(s, 'edu') +
         (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0)) * 100);
+    }
+    function schoolFee(def) {
+      return (Number(def && def.cost) || 0) * FB.techCostFactor(s, 'training');
+    }
+    function schoolTechNames(def) {
+      const reqs = Array.isArray(def.requiresTech) ? def.requiresTech : [def.requiresTech];
+      return reqs.filter(function (id) {
+        return id && !FB.hasTech(s, id);
+      }).map(function (id) {
+        const tech = FBDATA.tech[id];
+        return tech ? dt(s, 'tech', id, tech, 'name') : id;
+      });
+    }
+    function schoolLockReason(def) {
+      const age = FB.ageOf(c, s.date.year);
+      if (!focus) return FB.T('Choose an education focus first.');
+      if (age < 6) return FB.T('Lessons begin at age 6.');
+      if (age >= 16) return FB.T('Lessons end at age 16.');
+      if (def.tierMin !== undefined && s.player.tier < def.tierMin) {
+        return FB.T('Requires {rank} rank or higher.', {
+          rank:FB.titleWordFor(s, def.tierMin)
+        });
+      }
+      if (def.requiresTech && !FB.techRequirementMet(s, def.requiresTech)) {
+        const names = schoolTechNames(def);
+        return names.length === 1
+          ? FB.T('Requires the national technology {technology}.', { technology:names[0] })
+          : FB.T('Requires the national technologies {technologies}.', {
+              technologies:names.join(', ')
+            });
+      }
+      if (def.devMin && (s.dev[s.player.provinceId] || 1) < def.devMin) {
+        return FB.T('Requires a town or city in your home county.');
+      }
+      if (def.focuses && def.focuses.indexOf(focus) < 0) {
+        return FB.T('This school does not teach the chosen focus.');
+      }
+      return '';
+    }
+    function schoolRiskWarning(def) {
+      const annualMortality = Math.min(1,
+        Math.max(0, Number(def.annualMortality) || 0));
+      if (!annualMortality) return '';
+      return FB.T(
+        '⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).', {
+          termRisk:Math.round(annualMortality / 4 * 1000) / 10,
+          annualRisk:Math.round(annualMortality * 1000) / 10
+        });
     }
     function tutorChance(t) {
       return Math.min(B.educationChanceCap || 0.9,
@@ -7924,37 +8015,38 @@ window.FB = window.FB || {};
       const available = focus && FB.schoolingAvailable(s, c, id);
       const cur = currentSchool === id;
       let reason = FB.T('{chance}% yearly · {money:amount} each season', {
-        chance:yearlyChance(def.chance), amount:def.cost || 0
+        chance:yearlyChance(def.chance), amount:schoolFee(def)
       });
-      if (!focus) reason = FB.T('Choose an education focus first.');
-      else if (def.devMin && (s.dev[s.player.provinceId] || 1) < def.devMin) {
-        reason = FB.T('Requires a town or city in your home county.');
-      } else if (def.focuses && def.focuses.indexOf(focus) < 0) {
-        reason = FB.T('This school does not teach the chosen focus.');
-      } else if (FB.ageOf(c, s.date.year) < 6) {
-        reason = FB.T('Lessons begin at age 6.');
-      }
+      const locked = schoolLockReason(def);
+      if (locked) reason = locked;
+      const warning = schoolRiskWarning(def);
       h += '<button class="actionbtn" data-school="' + id + '"' +
         (!available ? ' disabled' : '') + '>' + (cur ? '◉ ' : '○ ') +
         def.icon + ' ' + esc(dt(s, 'schooling', id, def, 'name')) +
-        '<span class="adesc">' + esc(reason) + '</span></button>';
+        '<span class="adesc">' + esc(reason) +
+        (warning ? '<br>' + esc(warning) : '') + '</span></button>';
     }
+    const masterDef = FBDATA.schooling.master;
+    const masterFee = schoolFee(masterDef);
+    const masterAvailable = focus && FB.schoolingAvailable(s, c, 'master');
     for (const cd of cands) {
       const cur = c.edu && c.edu.tutorId === cd.id;
       const detail = cd.c.role === 'tutor' ?
         FB.T('{skill} · {money:amount} each season', {
-          skill:skillNote(cd.c), amount:FBDATA.schooling.master.cost
+          skill:skillNote(cd.c), amount:masterFee
         }) :
         FB.T('{skill} · free', { skill:skillNote(cd.c) });
       h += '<button class="actionbtn" data-tutor="' + cd.id + '">' + (cur ? '◉ ' : '○ ') + esc(cd.name) +
         '<span class="adesc">' + esc(detail) + '</span></button>';
     }
     if (currentSchool !== 'master') {
+      const masterLock = schoolLockReason(masterDef);
       h += '<button class="actionbtn" data-tutor="~hire"' +
-        (!focus || s.player.gold < FBDATA.schooling.master.cost ? ' disabled' : '') +
+        (!masterAvailable || s.player.gold < masterFee ? ' disabled' : '') +
         '>' + esc(FB.T('🎓 Hire a personal learned master ({money:amount} each season)', {
-          amount:FBDATA.schooling.master.cost
-        })) + '<span class="adesc">' + esc(masterDescription()) + '</span></button>';
+          amount:masterFee
+        })) + '<span class="adesc">' +
+        esc(masterLock || masterDescription()) + '</span></button>';
     }
     h += '<button class="actionbtn" data-tutor="~none">' +
       (currentSchool || (c.edu && c.edu.tutorId) ? '○ ' : '◉ ') +
@@ -8007,7 +8099,7 @@ window.FB = window.FB || {};
             }
           }, { subject: self ? 'self' : 'other', name: c.name }));
         } else if (v === '~hire') {
-          if (!focus || s.player.gold < FBDATA.schooling.master.cost) return;
+          if (!masterAvailable || s.player.gold < masterFee) return;
           const pr = FB.world.byId[s.player.provinceId];
           const master = FB.makeCharacter(s, {
             culture: pr.culture, religion: pr.religion,
@@ -8614,7 +8706,7 @@ window.FB = window.FB || {};
       '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, your lord’s favor, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
-      '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. A Learning education grants literacy at 16.</p>' +
+      '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +
       '<p>Resident spouses and unmarried children add provisions and quarters to seasonal household upkeep. Working family members can offset that cost with wages or enterprise income.</p>' +
       '<h4>Rivalries</h4>' +
       '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +

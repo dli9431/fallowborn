@@ -114,6 +114,17 @@ FBDATA.schooling = {
     focuses:['dip','ste','int','lea'],
     desc:'Paid lessons in letters, figures, persuasion, and practical affairs.'
   },
+  noble_academy: {
+    name:'Noble Academy', icon:'🏛', cost:4, chance:0.75, tierMin:2,
+    requiresTech:'scholarly_networks',
+    focuses:['dip','mar','ste','int','lea'],
+    annualMortality:0.02,
+    annualEvents:[
+      'academy_patron_notice', 'academy_purse',
+      'academy_disputation', 'academy_houses_compete'
+    ],
+    desc:'A costly education among noble houses, rich in opportunity and harsh in its demands.'
+  },
   master: {
     name:'Personal learned master', icon:'🎓', cost:3, requiresTech:'scholarly_networks',
     desc:'A private teacher whose own skill sets the pace of study.'
