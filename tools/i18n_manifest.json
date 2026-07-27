@@ -42079,6 +42079,16 @@
         "text": "⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated."
       }
     },
+    "src.268a86bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Economic development"
+      }
+    },
     "src.2692fb9a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56268,6 +56278,16 @@
       ],
       "source": {
         "text": "🧭 The trade partnership is resolved."
+      }
+    },
+    "src.60a14060": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Technological development"
       }
     },
     "src.60a2596b": {
@@ -72841,16 +72861,6 @@
       ],
       "source": {
         "text": "Walk away from it."
-      }
-    },
-    "src.a2381c8a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Development"
       }
     },
     "src.a24960c4": {

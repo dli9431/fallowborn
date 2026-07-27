@@ -53,6 +53,14 @@ duplicated by separation and reunion.
 Knowledge and exposure are permanent. `FB.hasTech`, `FB.techExposed`,
 `FB.techRequirementMet`, and `FB.hasTechUnlock` are the normal gameplay queries.
 
+The Land tab summarizes the effective sovereign's completed knowledge as a
+0–10 **Technological development** rating: completed entries still present in
+the loaded `FBDATA.tech` catalogue divided by the total loaded catalogue,
+multiplied by 10 and rounded to the nearest integer. Exposed and active but
+incomplete entries do not count. This is a compact comparison display only;
+technology's gameplay effects continue to come from its individual unlocks and
+`fx`.
+
 ## Traditions and bookmark seeding
 
 Technology traditions describe overlapping routes of transmission, not mutually
