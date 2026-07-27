@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.72.0';
+  FB.VERSION = '1.72.1';
   FB.CHANGELOG = [
+    { v: '1.72.1', date: '2026-07-27', changes: [
+      'A generated ruler\'s heraldry and identity card now opens their full character sheet.'
+    ] },
     { v: '1.72.0', date: '2026-07-27', changes: [
       'Living rulers can now be cultivated through capital visits, and gifts sent beyond the household’s realm travel by courier with visible delivery or return times.',
       'Gift choices remain readable in narrow dialogs.'

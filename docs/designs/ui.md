@@ -260,8 +260,9 @@ both views show opinion and the current direction.
 
 Every living AI ruler sheet exposes **Cultivate relationship…** and **Offer a gift…**.
 Cultivation materializes that ruler only when chosen and opens the ordinary capital-visit
-review; once materialized, **Open full character sheet** exposes applicable friendship,
-rivalry, courtship, marriage, and spouse actions. Both sheets route gifts back through the
+review; once materialized, the ruler identity card and **Open full character sheet**
+action expose applicable friendship, rivalry, courtship, marriage, and spouse actions.
+Both sheets route gifts back through the
 ruler picker, so its numbered cash choice uses the rank price, exact armory influence, and
 Favor/Opinion plus ruler-generation cooldown rather than the ordinary five-gold path.
 Foreign-sovereign choices preview courier time and later show outbound/return ETA. The

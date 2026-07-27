@@ -163,7 +163,8 @@ AI rulers ordinarily stay lightweight `realm.ruler` objects (name, culture, age,
 and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads
 at king tier and up). The Deeds banner's "vassal of X" links to their realm sheet via
 `UI.showLiegeModal` (`data-liege` click delegation); after cultivation materializes the
-ruler, that sheet also links to the full character sheet. The cultivation action uses
+ruler, both the top identity card and **Open full character sheet** action on that sheet
+link to the full character sheet. The cultivation action uses
 the ordinary relationship visit to the current capital, including normal route cost and
 the 90-day minimum stay; attention advances only while the player is physically there. See
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great

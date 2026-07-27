@@ -5782,7 +5782,11 @@ window.FB = window.FB || {};
     const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player.rank >= 3 &&
       !r.liege && r.rank >= 3 && FB.realmsAdjacent(s, 'player', rid);
     const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
-    let h = '<div class="charcard"><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
+    let h = '<div class="charcard"' + (rulerCharacter
+      ? ' data-cid="' + esc(rulerCharacter.id) + '" title="' +
+        esc(FB.T('Open their sheet and your dealings with them')) + '"'
+      : '') +
+      '><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
       '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
         title: FB.realmRankTitle(s, r), name: r.ruler.name
       })) + '</div>' +
