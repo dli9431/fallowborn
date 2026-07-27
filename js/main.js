@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.2';
+  FB.VERSION = '1.65.3';
   FB.CHANGELOG = [
+    { v: '1.65.3', date: '2026-07-26', changes: [
+      'Mobile dialogs and pickers now show complete bottom frames above device safe areas.',
+      'Mobile tabs now use full labels without desktop keycap styling.'
+    ] },
     { v: '1.65.2', date: '2026-07-26', changes: [
       'National technology research now takes longer across every historical era.'
     ] },
