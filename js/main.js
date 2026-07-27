@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.73.0';
+  FB.VERSION = '1.74.0';
   FB.CHANGELOG = [
+    { v: '1.74.0', date: '2026-07-27', changes: [
+      'Great holy wars now end in settlement councils where vows, service, occupation, rights, and local support shape claims to captured land and sacred-site custody.'
+    ] },
     { v: '1.73.0', date: '2026-07-27', changes: [
       'Temporary county and campaign modifiers now make relief, charters, vows, and military conditions visible until their effects expire.'
     ] },
@@ -1083,9 +1086,8 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
     if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
-    if (!G.observe && s.greatHolyWar && s.greatHolyWar.phase === 'settlement' &&
-        s.greatHolyWar.settlement &&
-        s.greatHolyWar.settlement.pendingPlayer) {
+    if (!G.observe && FB.greatHolyWarSettlementNeedsPlayer &&
+        FB.greatHolyWarSettlementNeedsPlayer(s)) {
       G.setPaused(true);
       if (FB.ui.showGreatHolyWarSettlement) FB.ui.showGreatHolyWarSettlement();
       return undefined;
@@ -1166,6 +1168,7 @@ window.FB = window.FB || {};
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
+      if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);
       FB.financeSeason(s);
       FB.tickRivalry(s);

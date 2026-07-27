@@ -301,11 +301,32 @@ settlement. `state.greatHolyWarHistory` owns the sequence, first-call/first-laun
 markers, uninterrupted sacred-loss clocks, office restoration observations,
 per-faith cooldowns, and a bounded completed-campaign summary. The personal
 `player.greatHolyWar` record owns camp, service mode, vow/renewal/withdrawal flags,
-mandatory-defense status, and territorial eligibility.
+mandatory-defense status, territorial eligibility, `vowOutcome`, and
+`vowTerms:{seasons,desire,beneficiary,served,mustered}`. AI attacker participant
+records add `vowSeasons`, `desire`, `served`, `mustered`, and `vowOutcome`.
+
+A new settlement is
+`settlement:{schema:2,case,captured,applied,pendingPlayer,awardRealms,mainRealmId?}`.
+The generic case is entirely serializable:
+`{schema,kind,seats,assets,claims,awards,step,status,standing,nextClaimBoost,
+blessingUsed,blessed,objections,contested,playerHead,playerDiplomacy}`. Claims retain
+their extensible basis object and computed weight; awards retain asset, claimant, form,
+optional terms/beneficiary, runner-up, and move. No map ownership changes while the case
+is open. A resolved beneficiary-free personal land award uses `pendingPlayer` for the
+final accept/decline; all collected awards then apply together.
+
+Completed compact history adds locale-neutral `vowOutcome`, `desire`, attacker `vows`,
+`settlementContested`, objection count, and award summaries. Awarded realms may carry
+`sacredCustody:{religion,siteIds,campaignId,grantTurn}`. All fields remain additive
+under save format 3.
 
 `FB.repairGreatHolyWar` runs before `FB.repairWars` on restore. Missing fields on old
 saves initialize lazily; malformed ids, phases, objectives, occupations, participants,
-and pledges are discarded or clamped without rendering prose. Army repair then keeps
+and pledges are discarded or clamped without rendering prose. Old active campaigns gain
+neutral player vow terms and deterministic, RNG-neutral AI terms. Old
+`pendingPlayer` partitions are marked legacy and retain their already-mutated
+accept/decline flow. A malformed new case rebuilds only before awards are applied; an
+already-applied case finalizes without replaying transfers. Army repair then keeps
 at most one host for every living active sovereign participant. Preparation and
 settlement do not preserve field hosts. Contribution belongs to the campaign rather
 than the current character, so it persists across protagonist succession.

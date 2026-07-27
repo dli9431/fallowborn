@@ -638,7 +638,7 @@ window.FB = window.FB || {};
       const campaign = s.greatHolyWar;
       return campaign && campaign.phase === 'preparation'
         ? FB.T('Review the camps, target, and time remaining before the banners march.')
-        : FB.T('Review coalition strength, resolve, occupations, contribution, and reward standing.');
+        : FB.T('Review coalition strength, resolve, occupations, vows, contribution, and claim standing.');
     },
     show: function (s) { return !!s.greatHolyWar; },
     run: function () {
@@ -658,10 +658,16 @@ window.FB = window.FB || {};
   { id: 'withdraw_great_holy_war', label: '🏳 Withdraw from great holy war…', noConsume: true,
     desc: function (s) {
       const cost = FB.greatHolyWarWithdrawalCost
-        ? FB.greatHolyWarWithdrawalCost(s) : { piety:100, prestige:50, inherited:false };
-      return cost.inherited
-        ? FB.T('Decline the inherited vow without a personal penalty, but surrender territorial eligibility.')
-        : FB.T('Abandon the vow for {piety} piety and {prestige} prestige, surrendering territorial eligibility.', {
+        ? FB.greatHolyWarWithdrawalCost(s)
+        : { piety:100, prestige:50, inherited:false, broken:false };
+      if (cost.inherited) {
+        return FB.T('Decline the inherited vow without a personal penalty, but surrender territorial eligibility.');
+      }
+      return cost.broken
+        ? FB.T('Break the unfinished vow for {piety} piety and {prestige} prestige.', {
+          piety:cost.piety, prestige:cost.prestige
+        })
+        : FB.T('Withdraw after fulfilling the term for {piety} piety and {prestige} prestige.', {
           piety:cost.piety, prestige:cost.prestige
         });
     },
@@ -674,13 +680,13 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarWithdraw) FB.ui.showGreatHolyWarWithdraw();
     } },
-  { id: 'great_holy_war_settlement', label: '👑 Decide the campaign grant…', noConsume: true,
+  { id: 'great_holy_war_settlement', label: '👑 Enter the settlement council…', noConsume: true,
     desc: function () {
-      return FB.T('Accept the territorial award or decline it for piety and prestige.');
+      return FB.T('Take your seat in the settlement council or decide a final territorial grant.');
     },
     show: function (s) {
-      return !!(s.greatHolyWar && s.greatHolyWar.phase === 'settlement' &&
-        s.greatHolyWar.settlement && s.greatHolyWar.settlement.pendingPlayer);
+      return !!(FB.greatHolyWarSettlementNeedsPlayer &&
+        FB.greatHolyWarSettlementNeedsPlayer(s));
     },
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarSettlement) {

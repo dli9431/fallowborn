@@ -1043,7 +1043,7 @@ window.FB = window.FB || {};
           days:Math.max(0, great.deadlineTurn - s.turn)
         });
       } else {
-        greatStatus = FB.T('partition awaits');
+        greatStatus = FB.T('settlement council awaits');
       }
       h += '<div class="progressnote warnote">' + esc(FB.T(
         '📯 {campaign} for {kingdom} · {status}', {
@@ -4647,8 +4647,55 @@ window.FB = window.FB || {};
     if (band === 'kingdom') return FB.T('kingdom crown');
     if (band === 'duchy') return FB.T('complete duchy');
     if (band === 'county') return FB.T('county');
+    if (band === 'sacred') return FB.T('sacred-site custody');
     if (band === 'honor') return FB.T('piety and prestige');
     return FB.T('no territorial claim');
+  }
+
+  function greatHolyWarDesireName(s, campaign, desire) {
+    if (!desire || desire.kind === 'neutral') return FB.T('No particular prize');
+    if (desire.kind === 'crown') return FB.T('The target crown');
+    if (desire.kind === 'sacred') return FB.T('Custody of the sacred places');
+    if (desire.kind === 'honor') return FB.T('Honor rather than land');
+    if (desire.kind === 'duchy') {
+      const duchy = FBDATA.duchies[desire.id];
+      return FB.T('The Duchy of {name}', {
+        name:duchy ? duchy.name : desire.id
+      });
+    }
+    if (desire.kind === 'county') {
+      const province = FB.world.byId[desire.id];
+      return FB.T('The County of {name}', {
+        name:province ? province.name : desire.id
+      });
+    }
+    return desire.kind;
+  }
+
+  function greatHolyWarOccupationEvidence(s, campaign, desire) {
+    if (!desire || desire.kind === 'neutral' || desire.kind === 'honor') {
+      return FB.T('Your vow seeks no territorial evidence.');
+    }
+    let ids = [];
+    if (desire.kind === 'county') ids = [desire.id];
+    else if (desire.kind === 'duchy') {
+      ids = FB.duchyCounties(desire.id).filter(function (pid) {
+        return campaign.objectiveCounties.indexOf(pid) >= 0;
+      });
+    } else if (desire.kind === 'sacred') {
+      ids = campaign.holyCounties.slice();
+    } else {
+      ids = campaign.objectiveCounties.slice();
+    }
+    let occupied = 0, personally = 0;
+    for (const pid of ids) {
+      const row = campaign.occupations[pid];
+      if (row && row.occupied) occupied++;
+      if (row && row.occupiedBy === 'player') personally++;
+    }
+    return FB.T('{occupied}/{total} relevant counties occupied; your host led {personal}.', {
+      occupied:occupied, total:ids.length, personal:personally
+    });
   }
 
   UI.showGreatHolyWarTargets = function () {
@@ -4713,25 +4760,157 @@ window.FB = window.FB || {};
       ? FB.T('You will command your realm’s host.')
       : FB.T('You will serve through your liege’s army or a personal expedition.');
     const side = camp === 'attackers' ? FB.T('attacking') : FB.T('defending');
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Take a vow for the {side} camp of the {campaign}. {service}', {
-        side:side, campaign:greatHolyWarName(s, campaign), service:service
-      })) + '</p><p>' + esc(FB.T(
-      'Your dynasty keeps contribution through succession. Withdrawal forfeits piety, prestige, and land eligibility; active campaign effects determine the final cost.')) +
-      '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="ghw-join-confirm">📯 ' +
-      esc(FB.T('Take the vow')) + '</button>' +
-      '<button class="actionbtn" id="ghw-join-cancel">' +
-      esc(FB.T('Not now')) + '</button></div>';
-    openModal(FB.T('Answer the {campaign}', {
-      campaign:greatHolyWarName(s, campaign)
-    }), h);
-    $('ghw-join-confirm').addEventListener('click', function () {
-      FB.joinGreatHolyWar(s, camp, 'player');
-      UI.closeModal();
-      UI.refresh();
-    });
-    $('ghw-join-cancel').addEventListener('click', UI.closeModal);
+    const draft = {
+      seasons:4,
+      desire:{ kind:camp === 'attackers' ? 'crown' : 'honor', id:null },
+      beneficiary:null
+    };
+
+    function title() {
+      return FB.T('Answer the {campaign}', {
+        campaign:greatHolyWarName(s, campaign)
+      });
+    }
+
+    function showService() {
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Take a vow for the {side} camp of the {campaign}. {service}', {
+          side:side, campaign:greatHolyWarName(s, campaign), service:service
+        })) + '</p><p>' + esc(FB.T(
+        'Promise one, two, or three years of seasonal service. If the campaign ends earlier, remaining continuously enrolled through its resolution keeps the vow.')) +
+        '</p></div><div class="gm-list">';
+      const terms = [
+        { seasons:4, label:FB.T('One year · 4 seasons') },
+        { seasons:8, label:FB.T('Two years · 8 seasons') },
+        { seasons:12, label:FB.T('Three years · 12 seasons') }
+      ];
+      for (const term of terms) {
+        h += '<button class="actionbtn" data-ghw-seasons="' + term.seasons +
+          '">📯 ' + esc(term.label) + '</button>';
+      }
+      h += '<button class="actionbtn" id="ghw-join-cancel">' +
+        esc(FB.T('Not now')) + '</button></div>';
+      openModal(title(), h);
+      document.querySelectorAll('[data-ghw-seasons]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          draft.seasons = parseInt(button.dataset.ghwSeasons, 10);
+          showDesire();
+        });
+      });
+      $('ghw-join-cancel').addEventListener('click', UI.closeModal);
+    }
+
+    function showDesire() {
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Name what this service is meant to secure. A precise vow strengthens that claim and weakens unrelated claims.')) +
+        '</p></div><div class="gm-list">';
+      const desires = camp === 'attackers' ? [
+        { kind:'crown', label:FB.T('The target crown') },
+        { kind:'sacred', label:FB.T('Custody of the sacred places') },
+        { kind:'duchy', label:FB.T('An exact objective duchy…') },
+        { kind:'county', label:FB.T('An exact objective county…') },
+        { kind:'honor', label:FB.T('Honor rather than land') }
+      ] : [
+        { kind:'honor', label:FB.T('Defend the faith for honor') }
+      ];
+      for (const desire of desires) {
+        h += '<button class="actionbtn" data-ghw-desire="' +
+          esc(desire.kind) + '">' + esc(desire.label) + '</button>';
+      }
+      h += '<button class="actionbtn" id="ghw-join-back">' +
+        esc(FB.T('Back')) + '</button></div>';
+      openModal(title(), h);
+      document.querySelectorAll('[data-ghw-desire]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          draft.desire = { kind:button.dataset.ghwDesire, id:null };
+          draft.beneficiary = null;
+          if (draft.desire.kind === 'duchy' ||
+              draft.desire.kind === 'county') showLandTarget();
+          else showReview();
+        });
+      });
+      $('ghw-join-back').addEventListener('click', showService);
+    }
+
+    function showLandTarget() {
+      const targets = FB.greatHolyWarDesireTargets(s, draft.desire.kind);
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Choose the exact land named in the vow.')) +
+        '</p></div><div class="gm-list">';
+      for (const target of targets) {
+        h += '<button class="actionbtn" data-ghw-vow-target="' +
+          esc(target.id) + '">' + esc(target.name) + '</button>';
+      }
+      h += '<button class="actionbtn" id="ghw-target-back">' +
+        esc(FB.T('Back')) + '</button></div>';
+      openModal(title(), h);
+      document.querySelectorAll('[data-ghw-vow-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          draft.desire.id = button.dataset.ghwVowTarget;
+          showBeneficiary();
+        });
+      });
+      $('ghw-target-back').addEventListener('click', showDesire);
+    }
+
+    function showBeneficiary() {
+      const candidates = FB.greatHolyWarVowBeneficiaries(s);
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'You may name one living adult close relative to rule a won duchy or county. If they die or take another throne before settlement, the grant returns to you.')) +
+        '</p></div><div class="gm-list">' +
+        '<button class="actionbtn" data-ghw-beneficiary="">' +
+        esc(FB.T('Claim it for yourself')) + '</button>';
+      for (const row of candidates) {
+        h += '<button class="actionbtn" data-ghw-beneficiary="' +
+          esc(row.c.id) + '">' + esc(FB.T('{name} · {relation}', {
+            name:FB.fullName(row.c), relation:FB.T(row.rel)
+          })) + '</button>';
+      }
+      h += '<button class="actionbtn" id="ghw-beneficiary-back">' +
+        esc(FB.T('Back')) + '</button></div>';
+      openModal(title(), h);
+      document.querySelectorAll('[data-ghw-beneficiary]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          draft.beneficiary = button.dataset.ghwBeneficiary || null;
+          showReview();
+        });
+      });
+      $('ghw-beneficiary-back').addEventListener('click', showLandTarget);
+    }
+
+    function showReview() {
+      const beneficiary = draft.beneficiary && s.chars[draft.beneficiary];
+      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'You promise {seasons} seasons of service and seek {desire}.{beneficiary}', {
+          seasons:draft.seasons,
+          desire:greatHolyWarDesireName(s, campaign, draft.desire),
+          beneficiary:beneficiary
+            ? FB.T(' If land is won, {name} will receive it.', {
+              name:FB.fullName(beneficiary)
+            }) : ''
+        })) + '</p><p>' + esc(FB.T(
+        'Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount.')) +
+        '</p></div><div class="gm-list">' +
+        '<button class="actionbtn" id="ghw-join-confirm">📯 ' +
+        esc(FB.T('Take this vow')) + '</button>' +
+        '<button class="actionbtn" id="ghw-review-back">' +
+        esc(FB.T('Back')) + '</button></div>';
+      openModal(title(), h);
+      $('ghw-join-confirm').addEventListener('click', function () {
+        FB.joinGreatHolyWar(s, camp, 'player', draft);
+        UI.closeModal();
+        UI.refresh();
+      });
+      $('ghw-review-back').addEventListener('click', function () {
+        if (draft.desire.kind === 'duchy' || draft.desire.kind === 'county') {
+          showBeneficiary();
+        } else {
+          showDesire();
+        }
+      });
+    }
+
+    showService();
   };
 
   UI.showGreatHolyWarPanel = function () {
@@ -4755,7 +4934,7 @@ window.FB = window.FB || {};
         season:FB.seasonName(deadline.season), day:deadline.day, year:deadline.year
       });
     } else {
-      timing = FB.T('The territorial partition awaits a decision.');
+      timing = FB.T('The settlement council awaits a decision.');
     }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       '{campaign} for {kingdom} · {phase}', {
@@ -4808,12 +4987,32 @@ window.FB = window.FB || {};
       h += panelh('Your service');
       h += kv('Camp', esc(pledge.camp === 'attackers'
         ? FB.T('Attackers') : FB.T('Defenders')));
+      const vow = pledge.vowTerms;
+      if (vow) {
+        h += kv('Promised service', esc(FB.T('{served}/{seasons} seasons{muster}', {
+          served:vow.served || 0,
+          seasons:vow.seasons,
+          muster:vow.mustered ? FB.T(' · mustered') : FB.T(' · not yet mustered')
+        })));
+        h += kv('Desire',
+          esc(greatHolyWarDesireName(s, campaign, vow.desire)));
+        h += kv('Occupation evidence',
+          esc(greatHolyWarOccupationEvidence(s, campaign, vow.desire)));
+      }
       h += kv('Contribution', esc(String(Math.round(
         (campaign.contribution.player || 0) * 10) / 10)));
       h += kv('Share', esc(String(Math.round(
         FB.greatHolyWarPlayerShare(s) * 1000) / 10)) + '%');
-      h += kv('Current reward band',
-        esc(greatHolyWarRewardName(FB.greatHolyWarPlayerRewardBand(s))));
+      const projection = FB.greatHolyWarPlayerClaimProjection(s);
+      h += kv('Projected claim standing', projection
+        ? esc(FB.T('{award} · {weight} weighted claim', {
+          award:greatHolyWarRewardName(projection.kind === 'crown'
+            ? (projection.rank >= 3 ? 'kingdom' :
+              projection.rank === 2 ? 'duchy' : 'county')
+            : projection.kind),
+          weight:(Math.round(projection.weight * 1000) / 1000).toFixed(3)
+        }))
+        : esc(FB.T('No current territorial claim')));
       const campaignModifiers = FB.campaignModifierRecords
         ? FB.campaignModifierRecords(s) : [];
       if (campaignModifiers.length) {
@@ -4838,12 +5037,16 @@ window.FB = window.FB || {};
     if (!campaign || !pledge || pledge.withdrawn) return;
     const cost = FB.greatHolyWarWithdrawalCost
       ? FB.greatHolyWarWithdrawalCost(s)
-      : { piety:100, prestige:50, inherited:!!pledge.renewalRequired };
+      : { piety:100, prestige:50, inherited:!!pledge.renewalRequired, broken:false };
     const h = '<div class="gm-body-text"><p>' + esc(cost.inherited
       ? FB.T('Decline the inherited vow without a personal piety or prestige penalty. The dynasty’s contribution remains in the record, but it cannot claim land.')
-      : FB.T('Abandoning your own vow costs {piety} piety and {prestige} prestige. Your dynasty’s contribution remains in the record, but it cannot claim land.', {
-        piety:cost.piety, prestige:cost.prestige
-      })) +
+      : cost.broken
+        ? FB.T('Your promised term is not fulfilled. Withdrawal costs {piety} piety and {prestige} prestige and records a broken vow.', {
+          piety:cost.piety, prestige:cost.prestige
+        })
+        : FB.T('Your promised term is fulfilled. Withdrawal costs {piety} piety and {prestige} prestige without recording a broken vow.', {
+          piety:cost.piety, prestige:cost.prestige
+        })) +
       '</p></div><div class="gm-list">' +
       '<button class="actionbtn danger" id="ghw-withdraw-confirm">🏳 ' +
       esc(FB.T('Withdraw from the campaign')) + '</button>' +
@@ -4884,11 +5087,290 @@ window.FB = window.FB || {};
     });
   };
 
+  function greatHolyWarCouncilAssetName(s, asset) {
+    if (!asset) return FB.T('Unknown award');
+    if (asset.kind === 'crown') {
+      return asset.rank >= 3 ? FB.T('Sovereign kingdom crown')
+        : asset.rank === 2 ? FB.T('Sovereign duchy')
+          : FB.T('Sovereign county');
+    }
+    if (asset.kind === 'sacred') {
+      const sites = (asset.siteIds || asset.ids || []).map(function (pid) {
+        return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
+      });
+      return FB.T('Sacred custody · {sites}', { sites:sites.join(', ') });
+    }
+    if (asset.kind === 'duchy') {
+      const duchy = FBDATA.duchies[asset.titleId];
+      return FB.T('Duchy of {name}', {
+        name:duchy ? duchy.name : asset.titleId
+      });
+    }
+    const province = FB.world.byId[asset.titleId || asset.ids[0]];
+    return FB.T('County of {name}', {
+      name:province ? province.name : (asset.titleId || asset.ids[0])
+    });
+  }
+
+  function greatHolyWarCouncilClaimantName(s, settlementCase, claimant) {
+    if (claimant === 'player') return FB.T('You');
+    if (claimant && claimant.indexOf('local:') === 0) {
+      for (const claim of settlementCase.claims) {
+        if (claim.claimant === claimant && claim.sourceRealm) {
+          return FB.T('A local cadet of {realm}', {
+            realm:greatHolyWarRealmName(s, claim.sourceRealm)
+          });
+        }
+      }
+      return FB.T('A local cadet');
+    }
+    return greatHolyWarRealmName(s, claimant);
+  }
+
+  function greatHolyWarBasisText(basis) {
+    basis = basis || {};
+    function score(value) {
+      return String(Math.round((value || 0) * 100)) + '%';
+    }
+    return FB.T(
+      'Contribution {contribution} · vow {vow} · occupation {occupation} · right {right} · support {support} · office {office}', {
+        contribution:score(basis.contribution),
+        vow:score(basis.vow),
+        occupation:score(basis.occupation),
+        right:score(basis.right),
+        support:score(basis.support),
+        office:score(basis.office)
+      });
+  }
+
+  function greatHolyWarAwardList(s, settlementCase) {
+    if (!settlementCase.awards.length) {
+      return '<div class="progressnote">' +
+        esc(FB.T('No awards have yet been settled.')) + '</div>';
+    }
+    let h = '';
+    for (const award of settlementCase.awards) {
+      let asset = null;
+      for (const candidate of settlementCase.assets) {
+        if (candidate.id === award.asset) {
+          asset = candidate;
+          break;
+        }
+      }
+      let terms = '';
+      if (award.terms && award.terms.kind === 'vassal') {
+        terms = FB.T(' · as vassal of {realm}', {
+          realm:greatHolyWarRealmName(s, award.terms.liege)
+        });
+      } else if (award.terms && award.terms.kind === 'payment') {
+        terms = FB.T(' · with a {money:gold} settlement payment', {
+          gold:award.terms.gold
+        });
+      }
+      const beneficiary = award.beneficiary && s.chars[award.beneficiary]
+        ? FB.T(' for {name}', {
+          name:FB.fullName(s.chars[award.beneficiary])
+        }) : '';
+      h += '<div class="kv"><span>' +
+        esc(greatHolyWarCouncilAssetName(s, asset)) + '</span><b>' +
+        esc(greatHolyWarCouncilClaimantName(
+          s, settlementCase, award.claimant) + beneficiary + terms) +
+        '</b></div>';
+    }
+    return h;
+  }
+
+  UI.showGreatHolyWarSettlementSummary = function (settlementCase) {
+    if (!settlementCase) return;
+    const s = FB.state;
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The council has concluded and every award now takes effect.')) +
+      '</p></div>' + panelh('Final settlement') +
+      greatHolyWarAwardList(s, settlementCase) +
+      '<div class="gm-footer"><button class="btn primary" id="ghw-summary-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('The settlement concluded'), h, {
+      modalClass:'fullsheet-modal'
+    });
+    $('ghw-summary-close').addEventListener('click', UI.closeModal);
+  };
+
+  function showGreatHolyWarCouncil(s, campaign, settlement) {
+    const settlementCase = settlement.case;
+    const pending = settlement.pendingPlayer;
+    if (settlementCase.status === 'resolved' && pending) {
+      const counties = pending.counties.map(function (pid) {
+        return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
+      });
+      let consequence;
+      if (pending.sovereign && pending.rank >= 3) {
+        consequence = FB.T(
+          'Accepting makes you sovereign of the new kingdom and unites it with your existing lands.');
+      } else if (FB.isPlayerSovereign(s)) {
+        consequence = FB.T(
+          'Accepting attaches this foreign grant to your existing sovereign realm.');
+      } else if (s.player.provs && s.player.provs.length) {
+        consequence = FB.T(
+          'Accepting returns your old demesne and title to its liege, then relocates your playable household to the new grant.');
+      } else {
+        consequence = FB.T(
+          'Accepting founds a new playable landed realm for your household.');
+      }
+      const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'The council offers you a {award}: {counties}. {consequence}', {
+          award:greatHolyWarRewardName(pending.kind),
+          counties:counties.join(', '),
+          consequence:consequence
+        })) + '</p><p>' + esc(FB.T(
+        'Declining grants the land to a generated cadet ruler and converts your service into piety and prestige.')) +
+        '</p></div>' + panelh('Final settlement') +
+        greatHolyWarAwardList(s, settlementCase) +
+        '<div class="gm-list">' +
+        '<button class="actionbtn" id="ghw-settlement-accept">👑 ' +
+        esc(FB.T('Accept the territorial grant')) + '</button>' +
+        '<button class="actionbtn" id="ghw-settlement-decline">🕊 ' +
+        esc(FB.T('Decline for honor')) + '</button></div>';
+      openModal(FB.T('The council’s final settlement'), h, {
+        dismissable:false, noFocus:true, modalClass:'fullsheet-modal'
+      });
+      $('ghw-settlement-accept').addEventListener('click', function () {
+        FB.greatHolyWarSettlementChoice(s, true);
+        UI.showGreatHolyWarSettlementSummary(settlementCase);
+        UI.refresh();
+      });
+      $('ghw-settlement-decline').addEventListener('click', function () {
+        FB.greatHolyWarSettlementChoice(s, false);
+        UI.showGreatHolyWarSettlementSummary(settlementCase);
+        UI.refresh();
+      });
+      return;
+    }
+
+    const view = FB.settlement.current(settlementCase);
+    if (!view) return;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award.')) +
+      '</p></div>';
+    h += kv('Current asset',
+      esc(greatHolyWarCouncilAssetName(s, view.asset)));
+    h += kv('Council standing',
+      esc(FB.T('{points}/2 points', { points:settlementCase.standing })));
+    const currentHead = FB.religiousHeadOf(
+      s, campaign.callingReligion);
+    h += kv('Blessing', esc(settlementCase.blessed
+      ? FB.T('Used for {claimant}', {
+        claimant:greatHolyWarCouncilClaimantName(
+          s, settlementCase, settlementCase.blessed.claimant)
+      }) : !currentHead
+        ? FB.T('Vacant office') : settlementCase.playerHead
+          ? FB.T('Available') : FB.T('Not yours to grant')));
+    h += kv('Next-claim boost', esc(settlementCase.nextClaimBoost
+      ? FB.T('+{amount} waiting for your next eligible claim', {
+        amount:settlementCase.nextClaimBoost.toFixed(2)
+      }) : FB.T('None')));
+    h += panelh('Ordered claims');
+    if (!view.claims.length) {
+      h += '<div class="progressnote">' +
+        esc(FB.T('No eligible claimant remains for this asset.')) + '</div>';
+    }
+    for (let i = 0; i < view.claims.length; i++) {
+      const claim = view.claims[i];
+      const tags = [];
+      if (i === 0) tags.push(FB.T('leader'));
+      if (claim.confirmation) tags.push(FB.T('local confirmation'));
+      if (claim.localCadet) tags.push(FB.T('local cadet'));
+      if (claim.blessing) tags.push(FB.T('blessed +0.10'));
+      if (claim.nextClaimBoost) tags.push(FB.T('endorsement +0.10'));
+      h += '<div class="settblock council-claim"><span>' +
+        esc(greatHolyWarCouncilClaimantName(
+          s, settlementCase, claim.claimant)) + '</span><b>' +
+        esc(claim.effectiveWeight.toFixed(3) +
+          (tags.length ? ' · ' + tags.join(', ') : '')) +
+        '</b><small>' + esc(greatHolyWarBasisText(claim.basis)) +
+        '</small></div>';
+    }
+    h += panelh('Your moves') + '<div class="gm-list">';
+    h += '<button class="actionbtn" data-ghw-council-move="acquiesce">' +
+      esc(view.leader ? FB.T('Acquiesce · award {claimant}', {
+        claimant:greatHolyWarCouncilClaimantName(
+          s, settlementCase, view.leader.claimant)
+      }) : FB.T('Acquiesce · leave this asset unawarded')) + '</button>';
+    if (view.playerClaim && view.leader && view.leader.claimant !== 'player') {
+      h += '<button class="actionbtn" data-ghw-council-move="press">' +
+        esc(FB.T('Press your claim · {odds}% chance', {
+          odds:Math.round(view.pressChance * 100)
+        })) + '</button>';
+    }
+    for (const rival of view.claims) {
+      if (rival.claimant === 'player') continue;
+      h += '<button class="actionbtn" data-ghw-council-move="endorse" ' +
+        'data-ghw-council-claimant="' + esc(rival.claimant) + '">' +
+        esc(FB.T('Endorse {claimant} · +15 opinion, +0.10 next claim', {
+          claimant:greatHolyWarCouncilClaimantName(
+            s, settlementCase, rival.claimant)
+        })) + '</button>';
+    }
+    if (view.terms) {
+      const disabled = view.terms.kind === 'payment' &&
+        s.player.gold < view.terms.gold;
+      const termsText = view.terms.kind === 'vassal'
+        ? FB.T('Offer terms · take it as vassal of {realm}', {
+          realm:greatHolyWarRealmName(s, view.terms.liege)
+        })
+        : FB.T('Offer terms · guarantee it for {money:gold}', {
+          gold:view.terms.gold
+        });
+      h += '<button class="actionbtn" data-ghw-council-move="terms"' +
+        (disabled ? ' disabled' : '') + '>' + esc(termsText) + '</button>';
+    }
+    if (view.objectChance !== null && settlementCase.standing > 0) {
+      h += '<button class="actionbtn" data-ghw-council-move="object">' +
+        esc(FB.T('Object · spend 1 standing · {odds}% chance for the runner-up · {leader} loses 10 opinion', {
+          odds:Math.round(view.objectChance * 100),
+          leader:greatHolyWarCouncilClaimantName(
+            s, settlementCase, view.leader.claimant)
+        })) + '</button>';
+    }
+    if (settlementCase.playerHead && !settlementCase.blessingUsed) {
+      for (const blessClaim of view.claims) {
+        if (blessClaim.claimant === 'player') continue;
+        h += '<button class="actionbtn" data-ghw-council-move="bless" ' +
+          'data-ghw-council-claimant="' + esc(blessClaim.claimant) + '">' +
+          esc(FB.T('Bless {claimant} · +0.10 to this claim', {
+            claimant:greatHolyWarCouncilClaimantName(
+              s, settlementCase, blessClaim.claimant)
+          })) + '</button>';
+      }
+    }
+    h += '</div>' + panelh('Prior awards') +
+      greatHolyWarAwardList(s, settlementCase);
+    openModal(FB.T('Settlement council · {asset}', {
+      asset:greatHolyWarCouncilAssetName(s, view.asset)
+    }), h, { dismissable:false, noFocus:true, modalClass:'fullsheet-modal' });
+    document.querySelectorAll('[data-ghw-council-move]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const move = {
+          kind:button.dataset.ghwCouncilMove,
+          claimant:button.dataset.ghwCouncilClaimant || null
+        };
+        FB.greatHolyWarSettlementMove(s, move);
+        if (s.greatHolyWar) UI.showGreatHolyWarSettlement();
+        else UI.showGreatHolyWarSettlementSummary(settlementCase);
+        UI.refresh();
+      });
+    });
+  }
+
   UI.showGreatHolyWarSettlement = function () {
     const s = FB.state, campaign = s && s.greatHolyWar;
     const settlement = campaign && campaign.settlement;
     const award = settlement && settlement.pendingPlayer;
-    if (!campaign || campaign.phase !== 'settlement' || !award) return;
+    if (!campaign || campaign.phase !== 'settlement' || !settlement) return;
+    if (settlement.case) {
+      showGreatHolyWarCouncil(s, campaign, settlement);
+      return;
+    }
+    if (!award) return;
     const counties = award.counties.map(function (pid) {
       return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
     });
@@ -10168,7 +10650,7 @@ window.FB = window.FB || {};
       '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
       '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war requires a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
-      '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering; sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. Field victories, sieges, and seasons of service build contribution, which determines crowns, duchies, counties, or non-land honors at partition.</p>' +
+      '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

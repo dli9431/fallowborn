@@ -352,11 +352,21 @@ Related: [items.md](items.md) for the item card's hover/tap duality.
 An active call adds a compact Deeds summary and a focusable campaign action. The
 full-sheet campaign dialog names caller, military leader, schedule, camp strengths,
 resolve, both participant lists, every frozen objective and occupation/siege state,
-and the protagonist's contribution share and current reward band. A player religious
-head gets a target picker; eligible adults get pledge, renewal, and withdrawal
-confirmations. A pending territorial grant is a non-dismissable accept/decline dialog
-that explains whether acceptance founds a realm, relocates a vassal, attaches a
-secondary grant, or unites a crown.
+and the protagonist's vow progress, desire, occupation evidence, contribution, share,
+and projected weighted claim. A player religious head gets a target picker. Joining is
+a numbered, keyboard/mobile-safe sequence for four/eight/twelve seasons, desire, exact
+duchy/county where needed, optional eligible beneficiary, and final review. Renewal and
+withdrawal state the inherited choice or exact fulfilled/broken-vow costs.
+
+An attacker victory opens one non-dismissable full-sheet council. It shows the current
+asset, ordered claimant weights, all six basis scores, exact press/object odds and term
+cost, two-point standing, blessing and next-claim-boost state, prior awards, and every
+available move. `bless` redraws the same asset without resolving it; other moves advance
+to the next asset. The last step shows the complete settlement summary. A personal,
+beneficiary-free territorial grant adds its existing final accept/decline decision and
+explains founding, relocation, attachment, or crown union. Time stays paused whenever
+the player is seated, claiming, or deciding that grant; observe and AI-only cases
+resolve automatically.
 
 The map draws target rings, temporary occupation color, and siege arcs underneath
 field hosts. The Land panel repeats the selected objective's occupation and progress,

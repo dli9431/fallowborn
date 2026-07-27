@@ -163,8 +163,11 @@ Great holy wars use all three existing clock scales without a new timer. The dai
 tick records sacred-place control, launches a prepared call on its exact 180th day,
 advances or decays objective sieges after field armies march and fight, and checks
 resolve/objective/deadline victory. Season boundaries award one service contribution
-to every active participant and queue the personal service event for vassal or
-unlanded expeditions. The new-year world tick runs the saved, seeded historical call
+to every active participant, increment vow service, queue the personal service event
+for vassal or unlanded expeditions, and then run `FB.sacredCustodySeason`. Custody
+held by the player's realm or a vassal pays 2 piety only while a custodian's sovereign
+bloc controls at least one saved site. The new-year world tick runs the saved,
+seeded historical call
 scheduler before ordinary realm declarations, so campaign participants cannot open a
 second war that year.
 
