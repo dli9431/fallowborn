@@ -63,6 +63,12 @@ python tools/i18n_catalog.py translate fr de it es  # AI-translate new/changed r
 python tools/i18n_catalog.py validate               # coverage, source hashes, tokens, structure
 ```
 
+The pipeline's tracked working state lives under `i18n/`. `extract` refreshes
+`i18n/i18n-coverage.json` and `i18n/i18n-coverage.md`; `translate` reuses and updates
+`i18n/i18n-cache/<locale>.json`. These cache files contain only source-keyed translated catalog
+text, never request headers or credentials, and their changes land with the generated catalogs.
+Historical `translate*.log` files are progress output only and are not consumed by the tool.
+
 `extract` and `validate` are network-free, while `translate` calls a translation API; all three
 still obey the integration-only timing rule below. If you cannot run `translate` during an
 authorized integration, **say so** — English fallback keeps the game correct, but the owner must

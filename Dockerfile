@@ -13,12 +13,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Append ?v=<fingerprint> to css/js/data/mods asset URLs in index.html so every
 # deploy mints fresh URLs and auto-busts edge + browser caches. Uses -r (ERE)
 # for BusyBox sed compatibility. Then drop VCS metadata and build files from the
-# served root. The log line lets you confirm a real SHA won (vs the fallback).
+# served root, including tracked development-only i18n pipeline state. The log
+# line lets you confirm a real SHA won (vs the fallback).
 RUN set -eu; \
     V="${SOURCE_COMMIT:-}"; \
     [ -n "$V" ] || V="$(sed -n -r "s/.*FB\.VERSION[[:space:]]*=[[:space:]]*'([^']+)'.*/\1/p" /usr/share/nginx/html/js/main.js | head -n1)"; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" /usr/share/nginx/html/index.html; \
-    rm -rf /usr/share/nginx/html/.git /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/nginx.conf; \
+    rm -rf /usr/share/nginx/html/.git /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/nginx.conf /usr/share/nginx/html/i18n; \
     echo "stamped ?v=$V"
 
 # Report container health so Coolify can wait for a healthy container before

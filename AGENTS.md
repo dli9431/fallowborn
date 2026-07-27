@@ -87,7 +87,9 @@ every other branch in flight (parallel worktrees are unaware of each other):
    run `extract → translate fr de it es → validate` as the final integration step immediately
    before the requested commit. For a requested branch merge, assemble the merged tree without
    finalizing the merge commit, then run the same recipe from that merged tree immediately before
-   finalizing the integration. `validate` is the gate. Land the catalogs in the *same*
+   finalizing the integration. `validate` is the gate. The commands also maintain tracked
+   translation caches and coverage reports under `i18n/`; include any resulting updates in the
+   integration. Land the catalogs and this pipeline state in the *same*
    `FB.VERSION` as the integration — they cache-bust on that version, so pushing code without
    them serves stale/English-fallback locales until the next bump. An integration with no
    player-facing text change is a no-op `validate` confirms. Never regenerate on a feature branch
@@ -194,6 +196,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/util.js` — RNG, projection, helpers.
 - `js/keys.js`, `js/save.js`, `js/mods.js` — keyboard, persistence, runtime mods.
 - `js/messages.js`, `js/i18n.js` — durable saved-message descriptors; localization catalog lookup and locale lifecycle.
+- `i18n/` — tracked translation caches, extraction coverage reports, and historical translation logs.
 - `data/*.js` — the whole moddable world; `data/map_data.js` ends with `FBDATA.balance`
   (every economy/war/mortality knob in one place). `data/counties.js` holds the county
   table (one historical county per province, each tagged with its de jure duchy).

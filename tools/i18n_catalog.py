@@ -23,6 +23,7 @@ from typing import Any, Iterable
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 JS = ROOT / "js"
+I18N = ROOT / "i18n"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
@@ -1530,9 +1531,9 @@ def command_extract(args: argparse.Namespace) -> int:
             for record in {stable_json(v): v for v in inv.entries.values()}.values()
         ),
     }
-    report_path = ROOT / "notes" / "i18n-coverage.json"
+    report_path = I18N / "i18n-coverage.json"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    human_path = ROOT / "notes" / "i18n-coverage.md"
+    human_path = I18N / "i18n-coverage.md"
     human_path.write_text(
         "# i18n extraction coverage\n\n"
         f"- Catalog schema: {CATALOG_SCHEMA}\n"
@@ -1560,7 +1561,7 @@ def command_translate(args: argparse.Namespace) -> int:
     for code in args.locales:
         if code not in names:
             raise SystemExit(f"unsupported target locale: {code}")
-        cache = ROOT / "notes" / "i18n-cache" / f"{code}.json"
+        cache = I18N / "i18n-cache" / f"{code}.json"
         translated = translate_inventory(inv, code, cache)
         errors: list[str] = []
         for key, source in inv.entries.items():
