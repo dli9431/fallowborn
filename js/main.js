@@ -1172,7 +1172,6 @@ window.FB = window.FB || {};
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
-    if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }

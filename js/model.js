@@ -5,6 +5,8 @@ window.FB = window.FB || {};
   'use strict';
 
   const SKILLS = ['dip', 'mar', 'ste', 'int', 'lea'];
+  const CHARACTER_RESIDENCE_CACHE =
+    typeof WeakMap === 'function' ? new WeakMap() : null;
   FB.SKILLS = SKILLS;
   FB.SKILL_NAMES = { dip: 'Diplomacy', mar: 'Martial', ste: 'Stewardship', int: 'Intrigue', lea: 'Learning' };
   FB.SKILL_ICONS = { dip: '🤝', mar: '⚔', ste: '⚖', int: '🕸', lea: '📖' };
@@ -447,9 +449,18 @@ window.FB = window.FB || {};
       return c.homeProvinceId;
     }
     if (state.provChars) {
+      const cached = CHARACTER_RESIDENCE_CACHE &&
+        CHARACTER_RESIDENCE_CACHE.get(c);
+      if (cached && Array.isArray(state.provChars[cached]) &&
+          state.provChars[cached].indexOf(c.id) >= 0) return cached;
       for (const pid in state.provChars) {
         if (Array.isArray(state.provChars[pid]) &&
-            state.provChars[pid].indexOf(c.id) >= 0) return pid;
+            state.provChars[pid].indexOf(c.id) >= 0) {
+          if (CHARACTER_RESIDENCE_CACHE) {
+            CHARACTER_RESIDENCE_CACHE.set(c, pid);
+          }
+          return pid;
+        }
       }
     }
     return state.player.provinceId;

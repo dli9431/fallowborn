@@ -2654,6 +2654,7 @@ window.FB = window.FB || {};
       : FB.T('Sovereign over {realm}', { realm:subject });
   }
   function landRulerUsesFavor(s, rid) {
+    if (FB.rulerGiftUsesFavor) return FB.rulerGiftUsesFavor(s, rid);
     if (rid === s.player.liege) return true;
     const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
     const r = landRulerRealm(s, rid);

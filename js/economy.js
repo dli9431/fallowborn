@@ -2570,19 +2570,20 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.tradeVentureMarkets = function (state) {
+  FB.tradeVentureMarkets = function (state, destinationId) {
     const def = tradeVentureDef() || {};
     if (!FB.developedMarketDestinations) return [];
     return FB.developedMarketDestinations(state,
       tradeVentureNumber(def.minDevelopment, 4), {
       purpose:'trade',
       ignoreHistory:true,
-      overheadOnly:true
+      overheadOnly:true,
+      destinationId:destinationId
     });
   };
 
   function tradeVentureMarket(state, destinationId) {
-    const markets = FB.tradeVentureMarkets(state);
+    const markets = FB.tradeVentureMarkets(state, destinationId);
     for (let i = 0; i < markets.length; i++) {
       if (markets[i].destinationId === destinationId) return markets[i];
     }
