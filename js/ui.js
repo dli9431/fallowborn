@@ -8699,8 +8699,11 @@ window.FB = window.FB || {};
           const keyAt = label.toUpperCase().indexOf(item.key);
           const before = keyAt >= 0 ? label.slice(0, keyAt) : '';
           const after = keyAt >= 0 ? label.slice(keyAt + 1) : label;
-          t.innerHTML = esc(before) + '<span class="keyhint tabkeyhint">' +
-            item.key + '</span>' + esc(after);
+          t.setAttribute('aria-label', label);
+          t.innerHTML = '<span class="tabfulllabel">' + esc(label) + '</span>' +
+            '<span class="tabhotkeylabel" aria-hidden="true">' + esc(before) +
+            '<span class="keyhint tabkeyhint">' + item.key + '</span>' +
+            esc(after) + '</span>';
         }
       });
     }
