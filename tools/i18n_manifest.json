@@ -428,6 +428,14 @@
         "text": "🏛 The Estates…"
       }
     },
+    "action.travel_marriage_residence.label.default": {
+      "context": "action travel_marriage_residence, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "💍 Stay after marriage…"
+      }
+    },
     "action.travel_settle_here.label.default": {
       "context": "action travel_settle_here, visible label.",
       "glossary": [],
@@ -26741,6 +26749,19 @@
         }
       }
     },
+    "news.life.living_abdication": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "former",
+        "generation",
+        "heir"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}."
+      }
+    },
     "news.life.lord_died": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -27298,6 +27319,27 @@
       "location": "js/travel.js",
       "source": {
         "text": "🧭 Set out from {home} for {destination}."
+      }
+    },
+    "news.travel.marriage_residence_self": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "heir",
+        "realm",
+        "spouse"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "no": "💍 You relinquish the barony and settle with {spouse} in {destination} as landless gentry.",
+            "other": "💍 You leave office and settle with {spouse} in {destination}.",
+            "yes": "💍 You yield {realm} to {heir} and settle with {spouse} in {destination} as landless gentry."
+          },
+          "param": "landed",
+          "select": "value"
+        }
       }
     },
     "news.travel.relationship_visit_ended": {
@@ -34832,6 +34874,16 @@
         "text": "Saved to slot {slot}."
       }
     },
+    "src.04553fa0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "This journey is not the wedding visit that created the decision."
+      }
+    },
     "src.0457cc0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35000,6 +35052,16 @@
       ],
       "source": {
         "text": "Empty hands may move him — or merely invite his."
+      }
+    },
+    "src.04f5ffa9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Abdicate and continue as {name}"
       }
     },
     "src.0505a7bf": {
@@ -38212,6 +38274,16 @@
         "text": "Fill research slots automatically"
       }
     },
+    "src.10de9dc7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends."
+      }
+    },
     "src.10f069e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41060,6 +41132,16 @@
         "text": "Make your case."
       }
     },
+    "src.1ad0764d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} can remain playable only if a living lawful heir can receive the realm."
+      }
+    },
     "src.1ad3e92d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41789,6 +41871,16 @@
       ],
       "source": {
         "text": "{career} · regard {regard}"
+      }
+    },
+    "src.1e73aee5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The post-marriage residence decision is unavailable."
       }
     },
     "src.1e93f87f": {
@@ -42621,6 +42713,16 @@
       ],
       "source": {
         "text": "An ox in human form."
+      }
+    },
+    "src.21bfe90b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "The wedding county can no longer receive the household."
       }
     },
     "src.21cbaab2": {
@@ -46157,6 +46259,16 @@
         "text": "Mecklenburg"
       }
     },
+    "src.2f82b20d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stay in {destination} after the wedding?"
+      }
+    },
     "src.2f88d798": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47238,6 +47350,16 @@
       ],
       "source": {
         "text": "Improve {standard}?"
+      }
+    },
+    "src.341a06e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A living lawful heir is required to continue the story."
       }
     },
     "src.3431f4a1": {
@@ -48586,6 +48708,16 @@
         "text": "Begin"
       }
     },
+    "src.3a34e8cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "No living lawful heir can continue the family’s story."
+      }
+    },
     "src.3a44a501": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49827,6 +49959,16 @@
       ],
       "source": {
         "text": "Order feeds more travelers than good intentions alone."
+      }
+    },
+    "src.3ec7a818": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your current lawful heir is {heir}."
       }
     },
     "src.3ed2136e": {
@@ -51544,6 +51686,16 @@
       ],
       "source": {
         "text": "Royal Constable"
+      }
+    },
+    "src.44f2792d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "No living lawful heir can receive the realm."
       }
     },
     "src.44f4f8a4": {
@@ -53577,6 +53729,16 @@
         "text": "{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms"
       }
     },
+    "src.4c7c5479": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later."
+      }
+    },
     "src.4c7f7299": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54716,6 +54878,16 @@
       ],
       "source": {
         "text": "Persian"
+      }
+    },
+    "src.50f0d4bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Abdicate and continue as the heir"
       }
     },
     "src.50f7365b": {
@@ -56802,6 +56974,16 @@
         "text": "Stand in the line."
       }
     },
+    "src.593c024b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Reach the wedding county before deciding where to live."
+      }
+    },
     "src.593e36f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56820,6 +57002,16 @@
       ],
       "source": {
         "text": "🎁 Offer a gift…"
+      }
+    },
+    "src.595789fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "The marriage that created this choice is no longer in force."
       }
     },
     "src.5965768a": {
@@ -58026,6 +58218,16 @@
       ],
       "source": {
         "text": "The Chamberlain’s Whisper"
+      }
+    },
+    "src.5dd37740": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Only a baron or greater ruler may abdicate through this decision."
       }
     },
     "src.5e0c5ae1": {
@@ -61376,6 +61578,16 @@
         "text": "Working Library and Copyist’s Instruments"
       }
     },
+    "src.6ae9f2e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}."
+      }
+    },
     "src.6aed70a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63596,6 +63808,16 @@
       ],
       "source": {
         "text": "Water the wine."
+      }
+    },
+    "src.732d3ef8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Your landed realm cannot pass through a living abdication."
       }
     },
     "src.732dc126": {
@@ -65912,6 +66134,16 @@
         "text": "Let distant subjects see the full weight of the crown."
       }
     },
+    "src.7b3eaa96": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Wait until the current pregnancy ends before leaving this couple outside the managed household."
+      }
+    },
     "src.7b448750": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67703,6 +67935,16 @@
       ],
       "source": {
         "text": "{student} unmade a rival’s case in the academy disputation."
+      }
+    },
+    "src.81135760": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💍 Stay after marriage…"
       }
     },
     "src.8118262b": {
@@ -69587,6 +69829,16 @@
         "text": "Urban Communes"
       }
     },
+    "src.881eb89d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Reconsider abdication and residence in the wedding county before this journey ends."
+      }
+    },
     "src.88285884": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70716,6 +70968,16 @@
       ],
       "source": {
         "text": "The offer was a test. Your reputation reaches the door before you do."
+      }
+    },
+    "src.8c61b634": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives."
       }
     },
     "src.8c65fea8": {
@@ -77167,6 +77429,16 @@
         "text": "Silver buys a name the craft will honor."
       }
     },
+    "src.a571fe2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}."
+      }
+    },
     "src.a57af18f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80054,6 +80326,17 @@
       ],
       "source": {
         "text": "The patron asks {student} to remain after the lecture. Merit has opened the door."
+      }
+    },
+    "src.b0b0a618": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No post-marriage residence decision is pending."
       }
     },
     "src.b0c67ed6": {
@@ -83312,6 +83595,16 @@
         "text": "No further permanent holding is available for this station and profession."
       }
     },
+    "src.bcd60b7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} relinquishes the barony to the local count and becomes landless gentry in {destination}."
+      }
+    },
     "src.bcdfb3e1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84949,6 +85242,16 @@
         "text": "🚩 {realm} takes the field — some {men} spears against you."
       }
     },
+    "src.c2b9d198": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Abdicate and continue as {heir}"
+      }
+    },
     "src.c2bacdb9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86510,6 +86813,16 @@
       ],
       "source": {
         "text": "Let the plough do the boasting."
+      }
+    },
+    "src.c94125cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "The return journey has already begun."
       }
     },
     "src.c956c935": {
@@ -89818,6 +90131,16 @@
         "text": "Smile and let the verses die."
       }
     },
+    "src.d6e27ff7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{heir} keeps the family’s existing realm and home. {former} and {spouse} remain married and live in {destination}."
+      }
+    },
     "src.d6e299e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89986,6 +90309,16 @@
       ],
       "source": {
         "text": "The camp remembers what you forgive."
+      }
+    },
+    "src.d77e33dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "💍 You relinquish the barony and settle with {spouse} in {destination} as landless gentry."
       }
     },
     "src.d7859634": {
@@ -91262,6 +91595,16 @@
         "text": "Caught in the moonlight, shovel in hand. The moot fines you."
       }
     },
+    "src.dca48804": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "💍 You yield {realm} to {heir} and settle with {spouse} in {destination} as landless gentry."
+      }
+    },
     "src.dcb23e72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91460,6 +91803,16 @@
       ],
       "source": {
         "text": "Every tide brings someone who owes you a toll."
+      }
+    },
+    "src.dd961783": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}."
       }
     },
     "src.ddb88f28": {
@@ -91800,6 +92153,16 @@
       ],
       "source": {
         "text": "Some gifts cost more than they pay."
+      }
+    },
+    "src.de93886c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Your landed realm cannot be handed over intact."
       }
     },
     "src.dea08148": {
@@ -93968,6 +94331,16 @@
       ],
       "source": {
         "text": "This household office is already filled."
+      }
+    },
+    "src.e6fe31f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "💍 You leave office and settle with {spouse} in {destination}."
       }
     },
     "src.e70130c0": {
@@ -97779,7 +98152,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js"
+        "js/events.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "the realm"
@@ -98354,6 +98728,16 @@
       ],
       "source": {
         "text": "⚔ The siege of {target} tightens. ({progress}/3)"
+      }
+    },
+    "src.f8171538": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No lawful heir is living."
       }
     },
     "src.f81e25d9": {
@@ -105175,6 +105559,14 @@
         "text": "A baron must first hold a county before waging a foreign war."
       }
     },
+    "ui:A living lawful heir is required to continue the story.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A living lawful heir is required to continue the story."
+      }
+    },
     "ui:A manor-sized holding is assembled here.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -105366,6 +105758,34 @@
       "location": "js/model.js",
       "source": {
         "text": "Abbot"
+      }
+    },
+    "ui:Abdicate and continue as the heir": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Abdicate and continue as the heir"
+      }
+    },
+    "ui:Abdicate and continue as {heir}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "heir"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Abdicate and continue as {heir}"
+      }
+    },
+    "ui:Abdicate and continue as {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Abdicate and continue as {name}"
       }
     },
     "ui:Absolution requires {money:gold}.": {
@@ -107036,6 +107456,14 @@
         "text": "Debase the coinage…"
       }
     },
+    "ui:Decide later": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Decide later"
+      }
+    },
     "ui:Decide nothing today": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -108205,6 +108633,14 @@
         "text": "How quickly the days flow while time runs."
       }
     },
+    "ui:If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later."
+      }
+    },
     "ui:Ill": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -108409,6 +108845,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Keep staying for now"
+      }
+    },
+    "ui:Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends."
       }
     },
     "ui:Keep the vow": {
@@ -109143,12 +109587,36 @@
         "text": "No journey is in progress."
       }
     },
+    "ui:No lawful heir is living.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No lawful heir is living."
+      }
+    },
     "ui:No lender will advance more while revenues are in default.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "No lender will advance more while revenues are in default."
+      }
+    },
+    "ui:No living lawful heir can continue the family’s story.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "No living lawful heir can continue the family’s story."
+      }
+    },
+    "ui:No living lawful heir can receive the realm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "No living lawful heir can receive the realm."
       }
     },
     "ui:No lost kingdom is currently eligible.": {
@@ -109287,6 +109755,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No personal host yet. Land, military positions, and sworn service will appear here."
+      }
+    },
+    "ui:No post-marriage residence decision is pending.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No post-marriage residence decision is pending."
       }
     },
     "ui:No practiced household profession currently has a relevant outfit.": {
@@ -109567,6 +110043,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons."
+      }
+    },
+    "ui:Only a baron or greater ruler may abdicate through this decision.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Only a baron or greater ruler may abdicate through this decision."
       }
     },
     "ui:Only a baron or higher ruler may grant a monopoly.": {
@@ -110330,6 +110814,14 @@
         "text": "Reach the destination first."
       }
     },
+    "ui:Reach the wedding county before deciding where to live.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Reach the wedding county before deciding where to live."
+      }
+    },
     "ui:Ready in {days} days.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110383,6 +110875,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Recognition adds {piety} piety each season."
+      }
+    },
+    "ui:Reconsider abdication and residence in the wedding county before this journey ends.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Reconsider abdication and residence in the wedding county before this journey ends."
       }
     },
     "ui:Reduce this standard by one level…": {
@@ -111348,6 +111848,16 @@
         "text": "Stay and work here for {days} more days before returning home."
       }
     },
+    "ui:Stay in {destination} after the wedding?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Stay in {destination} after the wedding?"
+      }
+    },
     "ui:Steppe": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -111768,12 +112278,28 @@
         "text": "The liege’s aid"
       }
     },
+    "ui:The marriage that created this choice is no longer in force.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "The marriage that created this choice is no longer in force."
+      }
+    },
     "ui:The people and institutions tied to this household, and what each tie currently does.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "The people and institutions tied to this household, and what each tie currently does."
+      }
+    },
+    "ui:The post-marriage residence decision is unavailable.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The post-marriage residence decision is unavailable."
       }
     },
     "ui:The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.": {
@@ -111798,6 +112324,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "The retainer leaves immediately and remembers the slight."
+      }
+    },
+    "ui:The return journey has already begun.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "The return journey has already begun."
       }
     },
     "ui:The road is open to freeholders and gentry.": {
@@ -111863,6 +112397,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}."
+      }
+    },
+    "ui:The wedding county can no longer receive the household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "The wedding county can no longer receive the household."
+      }
+    },
+    "ui:The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives."
       }
     },
     "ui:The ± beside the stat is last season’s real change — events and deeds included.": {
@@ -112011,6 +112563,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again."
+      }
+    },
+    "ui:This journey is not the wedding visit that created the decision.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "This journey is not the wedding visit that created the decision."
       }
     },
     "ui:This journey is open to freeholders and gentry.": {
@@ -112290,6 +112850,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Waist"
+      }
+    },
+    "ui:Wait until the current pregnancy ends before leaving this couple outside the managed household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Wait until the current pregnancy ends before leaving this couple outside the managed household."
       }
     },
     "ui:Waqf Patron": {
@@ -112772,6 +113340,16 @@
         "text": "Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time."
       }
     },
+    "ui:Your current lawful heir is {heir}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "heir"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your current lawful heir is {heir}."
+      }
+    },
     "ui:Your defensive alliance forbids an attack on the only realm you have cause against.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -112844,6 +113422,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your inherited vow must be renewed before service and land eligibility resume."
+      }
+    },
+    "ui:Your landed realm cannot be handed over intact.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Your landed realm cannot be handed over intact."
+      }
+    },
+    "ui:Your landed realm cannot pass through a living abdication.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "Your landed realm cannot pass through a living abdication."
       }
     },
     "ui:Your liege must at least tolerate you (favor 20+, now {current}).": {
@@ -113898,7 +114492,7 @@
     "ui:the realm": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/events.js",
+      "location": "js/ui.js",
       "source": {
         "text": "the realm"
       }
@@ -114708,6 +115302,45 @@
         "text": "{grantor} must hold at least 40 favor toward you; currently {favor}."
       }
     },
+    "ui:{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "former",
+        "heir",
+        "spouse"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}."
+      }
+    },
+    "ui:{heir} keeps the family’s existing realm and home. {former} and {spouse} remain married and live in {destination}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "former",
+        "heir",
+        "spouse"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{heir} keeps the family’s existing realm and home. {former} and {spouse} remain married and live in {destination}."
+      }
+    },
+    "ui:{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "heir",
+        "name",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}."
+      }
+    },
     "ui:{icon} level {level}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -115020,6 +115653,16 @@
         "text": "{name} - {slot}"
       }
     },
+    "ui:{name} can remain playable only if a living lawful heir can receive the realm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} can remain playable only if a living lawful heir can receive the realm."
+      }
+    },
     "ui:{name} has already made the one permanent move allowed in this lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -115049,6 +115692,17 @@
       "location": "js/travel.js",
       "source": {
         "text": "{name} is already resident in your county."
+      }
+    },
+    "ui:{name} relinquishes the barony to the local count and becomes landless gentry in {destination}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} relinquishes the barony to the local count and becomes landless gentry in {destination}."
       }
     },
     "ui:{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way.": {

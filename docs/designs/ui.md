@@ -327,6 +327,16 @@ after 90 days; for freeholders and gentry, a year and four work stories unlock
 **Settle here permanently…**, whose confirmation names the destination,
 preserved property/culture/faith, and the once-per-character-life limit.
 
+A tier-3+ courtship-visit review also previews the possible post-wedding
+residence choice. If that wedding occurs at the destination, the event flow
+immediately opens a non-dismissable three-action generic modal: remain as the
+abdicated protagonist, continue as the live lawful heir, or decide later.
+Unavailable abdication paths stay visible with localized reasons; the first
+enabled native button receives focus and all three choices receive the ordinary
+number-key hints and mobile bottom-sheet layout. Deferral leaves **Stay after
+marriage…** in Life & Family until the journey ends, so keyboard and touch users
+can reopen the same live-validated decision.
+
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
 input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar

@@ -33,6 +33,17 @@ changes the sovereign owner of the combined hierarchy. An intact player crown ha
 to a downfall usurper may instead leave the displaced rightful character one narrow
 restoration right; ordinary county conquest never creates one.
 
+Marriage-residence abdication performs the inverse political handoff without
+killing a realm. `FB.abdicatePlayerRealmToHeir` rekeys the special
+`state.realms.player` node as a living AI realm ruled by the current lawful heir.
+It preserves the realm’s name, color, counties, vassals, liege relationship,
+religion, technology, and any religious-head office, while rewriting ownership,
+holder, vassal-liege, and live realm references from the player id to the new AI
+id. Because the realm never dies, this path creates no usurper, vacancy,
+restoration right, or death effects. Existing player-realm alliances end at the
+handoff. A tier-3 barony has no realm node to convert; relinquishing it simply
+returns that local office to the county’s count.
+
 ## Religious head offices
 
 Central religious leadership is an office assignment, not a territorial tier.

@@ -439,8 +439,10 @@ window.FB = window.FB || {};
     /* A reigning spouse keeps the court and person at the realm's current
        capital; marriage never turns that sovereign household into a managed
        member of the player's permanent home. */
-    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
-      const reigningRealm = state.realms[c.royalLine.realmId];
+    const reigningId = FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(state, c) : null;
+    if (reigningId) {
+      const reigningRealm = state.realms[reigningId];
       if (reigningRealm && reigningRealm.capital && FB.world &&
           FB.world.byId[reigningRealm.capital]) return reigningRealm.capital;
     }
@@ -448,13 +450,16 @@ window.FB = window.FB || {};
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
       return state.player.provinceId;
     }
+    /* A living abdication can leave former household members at an explicit
+       residence. Once they are outside the managed household, it outranks old
+       royal-line provenance but not a sovereign ruler's live capital above. */
+    if (c.homeProvinceId && FB.world && FB.world.byId[c.homeProvinceId]) {
+      return c.homeProvinceId;
+    }
     if (c.royalLine && state.realms) {
       const royalRealm = state.realms[c.royalLine.realmId];
       if (royalRealm && royalRealm.capital && FB.world &&
           FB.world.byId[royalRealm.capital]) return royalRealm.capital;
-    }
-    if (c.homeProvinceId && FB.world && FB.world.byId[c.homeProvinceId]) {
-      return c.homeProvinceId;
     }
     if (state.provChars) {
       const cached = CHARACTER_RESIDENCE_CACHE &&

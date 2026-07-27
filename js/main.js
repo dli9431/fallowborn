@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.72.1';
+  FB.VERSION = '1.72.2';
   FB.CHANGELOG = [
+    { v: '1.72.2', date: '2026-07-27', changes: [
+      'Rulers who marry during a courtship visit can now abdicate and settle with their spouse or continue as their lawful heir, or defer the choice until the journey ends.'
+    ] },
     { v: '1.72.1', date: '2026-07-27', changes: [
       'A generated ruler\'s heraldry and identity card now opens their full character sheet.'
     ] },
@@ -1300,6 +1303,10 @@ window.FB = window.FB || {};
         { name: me.name }), provenance);
       return;
     }
+    if (FB.ui && FB.ui.showPendingMarriageResidence &&
+        FB.ui.showPendingMarriageResidence()) {
+      return;
+    }
     FB.checkTierPromotions(s);
     FB.ui.refresh();
   };
@@ -1918,19 +1925,28 @@ window.FB = window.FB || {};
     return FB.pick(pool);
   }
 
-  G.succeedTo = function (heirId) {
+  G.succeedTo = function (heirId, opts) {
+    opts = opts || {};
+    const livingAbdication = !!opts.livingAbdication;
     const s = FB.state;
     const p = s.player;
     const old = s.chars[p.charId];
     const heir = s.chars[heirId];
-    if (!heir) { FB.ui.gameOver(); return; }
+    if (!heir || heir.dead) {
+      if (!livingAbdication) FB.ui.gameOver();
+      return false;
+    }
     if (FB.travelCancel) FB.travelCancel(s, '', true);
+    if (livingAbdication) {
+      if (FB.endRoyalCompact) FB.endRoyalCompact(s);
+      if (FB.breakAlliance) FB.breakAlliance(s, 'player');
+    }
 
     s.generation++;
     heir.dyn = old.dyn;
     heir.role = null;
     if (heir.health === undefined) heir.health = 8;
-    // a tutor of 'self' was the dead parent; the new life names its own teachers
+    // a tutor of 'self' was the predecessor; the new life names its own teachers
     if (heir.edu && heir.edu.tutorId === 'self') heir.edu.tutorId = null;
     // coming-of-age events queued for a player who died a teen must not fire for the heir
     s.eventQueue = s.eventQueue.filter(function (ev) {
@@ -1943,22 +1959,22 @@ window.FB = window.FB || {};
     if (FB.cleanupManagedMatches) FB.cleanupManagedMatches(s);
     if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
     p.dead = false;
-    p.gold = Math.round(p.gold * 0.9); // death dues
-    FB.financeSuccession(s); // household contracts survive; mature ones settle after death dues
+    if (!livingAbdication) p.gold = Math.round(p.gold * 0.9); // death dues
+    FB.financeSuccession(s); // household contracts survive; mature ones settle at transition
     p.courtingId = null;
-    p.suitorIds = null; // the dead parent's prospects do not follow the heir
+    p.suitorIds = null; // the predecessor's prospects do not follow the heir
     p.socialAttention = {};
     p.socialGiftTurns = {};
     p.realmGiftTurns = {};
     p.plot = null; // plots die with their plotter
-    p.royalCompact = null; // the dead ruler's marriage alliance ends
+    p.royalCompact = null; // the predecessor's marriage compact ends
     p.rivalContacts = {};
     p.rivalPeace = {};
     p.stationFarewell = null;
     if (FB.clearItemOffer) FB.clearItemOffer(s); // the peddler moves on
     else p.itemOffer = null;
-    s.pregnant = null;
-    /* The dead head's final equipment stayed in place for the death sheet.
+    if (!livingAbdication) s.pregnant = null;
+    /* The predecessor's equipment stays in place through the transition.
        Succession returns every assignment outside the new household to the
        armory, while an heir who owned gifts outside it brings those exact
        objects home. */
@@ -1984,7 +2000,7 @@ window.FB = window.FB || {};
     p.travelHistory = [];
     p.travelSettlement = null;
     p.pop = Math.round(p.pop * 0.5);
-    // death dues and standing cuts must not read as a season's losses
+    // transition costs and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
     s.seasonNet = null;
     FB.syncPlayerCareer(s);
@@ -2038,14 +2054,28 @@ window.FB = window.FB || {};
       s.realms.player.liege = p.liege || null;
       s.realms.player.religion = heir.religion;
     }
+    if (FB.repairAlliances) FB.repairAlliances(s);
 
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(s);
-    FB.news(s, FB.msg('news.life.succession',
-      '👤 {name} takes up the family’s story. Generation {generation}.',
-      { name: FB.fullName(heir), generation: s.generation }));
+    if (livingAbdication) {
+      const destination = opts.destinationId && FB.world.byId[opts.destinationId];
+      FB.news(s, FB.msg('news.life.living_abdication',
+        '👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}.',
+        {
+          heir:FB.fullName(heir),
+          former:opts.formerName || FB.fullName(old),
+          destination:destination ? destination.name : '',
+          generation:s.generation
+        }));
+    } else {
+      FB.news(s, FB.msg('news.life.succession',
+        '👤 {name} takes up the family’s story. Generation {generation}.',
+        { name: FB.fullName(heir), generation: s.generation }));
+    }
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();
+    return true;
   };
 
   /* ================= save/load/title ================= */
@@ -2103,6 +2133,9 @@ window.FB = window.FB || {};
         year: FB.state.date.year
       });
       FB.save.warnIfBlocked();
+      if (FB.ui.showPendingMarriageResidence) {
+        FB.ui.showPendingMarriageResidence();
+      }
       if (afterLoad) afterLoad();
     });
     return true;

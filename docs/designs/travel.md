@@ -54,6 +54,14 @@ indefinitely. For tier-1/2 travelers, permanent settlement becomes available
 after `travelSettleOfferDays` (360) and at least `travelSettleWorkEvents` (four)
 destination stories.
 
+A tier-3+ protagonist who marries the exact target of an arrived relationship
+visit receives a separate post-wedding residence decision immediately after the
+wedding. The visit remains in its ordinary arrived stay instead of becoming
+invalid when courtship ends. The ruler may abdicate and remain as landless
+gentry at the destination, abdicate and continue as the current lawful heir, or
+defer. Deferral removes only the automatic prompt: **Stay after marriage…**
+remains in Deeds until the journey ends, alongside the unchanged return deed.
+
 The departure cooldown begins when `FB.travelStart` or `FB.socialVisitStart`
 actually spends the cost, not when the purpose or destination picker opens.
 Pilgrimage is once per character (the legacy Pilgrim trait also counts); a
@@ -76,7 +84,10 @@ counties, leg clock, departure turn/cost, encounter counts, seen cultures/events
 and additive destination-stay fields (`stayStartTurn`, `nextWorkTurn`, `workEvents`,
 and last work event). A targeted journey also saves optional `targetCharId`, whether
 departure initiated courtship, and a reigning-ruler realm/generation stamp when
-applicable. `player.travelHistory` is an array of completed
+applicable. A qualifying destination wedding adds
+`marriageResidence:{spouseId,destinationId,promptPending}`. This child is
+additive and lazily validated; `promptPending:false` means the automatic modal
+was deferred, not that the decision has expired. `player.travelHistory` is an array of completed
 `{purpose,destinationId,turn}` records. `player.travelSettlement` is `null` or the
 current character’s completed `{turn,destinationId}` permanent move. All initialize
 lazily, so version-3 saves need no migration.
@@ -110,7 +121,10 @@ purpose’s tier range cancels the journey and removes queued travel events. If 
 targeted character dies, becomes unavailable to an initiated courtship, or no
 longer resides in the quoted destination, invalid attention/courtship state is
 cleared and the traveler starts home immediately without serving the destination
-stay. If a paid-service realm dies or moves its
+stay. The post-wedding child is the narrow exception: a living spouse keeps the
+relationship visit valid after courtship is cleared. An ordinary spouse shares
+the temporary destination stay; a reigning spouse must still rule from that
+destination. If a paid-service realm dies or moves its
 capital before arrival, the traveler receives the patron-gone capstone rather than
 following an invalid realm reference.
 
@@ -158,6 +172,15 @@ life. A province-scoped incoming guild monopoly is a local right and ends during
 permanent move; other household property and institutional records keep their own
 ordinary rules. Succession clears the lifetime settlement marker for the heir.
 
+The marriage-residence move deliberately bypasses the year and four-story
+requirements, but it consumes the same one-per-character
+`player.travelSettlement`. Continuing as the same character uses the ordinary
+settlement cleanup for destination-local roles and relationships while keeping
+marriage, household wealth, items, holdings, enterprises, and finance contracts.
+Continuing as the heir cancels the journey through living succession instead:
+the household home does not move, and the former protagonist and wedding spouse
+receive explicit residence in the destination county.
+
 An accompanied self-founded venture adds only `travel.venture`: its kind, selected
 stake, separately paid overhead, destination/route snapshot, status, and irreversible
 settlement fields. No matching finance investment record is created. The normal trade
@@ -172,6 +195,7 @@ The public surface is `FB.travelLocation`, `FB.travelRoute`,
 `FB.travelEligible(state, purposeId?)`, `FB.socialVisitPreview`,
 `FB.socialVisitStart`, `FB.travelTick`, `FB.travelStayDays`,
 `FB.travelReturnEligible`, `FB.travelSettlementEligible`,
+`FB.travelMarriageResidenceEligible`, `FB.travelMarriageResidence`,
 `FB.travelTurnBack`, `FB.travelReturn`, `FB.travelSettle`, and `FB.travelCancel`.
 The courier surface is `FB.giftDeliveryEnsure`, `FB.giftDeliveryPreview`,
 `FB.giftDeliveryPending`, `FB.dispatchGiftDelivery`, and `FB.giftDeliveryTick`.

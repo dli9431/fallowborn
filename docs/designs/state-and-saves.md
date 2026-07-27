@@ -170,12 +170,26 @@ marker, and a realm/generation stamp when the target is a reigning ruler. Restor
 validates the live target and their current
 `FB.characterResidence`; a dead, unavailable, or moved target clears invalid
 relationship state and starts the saved traveler home without a minimum stay.
+A qualifying tier-3+ destination wedding adds the optional JSON-only child
+`marriageResidence:{spouseId,destinationId,promptPending}`. Restore validates it
+additively and reopens the immediate decision only while `promptPending` remains
+true; deferral leaves the child and its Deed entry in place until travel ends.
 `player.travelHistory` stores completed purpose/destination pairs for the
 current character. `player.travelSettlement` records the current character’s one
 completed permanent move as `{turn,destinationId}`. All initialize lazily without
 changing the save version. Succession cancels an active journey and clears both the
 new character’s lifetime history and permanent-move marker; the household home remains
 `player.provinceId` unless an eligible destination stay explicitly settles there.
+
+Living marriage abdication reuses the ordinary successor transition with an
+explicit option rather than inventing a second player-state shape. It advances
+`state.generation` and applies the normal heir-specific standing, focus,
+relationship, and lifetime-counter resets, but does not mark the predecessor
+dead, add `state.legends`, charge death dues, or clear an unrelated
+`state.pregnant`. Before the pointer changes, the former protagonist and wedding
+spouse receive `homeProvinceId` in the destination; their marriage and family
+links remain ordinary character state, while household enumeration follows the
+new protagonist.
 
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an

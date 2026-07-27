@@ -46,6 +46,38 @@ conceive only when the player’s physical travel location is the capital; every
 child is registered beneath the reigning compact member and therefore enters the realm’s
 normal succession.
 
+## Marriage residence and living abdication
+
+When a tier-3+ protagonist marries the exact relationship-visit target in that
+character’s county, the completed wedding preserves the destination stay and
+opens a non-dismissible residence decision. A reigning-ruler spouse qualifies.
+The lawful heir shown in the modal is recomputed from `FB.heirsOf`; both
+abdication paths recompute and validate it again at confirmation.
+
+- **Remain the protagonist:** the ruler abdicates, moves the household to the
+  wedding county, and continues as tier-2 landless gentry. Counts and greater
+  rulers hand their intact player realm to the heir as an AI realm; a barony has
+  no realm node and returns to the local count. The protagonist’s royal compact
+  and already-created descendant claims remain, but any realm-to-realm alliance
+  ends once the protagonist is landless.
+- **Continue as the heir:** the playable generation advances through the normal
+  successor resets while the former ruler remains alive. The existing title,
+  household home, and player realm where one exists stay in place. The former
+  ruler and spouse remain married, receive explicit residence in the wedding
+  county, and leave the managed household. The former ruler’s compact and
+  alliance end, while already-born descendants keep their royal succession
+  positions.
+- **Decide later:** the ordinary destination stay and eventual return remain
+  available. The automatic prompt clears, but **Stay after marriage…** remains
+  in Deeds until the journey ends.
+
+This decision bypasses the ordinary year/four-story settlement threshold but
+still consumes the protagonist’s one lifetime relocation. The heir path is
+disabled while either member of the retiring couple participates in the active
+pregnancy record, so a deferred decision can be completed after the birth.
+Living abdication never marks the predecessor dead, records a legend, charges
+death dues, or clears an unrelated pregnancy.
+
 **Marriage is station-gated.** Characters carry a social rank `station` 0–4
 (`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps
 up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up

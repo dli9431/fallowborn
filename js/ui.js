@@ -851,7 +851,7 @@ window.FB = window.FB || {};
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
-    travel_settle_here:'life',
+    travel_marriage_residence:'life', travel_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', restore_papacy:'faith',
     claim_caliphate:'faith', call_great_holy_war:'faith',
     join_great_holy_war:'faith', renew_great_holy_war_vow:'faith',
@@ -4213,9 +4213,13 @@ window.FB = window.FB || {};
           ? FB.T(
             'Departure keeps your personal attention on {name}; progress resumes only once you arrive.',
             { name:c.name })
-          : FB.T(
-            'Departure assigns your personal attention to {name}; progress begins only once you arrive.',
-            { name:c.name })) + '</p>') +
+           : FB.T(
+             'Departure assigns your personal attention to {name}; progress begins only once you arrive.',
+             { name:c.name })) + '</p>') +
+      (options.courtship && s.player.tier >= 3
+        ? '<p>' + esc(FB.T(
+          'If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later.')) + '</p>'
+        : '') +
       '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {
         cost:preview.cost
       })) + '</b>' + (preview.cost > s.player.gold
@@ -4308,6 +4312,129 @@ window.FB = window.FB || {};
       FB.travelSettle(s);
     });
     $('travel-settle-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showMarriageResidence = function () {
+    const s = FB.state;
+    const t = s && s.player.travel;
+    const residence = t && t.marriageResidence;
+    const protagonist = s && s.chars[s.player.charId];
+    const spouse = residence && s.chars[residence.spouseId];
+    const destination = residence && FB.world.byId[residence.destinationId];
+    if (!s || !t || !residence || !protagonist || !spouse || !destination ||
+        t.purpose !== 'relationship' ||
+        t.phase !== 'arrived' ||
+        t.currentId !== residence.destinationId ||
+        t.destinationId !== residence.destinationId) {
+      UI.toast(FB.T('No post-marriage residence decision is pending.'));
+      return false;
+    }
+
+    /* This is only a snapshot for the prose. Each path is checked again by
+       travelMarriageResidence immediately before it changes state. */
+    const heirs = FB.heirsOf ? FB.heirsOf(s) : [];
+    const heir = heirs.length ? heirs[0] : null;
+    const selfEligible = FB.travelMarriageResidenceEligible
+      ? FB.travelMarriageResidenceEligible(s, 'self') : false;
+    const heirEligible = FB.travelMarriageResidenceEligible
+      ? FB.travelMarriageResidenceEligible(s, 'heir') : false;
+    const realm = s.realms && s.realms.player;
+    const heirName = heir ? FB.fullName(heir) : '';
+    const currentHeir = heir
+      ? FB.T('Your current lawful heir is {heir}.', { heir:heirName })
+      : FB.T('No lawful heir is living.');
+    const selfDetail = s.player.tier >= 4
+      ? (heir
+        ? FB.T('{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}.', {
+            heir:heirName,
+            realm:realm ? realm.name : FB.T('the realm'),
+            name:FB.fullName(protagonist),
+            destination:destination.name
+          })
+        : FB.T('{name} can remain playable only if a living lawful heir can receive the realm.', {
+            name:FB.fullName(protagonist)
+          }))
+      : FB.T('{name} relinquishes the barony to the local count and becomes landless gentry in {destination}.', {
+          name:FB.fullName(protagonist),
+          destination:destination.name
+        });
+    const heirDetail = heir
+      ? (s.player.tier >= 4
+        ? FB.T('{heir} keeps the family’s existing realm and home. {former} and {spouse} remain married and live in {destination}.', {
+            heir:heirName,
+            former:FB.fullName(protagonist),
+            spouse:FB.fullName(spouse),
+            destination:destination.name
+          })
+        : FB.T('{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}.', {
+            heir:heirName,
+            former:FB.fullName(protagonist),
+            spouse:FB.fullName(spouse),
+            destination:destination.name
+          }))
+      : FB.T('A living lawful heir is required to continue the story.');
+
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives.', {
+        destination:destination.name
+      })) + '</p><p><b>' + esc(currentHeir) + '</b></p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="marriage-residence-self"' +
+      (selfEligible === true ? '' : ' disabled') + '>👤 ' +
+      esc(FB.T('Abdicate and continue as {name}', {
+        name:FB.fullName(protagonist)
+      })) + '<span class="adesc">' + esc(selfEligible === true
+        ? selfDetail : selfEligible || selfDetail) + '</span></button>' +
+      '<button type="button" class="actionbtn" id="marriage-residence-heir"' +
+      (heirEligible === true ? '' : ' disabled') + '>👑 ' +
+      esc(heir
+        ? FB.T('Abdicate and continue as {heir}', { heir:heirName })
+        : FB.T('Abdicate and continue as the heir')) +
+      '<span class="adesc">' + esc(heirEligible === true
+        ? heirDetail : heirEligible || heirDetail) + '</span></button>' +
+      '<button type="button" class="actionbtn" id="marriage-residence-defer">🧭 ' +
+      esc(FB.T('Decide later')) + '<span class="adesc">' + esc(FB.T(
+        'Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends.')) +
+      '</span></button></div>';
+
+    openModal(FB.T('Stay in {destination} after the wedding?', {
+      destination:destination.name
+    }), h, { dismissable:false });
+    const selfButton = $('marriage-residence-self');
+    if (selfButton) selfButton.addEventListener('click', function () {
+      const eligible = FB.travelMarriageResidenceEligible(s, 'self');
+      if (eligible !== true) {
+        UI.toast(eligible);
+        UI.showMarriageResidence();
+        return;
+      }
+      if (FB.travelMarriageResidence(s, 'self')) UI.closeModal();
+    });
+    const heirButton = $('marriage-residence-heir');
+    if (heirButton) heirButton.addEventListener('click', function () {
+      const eligible = FB.travelMarriageResidenceEligible(s, 'heir');
+      if (eligible !== true) {
+        UI.toast(eligible);
+        UI.showMarriageResidence();
+        return;
+      }
+      if (FB.travelMarriageResidence(s, 'heir')) UI.closeModal();
+    });
+    $('marriage-residence-defer').addEventListener('click', function () {
+      FB.travelMarriageResidence(s, 'defer');
+      UI.closeModal();
+      UI.refresh();
+    });
+    return true;
+  };
+
+  UI.showPendingMarriageResidence = function () {
+    const s = FB.state;
+    const t = s && s.player.travel;
+    const residence = t && t.marriageResidence;
+    if (!residence || !residence.promptPending ||
+        !$('eventmodal').classList.contains('hidden') ||
+        !$('genmodal').classList.contains('hidden')) return false;
+    return UI.showMarriageResidence();
   };
 
   UI.showAbsolution = function () {

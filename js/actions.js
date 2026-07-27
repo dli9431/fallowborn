@@ -454,6 +454,23 @@ window.FB = window.FB || {};
           ? true : FB.T('Already returning home.'));
     },
     run: function (s) { if (FB.travelTurnBack) FB.travelTurnBack(s); } },
+  { id: 'travel_marriage_residence', label: '💍 Stay after marriage…', noConsume: true,
+    desc: function () {
+      return FB.T('Reconsider abdication and residence in the wedding county before this journey ends.');
+    },
+    show: function (s) {
+      return !!(s.player.travel && s.player.travel.marriageResidence);
+    },
+    can: function (s) {
+      return FB.travelMarriageResidenceEligible
+        ? FB.travelMarriageResidenceEligible(s)
+        : FB.T('The post-marriage residence decision is unavailable.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showMarriageResidence) {
+        FB.ui.showMarriageResidence();
+      }
+    } },
   { id: 'travel_settle_here', label: '🏠 Settle here permanently…', noConsume: true,
     desc: function () {
       return FB.T('Move the household here. Each character may make this permanent move only once in their lifetime.');
@@ -2721,7 +2738,8 @@ window.FB = window.FB || {};
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
-        ['travel_turn_back', 'travel_settle_here'].indexOf(a.id) < 0) continue;
+        ['travel_turn_back', 'travel_marriage_residence',
+          'travel_settle_here'].indexOf(a.id) < 0) continue;
       if (!a.show(state)) continue;
       let can = true, reason = '';
       if (a.cd !== undefined) {

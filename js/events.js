@@ -2350,6 +2350,12 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    const weddingTravel = p.travel && p.tier >= 3 &&
+      p.travel.purpose === 'relationship' &&
+      p.travel.phase === 'arrived' &&
+      p.travel.currentId === p.travel.destinationId &&
+      p.travel.targetCharId === s.id
+      ? p.travel : null;
     FB.socialAttentionWithdraw(state, s.id, true);
     /* Marriage makes a retainer resident family: end the paid office before
        the ordinary spouse livelihood and household rules take over. */
@@ -2460,6 +2466,16 @@ window.FB = window.FB || {};
         const i = state.provChars[pid].indexOf(s.id);
         if (i >= 0) state.provChars[pid].splice(i, 1);
       }
+    }
+    /* A ruler who marries the exact relationship-visit target may decide
+       whether the wedding county becomes a permanent residence. This saved
+       child keeps the arrived stay valid after courtship itself is cleared. */
+    if (weddingTravel) {
+      weddingTravel.marriageResidence = {
+        spouseId:s.id,
+        destinationId:weddingTravel.destinationId,
+        promptPending:true
+      };
     }
   };
 

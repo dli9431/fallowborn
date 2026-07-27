@@ -93,6 +93,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    county the household’s permanent home—but only as a freeholder or gentry
    traveler, and each character can relocate only once. Rulers remain temporary
    guests and receive court-residence stories instead of looking for local wages.
+   One exception follows a destination wedding: a baron or greater ruler who
+   marries the person they came to visit may abdicate and stay there as landless
+   gentry, abdicate and continue as their lawful heir while the couple remains
+   there, or decide later. The **Stay after marriage…** deed remains available
+   until the visit ends; this wedding move skips the one-year wait but still uses
+   that character’s single lifetime relocation.
    Named characters remember personal encounters. Assign your one **personal-attention**
    slot to cultivate a local character’s Regard each day alongside your ordinary
    focus. A distant character offers a targeted visit: review the route, cost,

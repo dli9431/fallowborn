@@ -95,6 +95,16 @@ window.FB = window.FB || {};
     if (t && t.targetCourtship !== undefined) {
       t.targetCourtship = !!t.targetCourtship;
     }
+    if (t && t.marriageResidence !== undefined) {
+      const residence = t.marriageResidence;
+      if (!residence || typeof residence !== 'object' ||
+          typeof residence.spouseId !== 'string' ||
+          typeof residence.destinationId !== 'string') {
+        delete t.marriageResidence;
+      } else {
+        residence.promptPending = !!residence.promptPending;
+      }
+    }
     return t;
   };
 
@@ -1092,6 +1102,25 @@ window.FB = window.FB || {};
     if (!t || !t.targetCharId) return true;
     const c = state.chars[t.targetCharId];
     if (!c || c.dead) return false;
+    const marriageResidence = t.marriageResidence;
+    if (marriageResidence &&
+        marriageResidence.spouseId === c.id &&
+        marriageResidence.destinationId === t.destinationId) {
+      const me = state.chars[state.player.charId];
+      if (!me || !((me.spouseId === c.id) || (c.spouseId === me.id))) {
+        return false;
+      }
+      /* An ordinary spouse shares the traveler’s temporary destination stay
+         even though the household’s permanent home has not moved. A reigning
+         spouse remains tied to the live capital and invalidates the visit if
+         that court itself moves away. */
+      if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+        const reigningResidence = FB.characterResidence
+          ? FB.characterResidence(state, c) : FB.homeOf(state, c);
+        if (reigningResidence !== t.destinationId) return false;
+      }
+      return true;
+    }
     if (t.targetRulerRealm) {
       const r = state.realms[t.targetRulerRealm];
       if (!r || !r.alive || !r.ruler ||
@@ -1239,6 +1268,203 @@ window.FB = window.FB || {};
     return true;
   };
 
+  function marriageResidenceRecord(state) {
+    const t = FB.travelEnsure(state);
+    return t && t.marriageResidence ? t.marriageResidence : null;
+  }
+
+  function marriageResidenceHeir(state) {
+    const heirs = FB.heirsOf ? FB.heirsOf(state) : [];
+    return heirs.length ? heirs[0] : null;
+  }
+
+  function marriageResidencePregnancyBlocks(state, spouseId) {
+    const pregnancy = state.pregnant;
+    if (!pregnancy) return false;
+    const playerId = state.player.charId;
+    return pregnancy.motherId === playerId ||
+      pregnancy.fatherId === playerId ||
+      pregnancy.motherId === spouseId ||
+      pregnancy.fatherId === spouseId;
+  }
+
+  /* The post-wedding decision is live-validated every time it is shown and
+     again when a button resolves. Passing no mode validates the shared
+     situation; "self" and "heir" add their path-specific gates. */
+  FB.travelMarriageResidenceEligible = function (state, mode) {
+    const p = state && state.player;
+    const t = p && FB.travelEnsure(state);
+    const residence = t && marriageResidenceRecord(state);
+    if (!p || !t || !residence) {
+      return FB.T('No post-marriage residence decision is pending.');
+    }
+    if (t.purpose !== 'relationship' ||
+        residence.destinationId !== t.destinationId) {
+      return FB.T('This journey is not the wedding visit that created the decision.');
+    }
+    if (t.phase !== 'arrived' || t.currentId !== t.destinationId) {
+      return t.phase === 'return'
+        ? FB.T('The return journey has already begun.')
+        : FB.T('Reach the wedding county before deciding where to live.');
+    }
+    const protagonist = state.chars[p.charId];
+    const spouse = state.chars[residence.spouseId];
+    if (!protagonist || protagonist.dead || !spouse || spouse.dead ||
+        !((protagonist.spouseId === spouse.id) ||
+          (spouse.spouseId === protagonist.id))) {
+      return FB.T('The marriage that created this choice is no longer in force.');
+    }
+    if (p.tier < 3) {
+      return FB.T('Only a baron or greater ruler may abdicate through this decision.');
+    }
+    if (!settled(residence.destinationId)) {
+      return FB.T('The wedding county can no longer receive the household.');
+    }
+    if (p.travelSettlement) {
+      return FB.T('{name} has already made the one permanent move allowed in this lifetime.', {
+        name:FB.fullName(protagonist)
+      });
+    }
+
+    const heir = marriageResidenceHeir(state);
+    if (mode === 'self') {
+      if (p.tier >= 4) {
+        if (!heir) {
+          return FB.T('No living lawful heir can receive the realm.');
+        }
+        if (!state.realms.player || !state.realms.player.alive ||
+            !p.provs || !p.provs.length) {
+          return FB.T('Your landed realm cannot be handed over intact.');
+        }
+      }
+    } else if (mode === 'heir') {
+      if (!heir) {
+        return FB.T('No living lawful heir can continue the family’s story.');
+      }
+      if (p.tier >= 4 &&
+          (!state.realms.player || !state.realms.player.alive ||
+            !p.provs || !p.provs.length)) {
+        return FB.T('Your landed realm cannot pass through a living abdication.');
+      }
+      if (marriageResidencePregnancyBlocks(state, spouse.id)) {
+        return FB.T('Wait until the current pregnancy ends before leaving this couple outside the managed household.');
+      }
+    }
+    return true;
+  };
+
+  function relocateHousehold(state, destination, t, message) {
+    const p = state.player;
+    const rival = FB.getRole ? FB.getRole(state, 'rival', false) : null;
+    if (rival) rival.homeProvinceId = t.homeId;
+    clearQueued(state);
+    p.provinceId = destination;
+    p.liege = null;
+    delete state.roles.lord;
+    delete state.roles.priest;
+    if (FB.clearCourtship) FB.clearCourtship(state);
+    if (FB.socialAttentionClear) FB.socialAttentionClear(state);
+    if (FB.clearFriendship) FB.clearFriendship(state, true);
+    else delete state.roles.friend;
+    delete state.roles.notable;
+    /* The active rival and all household/property/finance records are
+       deliberately untouched. Local authority is regenerated at the new home. */
+    if (FB.getRole) {
+      FB.getRole(state, 'lord', true);
+      FB.getRole(state, 'priest', true);
+    }
+    p.travelSettlement = { turn:state.turn, destinationId:destination };
+    p.travel = null;
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+    if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
+    if (FB.enterpriseList) FB.enterpriseList(state);
+    if (FB.map) {
+      FB.map.playerProv = destination;
+      FB.map.travelPreview = null;
+      FB.map.travelTargets = null;
+      FB.map.request();
+    }
+    if (message) FB.news(state, message);
+    if (FB.validateFocus) FB.validateFocus(state);
+    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+    return true;
+  }
+
+  function setCharacterResidence(state, c, destination) {
+    if (!c) return;
+    c.homeProvinceId = destination;
+    if (!state.provChars) return;
+    for (const pid in state.provChars) {
+      if (!Array.isArray(state.provChars[pid])) continue;
+      const at = state.provChars[pid].indexOf(c.id);
+      if (at >= 0) state.provChars[pid].splice(at, 1);
+    }
+    state.provChars[destination] = state.provChars[destination] || [];
+    if (state.provChars[destination].indexOf(c.id) < 0) {
+      state.provChars[destination].push(c.id);
+    }
+  }
+
+  FB.travelMarriageResidence = function (state, mode) {
+    const p = state.player;
+    const t = FB.travelEnsure(state);
+    const residence = marriageResidenceRecord(state);
+    if (!t || !residence) return false;
+    if (mode === 'defer') {
+      residence.promptPending = false;
+      return true;
+    }
+    if (FB.travelMarriageResidenceEligible(state, mode) !== true) return false;
+
+    const protagonist = state.chars[p.charId];
+    const spouse = state.chars[residence.spouseId];
+    const destination = residence.destinationId;
+    const heir = marriageResidenceHeir(state); // recomputed at confirmation
+    if (mode === 'self') {
+      let handedRealm = null;
+      if (p.tier >= 4) {
+        handedRealm = FB.abdicatePlayerRealmToHeir
+          ? FB.abdicatePlayerRealmToHeir(state, heir) : null;
+        if (!handedRealm) return false;
+        p.provs = [];
+      } else if (FB.breakAlliance) {
+        /* A barony is an office inside the local count’s county rather than
+           a realm node, so there is no territorial object to transfer. */
+        FB.breakAlliance(state, 'player');
+      }
+      FB.setPlayerTier(state, 2, { attachLiege:false });
+      p.liege = null;
+      return relocateHousehold(state, destination, t,
+        FB.msg('news.travel.marriage_residence_self', {
+          forms: {
+            select:'value', param:'landed', cases:{
+              yes:'💍 You yield {realm} to {heir} and settle with {spouse} in {destination} as landless gentry.',
+              no:'💍 You relinquish the barony and settle with {spouse} in {destination} as landless gentry.',
+              other:'💍 You leave office and settle with {spouse} in {destination}.'
+            }
+          }
+        }, {
+          landed:handedRealm ? 'yes' : 'no',
+          realm:handedRealm ? handedRealm.name : '',
+          heir:heir ? FB.fullName(heir) : '',
+          spouse:FB.fullName(spouse),
+          destination:FB.world.byId[destination].name
+        }));
+    }
+
+    if (mode === 'heir') {
+      setCharacterResidence(state, protagonist, destination);
+      setCharacterResidence(state, spouse, destination);
+      return !!(FB.game && FB.game.succeedTo &&
+        FB.game.succeedTo(heir.id, {
+          livingAbdication:true,
+          formerName:FB.fullName(protagonist),
+          destinationId:destination
+        }));
+    }
+    return false;
+  };
+
   FB.travelTurnBack = function (state) {
     const t = FB.travelEnsure(state);
     if (!t || FB.travelReturnEligible(state) !== true) return false;
@@ -1278,40 +1504,10 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t || t.phase !== 'arrived' || FB.travelSettlementEligible(state) !== true) return false;
     const destination = t.destinationId;
-    const rival = FB.getRole ? FB.getRole(state, 'rival', false) : null;
-    if (rival) rival.homeProvinceId = t.homeId;
-    clearQueued(state);
-    p.provinceId = destination;
-    p.liege = null;
-    delete state.roles.lord;
-    delete state.roles.priest;
-    if (FB.clearCourtship) FB.clearCourtship(state);
-    if (FB.socialAttentionClear) FB.socialAttentionClear(state);
-    if (FB.clearFriendship) FB.clearFriendship(state, true);
-    else delete state.roles.friend;
-    delete state.roles.notable;
-    /* The active rival and all household/property/finance records are
-       deliberately untouched. Local authority is regenerated at the new home. */
-    if (FB.getRole) {
-      FB.getRole(state, 'lord', true);
-      FB.getRole(state, 'priest', true);
-    }
-    p.travelSettlement = { turn:state.turn, destinationId:destination };
-    p.travel = null;
-    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
-    if (FB.map) {
-      FB.map.playerProv = destination;
-      FB.map.travelPreview = null;
-      FB.map.travelTargets = null;
-      FB.map.request();
-    }
-    FB.news(state, FB.msg('news.travel.settled',
+    return relocateHousehold(state, destination, t, FB.msg('news.travel.settled',
       '🧭 The household settles in {destination}.', {
         destination:FB.world.byId[destination].name
       }));
-    if (FB.validateFocus) FB.validateFocus(state);
-    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
-    return true;
   };
 
   FB.travelCancel = function (state, reason, silent) {

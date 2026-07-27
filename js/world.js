@@ -1352,14 +1352,23 @@ window.FB = window.FB || {};
   FB.realmIdForRulerCharacter = function (state, value) {
     const c = typeof value === 'string'
       ? state && state.chars && state.chars[value] : value;
-    if (!state || !c || c.dead || !c.royalLine) return null;
-    const rid = c.royalLine.realmId;
-    const r = state.realms && state.realms[rid];
-    const s = r && r.succession;
-    const m = s && s.rulerMemberId && s.members &&
-      s.members[s.rulerMemberId];
-    return r && r.alive && rid !== 'player' && m &&
-      m.id === c.royalLine.memberId && m.charId === c.id ? rid : null;
+    if (!state || !c || c.dead || !state.realms) return null;
+    function rulesRealm(rid) {
+      const r = state.realms[rid];
+      const s = r && r.succession;
+      const m = s && s.rulerMemberId && s.members &&
+        s.members[s.rulerMemberId];
+      return r && r.alive && rid !== 'player' && m && m.charId === c.id;
+    }
+    /* Prefer the character's inherited royal-line identity when it is also
+       the crown they currently wear. A living abdication may put a character
+       on a second throne without overwriting that existing descendant claim,
+       so fall back to the compact ruler roots. */
+    if (c.royalLine && rulesRealm(c.royalLine.realmId)) {
+      return c.royalLine.realmId;
+    }
+    for (const rid in state.realms) if (rulesRealm(rid)) return rid;
+    return null;
   };
 
   FB.isReigningRealmRuler = function (state, value) {
@@ -3026,6 +3035,125 @@ window.FB = window.FB || {};
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = sovereign;
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+  };
+
+  /* A count-or-higher protagonist may voluntarily leave an intact realm to
+     the current lawful heir. Re-key the special player node into an ordinary
+     AI realm in place: no realm dies, so offices, technology, vassals, and
+     ownership survive without vacancy, usurpation, or restoration effects. */
+  FB.abdicatePlayerRealmToHeir = function (state, heir) {
+    const p = state && state.player;
+    const realm = state && state.realms && state.realms.player;
+    if (!p || !realm || !realm.alive || !heir || heir.dead ||
+        !p.provs || !p.provs.length) return null;
+
+    let rid = 'abdicated_player_' + state.turn;
+    let suffix = 2;
+    while (state.realms[rid]) rid = 'abdicated_player_' + state.turn + '_' + suffix++;
+    if (FB.breakAlliance) FB.breakAlliance(state, 'player');
+    if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(state);
+
+    const generation = realm.ruler && realm.ruler.generation !== undefined
+      ? realm.ruler.generation + 1 : 2;
+    realm.id = rid;
+    realm.ruler = {
+      name:heir.name,
+      sex:heir.sex,
+      culture:heir.culture,
+      born:heir.born,
+      age:FB.ageOf(heir, state.date.year),
+      mar:FB.skillOf(heir, 'mar'),
+      trait:heir.traits && heir.traits.length ? heir.traits[0] : null,
+      generation:generation
+    };
+    heir.role = null;
+
+    const rootId = 'royal_' + rid + '_' + heir.id;
+    const root = {
+      id:rootId,
+      name:heir.name,
+      sex:heir.sex,
+      born:heir.born,
+      alive:true,
+      parentId:null,
+      childIds:[],
+      charId:heir.id
+    };
+    const succession = {
+      rulerGeneration:generation,
+      rulerMemberId:rootId,
+      members:{},
+      order:[],
+      heirId:null
+    };
+    succession.members[rootId] = root;
+    const children = FB.childrenOf ? FB.childrenOf(state, heir).filter(function (c) {
+      return c && !c.dead;
+    }) : [];
+    children.sort(function (a, b) {
+      if (a.sex !== b.sex) return a.sex === 'm' ? -1 : 1;
+      return a.born - b.born;
+    });
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const memberId = 'royal_' + rid + '_' + child.id;
+      succession.members[memberId] = {
+        id:memberId,
+        name:child.name,
+        sex:child.sex,
+        born:child.born,
+        alive:true,
+        parentId:rootId,
+        childIds:[],
+        charId:child.id
+      };
+      root.childIds.push(memberId);
+      succession.order.push(memberId);
+      if (!child.royalLine) {
+        child.royalLine = { realmId:rid, memberId:memberId };
+      }
+    }
+    succession.heirId = succession.order.length ? succession.order[0] : null;
+    realm.succession = succession;
+    if (!heir.royalLine) heir.royalLine = { realmId:rid, memberId:rootId };
+
+    state.realms[rid] = realm;
+    for (const pid in state.owner) {
+      if (state.owner[pid] === 'player') state.owner[pid] = rid;
+      if (state.holder && state.holder[pid] === 'player') state.holder[pid] = rid;
+    }
+    for (const otherId in state.realms) {
+      const other = state.realms[otherId];
+      if (!other || otherId === 'player') continue;
+      if (other.liege === 'player') other.liege = rid;
+      if (other.war && other.war.enemy === 'player') other.war.enemy = rid;
+    }
+    for (const religionId in (state.religiousHeads || {})) {
+      if (state.religiousHeads[religionId] === 'player') {
+        state.religiousHeads[religionId] = rid;
+      }
+    }
+    if (state.realmTech &&
+        Object.prototype.hasOwnProperty.call(state.realmTech, 'player')) {
+      state.realmTech[rid] = state.realmTech.player;
+      delete state.realmTech.player;
+    }
+    if (Array.isArray(state.armies)) {
+      for (const army of state.armies) {
+        if (army.realm === 'player') army.realm = rid;
+      }
+    }
+    if (state.armyDown &&
+        Object.prototype.hasOwnProperty.call(state.armyDown, 'player')) {
+      state.armyDown[rid] = state.armyDown.player;
+      delete state.armyDown.player;
+    }
+    delete state.realms.player;
+
+    FB.ensureRealmSuccession(state, rid);
+    FB.invalidateRealmCache();
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return realm;
   };
 
   /* Join an inherited realm to the protagonist's landed realm. The inherited
