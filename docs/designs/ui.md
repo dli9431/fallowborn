@@ -53,6 +53,10 @@ the Menu, Automation, and end-game dialogs (`.fullsheet-modal`) fill the whole s
 edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, centered
 `.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
 footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
+Ordinary modals (including event, settlement, and resource dialogs), the nested equipment
+picker, and the travel destination picker float above the device's bottom safe area with a
+complete rounded frame. Only deliberate full-screen sheets and the Self/Kin drawer meet the
+bottom edge.
 Desktop scroll containers share narrow, rounded bronze thumbs over transparent tracks so
 panels, sheets, lists, and modals retain the parchment styling without prominent scrollbars.
 Touch devices keep their platform-native overlay scrolling.

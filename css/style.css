@@ -721,11 +721,15 @@ textarea.modjson, textarea.savetext {
   #sidebody, #leftbody { padding-bottom: 78px; } /* clear the fixed bar */
   body.picking #timebtns { display: none; } /* not while choosing a birthplace */
   .travel-picker {
-    position: fixed; z-index: 41; left: 0; right: 0; bottom: 0;
-    width: 100%; max-height: 55vh; max-height: 55dvh;
-    border-radius: 14px 14px 0 0; border-width: 2px 0 0;
-    padding: 14px max(14px, env(safe-area-inset-right))
-      max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    position: fixed; z-index: 41;
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: calc(55vh - 10px - env(safe-area-inset-bottom));
+    max-height: calc(55dvh - 10px - env(safe-area-inset-bottom));
+    border-radius: 14px; border-width: 2px;
+    padding: 14px;
   }
   .travel-destination { min-height: 48px; font-size: 15px; }
   .travel-picker-actions .btn { flex: 1 1 0; }
@@ -742,12 +746,20 @@ textarea.modjson, textarea.savetext {
   #btn-closeself { display: block; flex: 0 0 56px; font-size: 16px; }
   /* the fixed time bar's keyboard badges are noise on a small screen */
   #timebtns .keyhint { display: none; }
-  /* modals become bottom sheets */
-  .modal { align-items: flex-end; padding: 0; }
+  /* Ordinary modals become framed bottom sheets. Keep the full lower edge
+     above the device safe area so it cannot read as clipped by the viewport. */
+  .modal {
+    align-items: flex-end;
+    padding: 0 max(10px, env(safe-area-inset-right))
+      calc(10px + env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
   .modalcard {
-    width: 100%; max-height: 86vh; max-height: 86dvh;
-    border-radius: 14px 14px 0 0; border-bottom: none;
-    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-height: calc(86vh - 10px - env(safe-area-inset-bottom));
+    max-height: calc(86dvh - 10px - env(safe-area-inset-bottom));
+    border: 2px solid #7a6234; border-radius: 14px;
+    padding: 16px;
   }
   #genmodal.embedded-history-back .gm-heading,
   .equip-picker-overlay.embedded-history-back .equip-picker-heading {
@@ -757,13 +769,6 @@ textarea.modjson, textarea.savetext {
   .gm-history-back:not(.hidden), .equip-picker-history-back:not(.hidden) {
     display: inline-flex; align-items: center; justify-content: center;
     min-height: 44px; padding: 8px 10px;
-  }
-  /* the event dialog floats just above the screen edge with its full frame
-     restored — a sheet touching the edge reads as if its bottom were cut off */
-  #eventmodal { padding: 0 10px calc(10px + env(safe-area-inset-bottom)); }
-  #eventmodal .modalcard {
-    border-bottom: 2px solid #7a6234; border-radius: 14px;
-    padding-bottom: 16px;
   }
   /* Tall dialogs with a Close pinned to the bottom middle, so a long list
      needs no scroll to shut and no reach for the top edge to dismiss. Two
@@ -808,11 +813,18 @@ textarea.modjson, textarea.savetext {
   .changelog-modal .gm-footer .btn { min-width: 180px; text-align: center; }
   /* the full-screen sheets get a chunkier, thumb-friendly Close */
   .fullsheet-modal .gm-footer .btn { min-width: 200px; min-height: 52px; font-size: 16px; text-align: center; }
-  .equip-picker-overlay { align-items: flex-end; padding: 0; }
+  .equip-picker-overlay {
+    align-items: flex-end;
+    padding: 0 max(10px, env(safe-area-inset-right))
+      calc(10px + env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
   .equip-picker-card {
-    width: 100%; max-height: 86vh; max-height: 86dvh;
-    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-    border-radius: 14px 14px 0 0; border-bottom: none;
+    width: 100%;
+    max-height: calc(86vh - 10px - env(safe-area-inset-bottom));
+    max-height: calc(86dvh - 10px - env(safe-area-inset-bottom));
+    padding: 16px;
+    border: 2px solid #7a6234; border-radius: 14px;
   }
 }
 
