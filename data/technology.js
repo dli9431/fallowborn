@@ -99,11 +99,11 @@ window.FBDATA = window.FBDATA || {};
     var from = attested[0];
     var cost = options.cost;
     if (cost === undefined) {
-      /* Later knowledge must remain a multi-century undertaking even for a
-         wealthy realm that patronizes scholars continuously. Foundations stay
-         cheap; the post-800 tiers carry the long campaign's pacing. */
-      cost = from < 476 ? 10 : from < 800 ? 24 :
-        from < 1000 ? 50 : from < 1150 ? 75 : 100;
+      /* Completing the national catalogue should span several generations even
+         for a wealthy realm that patronizes scholars continuously. Foundations
+         stay cheapest, but every era contributes to the long campaign's pace. */
+      cost = from < 476 ? 20 : from < 800 ? 50 :
+        from < 1000 ? 100 : from < 1150 ? 150 : 200;
     }
     var def = {
       name:name,

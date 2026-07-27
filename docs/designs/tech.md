@@ -76,9 +76,10 @@ Nordic, Slavic, Steppe, and other realms without treating a single calendar as u
 
 Prerequisites are hard. Dates are not. `FB.techCostBreakdown` starts from the authored
 base cost and applies the sovereign's regional historical window. Core default base costs
-rise by first-attestation era: 10 before 476, 24 for 476–799, 50 for 800–999,
-75 for 1000–1149, and 100 from 1150 onward. The later tiers keep a dedicated scholarly
-realm from exhausting the thirteenth-century catalogue several centuries early.
+rise by first-attestation era: 20 before 476, 50 for 476–799, 100 for 800–999,
+150 for 1000–1149, and 200 from 1150 onward. The full curve keeps even a dedicated
+scholarly realm's remaining catalogue a multi-generation undertaking, while historical
+and exposure discounts still let lagging nations catch up.
 
 ```text
 before first attestation:
