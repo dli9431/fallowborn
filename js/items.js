@@ -79,7 +79,31 @@ window.FB = window.FB || {};
   };
 
   FB.isHouseholdCharacter = function (state, cid) {
-    return directHouseholdIds(state).indexOf(cid) >= 0;
+    if (!state || !state.player || !state.chars) return false;
+    const c = state.chars[cid];
+    const me = state.chars[state.player.charId];
+    if (!c || !me) return false;
+    /* The protagonist remains inspectable through the death/succession
+       boundary; every other household member must still be living. */
+    if (c.id === me.id) return true;
+    if (c.dead) return false;
+    if (c.spouseId === me.id || me.spouseId === c.id) return true;
+    const retainers = state.player.retainers || [];
+    for (let i = 0; i < retainers.length; i++) {
+      if (retainers[i] && retainers[i].charId === c.id) return true;
+    }
+    if (!FB.playerDescendantKind ||
+        !FB.playerDescendantKind(state, c.id)) return false;
+    /* Unmarried children and grandchildren live in the managed household.
+       Check both link directions because polygynous wives point to the
+       husband while only his first wife is stored on him. */
+    const spouse = c.spouseId && state.chars[c.spouseId];
+    if (spouse && !spouse.dead) return false;
+    for (const id in state.chars) {
+      const other = state.chars[id];
+      if (other && !other.dead && other.spouseId === c.id) return false;
+    }
+    return true;
   };
 
   function loanPledgesRef(state, ref) {

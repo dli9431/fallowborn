@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.71.0';
+  FB.VERSION = '1.71.1';
   FB.CHANGELOG = [
+    { v: '1.71.1', date: '2026-07-27', changes: [
+      'Travel destination and trade venture screens now calculate large route lists faster, while relationship visits and ruler standing labels stay consistent as circumstances change.'
+    ] },
     { v: '1.71.0', date: '2026-07-26', changes: [
       'Relationship cultivation and courtship now follow character residence, with personal visits to distant contacts and royal courts.'
     ] },
@@ -1172,7 +1175,6 @@ window.FB = window.FB || {};
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
-    if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }

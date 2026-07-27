@@ -105,9 +105,9 @@ window.FB = window.FB || {};
 
   /* Settled-only BFS. Authored straits are already part of FB.world.adj, so
      they remain legal without admitting decorative wasteland counties. */
-  FB.travelRoute = function (fromPid, toPid) {
-    if (fromPid === toPid) return [];
-    if (!settled(fromPid) || !settled(toPid)) return null;
+  function routeSearch(fromPid, toPid) {
+    const targeted = toPid !== undefined && toPid !== null;
+    if (!settled(fromPid) || (targeted && !settled(toPid))) return null;
     const prev = {};
     const q = [fromPid];
     prev[fromPid] = fromPid;
@@ -117,19 +117,29 @@ window.FB = window.FB || {};
       for (const nb in adj) {
         if (prev[nb] !== undefined || !settled(nb)) continue;
         prev[nb] = cur;
-        if (nb === toPid) {
-          const route = [toPid];
-          let step = toPid;
-          while (step !== fromPid) {
-            step = prev[step];
-            if (step !== fromPid) route.unshift(step);
-          }
-          return route;
-        }
+        if (targeted && nb === toPid) return { from:fromPid, prev:prev };
         q.push(nb);
       }
     }
-    return null;
+    return targeted ? null : { from:fromPid, prev:prev };
+  }
+
+  function routeFromSearch(search, toPid) {
+    if (!search) return null;
+    if (search.from === toPid) return [];
+    if (search.prev[toPid] === undefined) return null;
+    const route = [toPid];
+    let step = toPid;
+    while (step !== search.from) {
+      step = search.prev[step];
+      if (step !== search.from) route.unshift(step);
+    }
+    return route;
+  }
+
+  FB.travelRoute = function (fromPid, toPid) {
+    if (fromPid === toPid) return [];
+    return routeFromSearch(routeSearch(fromPid, toPid), toPid);
   };
 
   FB.travelLegDays = function (state) {
@@ -232,7 +242,8 @@ window.FB = window.FB || {};
     return true;
   }
 
-  function addDestination(state, out, seen, purposeId, pid, realmId, opts) {
+  function addDestination(state, out, seen, purposeId, pid, realmId, opts,
+      search) {
     const p = state.player;
     opts = opts || {};
     const def = purpose(purposeId);
@@ -243,7 +254,9 @@ window.FB = window.FB || {};
       if (purposeId !== 'pilgrimage' && !(def && def.repeatable) &&
           historyHas(state, purposeId, pid)) return;
     }
-    const route = FB.travelRoute(p.provinceId, pid);
+    const route = search === undefined
+      ? FB.travelRoute(p.provinceId, pid)
+      : routeFromSearch(search, pid);
     if (!route || !route.length) return;
     const legDays = FB.travelLegDays(state);
     const pr = FB.world.byId[pid];
@@ -279,11 +292,16 @@ window.FB = window.FB || {};
     opts = opts || {};
     minDev = Math.max(1, Number(minDev) || 4);
     if (!state || !state.player || !FB.world) return out;
-    for (let i = 0; i < FB.world.provs.length; i++) {
-      const pr = FB.world.provs[i];
+    const target = opts.destinationId && FB.world.byId[opts.destinationId];
+    const candidates = target ? [target] :
+      (opts.destinationId ? [] : FB.world.provs);
+    const search = routeSearch(state.player.provinceId,
+      opts.destinationId || undefined);
+    for (let i = 0; i < candidates.length; i++) {
+      const pr = candidates[i];
       if (!pr.wasteland && (state.dev[pr.id] || pr.dev0 || 1) >= minDev) {
         addDestination(state, out, seen, opts.purpose || 'trade',
-          pr.id, null, opts);
+          pr.id, null, opts, search);
       }
     }
     return sortDestinations(out);
@@ -294,13 +312,16 @@ window.FB = window.FB || {};
     const out = [];
     const seen = {};
     if (!def || def.targeted || FB.travelEligible(state, purposeId) !== true) return out;
+    const search = def.mode === 'developed'
+      ? null : routeSearch(state.player.provinceId);
 
     if (def.mode === 'sites') {
       const sites = FBDATA.travelSites || [];
       for (let i = 0; i < sites.length; i++) {
         const site = sites[i];
         if (site.purpose === purposeId && siteAllowed(state, site)) {
-          addDestination(state, out, seen, purposeId, site.provinceId, null);
+          addDestination(state, out, seen, purposeId, site.provinceId, null,
+            null, search);
         }
       }
     } else if (def.mode === 'developed') {
@@ -315,7 +336,8 @@ window.FB = window.FB || {};
       for (const rid in state.realms) {
         const realm = state.realms[rid];
         if (realm && realm.alive && realm.capital) {
-          addDestination(state, out, seen, purposeId, realm.capital, rid);
+          addDestination(state, out, seen, purposeId, realm.capital, rid,
+            null, search);
         }
       }
     }
@@ -630,12 +652,8 @@ window.FB = window.FB || {};
     if (residence !== t.destinationId) return false;
     if (!t.targetCourtship) return true;
     const p = state.player;
-    const traveler = me(state);
     if (p.courtingId !== c.id || !p.flags || !p.flags.courting) return false;
-    if (!traveler || FB.ageOf(traveler, state.date.year) < 16 ||
-        FB.ageOf(c, state.date.year) < 16 || traveler.sex === c.sex) return false;
-    if ((FB.spouseOf && FB.spouseOf(state, c)) || c.betrothedId) return false;
-    return true;
+    return !!(FB.canCourt && FB.canCourt(state, c, true));
   }
 
   function endInvalidTargetVisit(state, t) {

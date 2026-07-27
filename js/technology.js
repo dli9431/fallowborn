@@ -1,6 +1,5 @@
 /* Fallowborn — historical national technology, regional seeding, and diffusion.
-   This graph engine supersedes the compact compatibility implementation in
-   actions.js while preserving its public helper names for saves and mods. */
+   This graph engine owns the public helper names used by saves and mods. */
 window.FB = window.FB || {};
 
 (function () {

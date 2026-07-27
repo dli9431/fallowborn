@@ -69308,7 +69308,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js",
         "js/technology.js"
       ],
       "source": {
