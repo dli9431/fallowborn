@@ -20,11 +20,15 @@ though the game still *runs*.
   `panelh(title)`, `toast`, modal/button/tab helpers. Splice values with `{token}` placeholders,
   never concatenation: `FB.T('You have {n} children', { n: n })`, **not** `'You have ' + n + '
   children'`.
-- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, items, …):**
+- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, items,
+  technologies, …):**
   keep the English in the source data — it is id-keyed and auto-extracted, including the `log:`
   effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
-  in the source (the renderer selects the branch, then localizes it).
+  in the source (the renderer selects the branch, then localizes it). Technology `name`
+  and historical `desc` live in `data/technology.js` and render through `FB.dataText`;
+  domain/tradition labels and cost explanations are UI chrome and use explicit `FB.T`
+  keys.
 - **Durable / shared messages (chronicle, `FB.news`, `FB.fx`, anything stored in state):** emit an
   opaque descriptor, never rendered prose. From shared sim code: `FB.news(state,
   FB.msg('news.war.tribute', '🕊 English fallback.', params))`. The opaque key (`news.*`, `fx.*`)

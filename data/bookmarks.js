@@ -516,6 +516,33 @@ window.FBDATA = window.FBDATA || {};
   kingdoms1066.k_pannonia.name = 'Hungary';
   kingdoms1066.k_rus.name = 'Kievan Rus';
 
+  /* Most technology traditions derive from capital culture and faith. These
+     authored overlaps record courts whose working knowledge plainly crossed
+     those broad regional labels; techSeed remains available for narrower
+     complete/expose/omit bookmark exceptions. */
+  function setTechTraditions(realms, map) {
+    for (var i = 0; i < realms.length; i++) {
+      if (map[realms[i].id]) realms[i].techTraditions = map[realms[i].id].slice();
+    }
+  }
+  setTechTraditions(FBDATA.realms, {
+    venice:['latin','byzantine'],
+    cordoba:['islamic','latin'],
+    byzantium:['byzantine'],
+    khazaria:['steppe','persianate'],
+    abbasid:['islamic','persianate'],
+    makuria:['northeast_african','byzantine']
+  });
+  setTechTraditions(REALMS_1066, {
+    venice_1066:['latin','byzantine'],
+    byzantium_1066:['byzantine'],
+    seljuk_1066:['steppe','persianate','islamic'],
+    abbasid_1066:['islamic','persianate'],
+    fatimid_1066:['islamic','northeast_african'],
+    makuria_1066:['northeast_african','byzantine'],
+    abyssinia_1066:['northeast_african','caucasian']
+  });
+
   var bookmark867 = {
     id:'867',
     name:'The Viking Age',

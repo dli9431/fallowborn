@@ -1,71 +1,179 @@
 # National technology
 
-Technology belongs to sovereign nations, not dynasties. Every realm may retain a dormant
-record in `state.realmTech[realmId]`:
+Technology belongs to sovereign nations, not dynasties. It models durable knowledge and
+institutional practice from inherited late-antique foundations through the medieval
+diffusions of 476–1300. The campaign remains playable after 1300: projects do not acquire
+hard calendar locks, exposure continues, and the historical cost curve becomes a catch-up
+discount rather than stopping.
+
+The live catalogue is `FBDATA.tech` in `data/technology.js`. It contains 180 entries in a
+directed prerequisite graph across seven domains:
+
+- agriculture and animal power;
+- crafts, materials, and industry;
+- commerce, transport, and infrastructure;
+- learning, medicine, and natural knowledge;
+- governance, law, and institutions;
+- warfare and fortification;
+- seafaring and navigation.
+
+Every core definition has `domain`, `cost`, all-of `req`, optional any-of `reqAny`,
+`history.attested`, `history.adoption`, a localized `desc`, `unlocks`, and `fx`. The
+research catalogue and bibliography are in
+[../research/medieval-technology-catalogue.md](../research/medieval-technology-catalogue.md).
+The validator rejects unknown domains or traditions, malformed or reversed dates, missing
+prerequisites, cycles, invalid effects or unlock references, and bad bookmark seed
+overrides.
+
+## National records and sovereignty
+
+Every realm may retain a dormant record in `state.realmTech[realmId]`:
 
 ```js
-{ completed:[], active:null, progress:{}, reserve:0 }
+{
+  completed:[],
+  exposed:[],
+  active:[],
+  progress:{},
+  reserve:0,
+  priorities:{}
+}
 ```
 
-All gameplay lookups resolve a character or realm through `FB.topRealm`, so vassals receive
-their sovereign's completed technology and contribute to the sovereign's current project.
-Changing fealty therefore changes the technology currently available to a vassal without
-deleting either nation's knowledge. A restored or newly independent realm resumes its own
-dormant record.
+All lookups resolve through `FB.techRealmId`/`FB.topRealm`, so vassals use their
+sovereign's knowledge and contribute research to that national pool. Changing fealty
+changes the knowledge currently available to a vassal without erasing either sovereign
+record. A restored or newly independent realm resumes its dormant record.
 
-`FBDATA.tech` (in `data/map_data.js`) defines three linear branches—`military`, `economy`,
-and `administrative`—with five levels each. `branch` and `level` place a definition in a
-branch; `req`, `cost`, and `yearMin` gate it. `cultures` and `notCultures` choose mutually
-exclusive variants when a project begins. This is how a Greek sovereign begins `tagmata`
-instead of `stirrups`; the chosen id remains completed even if the ruler's culture later
-changes. There are no repeatable technologies.
+Absorption and secession merge completed and exposed sets by union, partial progress and
+reserve by maximum, and compatible active projects up to the surviving realm's slot
+count. The maximum rule prevents research once shared by two polities from being
+duplicated by separation and reunion.
 
-Only a sovereign player may choose or switch the one active project. Switching preserves
-the old project's value in `progress[id]`. Vassals see the sovereign ruler and project
-read-only; Patronize Scholars, libraries, and `research` event effects still add to that
-project. If no project is active, additions collect in `reserve` and pour into the next
-selection. AI sovereigns use saved RNG to choose among each branch's next eligible level,
-with aggression and ruler traits weighting the branch.
+Knowledge and exposure are permanent. `FB.hasTech`, `FB.techExposed`,
+`FB.techRequirementMet`, and `FB.hasTechUnlock` are the normal gameplay queries.
 
-Every season each living sovereign gains:
+## Traditions and bookmark seeding
+
+Technology traditions describe overlapping routes of transmission, not mutually
+exclusive civilization levels. The built-ins are Latin West, Byzantine, Islamic
+Mediterranean, Persianate, Slavic, Nordic, Steppe, Baltic-Finnic, Caucasian, and Northeast
+African. A realm may have more than one.
+
+`techTraditions` and `techSeed:{complete,expose,omit}` may be authored on a bookmark realm.
+Otherwise traditions derive from the capital/ruler culture and religion. On a fresh
+bookmark, `FB.seedRealmTechnologies`:
+
+1. completes entries whose regional widespread-adoption date has passed;
+2. exposes entries whose regional emergence date has passed;
+3. applies authored complete/expose/omit exceptions; and
+4. closes completed entries over all required prerequisites.
+
+This produces distinct 867 and 1066 starting knowledge for Byzantine, Islamic, Latin,
+Nordic, Slavic, Steppe, and other realms without treating a single calendar as universal.
+
+## Soft historical cost
+
+Prerequisites are hard. Dates are not. `FB.techCostBreakdown` starts from the authored
+base cost and applies the sovereign's regional historical window:
+
+```text
+before first attestation:
+  4× + 1× per additional 50 years early, capped at 8×
+
+attestation → regional emergence:
+  linear 4× → 2×
+
+regional emergence → widespread adoption:
+  linear 2× → 1×
+
+after widespread adoption:
+  linear 1× → 0.7× across 300 years, then a 0.7× floor
+
+permanent exposure:
+  multiply the resulting cost by 0.65
+```
+
+The UI displays the base, historical multiplier, exposure multiplier, effective cost, and
+remaining progress exactly. A far-ahead project is therefore possible but expensive.
+
+## Research slots, reserve, and completion
+
+A sovereign begins with one slot. `scholarly_networks` unlocks the second and
+`universities` the third. Display names can use religion-sensitive variants such as
+universities, madrasas, and colleges without changing the saved id.
+
+There is one national research pool. Each season `FB.techSeason` calculates:
 
 ```text
 2 + min(4, realm development × 0.04) + completed research bonuses
 ```
 
-`FB.techSeason` applies the gain and lets AI nations select their next project. The player
-automation switch, “Choose the next technology automatically,” is available only while
-the player is sovereign. Completion emits one structured Chronicle message and toast to a
-player who belongs to that nation. Succession does not interrupt a project.
+The total, including reserve, is divided evenly among active projects. Each project's
+share is applied independently; completion overflow returns to reserve. If fewer slots
+are occupied, unused research remains reserve. Direct `research` effects, building
+research, and Patronize Scholars enter the same pool.
 
-Bonuses resolve through `FB.techBonus`. Signed cost modifiers use
-`FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI army
-fractions use `FB.techAIUnits`. The nested effects are:
+Only a sovereign player chooses projects. The player automation switch deterministically
+selects the highest-scoring eligible project and consumes no random rolls. AI sovereigns
+fill every slot and use saved RNG to choose from a weighted score. Exposure,
+affordability, historical currency, ruler traits, contextual military/economic needs,
+and useful unlocks raise that score; projects still at 4× or more receive a strong
+penalty.
 
-- `fx.tax`, `levy`, `battle`, `devCap`, `health`, `research`, and `domain`
-- `fx.costs.{build,enterprise,training}` as signed fractional changes
-- `fx.units.{levy,arch,cav,ret}` as flat player-host contributions
-- `fx.aiUnits.{arch,cav,ret}` as AI professional composition fractions
+## Exposure and diffusion
 
-For mod compatibility, flat `build`, `retinue`, and `archers` effects remain readable as
-aliases for a building-cost discount, `units.ret`, and `units.arch`.
+On the first day of each year, every sovereign can gain permanent exposure to knowledge
+it has not completed. Exposure may precede the prerequisites needed to research it;
+`FB.techDiffusionChance` combines:
 
-Secession and restoration merge the new sovereign's record with its former sovereign by
-completed-set union and the maximum value of each partial progress entry and reserve.
-Absorption uses the same merge into the surviving sovereign and retains that sovereign's
-active project. The maximum rule prevents two realms that previously shared research from
-duplicating it by separating and reuniting.
+- 12% when an adjacent or strait-connected sovereign knows the entry;
+- 15% when an ally knows it;
+- 20% from a wartime opponent for warfare/fortification entries, 5% otherwise;
+- 4% when another sovereign sharing a technology tradition knows it;
+- 3% through the broader same-faith scholarly and commercial network.
 
-Save format remains 3. On the first restore of an older life, `FB.ensureRealmTech` moves
-`state.tech` and `player.research` into the player's effective sovereign record. Duplicate
-legacy repeatable capstones collapse to one completion, and their historical additional
-purchase costs are refunded into `reserve`. Fresh bookmarks and AI realms begin at level
-0 in all branches.
+The combined annual chance is capped at 50%, and all rolls use the saved game RNG.
+Exposure is not completion: it is a durable contact record and the 0.65 cost multiplier.
 
-Events gate `techs`/`notTechs` against the player's effective national completed set.
-Careers and enterprises may declare `requiresTech`; the built-in Administration career
-requires `royal_chancery`.
+## Vassal advocacy
 
-Related: [development.md](development.md) for costs and the development cap,
-[war.md](war.md) for technology-shaped host composition, and [time.md](time.md) for
-seasonal progress and automation.
+A tier-3+ vassal with at least 40 liege favor may advocate one currently
+prerequisite-valid technology per year. Advocacy costs 20 gold and 15 favor. The
+priority lasts four years or until the liege selects or completes the entry, multiplies
+the AI selection weight by six, and never interrupts an active project.
+
+## Gameplay effects and caps
+
+Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
+or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
+schooling, household standards, careers, enterprises, credit, and trade partnerships.
+Warfare technologies alter the existing levy/archer/cavalry/retinue classes, movement,
+quality, siege progress, and composition; they do not add a second unit taxonomy.
+
+Scalar effects resolve through `FB.techBonus`. Signed costs use
+`FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
+composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,
+research, domain, siege, movement, education, finance, trade, cost reductions, and unit
+additions. Inherited foundations deliberately carry almost no scalar bonuses, so normal
+867 income, health, development, and military power remain the baseline.
+
+For mod compatibility, flat `build`, `retinue`, and `archers` effects remain aliases for a
+building-cost discount, `units.ret`, and `units.arch`.
+
+## Saves and legacy definitions
+
+Save format remains 3. `realmTechMigration:2` marks the one-time graph migration.
+`FB.ensureRealmTech` converts a legacy active string to an array, preserves every known
+completed id, progress value, and reserve, historically backfills every living sovereign
+through the current year and derived traditions, and then unions the legacy state. Old
+`state.tech` and `player.research` are still imported into the effective player
+sovereign.
+
+Runtime mods are normalized before validation: `branch` becomes `domain`, scalar or array
+`req` is accepted, and `yearMin` becomes an inferred soft history window rather than a
+lock. Existing `cultures` and `notCultures` restrictions remain supported.
+
+Related: [state-and-saves.md](state-and-saves.md), [development.md](development.md),
+[war.md](war.md), [finance.md](finance.md), [time.md](time.md),
+[ui.md](ui.md), and [mods.md](mods.md).

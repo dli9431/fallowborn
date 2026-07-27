@@ -6,19 +6,19 @@ window.FBDATA = window.FBDATA || {};
 
 FBDATA.careers = {
   farmer: {
-    name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0,
+    name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0, requiresTech:'scratch_plough',
     wage:1.2, masterWage:2,
     ranks:{ apprentice:'Farm servant', journeyman:'Farmer', master:'Master farmer' },
     desc:'Fields, herds, orchards, and the patient arithmetic of the seasons.'
   },
   craftsman: {
-    name:'Craft', icon:'🔨', skill:'ste', apprenticeAge:10, apprenticeCost:8, tierMin:1,
+    name:'Craft', icon:'🔨', skill:'ste', apprenticeAge:10, apprenticeCost:8, tierMin:1, requiresTech:'bloomery_iron',
     wage:1.8, masterWage:3, guild:true,
     ranks:{ apprentice:'Apprentice', journeyman:'Journeyman', master:'Master craftsman' },
     desc:'Learn a skilled trade, earn a mark, and one day keep a bench of your own.'
   },
   merchant: {
-    name:'Trade', icon:'⚖', skill:'ste', apprenticeAge:12, apprenticeCost:10, tierMin:1,
+    name:'Trade', icon:'⚖', skill:'ste', apprenticeAge:12, apprenticeCost:10, tierMin:1, requiresTech:'weights_measures',
     wage:2, masterWage:3.5, guild:true,
     ranks:{ apprentice:'Merchant’s clerk', journeyman:'Peddler', master:'Merchant' },
     desc:'Weights, ledgers, roads, and the trust that lets silver travel.'
@@ -30,13 +30,13 @@ FBDATA.careers = {
     desc:'Charters, accounts, judgments, and the written machinery of rule.'
   },
   soldier: {
-    name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1,
+    name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1, requiresTech:'spear_shield_drill',
     wage:1.5, masterWage:2.5, maleOnly:true,
     ranks:{ apprentice:'Garrison page', journeyman:'Man-at-arms', master:'Veteran retainer' },
     desc:'Drill, guard duty, and paid service beneath another person’s banner.'
   },
   monk: {
-    name:'Letters & Faith', icon:'✒', skill:'lea', apprenticeAge:10, apprenticeCost:5, tierMin:1,
+    name:'Letters & Faith', icon:'✒', skill:'lea', apprenticeAge:10, apprenticeCost:5, tierMin:1, requiresTech:'manuscript_codex',
     wage:0.5, masterWage:1, piety:1.5,
     ranks:{ apprentice:'Religious student', journeyman:'Scribe', master:'Learned scholar' },
     desc:'Letters, law, worship, and the learned work of a religious house.'
@@ -106,52 +106,52 @@ FBDATA.schooling = {
       muslim:'Maktab or charity school',
       jewish:'Synagogue or charity school'
     },
-    icon:'🕯', cost:0.25, chance:0.35,
+    icon:'🕯', cost:0.25, chance:0.35, requiresTech:'manuscript_codex',
     desc:'Basic lessons kept within reach of a poor household.'
   },
   merchant: {
-    name:'Town merchant’s school', icon:'⚖', cost:1.25, chance:0.6, devMin:2,
+    name:'Town merchant’s school', icon:'⚖', cost:1.25, chance:0.6, devMin:2, requiresTech:'arithmetic',
     focuses:['dip','ste','int','lea'],
     desc:'Paid lessons in letters, figures, persuasion, and practical affairs.'
   },
   master: {
-    name:'Personal learned master', icon:'🎓', cost:3,
+    name:'Personal learned master', icon:'🎓', cost:3, requiresTech:'scholarly_networks',
     desc:'A private teacher whose own skill sets the pace of study.'
   }
 };
 
 FBDATA.enterprises = {
   field_strip: {
-    name:'Leased Field', icon:'🌾', cost:20, profession:'farmer', yield:1.5,
+    name:'Leased Field', icon:'🌾', cost:20, profession:'farmer', yield:1.5, requiresTech:'scratch_plough',
     terrains:['farmland','steppe'],
     desc:'Another strip under the plough. It pays only while someone works it.'
   },
   orchard_business: {
-    name:'Orchard', icon:'🌳', cost:30, profession:'farmer', yield:2,
+    name:'Orchard', icon:'🌳', cost:30, profession:'farmer', yield:2, requiresTech:'seed_selection',
     terrains:['farmland','forest','hills'],
     desc:'Fruit trees planted for sale as well as the household table.'
   },
   press_business: {
     name:{ default:'Press House', muslim:'Oil Press' }, icon:'🏺', cost:60,
-    profession:'farmer', yield:3, devMin:2,
+    profession:'farmer', yield:3, devMin:2, requiresTech:'olive_press',
     desc:'A press worked for neighbors as well as the family’s own harvest.'
   },
   workshop_business: {
     name:'Workshop', icon:'⚒', cost:80, profession:'craftsman', yield:4, devMin:2,
-    guildRank:'member',
+    guildRank:'member', requiresTech:'horizontal_loom',
     desc:'A public bench and your mark above the door. A guild member must staff it.'
   },
   market_stall_business: {
-    name:'Market Stall', icon:'⛺', cost:60, profession:'merchant', yield:3.5, devMin:2,
+    name:'Market Stall', icon:'⛺', cost:60, profession:'merchant', yield:3.5, devMin:2, requiresTech:'urban_markets',
     desc:'A fixed place in the market, profitable while a practiced seller tends it.'
   },
   trade_house_business: {
     name:'Trading House', icon:'🏛', cost:150, profession:'merchant', yield:6, devMin:5,
-    guildRank:'member',
+    guildRank:'member', requiresTech:'trade_houses',
     desc:'Stores, ledgers, and agents gathered beneath one family name.'
   },
   fishing_boat_business: {
-    name:'Fishing Boat', icon:'🛶', cost:40, profession:'farmer', yield:2.5, coastal:true,
+    name:'Fishing Boat', icon:'🛶', cost:40, profession:'farmer', yield:2.5, coastal:true, requiresTech:'knarrs',
     desc:'A working boat whose catch is sold beyond the household.'
   }
 };
@@ -165,17 +165,17 @@ FBDATA.householdStandards = {
     desc:'Food kept above bare subsistence: fuller stores, broader fare, and rarer seasonings.',
     levels:[
       {
-        name:'Full Larder', cost:10, upkeep:0.5, tierMin:0,
+        name:'Full Larder', cost:10, upkeep:0.5, tierMin:0, requiresTech:'warehouses',
         desc:'Reduces yearly household mortality by 0.1 percentage points.',
         fx:{ mortality:0.001 }
       },
       {
-        name:'Varied Board', cost:40, upkeep:1.5, tierMin:1,
+        name:'Varied Board', cost:40, upkeep:1.5, tierMin:1, requiresTech:'improved_husbandry',
         desc:'Reduces yearly household mortality by 0.2 percentage points.',
         fx:{ mortality:0.002 }
       },
       {
-        name:'Spiced and Imported Table', cost:120, upkeep:4, tierMin:2,
+        name:'Spiced and Imported Table', cost:120, upkeep:4, tierMin:2, requiresTech:'trade_houses',
         desc:'Reduces yearly household mortality by 0.3 percentage points.',
         fx:{ mortality:0.003 }
       }
@@ -186,17 +186,17 @@ FBDATA.householdStandards = {
     desc:'Bedding, vessels, linens, and furnishings maintained for a more capable home.',
     levels:[
       {
-        name:'Good Bedding and Vessels', cost:15, upkeep:0.25, tierMin:0,
+        name:'Good Bedding and Vessels', cost:15, upkeep:0.25, tierMin:0, requiresTech:'wheel_thrown_pottery',
         desc:'Adds 1 percentage point to yearly education chances.',
         fx:{ education:0.01 }
       },
       {
-        name:'Chests, Linens and Copperware', cost:50, upkeep:1, tierMin:1,
+        name:'Chests, Linens and Copperware', cost:50, upkeep:1, tierMin:1, requiresTech:'cooperage',
         desc:'Adds 2.5 percentage points to yearly education chances.',
         fx:{ education:0.025 }
       },
       {
-        name:'Painted Furniture and Fine Hangings', cost:150, upkeep:3, tierMin:2,
+        name:'Painted Furniture and Fine Hangings', cost:150, upkeep:3, tierMin:2, requiresTech:'glazed_pottery',
         desc:'Adds 4 percentage points to yearly education chances.',
         fx:{ education:0.04 }
       }
@@ -207,17 +207,17 @@ FBDATA.householdStandards = {
     desc:'Sounder, roomier buildings that shelter the family and make space for service.',
     levels:[
       {
-        name:'Sound Roof and Raised Bed', cost:20, upkeep:0.5, tierMin:0,
+        name:'Sound Roof and Raised Bed', cost:20, upkeep:0.5, tierMin:0, requiresTech:'lime_mortar',
         desc:'Reduces yearly household mortality by 0.05 percentage points.',
         fx:{ mortality:0.0005, retainers:0 }
       },
       {
-        name:'Chambered House', cost:75, upkeep:1.5, tierMin:1,
+        name:'Chambered House', cost:75, upkeep:1.5, tierMin:1, requiresTech:'stone_bridgebuilding',
         desc:'Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer.',
         fx:{ mortality:0.001, retainers:1 }
       },
       {
-        name:'Hall, Chambers and Outbuildings', cost:250, upkeep:5, tierMin:2,
+        name:'Hall, Chambers and Outbuildings', cost:250, upkeep:5, tierMin:2, requiresTech:'stone_castles',
         desc:'Reduces yearly household mortality by 0.2 percentage points and adds room for two retainers.',
         fx:{ mortality:0.002, retainers:2 }
       }
@@ -228,17 +228,17 @@ FBDATA.householdStandards = {
     desc:'Visible comfort and display that turn household prosperity into social standing.',
     levels:[
       {
-        name:'Sunday Woollens', cost:20, upkeep:0.5, tierMin:0,
+        name:'Sunday Woollens', cost:20, upkeep:0.5, tierMin:0, requiresTech:'warp_weighted_loom',
         desc:'Adds 0.25 prestige each season.',
         fx:{ prestige:0.25 }
       },
       {
-        name:'Dyed Cloth and Fur', cost:80, upkeep:2, tierMin:1,
+        name:'Dyed Cloth and Fur', cost:80, upkeep:2, tierMin:1, requiresTech:'horizontal_loom',
         desc:'Adds 0.75 prestige each season.',
         fx:{ prestige:0.75 }
       },
       {
-        name:'Imported Cloth and Silver Plate', cost:250, upkeep:6, tierMin:2,
+        name:'Imported Cloth and Silver Plate', cost:250, upkeep:6, tierMin:2, requiresTech:'annual_fairs',
         desc:'Adds 1.5 prestige each season.',
         fx:{ prestige:1.5 }
       }
@@ -249,17 +249,17 @@ FBDATA.householdStandards = {
     desc:'Maintained beasts and vehicles for journeys, distinct from permanent productive livestock.',
     levels:[
       {
-        name:'Pack Ass', cost:25, upkeep:0.25, tierMin:1,
+        name:'Pack Ass', cost:25, upkeep:0.25, tierMin:1, requiresTech:'pack_saddles',
         desc:'Journey costs are multiplied by 0.85; each county leg takes 3 days.',
         fx:{ travelCost:0.85, travelLegDays:3 }
       },
       {
-        name:'Mule and Cart', cost:90, upkeep:1, tierMin:1,
+        name:'Mule and Cart', cost:90, upkeep:1, tierMin:1, requiresTech:'wheeled_carts',
         desc:'Journey costs are multiplied by 0.75; each county leg takes 2 days.',
         fx:{ travelCost:0.75, travelLegDays:2 }
       },
       {
-        name:'Riding Horses and Covered Wagon', cost:300, upkeep:4, tierMin:2,
+        name:'Riding Horses and Covered Wagon', cost:300, upkeep:4, tierMin:2, requiresTech:'horse_collar',
         desc:'Journey costs are multiplied by 0.60; each county leg takes 1 day.',
         fx:{ travelCost:0.60, travelLegDays:1 }
       }
@@ -269,11 +269,11 @@ FBDATA.householdStandards = {
     name:'Farming outfit', icon:'🌾', kind:'work', profession:'farmer',
     desc:'Maintained husbandry equipment that improves paid farming and family enterprises, but is not saleable property.',
     levels:[
-      { name:'Iron-Edged Husbandry Tools', cost:25, upkeep:0.5, tierMin:0,
+      { name:'Iron-Edged Husbandry Tools', cost:25, upkeep:0.5, tierMin:0, requiresTech:'iron_sickles',
         desc:'Raises farming output by 5%.', fx:{ work:0.05 } },
-      { name:'Ox Tackle and Mouldboard Plough', cost:100, upkeep:1.5, tierMin:1,
+      { name:'Ox Tackle and Mouldboard Plough', cost:100, upkeep:1.5, tierMin:1, requiresTech:'heavy_plough',
         desc:'Raises farming output by 10%.', fx:{ work:0.10 } },
-      { name:'Full Plough Team and Harvest Gear', cost:300, upkeep:4, tierMin:2,
+      { name:'Full Plough Team and Harvest Gear', cost:300, upkeep:4, tierMin:2, requiresTech:'improved_husbandry',
         desc:'Raises farming output by 15%.', fx:{ work:0.15 } }
     ]
   },
@@ -281,11 +281,11 @@ FBDATA.householdStandards = {
     name:'Craft outfit', icon:'🔨', kind:'work', profession:'craftsman',
     desc:'Maintained trade tools that improve paid craft work and workshops, but are not saleable property.',
     levels:[
-      { name:'Journeyman’s Tool Chest', cost:25, upkeep:0.5, tierMin:0,
+      { name:'Journeyman’s Tool Chest', cost:25, upkeep:0.5, tierMin:0, requiresTech:'bloomery_iron',
         desc:'Raises craft output by 5%.', fx:{ work:0.05 } },
-      { name:'Tempered Guild Tools', cost:100, upkeep:1.5, tierMin:1,
+      { name:'Tempered Guild Tools', cost:100, upkeep:1.5, tierMin:1, requiresTech:'improved_furnaces',
         desc:'Raises craft output by 10%.', fx:{ work:0.10 } },
-      { name:'Master’s Instruments and Patterns', cost:300, upkeep:4, tierMin:2,
+      { name:'Master’s Instruments and Patterns', cost:300, upkeep:4, tierMin:2, requiresTech:'powered_mills',
         desc:'Raises craft output by 15%.', fx:{ work:0.15 } }
     ]
   },
@@ -293,11 +293,11 @@ FBDATA.householdStandards = {
     name:'Merchant outfit', icon:'⚖', kind:'work', profession:'merchant',
     desc:'Maintained commercial equipment that improves paid trade and merchant enterprises, but is not saleable property.',
     levels:[
-      { name:'Sealed Weights and Locking Chest', cost:25, upkeep:0.5, tierMin:0,
+      { name:'Sealed Weights and Locking Chest', cost:25, upkeep:0.5, tierMin:0, requiresTech:'weights_measures',
         desc:'Raises merchant output by 5%.', fx:{ work:0.05 } },
-      { name:'Fine Scales and Merchant’s Ledgers', cost:100, upkeep:1.5, tierMin:1,
+      { name:'Fine Scales and Merchant’s Ledgers', cost:100, upkeep:1.5, tierMin:1, requiresTech:'commercial_arithmetic',
         desc:'Raises merchant output by 10%.', fx:{ work:0.10 } },
-      { name:'Coffers, Bills and Caravan Tackle', cost:300, upkeep:4, tierMin:2,
+      { name:'Coffers, Bills and Caravan Tackle', cost:300, upkeep:4, tierMin:2, requiresTech:'letters_of_credit',
         desc:'Raises merchant output by 15%.', fx:{ work:0.15 } }
     ]
   },
@@ -305,11 +305,11 @@ FBDATA.householdStandards = {
     name:'Soldier’s work outfit', icon:'🛡', kind:'work', profession:'soldier',
     desc:'Maintained service equipment that improves paid military work only; combat still depends on armory equipment and holdings.',
     levels:[
-      { name:'Fitted Arms and Field Kit', cost:25, upkeep:0.5, tierMin:0,
+      { name:'Fitted Arms and Field Kit', cost:25, upkeep:0.5, tierMin:0, requiresTech:'iron_weaponry',
         desc:'Raises paid soldiering output by 5%.', fx:{ work:0.05 } },
-      { name:'Campaign Harness and Remount', cost:100, upkeep:1.5, tierMin:1,
+      { name:'Campaign Harness and Remount', cost:100, upkeep:1.5, tierMin:1, requiresTech:'stirrups',
         desc:'Raises paid soldiering output by 10%.', fx:{ work:0.10 } },
-      { name:'Retainer’s Full Harness', cost:300, upkeep:4, tierMin:2,
+      { name:'Retainer’s Full Harness', cost:300, upkeep:4, tierMin:2, requiresTech:'mail_hauberks',
         desc:'Raises paid soldiering output by 15%.', fx:{ work:0.15 } }
     ]
   },
@@ -317,11 +317,11 @@ FBDATA.householdStandards = {
     name:'Monastic work outfit', icon:'✒', kind:'work', profession:'monk',
     desc:'Maintained writing equipment that improves a monk’s paid and religious work, but is not saleable property.',
     levels:[
-      { name:'Scribe’s Writing Chest', cost:25, upkeep:0.5, tierMin:0,
+      { name:'Scribe’s Writing Chest', cost:25, upkeep:0.5, tierMin:0, requiresTech:'manuscript_codex',
         desc:'Raises monastic output by 5%.', fx:{ work:0.05 } },
-      { name:'Illuminator’s Desk and Pigments', cost:100, upkeep:1.5, tierMin:1,
+      { name:'Illuminator’s Desk and Pigments', cost:100, upkeep:1.5, tierMin:1, requiresTech:'scriptoria',
         desc:'Raises monastic output by 10%.', fx:{ work:0.10 } },
-      { name:'Working Library and Copyist’s Instruments', cost:300, upkeep:4, tierMin:2,
+      { name:'Working Library and Copyist’s Instruments', cost:300, upkeep:4, tierMin:2, requiresTech:'paper_scholarship',
         desc:'Raises monastic output by 15%.', fx:{ work:0.15 } }
     ]
   },
@@ -358,17 +358,17 @@ FBDATA.householdStandards = {
 FBDATA.finance = {
   pledge: {
     maxPrincipal:40, markup:0.25, termSeasons:4, collateralRatio:0.60,
-    lender:'moneychanger', defaultKind:'collateral'
+    lender:'moneychanger', defaultKind:'collateral', requiresTech:'standardized_coinage'
   },
   merchant: {
     maxPrincipal:100, markup:0.18, termSeasons:6,
-    lender:'merchant_house', defaultKind:'revenue'
+    lender:'merchant_house', defaultKind:'revenue', requiresTech:'notarial_contracts'
   },
   revenue: {
     maxPrincipal:500, markup:0.15, termSeasons:8,
-    lender:'lombard_house', defaultKind:'revenue'
+    lender:'lombard_house', defaultKind:'revenue', requiresTech:'exchequer_accounts'
   },
   tradePartnership: {
-    termSeasons:4, risk:0.25, profitShare:0.45
+    termSeasons:4, risk:0.25, profitShare:0.45, requiresTech:'sea_loans'
   }
 };

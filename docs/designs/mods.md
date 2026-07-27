@@ -47,6 +47,14 @@ career rank names and household-standard level names/descriptions, use the same
 structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
+Technology definitions merge under the top-level `tech` key before validation. The graph
+engine normalizes legacy `branch` to `domain`, scalar `req` to an array, and `yearMin` to
+an inferred soft attestation/adoption window; legacy `cultures` and `notCultures`
+restrictions remain valid. New definitions should author `domain`, `cost`, `req`,
+optional `reqAny`, full `history`, localized `name`/`desc`, `unlocks`, and `fx`.
+Bookmark realms may add `techTraditions` and `techSeed` overrides. Cycles, unknown
+prerequisites/traditions/unlocks, and malformed historical ranges reject the bookmark.
+
 Household-standard definitions replace atomically by id. Their ordered `levels` arrays are
 never deep-merged: a replacement supplies its complete rank gates, setup/upkeep values,
 display fields, and effects. This keeps saved numeric levels stable and makes definition

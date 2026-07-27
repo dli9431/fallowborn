@@ -330,10 +330,11 @@ window.FB = window.FB || {};
   { id: 'patronize', label: '📜 Patronize scholars',
     desc: function (s) {
       const record = FB.realmTechRecord(s);
-      const active = record.active && FBDATA.tech[record.active];
+      const activeId = record.active && record.active[0];
+      const active = activeId && FBDATA.tech[activeId];
       return active
         ? FB.T('Fund learned people; their work aids the national project {technology}.', {
-          technology:FB.dataText(s, s.player.charId, 'tech', record.active, active, 'name', {})
+          technology:FB.dataText(s, s.player.charId, 'tech', activeId, active, 'name', {})
         })
         : FB.T('Fund learned people; their work is banked until the nation begins a technology.');
     },
@@ -860,14 +861,15 @@ window.FB = window.FB || {};
     desc: function (s) {
       const rid = FB.techRealmId(s);
       const realm = s.realms[rid];
-      const levels = FB.techLevels(s, rid);
-      return FB.T('{realm}: Military {military}/5 · Economy {economy}/5 · Administrative {administrative}/5.', {
+      const record = FB.realmTechRecord(s, rid);
+      return FB.T('{realm}: {completed} completed · {active}/{slots} active research.', {
         realm:realm ? realm.name : FB.T('Your nation'),
-        military:levels.military, economy:levels.economy,
-        administrative:levels.administrative
+        completed:record.completed.length,
+        active:record.active.length,
+        slots:FB.techSlotCount(s, rid)
       });
     },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function () { return true; },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast', label: '🍗 Hold a feast', cd: 180,
     desc: function (s) {
@@ -2643,6 +2645,7 @@ window.FB = window.FB || {};
     const def = FBDATA.buildings[id];
     const pr = FB.world.byId[pid];
     if (!def || FB.demesne(state).indexOf(pid) < 0 || !FB.settlementsOf(state, pid)[idx]) return false;
+    if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     const done = FB.builtIn(state, pid);
     for (const e of done) if (e.id === id && e.s === idx) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;

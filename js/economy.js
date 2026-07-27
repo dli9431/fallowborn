@@ -499,6 +499,9 @@ window.FB = window.FB || {};
   FB.householdStandardActive = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || state.player.tier > 2 || !FB.householdStandardLevel(state, id)) return false;
+    const current = FB.householdStandardLevelDef(state, id);
+    if (current && current.requiresTech &&
+        !FB.techRequirementMet(state, current.requiresTech)) return false;
     return def.kind !== 'work' || FB.householdStandardWorkerEligible(state, id);
   };
 
@@ -567,6 +570,14 @@ window.FB = window.FB || {};
     if (level >= def.levels.length) return FB.T('This standard is already at its highest level.');
     const next = def.levels[level];
     const tierMin = next.tierMin === undefined ? level : next.tierMin;
+    if (next.requiresTech && !FB.techRequirementMet(state, next.requiresTech)) {
+      return FB.T('Requires the national technology {technology}.', {
+        technology:FBDATA.tech[next.requiresTech]
+          ? FB.dataText(state, state.player.charId, 'tech', next.requiresTech,
+            FBDATA.tech[next.requiresTech], 'name', {})
+          : next.requiresTech
+      });
+    }
     if (state.player.tier < tierMin) {
       return FB.T('Requires {rank} rank.', {
         rank:tierMin >= 2 ? FB.T('Gentry') : tierMin >= 1 ? FB.T('Freeholder') : FB.T('Serf')
@@ -997,6 +1008,7 @@ window.FB = window.FB || {};
     if (!def || !c) return false;
     const age = FB.ageOf(c, state.date.year);
     if (age < 6 || age >= 16) return false;
+    if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) return false;
     if (def.focuses && (!c.edu || def.focuses.indexOf(c.edu.focus) < 0)) return false;
     return true;
@@ -1016,17 +1028,18 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
     const cap = B.educationChanceCap || 0.9;
-    if (!c || !c.edu || !c.edu.focus) return base;
+    const tech = FB.techBonus ? FB.techBonus(state, 'education') : 0;
+    if (!c || !c.edu || !c.edu.focus) return Math.min(cap, base + tech);
     const id = FB.schoolingId(state, c);
     const def = id && FBDATA.schooling[id];
     if (def && FB.schoolingAvailable(state, c, id) && def.chance !== undefined) {
-      return Math.min(cap, def.chance);
+      return Math.min(cap, def.chance + tech);
     }
     const tutor = FB.educationTutor(state, c, false);
-    if (!tutor) return base;
+    if (!tutor) return Math.min(cap, base + tech);
     return Math.min(cap, (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
       FB.skillOf(tutor, c.edu && c.edu.focus) *
-      (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance));
+      (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance) + tech);
   };
 
   FB.schoolingSeasonCost = function (state) {
@@ -1228,6 +1241,9 @@ window.FB = window.FB || {};
     amount *= FB.guildIncomeMultiplier(career);
     amount *= 1 + FB.positionBonus(state, 'enterprise');
     amount *= FB.householdWorkMultiplier(state, career.profession);
+    if (career.profession === 'merchant' || career.profession === 'craftsman') {
+      amount *= 1 + (FB.techBonus ? FB.techBonus(state, 'trade') : 0);
+    }
     return amount;
   };
 
@@ -1609,6 +1625,7 @@ window.FB = window.FB || {};
       capacity += Math.min(B.financePrestigeMax || 25,
         Math.max(0, state.player.prestige || 0) / 20);
     }
+    capacity *= 1 + (FB.techBonus ? FB.techBonus(state, 'finance') : 0);
     return Math.max(0, capacity - outstandingValue(state));
   };
 
@@ -1633,7 +1650,8 @@ window.FB = window.FB || {};
       (e.creditBanUntil !== undefined && state.turn < e.creditBanUntil)) return out;
 
     const pledge = defs.pledge;
-    if (pledge) {
+    if (pledge && (!pledge.requiresTech ||
+        FB.techRequirementMet(state, pledge.requiresTech))) {
       for (const asset of FB.financeCollateral(state)) {
         const cap = FB.financeCreditCapacity(state, asset, true);
         const principal = Math.floor(Math.min(pledge.maxPrincipal || 40, cap,
@@ -1647,14 +1665,18 @@ window.FB = window.FB || {};
 
     const career = currentCareer(state);
     const income = FB.reliableGoldIncome ? FB.reliableGoldIncome(state) : 0;
-    if (defs.merchant && state.player.tier <= 2 && income > 0 && career &&
+    if (defs.merchant && (!defs.merchant.requiresTech ||
+      FB.techRequirementMet(state, defs.merchant.requiresTech)) &&
+      state.player.tier <= 2 && income > 0 && career &&
       (career.profession === 'merchant' || career.profession === 'craftsman' ||
         state.player.tier === 2)) {
       const principal = Math.floor(Math.min(defs.merchant.maxPrincipal || 100,
         FB.financeCreditCapacity(state, null, false)));
       if (principal >= 10) out.push({ kind:'merchant', principal:principal, collateral:null });
     }
-    if (defs.revenue && state.player.tier >= 3 && income > 0) {
+    if (defs.revenue && (!defs.revenue.requiresTech ||
+      FB.techRequirementMet(state, defs.revenue.requiresTech)) &&
+      state.player.tier >= 3 && income > 0) {
       const principal = Math.floor(Math.min(defs.revenue.maxPrincipal || 500,
         FB.financeCreditCapacity(state, null, true)));
       if (principal >= 20) out.push({ kind:'revenue', principal:principal, collateral:null });
@@ -1864,6 +1886,9 @@ window.FB = window.FB || {};
   }
 
   FB.tradeInvestmentStakes = function (state) {
+    const partnership = FBDATA.finance && FBDATA.finance.tradePartnership;
+    if (partnership && partnership.requiresTech &&
+        !FB.techRequirementMet(state, partnership.requiresTech)) return [];
     const career = currentCareer(state);
     if (!career || (career.profession !== 'merchant' && career.profession !== 'craftsman')) return [];
     const stakes = [20];
@@ -2007,7 +2032,8 @@ window.FB = window.FB || {};
   FB.financeCanDebase = function (state) {
     const e = FB.ensureEconomy(state);
     const cooldown = FBDATA.balance.financeDebaseCooldown || 1800;
-    return state.player.tier >= 6 && !state.player.liege &&
+    return FB.techRequirementMet(state, 'mint_assay') &&
+      state.player.tier >= 6 && !state.player.liege &&
       (e.lastDebasementTurn === undefined ||
         state.turn - e.lastDebasementTurn >= cooldown);
   };
@@ -2045,7 +2071,8 @@ window.FB = window.FB || {};
   FB.financeCanRecoin = function (state) {
     const e = FB.ensureEconomy(state);
     const cost = Math.max(30, Math.round((FB.playerTax ? FB.playerTax(state) : 15) * 2));
-    return state.player.tier >= 6 && !state.player.liege && e.debasements > e.recoinages &&
+    return FB.techRequirementMet(state, 'mint_assay') &&
+      state.player.tier >= 6 && !state.player.liege && e.debasements > e.recoinages &&
       e.price > 1.02 && state.player.gold >= cost &&
       (e.lastRecoinTurn === undefined || state.turn - e.lastRecoinTurn >= 1800);
   };

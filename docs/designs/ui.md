@@ -178,12 +178,16 @@ and uses its own second confirmation; no penalty is applied until that final but
 A separate personal-attention summary names the assigned character, current Regard, fixed
 daily rate, estimated days to the relationship threshold, and travel-pause state; attention
 never replaces the work focus.
-Rank & Realm keeps the no-day-cost **Technology…** deed. Its full sheet names the
-effective sovereign nation, shows all three branch levels out of five, seasonal rate,
-reserve, the active project, completed nodes, preserved partial progress, costs, and year
-locks. Independent players receive start/switch controls; vassals instead see their
-sovereign ruler and an explanation that patronage aids that ruler's project. Foreign ruler
-sheets show the same nation's three branch levels and current project read-only.
+Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
+mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
+rate, reserve, occupied slots, and active projects. The catalogue supports domain,
+status, and text filters; Active/Available/Exposed/Completed/All views; and chronological
+grouping from inherited foundations through the thirteenth century and beyond. Entries
+open keyboard-focusable details with clickable prerequisite chips, attestation and
+regional-adoption windows, historical context, effects, unlocks, exposure, and an exact
+base/history/exposure/progress cost breakdown. Sovereigns receive start controls for free
+slots; eligible tier-3+ vassals receive advocacy controls. Foreign ruler sheets show the
+same nation's completed/exposed totals and active projects read-only.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile

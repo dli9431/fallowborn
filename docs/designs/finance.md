@@ -57,6 +57,15 @@ be sold or gifted. Death dues are assessed first; mature debt then settles if
 possible and every remaining id, face, denomination, deadline, and pledge
 passes unchanged to the successor.
 
+Credit forms are discrete technology unlocks. Standardized coinage opens pledged
+moneychanging, notarial contracts open merchant advances, exchequer accounts open landed
+revenue credit, and sea loans open trade partnerships. Mint assaying is required for
+sovereign debasement and recoinage. These gates are checked when offers/actions are
+enumerated; an already signed contract remains enforceable if sovereignty later changes.
+Finance and trade scalar technology bonuses are capped by `FBDATA.techCaps`. The finance
+bonus multiplies computed credit capacity before outstanding debt is subtracted; the
+trade bonus multiplies staffed merchant and craft enterprise yield.
+
 Every default also costs prestige. A crowned ruler loses council authority and
 councillor favor; a sworn landed ruler loses standing with the liege, giving
 the existing political institutions a visible hold over failed finance.

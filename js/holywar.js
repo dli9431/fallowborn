@@ -866,6 +866,13 @@ window.FB = window.FB || {};
         ((state.dev[pid] || 1) * B('greatHolyWarSiegeMenPerDev', 27)),
         B('greatHolyWarSiegeMinRate', 0.5),
         B('greatHolyWarSiegeMaxRate', 2));
+      var siegeBonus = 0;
+      var campHosts = present[camp] || [];
+      for (var siegeHostIndex = 0; siegeHostIndex < campHosts.length; siegeHostIndex++) {
+        siegeBonus = Math.max(siegeBonus,
+          FB.techBonus ? FB.techBonus(state, 'siege', campHosts[siegeHostIndex].realm) : 0);
+      }
+      rate *= 1 + siegeBonus;
       occupation.progress += rate;
       changed = true;
       if (occupation.progress < occupationRequirement(state, pid)) continue;

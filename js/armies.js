@@ -352,7 +352,11 @@ window.FB = window.FB || {};
     }
     army.path = path;
     army.goal = destPid;
-    if (army.moveLeft <= 0) { army.from = army.at; army.moveLeft = B().armyMarchDays; }
+    if (army.moveLeft <= 0) {
+      army.from = army.at;
+      army.moveLeft = FB.techArmyMarchDays
+        ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
+    }
     requestMap();
     return true;
   };
@@ -366,7 +370,10 @@ window.FB = window.FB || {};
         // the leg completes: the host steps into the next province
         army.from = army.at;
         army.at = army.path.shift();
-        if (army.path.length) army.moveLeft = B().armyMarchDays;
+        if (army.path.length) {
+          army.moveLeft = FB.techArmyMarchDays
+            ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
+        }
         requestMap();
       }
       return;
@@ -374,7 +381,8 @@ window.FB = window.FB || {};
     // standing with a route but no clock (old save): begin the next leg
     if (army.path && army.path.length) {
       army.from = army.at;
-      army.moveLeft = B().armyMarchDays;
+      army.moveLeft = FB.techArmyMarchDays
+        ? FB.techArmyMarchDays(state, army.realm) : B().armyMarchDays;
     }
   }
 

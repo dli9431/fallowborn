@@ -92,7 +92,10 @@ the campaign; the **retinue** is the professional core of men-at-arms from war b
 split — `FB.playerLevy` remains the total for callers that want a number — and AI hosts
 start from `balance.aiRetinueFrac`/`aiArcherFrac`, then add the effective sovereign's
 `fx.aiUnits` fractions; national `levy` bonuses also increase their muster, and there is
-no global era step. Each class fights at its own quality
+no global era step. `FB.techArmyMarchDays` applies the capped movement bonus to every
+path leg, while ordinary and great-holy-war sieges use the capped sovereign siege bonus.
+Technologies therefore change access, quality, composition, movement, and siege practice
+without introducing additional unit classes. Each class fights at its own quality
 (`balance.qualityLevy`/`qualityArcher`/`qualityCavalry`/`qualityRetinue`/`qualityMerc`,
 read through `FB.compQuality`): cavalry has quality 2.0, men-at-arms punch far above their
 numbers, and levy below. Battle casualties fall in the fixed order levy → archers →

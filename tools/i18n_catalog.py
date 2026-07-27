@@ -27,6 +27,7 @@ HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
 BOOKMARK_FILE = DATA / "bookmarks.js"
+TECHNOLOGY_FILE = DATA / "technology.js"
 SOURCE_FILES = [
     ROOT / "index.html",
     *[
@@ -342,6 +343,30 @@ def parse_events(path: Path) -> list[Node]:
     return []
 
 
+def parse_technologies(path: Path) -> list[tuple[str, Node, Node]]:
+    """Read compact add(id, name, ..., desc, ...) rows without executing JS."""
+    tokens = lex_js(path.read_text(encoding="utf-8"))
+    technologies: list[tuple[str, Node, Node]] = []
+    for i in range(len(tokens) - 1):
+        if tokens[i].value != "add" or tokens[i + 1].value != "(":
+            continue
+        parser = Parser(tokens)
+        parser.i = i + 2
+        args: list[Node] = []
+        while parser.peek() and not parser.peek(")"):
+            args.append(parser.parse_value())
+            if parser.peek(","):
+                parser.take()
+            elif not parser.peek(")"):
+                break
+        if len(args) < 8:
+            continue
+        technology_id = node_string(args[0])
+        if technology_id:
+            technologies.append((technology_id, args[1], args[7]))
+    return technologies
+
+
 def stable_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -599,6 +624,19 @@ def extract_structured(inv: Inventory) -> None:
                         )
 
     for data_name, namespace in STRUCTURED_DATA.items():
+        if data_name == "tech":
+            rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()
+            for item_id, name_node, desc_node in parse_technologies(TECHNOLOGY_FILE):
+                for field, node in (("name", name_node), ("desc", desc_node)):
+                    for branch, record, line in branch_records(node):
+                        inv.add(
+                            f"{namespace}.{item_id}.{field}.{branch}",
+                            record,
+                            f"{rel}:{line}",
+                            f"{namespace} {item_id}, {field}, faith branch {branch}.",
+                            TOKEN_RE.findall(record["text"]),
+                        )
+            continue
         path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                        "cultures.js" if data_name in ("cultures", "religions") else
                        "economy.js" if data_name in (
