@@ -889,6 +889,9 @@ FBDATA.balance = {
   armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   armyMinMen: 40, // a host under this many men disperses; also the smallest muster
+  armyDemusterKeepOwn: 1, // a voluntary de-muster on the player's own county preserves this share of the host
+  armyDemusterKeepRealm: 0.5, // ...elsewhere in the player's sovereign realm preserves this share
+  armyDemusterKeepOther: 0, // ...on foreign soil preserves this share
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)

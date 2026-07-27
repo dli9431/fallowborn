@@ -1733,7 +1733,11 @@ For AI declarations against the player it multiplies the base chance by
 The field-army knobs drive the hosts on the map (`js/armies.js`): `armyMarchDays` (days to
 cross one province), `armyRearmDays` (how long a shattered host must wait to muster
 again), `armyReinforceRate` (the fraction of its mustered size a host resting on home
-land refills per day), `aiHostPerDev` (AI host size = realm development × `levyPerDev` ×
+land refills per day), `armyDemusterKeepOwn` / `armyDemusterKeepRealm` /
+`armyDemusterKeepOther` (the share of a voluntarily de-mustered host preserved for the
+war's next muster — standing on the player's own county / elsewhere in the player's
+sovereign realm / anywhere else), `aiHostPerDev` (AI host size = realm development ×
+`levyPerDev` ×
 this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).
 Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
