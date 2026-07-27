@@ -132,15 +132,15 @@ FBDATA.events.push(
   text:'The markets of {destination} are ready. Your stake can be turned quickly and safely, or risked on the bargain you came all this way to make.',
   options:[
     { label:'Take the cautious return.', desc:'Recover the stake with a modest profit.',
-      effects:{gold:12, skills:{ste:1}, custom:'travel_capstone_done',
+      effects:{skills:{ste:1}, custom:'travel_trade_cautious',
         log:'Closed a cautious venture in {destination}.'} },
     { label:'Press the great bargain.', desc:'Your Stewardship decides whether the venture prospers.',
       chance:'travel_trade',
       success:{text:'Every weight, promise, and delivery falls into place. The venture returns handsomely.',
-        effects:{gold:25, prestige:8, skills:{ste:1}, custom:'travel_capstone_done',
+        effects:{prestige:8, skills:{ste:1}, custom:'travel_trade_bold_success',
           log:'Won a rich bargain in {destination}.'}},
       failure:{text:'A hidden fee and a spoiled consignment consume nearly all the stake.',
-        effects:{gold:3, custom:'travel_capstone_done',
+        effects:{custom:'travel_trade_bold_failure',
           log:'The venture in {destination} barely returned a coin.'}} }
   ]},
 { id:'travel_capstone_study', title:'Lessons Worth the Road', trigger:{never:true},

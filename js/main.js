@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.68.0';
+  FB.VERSION = '1.69.0';
   FB.CHANGELOG = [
+    { v: '1.69.0', date: '2026-07-26', changes: [
+      'Adult freeholders and gentry can now found trade ventures, choose a market, stake, and strategy, then dispatch the venture or accompany it on the road.'
+    ] },
     { v: '1.68.0', date: '2026-07-26', changes: [
       'Gentry households can now send young family members to a Noble Academy for advanced lessons, noble connections, and new school events.'
     ] },
@@ -1092,6 +1095,8 @@ window.FB = window.FB || {};
       FB.ui.refresh();
       return seasonBoundary ? 'season' : 'day';
     }
+
+    if (FB.financeDay) FB.financeDay(s);
 
     if (seasonBoundary) {
       const upkeep = FB.householdUpkeep(s);

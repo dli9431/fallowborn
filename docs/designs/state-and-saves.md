@@ -159,7 +159,10 @@ Overland travel is additive and save-safe. `player.travel` is `null` or the
 JSON-only journey record described in [travel.md](travel.md): purpose,
 home/destination/current county, phase, routes and leg clock, departure turn,
 encounter counters, seen cultures/events, and optional destination-stay timing/work
-fields. `player.travelHistory` stores completed purpose/destination pairs for the
+fields. An accompanied self-founded trade venture adds a JSON-only `venture` child
+containing its stake, separately paid overhead, destination/route snapshot, status,
+and any settled outcome/payout. It has no duplicate finance record.
+`player.travelHistory` stores completed purpose/destination pairs for the
 current character. `player.travelSettlement` records the current character’s one
 completed permanent move as `{turn,destinationId}`. All initialize lazily without
 changing the save version. Succession cancels an active journey and clears both the
@@ -236,6 +239,13 @@ default history, and coinage history. Every record is plain JSON, so slots, auto
 export/import, and succession preserve exact faces, denominations, deadlines, pledges, and
 already-resolved investment outcomes without a save-version bump. An older save starts at
 price 1 and is first revalued on its next annual tick; no historical inflation is invented.
+Self-founded dispatched ventures reuse `economy.investments` with
+`kind:"trade_venture"` and save their destination, route, strategy, stake, overhead,
+exact due turn/date, captured modifiers and outcome bands, plus the sole raw/adjusted
+roll, multiplier, payout, status, and resolution turn once mature. Active records
+survive succession and promotion and pay whichever household head is current on the
+exact due day. Passive `kind:"trade_partnership"` capacity and season-boundary
+resolution remain separate.
 
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set,
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries,

@@ -896,6 +896,18 @@ window.FB = window.FB || {};
           ? ' · ' + esc(FB.T('{days} days living and working here', {
               days:FB.travelStayDays(s)
             })) : '') +
+        (travel.venture
+          ? '<br><span class="hint">' + esc(
+            travel.venture.status === 'resolved'
+              ? FB.T('Venture settled: {money:payout} returned from a {money:stake} stake.', {
+                payout:travel.venture.payout || 0, stake:travel.venture.stake
+              })
+              : (travel.venture.status === 'cancelled'
+                ? FB.T('The accompanied venture was cancelled without a payout.')
+                : FB.T('Accompanied venture: {money:stake} invested; turning back or forced cancellation pays nothing.', {
+                  stake:travel.venture.stake
+                }))) + '</span>'
+          : '') +
         '</div>';
     }
     h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
@@ -3650,8 +3662,17 @@ window.FB = window.FB || {};
       '</p></div><div class="gm-list">';
     for (const id in FBDATA.travelPurposes) {
       const def = FBDATA.travelPurposes[id];
-      const destinations = FB.travelDestinations(s, id);
-      const affordable = destinations.some(function (item) { return item.cost <= s.player.gold; });
+      const destinations = id === 'trade'
+        ? FB.tradeVentureMarkets(s) : FB.travelDestinations(s, id);
+      const stakes = id === 'trade' ? FB.tradeVentureStakes() : [];
+      const affordable = destinations.some(function (item) {
+        if (id !== 'trade') return item.cost <= s.player.gold;
+        if (FB.tradeVentureEligible(s, 'dispatch') !== true) return false;
+        return stakes.some(function (stake) {
+          const preview = FB.tradeVenturePreview(s, stake, item.destinationId);
+          return preview && preview.totalCost <= s.player.gold;
+        });
+      });
       h += '<button class="actionbtn" data-travel-purpose="' + esc(id) + '"' +
         (destinations.length && affordable ? '' : ' disabled') + '>' +
         esc((def.icon || '🧭') + ' ' + travelPurposeText(s, id, 'name')) +
@@ -3665,16 +3686,21 @@ window.FB = window.FB || {};
     openModal('🧭 Take to the road…', h);
     document.querySelectorAll('[data-travel-purpose]').forEach(function (button) {
       button.addEventListener('click', function () {
+        const purposeId = button.getAttribute('data-travel-purpose');
+        if (purposeId === 'trade') {
+          UI.showTradeVentureSetup('travel');
+          return;
+        }
         UI.closeModal();
-        UI.showTravelDestinations(button.getAttribute('data-travel-purpose'));
+        UI.showTravelDestinations(purposeId);
       });
     });
     $('travel-purpose-cancel').addEventListener('click', UI.closeModal);
   };
 
-  UI.showTravelDestinations = function (purposeId) {
+  function showDestinationPicker(opts) {
     const s = FB.state;
-    const choices = FB.travelDestinations(s, purposeId);
+    const choices = opts.choices || [];
     if (!choices.length) {
       UI.toast(FB.T('No qualifying destination can be reached.'));
       return;
@@ -3682,27 +3708,38 @@ window.FB = window.FB || {};
     const wasPaused = FB.game.paused;
     FB.game.setPaused(true);
     travelPicker = {
-      purpose:purposeId,
+      kind:opts.kind || 'travel',
+      purpose:opts.purpose || null,
+      stake:opts.stake || 0,
+      source:opts.source || null,
       choices:choices,
       selected:null,
-      wasPaused:wasPaused
+      wasPaused:wasPaused,
+      cancelAction:opts.cancelAction || null
     };
     document.body.classList.add('travel-picking');
     $('travel-picker').classList.remove('hidden');
-    $('travel-picker-title').textContent = FB.T('Choose a destination for {purpose}', {
-      purpose:travelPurposeText(s, purposeId, 'name')
-    });
+    $('travel-picker-title').textContent = opts.title;
+    $('travel-picker-continue').textContent = opts.kind === 'trade_venture'
+      ? FB.T('Review venture') : FB.T('Review journey');
     const list = $('travel-destination-list');
     let h = '';
     for (let i = 0; i < choices.length; i++) {
       const item = choices[i];
       const pr = FB.world.byId[item.destinationId];
-      const short = item.cost > s.player.gold;
+      const preview = opts.kind === 'trade_venture'
+        ? FB.tradeVenturePreview(s, opts.stake, item.destinationId) : null;
+      const cost = opts.kind === 'trade_venture'
+        ? (preview ? preview.totalCost : Infinity) : item.cost;
+      const short = cost > s.player.gold;
       h += '<button class="travel-destination" data-travel-destination="' +
         esc(item.destinationId) + '" data-choice-index="' + i + '">' +
         esc(pr ? pr.name : item.destinationId) +
-        '<span class="adesc">' + esc(FB.T(
-          '{legs} county legs · {days} days each way · {money:cost}', {
+        '<span class="adesc">' + esc(opts.kind === 'trade_venture'
+          ? FB.T('{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead', {
+            legs:item.legs, days:item.days, stake:opts.stake, overhead:item.cost
+          })
+          : FB.T('{legs} county legs · {days} days each way · {money:cost}', {
             legs:item.legs, days:item.days, cost:item.cost
           })) + (short ? ' · ' + esc(FB.T('not enough money')) : '') +
         '</span></button>';
@@ -3713,8 +3750,9 @@ window.FB = window.FB || {};
     FB.map.travelPreview = null;
     FB.map.select(null);
     FB.map.request();
-    $('travel-picker-summary').textContent = FB.T(
-      'Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
+    $('travel-picker-summary').textContent = opts.kind === 'trade_venture'
+      ? FB.T('Choose a developed market on the map or from the list. The stake and route overhead are charged separately.')
+      : FB.T('Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
     $('travel-picker-continue').disabled = true;
     document.querySelectorAll('[data-travel-destination]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -3725,11 +3763,89 @@ window.FB = window.FB || {};
       const first = list.querySelector('button');
       if (first) first.focus();
     }, 0);
+    const reopen = opts.kind === 'trade_venture'
+      ? function () { UI.showTradeVentureMarkets(opts.stake, opts.source); }
+      : function () { UI.showTravelDestinations(opts.purpose); };
     mobileNavPush('travel-picker',
       function () { closeTravelPicker(true); },
-      function () { UI.showTravelDestinations(purposeId); },
+      reopen,
       function () { return UI.travelPickerOpen(); },
       function () { return true; });
+  }
+
+  UI.showTravelDestinations = function (purposeId) {
+    const s = FB.state;
+    showDestinationPicker({
+      kind:'travel',
+      purpose:purposeId,
+      choices:FB.travelDestinations(s, purposeId),
+      title:FB.T('Choose a destination for {purpose}', {
+        purpose:travelPurposeText(s, purposeId, 'name')
+      }),
+      cancelAction:UI.showTravelPurposes
+    });
+  };
+
+  UI.showTradeVentureSetup = function (source) {
+    const s = FB.state;
+    const eligible = FB.tradeVentureEligible(s, 'dispatch');
+    if (eligible !== true) { UI.toast(eligible); return; }
+    const markets = FB.tradeVentureMarkets(s);
+    if (!markets.length) {
+      UI.toast(FB.T('No developed market can be reached.'));
+      return;
+    }
+    const stakes = FB.tradeVentureStakes();
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < stakes.length; i++) {
+      const stake = stakes[i];
+      const affordable = markets.some(function (market) {
+        const preview = FB.tradeVenturePreview(s, stake, market.destinationId);
+        return preview && preview.totalCost <= s.player.gold;
+      });
+      h += '<button class="actionbtn" data-venture-stake="' + stake + '"' +
+        (affordable ? '' : ' disabled') + '>⚖ ' +
+        esc(FB.T('Invest {money:stake}…', { stake:stake })) +
+        '<span class="adesc">' + esc(affordable
+          ? FB.T('Choose from {count} reachable developed markets.', { count:markets.length })
+          : FB.T('The purse cannot cover this stake and any reachable route.')) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="venture-setup-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Form your own venture'), h);
+    document.querySelectorAll('[data-venture-stake]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const stake = parseInt(button.dataset.ventureStake, 10);
+        UI.closeModal();
+        UI.showTradeVentureMarkets(stake, source);
+      });
+    });
+    $('venture-setup-back').addEventListener('click',
+      source === 'finance' ? UI.showFinance : UI.showTravelPurposes);
+  };
+
+  UI.showTradeVentureMarkets = function (stake, source) {
+    const s = FB.state;
+    const eligible = FB.tradeVentureEligible(s, 'dispatch');
+    if (eligible !== true) { UI.toast(eligible); return; }
+    if (FB.tradeVentureStakes().indexOf(Number(stake)) < 0) {
+      UI.toast(FB.T('That stake is not available.'));
+      return;
+    }
+    showDestinationPicker({
+      kind:'trade_venture',
+      purpose:'trade',
+      stake:stake,
+      source:source,
+      choices:FB.tradeVentureMarkets(s),
+      title:FB.T('Choose a market for your venture'),
+      cancelAction:function () { UI.showTradeVentureSetup(source); }
+    });
   };
 
   UI.travelPickerOpen = function () {
@@ -3763,21 +3879,149 @@ window.FB = window.FB || {};
     });
     if (selectedButton && !center) selectedButton.scrollIntoView({block:'nearest'});
     const pr = FB.world.byId[pid];
-    const affordable = item.cost <= FB.state.player.gold;
-    $('travel-picker-summary').textContent = affordable
-      ? FB.T('{destination}: {legs} legs, {days} days each way, {money:cost}.', {
-          destination:pr.name, legs:item.legs, days:item.days, cost:item.cost
-        })
-      : FB.T('{destination} costs {money:cost}; you have {money:gold}.', {
-          destination:pr.name, cost:item.cost, gold:Math.floor(FB.state.player.gold)
-        });
+    const preview = travelPicker.kind === 'trade_venture'
+      ? FB.tradeVenturePreview(FB.state, travelPicker.stake, pid) : null;
+    const cost = travelPicker.kind === 'trade_venture'
+      ? (preview ? preview.totalCost : Infinity) : item.cost;
+    const affordable = cost <= FB.state.player.gold;
+    if (travelPicker.kind === 'trade_venture') {
+      $('travel-picker-summary').textContent = affordable
+        ? FB.T('{destination}: {money:stake} stake + {money:overhead} route overhead; {days} days each way.', {
+            destination:pr.name, stake:travelPicker.stake,
+            overhead:item.cost, days:item.days
+          })
+        : FB.T('{destination} needs {money:cost} for stake and road; you have {money:gold}.', {
+            destination:pr.name, cost:cost, gold:Math.floor(FB.state.player.gold)
+          });
+    } else {
+      $('travel-picker-summary').textContent = affordable
+        ? FB.T('{destination}: {legs} legs, {days} days each way, {money:cost}.', {
+            destination:pr.name, legs:item.legs, days:item.days, cost:item.cost
+          })
+        : FB.T('{destination} costs {money:cost}; you have {money:gold}.', {
+            destination:pr.name, cost:item.cost, gold:Math.floor(FB.state.player.gold)
+          });
+    }
     $('travel-picker-continue').disabled = !affordable;
     FB.map.request();
     return true;
   };
 
+  function ventureReturnsText(strategy) {
+    const values = [];
+    for (let i = 0; i < strategy.bands.length; i++) {
+      const value = strategy.bands[i].multiplier;
+      if (values.indexOf(value) < 0) values.push(value);
+    }
+    return FB.T('Possible stake returns: {returns}.', {
+      returns:values.map(function (value) {
+        return FB.T('{amount}×', { amount:value });
+      }).join(' · ')
+    });
+  }
+
+  function reviewTradeVentureChoice() {
+    if (!travelPicker || !travelPicker.selected) return;
+    const item = travelPicker.selected;
+    const s = FB.state;
+    const preview = FB.tradeVenturePreview(
+      s, travelPicker.stake, item.destinationId);
+    if (!preview) {
+      UI.toast(FB.T('That venture is no longer available.'));
+      return;
+    }
+    const pr = FB.world.byId[item.destinationId];
+    const cautiousRisk = Math.round(preview.strategies.cautious.lossChance * 100);
+    const boldRisk = Math.round(preview.strategies.bold.lossChance * 100);
+    const modifier = Math.round(preview.modifiers.total * 1000) / 10;
+    const accompany = FB.tradeVentureCanStart(
+      s, 'accompany', preview.stake, preview.destinationId);
+    const personalDays = preview.roundTripDays +
+      (FBDATA.balance.travelMinStayDays || 90);
+    const currentBoldChance = Math.round(FB.namedChance(s, 'travel_trade') * 100);
+    let h = '<div class="gm-body-text">' +
+      '<p><b>' + esc(FB.T('Your venture to {destination}', {
+        destination:pr.name
+      })) + '</b></p>' +
+      kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
+      kv('Route overhead', esc(FB.T('{money:amount}', { amount:preview.overhead }))) +
+      kv('Total paid now', esc(FB.T('{money:amount}', { amount:preview.totalCost }))) +
+      kv('Road', esc(FB.T('{legs} county legs · {days} days each way', {
+        legs:preview.legs, days:preview.oneWayDays
+      }))) +
+      kv('Dispatch resolves', esc(FB.T('{date} · {days} days', {
+        date:financeFullDate(preview.dueDate), days:preview.durationDays
+      }))) +
+      kv('Captured roll adjustment', esc(FB.T('{amount}%', {
+        amount:(modifier > 0 ? '+' : '') + modifier
+      }))) +
+      '<p class="hint">' + esc(FB.T(
+        'The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.')) +
+      '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="venture-dispatch-cautious">🧭 ' +
+      esc(FB.T('Dispatch cautiously')) +
+      '<span class="adesc">' + esc(FB.T(
+        '{risk}% risk of total loss. You remain home and continue normal work.', {
+          risk:cautiousRisk
+        }) + ' ' + ventureReturnsText(preview.strategies.cautious)) +
+      '</span></button>' +
+      '<button class="actionbtn" id="venture-dispatch-bold">⚖ ' +
+      esc(FB.T('Dispatch boldly')) +
+      '<span class="adesc">' + esc(FB.T(
+        '{risk}% risk of total loss, with larger gains and harsher losses. You remain home.', {
+          risk:boldRisk
+        }) + ' ' + ventureReturnsText(preview.strategies.bold)) +
+      '</span></button>' +
+      '<button class="actionbtn" id="venture-accompany"' +
+      (accompany === true ? '' : ' disabled') + '>🧭 ' +
+      esc(FB.T('Accompany personally')) +
+      '<span class="adesc">' + esc(accompany === true
+        ? FB.T('At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).', {
+          days:personalDays, chance:currentBoldChance
+        }) + ' ' + FB.T(
+          'Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.')
+        : accompany) + '</span></button>' +
+      '<button class="actionbtn" id="venture-review-back">' +
+      esc(FB.T('Back to markets')) + '</button></div>';
+    openModal(FB.T('Review your venture'), h,
+      {dismissable:false, historyBack:true});
+    $('venture-dispatch-cautious').addEventListener('click', function () {
+      if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
+          'cautious', travelPicker.source)) return;
+      UI.cancelTravelPicker(true);
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('venture-dispatch-bold').addEventListener('click', function () {
+      if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
+          'bold', travelPicker.source)) return;
+      UI.cancelTravelPicker(true);
+      UI.closeModal();
+      UI.refresh();
+    });
+    if (accompany === true) {
+      $('venture-accompany').addEventListener('click', function () {
+        if (!FB.travelStart(s, 'trade', preview.destinationId,
+            preview.destinationRealm, {
+              kind:'trade_venture', stake:preview.stake
+            })) return;
+        UI.cancelTravelPicker(true);
+        UI.closeModal();
+      });
+    }
+    $('venture-review-back').addEventListener('click', function () {
+      UI.closeModal();
+      const selected = document.querySelector('.travel-destination.selected');
+      if (selected) selected.focus();
+    });
+  }
+
   function reviewTravelChoice() {
     if (!travelPicker || !travelPicker.selected) return;
+    if (travelPicker.kind === 'trade_venture') {
+      reviewTradeVentureChoice();
+      return;
+    }
     const item = travelPicker.selected;
     const s = FB.state;
     const def = FBDATA.travelPurposes[travelPicker.purpose];
@@ -3820,6 +4064,7 @@ window.FB = window.FB || {};
   }
 
   function closeTravelPicker(restorePause) {
+    const closed = travelPicker;
     const wasPaused = travelPicker ? travelPicker.wasPaused : true;
     travelPicker = null;
     document.body.classList.remove('travel-picking');
@@ -3830,11 +4075,13 @@ window.FB = window.FB || {};
     FB.map.select(null);
     FB.map.request();
     if (restorePause && !wasPaused) FB.game.setPaused(false);
+    return closed;
   }
 
   UI.cancelTravelPicker = function (discard) {
-    closeTravelPicker(true);
+    const closed = closeTravelPicker(true);
     mobileNavClosed('travel-picker', !!discard);
+    if (!discard && closed && closed.cancelAction) closed.cancelAction();
   };
 
   UI.showTravelSettlement = function () {
@@ -5594,6 +5841,14 @@ window.FB = window.FB || {};
     return FB.T('{season} {year}', { season:FB.seasonName(season), year:year });
   }
 
+  function financeFullDate(date) {
+    return FB.T('{season} day {day}, {year}', {
+      season:FB.seasonName(date.season),
+      day:date.day,
+      year:date.year
+    });
+  }
+
   function financeDateAfter(s, seasons) {
     const n = s.date.season + seasons;
     return { season:n % 4, year:s.date.year + Math.floor(n / 4) };
@@ -5695,9 +5950,11 @@ window.FB = window.FB || {};
     const loans = FB.financeActiveLoans(s).slice().sort(function (a, b) {
       return a.dueTurn - b.dueTurn || a.id - b.id;
     });
-    const investments = FB.financeActiveInvestments(s);
+    const partnerships = FB.financeActivePartnerships(s);
+    const ventures = FB.financeActiveTradeVentures(s);
     const offers = FB.financeLoanOffers(s);
     const stakes = FB.tradeInvestmentStakes(s);
+    const ventureEligible = FB.tradeVentureEligible(s, 'dispatch');
     let h = '';
 
     /* Obligations lead the sheet so a narrow phone shows the urgent date
@@ -5742,16 +5999,49 @@ window.FB = window.FB || {};
           : FB.T('No offer fits the household’s income, collateral, or current obligations.'))) +
       '</span></button></div>';
 
-    h += panelh('Trade partnerships');
-    if (investments.length) {
-      for (const inv of investments) {
+    h += panelh('Your trade venture');
+    if (ventures.length) {
+      for (const inv of ventures) {
+        const destination = FB.world.byId[inv.destinationId];
+        const dueDate = inv.dueDate || FB.dateAtTurn(s, inv.dueTurn);
+        h += '<div class="progressnote"><b>' +
+          esc(inv.strategy === 'bold'
+            ? FB.T('Bold venture to {destination}', {
+              destination:destination ? destination.name : inv.destinationId
+            })
+            : FB.T('Cautious venture to {destination}', {
+              destination:destination ? destination.name : inv.destinationId
+            })) + '</b> · ' +
+          esc(FB.T('{money:stake} invested · resolves {date}', {
+            stake:inv.stake, date:financeFullDate(dueDate)
+          })) + '<br><span class="hint">' +
+          esc(FB.T('{money:overhead} route overhead was paid separately.', {
+            overhead:inv.overhead || 0
+          })) + '</span></div>';
+      }
+    } else {
+      h += '<div class="progressnote">' +
+        esc(FB.T('No self-founded venture is active.')) + '</div>';
+    }
+    h += '<div class="gm-list"><button class="actionbtn" id="finance-own-venture"' +
+      (ventureEligible === true ? '' : ' disabled') + '>⚖ ' +
+      esc(FB.T('Form your own venture…')) +
+      '<span class="adesc">' + esc(ventureEligible === true
+        ? FB.T('Choose a stake and developed market, then dispatch it or travel with it.')
+        : ventureEligible) +
+      '</span></button></div>';
+
+    h += panelh('Back another merchant’s venture');
+    if (partnerships.length) {
+      for (const inv of partnerships) {
         h += '<div class="progressnote"><b>' + esc(FB.tradePartnershipName(s)) + '</b> · ' +
           esc(FB.T('{money:stake} at risk · matures {date}', {
             stake:inv.stake, date:financeDate(inv.dueSeason, inv.dueYear)
           })) + '</div>';
       }
     } else {
-      h += '<div class="progressnote">' + esc(FB.T('No coin is committed to distant trade.')) + '</div>';
+      h += '<div class="progressnote">' +
+        esc(FB.T('No coin is backing another merchant’s venture.')) + '</div>';
     }
     if (stakes.length) {
       h += '<div class="gm-list">';
@@ -5759,9 +6049,9 @@ window.FB = window.FB || {};
         const can = FB.canStartTradeInvestment(s, stake);
         h += '<button class="actionbtn" data-finance-invest="' + stake + '"' +
           (can ? '' : ' disabled') + '>🧭 ' +
-          esc(FB.T('Commit {money:stake}…', { stake:stake })) +
+          esc(FB.T('Back with {money:stake}…', { stake:stake })) +
           '<span class="adesc">' + esc(FB.T(
-            'A four-season profit-sharing venture: productive risk, with no guaranteed return.')) +
+            'Back another merchant’s four-season venture for a share of its profit or loss.')) +
           '</span></button>';
       }
       h += '</div>';
@@ -5790,6 +6080,10 @@ window.FB = window.FB || {};
     $('finance-close').addEventListener('click', UI.closeModal);
     const borrow = $('finance-borrow');
     if (borrow) borrow.addEventListener('click', UI.showFinanceBorrow);
+    const ownVenture = $('finance-own-venture');
+    if (ownVenture) ownVenture.addEventListener('click', function () {
+      UI.showTradeVentureSetup('finance');
+    });
     document.querySelectorAll('[data-finance-repay]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFinanceRepay(parseInt(button.dataset.financeRepay, 10));
@@ -5905,18 +6199,18 @@ window.FB = window.FB || {};
     const def = FBDATA.finance.tradePartnership;
     const due = financeDateAfter(s, def.termSeasons);
     const h = '<div class="gm-body-text">' +
-      kv('Contract', esc(FB.tradePartnershipName(s))) +
+      kv('Backing arrangement', esc(FB.tradePartnershipName(s))) +
       kv('Stake now', esc(FB.T('{money:amount}', { amount:stake }))) +
       kv('Maturity', esc(financeDate(due.season, due.year))) +
       kv('Risk of total loss', esc(FB.T('{amount}%', {
         amount:Math.round(def.risk * 100)
       }))) +
       '<p>' + esc(FB.T(
-        'This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.')) +
+        'You are backing another merchant, not leading this venture. This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.')) +
       '</p></div><div class="gm-list"><button class="actionbtn" id="finance-invest-confirm">🧭 ' +
-      esc(FB.T('Commit {money:amount}', { amount:stake })) +
+      esc(FB.T('Back with {money:amount}', { amount:stake })) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Confirm the partnership'), h);
+    openModal(FB.T('Back another merchant’s venture'), h);
     $('finance-invest-confirm').addEventListener('click', function () {
       FB.startTradeInvestment(s, stake, 'finance');
       UI.showFinance();
@@ -9251,7 +9545,9 @@ window.FB = window.FB || {};
       else FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
-    $('travel-picker-cancel').addEventListener('click', UI.cancelTravelPicker);
+    $('travel-picker-cancel').addEventListener('click', function () {
+      UI.cancelTravelPicker(false);
+    });
     $('travel-picker-continue').addEventListener('click', reviewTravelChoice);
     FB.map.onTap = function (pr, wx, wy) {
       if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }

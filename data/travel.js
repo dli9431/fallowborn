@@ -12,7 +12,7 @@ FBDATA.travelPurposes = {
   trade: {
     name:'Trade venture',
     icon:'⚖',
-    desc:'Carry a stake to a developed market and bargain for a return.',
+    desc:'Choose a stake and developed market, then dispatch the venture or accompany it.',
     cost:10,
     stake:10,
     mode:'developed',

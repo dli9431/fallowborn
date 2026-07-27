@@ -25600,6 +25600,39 @@
         "text": "⚖ The last assigned revenues reach the lender; the defaulted obligation is settled."
       }
     },
+    "news.finance.trade_venture_matured": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "money:payout"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "exceptional": "✨ The venture to {destination} returns a remarkable {money:payout}.",
+            "loss": "🌊 The household’s venture to {destination} is lost with every coin invested.",
+            "other": "🧭 The household’s venture to {destination} is resolved.",
+            "partial": "🧭 The venture to {destination} limps home with {money:payout}.",
+            "profit": "🧭 The venture to {destination} returns {money:payout}."
+          },
+          "param": "outcome",
+          "select": "value"
+        }
+      }
+    },
+    "news.finance.trade_venture_started": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "money:overhead",
+        "money:stake"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road."
+      }
+    },
     "news.guild.advanced": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -26649,6 +26682,28 @@
       "location": "js/travel.js",
       "source": {
         "text": "🧭 The household settles in {destination}."
+      }
+    },
+    "news.travel.trade_venture_cancelled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 The accompanied venture ends without a payout. The household remains at {home}."
+      }
+    },
+    "news.travel.trade_venture_departed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "money:overhead",
+        "money:stake"
+      ],
+      "location": "js/travel.js",
+      "source": {
+        "text": "🧭 Set out for {destination} with {money:stake} invested and {money:overhead} paid for the road."
       }
     },
     "news.travel.turned_back": {
@@ -33360,6 +33415,16 @@
         "text": "Menu"
       }
     },
+    "src.00d6e110": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back another merchant’s venture"
+      }
+    },
     "src.00dacd24": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -33378,6 +33443,16 @@
       ],
       "source": {
         "text": "🧭 The trade partnership limps home; {money:payout} is salvaged."
+      }
+    },
+    "src.010771c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dispatch resolves"
       }
     },
     "src.010d2c87": {
@@ -33891,6 +33966,16 @@
       ],
       "source": {
         "text": "No one is born in {province}. Pick a settled land."
+      }
+    },
+    "src.038b005a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review venture"
       }
     },
     "src.0395045d": {
@@ -34431,6 +34516,16 @@
       ],
       "source": {
         "text": "The ledger records one thin goat. The fat one chews safely in the wood."
+      }
+    },
+    "src.05bfb819": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🌊 The household’s venture to {destination} is lost with every coin invested."
       }
     },
     "src.05c50c09": {
@@ -35377,6 +35472,16 @@
         "text": "Buy it. ({money:itemprice})"
       }
     },
+    "src.09383ddf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{money:overhead} route overhead was paid separately."
+      }
+    },
     "src.093a737a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36178,6 +36283,16 @@
         "text": "Autumn"
       }
     },
+    "src.0c0ceeae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Possible stake returns: {returns}."
+      }
+    },
     "src.0c0d0108": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36416,6 +36531,16 @@
       ],
       "source": {
         "text": "Cook the Ledgers"
+      }
+    },
+    "src.0d1c13d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back another merchant’s four-season venture for a share of its profit or loss."
       }
     },
     "src.0d22068e": {
@@ -38423,6 +38548,16 @@
         "text": "Answer with a counter-plot."
       }
     },
+    "src.1497f759": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No self-founded venture is active."
+      }
+    },
     "src.14b16288": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39035,16 +39170,6 @@
       ],
       "source": {
         "text": "Tap them to court, propose, or break it off."
-      }
-    },
-    "src.171ce2cf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "No coin is committed to distant trade."
       }
     },
     "src.172228ff": {
@@ -40030,6 +40155,16 @@
         "text": "Make your case."
       }
     },
+    "src.1ad3e92d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Total paid now"
+      }
+    },
     "src.1adb76f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40588,6 +40723,16 @@
       ],
       "source": {
         "text": "Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion."
+      }
+    },
+    "src.1df97089": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stake"
       }
     },
     "src.1df9c4ee": {
@@ -42284,16 +42429,6 @@
         "text": "Return it to the armory"
       }
     },
-    "src.242faa23": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Contract"
-      }
-    },
     "src.2441f35e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42442,6 +42577,16 @@
       ],
       "source": {
         "text": "Wander the pleasure quarter."
+      }
+    },
+    "src.24ba3385": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No household is ready to trade."
       }
     },
     "src.24d3a8dd": {
@@ -42833,6 +42978,16 @@
       ],
       "source": {
         "text": "Martial"
+      }
+    },
+    "src.26752a8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back with {money:stake}…"
       }
     },
     "src.268542ed": {
@@ -43947,6 +44102,16 @@
         "text": "This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally."
       }
     },
+    "src.2b7e3395": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally."
+      }
+    },
     "src.2b81e976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43995,6 +44160,16 @@
       ],
       "source": {
         "text": "your faith permits no more wives."
+      }
+    },
+    "src.2b9c1e89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Captured roll adjustment"
       }
     },
     "src.2bc9a4c3": {
@@ -44565,6 +44740,16 @@
       ],
       "source": {
         "text": "⛪ The marriage to {name} is declared void — before Allah, it never was."
+      }
+    },
+    "src.2da0c0d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cautious venture to {destination}"
       }
     },
     "src.2dad350b": {
@@ -45680,16 +45865,6 @@
         "text": "{money:5} says another man bleeds for you."
       }
     },
-    "src.32a39b39": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "A four-season profit-sharing venture: productive risk, with no guaranteed return."
-      }
-    },
     "src.32b94572": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45938,6 +46113,16 @@
       ],
       "source": {
         "text": "Gates like cliffs, streets like rivers. In {settlement} a fortune is made or lost every day, and nobody asks where you were born — only what you carry."
+      }
+    },
+    "src.33b36715": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose from {count} reachable developed markets."
       }
     },
     "src.33c20343": {
@@ -46573,6 +46758,16 @@
         "text": "Bring it before the village moot."
       }
     },
+    "src.36aa88ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The purse cannot cover this stake and any reachable route."
+      }
+    },
     "src.36afa402": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46691,6 +46886,16 @@
       ],
       "source": {
         "text": "Last annual movement"
+      }
+    },
+    "src.37357b76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only freeholders and gentry can form a trade venture."
       }
     },
     "src.373a95db": {
@@ -47273,6 +47478,16 @@
       ],
       "source": {
         "text": "Loved, not feared."
+      }
+    },
+    "src.39f5d4d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{season} day {day}, {year}"
       }
     },
     "src.3a080eaf": {
@@ -48910,6 +49125,16 @@
         "text": "Ruler’s Martial"
       }
     },
+    "src.400e05fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{destination}: {money:stake} stake + {money:overhead} route overhead; {days} days each way."
+      }
+    },
     "src.402a1280": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49439,6 +49664,16 @@
       ],
       "source": {
         "text": "{realm} — exceptional levy"
+      }
+    },
+    "src.4298b24a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a market for your venture"
       }
     },
     "src.429928d6": {
@@ -50581,8 +50816,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "index.html",
-        "js/ui.js"
+        "js/ui.js",
+        "index.html"
       ],
       "source": {
         "text": "Review journey"
@@ -50728,6 +50963,16 @@
       ],
       "source": {
         "text": "Dasht-e Kavir"
+      }
+    },
+    "src.47053cfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility."
       }
     },
     "src.4706e34f": {
@@ -53576,16 +53821,6 @@
         "text": "Exposed · prerequisites needed"
       }
     },
-    "src.52226962": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Trade partnerships"
-      }
-    },
     "src.522bba25": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54298,16 +54533,6 @@
         "text": "No power but its worth."
       }
     },
-    "src.55458dd8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/travel.js"
-      ],
-      "source": {
-        "text": "Carry a stake to a developed market and bargain for a return."
-      }
-    },
     "src.5547ce8e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54947,6 +55172,16 @@
       ],
       "source": {
         "text": "Cork"
+      }
+    },
+    "src.579d5b94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Invest {money:stake}…"
       }
     },
     "src.57b55206": {
@@ -55950,6 +56185,16 @@
         "text": "The tale is sound, and the guest repays caution with useful news."
       }
     },
+    "src.5be1598a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You are backing another merchant, not leading this venture. This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
+      }
+    },
     "src.5bf74906": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56209,6 +56454,16 @@
       ],
       "source": {
         "text": "Fire in the night, from one end of your lands to the other. The league marches under a harvest-king of its own making, and your garrisons yield their towers rather than fight their neighbors. This is no riot — it is a war for your seat."
+      }
+    },
+    "src.5cd18e78": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A prisoner cannot organize a trade venture."
       }
     },
     "src.5cd7c002": {
@@ -58209,16 +58464,6 @@
         "text": "Reims"
       }
     },
-    "src.65000e4a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Commit {money:amount}"
-      }
-    },
     "src.650b0acc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58660,6 +58905,16 @@
         "text": "Favor {favor}"
       }
     },
+    "src.66dd0f6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Accompanied venture: {money:stake} invested; turning back or forced cancellation pays nothing."
+      }
+    },
     "src.66ebf7f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58900,6 +59155,16 @@
         "text": "Choose cash or an unequipped, unpledged item from the family armory."
       }
     },
+    "src.67eaedd8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure."
+      }
+    },
     "src.67f4fe57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59108,6 +59373,16 @@
       ],
       "source": {
         "text": "Raška"
+      }
+    },
+    "src.68a3b29f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The venture to {destination} limps home with {money:payout}."
       }
     },
     "src.68c3e96d": {
@@ -60282,6 +60557,16 @@
         "text": "Sultana"
       }
     },
+    "src.6d2829f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No developed market can be reached."
+      }
+    },
     "src.6d2dc236": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60612,6 +60897,16 @@
         "text": "Inspect the reeve’s accounts."
       }
     },
+    "src.6e1c0866": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "This character has already completed a trade journey to that market."
+      }
+    },
     "src.6e40214e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60620,6 +60915,16 @@
       ],
       "source": {
         "text": "Talk them all down."
+      }
+    },
+    "src.6e479f83": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review your venture"
       }
     },
     "src.6e4c6c0b": {
@@ -61373,6 +61678,16 @@
         "text": "{have} of {total} kingdoms"
       }
     },
+    "src.716cf600": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "That venture is no longer available."
+      }
+    },
     "src.71756075": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61762,6 +62077,16 @@
       ],
       "source": {
         "text": "Renew the right already held by your house."
+      }
+    },
+    "src.7307442a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "That stake is not available."
       }
     },
     "src.73092cb2": {
@@ -62225,6 +62550,16 @@
         "text": "⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year"
       }
     },
+    "src.74a2a466": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only an adult can form a trade venture."
+      }
+    },
     "src.74a58aca": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62303,6 +62638,16 @@
       ],
       "source": {
         "text": "kingdom crown"
+      }
+    },
+    "src.74f248c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Venture settled: {money:payout} returned from a {money:stake} stake."
       }
     },
     "src.74f3814f": {
@@ -63388,6 +63733,16 @@
         "text": "Think better of it."
       }
     },
+    "src.7927fd2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your venture to {destination}"
+      }
+    },
     "src.7931df61": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63556,16 +63911,6 @@
       ],
       "source": {
         "text": "Genova"
-      }
-    },
-    "src.79bdcddc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Confirm the partnership"
       }
     },
     "src.79be1efe": {
@@ -64076,6 +64421,16 @@
       ],
       "source": {
         "text": "not occupied"
+      }
+    },
+    "src.7b78a1a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No coin is backing another merchant’s venture."
       }
     },
     "src.7b86e9b1": {
@@ -64798,6 +65153,16 @@
       ],
       "source": {
         "text": "~150 spears: {money:15} now, {money:upkeep} a season while the host is raised. ({count} company under your banner)"
+      }
+    },
+    "src.7e2274f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{risk}% risk of total loss. You remain home and continue normal work."
       }
     },
     "src.7e231222": {
@@ -65879,6 +66244,16 @@
       ],
       "source": {
         "text": "Spent freely to keep the fence-sitters loyal."
+      }
+    },
+    "src.81c94599": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "That stake or market is not available."
       }
     },
     "src.81dd7293": {
@@ -67433,16 +67808,6 @@
         "text": "🤝 Your liege strips the old lord of {province} and invests you with it."
       }
     },
-    "src.8792fec5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
-      }
-    },
     "src.87980f7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67551,6 +67916,16 @@
       ],
       "source": {
         "text": "The dead deserve better than gulls."
+      }
+    },
+    "src.88124c23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dispatch cautiously"
       }
     },
     "src.8813e171": {
@@ -69479,6 +69854,16 @@
         "text": "Can read and write — rare gift."
       }
     },
+    "src.8f994f84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "✨ The venture to {destination} returns a remarkable {money:payout}."
+      }
+    },
     "src.8fa0fe15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69557,6 +69942,16 @@
       ],
       "source": {
         "text": "Only your home county can raise this."
+      }
+    },
+    "src.8ff35981": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dispatch boldly"
       }
     },
     "src.8ff3af64": {
@@ -70078,6 +70473,16 @@
       ],
       "source": {
         "text": "Experiment and geometry explain reflection, refraction, and vision."
+      }
+    },
+    "src.91e1910c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "You cannot form a trade venture while personally at war."
       }
     },
     "src.91e45132": {
@@ -70974,6 +71379,16 @@
         "text": "— Fallowborn v"
       }
     },
+    "src.9610400c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a stake and developed market, then dispatch it or travel with it."
+      }
+    },
     "src.961a69e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71413,6 +71828,16 @@
       ],
       "source": {
         "text": "A commission worthy of your best: fine work for a great house. Succeed, and your name travels farther than you ever have."
+      }
+    },
+    "src.97c1920d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{money:stake} invested · resolves {date}"
       }
     },
     "src.97d8f061": {
@@ -73929,6 +74354,16 @@
         "text": "Shared embarrassment becomes shared good humor."
       }
     },
+    "src.a16321e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture."
+      }
+    },
     "src.a1633c4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74088,6 +74523,16 @@
       ],
       "source": {
         "text": "Master craftsman"
+      }
+    },
+    "src.a21b5b5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Form your own venture"
       }
     },
     "src.a228866d": {
@@ -75155,6 +75600,16 @@
         "text": "Greek"
       }
     },
+    "src.a662af76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a developed market on the map or from the list. The stake and route overhead are charged separately."
+      }
+    },
     "src.a66965fe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75243,6 +75698,16 @@
       ],
       "source": {
         "text": "Confess, and expose what the reeve paid for."
+      }
+    },
+    "src.a6efdfd0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Bold venture to {destination}"
       }
     },
     "src.a6fc2116": {
@@ -75836,6 +76301,16 @@
       ],
       "source": {
         "text": "The patron has paid less than half while claiming to have paid all."
+      }
+    },
+    "src.a943d986": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/travel.js"
+      ],
+      "source": {
+        "text": "Choose a stake and developed market, then dispatch the venture or accompany it."
       }
     },
     "src.a945a618": {
@@ -76500,6 +76975,16 @@
         "text": "Feared, not loved."
       }
     },
+    "src.ac4362a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Form your own venture…"
+      }
+    },
     "src.ac4371a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76708,6 +77193,16 @@
       ],
       "source": {
         "text": "Emira"
+      }
+    },
+    "src.ad278494": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 The accompanied venture ends without a payout. The household remains at {home}."
       }
     },
     "src.ad30bd50": {
@@ -77090,6 +77585,16 @@
         "text": "· dormant — no upkeep or benefit"
       }
     },
+    "src.aed42db2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The stake and route overhead cost {money:cost}; you have {money:gold}."
+      }
+    },
     "src.aee19533": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77430,16 +77935,6 @@
       ],
       "source": {
         "text": "The birds keep; hunger is patient too."
-      }
-    },
-    "src.b0337ce0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Commit {money:stake}…"
       }
     },
     "src.b041fd22": {
@@ -78955,6 +79450,16 @@
         "text": "The bad silver leaves your purse and becomes another household’s lesson."
       }
     },
+    "src.b5aa0808": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Prices, reliable income, loans, pledged property, and trade ventures."
+      }
+    },
     "src.b5b09ab5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79744,6 +80249,16 @@
       ],
       "source": {
         "text": "Hunt them down and hang one."
+      }
+    },
+    "src.b88b3456": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Backing arrangement"
       }
     },
     "src.b8a10f5d": {
@@ -80688,6 +81203,16 @@
         "text": "{name} dies in {year} AD, aged {age} — before their time."
       }
     },
+    "src.bcc8d916": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{legs} county legs · {days} days each way"
+      }
+    },
     "src.bcca4ab8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80766,6 +81291,16 @@
       ],
       "source": {
         "text": "Touchstones, balances, and cupellation test the fineness of coin."
+      }
+    },
+    "src.bd4c18bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Road"
       }
     },
     "src.bd526443": {
@@ -81037,6 +81572,16 @@
       ],
       "source": {
         "text": "The Retinue at the Door"
+      }
+    },
+    "src.be3fd074": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The accompanied venture was cancelled without a payout."
       }
     },
     "src.be43d370": {
@@ -82443,6 +82988,16 @@
       ],
       "source": {
         "text": "📯 {campaign} for {kingdom} · {status}"
+      }
+    },
+    "src.c35be32f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your trade venture"
       }
     },
     "src.c3894449": {
@@ -85693,6 +86248,26 @@
         "text": "Chests, Linens and Copperware"
       }
     },
+    "src.d17ce893": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{destination} needs {money:cost} for stake and road; you have {money:gold}."
+      }
+    },
+    "src.d17eadc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "🧭 Set out for {destination} with {money:stake} invested and {money:overhead} paid for the road."
+      }
+    },
     "src.d1aa3c6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86084,6 +86659,16 @@
         "text": "Anointed against sickness."
       }
     },
+    "src.d325ed67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The household already has an active self-founded venture."
+      }
+    },
     "src.d32d08b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86324,6 +86909,16 @@
         "text": "Control Baghdad, or both Mecca and Medina."
       }
     },
+    "src.d435b33c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back with {money:amount}"
+      }
+    },
     "src.d437d642": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86392,6 +86987,16 @@
       ],
       "source": {
         "text": "The campaign is active and the gathered hosts are now in the field."
+      }
+    },
+    "src.d4b27344": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{risk}% risk of total loss, with larger gains and harsher losses. You remain home."
       }
     },
     "src.d4b31d8d": {
@@ -86924,6 +87529,16 @@
         "text": "You save your skin and little else."
       }
     },
+    "src.d6a09c52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{amount}×"
+      }
+    },
     "src.d6ba0fc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86952,6 +87567,16 @@
       ],
       "source": {
         "text": "🧭 Set out from {home} for {destination}."
+      }
+    },
+    "src.d6d2d29f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A traveler cannot organize another venture."
       }
     },
     "src.d6d9506b": {
@@ -87443,6 +88068,16 @@
       ],
       "source": {
         "text": "Rival"
+      }
+    },
+    "src.d8a52630": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road."
       }
     },
     "src.d8b57123": {
@@ -88298,6 +88933,16 @@
         "text": "You wake with a hand over your mouth and steel already moving. There are three of them, and they know the room — someone drew them a map. {god} help you, the guards are not coming."
       }
     },
+    "src.dc59a3aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Route overhead"
+      }
+    },
     "src.dc6bf228": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88846,16 +89491,6 @@
       ],
       "source": {
         "text": "Let them talk. You chose well."
-      }
-    },
-    "src.de7e9297": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Prices, reliable income, loans, pledged property, and trade partnerships."
       }
     },
     "src.de84c47c": {
@@ -90299,6 +90934,16 @@
       ],
       "source": {
         "text": "📕 The school fee for {name} cannot be met; their lessons pause for the season."
+      }
+    },
+    "src.e42a2552": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The venture to {destination} returns {money:payout}."
       }
     },
     "src.e44f4fe0": {
@@ -92677,6 +93322,16 @@
         "text": "🎲 Random name"
       }
     },
+    "src.edbee198": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{date} · {days} days"
+      }
+    },
     "src.edc45b74": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93546,6 +94201,16 @@
       ],
       "source": {
         "text": "Either hand"
+      }
+    },
+    "src.f0e71644": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead"
       }
     },
     "src.f0ef0c46": {
@@ -95391,6 +96056,16 @@
         "text": "Van"
       }
     },
+    "src.f8b7b02c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success)."
+      }
+    },
     "src.f8b8c0ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95539,6 +96214,16 @@
       ],
       "source": {
         "text": "Only one guild favor may be called each year."
+      }
+    },
+    "src.f93ad7fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Accompany personally"
       }
     },
     "src.f9508f3f": {
@@ -96291,6 +96976,16 @@
         "text": "Claim the glory — if the guild allows ambition."
       }
     },
+    "src.fc22b192": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Back to markets"
+      }
+    },
     "src.fc2a100d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96871,6 +97566,16 @@
       ],
       "source": {
         "text": "🙇 Pay homage…"
+      }
+    },
+    "src.fe71d8ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The household’s venture to {destination} is resolved."
       }
     },
     "src.fe7fb598": {
@@ -101474,7 +102179,7 @@
       "glossary": [],
       "location": "data/travel.js",
       "source": {
-        "text": "Carry a stake to a developed market and bargain for a return."
+        "text": "Choose a stake and developed market, then dispatch the venture or accompany it."
       }
     },
     "travelPurpose.trade.name.default": {
@@ -101939,14 +102644,6 @@
         "text": "A baron must first hold a county before waging a foreign war."
       }
     },
-    "ui:A four-season profit-sharing venture: productive risk, with no guaranteed return.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "A four-season profit-sharing venture: productive risk, with no guaranteed return."
-      }
-    },
     "ui:A manor-sized holding is assembled here.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102016,6 +102713,14 @@
         "text": "A prisoner cannot leave."
       }
     },
+    "ui:A prisoner cannot organize a trade venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A prisoner cannot organize a trade venture."
+      }
+    },
     "ui:A serf household cannot yet maintain paid servants.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102038,6 +102743,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "A sworn peace pact protects the only realm you have cause against."
+      }
+    },
+    "ui:A traveler cannot organize another venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A traveler cannot organize another venture."
       }
     },
     "ui:A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the favor. Your dignity still counts land held through vassals.": {
@@ -102188,6 +102901,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Accepting returns your old demesne and title to its liege, then relocates your playable household to the new grant."
+      }
+    },
+    "ui:Accompanied venture: {money:stake} invested; turning back or forced cancellation pays nothing.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Accompanied venture: {money:stake} invested; turning back or forced cancellation pays nothing."
+      }
+    },
+    "ui:Accompany personally": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Accompany personally"
       }
     },
     "ui:Acolyte": {
@@ -102524,6 +103255,17 @@
         "text": "Assign personal attention for +{rate} regard each ordinary day. This costs no day."
       }
     },
+    "ui:At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success)."
+      }
+    },
     "ui:At the destination you must stay and find local work for at least {days} days before returning home.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -102629,6 +103371,22 @@
         "text": "Back"
       }
     },
+    "ui:Back another merchant’s four-season venture for a share of its profit or loss.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back another merchant’s four-season venture for a share of its profit or loss."
+      }
+    },
+    "ui:Back another merchant’s venture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back another merchant’s venture"
+      }
+    },
     "ui:Back to character": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -102667,6 +103425,34 @@
       "location": "js/ui.js",
       "source": {
         "text": "Back to item"
+      }
+    },
+    "ui:Back to markets": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back to markets"
+      }
+    },
+    "ui:Back with {money:amount}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back with {money:amount}"
+      }
+    },
+    "ui:Back with {money:stake}…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Back with {money:stake}…"
       }
     },
     "ui:Baltic-Finnic": {
@@ -102799,6 +103585,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Body"
+      }
+    },
+    "ui:Bold venture to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Bold venture to {destination}"
       }
     },
     "ui:Both hands": {
@@ -103026,6 +103822,24 @@
         "text": "Caucasian"
       }
     },
+    "ui:Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure."
+      }
+    },
+    "ui:Cautious venture to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Cautious venture to {destination}"
+      }
+    },
     "ui:Cavalry fodder and supplies": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103110,12 +103924,28 @@
         "text": "Choose a destination for {purpose}"
       }
     },
+    "ui:Choose a developed market on the map or from the list. The stake and route overhead are charged separately.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a developed market on the map or from the list. The stake and route overhead are charged separately."
+      }
+    },
     "ui:Choose a household wearer and compatible slot. This costs no day.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Choose a household wearer and compatible slot. This costs no day."
+      }
+    },
+    "ui:Choose a market for your venture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a market for your venture"
       }
     },
     "ui:Choose a purpose and travel county by county over game time.": {
@@ -103132,6 +103962,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose a slot, then choose an exact object from the family armory. Changes cost no day."
+      }
+    },
+    "ui:Choose a stake and developed market, then dispatch it or travel with it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a stake and developed market, then dispatch it or travel with it."
       }
     },
     "ui:Choose an education focus first.": {
@@ -103160,12 +103998,30 @@
         "text": "Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains."
       }
     },
+    "ui:Choose from {count} reachable developed markets.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose from {count} reachable developed markets."
+      }
+    },
     "ui:Choose the Target": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Choose the Target"
+      }
+    },
+    "ui:Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally."
       }
     },
     "ui:Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution.": {
@@ -103318,26 +104174,6 @@
         "text": "Commerce, transport, and infrastructure"
       }
     },
-    "ui:Commit {money:amount}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:amount"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Commit {money:amount}"
-      }
-    },
-    "ui:Commit {money:stake}…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:stake"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Commit {money:stake}…"
-      }
-    },
     "ui:Completed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -103352,14 +104188,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Confirm the contract"
-      }
-    },
-    "ui:Confirm the partnership": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Confirm the partnership"
       }
     },
     "ui:Constable": {
@@ -103730,6 +104558,30 @@
       "location": "js/ui.js",
       "source": {
         "text": "Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end."
+      }
+    },
+    "ui:Dispatch boldly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Dispatch boldly"
+      }
+    },
+    "ui:Dispatch cautiously": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Dispatch cautiously"
+      }
+    },
+    "ui:Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility."
       }
     },
     "ui:Disputed crown": {
@@ -104164,6 +105016,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Foreign Policy"
+      }
+    },
+    "ui:Form your own venture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Form your own venture"
+      }
+    },
+    "ui:Form your own venture…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Form your own venture…"
       }
     },
     "ui:Former calling of {name}": {
@@ -104620,6 +105488,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Inherited debt:"
+      }
+    },
+    "ui:Invest {money:stake}…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Invest {money:stake}…"
       }
     },
     "ui:Islamic Mediterranean": {
@@ -105291,12 +106169,20 @@
         "text": "No buildings stand in {settlement} yet."
       }
     },
-    "ui:No coin is committed to distant trade.": {
+    "ui:No coin is backing another merchant’s venture.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "No coin is committed to distant trade."
+        "text": "No coin is backing another merchant’s venture."
+      }
+    },
+    "ui:No developed market can be reached.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No developed market can be reached."
       }
     },
     "ui:No eligible household worker currently practices this profession.": {
@@ -105353,6 +106239,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No guild favor is available."
+      }
+    },
+    "ui:No household is ready to trade.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No household is ready to trade."
       }
     },
     "ui:No journey is in progress.": {
@@ -105531,6 +106425,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No refund. The lost level and its setup investment must be purchased again."
+      }
+    },
+    "ui:No self-founded venture is active.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No self-founded venture is active."
       }
     },
     "ui:No steady sources yet — deeds and events still move it.": {
@@ -105749,6 +106651,14 @@
         "text": "Only a sovereign player chooses national technology; your sovereign selects the project."
       }
     },
+    "ui:Only an adult can form a trade venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only an adult can form a trade venture."
+      }
+    },
     "ui:Only an adult can take to the road.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -105763,6 +106673,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Only an independent king or emperor may claim the Caliphate."
+      }
+    },
+    "ui:Only freeholders and gentry can form a trade venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only freeholders and gentry can form a trade venture."
       }
     },
     "ui:Only one guild favor may be called each year.": {
@@ -106195,6 +107113,16 @@
         "text": "Political attention: {used} of {capacity} assigned."
       }
     },
+    "ui:Possible stake returns: {returns}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "returns"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Possible stake returns: {returns}."
+      }
+    },
     "ui:Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -106233,6 +107161,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Preview"
+      }
+    },
+    "ui:Prices, reliable income, loans, pledged property, and trade ventures.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Prices, reliable income, loans, pledged property, and trade ventures."
       }
     },
     "ui:Priest": {
@@ -106881,12 +107817,36 @@
         "text": "Review coalition strength, resolve, occupations, contribution, and reward standing."
       }
     },
+    "ui:Review journey": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review journey"
+      }
+    },
     "ui:Review the camps, target, and time remaining before the banners march.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Review the camps, target, and time remaining before the banners march."
+      }
+    },
+    "ui:Review venture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review venture"
+      }
+    },
+    "ui:Review your venture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review your venture"
       }
     },
     "ui:Right hand": {
@@ -107469,6 +108429,30 @@
         "text": "That household standard is unavailable."
       }
     },
+    "ui:That stake is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "That stake is not available."
+      }
+    },
+    "ui:That stake or market is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "That stake or market is not available."
+      }
+    },
+    "ui:That venture is no longer available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "That venture is no longer available."
+      }
+    },
     "ui:The Estates": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107511,6 +108495,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "The Royal Council"
+      }
+    },
+    "ui:The accompanied venture was cancelled without a payout.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The accompanied venture was cancelled without a payout."
+      }
+    },
+    "ui:The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture."
       }
     },
     "ui:The armory is shared. Only equipped objects grant their powers.": {
@@ -107623,6 +108623,14 @@
         "text": "The house of {dynasty} passes out of memory, as all things must."
       }
     },
+    "ui:The household already has an active self-founded venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The household already has an active self-founded venture."
+      }
+    },
     "ui:The household is at its retainer capacity.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107683,6 +108691,14 @@
         "text": "The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty."
       }
     },
+    "ui:The purse cannot cover this stake and any reachable route.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The purse cannot cover this stake and any reachable route."
+      }
+    },
     "ui:The retainer leaves immediately and remembers the slight.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107705,6 +108721,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "The roads are not ready."
+      }
+    },
+    "ui:The stake and route overhead cost {money:cost}; you have {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:gold"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The stake and route overhead cost {money:cost}; you have {money:gold}."
       }
     },
     "ui:The target freezes when the call is made. The banners gather for 180 days; a vacant religious head or an invalid target collapses the call.": {
@@ -107779,6 +108806,14 @@
         "text": "Think better of it"
       }
     },
+    "ui:This character has already completed a trade journey to that market.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "This character has already completed a trade journey to that market."
+      }
+    },
     "ui:This character has already made their one permanent move; this journey cannot relocate the household again.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107817,14 +108852,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "This household office is already filled."
-      }
-    },
-    "ui:This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
       }
     },
     "ui:This is the highest guild rank.": {
@@ -108009,6 +109036,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "Vassal dues"
+      }
+    },
+    "ui:Venture settled: {money:payout} returned from a {money:stake} stake.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:payout",
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Venture settled: {money:payout} returned from a {money:stake} stake."
       }
     },
     "ui:Waist": {
@@ -108236,12 +109274,28 @@
         "text": "You are already traveling home."
       }
     },
+    "ui:You are backing another merchant, not leading this venture. This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You are backing another merchant, not leading this venture. This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
+      }
+    },
     "ui:You are committed to a great holy war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "You are committed to a great holy war."
+      }
+    },
+    "ui:You cannot form a trade venture while personally at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "You cannot form a trade venture while personally at war."
       }
     },
     "ui:You cannot leave while personally at war.": {
@@ -108666,6 +109720,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your spouse"
+      }
+    },
+    "ui:Your venture to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your venture to {destination}"
       }
     },
     "ui:Your voice in the hall": {
@@ -109926,6 +110990,16 @@
         "text": "{amount}% health protection"
       }
     },
+    "ui:{amount}×": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{amount}×"
+      }
+    },
     "ui:{asset} is taken, prestige falls, and lenders refuse the household for four seasons.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110146,6 +111220,17 @@
         "text": "{count} · about {money:gold}/season"
       }
     },
+    "ui:{date} · {days} days": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{date} · {days} days"
+      }
+    },
     "ui:{days} days living and working here": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110238,6 +111323,18 @@
         "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
       }
     },
+    "ui:{destination} needs {money:cost} for stake and road; you have {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "money:cost",
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{destination} needs {money:cost} for stake and road; you have {money:gold}."
+      }
+    },
     "ui:{destination}: {legs} legs, {days} days each way, {money:cost}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110249,6 +111346,19 @@
       "location": "js/ui.js",
       "source": {
         "text": "{destination}: {legs} legs, {days} days each way, {money:cost}."
+      }
+    },
+    "ui:{destination}: {money:stake} stake + {money:overhead} route overhead; {days} days each way.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "destination",
+        "money:overhead",
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{destination}: {money:stake} stake + {money:overhead} route overhead; {days} days each way."
       }
     },
     "ui:{domain} first": {
@@ -110350,6 +111460,17 @@
         "text": "{label}: {amount}"
       }
     },
+    "ui:{legs} county legs · {days} days each way": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "legs"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{legs} county legs · {days} days each way"
+      }
+    },
     "ui:{legs} county legs · {days} days each way · {money:cost}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110360,6 +111481,19 @@
       "location": "js/ui.js",
       "source": {
         "text": "{legs} county legs · {days} days each way · {money:cost}"
+      }
+    },
+    "ui:{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "legs",
+        "money:overhead",
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead"
       }
     },
     "ui:{level} — {name}": {
@@ -110446,6 +111580,16 @@
         "text": "{money:gold} per plot. Land held together in one settlement is more productive."
       }
     },
+    "ui:{money:overhead} route overhead was paid separately.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:overhead"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{money:overhead} route overhead was paid separately."
+      }
+    },
     "ui:{money:pay} each season; the first season is paid on entry.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -110465,6 +111609,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{money:stake} at risk · matures {date}"
+      }
+    },
+    "ui:{money:stake} invested · resolves {date}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "money:stake"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{money:stake} invested · resolves {date}"
       }
     },
     "ui:{name} (household tutor)": {
@@ -110971,6 +112126,26 @@
         "text": "{relation} · {marital} · regard {regard}"
       }
     },
+    "ui:{risk}% risk of total loss, with larger gains and harsher losses. You remain home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "risk"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{risk}% risk of total loss, with larger gains and harsher losses. You remain home."
+      }
+    },
+    "ui:{risk}% risk of total loss. You remain home and continue normal work.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "risk"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{risk}% risk of total loss. You remain home and continue normal work."
+      }
+    },
     "ui:{ruler} · dev {development} · {money:price}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -111051,6 +112226,18 @@
       "location": "js/actions.js",
       "source": {
         "text": "{school} — {name}"
+      }
+    },
+    "ui:{season} day {day}, {year}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "day",
+        "season",
+        "year"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{season} day {day}, {year}"
       }
     },
     "ui:{season} {day} · {year} AD": {

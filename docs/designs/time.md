@@ -60,7 +60,7 @@ school terms settle after standards, so a lost quarters level can reduce service
 before contracts are paid. Unaffordable schooling pauses for that term. Any live player
 host then pays composition-based logistics, clamped at an empty purse if unaffordable,
 before the ordinary war and great holy-war seasonal drivers run. Then
-`FB.financeSeason` collects assigned revenues and processes loans and trade partnerships
+`FB.financeSeason` collects assigned revenues and processes loans and passive trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
 new year `FB.financeYear` then moves the price index and revalues the remaining purse before
 `FB.worldTick`, autosave, and yearly life. The revaluation is visible immediately in
@@ -138,6 +138,11 @@ For an independent count or higher, season boundaries also run
 opinion deterministically after the player’s war tick. On the winter boundary this happens
 before `FB.worldTick`, so the new opinion affects that year’s AI declarations; yearly
 opinion decay follows in `yearlyLife`.
+
+On every normal day after the calendar advances, `FB.financeDay` resolves dispatched
+self-founded trade ventures whose exact saved `dueTurn` has arrived. This is independent
+of the season-boundary partnership pass. The resolver stores its sole seeded roll and
+result before adding the payout to the current household purse.
 
 Great holy wars use all three existing clock scales without a new timer. The daily
 tick records sacred-place control, launches a prepared call on its exact 180th day,
