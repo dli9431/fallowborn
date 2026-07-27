@@ -42,7 +42,7 @@ FBDATA.events.push(
   text:'Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything.',
   options:[
     { label:'Press the motion to a vote.', desc:'The estates decide — rank, name, and the liege’s favor all count now.', require:{ custom:'parliament_redress_possible' }, chance:'parliament_vote',
-      success:{ text:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good.', effects:{ custom:'parliament_redress_won', prestige:5, log:'Won redress of grievances in the estates.' } },
+      success:{ text:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good.', effects:{ custom:'parliament_redress_won', addModifier:{id:'custom_confirmed'}, prestige:5, log:'Won redress of grievances in the estates.' } },
       failure:{ text:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', effects:{ custom:'parliament_redress_lost', prestige:-4 } } },
     { label:'Let it be talked out, and withdraw.', desc:'Some motions serve better as threats than as votes.', effects:{ prestige:-2 } }
   ]},

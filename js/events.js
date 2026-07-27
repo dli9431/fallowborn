@@ -1704,7 +1704,7 @@ window.FB = window.FB || {};
   };
 
   /* ---------- trigger evaluation ---------- */
-  FB.checkTrigger = function (state, tg) {
+  FB.checkTrigger = function (state, tg, ctx) {
     if (!tg) return true;
     if (tg.never) return false;
     const p = state.player;
@@ -1754,6 +1754,15 @@ window.FB = window.FB || {};
     if (tg.notFlags) for (const fl of tg.notFlags) if (p.flags[fl]) return false;
     if (tg.buildings) for (const b of tg.buildings) if (!FB.hasBuilding(state, b)) return false;
     if (tg.notBuildings) for (const b of tg.notBuildings) if (FB.hasBuilding(state, b)) return false;
+    if (tg.hasModifier !== undefined) {
+      const spec = typeof tg.hasModifier === 'string'
+        ? { id:tg.hasModifier } : tg.hasModifier;
+      if (!spec || typeof spec.id !== 'string') return false;
+      const def = FBDATA.modifiers && FBDATA.modifiers[spec.id];
+      const pid = spec.pid || (ctx && ctx.locationId) || p.provinceId;
+      if (!def || !FB.hasModifier ||
+          !FB.hasModifier(state, spec.id, def.scope === 'county' ? pid : null)) return false;
+    }
     if (tg.techs) for (const t of tg.techs) if (FB.techList(state).indexOf(t) < 0) return false;
     if (tg.notTechs) for (const t of tg.notTechs) if (FB.techList(state).indexOf(t) >= 0) return false;
     if (tg.holdings) for (const hd of tg.holdings) if (!FB.hasHouseholdAsset(state, hd)) return false;
@@ -1789,7 +1798,8 @@ window.FB = window.FB || {};
     }
     if (tg.rivalHeatMin !== undefined && FB.rivalHeat(state) < tg.rivalHeatMin) return false;
     if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
-    if (tg.popularOpinionBelow !== undefined && p.pop > tg.popularOpinionBelow) return false;
+    const popularOpinion = FB.popEffective ? FB.popEffective(state) : p.pop;
+    if (tg.popularOpinionBelow !== undefined && popularOpinion > tg.popularOpinionBelow) return false;
     if (tg.custom && FB.fns[tg.custom] && !FB.fns[tg.custom](state)) return false;
     return true;
   };
@@ -1812,9 +1822,10 @@ window.FB = window.FB || {};
     }
   };
 
-  /* Queue context is a snapshot, not a view of whichever title the player
-     happens to hold when the modal is finally opened. That keeps selectors,
-     autoresolve, and durable event logs faithful across promotion. */
+  /* Queue context is a snapshot, not a view of whichever title or location
+     the player has when the modal is finally opened. That keeps selectors,
+     county effects, autoresolve, and durable event logs faithful across
+     promotion and travel. */
   FB.eventContext = function (state, ctx) {
     const out = {};
     ctx = ctx || {};
@@ -1825,6 +1836,10 @@ window.FB = window.FB || {};
     if (out.profession === undefined) out.profession = state.player.profession;
     if (out.formerProfession === undefined) {
       out.formerProfession = state.player.professionBack || state.player.profession;
+    }
+    if (out.locationId === undefined) {
+      const location = FB.travelLocation ? FB.travelLocation(state) : null;
+      out.locationId = location && location.id ? location.id : state.player.provinceId;
     }
     return out;
   };
@@ -2143,6 +2158,8 @@ window.FB = window.FB || {};
 
   FB.applyEffects = function (state, fx, ctx, ev) {
     if (!fx) return;
+    const sourceFx = fx;
+    if (FB.scaleEventEffects) fx = FB.scaleEventEffects(state, fx, ctx, ev);
     const p = state.player;
     const me = state.chars[p.charId];
     /* Freeze semantic context before a custom outcome can end a war, move
@@ -2251,6 +2268,15 @@ window.FB = window.FB || {};
       state.dev[pid] = FB.clamp((state.dev[pid] || 1) + fx.devUp, 1, FB.devCap(state, pid));
     }
     if (fx.research) FB.addResearch(state, fx.research);
+    if (fx.addModifier && FB.addModifier) {
+      const spec = typeof fx.addModifier === 'string'
+        ? { id:fx.addModifier } : fx.addModifier;
+      if (spec && typeof spec.id === 'string') {
+        const def = FBDATA.modifiers && FBDATA.modifiers[spec.id];
+        const pid = spec.pid || ctx.locationId || p.provinceId;
+        FB.addModifier(state, spec.id, def && def.scope === 'county' ? pid : null);
+      }
+    }
     if (fx.holding) {
       const hl = FB.holdingList(state);
       if (hl.indexOf(fx.holding) < 0) hl.push(fx.holding);
@@ -2331,7 +2357,7 @@ window.FB = window.FB || {};
     }
     if (fx.queue) FB.queueEvent(state, fx.queue, ctx);
     if (fx.worldNews) FB.randomWorldNews(state);
-    if (fx.log) FB.news(state, FB.eventLogMessage(state, fx, ctx));
+    if (fx.log) FB.news(state, FB.eventLogMessage(state, sourceFx, ctx));
     if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
     if (FB.travelValidate) FB.travelValidate(state);
     /* Lethal effects may freeze where and against whom the blow fell. The

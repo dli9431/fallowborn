@@ -127,3 +127,9 @@ supported money-bag icon rather than the unsupported coin glyph.
 Related: [time.md](time.md) for tick order, [state-and-saves.md](state-and-saves.md)
 for persistence, [holdings.md](holdings.md) for pledged property, and
 [ui.md](ui.md) for the Finance sheet.
+
+County modifier upkeep is another disclosed recurring cost. It is charged only for
+directly held counties and enters seasonal settlement, `FB.reliableGoldIncome`, and
+`FB.incomeBreakdown` through the same `FB.modifierUpkeep` source. Great-holy-war
+`supplyUse` adjusts the live raised-host logistics total and receives its own ledger
+line. See [modifiers.md](modifiers.md).

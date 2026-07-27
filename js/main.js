@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.72.2';
+  FB.VERSION = '1.73.0';
   FB.CHANGELOG = [
+    { v: '1.73.0', date: '2026-07-27', changes: [
+      'Temporary county and campaign modifiers now make relief, charters, vows, and military conditions visible until their effects expire.'
+    ] },
     { v: '1.72.2', date: '2026-07-27', changes: [
       'Rulers who marry during a courtship visit can now abdicate and settle with their spouse or continue as their lawful heir, or defer the choice until the journey ends.'
     ] },
@@ -871,6 +874,7 @@ window.FB = window.FB || {};
       religiousHeadVacancies: {},
       greatHolyWar: null,
       greatHolyWarHistory: {},
+      modifiers: { county:{} },
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -1016,6 +1020,7 @@ window.FB = window.FB || {};
       religiousHeadVacancies: {},
       greatHolyWar: null,
       greatHolyWarHistory: {},
+      modifiers: { county:{} },
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -1111,6 +1116,7 @@ window.FB = window.FB || {};
     FB.scriptedTick(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
+    if (FB.modifierTick) FB.modifierTick(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1131,10 +1137,11 @@ window.FB = window.FB || {};
       const upkeep = FB.householdUpkeep(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
+      const modifierUpkeep = FB.modifierUpkeep ? FB.modifierUpkeep(s, 'gold') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
       /* Settle ordinary household income together; livelihoodSeason clamps the
          combined result once, so family wages really can meet family costs. */
-      p.gold += income - upkeep - buildingUpkeep +
+      p.gold += income - upkeep - buildingUpkeep - modifierUpkeep +
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);

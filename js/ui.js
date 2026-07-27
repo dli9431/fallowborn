@@ -28,6 +28,89 @@ window.FB = window.FB || {};
     const def = FBDATA.positions && FBDATA.positions[id];
     return def ? dt(s, 'position', id, def, 'desc') : '';
   }
+  function signedPercent(value) {
+    const percent = Math.round((Number(value) || 0) * 100);
+    return (percent > 0 ? '+' : '') + percent;
+  }
+  function modifierEffectText(s, id) {
+    const def = FBDATA.modifiers && FBDATA.modifiers[id];
+    if (!def) return '';
+    const fx = def.fx || {}, parts = [];
+    if (fx.tax) parts.push(FB.T('{amount}% county tax', {
+      amount:signedPercent(fx.tax)
+    }));
+    if (fx.levy) parts.push(FB.T('{amount}% county levy', {
+      amount:signedPercent(fx.levy)
+    }));
+    if (fx.buildingCost) parts.push(FB.T('{amount}% construction cost', {
+      amount:signedPercent(fx.buildingCost)
+    }));
+    if (fx.commonVoice) parts.push(FB.T('{amount} Common Voice', {
+      amount:(fx.commonVoice > 0 ? '+' : '') + fx.commonVoice
+    }));
+    if (fx.famine) parts.push(FB.T('{amount}% famine harm', {
+      amount:signedPercent(fx.famine)
+    }));
+    if (fx.unrest) parts.push(FB.T('{amount}% unrest harm', {
+      amount:signedPercent(fx.unrest)
+    }));
+    if (fx.supplyUse) parts.push(FB.T('{amount}% campaign supply use', {
+      amount:signedPercent(fx.supplyUse)
+    }));
+    if (fx.contribution) parts.push(FB.T('{amount}% campaign contribution', {
+      amount:signedPercent(fx.contribution)
+    }));
+    if (fx.withdrawalPenalty) parts.push(FB.T('{amount}% withdrawal penalties', {
+      amount:signedPercent(fx.withdrawalPenalty)
+    }));
+    if (fx.marchSpeed) parts.push(FB.T('{amount}% march speed', {
+      amount:signedPercent(fx.marchSpeed)
+    }));
+    if (fx.battleOdds) parts.push(FB.T('{amount}% battle power', {
+      amount:signedPercent(fx.battleOdds)
+    }));
+    if (fx.desertion) parts.push(FB.T('{amount}% desertion per season', {
+      amount:Math.round(fx.desertion * 100)
+    }));
+    if (def.upkeep && def.upkeep.gold) {
+      parts.push(FB.T('{money:amount} upkeep each season', {
+        amount:def.upkeep.gold
+      }));
+    }
+    return parts.join(' · ');
+  }
+  function modifierDurationText(s, record, scope) {
+    const days = FB.modifierRemainingDays
+      ? FB.modifierRemainingDays(s, record) : null;
+    if (days !== null) return FB.T('{days} days remaining', { days:days });
+    return scope === 'campaign'
+      ? FB.T('Until the campaign ends') : FB.T('No fixed end');
+  }
+  function modifierChips(s, records, scope, pid) {
+    let h = '';
+    for (const record of records) {
+      const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+      if (!def) continue;
+      const name = dt(s, 'modifier', record.id, def, 'name');
+      const duration = modifierDurationText(s, record, scope);
+      const label = FB.T('{modifier} — {duration}', {
+        modifier:name, duration:duration
+      });
+      h += '<button type="button" class="traitchip modifierchip" data-modifier="' +
+        esc(record.id) + '" data-modifier-scope="' + esc(scope) + '"' +
+        (pid ? ' data-modifier-pid="' + esc(pid) + '"' : '') +
+        ' aria-label="' + esc(label) + '">' + def.icon + ' ' + esc(name) +
+        ' <span class="modifier-duration">' + esc(duration) + '</span></button>';
+    }
+    return h;
+  }
+  function modifierRecord(s, id, scope, pid) {
+    const records = scope === 'county'
+      ? (FB.countyModifierRecords ? FB.countyModifierRecords(s, pid) : [])
+      : (FB.campaignModifierRecords ? FB.campaignModifierRecords(s) : []);
+    for (const record of records) if (record.id === id) return record;
+    return null;
+  }
   function householdStandardName(s, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     return def ? dt(s, 'householdStandard', id, def, 'name') : id;
@@ -1478,7 +1561,7 @@ window.FB = window.FB || {};
         ? kv('Church standing', esc(FB.T('Excommunicated'))) : '') +
       kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      kv('Reputation among the folk', Math.round(s.player.pop)) +
+      kv('Common Voice', Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
       (s.player.liege ? kv('Liege’s favor', Math.round(s.player.liegeOp || 0)) : '') +
       (titleCount ? selfSectionHtml('titles', 'Titles', titleCount, titleRows(s, titles)) : '') +
       dynasticStatusRows(s, me) +
@@ -1828,6 +1911,14 @@ window.FB = window.FB || {};
       return entry.count > 1 ? FB.T('{building} ×{count}', {
         building:name, count:entry.count
       }) : name;
+    }
+    if (entry.kind === 'modifier') {
+      const def = FBDATA.modifiers && FBDATA.modifiers[entry.modifierId];
+      const pr = FB.world.byId[entry.pid];
+      return FB.T('{modifier} — {county}', {
+        modifier:def ? dt(s, 'modifier', entry.modifierId, def, 'name') : entry.modifierId,
+        county:pr ? pr.name : entry.pid
+      });
     }
     if (entry.kind === 'technology_flat' || entry.kind === 'technology_rate') {
       return FB.T('National military technology');
@@ -2757,6 +2848,12 @@ window.FB = window.FB || {};
           'Seasonal host logistics: {money:amount}', {
             amount:financeAmount(selectedHostUpkeep.total)
           })) + '</div>';
+        if (selectedHostUpkeep.campaignModifier) {
+          h += '<div class="cmeta">' + esc(FB.T(
+            'Campaign supply adjustment: {money:amount}', {
+              amount:financeAmount(selectedHostUpkeep.campaignModifier)
+            })) + '</div>';
+        }
       }
     }
     if (pr.wasteland) {
@@ -2819,7 +2916,16 @@ window.FB = window.FB || {};
         kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         (realm ? kv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
-        kv('Province levy', '~' + esc(menText(s, (s.dev[pid] || 1) * B.levyPerDev)));
+        kv('Province levy', '~' + esc(menText(s,
+          (s.dev[pid] || 1) * B.levyPerDev *
+          (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1))));
+      const countyModifiers = FB.countyModifierRecords
+        ? FB.countyModifierRecords(s, pid) : [];
+      if (countyModifiers.length) {
+        h += panelh('County modifiers') +
+          '<div class="modifier-list">' +
+          modifierChips(s, countyModifiers, 'county', pid) + '</div>';
+      }
       const great = s.greatHolyWar;
       if (great && great.objectiveCounties &&
           great.objectiveCounties.indexOf(pid) >= 0) {
@@ -3147,7 +3253,7 @@ window.FB = window.FB || {};
     UI.autoResolving = true;
     FB.markFired(s, ev);
     let opts = (ev.options || []).filter(function (o) {
-      return !o.require || FB.checkTrigger(s, o.require);
+      return !o.require || FB.checkTrigger(s, o.require, ctx);
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     let pick = opts[0];
@@ -3400,7 +3506,7 @@ window.FB = window.FB || {};
       }
     }
     let opts = (ev.options || []).filter(function (o) {
-      return !o.require || FB.checkTrigger(s, o.require);
+      return !o.require || FB.checkTrigger(s, o.require, ctx);
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     for (let i = 0; i < opts.length; i++) {
@@ -4611,7 +4717,7 @@ window.FB = window.FB || {};
       'Take a vow for the {side} camp of the {campaign}. {service}', {
         side:side, campaign:greatHolyWarName(s, campaign), service:service
       })) + '</p><p>' + esc(FB.T(
-      'Your dynasty keeps contribution through succession. Withdrawal normally costs 100 piety and 50 prestige and forfeits land eligibility.')) +
+      'Your dynasty keeps contribution through succession. Withdrawal forfeits piety, prestige, and land eligibility; active campaign effects determine the final cost.')) +
       '</p></div><div class="gm-list">' +
       '<button class="actionbtn" id="ghw-join-confirm">📯 ' +
       esc(FB.T('Take the vow')) + '</button>' +
@@ -4708,6 +4814,12 @@ window.FB = window.FB || {};
         FB.greatHolyWarPlayerShare(s) * 1000) / 10)) + '%');
       h += kv('Current reward band',
         esc(greatHolyWarRewardName(FB.greatHolyWarPlayerRewardBand(s))));
+      const campaignModifiers = FB.campaignModifierRecords
+        ? FB.campaignModifierRecords(s) : [];
+      if (campaignModifiers.length) {
+        h += '<div class="modifier-list">' +
+          modifierChips(s, campaignModifiers, 'campaign', null) + '</div>';
+      }
       if (pledge.renewalRequired) {
         h += '<div class="progressnote warnote">' +
           esc(FB.T('Your inherited vow must be renewed before service and land eligibility resume.')) +
@@ -4724,10 +4836,14 @@ window.FB = window.FB || {};
     const s = FB.state, campaign = s && s.greatHolyWar;
     const pledge = s && s.player.greatHolyWar;
     if (!campaign || !pledge || pledge.withdrawn) return;
-    const inherited = !!pledge.renewalRequired;
-    const h = '<div class="gm-body-text"><p>' + esc(inherited
+    const cost = FB.greatHolyWarWithdrawalCost
+      ? FB.greatHolyWarWithdrawalCost(s)
+      : { piety:100, prestige:50, inherited:!!pledge.renewalRequired };
+    const h = '<div class="gm-body-text"><p>' + esc(cost.inherited
       ? FB.T('Decline the inherited vow without a personal piety or prestige penalty. The dynasty’s contribution remains in the record, but it cannot claim land.')
-      : FB.T('Abandoning your own vow costs 100 piety and 50 prestige. Your dynasty’s contribution remains in the record, but it cannot claim land.')) +
+      : FB.T('Abandoning your own vow costs {piety} piety and {prestige} prestige. Your dynasty’s contribution remains in the record, but it cannot claim land.', {
+        piety:cost.piety, prestige:cost.prestige
+      })) +
       '</p></div><div class="gm-list">' +
       '<button class="actionbtn danger" id="ghw-withdraw-confirm">🏳 ' +
       esc(FB.T('Withdraw from the campaign')) + '</button>' +
@@ -6335,7 +6451,9 @@ window.FB = window.FB || {};
         if (s.player.gold < cost || obl.lastMotion === s.date.year) return;
         s.player.gold -= cost;
         obl.lastMotion = s.date.year;
-        FB.queueEvent(s, 'parliament_' + btn.dataset.motion, {});
+        FB.queueEvent(s, 'parliament_' + btn.dataset.motion, {
+          locationId:s.player.provinceId
+        });
         UI.closeModal(); UI.refresh();
       });
     });
@@ -9515,6 +9633,33 @@ window.FB = window.FB || {};
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
+  UI.showModifierModal = function (id, scope, pid) {
+    const s = FB.state;
+    const def = FBDATA.modifiers && FBDATA.modifiers[id];
+    if (!s || !def) return;
+    scope = scope === 'county' ? 'county' : 'campaign';
+    const record = modifierRecord(s, id, scope, pid);
+    if (!record) return;
+    const name = dt(s, 'modifier', id, def, 'name');
+    const desc = dt(s, 'modifier', id, def, 'desc');
+    const effects = modifierEffectText(s, id);
+    let h = '<div class="gm-body-text"><p><i>' + esc(desc) + '</i></p>' +
+      kv('Duration', esc(modifierDurationText(s, record, scope)));
+    if (scope === 'county') {
+      const province = FB.world.byId[pid];
+      h += kv('County', esc(province ? province.name : pid));
+    } else {
+      h += kv('Scope', esc(FB.T('Your participation in this campaign')));
+    }
+    h += effects
+      ? '<div class="panelh">' + esc(FB.T('Effects')) + '</div><p>' +
+        esc(effects) + '</p>'
+      : '<p class="hint">' + esc(FB.T('No active mechanical effects.')) + '</p>';
+    h += '</div><button class="btn" id="mm-close">' + esc(FB.T('Close')) + '</button>';
+    openModal(def.icon + ' ' + name, h);
+    $('mm-close').addEventListener('click', UI.closeModal);
+  };
+
   UI.showAilmentModal = function (aid) {
     const a = FBDATA.ailments[aid];
     const s = FB.state;
@@ -10207,6 +10352,15 @@ window.FB = window.FB || {};
       }
       const lnk = e.target.closest('[data-liege]');
       if (lnk && FB.state && !UI.eventsBusy()) { UI.showLiegeModal(lnk.getAttribute('data-liege')); return; }
+      const modifierChip = e.target.closest('.modifierchip[data-modifier]');
+      if (modifierChip && FB.state) {
+        UI.showModifierModal(
+          modifierChip.getAttribute('data-modifier'),
+          modifierChip.getAttribute('data-modifier-scope'),
+          modifierChip.getAttribute('data-modifier-pid')
+        );
+        return;
+      }
       const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
       if (chip) {
         if (chip.hasAttribute('data-ailment')) UI.showAilmentModal(chip.getAttribute('data-ailment'));
@@ -10250,9 +10404,23 @@ window.FB = window.FB || {};
           tip.style.top = Math.min(window.innerHeight - 110, sr.bottom + 6) + 'px';
           return;
         }
-        const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview]');
+        const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview], .modifierchip[data-modifier]');
         if (!chip) { tip.classList.add('hidden'); return; }
-        if (chip.hasAttribute('data-ailment')) {
+        if (chip.hasAttribute('data-modifier')) {
+          const id = chip.getAttribute('data-modifier');
+          const scope = chip.getAttribute('data-modifier-scope') === 'county'
+            ? 'county' : 'campaign';
+          const pid = chip.getAttribute('data-modifier-pid');
+          const def = FBDATA.modifiers && FBDATA.modifiers[id];
+          const record = FB.state && modifierRecord(FB.state, id, scope, pid);
+          if (!def || !record) { tip.classList.add('hidden'); return; }
+          const effects = modifierEffectText(FB.state, id);
+          tip.innerHTML = '<b>' + def.icon + ' ' +
+            esc(dt(FB.state, 'modifier', id, def, 'name')) + '</b><br>' +
+            esc(dt(FB.state, 'modifier', id, def, 'desc')) +
+            (effects ? '<br><i>' + esc(effects) + '</i>' : '') +
+            '<br><i>' + esc(modifierDurationText(FB.state, record, scope)) + '</i>';
+        } else if (chip.hasAttribute('data-ailment')) {
           const a = FBDATA.ailments[chip.getAttribute('data-ailment')];
           const aid = chip.getAttribute('data-ailment');
           tip.innerHTML = a ? '<b>' + a.icon + ' ' + esc(dt(FB.state, 'ailment', aid, a, 'name')) +

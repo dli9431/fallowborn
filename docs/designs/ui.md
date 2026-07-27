@@ -393,3 +393,10 @@ Character cards carry the character's house arms and the arms of the realm holdi
 home county (`FB.homeOf` resolves the county). `FB.paintFaces` also paints every
 `canvas.crest[data-seed]` under its root, so any panel that renders faces gets crests for
 free.
+
+**Temporary modifiers use one accessible chip pattern.** The selected Land county lists
+its active county records, and the great-holy-war service section lists the
+protagonist's campaign records. Each native-button chip exposes localized icon, name,
+and remaining duration. Pointer hover shows description/effects; click, tap, Enter, or
+Space opens the same information in a focus-managed modal. County chips remain visible
+when ownership changes. See [modifiers.md](modifiers.md).

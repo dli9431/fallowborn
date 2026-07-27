@@ -151,3 +151,9 @@ the *chief’s* war-band and the shield-ring among the pagans (Christian/Jewish 
 
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for
 the childhood event filter, [time.md](time.md) for slot days and autoresolve.
+
+Temporary modifier integration is described in [modifiers.md](modifiers.md). Event
+contexts snapshot `locationId`; top-level `tags` scale only negative signed effects
+through county/estate tag bonuses; and declarative content may use the `hasModifier`
+trigger or `addModifier:{id,pid?}` effect. The interpreter clones a scaled effect object
+and never rewrites the source event definition.

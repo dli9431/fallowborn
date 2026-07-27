@@ -186,3 +186,10 @@ decays an active feud’s heat, honors post-settlement peace cooldowns, and can 
 slighted NPC declare a rivalry of its own. It moves no gold/prestige/piety, so the measured
 season net is unchanged. See [events.md](events.md) for the feud interpreter and
 [characters.md](characters.md) for rivalry state and the heir’s legacy-feud choice.
+
+The daily post-calendar phase also runs `FB.modifierTick` beside the guild-monopoly
+sweep and before season-boundary income. Records expire exactly when
+`state.turn >= endTurn`, so an expiring county contributes neither upkeep nor bonuses at
+that boundary. Direct-demesne modifier upkeep settles with household income; campaign
+host supply adjustments settle later with the live host bill. See
+[modifiers.md](modifiers.md).

@@ -314,3 +314,10 @@ Saves from before parents were recorded (first-generation siblings known only
 by role) have a father and mother synthesized on load — long dead, ages
 fitted to the oldest child — so the family tree shows them instead of an
 "Unrecorded" ghost (`backfillParents` in `js/save.js`).
+
+Temporary modifiers are another additive version-3 extension. County records live at
+`state.modifiers.county[provinceId] = [{id,endTurn?}]`; player-participation campaign
+records live at `state.greatHolyWar.modifiers`. After holy-war and ordinary-war repair,
+`FB.ensureModifiers` creates missing containers, discards malformed or unknown records,
+and collapses duplicate ids without migrating the save version. County records remain
+with their county through ownership changes. See [modifiers.md](modifiers.md).

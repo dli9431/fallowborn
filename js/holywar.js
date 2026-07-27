@@ -101,10 +101,20 @@ window.FB = window.FB || {};
     return typeof value === 'number' && isFinite(value) ? value : 0;
   }
 
-  function addContribution(campaign, rid, points) {
+  function addContribution(state, campaign, rid, points) {
     if (!rid || !isFinite(points) || points <= 0) return;
+    if (rid === 'player' && FB.campaignModBonus) {
+      points *= Math.max(0, 1 + FB.campaignModBonus(state, 'contribution'));
+    }
     campaign.contribution[rid] = contribution(campaign, rid) + points;
   }
+
+  FB.addGreatHolyWarContribution = function (state, rid, points) {
+    var campaign = state && state.greatHolyWar;
+    if (!campaign) return false;
+    addContribution(state, campaign, rid, points);
+    return true;
+  };
 
   function ensureHistory(state) {
     var history = state.greatHolyWarHistory;
@@ -334,6 +344,7 @@ window.FB = window.FB || {};
         };
       }
     }
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
   }
 
   function aiDefenders(state, campaign) {
@@ -466,7 +477,8 @@ window.FB = window.FB || {};
           voluntary:true, joinedTurn:state.turn
         });
       }
-      addContribution(campaign, 'player', 0);
+      addContribution(state, campaign, 'player', 0);
+      if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
       FB.news(state, FB.msg('news.holywar.player_pledges',
         '📯 You take the vow and pledge yourself to the {campaign}.', {
           campaign:FB.dataParam('religion', campaign.callingReligion,
@@ -499,22 +511,35 @@ window.FB = window.FB || {};
     campaign.participants[camp] = out;
   }
 
+  FB.greatHolyWarWithdrawalCost = function (state) {
+    var pledge = state && state.player && state.player.greatHolyWar;
+    var inherited = !!(pledge && pledge.renewalRequired);
+    if (inherited) return { piety:0, prestige:0, inherited:true };
+    var multiplier = FB.campaignModBonus
+      ? Math.max(0, 1 + FB.campaignModBonus(state, 'withdrawalPenalty')) : 1;
+    return {
+      piety:Math.round(B('greatHolyWarWithdrawPiety', 100) * multiplier),
+      prestige:Math.round(B('greatHolyWarWithdrawPrestige', 50) * multiplier),
+      inherited:false
+    };
+  };
+
   FB.withdrawGreatHolyWar = function (state) {
     var campaign = state && state.greatHolyWar;
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id || pledge.withdrawn) return false;
-    var inherited = !!pledge.renewalRequired;
+    var cost = FB.greatHolyWarWithdrawalCost(state);
+    var inherited = cost.inherited;
     if (!inherited) {
-      state.player.piety = Math.max(0, state.player.piety -
-        B('greatHolyWarWithdrawPiety', 100));
-      state.player.prestige = Math.max(0, state.player.prestige -
-        B('greatHolyWarWithdrawPrestige', 50));
+      state.player.piety = Math.max(0, state.player.piety - cost.piety);
+      state.player.prestige = Math.max(0, state.player.prestige - cost.prestige);
     }
     pledge.withdrawn = true;
     pledge.vow = false;
     pledge.landEligible = false;
     pledge.renewalRequired = false;
     removeParticipant(campaign, pledge.camp, 'player', !!pledge.mandatory);
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
     if (FB.validateFocus) FB.validateFocus(state);
     FB.news(state, FB.msg('news.holywar.player_withdraws',
       inherited
@@ -533,6 +558,7 @@ window.FB = window.FB || {};
     pledge.withdrawn = false;
     pledge.landEligible = pledge.inheritedLandEligible !== false;
     delete pledge.inheritedLandEligible;
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
     FB.news(state, FB.msg('news.holywar.vow_renewed',
       '📯 You renew your predecessor’s vow. The dynasty’s service and claim remain whole.', {}));
     return true;
@@ -549,6 +575,7 @@ window.FB = window.FB || {};
     pledge.landEligible = false;
     pledge.vow = false;
     pledge.renewalRequired = true;
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
   };
 
   FB.greatHolyWarCamp = function (state, rid) {
@@ -622,6 +649,7 @@ window.FB = window.FB || {};
       pledge.withdrawn = true;
       pledge.landEligible = false;
     }
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
   }
 
   function campaignTargetValid(state, campaign) {
@@ -828,10 +856,10 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function shareOccupationContribution(campaign, hosts, men, points) {
+  function shareOccupationContribution(state, campaign, hosts, men, points) {
     if (!hosts.length || men <= 0) return;
     for (var i = 0; i < hosts.length; i++) {
-      addContribution(campaign, hosts[i].realm, points * hosts[i].men / men);
+      addContribution(state, campaign, hosts[i].realm, points * hosts[i].men / men);
     }
   }
 
@@ -886,7 +914,7 @@ window.FB = window.FB || {};
         })[0].realm;
         campaign.resolve = FB.clamp(campaign.resolve +
           B('greatHolyWarOccupationResolve', 5), -100, 100);
-        shareOccupationContribution(campaign, present.attackers,
+        shareOccupationContribution(state, campaign, present.attackers,
           present.attackersMen, points);
         FB.news(state, FB.msg('news.holywar.occupied',
           '🏰 {province} falls to the attacking camp.', {
@@ -897,7 +925,7 @@ window.FB = window.FB || {};
         occupation.occupiedBy = null;
         campaign.resolve = FB.clamp(campaign.resolve -
           B('greatHolyWarOccupationResolve', 5), -100, 100);
-        shareOccupationContribution(campaign, present.defenders,
+        shareOccupationContribution(state, campaign, present.defenders,
           present.defendersMen, points);
         FB.news(state, FB.msg('news.holywar.recaptured',
           '🏳 {province} is relieved and returns to the defending camp.', {
@@ -935,8 +963,8 @@ window.FB = window.FB || {};
     campaign.resolve = FB.clamp(campaign.resolve +
       (winnerCamp === 'attackers' ? 1 : -1) *
       B('greatHolyWarBattleResolve', 10), -100, 100);
-    addContribution(campaign, winner.realm, 5 + Math.floor((loserLoss || 0) / 100));
-    if (loser.men > 0) addContribution(campaign, loser.realm, 1);
+    addContribution(state, campaign, winner.realm, 5 + Math.floor((loserLoss || 0) / 100));
+    if (loser.men > 0) addContribution(state, campaign, loser.realm, 1);
     if (winner.realm === 'player' || loser.realm === 'player') {
       state.eventQueue.push({
         id:winner.realm === 'player'
@@ -1262,6 +1290,7 @@ window.FB = window.FB || {};
     if (!campaign || campaign.phase === 'settlement') return false;
     outcome = outcome === 'attackers' ? 'attackers' : 'defenders';
     campaign.phase = 'settlement';
+    if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
     campaign.result = { outcome:outcome, reason:reason || 'resolve', turn:state.turn };
     if (FB.validateFocus) FB.validateFocus(state);
     ensureHistory(state).cooldownUntil[campaign.callingReligion] = state.turn +
@@ -1534,7 +1563,7 @@ window.FB = window.FB || {};
           if (!pledge || pledge.renewalRequired || pledge.withdrawn) continue;
         }
         served[list[i].realm] = 1;
-        addContribution(campaign, list[i].realm, 1);
+        addContribution(state, campaign, list[i].realm, 1);
       }
     }
     var playerPledge = state.player.greatHolyWar;
@@ -1551,11 +1580,11 @@ window.FB = window.FB || {};
   FB.fns = FB.fns || {};
   FB.fns.ghw_service_safe = function (state) {
     var campaign = state.greatHolyWar;
-    if (campaign) addContribution(campaign, 'player', 1);
+    if (campaign) addContribution(state, campaign, 'player', 1);
   };
   FB.fns.ghw_service_danger = function (state) {
     var campaign = state.greatHolyWar;
-    if (campaign) addContribution(campaign, 'player', 3);
+    if (campaign) addContribution(state, campaign, 'player', 3);
   };
 
   FB.greatHolyWarTick = function (state) {

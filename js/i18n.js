@@ -441,6 +441,7 @@ window.FBDATA = window.FBDATA || {};
         const tables = {
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
+          modifier: FBDATA.modifiers,
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
           career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
           enterprise: FBDATA.enterprises, householdStandard:FBDATA.householdStandards,

@@ -344,6 +344,14 @@ a.actionbtn { text-decoration: none; }
   display: inline-block; background: #2c2418; border: 1px solid #55452a; border-radius: 12px;
   padding: 2px 9px; margin: 2px 3px 2px 0; font-size: 12px; cursor: help;
 }
+.modifier-list { padding: 2px 0 6px; }
+button.modifierchip {
+  color: inherit; font-family: inherit; line-height: inherit; text-align: left;
+}
+button.modifierchip:hover, button.modifierchip:focus-visible {
+  border-color: #a5842f; background: #3a2f1e; outline: none;
+}
+.modifier-duration { color: #9d9076; margin-left: 4px; }
 .skillrow { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 2px 0; }
 .skillrow .skill-label {
   width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

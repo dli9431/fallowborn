@@ -91,3 +91,8 @@ both a live centralized head and this metadata has no caller; therefore decentra
 core faiths remain unable to call unless a mod deliberately supplies both pieces.
 The runtime freezes ids and numeric campaign state only, and the active mod
 fingerprint continues to protect saves that reference mod-added targets.
+
+Temporary modifier definitions merge under the top-level `modifiers` key. A later mod
+replaces the complete same-id record rather than deep-merging `scope`, duration, upkeep,
+or `fx`; runtime state stores only the stable id and optional expiry. `name` and `desc`
+remain localized structured display fields. See [modifiers.md](modifiers.md).
