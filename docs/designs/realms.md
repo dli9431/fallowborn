@@ -95,6 +95,15 @@ assembly where the terms of service, the aid and scutage, are voted on — see
 `player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate` and a
 share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
 
+The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
+the selected county's direct holder, every living realm sworn directly to that holder
+(rank first, then stable realm name/id), and the holder's complete liege chain through
+the sovereign, with duplicates removed. The protagonist occupies the same list when
+`'player'` is one of those realm nodes, using their full character rather than the
+lightweight ruler snapshot. Generated province characters from `FB.provNotables` are a
+defensive fallback only when a settled county has no resolvable political ruler, so
+ordinary Land browsing neither creates `provChars` nor consumes RNG.
+
 Realm, ownership, and de jure source data belong to the active start bookmark. The
 867 and 1066 definitions may therefore use different realm ids, liege chains,
 capitals, county owners, and hierarchy names without altering saved political state.
