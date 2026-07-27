@@ -93,7 +93,9 @@ immediately regenerated from the destination.
 The map’s household marker then moves to the new home. The action is exposed only
 after a year and four work stories, uses an explicit confirmation, writes
 `player.travelSettlement`, and cannot succeed again during the same character’s
-life. Succession clears that lifetime marker for the heir.
+life. A province-scoped incoming guild monopoly is a local right and ends during this
+permanent move; other household property and institutional records keep their own
+ordinary rules. Succession clears the lifetime settlement marker for the heir.
 
 The public surface is `FB.travelLocation`, `FB.travelRoute`,
 `FB.travelDestinations`, `FB.travelCost`, `FB.travelLegDays`, `FB.travelStart`, `FB.travelTick`,

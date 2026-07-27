@@ -1241,6 +1241,7 @@ window.FB = window.FB || {};
     amount *= FB.guildIncomeMultiplier(career);
     amount *= 1 + FB.positionBonus(state, 'enterprise');
     amount *= FB.householdWorkMultiplier(state, career.profession);
+    amount *= 1 + FB.guildMonopolyEnterpriseBonus(state, career.profession);
     if (career.profession === 'merchant' || career.profession === 'craftsman') {
       amount *= 1 + (FB.techBonus ? FB.techBonus(state, 'trade') : 0);
     }
@@ -1426,6 +1427,437 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.guild.favor_called',
       '🏅 {name} calls in guild commissions worth {money:amount}.',
       { name:c.name, amount:favor.amount }));
+    return true;
+  };
+
+  /* ================= guild monopoly charters =================
+     The household may hold one incoming privilege and, while landed, issue
+     one outgoing privilege. Records copy their numeric terms at creation:
+     an active charter never changes because balance data changes later. */
+
+  function monopolyProfession(profession) {
+    return profession === 'craftsman' || profession === 'merchant'
+      ? profession : null;
+  }
+
+  function finiteNumber(value, fallback) {
+    const number = Number(value);
+    return isFinite(number) ? number : fallback;
+  }
+
+  FB.guildMonopolyTerms = function (tier) {
+    tier = Math.floor(finiteNumber(tier, 0));
+    const table = FBDATA.balance.guildMonopolyTerms || {};
+    const raw = table[tier];
+    if (!raw) return null;
+    const years = Math.max(1, Math.round(finiteNumber(raw.years, 0)));
+    return {
+      tier:tier,
+      years:years,
+      durationDays:years * 360,
+      enterpriseBonus:FB.clamp(finiteNumber(raw.enterpriseBonus, 0), 0, 0.5),
+      rulerFee:Math.max(0, finiteNumber(raw.rulerFee, 0)),
+      taxBonus:FB.clamp(finiteNumber(raw.taxBonus, 0), 0, 0.5),
+      popularOpinion:FB.clamp(finiteNumber(raw.popularOpinion, 0), -100, 100)
+    };
+  };
+
+  function normalizeMonopolyRecord(record, slot) {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+    const profession = monopolyProfession(record.profession);
+    const startTurn = Math.round(finiteNumber(record.startTurn, -1));
+    const endTurn = Math.round(finiteNumber(record.endTurn, -1));
+    const tier = FB.clamp(Math.round(finiteNumber(record.tier, 3)), 3, 7);
+    if (!profession || startTurn < 0 || endTurn <= startTurn) return null;
+    const scope = slot === 'incoming'
+      ? (record.scope === 'province' ? 'province' :
+        record.scope === 'liege' ? 'liege' : null)
+      : 'landed';
+    if (!scope) return null;
+    return {
+      profession:profession,
+      grantorKind:slot === 'incoming'
+        ? (record.grantorKind === 'realm' ? 'realm' : 'local')
+        : 'player',
+      grantorId:record.grantorId || (slot === 'outgoing' ? 'player' : null),
+      grantorName:String(record.grantorName || ''),
+      grantorRulerName:String(record.grantorRulerName || ''),
+      recipientKind:slot === 'outgoing' ? 'local_guild' : 'household',
+      advocateId:record.advocateId || null,
+      advocateName:String(record.advocateName || ''),
+      scope:scope,
+      scopeId:record.scopeId || (slot === 'outgoing' ? 'player' : null),
+      tier:tier,
+      years:Math.max(1, Math.round(finiteNumber(record.years,
+        Math.max(1, Math.round((endTurn - startTurn) / 360))))),
+      durationDays:endTurn - startTurn,
+      startTurn:startTurn,
+      endTurn:endTurn,
+      enterpriseBonus:FB.clamp(finiteNumber(record.enterpriseBonus, 0), 0, 0.5),
+      rulerFee:Math.max(0, finiteNumber(record.rulerFee, 0)),
+      taxBonus:FB.clamp(finiteNumber(record.taxBonus, 0), 0, 0.5),
+      popularOpinion:FB.clamp(finiteNumber(record.popularOpinion, 0), -100, 100)
+    };
+  }
+
+  FB.ensureGuildMonopolies = function (state) {
+    const p = state.player;
+    let slots = p.guildMonopolies;
+    if (!slots || typeof slots !== 'object' || Array.isArray(slots)) slots = {};
+    slots.incoming = normalizeMonopolyRecord(slots.incoming, 'incoming');
+    slots.outgoing = normalizeMonopolyRecord(slots.outgoing, 'outgoing');
+    p.guildMonopolies = slots;
+    return slots;
+  };
+
+  function monopolyInvalidReason(state, slot, record) {
+    if (!record) return null;
+    if (state.turn >= record.endTurn) return 'expired';
+    if (slot === 'incoming' && record.scope === 'province' &&
+        state.player.provinceId !== record.scopeId) return 'relocation';
+    if (slot === 'incoming' && record.scope === 'liege' &&
+        state.player.liege !== record.scopeId) return 'liege';
+    if (slot === 'outgoing' && state.player.tier < 3) return 'authority';
+    return null;
+  }
+
+  FB.guildMonopolyActive = function (state, slot) {
+    const record = FB.ensureGuildMonopolies(state)[slot];
+    return record && !monopolyInvalidReason(state, slot, record) ? record : null;
+  };
+
+  FB.guildMonopolyRemainingDays = function (state, record) {
+    return record ? Math.max(0, record.endTurn - state.turn) : 0;
+  };
+
+  function monopolyEndNotice(state, slot, record, reason) {
+    const profession = FB.dataParam('career', record.profession, 'name', 'lower');
+    if (reason === 'expired' && slot === 'incoming') {
+      FB.news(state, FB.msg('news.guild_monopoly.incoming_expired',
+        '📜 The {profession} monopoly granted by {grantor} expires; its exclusive privilege ends.',
+        { profession:profession, grantor:record.grantorName || record.grantorRulerName }));
+    } else if (reason === 'expired') {
+      FB.news(state, FB.msg('news.guild_monopoly.outgoing_expired',
+        '📜 The local {profession} guild’s monopoly expires; its toll privilege returns to the ordinary law.',
+        { profession:profession }));
+    } else if (reason === 'relocation') {
+      const province = FB.world.byId[record.scopeId];
+      FB.news(state, FB.msg('news.guild_monopoly.relocation_ended',
+        '📜 The household’s {profession} monopoly ends when it leaves {province}.',
+        { profession:profession, province:province ? province.name : record.scopeId }));
+    } else if (reason === 'liege') {
+      FB.news(state, FB.msg('news.guild_monopoly.liege_ended',
+        '📜 The household’s {profession} monopoly ends with its direct bond to {grantor}.',
+        { profession:profession, grantor:record.grantorName || record.grantorRulerName }));
+    } else if (reason === 'authority') {
+      FB.news(state, FB.msg('news.guild_monopoly.authority_ended',
+        '📜 The local {profession} guild’s monopoly ends with the dynasty’s landed authority.',
+        { profession:profession }));
+    }
+  }
+
+  FB.invalidateGuildMonopolies = function (state) {
+    const slots = FB.ensureGuildMonopolies(state);
+    for (const slot of ['incoming', 'outgoing']) {
+      const record = slots[slot];
+      const reason = monopolyInvalidReason(state, slot, record);
+      if (!reason) continue;
+      slots[slot] = null;
+      monopolyEndNotice(state, slot, record, reason);
+    }
+    return slots;
+  };
+  FB.guildMonopolyTick = FB.invalidateGuildMonopolies;
+
+  FB.guildMonopolyCareer = function (state) {
+    const c = playerChar(state);
+    const career = FB.careerOf(state, c);
+    const profession = career && monopolyProfession(career.profession);
+    return profession && career.guildRank === 'guildmaster'
+      ? { character:c, career:career, profession:profession } : null;
+  };
+
+  /* Low-station guildmasters address the local lord and receive baron terms.
+     Landed vassals address their exact direct liege and use that realm's tier. */
+  FB.guildMonopolyGrantor = function (state, createLocal) {
+    const p = state.player;
+    if (p.tier <= 2) {
+      const lord = FB.getRole ? FB.getRole(state, 'lord', !!createLocal) : null;
+      if (!lord || lord.dead) return null;
+      return {
+        kind:'local',
+        id:lord.id,
+        name:FB.fullName ? FB.fullName(lord) : lord.name,
+        rulerName:lord.name,
+        tier:3,
+        scope:'province',
+        scopeId:p.provinceId,
+        favor:lord.opinion || 0
+      };
+    }
+    if (!p.liege) return null;
+    const realm = state.realms[p.liege];
+    if (!realm || !realm.alive) return null;
+    return {
+      kind:'realm',
+      id:realm.id,
+      name:realm.name,
+      rulerName:realm.ruler ? realm.ruler.name : realm.name,
+      tier:FB.clamp((realm.rank || 1) + 3, 3, 7),
+      scope:'liege',
+      scopeId:realm.id,
+      favor:FB.liegeOpOf ? FB.liegeOpOf(state, realm.id) : 0
+    };
+  };
+
+  FB.guildMonopolyPetitionStatus = function (state, createLocal) {
+    const career = FB.guildMonopolyCareer(state);
+    if (!career) return {
+      ready:false,
+      reason:FB.T('Only a guildmaster of the Craft or Trade profession may petition.')
+    };
+    const slots = FB.ensureGuildMonopolies(state);
+    if (slots.incoming) return {
+      ready:false,
+      reason:FB.T('The household already holds an incoming guild monopoly.')
+    };
+    if (!FB.hasTech || !FB.hasTech(state, 'guild_charters')) return {
+      ready:false,
+      reason:FB.T('Your sovereign nation has not completed Guild Charters.')
+    };
+    if ((career.career.guildStanding || 0) < 60) return {
+      ready:false,
+      reason:FB.T('A petition requires 60 guild standing; currently {standing}.', {
+        standing:Math.round(career.career.guildStanding || 0)
+      })
+    };
+    const grantor = FB.guildMonopolyGrantor(state, createLocal);
+    if (!grantor) return {
+      ready:false,
+      reason:state.player.tier >= 3 && !state.player.liege
+        ? FB.T('An independent landed ruler has no superior to petition.')
+        : FB.T('No valid local grantor can hear this petition.')
+    };
+    if (grantor.favor < 40) return {
+      ready:false,
+      reason:FB.T('{grantor} must hold at least 40 favor toward you; currently {favor}.', {
+        grantor:grantor.rulerName,
+        favor:Math.round(grantor.favor)
+      })
+    };
+    const terms = FB.guildMonopolyTerms(grantor.tier);
+    if (!terms) return {
+      ready:false,
+      reason:FB.T('No monopoly terms are defined for this grantor’s tier.')
+    };
+    return {
+      ready:true,
+      career:career,
+      grantor:grantor,
+      terms:terms
+    };
+  };
+
+  FB.guildMonopolyPetitionContext = function (state) {
+    const status = FB.guildMonopolyPetitionStatus(state, true);
+    if (!status.ready) return null;
+    const grantor = status.grantor, terms = status.terms;
+    return {
+      profession:status.career.profession,
+      grantorKind:grantor.kind,
+      grantorId:grantor.id,
+      grantor:grantor.rulerName,
+      grantorName:grantor.name,
+      grantorRulerName:grantor.rulerName,
+      rid:grantor.kind === 'realm' ? grantor.id : null,
+      scope:grantor.scope,
+      scopeId:grantor.scopeId,
+      tier:terms.tier,
+      years:terms.years,
+      durationDays:terms.durationDays,
+      enterpriseBonus:terms.enterpriseBonus,
+      enterprisePercent:Math.round(terms.enterpriseBonus * 100),
+      persuasionPercent:Math.round(FB.namedChance(state, 'skill_dip') * 100),
+      rulerFee:terms.rulerFee,
+      taxBonus:terms.taxBonus,
+      taxPercent:Math.round(terms.taxBonus * 100),
+      popularOpinion:terms.popularOpinion
+    };
+  };
+
+  function monopolyTermsFromContext(ctx) {
+    const tier = FB.clamp(Math.round(finiteNumber(ctx && ctx.tier, 3)), 3, 7);
+    const fallback = FB.guildMonopolyTerms(tier);
+    if (!fallback) return null;
+    const years = Math.max(1, Math.round(finiteNumber(ctx.years, fallback.years)));
+    const durationDays = Math.max(1, Math.round(finiteNumber(
+      ctx.durationDays, years * 360)));
+    return {
+      tier:tier,
+      years:years,
+      durationDays:durationDays,
+      enterpriseBonus:FB.clamp(finiteNumber(
+        ctx.enterpriseBonus, fallback.enterpriseBonus), 0, 0.5),
+      rulerFee:Math.max(0, finiteNumber(ctx.rulerFee, fallback.rulerFee)),
+      taxBonus:FB.clamp(finiteNumber(ctx.taxBonus, fallback.taxBonus), 0, 0.5),
+      popularOpinion:FB.clamp(finiteNumber(
+        ctx.popularOpinion, fallback.popularOpinion), -100, 100)
+    };
+  }
+
+  function monopolyRecord(state, profession, terms, identity) {
+    return {
+      profession:profession,
+      grantorKind:identity.grantorKind,
+      grantorId:identity.grantorId,
+      grantorName:identity.grantorName || '',
+      grantorRulerName:identity.grantorRulerName || '',
+      recipientKind:identity.recipientKind,
+      advocateId:identity.advocateId || null,
+      advocateName:identity.advocateName || '',
+      scope:identity.scope,
+      scopeId:identity.scopeId,
+      tier:terms.tier,
+      years:terms.years,
+      durationDays:terms.durationDays,
+      startTurn:state.turn,
+      endTurn:state.turn + terms.durationDays,
+      enterpriseBonus:terms.enterpriseBonus,
+      rulerFee:terms.rulerFee,
+      taxBonus:terms.taxBonus,
+      popularOpinion:terms.popularOpinion
+    };
+  }
+
+  FB.receiveGuildMonopoly = function (state, ctx) {
+    const slots = FB.ensureGuildMonopolies(state);
+    const profession = monopolyProfession(ctx && ctx.profession);
+    const terms = monopolyTermsFromContext(ctx || {});
+    if (slots.incoming || !profession || !terms) return false;
+    slots.incoming = monopolyRecord(state, profession, terms, {
+      grantorKind:ctx.grantorKind === 'realm' ? 'realm' : 'local',
+      grantorId:ctx.grantorId || null,
+      grantorName:String(ctx.grantorName || ctx.grantor || ''),
+      grantorRulerName:String(ctx.grantorRulerName || ctx.grantor || ''),
+      recipientKind:'household',
+      scope:ctx.scope === 'liege' ? 'liege' : 'province',
+      scopeId:ctx.scopeId || (ctx.scope === 'liege'
+        ? state.player.liege : state.player.provinceId)
+    });
+    FB.news(state, FB.msg('news.guild_monopoly.incoming_granted',
+      '📜 {grantor} grants the household a {profession} monopoly for {years} years.',
+      {
+        grantor:slots.incoming.grantorRulerName || slots.incoming.grantorName,
+        profession:FB.dataParam('career', profession, 'name', 'lower'),
+        years:terms.years
+      }));
+    return true;
+  };
+
+  function monopolyAdvocate(state, profession) {
+    for (const c of FB.householdWorkers(state)) {
+      if (c.id === state.player.charId || c.dead) continue;
+      const career = FB.careerOf(state, c);
+      if (career && career.profession === profession &&
+          career.guildRank === 'guildmaster') return c;
+    }
+    return null;
+  }
+
+  FB.guildMonopolyIssueStatus = function (state) {
+    if (state.player.tier < 3) return {
+      ready:false,
+      reason:FB.T('Only a baron or higher ruler may grant a monopoly.')
+    };
+    const slots = FB.ensureGuildMonopolies(state);
+    if (slots.outgoing) return {
+      ready:false,
+      reason:FB.T('Your realm has already granted a local guild monopoly.')
+    };
+    if (!FB.hasTech || !FB.hasTech(state, 'guild_charters')) return {
+      ready:false,
+      reason:FB.T('Your sovereign nation has not completed Guild Charters.')
+    };
+    const terms = FB.guildMonopolyTerms(state.player.tier);
+    if (!terms) return {
+      ready:false,
+      reason:FB.T('No monopoly terms are defined for your current tier.')
+    };
+    return { ready:true, terms:terms };
+  };
+
+  FB.issueGuildMonopoly = function (state, profession) {
+    profession = monopolyProfession(profession);
+    const status = FB.guildMonopolyIssueStatus(state);
+    if (!profession || !status.ready) return false;
+    const slots = FB.ensureGuildMonopolies(state);
+    const advocate = monopolyAdvocate(state, profession);
+    slots.outgoing = monopolyRecord(state, profession, status.terms, {
+      grantorKind:'player',
+      grantorId:'player',
+      grantorName:FB.fullName(playerChar(state)),
+      grantorRulerName:playerChar(state).name,
+      recipientKind:'local_guild',
+      advocateId:advocate ? advocate.id : null,
+      advocateName:advocate ? FB.fullName(advocate) : '',
+      scope:'landed',
+      scopeId:'player'
+    });
+    state.player.gold += status.terms.rulerFee;
+    state.player.pop = FB.clamp((state.player.pop || 0) +
+      status.terms.popularOpinion, -100, 100);
+    FB.news(state, FB.msg('news.guild_monopoly.outgoing_granted',
+      '📜 You grant the local {profession} guild a {years}-year monopoly; its fee adds {money:fee} to the treasury.',
+      {
+        profession:FB.dataParam('career', profession, 'name', 'lower'),
+        years:status.terms.years,
+        fee:status.terms.rulerFee
+      }));
+    return slots.outgoing;
+  };
+
+  FB.guildMonopolyEnterpriseBonus = function (state, profession) {
+    profession = monopolyProfession(profession);
+    if (!profession) return 0;
+    let total = 0;
+    for (const slot of ['incoming', 'outgoing']) {
+      const record = FB.guildMonopolyActive(state, slot);
+      if (record && record.profession === profession) total += record.enterpriseBonus;
+    }
+    return Math.min(0.5, total);
+  };
+
+  FB.guildMonopolyTaxBonus = function (state) {
+    const record = FB.guildMonopolyActive(state, 'outgoing');
+    return record ? record.taxBonus : 0;
+  };
+
+  function adjustPetitionGrantorFavor(state, ctx, amount) {
+    if (ctx && ctx.grantorKind === 'realm' && ctx.grantorId && FB.adjustLiegeOp) {
+      FB.adjustLiegeOp(state, ctx.grantorId, amount);
+      return;
+    }
+    let lord = ctx && ctx.grantorId ? state.chars[ctx.grantorId] : null;
+    if (!lord && !(ctx && ctx.grantorId)) {
+      lord = FB.getRole ? FB.getRole(state, 'lord', true) : null;
+    }
+    if (lord && !lord.dead) {
+      lord.opinion = FB.clamp((lord.opinion || 0) + amount, -100, 100);
+    }
+  }
+
+  FB.fns = FB.fns || {};
+  FB.fns.guild_monopoly_paid = function (state, ctx) {
+    return FB.receiveGuildMonopoly(state, ctx);
+  };
+  FB.fns.guild_monopoly_persuade_success = function (state, ctx) {
+    if (!FB.receiveGuildMonopoly(state, ctx)) return false;
+    state.player.prestige += 5;
+    return true;
+  };
+  FB.fns.guild_monopoly_persuade_failure = function (state, ctx) {
+    state.player.prestige = Math.max(0, state.player.prestige - 5);
+    adjustPetitionGrantorFavor(state, ctx, -8);
     return true;
   };
 

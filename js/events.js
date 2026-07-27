@@ -1766,6 +1766,7 @@ window.FB = window.FB || {};
     if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     if (FB.travelValidate) FB.travelValidate(state);
     if (FB.validateFocus) FB.validateFocus(state);
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     return true;
   };
   FB.fns.barony_offer_eligible = function (state) {
@@ -2472,6 +2473,7 @@ window.FB = window.FB || {};
       for (const r of ['lord', 'priest', 'friend', 'rival']) delete state.roles[r];
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
       p.liege = p.tier >= 3 && rid && rid !== 'player' ? rid : null;
+      if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
       FB.news(state, FB.msg('news.event.moved',
         '🧭 You now dwell in {province}.', { province: FB.world.byId[dest].name }));
       if (FB.map) { FB.map.playerProv = dest; FB.map.request(); }
@@ -2503,6 +2505,7 @@ window.FB = window.FB || {};
       FB.queueEvent(state, 'war_defense_muster', {});
     }
     FB.checkTierPromotions(state);
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     return true;
   };
 
@@ -2574,6 +2577,7 @@ window.FB = window.FB || {};
       }
       FB.checkTierPromotions(state);
     }
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
   };
 
   /* the liege strips a disgraced vassal and hands the county to the player
@@ -2636,6 +2640,7 @@ window.FB = window.FB || {};
       new_liege: r.name,
       old_liege: state.realms[old] ? state.realms[old].name : ''
     }));
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
   };
   FB.fns.appeal_lose = function (state, ctx) {
     const p = state.player;

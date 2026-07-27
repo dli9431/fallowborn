@@ -493,7 +493,7 @@ window.FBDATA = window.FBDATA || {};
     'Delegated judges carry royal pleas and procedure into the provinces.',
     { leaders:['latin','byzantine'], unlocks:['rule:itinerant_justice'], fx:{ tax:0.01 } });
   add('guild_charters','Guild Charters','📯','governance',[900,1200],[1030,1220],['merchant_guilds','written_law'],
-    'Public charters define corporate privileges, duties, and jurisdiction.',
+    'Public charters define corporate privileges and monopolies: guildmasters may petition a superior, while barons and greater rulers may grant one local Craft or Trade monopoly.',
     { leaders:['latin','byzantine','islamic'], unlocks:['rule:guild_charters'], fx:{ costs:{ enterprise:-0.04, training:-0.03 } } });
   add('authenticated_seals','Authenticated Seals','🕯','governance',[750,1100],[900,1120],['diplomatic_correspondence'],
     'Recognized seals authenticate commands and agreements without the issuer present.',

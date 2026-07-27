@@ -950,6 +950,16 @@ FBDATA.balance = {
   socialItemGiftOpinion: [4,8,12], // Plain/common, Well-made/fine, Masterwork/famed
   retainerCapacity: [0,1,2,2,3,3,4,5], // paid non-family household servants by player tier
   guildFavorStandingCost: 20, guildFavorCooldown: 360,
+  /* Guild monopoly charters. Numeric keys are the grantor's social tier:
+     3 baron, 4 count, 5 duke, 6 king, 7 emperor. Active charters copy these
+     values into saved records, so changing balance affects only new grants. */
+  guildMonopolyTerms: {
+    3:{ years:3, enterpriseBonus:0.15, rulerFee:25, taxBonus:0.02, popularOpinion:-5 },
+    4:{ years:4, enterpriseBonus:0.18, rulerFee:40, taxBonus:0.03, popularOpinion:-6 },
+    5:{ years:5, enterpriseBonus:0.21, rulerFee:60, taxBonus:0.04, popularOpinion:-8 },
+    6:{ years:7, enterpriseBonus:0.25, rulerFee:90, taxBonus:0.05, popularOpinion:-10 },
+    7:{ years:10, enterpriseBonus:0.30, rulerFee:140, taxBonus:0.06, popularOpinion:-12 }
+  },
   vassalLevyFavorRate: 0.05, vassalLevyFavorDays: 360,
   educationBaseChance: 0.18, educationTutorBase: 0.3,
   educationTutorSkillChance: 0.04, educationChanceCap: 0.9,

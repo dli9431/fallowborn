@@ -195,6 +195,13 @@ and uses its own second confirmation; no penalty is applied until that final but
 A separate personal-attention summary names the assigned character, current Regard, fixed
 daily rate, estimated days to the relationship threshold, and travel-pause state; attention
 never replaces the work focus.
+Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
+guildmaster; its locked description exposes the exact missing technology, standing,
+favor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
+**Grant a guild monopoly…** for every baron and greater ruler. Its numbered,
+keyboard-focusable profession picker previews Craft and Trade with the current
+tier-scaled fee, tax, enterprise, duration, and opinion terms, then repeats all effects
+in a confirmation sheet before spending the day.
 Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
 rate, reserve, occupied slots, and active projects. The catalogue supports domain,
@@ -229,6 +236,12 @@ rank, standing, exact income modifier, enterprises, partnerships, positions, and
 guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Royal
 Council summary/link, and the computed levy ledger). Empty sections explain what is
 absent rather than inventing placeholder people.
+
+Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
+the profession, issuer or abstract recipient, optional household advocate, grantor tier,
+enterprise strength, tax effect, scope, and exact days remaining; empty slots say None.
+The panel also states the +50% overlap cap and that active charters have no renewal or
+early-revocation control.
 
 Connections begins with the same personal-attention summary as Deeds. Item-gift recipient
 buttons show the exact +Regard tier and are disabled with the remaining cooldown days when

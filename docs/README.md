@@ -132,7 +132,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    business left idle earns nothing. Resident spouses and children also add provisions and
    quarters to seasonal household upkeep. Craft and merchant careers can climb the guild from
    ordinary membership to guildmaster, and landing does not erase a person's learned
-   occupation.
+   occupation. Once the sovereign nation completes **Guild Charters**, a guildmaster with
+   60 standing and 40 grantor favor can petition the local lord or a landed vassal's direct
+   liege for a profession-wide monopoly. Baron and greater rulers can grant one local Craft
+   or Trade monopoly instead. Incoming and outgoing charters can coexist, matching enterprise
+   bonuses add together up to +50%, and **Network → Trade & Guild** shows their terms and
+   remaining days. A charter cannot be renewed or revoked early.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
    Its household block also shows active standard icons/levels and their seasonal upkeep.
    Established households can hire a limited number of paid retainers as stewards, factors,

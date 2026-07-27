@@ -755,6 +755,28 @@ window.FB = window.FB || {};
     },
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
+  { id: 'petition_monopoly', label: '📜 Petition for a guild monopoly', cd: 360,
+    desc: function (s) {
+      const status = FB.guildMonopolyPetitionStatus(s, true);
+      if (!status.ready) return status.reason;
+      return FB.T(
+        'Ask {grantor} for a {years}-year monopoly: +{enterprise}% matching enterprise profit. Pay {money:25} or rely on Diplomacy.',
+        {
+          grantor:status.grantor.rulerName,
+          years:status.terms.years,
+          enterprise:Math.round(status.terms.enterpriseBonus * 100)
+        });
+    },
+    show: function (s) { return !!FB.guildMonopolyCareer(s); },
+    can: function (s) {
+      const status = FB.guildMonopolyPetitionStatus(s, true);
+      return status.ready ? true : status.reason;
+    },
+    run: function (s) {
+      const ctx = FB.guildMonopolyPetitionContext(s);
+      if (ctx) FB.queueEvent(s, 'guild_monopoly_petition', ctx);
+    } },
+
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
     desc: function () {
       return FB.T('Pay {money:gold} to be struck from the serf-roll.',
@@ -848,6 +870,28 @@ window.FB = window.FB || {};
     run: function (s) {
       const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
       FB.applyEffects(s, { gold: tax, popularOpinion: -6 });
+    } },
+  { id: 'grant_monopoly', label: '📜 Grant a guild monopoly…', noConsume: true,
+    desc: function (s) {
+      const status = FB.guildMonopolyIssueStatus(s);
+      if (!status.ready) return status.reason;
+      return FB.T(
+        'Grant one local Craft or Trade monopoly for {years} years: receive {money:fee}, gain +{tax}% tax, and change popular opinion by {opinion}.',
+        {
+          years:status.terms.years,
+          fee:status.terms.rulerFee,
+          tax:Math.round(status.terms.taxBonus * 100),
+          opinion:status.terms.popularOpinion > 0
+            ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
+        });
+    },
+    show: function (s) { return s.player.tier >= 3; },
+    can: function (s) {
+      const status = FB.guildMonopolyIssueStatus(s);
+      return status.ready ? true : status.reason;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGuildMonopolyGrant) FB.ui.showGuildMonopolyGrant();
     } },
   { id: 'build', label: '🏗 Raise a building…', noConsume: true,
     desc: function (s) {
@@ -1123,7 +1167,8 @@ window.FB = window.FB || {};
     t += FB.buildingBonus(state, 'tax');
     t *= 1 + FB.techBonus(state, 'tax') +
       (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0) +
-      (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0);
+      (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0) +
+      (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
     if (p.liege) t *= 1 - (FB.parliamentAid ? FB.parliamentAid(state) : 0.25); // liege's cut — haggled in the estates
     return Math.round(t);
   };
@@ -1261,6 +1306,9 @@ window.FB = window.FB || {};
       add('gold', FB.T('National technology'), nationalTech);
       const councilTax = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
       add('gold', FB.T('Royal Seneschal'), councilTax);
+      const monopolyTax = taxable *
+        (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
+      add('gold', FB.T('Guild monopoly tolls'), monopolyTax);
       let positionTax = 0;
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
@@ -1277,7 +1325,7 @@ window.FB = window.FB || {};
       }
       if (p.liege) {
         add('gold', FB.T('Liege’s cut'),
-          -(taxable + innov + councilTax + positionTax) *
+          -(taxable + nationalTech + councilTax + monopolyTax + positionTax) *
           (FB.parliamentAid ? FB.parliamentAid(state) : 0.25));
       }
       addBuildings('gold', 'upkeep', -1, true);
@@ -1526,6 +1574,7 @@ window.FB = window.FB || {};
         '🔥 {realm} names you traitor — war for your defection!',
         { realm: state.realms[oldTop].name }));
     }
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return true;
   };

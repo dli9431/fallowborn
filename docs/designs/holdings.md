@@ -76,6 +76,13 @@ the legacy guild-member work benefit, and position/retainer enterprise modifiers
 are not copied into enterprise instances, so a lost office, departed retainer, or changed
 guild rank affects the next calculation without migrating property state.
 
+Active guild monopoly charters add another live multiplier only to staffed enterprises
+whose career matches the charter's Craft or Trade profession. One incoming and one
+outgoing charter may apply at once; their enterprise percentages add and are capped at
++50%. Charter records freeze their percentages when granted, but no bonus is copied into
+the enterprise instance. The institutional rights pass through succession with the
+household.
+
 Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the family
 even if it moves or rises in station; a building belongs to its county and follows
 political conquest.

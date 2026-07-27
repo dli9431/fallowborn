@@ -8,6 +8,28 @@ FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 
 /* ================= CRAFT & TRADE ================= */
+{ id:'guild_monopoly_petition', title:'A Monopoly Petition',
+  trigger:{ never:true },
+  text:'Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise.',
+  options:[
+    { label:'Pay {money:25} for the seal.', require:{ goldMin:25 },
+      desc:'Spend {money:25}; the charter is guaranteed.',
+      effects:{ gold:-25, custom:'guild_monopoly_paid' } },
+    { label:'Persuade the grantor.',
+      desc:'A {persuasionPercent}% Diplomacy chance: success grants the charter and 5 prestige; failure costs 5 prestige and 8 grantor favor.',
+      chance:'skill_dip',
+      success:{
+        text:'Your case carries the hall. {grantor} orders the charter sealed.',
+        effects:{ custom:'guild_monopoly_persuade_success' }
+      },
+      failure:{
+        text:'The court is unmoved, and {grantor} takes the pressure as an insult.',
+        effects:{ custom:'guild_monopoly_persuade_failure' }
+      } },
+    { label:'Withdraw the petition.',
+      desc:'Keep your resources; the day and 360-day petition interval remain spent.',
+      effects:{} }
+  ]},
 { id:'guild_entry', title:'The Guild Bench',
   trigger:{ professions:['craftsman'], tierMin:1, chance:0.3, notFlags:['guild_member'] }, weight:10,
   text:{ default:'The masters of the craft drink together, set prices together, and bury each other’s dead. A seat at their bench costs silver — and buys a future.',

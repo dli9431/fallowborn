@@ -180,6 +180,17 @@ career deterministically from the current compatibility profession/station when 
 read. Old business-like holdings migrate once into enterprise instances in the home
 settlement, while all other holdings remain unchanged.
 
+Guild monopoly state is additive and keeps save format 3.
+`player.guildMonopolies = {incoming,outgoing}` is created lazily by
+`FB.ensureGuildMonopolies`; either slot is `null` or a plain JSON record. Each record
+freezes its Craft/Trade profession, grantor and recipient identity, province/liege/landed
+scope, tier, start/end turns, duration, enterprise bonus, ruler fee, tax bonus, and
+popular-opinion change. Balance changes therefore affect only future grants. Both slots
+survive succession and promotion. Exact-day expiry and scope invalidation clear a slot
+once and write a durable localized Chronicle descriptor; permanent relocation ends a
+province-scoped incoming charter, direct-liege change ends a liege-scoped one, and loss
+of landed authority ends an outgoing charter.
+
 Maintained household standards are additive and keep save format 3.
 `player.householdStandards` is a plain definition-id to numeric-level map. Missing state
 means every standard is at baseline level zero; `FB.ensureHouseholdStandards` creates the

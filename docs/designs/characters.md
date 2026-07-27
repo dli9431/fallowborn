@@ -150,6 +150,14 @@ Guild member → Master → Guild officer → Guildmaster. The saved `guildRank`
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the
 character's vocational `rank` from journeyman to master.
 
+Guildmaster is also the personal qualification for the **Petition for a guild monopoly**
+deed. The deed reads the protagonist's preserved character career, including at tier 3+,
+and is limited to core Craft and Trade professions. It requires 60 guild standing,
+Guild Charters in the effective sovereign nation, 40 favor with the grantor, and an empty
+incoming slot. Low-station guildmasters petition their local lord with baron terms;
+landed vassals petition their direct liege with that realm's title-tier terms. An
+independent landed ruler has no superior to petition.
+
 **Friendship requires an intentional relationship.** Assigning personal attention records
 an eligible living, non-family character in `player.friendContacts`. At the shared
 `balance.relationshipOpinionThreshold` (+40 by default), the character sheet offers

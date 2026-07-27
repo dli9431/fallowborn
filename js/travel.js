@@ -512,6 +512,7 @@ window.FB = window.FB || {};
     }
     p.travelSettlement = { turn:state.turn, destinationId:destination };
     p.travel = null;
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.map) {
       FB.map.playerProv = destination;
       FB.map.travelPreview = null;

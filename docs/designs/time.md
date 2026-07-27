@@ -50,6 +50,11 @@ The same daily post-calendar phase runs `FB.religiousHeadRecoveryTick`. It is in
 without an eligible vacancy; once a saved vacancy is 360 days old it can restore a
 qualified AI-controlled seat or assign the strongest eligible AI claimant in stable
 order, including in Observe mode.
+The same phase runs `FB.guildMonopolyTick` before any season-boundary income, so a
+charter whose saved `endTurn` equals the new turn expires without contributing to that
+day's income. A second idempotent pass after army/holy-war/travel movement catches a
+same-day relocation or political invalidation; clearing the slot makes its durable
+Chronicle notice one-shot.
 
 At a season boundary the household receives normal income, pays station and resident-family
 upkeep, including the wartime necessities surcharge when the player's sovereign realm is

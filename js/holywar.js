@@ -1428,6 +1428,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.holywar.player_declines_land',
         '🕊 You decline the land. A cadet ruler receives it, and your service is honored in piety and prestige.', {}));
     }
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     settlement.pendingPlayer = null;
     finalize(state, campaign);
     return true;
