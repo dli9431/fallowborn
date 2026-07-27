@@ -650,7 +650,8 @@ def extract_structured(inv: Inventory) -> None:
         rel = path.relative_to(ROOT).as_posix()
         for item_id, item_node in root.items():
             item = node_object(item_node) or {}
-            for field in DATA_FIELDS:
+            fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
+            for field in fields:
                 for branch, record, line in branch_records(item.get(field)):
                     inv.add(
                         f"{namespace}.{item_id}.{field}.{branch}",

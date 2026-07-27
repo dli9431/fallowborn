@@ -64,7 +64,7 @@ FBDATA.events.push(
   text:'The assassin hangs in your dungeon. Under hard questioning, a name is finally spat out — a rival hand paid for your death.',
   options:[
     { label:'Justice, publicly.', desc:'Let the crowd watch the law work.', effects:{ prestige:8, opinion:{role:'rival', amt:-30}, rivalHeat:15 } },
-    { label:'Turn the blade back on its buyer.', desc:'A quiet death answers a quiet death.', effects:{ skills:{int:2}, killRole:'rival', prestige:-5, log:'Repaid an assassin in kind.' } },
+    { label:'Turn the blade back on its buyer.', desc:'A quiet death answers a quiet death.', effects:{ skills:{int:2}, killRole:'rival', kinslayer:true, prestige:-5, log:'Repaid an assassin in kind.' } },
     { label:'Mercy — and a message.', desc:'Spare the tool to shame the hand.', effects:{ piety:8, prestige:4, rivalHeat:-10 } }
   ]},
 { id:'build_opportunity', title:'The Master Builder',
@@ -149,7 +149,7 @@ FBDATA.events.push(
   trigger:{ tierMin:3, married:true, chance:0.15 }, weight:5, cooldown:10,
   text:'{spouse} speaks quietly after the hall empties: a shrewd reading of your rivals, your coffers, and your next move.',
   options:[
-    { label:'Heed the counsel.', desc:'Two pairs of eyes miss fewer knives.', effects:{ skills:{ste:1}, opinion:{role:'spouse', amt:10}, gold:4 } },
+    { label:'Heed the counsel.', desc:'Two pairs of eyes miss fewer knives.', effects:{ skills:{ste:1}, opinion:{role:'spouse', amt:10}, gold:4, traitProgress:{id:'hearth_steady'} } },
     { label:'Rule alone.', desc:'Pride keeps poor company at night.', effects:{ opinion:{role:'spouse', amt:-10}, prestige:1 } }
   ]},
 { id:'independence_offer', title:'Whispers of a Crown',
@@ -366,7 +366,7 @@ FBDATA.events.push(
   text:'{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender.',
   options:[
     { label:'Meet them in the field.', desc:'One battle decides whose name the gate bears.', chance:'battle',
-      success:{ text:'The pretender’s host breaks like rotten wood, and the pretender hangs from the gate they would have entered in triumph.', effects:{ clearFlag:'df_claim', clearFlag2:'df_claim2', killRole:'rival', prestige:20, log:'Destroyed a pretender in open war.' } },
+      success:{ text:'The pretender’s host breaks like rotten wood, and the pretender hangs from the gate they would have entered in triumph.', effects:{ clearFlag:'df_claim', clearFlag2:'df_claim2', killRole:'rival', kinslayer:true, prestige:20, log:'Destroyed a pretender in open war.' } },
       failure:{ text:'Your men would not stand — some would not even draw. You watch your own banner come down from the gate tower.', effects:{ custom:'df_fall', log:'Overthrown by a rival claimant.' } } },
     { label:'Yield and beg terms.', desc:'Surrender the lands for your lives and your strongboxes.',
       effects:{ custom:'df_fall_flee', log:'Yielded everything to a rival claimant.' } }

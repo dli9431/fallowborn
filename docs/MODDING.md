@@ -544,9 +544,12 @@ rid of a spouse the darker way — its resolution is `plot_spouse_end`.
 ### Effects
 
 `gold prestige piety health warService` (numbers — warService is the lifetime tally of
-service in the liege's wars) · `skills: {dip|mar|ste|int|lea: n}` (positive gains
+service in the liege's wars and feeds any core trait progress attached to that service) ·
+`skills: {dip|mar|ste|int|lea: n}` (positive gains
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
-`addTrait / removeTrait` · `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
+`addTrait / removeTrait` · `traitProgress: {id, amount?}` (default amount 1; progress is
+clamped at the trait's `earn.threshold`, then the trait is awarded) ·
+`ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
 `rivalContact: {role, score, cause}` (record an explicitly hostile encounter with that
@@ -556,7 +559,9 @@ contact with the active rival also adds `score × balance.rivalContactHeat` heat
 rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `tierSet` (raise rank), `tierUp`
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
-`marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
+`marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
+`killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
+the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
 banked as reserve) ·
@@ -1303,6 +1308,62 @@ prerequisites.
 ## Cultures, religions, traits, titles, balance
 
 See `data/cultures.js` and `data/traits.js` for the exact culture and trait shapes.
+
+A trait definition may use this extended shape:
+
+```json
+{ "roadwise": {
+  "name": "Roadwise",
+  "icon": "🛤",
+  "desc": "Long journeys have taught them the rhythms of the road.",
+  "earned": "Earned after visiting three unique destinations.",
+  "class": "formation",
+  "noRandom": true,
+  "inherit": 0,
+  "ste": 1,
+  "earn": { "threshold": 3 },
+  "travel": { "legDays": -1, "roadIncident": -0.15 }
+} }
+```
+
+`name`, `desc`, and `earned` are localized pure-display fields; `earned` is optional
+acquisition guidance. `class` is `disposition`, `formation`, `reputation`, or
+`condition`. Full character sheets display those classes in that order followed by
+`Other`; an omitted or unknown class remains compatible and appears in `Other`.
+Unclassified traits also retain normal random-generation behavior. Set `noRandom:true`
+to exclude a trait from random character generation. `inherit`, `opposite`, the five
+root skill keys (`dip`, `mar`, `ste`, `int`, `lea`), and root aggregation fields such as
+`health`, `fert`, and `opinion` retain their existing meanings.
+
+`earn:{threshold:n}` defines progress-based acquisition. Event effects can call
+`traitProgress:{id,amount?}`; the engine keeps the current protagonist's progress in
+saved state, clamps it at the threshold, and awards the trait once. Removing an earned
+trait through `removeTrait` resets its progress if removal occurred, allowing it to be
+earned again. Direct `addTrait` remains valid and does not require progress. Mods can
+query root effects through `FB.traitAgg(character)`, grouped numeric effects through
+`FB.traitBonus(character,group,key)`, and award progress from code through
+`FB.noteTraitProgress(state,traitId,amount)`.
+
+The first grouped effect consumers are:
+
+- `assembly.voteChance`: additive vote probability; `assembly.popularOpinion`: a rate
+  applied only to positive Common Voice event gains.
+- `travel.legDays`: days added to the departure-time county-leg snapshot after transport
+  standards, with a minimum of one; `travel.roadIncident`: a multiplicative rate applied
+  only to the ordinary 38% road-incident roll.
+- `war.levy`: a rate against the player's direct levy base before Martial, domain
+  penalties, and vassal contributions. It receives its own levy-ledger line.
+- `estate.rent`: a rate applied to direct demesne rent after the domain penalty and
+  before later technology, council, position, monopoly, and liege-cut arithmetic. It
+  receives its own income-ledger line.
+- `household.regard`: an additive rate on positive event Regard toward the protagonist's
+  spouse or blood relatives. Losses and unrelated characters are unchanged.
+
+All grouped values are numeric; absent groups and keys contribute zero. The catalog has
+no trait cap. Named wounds and sicknesses in `FBDATA.ailments` remain timed conditions
+with their existing lifecycle; assigning a trait to the `condition` display class does
+not turn it into an ailment or change ailment behavior.
+
 A religion has `name`, `group`, and `icon`, plus an optional centralized religious
 office:
 

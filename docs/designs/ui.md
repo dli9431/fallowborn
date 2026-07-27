@@ -144,7 +144,13 @@ Its centered title stacks the character's full name above **Equipment**, keeping
 readable on narrow screens.
 The Self overview places its skill bars beside the compact portrait; both the portrait and
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
-overview, before the full identity and household details. Titles and Possessions use collapsed-by-default,
+overview, before the full identity and household details. Self and full character sheets
+group trait chips in the fixed order Disposition, Formation, Reputation, Condition,
+then Other, preserving the character's stored order inside each class. Compact event,
+family, and other character cards keep one flat chip row. Trait chips are native
+focusable buttons: hover gives the class, acquisition guidance, and exact root/grouped
+effects, while click, tap, Enter, or Space opens the same detail modal. Unclassed mod
+traits appear under Other. Titles and Possessions use collapsed-by-default,
 counted accordion rows matching the Deeds group controls so large realms and armories do
 not dominate the Self panel. Active maintained standards appear in the livelihood summary
 as compact icons with numeric levels; dormant purchased levels stay off that active row.

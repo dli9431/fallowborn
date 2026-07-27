@@ -1181,6 +1181,8 @@ window.FB = window.FB || {};
     for (const pid of (p.provs || [])) demesne += (state.dev[pid] || 1) * B.taxPerDev;
     if (p.tier === 3) demesne = Math.max(demesne, 6); // barony rents
     demesne *= FB.domainPenalty(state);
+    const me = state.chars[p.charId];
+    demesne *= 1 + (FB.traitBonus ? FB.traitBonus(me, 'estate', 'rent') : 0);
     // vassals render their seasonal due (never touched by the overload penalty)
     let vassal = 0;
     for (const vid of FB.playerVassals(state)) {
@@ -1316,6 +1318,18 @@ window.FB = window.FB || {};
       if (p.tier === 3) rents = Math.max(rents, 6); // barony rents
       rents *= FB.domainPenalty(state); // overload past the domain limit lets tax leak away
       add('gold', FB.T('Rents from your lands'), rents);
+      const rentBase = rents;
+      const me = state.chars[p.charId];
+      for (const tid of (me ? me.traits : [])) {
+        const trait = FBDATA.traits[tid];
+        const rate = trait && trait.estate && Number(trait.estate.rent);
+        if (!isFinite(rate) || !rate) continue;
+        add('gold', FB.T('{trait} — direct rent', {
+          trait:FB.dataText(state, p.charId, 'trait', tid, trait, 'name', {})
+        }), rentBase * rate);
+      }
+      rents = rentBase *
+        (1 + (FB.traitBonus ? FB.traitBonus(me, 'estate', 'rent') : 0));
       let dues = 0;
       for (const vid of FB.playerVassals(state)) {
         for (const pid of FB.realmHeldCounties(state, vid)) {
@@ -1918,6 +1932,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
         '💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while.',
         { gold: gold }));
+      if (FB.noteTraitProgress) FB.noteTraitProgress(state, 'rent_shrewd', 1);
     }
   };
 

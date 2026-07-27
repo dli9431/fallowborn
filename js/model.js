@@ -251,8 +251,9 @@ window.FB = window.FB || {};
     const q = opts.quality || 0;
     for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q);
     if (!opts.traits) {
-      const pool = Object.keys(FBDATA.traits).filter(t => !FBDATA.traits[t].noRandom &&
-        ['veteran', 'literate', 'pilgrim', 'scarred', 'one_eyed', 'maimed', 'kinslayer', 'excommunicated'].indexOf(t) < 0);
+      const pool = Object.keys(FBDATA.traits).filter(function (t) {
+        return !FBDATA.traits[t].noRandom;
+      });
       const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3);
       for (let i = 0; i < n; i++) FB.addTrait(c, FB.pick(pool));
     }
@@ -270,8 +271,74 @@ window.FB = window.FB || {};
     return true;
   };
   FB.removeTrait = function (c, traitId) {
+    if (!c || !Array.isArray(c.traits)) return false;
     const i = c.traits.indexOf(traitId);
-    if (i >= 0) c.traits.splice(i, 1);
+    if (i < 0) return false;
+    c.traits.splice(i, 1);
+    return true;
+  };
+
+  /* Grouped trait effects belong to the system that consumes them. Unknown
+     traits and incomplete mod definitions are deliberately worth zero. */
+  FB.traitBonus = function (c, group, key) {
+    if (!c || !Array.isArray(c.traits) || !group || !key) return 0;
+    let total = 0;
+    for (const id of c.traits) {
+      const def = FBDATA.traits[id];
+      const effects = def && def[group];
+      if (!effects || effects[key] === undefined) continue;
+      const value = Number(effects[key]);
+      if (isFinite(value)) total += value;
+    }
+    return total;
+  };
+
+  FB.ensureTraitProgress = function (state) {
+    if (!state || !state.player) return {};
+    let progress = state.player.traitProgress;
+    if (!progress || typeof progress !== 'object' || Array.isArray(progress)) {
+      progress = {};
+      state.player.traitProgress = progress;
+    }
+    for (const id in progress) {
+      if (!Object.prototype.hasOwnProperty.call(progress, id)) continue;
+      let value = Number(progress[id]);
+      if (!isFinite(value)) value = 0;
+      value = Math.max(0, value);
+      const def = FBDATA.traits[id];
+      const threshold = def && def.earn && Number(def.earn.threshold);
+      progress[id] = isFinite(threshold) && threshold > 0
+        ? Math.min(value, threshold) : value;
+    }
+    return progress;
+  };
+
+  /* Progress is current-protagonist state. It stops at the catalog threshold;
+     crossing that threshold grants once and writes a locale-neutral Chronicle
+     descriptor. A later event-driven removal may reset the counter. */
+  FB.noteTraitProgress = function (state, traitId, amount) {
+    if (!state || !state.player) return false;
+    const def = FBDATA.traits[traitId];
+    const threshold = def && def.earn && Number(def.earn.threshold);
+    if (!isFinite(threshold) || threshold <= 0) return false;
+    const c = state.chars && state.chars[state.player.charId];
+    if (!c) return false;
+    const progress = FB.ensureTraitProgress(state);
+    let delta = amount === undefined ? 1 : Number(amount);
+    if (!isFinite(delta)) delta = 0;
+    progress[traitId] = FB.clamp((Number(progress[traitId]) || 0) + delta,
+      0, threshold);
+    if (!Array.isArray(c.traits) ||
+        progress[traitId] < threshold || c.traits.indexOf(traitId) >= 0) {
+      return false;
+    }
+    if (!FB.addTrait(c, traitId)) return false;
+    FB.news(state, FB.msg('news.life.trait_earned',
+      '🏅 {name} earns {trait}.', {
+        name:FB.fullName(c),
+        trait:FB.dataParam('trait', traitId)
+      }));
+    return true;
   };
 
   /* ---------- ailments: named wounds & sicknesses (data table in traits.js) ----------

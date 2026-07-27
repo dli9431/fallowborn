@@ -138,6 +138,14 @@ current character's liege wars and `liegeGrants` records successful feudal patro
 in the current lifetime. Both reset on succession. Older saves need no migration;
 the grant multiplier treats a missing `liegeGrants` as zero.
 
+Earned-trait acquisition is additive version-3 state:
+`player.traitProgress = {traitId:number}`. Restore repairs a missing or malformed map
+and clamps known progress to the definition's current `earn.threshold`.
+`FB.noteTraitProgress` never stores localized text; a threshold award stores a durable
+message descriptor whose trait name resolves from data at display time. The succession
+path clears the whole map when `player.charId` changes. Character trait
+arrays, inheritance, and explicit grants keep their existing save shape.
+
 `player.gentryGeneration` is additive dynasty standing: it records the generation in
 which the house first reached tier 2 and persists through succession. Ordinary barony
 patronage requires that value to be lower than `state.generation`. Tier-2+ scenarios

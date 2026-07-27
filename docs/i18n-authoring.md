@@ -7,7 +7,7 @@ you write the code, not as a later cleanup pass.
 
 The game ships English plus AI **Preview** catalogs (`fr`, `de`, `it`, `es`). The simulation stays
 locale-neutral; **only pure-display fields (`title`, `text`, `label`, `desc`, `log`, `worldNews`,
-`name`) are ever localized** — ids, effects, triggers, numbers, and generated proper names never
+`name`, and trait `earned`) are ever localized** — ids, effects, triggers, numbers, and generated proper names never
 are. Nothing here breaks `file://`: catalogs are `.js` globals, and any new English self-heals (a
 lookup miss or stale source hash falls back to English), so an unrouted string is a bug even
 though the game still *runs*.
@@ -24,6 +24,8 @@ though the game still *runs*.
   technologies, …):**
   keep the English in the source data — it is id-keyed and auto-extracted, including the `log:`
   effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
+  Trait acquisition guidance lives in the pure-display `earned` field and renders through
+  the same `FB.dataText` path as `name` and `desc`.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
   in the source (the renderer selects the branch, then localizes it). Technology `name`
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;

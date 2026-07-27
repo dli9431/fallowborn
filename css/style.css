@@ -342,8 +342,16 @@ a.actionbtn { text-decoration: none; }
 .settlist > * { white-space: nowrap; }
 .traitchip {
   display: inline-block; background: #2c2418; border: 1px solid #55452a; border-radius: 12px;
-  padding: 2px 9px; margin: 2px 3px 2px 0; font-size: 12px; cursor: help;
+  padding: 2px 9px; margin: 2px 3px 2px 0; color: inherit; font: inherit;
+  font-size: 12px; line-height: 1.45; cursor: help;
 }
+.traitgroups { display: grid; gap: 5px; }
+.traitgroup { min-width: 0; }
+.traitgroup-label {
+  color: #97876a; font-size: 11px; line-height: 1.2; margin: 2px 0 1px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.traitgroup-chips { display: flex; flex-wrap: wrap; align-items: center; }
 .skillrow { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 2px 0; }
 .skillrow .skill-label {
   width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

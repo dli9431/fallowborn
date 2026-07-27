@@ -1169,14 +1169,55 @@ window.FB = window.FB || {};
     }
     return h;
   }
-  function traitChips(c) {
-    let h = '';
-    for (const t of c.traits) {
-      const tr = FBDATA.traits[t];
-      if (tr) h += '<span class="traitchip" data-trait="' + t + '">' + tr.icon + ' ' +
-        esc(dt(FB.state, 'trait', t, tr, 'name')) + '</span>';
+  const TRAIT_CLASS_ORDER = ['disposition', 'formation', 'reputation', 'condition', 'other'];
+  const TRAIT_CLASS_NAMES = {
+    disposition:'Disposition', formation:'Formation', reputation:'Reputation',
+    condition:'Condition', other:'Other'
+  };
+  function traitClassId(trait) {
+    const id = trait && trait['class'];
+    return TRAIT_CLASS_ORDER.indexOf(id) >= 0 ? id : 'other';
+  }
+  function traitClassName(trait) {
+    return FB.T(TRAIT_CLASS_NAMES[traitClassId(trait)]);
+  }
+  function traitChip(s, id, trait) {
+    const name = dt(s, 'trait', id, trait, 'name');
+    return '<button type="button" class="traitchip" data-trait="' + esc(id) +
+      '" aria-label="' + esc(FB.T('{trait}, {className}', {
+        trait:name, className:traitClassName(trait)
+      })) + '">' + esc(trait.icon || '') + (trait.icon ? ' ' : '') +
+      esc(name) + '</button>';
+  }
+  function traitChips(s, c, grouped) {
+    if (!c.traits || !c.traits.length) {
+      return '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>';
     }
-    return h || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>';
+    if (!grouped) {
+      let flat = '';
+      for (const id of c.traits) {
+        const trait = FBDATA.traits[id];
+        if (trait) flat += traitChip(s, id, trait);
+      }
+      return flat || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>';
+    }
+    const groups = {
+      disposition:[], formation:[], reputation:[], condition:[], other:[]
+    };
+    for (const id of c.traits) {
+      const trait = FBDATA.traits[id];
+      if (trait) groups[traitClassId(trait)].push({ id:id, trait:trait });
+    }
+    let h = '<div class="traitgroups">';
+    for (const classId of TRAIT_CLASS_ORDER) {
+      const group = groups[classId];
+      if (!group.length) continue;
+      h += '<div class="traitgroup"><div class="traitgroup-label">' +
+        esc(FB.T(TRAIT_CLASS_NAMES[classId])) + '</div><div class="traitgroup-chips">';
+      for (const item of group) h += traitChip(s, item.id, item.trait);
+      h += '</div></div>';
+    }
+    return h + '</div>';
   }
 
   function healthWord(hp) {
@@ -1467,7 +1508,7 @@ window.FB = window.FB || {};
       'data-action-id="self-equipment">' + esc(FB.T('Equip items…')) + '</button>' +
       '</div><div class="self-overview-skills">' + panelh('Skills') + skillBars(me) +
       '</div></div>' +
-      panelh('Traits') + traitChips(me) +
+      panelh('Traits') + traitChips(s, me, true) +
       '<div class="self-details-divider" aria-hidden="true"></div>' +
       kv('Rank', esc(FB.styledTitle(s))) +
       kv('Age', FB.ageOf(me, s.date.year)) +
@@ -1655,18 +1696,13 @@ window.FB = window.FB || {};
     })) + '</div>';
   }
 
-  UI.charCardHtml = function (s, c, clickable) {
+  UI.charCardHtml = function (s, c, clickable, groupedTraits) {
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
     for (const k of FB.SKILLS) sk += FB.skillName(k) + ' ' + FB.skillOf(c, k) + ' · ';
     sk = sk.slice(0, -3);
-    let tr = '';
-    for (const t of c.traits) {
-      const td = FBDATA.traits[t];
-      if (td) tr += '<span class="traitchip" data-trait="' + t + '">' + td.icon + ' ' +
-        esc(dt(s, 'trait', t, td, 'name')) + '</span>';
-    }
+    const tr = traitChips(s, c, !!groupedTraits);
     // treasures the player has gifted them, worn where callers can see
     let itc = '';
     if (c.items && c.items.length && c.id !== s.player.charId) {
@@ -1833,6 +1869,12 @@ window.FB = window.FB || {};
       return FB.T('National military technology');
     }
     if (entry.kind === 'council_rate') return FB.T('Royal Constable');
+    if (entry.kind === 'trait_rate') {
+      const trait = FBDATA.traits[entry.traitId];
+      const name = trait
+        ? dt(s, 'trait', entry.traitId, trait, 'name') : entry.traitId;
+      return FB.T('{trait} — direct levy', { trait:name });
+    }
     if (entry.kind === 'martial_rate') return FB.T('Ruler’s Martial');
     if (entry.kind === 'domain_penalty') return FB.T('Over-domain penalty');
     if (entry.kind === 'vassal') {
@@ -8046,7 +8088,7 @@ window.FB = window.FB || {};
     const isHousehold = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
     const retainer = !c.dead && FB.retainerRecord ? FB.retainerRecord(s, c.id) : null;
-    let h = UI.charCardHtml(s, c);
+    let h = UI.charCardHtml(s, c, false, true);
     const attentionTarget = FB.socialAttentionTarget(s);
     if (!c.dead && attentionTarget && attentionTarget.id === c.id) {
       h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
@@ -9495,6 +9537,10 @@ window.FB = window.FB || {};
     const s = FB.state;
     const traitName = dt(s, 'trait', tid, t, 'name');
     const traitDesc = dt(s, 'trait', tid, t, 'desc');
+    let meta = kv('Class', esc(traitClassName(t)));
+    if (t.earned) {
+      meta += kv('Earned', esc(dt(s, 'trait', tid, t, 'earned')));
+    }
     let fx = '';
     for (const k of FB.SKILLS) {
       if (t[k]) fx += '<div class="kv"><span>' + esc(FB.skillName(k)) + '</span><b>' +
@@ -9508,8 +9554,10 @@ window.FB = window.FB || {};
     if (t.opposite && FBDATA.traits[t.opposite]) {
       fx += kv('Opposite of', esc(dt(s, 'trait', t.opposite, FBDATA.traits[t.opposite], 'name')));
     }
+    const grouped = traitGroupedEffects(t);
+    for (const effect of grouped) fx += kv(effect.label, esc(effect.value));
     openModal(t.icon + ' ' + traitName,
-      '<div class="gm-body-text"><p><i>' + esc(traitDesc) + '</i></p>' +
+      '<div class="gm-body-text"><p><i>' + esc(traitDesc) + '</i></p>' + meta +
       (fx || '<p class="hint">No lasting effects — only a story people tell about you.</p>') +
       '</div><button class="btn" id="tm-close">Close</button>');
     $('tm-close').addEventListener('click', UI.closeModal);
@@ -10264,7 +10312,12 @@ window.FB = window.FB || {};
           const fx = traitFxText(t);
           const tid = chip.getAttribute('data-trait');
           tip.innerHTML = '<b>' + t.icon + ' ' + esc(dt(FB.state, 'trait', tid, t, 'name')) +
-            '</b><br>' + esc(dt(FB.state, 'trait', tid, t, 'desc')) +
+            '</b><br>' + esc(FB.T('Class: {className}', {
+              className:traitClassName(t)
+            })) + '<br>' + esc(dt(FB.state, 'trait', tid, t, 'desc')) +
+            (t.earned ? '<br><i>' + esc(FB.T('Earned: {guidance}', {
+              guidance:dt(FB.state, 'trait', tid, t, 'earned')
+            })) + '</i>' : '') +
             (fx ? '<br><i>' + esc(fx) + '</i>' : '');
         } else {
           const iid = chip.getAttribute('data-item') || chip.getAttribute('data-itemview');
@@ -10285,6 +10338,55 @@ window.FB = window.FB || {};
     }
   };
 
+  function signedTraitEffect(value) {
+    const rounded = Math.round(value * 1000) / 1000;
+    return (rounded > 0 ? '+' : '') + rounded;
+  }
+
+  function traitGroupedEffects(t) {
+    const out = [];
+    for (const group in t) {
+      if (!Object.prototype.hasOwnProperty.call(t, group) ||
+          group === 'earn' || group === 'name' || group === 'desc' ||
+          group === 'earned') continue;
+      const values = t[group];
+      if (!values || typeof values !== 'object' || Array.isArray(values)) continue;
+      for (const key in values) {
+        if (!Object.prototype.hasOwnProperty.call(values, key)) continue;
+        const value = Number(values[key]);
+        if (!isFinite(value)) continue;
+        const id = group + '.' + key;
+        let label = id;
+        let shown = signedTraitEffect(value);
+        if (id === 'assembly.voteChance') {
+          label = 'Assembly vote chance';
+          shown = FB.T('{amount} percentage points', {
+            amount:signedTraitEffect(value * 100)
+          });
+        } else if (id === 'assembly.popularOpinion') {
+          label = 'Positive Common Voice gains';
+          shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
+        } else if (id === 'travel.legDays') {
+          label = 'Days per county leg';
+        } else if (id === 'travel.roadIncident') {
+          label = 'Ordinary road incidents';
+          shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
+        } else if (id === 'war.levy') {
+          label = 'Direct levy base';
+          shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
+        } else if (id === 'estate.rent') {
+          label = 'Direct demesne rent';
+          shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
+        } else if (id === 'household.regard') {
+          label = 'Positive spouse and blood-kin Regard';
+          shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
+        }
+        out.push({ label:label, value:shown });
+      }
+    }
+    return out;
+  }
+
   function traitFxText(t) {
     const parts = [];
     for (const k of FB.SKILLS) if (t[k]) parts.push(FB.T('{amount} {skill}', {
@@ -10295,6 +10397,11 @@ window.FB = window.FB || {};
     if (t.health) parts.push(FB.T(t.health > 0 ? 'hardier' : 'frailer'));
     if (t.fert && t.fert !== 1) {
       parts.push(FB.T(t.fert > 1 ? 'more fertile' : 'less fertile'));
+    }
+    for (const effect of traitGroupedEffects(t)) {
+      parts.push(FB.T('{effect}: {value}', {
+        effect:FB.T(effect.label), value:effect.value
+      }));
     }
     return parts.join(' · ');
   }

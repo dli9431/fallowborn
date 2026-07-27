@@ -205,6 +205,9 @@ prey each day rather than marching to where it stood).
 the banner call (`with_liege_host`) fight through the `host_*` events; those and the
 war's end pay into the lifetime `player.warService` tally, which gates the
 intra-realm petition deed and the escheat scramble (see [realms.md](realms.md)).
+Each positive `fx.warService` award also adds its exact value to Muster-Bred
+acquisition progress; six points award the formation without changing the existing
+service tally or its succession reset.
 
 **One computed levy ledger is authoritative.** `FB.playerCompositionBreakdown` returns
 the levy, archers, cavalry, and retinue together with ordered source entries for direct counties,
@@ -214,6 +217,11 @@ standing barony troops, and position or retainer contributions.
 is stored. The Network Realm section renders the same entries, preserving the existing
 calculation order in which percentages and the domain penalty affect direct levy before
 vassal contributions are added.
+
+Grouped `war.levy` trait rates are itemized by localized trait name against the direct
+levy base after flat county/building/technology troops. Muster-Bred contributes +5%.
+That line is added before ruler Martial and the domain penalty, and vassal contributions
+remain outside all direct-domain percentages.
 
 A loyal vassal at opinion 40+ may supply one bounded exceptional levy favor. Spending
 15 favor records a one-year `player.vassalLevyFavors[realmId]` modifier and raises that

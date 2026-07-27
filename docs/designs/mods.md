@@ -47,6 +47,15 @@ career rank names and household-standard level names/descriptions, use the same
 structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
+Trait definitions remain replaced or added by id under the top-level `traits` key.
+`class` selects Disposition, Formation, Reputation, or Condition grouping; omission
+preserves compatibility by placing the trait under Other. Omission of `noRandom` also
+preserves ordinary random-generation eligibility. Root skill/health/fertility/Regard
+fields retain their old meaning, while numeric objects such as `assembly`, `travel`,
+`war`, `estate`, and `household` are read only by their owning systems through
+`FB.traitBonus`. Acquisition guidance in `earned` is display text; `earn.threshold`
+is mechanical progress state.
+
 Technology definitions merge under the top-level `tech` key before validation. The graph
 engine normalizes legacy `branch` to `domain`, scalar `req` to an array, and `yearMin` to
 an inferred soft attestation/adoption window; legacy `cultures` and `notCultures`
