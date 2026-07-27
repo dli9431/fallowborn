@@ -60,6 +60,10 @@ window.FB = window.FB || {};
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    if (FB.validateTechnologyData) {
+      var technologyErrors = FB.validateTechnologyData();
+      for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
+    }
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
     if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
@@ -679,6 +683,8 @@ window.FB = window.FB || {};
         id: r.id, name: r.name, color: r.color, capital: r.capital,
         aggression: r.aggression !== undefined ? r.aggression : 1,
         rank: r.rank || 3, liege: r.liege || null,
+        techTraditions:Array.isArray(r.techTraditions) ? r.techTraditions.slice() : null,
+        techSeed:r.techSeed || null,
         religion: r.religion || (cap ? cap.religion : null),
         alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish', r.ruler, state.date.year),
         war: null, op: 0
@@ -695,6 +701,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
+    if (FB.seedRealmTechnologies) FB.seedRealmTechnologies(state);
   };
 
   /* Group a realm's counties by duchy and hand out titles:
@@ -981,6 +988,7 @@ window.FB = window.FB || {};
     const seat = FB.world.byId[meta.seat];
     const controller = state.realms[controllerId];
     const controllerName = controller ? controller.name : controllerId;
+    const controllerSovereign = FB.topRealm(state, controllerId);
     const restored = {
       id:canonicalId,
       name:definition.name,
@@ -989,6 +997,9 @@ window.FB = window.FB || {};
       aggression:definition.aggression !== undefined ? definition.aggression : 0,
       rank:meta.restoredRank || 3,
       liege:null,
+      techTraditions:Array.isArray(definition.techTraditions)
+        ? definition.techTraditions.slice() : null,
+      techSeed:definition.techSeed || null,
       religion:religionId,
       alive:true,
       ruler:makeRuler(seat.culture, null, state.date.year),
@@ -996,6 +1007,9 @@ window.FB = window.FB || {};
       op:0
     };
     state.realms[canonicalId] = restored;
+    if (FB.mergeRealmTech && controllerSovereign) {
+      FB.mergeRealmTech(state, canonicalId, controllerSovereign);
+    }
     FB.ensureRealmSuccession(state, canonicalId);
     FB.transferProvince(state, meta.seat, canonicalId);
     if (!FB.assignReligiousHead(state, religionId, canonicalId)) return false;
@@ -1885,6 +1899,9 @@ window.FB = window.FB || {};
           capital: ev.newRealm.capital,
           aggression: ev.newRealm.aggression !== undefined ? ev.newRealm.aggression : 1,
           rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
+          techTraditions:Array.isArray(ev.newRealm.techTraditions)
+            ? ev.newRealm.techTraditions.slice() : null,
+          techSeed:ev.newRealm.techSeed || null,
           religion: ev.newRealm.religion || (cap ? cap.religion : null),
           alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic',
             ev.newRealm.ruler, state.date.year), war: null, op: 0
@@ -2635,7 +2652,7 @@ window.FB = window.FB || {};
   FB.fns.war_siege = function (state) {
     const w = state.player.war; if (!w || !FB.fns.war_can_siege(state)) return;
     const tname = FB.world.byId[w.target].name;
-    w.siege = (w.siege || 0) + 1;
+    w.siege = (w.siege || 0) + 1 + FB.techBonus(state, 'siege') * 3;
     if (FB.chance(0.4)) { // a sortie from the walls
       if (FB.chance(FB.namedChance(state, 'war_battle'))) {
         FB.news(state, FB.msg('news.war.sortie_repelled',

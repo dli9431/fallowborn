@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.63.0';
+  FB.VERSION = '1.64.0';
   FB.CHANGELOG = [
+    { v: '1.64.0', date: '2026-07-26', changes: [
+      'Technology now follows historical regional adoption and spreads through neighboring realms, alliances, wars, shared traditions, and faith networks.'
+    ] },
     { v: '1.63.0', date: '2026-07-26', changes: [
       'Technology now belongs to sovereign nations, with shared research projects and military, economic, and administrative branches.'
     ] },
@@ -800,7 +803,7 @@ window.FB = window.FB || {};
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
-      realmTech: {}, realmTechMigration: 1,
+      realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
@@ -943,7 +946,7 @@ window.FB = window.FB || {};
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
-      realmTech: {}, realmTechMigration: 1,
+      realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],

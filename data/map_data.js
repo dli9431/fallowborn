@@ -634,27 +634,27 @@ FBDATA.titles = {
    (professional men-at-arms — few, hard to kill), archers (bowmen) —
    all three join the host's composition at muster (see docs/designs/war.md). */
 FBDATA.buildings = {
-  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2,
+  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, requiresTech:'undershot_watermill',
     desc:'Grinds the valley’s grain for a fee.' },
-  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1,
+  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, requiresTech:'warehouses',
     desc:'Grain laid up against the hungry years.' },
-  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10,
+  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, requiresTech:'stone_bridgebuilding',
     desc:'Trade crosses where the ford once drowned it.' },
-  walls:   { name:'Stone Walls', icon:'🧱', cost:60, upkeep:1, maxCounty:1, homeOnly:true,
+  walls:   { name:'Stone Walls', icon:'🧱', cost:60, upkeep:1, maxCounty:1, homeOnly:true, requiresTech:'stone_castles',
     desc:'Stone walls rally the defense of your home county.' },
-  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3,
+  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, requiresTech:'urban_markets',
     desc:'Tolls, stalls, and strangers’ silver.' },
-  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5,
+  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, requiresTech:'lime_mortar',
     desc:'Stone raised toward heaven — and remembered on earth.' },
-  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4,
+  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, requiresTech:'harbor_works',
     desc:'Every tide brings someone who owes you a toll.' },
-  library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1,
+  library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1, requiresTech:'paper_scholarship',
     desc:'Shelves of knowledge — and the people who argue over it. (+1 national research per season)' },
-  keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10,
+  keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10, requiresTech:'stone_castles',
     desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
-  barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40,
+  barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40, requiresTech:'martial_drill',
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
-  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50,
+  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50, requiresTech:'crossbows',
     desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' }
 };
 
@@ -824,62 +824,6 @@ FBDATA.plots = {
   widow_veil: { name:'A Quiet Grave', icon:'🕯', need:16, event:'plot_spouse_end',
     trigger:{ married:true },
     desc:'Foxglove in the stew, a loose stair, a hunting mishap — and mourning clothes that fit you well.' }
-};
-
-/* National technology. Each sovereign realm owns one record in
-   state.realmTech; vassals use and contribute to their sovereign's record.
-   branch/level define the three linear trees. cultures/notCultures select a
-   culture-specific alternative when a project begins. fx scalar keys are
-   summed by FB.techBonus; fx.costs holds signed category modifiers (negative
-   is cheaper), fx.units adds flat player troops, and fx.aiUnits changes the
-   professional fractions of AI hosts. Legacy flat build/retinue/archers
-   effects remain readable through the technology helpers. */
-FBDATA.tech = {
-  /* economy */
-  heavy_plough:  { name:'Heavy Plough', icon:'🌾', branch:'economy', level:1, cost:30, yearMin:880,
-    desc:'Iron shares turn the deep clays. (+10% tax)', fx:{ tax:0.10 } },
-  three_field:   { name:'Three-Field Rotation', icon:'🌱', branch:'economy', level:2, cost:60, yearMin:920, req:'heavy_plough',
-    desc:'Two crops in the ground, one field at rest. (+10% tax, higher development ceiling)', fx:{ tax:0.10, devCap:1 } },
-  horse_collar:  { name:'Horse Collar', icon:'🐴', branch:'economy', level:3, cost:100, yearMin:980, req:'three_field',
-    desc:'A horse ploughs twice as fast as an ox. (+15% tax, higher development ceiling)', fx:{ tax:0.15, devCap:1 } },
-  improved_husbandry: { name:'Improved Husbandry', icon:'🐂', branch:'economy', level:4, cost:160, yearMin:1040, req:'horse_collar',
-    desc:'Better breeds, better folds, fuller barns. (+5% tax)', fx:{ tax:0.05 } },
-  powered_mills: { name:'Powered Mills', icon:'⚙', branch:'economy', level:5, cost:240, yearMin:1100, req:'improved_husbandry',
-    desc:'Water, wind, and gearing turn labor into abundance. (+10% tax, higher development ceiling, cheaper buildings and enterprises)',
-    fx:{ tax:0.10, devCap:1, costs:{ build:-0.10, enterprise:-0.10 } } },
-
-  /* military */
-  ringworks:     { name:'Ringworks', icon:'🛡', branch:'military', level:1, cost:30, yearMin:880,
-    desc:'Earth and timber around every village. (+10% levy)', fx:{ levy:0.10 } },
-  stirrups:      { name:'Stirrup Cavalry', icon:'🐎', branch:'military', level:2, cost:60, yearMin:920, req:'ringworks',
-    notCultures:['greek'],
-    desc:'Shock riders who stay in the saddle. (+30 cavalry)', fx:{ units:{ cav:30 }, aiUnits:{ cav:0.05 } } },
-  tagmata:       { name:'Tagmata', icon:'🐎', branch:'military', level:2, cost:60, yearMin:920, req:'ringworks',
-    cultures:['greek'],
-    desc:'Professional imperial regiments of horse and steel. (+15 cavalry, +15 men-at-arms)',
-    fx:{ units:{ cav:15, ret:15 }, aiUnits:{ cav:0.025, ret:0.025 } } },
-  mail_hauberks: { name:'Mail Hauberks', icon:'⛓', branch:'military', level:3, cost:100, yearMin:980,
-    desc:'A shirt of rings for every serious man. (+15% levy, +3% battle odds, +20 men-at-arms)',
-    fx:{ levy:0.15, battle:0.03, units:{ ret:20 }, aiUnits:{ ret:0.04 } } },
-  martial_drill: { name:'Martial Drill', icon:'⚔', branch:'military', level:4, cost:160, yearMin:1040, req:'mail_hauberks',
-    desc:'Shield-wall practice through the winter months. (+3% battle odds)', fx:{ battle:0.03 } },
-  combined_arms: { name:'Combined Arms', icon:'⚔', branch:'military', level:5, cost:240, yearMin:1100, req:'martial_drill',
-    desc:'Bow, horse, and armored foot train as one host. (+20 archers, +20 cavalry, +3% battle odds)',
-    fx:{ battle:0.03, units:{ arch:20, cav:20 }, aiUnits:{ arch:0.03, cav:0.03 } } },
-
-  /* administrative */
-  scriptoria:    { name:{ default:'Scriptoria', muslim:'Paper Mills' }, icon:'📜', branch:'administrative', level:1, cost:30, yearMin:880,
-    desc:'Knowledge that outlives its keepers. (+1 research per season)', fx:{ research:1 } },
-  physicians:    { name:'Court Physicians', icon:'🌿', branch:'administrative', level:2, cost:60, yearMin:920, req:'scriptoria',
-    desc:'Learned men against fevers and wounds. (−1.2% yearly ruler mortality)', fx:{ health:0.012 } },
-  guild_charters:{ name:'Guild Charters', icon:'📯', branch:'administrative', level:3, cost:100, yearMin:980, req:'physicians',
-    desc:'Chartered crafts and honest weights. (cheaper buildings, enterprises, and training)',
-    fx:{ costs:{ build:-0.20, enterprise:-0.10, training:-0.10 } } },
-  royal_catalogue: { name:'Royal Catalogue', icon:'📚', branch:'administrative', level:4, cost:160, yearMin:1040, req:'guild_charters',
-    desc:'Every charter and cartulary copied, counted, and kept. (+0.5 research per season)', fx:{ research:0.5 } },
-  royal_chancery: { name:'Royal Chancery', icon:'📜', branch:'administrative', level:5, cost:240, yearMin:1100, req:'royal_catalogue',
-    desc:'A permanent writing office carries the crown beyond one household. (+1 domain capacity, +0.5 research per season, unlocks Administration work)',
-    fx:{ domain:1, research:0.5 } }
 };
 
 /* Currency presentation only. All authored and saved economic values remain

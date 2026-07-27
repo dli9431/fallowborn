@@ -63,14 +63,19 @@ player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mo
 and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
 National technology is additive version-3 state. `state.realmTech[realmId]` stores
-`{completed,active,progress,reserve}` for that sovereign identity; effective bonuses resolve
-through the top independent realm while dormant former-sovereign records remain intact.
-Secession and absorption merge records by completed-set union and the maximum partial
-progress/reserve rather than summing research that may once have been shared. On the first
-restore, `FB.ensureRealmTech` migrates legacy `state.tech` and `player.research` into the
-player's effective sovereign, collapses duplicate repeatable capstones, and refunds their
-additional historical costs to reserve. The `realmTechMigration` marker makes that repair
-one-shot without raising save format 3. See [tech.md](tech.md).
+`{completed,exposed,active,progress,reserve,priorities}` for that sovereign identity;
+`active` is an array of up to three project ids and `priorities` maps advocated ids to
+expiry years. Effective bonuses resolve through the top independent realm while dormant
+former-sovereign records remain intact. Secession and absorption union completed/exposed
+sets and keep the maximum partial progress and reserve rather than summing research that
+may once have been shared.
+
+On the first restore, `FB.ensureRealmTech` uses `realmTechMigration:2` to convert a legacy
+active string to an array, historically backfill each living sovereign through the saved
+year and its derived traditions, and then union every saved completion, exposure, partial
+progress value, and reserve. Old `state.tech` and `player.research` are imported into the
+player's effective sovereign. The marker makes the graph migration one-shot without
+raising save format 3. See [tech.md](tech.md).
 
 `state.legends` records each player character at death (`js/main.js` `recordLegend`):
 id, name, born/died years, a semantic `titleData` snapshot, locale-neutral `causeMsg`

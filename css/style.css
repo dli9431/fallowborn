@@ -589,6 +589,76 @@ textarea.modjson, textarea.savetext {
 .autorow input { margin-right: 7px; }
 .autorow .adesc { display: block; font-size: 12px; opacity: 0.7; margin: 2px 0 0 26px; }
 
+/* ---------- historical technology catalogue ---------- */
+.tech-summary {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px; margin-bottom: 8px;
+}
+.tech-active-strip {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px; margin: 8px 0 12px;
+}
+.tech-active-project {
+  min-width: 0; padding: 8px 9px; border: 1px solid #9c7a2e;
+  border-radius: 7px; background: #332919; color: #ead7a2;
+  cursor: pointer; text-align: left;
+}
+.tech-active-project span { display: block; color: #aa9874; font-size: 11px; margin-top: 3px; }
+.tech-controls {
+  position: sticky; top: 0; z-index: 2;
+  display: grid; grid-template-columns: minmax(170px, 2fr) minmax(145px, 1fr) minmax(120px, .8fr);
+  gap: 8px; padding: 8px 0 10px;
+  background: linear-gradient(180deg, #2c2418 86%, rgba(44,36,24,.94));
+}
+.tech-controls label { color: #ad9b78; font-size: 11px; }
+.tech-controls label span { display: block; margin: 0 0 3px 2px; }
+.tech-controls input, .tech-controls select {
+  width: 100%; min-height: 38px; padding: 7px 8px;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #211a12; color: #eadbb6; font: inherit;
+}
+.tech-era { margin: 0 0 13px; }
+.tech-era h4 {
+  margin: 8px 0 5px; color: #d3ac4e; font-size: 13px;
+  letter-spacing: .04em;
+}
+.tech-entry {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 8px; align-items: center; width: 100%; min-height: 48px;
+  padding: 7px 9px; margin: 4px 0; border: 1px solid #4f422d;
+  border-radius: 7px; background: #241d15; color: #e8d7ac;
+  cursor: pointer; text-align: left;
+}
+.tech-entry:hover, .tech-entry:focus-visible { border-color: #b28a35; background: #2e2518; }
+.tech-entry.tech-completed { border-color: #47684b; background: #20291f; }
+.tech-entry.tech-active { border-color: #a67f2b; background: #302717; }
+.tech-entry.tech-exposed:not(.tech-completed) { border-left: 3px solid #5d84a6; }
+.tech-entry-icon { font-size: 22px; text-align: center; }
+.tech-entry-copy { min-width: 0; }
+.tech-entry-copy b {
+  display: block; overflow: hidden; text-overflow: ellipsis;
+  color: #ecd9a0; font-size: 13px; white-space: nowrap;
+}
+.tech-entry-copy small { display: block; color: #9f8e6d; font-size: 11px; margin-top: 2px; }
+.tech-entry-cost { color: #d0ad54; font-size: 12px; text-align: right; }
+.tech-empty { padding: 22px 8px; color: #9f8e6d; text-align: center; }
+.tech-detail-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.tech-detail-head > span { flex: 0 0 auto; font-size: 34px; }
+.tech-detail-head h4 { color: #e3c66d; font-size: 19px; margin: 0 0 2px; }
+.tech-detail-head small { color: #9f8e6d; }
+.tech-prereq-line { margin: 8px 0; color: #ad9b78; font-size: 12px; }
+.tech-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.tech-chip {
+  min-height: 34px; padding: 5px 9px; border: 1px solid #66522f;
+  border-radius: 999px; background: #241d15; color: #dec995; cursor: pointer;
+}
+.tech-chip.complete { border-color: #4f7955; background: #213022; }
+.tech-effects {
+  margin: 6px 0 12px; padding: 8px 10px; border: 1px solid #4d402b;
+  border-radius: 7px; background: #211a13; color: #cbbb94;
+  font-size: 12px; line-height: 1.55;
+}
+
 /* ---------- settings: speed-of-days slider ---------- */
 .speedrow { margin: 10px 0; }
 .speedrow input[type="range"] { width: 100%; margin: 0; }
@@ -622,6 +692,17 @@ textarea.modjson, textarea.savetext {
   .traitchip { font-size: 13px; padding: 4px 11px; }
   .logentry { font-size: 14px; padding: 6px 0; }
   .autorow input { width: 20px; height: 20px; vertical-align: -4px; }
+  .tech-summary { grid-template-columns: 1fr; }
+  .tech-active-strip { grid-template-columns: 1fr; }
+  .tech-controls {
+    grid-template-columns: 1fr 1fr;
+    padding-top: 4px;
+  }
+  .tech-controls label:first-child { grid-column: 1 / -1; }
+  .tech-controls input, .tech-controls select, .tech-chip { min-height: 44px; }
+  .tech-entry { min-height: 52px; padding: 9px; }
+  .tech-entry-copy b { font-size: 14px; }
+  .tech-entry-copy small { font-size: 12px; white-space: normal; }
   /* the flow of time lives in the thumb zone, always visible */
   #timebtns {
     position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; margin: 0;

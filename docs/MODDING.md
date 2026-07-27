@@ -556,7 +556,8 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`, `killRole`, `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (points added to
-the effective sovereign nation's active technology project, or its reserve) ·
+the effective sovereign nation's shared research pool; divided among active projects or
+banked as reserve) ·
 `travelReturn: true` (begin the saved route home once the minimum stay is complete) ·
 `travelSettle: true` (move the household to an eligible completed destination without
 converting culture/faith; limited to one permanent move per character life) ·
@@ -1108,39 +1109,59 @@ attack the player and cannot be declared on.
 
 ## Technology
 
-`FBDATA.tech` (in `data/map_data.js`, mod key `tech`) defines national technology.
-Each sovereign nation owns one saved `state.realmTech[realmId]` record; vassals use and
-contribute to the effective top independent realm's completed technology and active
-project. Only a sovereign player chooses a project, while AI sovereigns choose with saved
-RNG. A definition occupies one level of one linear branch:
+`FBDATA.tech` (in `data/technology.js`, mod key `tech`) defines the national prerequisite
+graph. Each sovereign owns one saved `state.realmTech[realmId]` record; vassals use and
+contribute to the effective top independent realm's completed knowledge, exposures, and
+one-to-three active projects. Only a sovereign player chooses projects, while AI
+sovereigns fill slots with saved RNG.
 
 ```json
 { "tech": { "windmills": {
   "name": "Windmills", "icon": "🌬",
-  "branch": "economy", "level": 4,
-  "cost": 160, "yearMin": 1040, "req": "horse_collar",
+  "domain": "crafts",
+  "cost": 50,
+  "req": ["water_power"],
+  "reqAny": ["overshot_waterwheel", "trip_hammer"],
+  "history": {
+    "attested": [850, 1200],
+    "adoption": {
+      "default": [1030, 1240],
+      "latin": [980, 1170],
+      "islamic": [980, 1170]
+    }
+  },
   "desc": "Grinding grain wherever the wind blows.",
+  "confidence": "medium",
+  "sources": ["GIES", "HILL"],
+  "unlocks": ["rule:wind_power"],
   "fx": {
-    "tax": 0.10,
-    "costs": { "build": -0.10, "enterprise": -0.10 },
-    "units": { "arch": 20 },
-    "aiUnits": { "arch": 0.03 }
+    "costs": { "build": -0.04, "enterprise": -0.04 },
+    "movement": 0.02
   }
 } } }
 ```
 
-- Core branches are `military`, `economy`, and `administrative`, with levels 1–5.
-  `cost` is required research, `yearMin` is the calendar gate, and `req` is an optional
-  prerequisite technology id. There is one active project per sovereign and technologies
-  are never repeatable.
+- Core domains are `agriculture`, `crafts`, `commerce`, `learning`, `governance`,
+  `warfare`, and `seafaring`. `req` is an all-of id or array; `reqAny` is an optional
+  any-of array. Technologies are never repeatable.
+- `history.attested:[from,to]` is the evidence range.
+  `history.adoption.default:[emergence,widespread]` is required; named technology
+  traditions may override it. Dates affect cost rather than availability, so a project
+  remains selectable before attestation at a severe premium.
+- `unlocks` names discrete content or rule hooks. Every referenced `building:*`,
+  `enterprise:*`, and `career:*` target is validated.
+- `confidence` and `sources` are research metadata; core source codes are expanded in
+  `docs/research/medieval-technology-catalogue.md`.
 - Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
-  that level begins. Once completed, the selected id remains valid after cultural
-  succession.
+  a project begins. Once completed, the selected id remains valid after cultural
+  succession. These restrictions remain primarily for old mods.
 - Scalar `fx` keys summed by `FB.techBonus` are `tax`/`levy` (fractional multipliers),
   `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
-  mortality), `research` (national points each season), and `domain` (domain capacity).
+  mortality), `research` (national points each season), `domain` (domain capacity),
+  `siege`, `movement`, `education`, `finance`, and `trade`. All are subject to
+  `FBDATA.techCaps`.
 - `fx.costs` contains signed fractional modifiers for `build`, `enterprise`, and
-  `training`: `-0.20` is twenty percent cheaper and `0.20` is twenty percent dearer.
+  `training`; final factors have category floors.
 - `fx.units` adds flat player-host `levy`, `arch`, `cav`, or `ret` troops.
   `fx.aiUnits` adds AI host composition fractions for `arch`, `cav`, or `ret`. Compatibility
   aliases remain readable: flat `build:0.20` means a twenty-percent building discount,
@@ -1149,7 +1170,30 @@ RNG. A definition occupies one level of one linear branch:
 - Events grant national progress with the `research` effect and gate on effective
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
   (see the library); contributions become reserve if no project is active.
-- Careers and enterprises may use `requiresTech:"technology_id"`.
+- Buildings, careers, schooling, enterprises, household-standard levels, finance
+  contracts, and trade partnerships may use `requiresTech:"technology_id"`.
+
+Legacy definitions are normalized at runtime. `branch` becomes `domain`, scalar `req`
+becomes an array, and `yearMin:Y` becomes an inferred soft historical window rather than
+a hard lock.
+
+Bookmark realm definitions may include:
+
+```json
+{
+  "techTraditions": ["byzantine", "islamic"],
+  "techSeed": {
+    "complete": ["technology_id"],
+    "expose": ["another_id"],
+    "omit": ["exception_id"]
+  }
+}
+```
+
+Without `techTraditions`, the engine derives one or more traditions from capital/ruler
+culture and religion. Fresh seeds complete knowledge whose regional adoption window has
+ended, expose knowledge whose window has begun, apply overrides, and close all completed
+prerequisites.
 
 ## Cultures, religions, traits, titles, balance
 
