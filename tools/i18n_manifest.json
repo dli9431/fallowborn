@@ -35611,16 +35611,6 @@
         "text": "Patience teaches what confidence cannot."
       }
     },
-    "src.0671b085": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "· mustered"
-      }
-    },
     "src.06895d5a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35849,6 +35839,16 @@
       ],
       "source": {
         "text": "A slow market day. You barely cover the road."
+      }
+    },
+    "src.073e7fc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{occupied}/{total} relevant counties occupied; your host occupied {personal} of them."
       }
     },
     "src.0753e869": {
@@ -36573,6 +36573,16 @@
       ],
       "source": {
         "text": "“I do not intend to die.”"
+      }
+    },
+    "src.09b0ea57": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "honor rather than land"
       }
     },
     "src.09c21925": {
@@ -38217,6 +38227,16 @@
       ],
       "source": {
         "text": "Name"
+      }
+    },
+    "src.0fe594f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "the target crown"
       }
     },
     "src.0feb4f23": {
@@ -41290,16 +41310,6 @@
         "text": "Requires +{threshold} regard; currently {regard}."
       }
     },
-    "src.1a55260d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The Duchy of {name}"
-      }
-    },
     "src.1a682a2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42269,6 +42279,16 @@
       ],
       "source": {
         "text": "fabricated claim"
+      }
+    },
+    "src.1edf4b2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You promise {seasons} seasons of service and seek {desire}."
       }
     },
     "src.1ee0efce": {
@@ -46737,16 +46757,6 @@
       ],
       "source": {
         "text": "active campaign"
-      }
-    },
-    "src.2fd2afb2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "· as vassal of {realm}"
       }
     },
     "src.2fdc1fb7": {
@@ -52306,16 +52316,6 @@
         "text": "Fresh mounts and prepared stations carry official news rapidly."
       }
     },
-    "src.44d6c403": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " · mustered"
-      }
-    },
     "src.44da1ebf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56599,6 +56599,16 @@
         "text": "The fever breaks. The child will live."
       }
     },
+    "src.54c21b85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{served}/{seasons} seasons · mustered"
+      }
+    },
     "src.54c3db16": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57402,16 +57412,6 @@
         "text": "Marked by battle."
       }
     },
-    "src.57835f69": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{served}/{seasons} seasons{muster}"
-      }
-    },
     "src.5784f28d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57710,16 +57710,6 @@
       ],
       "source": {
         "text": "🐞 Report a bug"
-      }
-    },
-    "src.586bb835": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Sovereign kingdom crown"
       }
     },
     "src.588247fe": {
@@ -58301,6 +58291,16 @@
       ],
       "source": {
         "text": "Trade supper for campaign gossip."
+      }
+    },
+    "src.5ad5c405": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You promise {seasons} seasons of service and seek {desire}. If land is won, {name} will receive it."
       }
     },
     "src.5af03138": {
@@ -59999,6 +59999,16 @@
       ],
       "source": {
         "text": "Laminated horn, sinew, and wood store great power in a short bow."
+      }
+    },
+    "src.6129d9b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Sovereign crown"
       }
     },
     "src.61302451": {
@@ -63496,6 +63506,16 @@
         "text": "Make the victory outlive those who won it."
       }
     },
+    "src.6df9936a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "custody of the sacred places"
+      }
+    },
     "src.6df9f75b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64475,16 +64495,6 @@
       ],
       "source": {
         "text": "A Dark Night of the Soul"
-      }
-    },
-    "src.71e00ca8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "The County of {name}"
       }
     },
     "src.71f1aaaa": {
@@ -68204,16 +68214,6 @@
         "text": "Ani"
       }
     },
-    "src.7ebb6dd2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{occupied}/{total} relevant counties occupied; your host led {personal}."
-      }
-    },
     "src.7ebf87d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69775,16 +69775,6 @@
         "text": "First option — take the default"
       }
     },
-    "src.83d86f21": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/traits.js"
-      ],
-      "source": {
-        "text": "Complete three distinct non-targeted journeys."
-      }
-    },
     "src.83e29c6f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69883,16 +69873,6 @@
       ],
       "source": {
         "text": "From serf to sovereign — a dynasty saga of the early Middle Ages"
-      }
-    },
-    "src.8411b7b8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "· not yet mustered"
       }
     },
     "src.842efc23": {
@@ -70927,6 +70907,16 @@
         "text": "💰 The house of {house} settles {money:gold} on you."
       }
     },
+    "src.87f75ecd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment"
+      }
+    },
     "src.880e987e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71085,16 +71075,6 @@
       ],
       "source": {
         "text": "Withdraw the petition."
-      }
-    },
-    "src.886c19f5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "for {name}"
       }
     },
     "src.888ffdbc": {
@@ -75710,6 +75690,16 @@
         "text": "🔥 {realm} declares war upon YOU!"
       }
     },
+    "src.9a333933": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant} · as vassal of {realm}"
+      }
+    },
     "src.9a49696e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77433,16 +77423,6 @@
         "text": "The lord’s stores are full, the nights are long, and hunger keeps no law."
       }
     },
-    "src.a03e19aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " If land is won, {name} will receive it."
-      }
-    },
     "src.a048c4d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78887,16 +78867,6 @@
         "text": "battle odds"
       }
     },
-    "src.a5d957d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "No particular prize"
-      }
-    },
     "src.a5d9615a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79800,16 +79770,6 @@
       ],
       "source": {
         "text": "{money:amount} due {date}"
-      }
-    },
-    "src.a93c98f3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " for {name}"
       }
     },
     "src.a941f54a": {
@@ -81624,16 +81584,6 @@
       ],
       "source": {
         "text": "🎓 You will be schooled in diplomacy."
-      }
-    },
-    "src.b068bb6c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "· with a {money:gold} settlement payment"
       }
     },
     "src.b06d14a9": {
@@ -87160,16 +87110,6 @@
         "text": "Western Karakhanids"
       }
     },
-    "src.c4636987": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "You promise {seasons} seasons of service and seek {desire}.{beneficiary}"
-      }
-    },
     "src.c46a8158": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88243,6 +88183,16 @@
         "text": "Let the masters associate prosperity with your name."
       }
     },
+    "src.c8a59f58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant}"
+      }
+    },
     "src.c8bb4b57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88421,16 +88371,6 @@
       ],
       "source": {
         "text": "Audit every holding."
-      }
-    },
-    "src.c99bf2d8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " · as vassal of {realm}"
       }
     },
     "src.c99ce018": {
@@ -88672,6 +88612,16 @@
       ],
       "source": {
         "text": "⚑ Declare independence…"
+      }
+    },
+    "src.ca7b7129": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{claimant} · as vassal of {realm}"
       }
     },
     "src.ca82befb": {
@@ -89958,6 +89908,16 @@
         "text": "🎓 {name} will be schooled in learning."
       }
     },
+    "src.cf159a3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Complete three distinct journeys for pilgrimage, trade, study, or paid service."
+      }
+    },
     "src.cf1fcfdd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91219,16 +91179,6 @@
         "text": "Unspoken words can never be traced."
       }
     },
-    "src.d4fae4aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " · with a {money:gold} settlement payment"
-      }
-    },
     "src.d4fc1433": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92158,6 +92108,16 @@
       ],
       "source": {
         "text": "Order at the end of a rope."
+      }
+    },
+    "src.d7f9d9ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "the Duchy of {name}"
       }
     },
     "src.d8172429": {
@@ -95791,6 +95751,16 @@
         "text": "broken strait at index"
       }
     },
+    "src.e5d7fac8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "the County of {name}"
+      }
+    },
     "src.e5d9f385": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96779,6 +96749,16 @@
       ],
       "source": {
         "text": "Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer."
+      }
+    },
+    "src.e904abb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "no particular prize"
       }
     },
     "src.e911331b": {
@@ -98794,6 +98774,16 @@
         "text": "Catch the poisoner — or teach him your defenses."
       }
     },
+    "src.f11f9463": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{claimant} · with a {money:gold} settlement payment"
+      }
+    },
     "src.f1286409": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100478,16 +100468,6 @@
         "text": "Walk away clean, and let them keep their guilt."
       }
     },
-    "src.f7b0003e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": " · not yet mustered"
-      }
-    },
     "src.f7bd0e24": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100526,16 +100506,6 @@
       ],
       "source": {
         "text": "🔥 War! {attacker} marches against {defender}."
-      }
-    },
-    "src.f803c8f8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "If land is won, {name} will receive it."
       }
     },
     "src.f8075687": {
@@ -102448,6 +102418,16 @@
       ],
       "source": {
         "text": "Give up this level with no refund"
+      }
+    },
+    "src.ff2482b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{served}/{seasons} seasons · not yet mustered"
       }
     },
     "src.ff263e51": {
@@ -106877,7 +106857,7 @@
       "glossary": [],
       "location": "data/traits.js",
       "source": {
-        "text": "Complete three distinct non-targeted journeys."
+        "text": "Complete three distinct journeys for pilgrimage, trade, study, or paid service."
       }
     },
     "trait.roadwise.name.default": {
@@ -107123,36 +107103,6 @@
         "text": " (including ~{men} from {ally})"
       }
     },
-    "ui: If land is won, {name} will receive it.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": " If land is won, {name} will receive it."
-      }
-    },
-    "ui: for {name}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": " for {name}"
-      }
-    },
-    "ui: · as vassal of {realm}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "realm"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": " · as vassal of {realm}"
-      }
-    },
     "ui: · designated heir": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -107187,14 +107137,6 @@
         "text": " · mandatory holy places: {places}"
       }
     },
-    "ui: · mustered": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": " · mustered"
-      }
-    },
     "ui: · next setup {money:cost}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -107203,14 +107145,6 @@
       "location": "js/ui.js",
       "source": {
         "text": " · next setup {money:cost}"
-      }
-    },
-    "ui: · not yet mustered": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": " · not yet mustered"
       }
     },
     "ui: · pay missed this season": {
@@ -107229,16 +107163,6 @@
       "location": "js/ui.js",
       "source": {
         "text": " · staffs {work}"
-      }
-    },
-    "ui: · with a {money:gold} settlement payment": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:gold"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": " · with a {money:gold} settlement payment"
       }
     },
     "ui: · {money:upkeep}/season upkeep": {
@@ -112093,14 +112017,6 @@
         "text": "No pact or war"
       }
     },
-    "ui:No particular prize": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "No particular prize"
-      }
-    },
     "ui:No personal host yet. Land, military positions, and sworn service will appear here.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -114186,20 +114102,20 @@
         "text": "Sovereign county"
       }
     },
+    "ui:Sovereign crown": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Sovereign crown"
+      }
+    },
     "ui:Sovereign duchy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Sovereign duchy"
-      }
-    },
-    "ui:Sovereign kingdom crown": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Sovereign kingdom crown"
       }
     },
     "ui:Sovereign over {realm}": {
@@ -114515,26 +114431,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "That visit cannot begin."
-      }
-    },
-    "ui:The County of {name}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "The County of {name}"
-      }
-    },
-    "ui:The Duchy of {name}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "The Duchy of {name}"
       }
     },
     "ui:The Estates": {
@@ -115877,16 +115773,27 @@
         "text": "You need {plots} plots together in one settlement."
       }
     },
-    "ui:You promise {seasons} seasons of service and seek {desire}.{beneficiary}": {
+    "ui:You promise {seasons} seasons of service and seek {desire}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "beneficiary",
         "desire",
         "seasons"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "You promise {seasons} seasons of service and seek {desire}.{beneficiary}"
+        "text": "You promise {seasons} seasons of service and seek {desire}."
+      }
+    },
+    "ui:You promise {seasons} seasons of service and seek {desire}. If land is won, {name} will receive it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "desire",
+        "name",
+        "seasons"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You promise {seasons} seasons of service and seek {desire}. If land is won, {name} will receive it."
       }
     },
     "ui:You renounce {liege} and raise your own banner over your lands. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.": {
@@ -116516,6 +116423,14 @@
         "text": "cultivated connection"
       }
     },
+    "ui:custody of the sacred places": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "custody of the sacred places"
+      }
+    },
     "ui:daughter": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -116669,6 +116584,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "home instruction"
+      }
+    },
+    "ui:honor rather than land": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "honor rather than land"
       }
     },
     "ui:household servant": {
@@ -116834,6 +116757,14 @@
       "location": "js/main.js",
       "source": {
         "text": "no one, watching"
+      }
+    },
+    "ui:no particular prize": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "no particular prize"
       }
     },
     "ui:no territorial claim": {
@@ -117157,6 +117088,26 @@
         "text": "tax income"
       }
     },
+    "ui:the County of {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "the County of {name}"
+      }
+    },
+    "ui:the Duchy of {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "the Duchy of {name}"
+      }
+    },
     "ui:the Lord": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -117219,6 +117170,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "the recipient"
+      }
+    },
+    "ui:the target crown": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "the target crown"
       }
     },
     "ui:the town": {
@@ -117759,6 +117718,41 @@
         "text": "{band} ({value})"
       }
     },
+    "ui:{beneficiary} · sponsored by {claimant}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "beneficiary",
+        "claimant"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant}"
+      }
+    },
+    "ui:{beneficiary} · sponsored by {claimant} · as vassal of {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "beneficiary",
+        "claimant",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant} · as vassal of {realm}"
+      }
+    },
+    "ui:{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "beneficiary",
+        "claimant",
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment"
+      }
+    },
     "ui:{building} upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -117871,6 +117865,28 @@
       "location": "js/ui.js",
       "source": {
         "text": "{chance}% yearly · {money:amount} each season"
+      }
+    },
+    "ui:{claimant} · as vassal of {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "claimant",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{claimant} · as vassal of {realm}"
+      }
+    },
+    "ui:{claimant} · with a {money:gold} settlement payment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "claimant",
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{claimant} · with a {money:gold} settlement payment"
       }
     },
     "ui:{completed} completed · {exposed} exposed": {
@@ -118670,7 +118686,7 @@
         "text": "{occupied}/{total} counties occupied · {development}/{totalDevelopment} objective development · attackers need every lost holy county, half the counties, and 60% of development."
       }
     },
-    "ui:{occupied}/{total} relevant counties occupied; your host led {personal}.": {
+    "ui:{occupied}/{total} relevant counties occupied; your host occupied {personal} of them.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "occupied",
@@ -118679,7 +118695,7 @@
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{occupied}/{total} relevant counties occupied; your host led {personal}."
+        "text": "{occupied}/{total} relevant counties occupied; your host occupied {personal} of them."
       }
     },
     "ui:{opinion} ({band})": {
@@ -119257,16 +119273,26 @@
         "text": "{season}, {year}"
       }
     },
-    "ui:{served}/{seasons} seasons{muster}": {
+    "ui:{served}/{seasons} seasons · mustered": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "muster",
         "seasons",
         "served"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "{served}/{seasons} seasons{muster}"
+        "text": "{served}/{seasons} seasons · mustered"
+      }
+    },
+    "ui:{served}/{seasons} seasons · not yet mustered": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "seasons",
+        "served"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{served}/{seasons} seasons · not yet mustered"
       }
     },
     "ui:{settlement} — {count}/{max} plots": {

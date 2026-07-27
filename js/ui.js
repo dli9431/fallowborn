@@ -100,7 +100,7 @@ window.FB = window.FB || {};
         esc(record.id) + '" data-modifier-scope="' + esc(scope) + '"' +
         (pid ? ' data-modifier-pid="' + esc(pid) + '"' : '') +
         ' aria-label="' + esc(label) + '">' + def.icon + ' ' + esc(name) +
-        ' <span class="modifier-duration">' + esc(duration) + '</span></button>';
+        ' <span class="modifier-duration">· ' + esc(duration) + '</span></button>';
     }
     return h;
   }
@@ -4695,19 +4695,19 @@ window.FB = window.FB || {};
   }
 
   function greatHolyWarDesireName(s, campaign, desire) {
-    if (!desire || desire.kind === 'neutral') return FB.T('No particular prize');
-    if (desire.kind === 'crown') return FB.T('The target crown');
-    if (desire.kind === 'sacred') return FB.T('Custody of the sacred places');
-    if (desire.kind === 'honor') return FB.T('Honor rather than land');
+    if (!desire || desire.kind === 'neutral') return FB.T('no particular prize');
+    if (desire.kind === 'crown') return FB.T('the target crown');
+    if (desire.kind === 'sacred') return FB.T('custody of the sacred places');
+    if (desire.kind === 'honor') return FB.T('honor rather than land');
     if (desire.kind === 'duchy') {
       const duchy = FBDATA.duchies[desire.id];
-      return FB.T('The Duchy of {name}', {
+      return FB.T('the Duchy of {name}', {
         name:duchy ? duchy.name : desire.id
       });
     }
     if (desire.kind === 'county') {
       const province = FB.world.byId[desire.id];
-      return FB.T('The County of {name}', {
+      return FB.T('the County of {name}', {
         name:province ? province.name : desire.id
       });
     }
@@ -4735,7 +4735,7 @@ window.FB = window.FB || {};
       if (row && row.occupied) occupied++;
       if (row && row.occupiedBy === 'player') personally++;
     }
-    return FB.T('{occupied}/{total} relevant counties occupied; your host led {personal}.', {
+    return FB.T('{occupied}/{total} relevant counties occupied; your host occupied {personal} of them.', {
       occupied:occupied, total:ids.length, personal:personally
     });
   }
@@ -4922,15 +4922,19 @@ window.FB = window.FB || {};
 
     function showReview() {
       const beneficiary = draft.beneficiary && s.chars[draft.beneficiary];
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'You promise {seasons} seasons of service and seek {desire}.{beneficiary}', {
+      const vowSummary = beneficiary
+        ? FB.T(
+          'You promise {seasons} seasons of service and seek {desire}. If land is won, {name} will receive it.', {
+            seasons:draft.seasons,
+            desire:greatHolyWarDesireName(s, campaign, draft.desire),
+            name:FB.fullName(beneficiary)
+          })
+        : FB.T('You promise {seasons} seasons of service and seek {desire}.', {
           seasons:draft.seasons,
-          desire:greatHolyWarDesireName(s, campaign, draft.desire),
-          beneficiary:beneficiary
-            ? FB.T(' If land is won, {name} will receive it.', {
-              name:FB.fullName(beneficiary)
-            }) : ''
-        })) + '</p><p>' + esc(FB.T(
+          desire:greatHolyWarDesireName(s, campaign, draft.desire)
+        });
+      let h = '<div class="gm-body-text"><p>' + esc(vowSummary) +
+        '</p><p>' + esc(FB.T(
         'Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount.')) +
         '</p></div><div class="gm-list">' +
         '<button class="actionbtn" id="ghw-join-confirm">📯 ' +
@@ -5031,11 +5035,13 @@ window.FB = window.FB || {};
         ? FB.T('Attackers') : FB.T('Defenders')));
       const vow = pledge.vowTerms;
       if (vow) {
-        h += kv('Promised service', esc(FB.T('{served}/{seasons} seasons{muster}', {
-          served:vow.served || 0,
-          seasons:vow.seasons,
-          muster:vow.mustered ? FB.T(' · mustered') : FB.T(' · not yet mustered')
-        })));
+        h += kv('Promised service', esc(vow.mustered
+          ? FB.T('{served}/{seasons} seasons · mustered', {
+            served:vow.served || 0, seasons:vow.seasons
+          })
+          : FB.T('{served}/{seasons} seasons · not yet mustered', {
+            served:vow.served || 0, seasons:vow.seasons
+          })));
         h += kv('Desire',
           esc(greatHolyWarDesireName(s, campaign, vow.desire)));
         h += kv('Occupation evidence',
@@ -5132,7 +5138,7 @@ window.FB = window.FB || {};
   function greatHolyWarCouncilAssetName(s, asset) {
     if (!asset) return FB.T('Unknown award');
     if (asset.kind === 'crown') {
-      return asset.rank >= 3 ? FB.T('Sovereign kingdom crown')
+      return asset.rank >= 3 ? FB.T('Sovereign crown')
         : asset.rank === 2 ? FB.T('Sovereign duchy')
           : FB.T('Sovereign county');
     }
@@ -5199,24 +5205,38 @@ window.FB = window.FB || {};
           break;
         }
       }
-      let terms = '';
-      if (award.terms && award.terms.kind === 'vassal') {
-        terms = FB.T(' · as vassal of {realm}', {
-          realm:greatHolyWarRealmName(s, award.terms.liege)
-        });
-      } else if (award.terms && award.terms.kind === 'payment') {
-        terms = FB.T(' · with a {money:gold} settlement payment', {
-          gold:award.terms.gold
-        });
-      }
+      const claimant = greatHolyWarCouncilClaimantName(
+        s, settlementCase, award.claimant);
       const beneficiary = award.beneficiary && s.chars[award.beneficiary]
-        ? FB.T(' for {name}', {
-          name:FB.fullName(s.chars[award.beneficiary])
-        }) : '';
+        ? FB.fullName(s.chars[award.beneficiary]) : null;
+      let awardText = beneficiary
+        ? FB.T('{beneficiary} · sponsored by {claimant}', {
+          claimant:claimant, beneficiary:beneficiary
+        })
+        : claimant;
+      if (award.terms && award.terms.kind === 'vassal') {
+        const realm = greatHolyWarRealmName(s, award.terms.liege);
+        awardText = beneficiary
+          ? FB.T('{beneficiary} · sponsored by {claimant} · as vassal of {realm}', {
+            claimant:claimant, beneficiary:beneficiary, realm:realm
+          })
+          : FB.T('{claimant} · as vassal of {realm}', {
+            claimant:claimant, realm:realm
+          });
+      } else if (award.terms && award.terms.kind === 'payment') {
+        awardText = beneficiary
+          ? FB.T('{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment', {
+            claimant:claimant,
+            beneficiary:beneficiary,
+            gold:award.terms.gold
+          })
+          : FB.T('{claimant} · with a {money:gold} settlement payment', {
+            claimant:claimant, gold:award.terms.gold
+          });
+      }
       h += '<div class="kv"><span>' +
         esc(greatHolyWarCouncilAssetName(s, asset)) + '</span><b>' +
-        esc(greatHolyWarCouncilClaimantName(
-          s, settlementCase, award.claimant) + beneficiary + terms) +
+        esc(awardText) +
         '</b></div>';
     }
     return h;

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.75.0';
+  FB.VERSION = '1.75.1';
   FB.CHANGELOG = [
+    { v: '1.75.1', date: '2026-07-27', changes: [
+      'Great holy-war settlement text, temporary modifier labels, and Roadwise guidance now read more clearly.'
+    ] },
     { v: '1.75.0', date: '2026-07-27', changes: [
       'Character traits are now grouped as dispositions, formations, reputations, and conditions, with five new traits earned through votes, journeys, war service, rents, and family choices.'
     ] },
