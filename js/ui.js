@@ -7143,15 +7143,20 @@ window.FB = window.FB || {};
     exitMode = exitMode === 'character' ? 'character' : 'close';
     const returnMode = 'equipment:' + exitMode;
     const closeLabel = exitMode === 'character' ? FB.T('Back to character') : FB.T('Close');
+    const fullName = FB.fullName(c);
+    const modalClass = ['fullsheet-modal', 'equipment-modal'].join(' ');
     const h = equipmentSheetHtml(s, c) +
       '<div class="gm-footer"><button type="button" class="btn" id="equipment-close">' +
       esc(closeLabel) + '</button></div>';
-    openModal(FB.T('Equipment for {name}', { name:FB.fullName(c) }), h,
+    openModal(FB.T('Equipment for {name}', { name:fullName }), h,
       {
-        modalClass:'fullsheet-modal',
+        modalClass:modalClass,
         historyView:exitMode === 'character',
         historyBackRender:function () { UI.showCharModal(cid); }
       });
+    if (mobileLayoutNow()) {
+      $('gm-title').textContent = fullName + '\n' + FB.T('Equipment');
+    }
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
     $('equipment-close').addEventListener('click', function () {

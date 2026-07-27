@@ -126,6 +126,8 @@ The Self sheet and the sheets for living spouses and resident unmarried children
 an **Equip items…** button. It opens a dedicated modal with one deterministic full-body
 figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
+Its centered title stacks the character's full name above **Equipment**, keeping the heading
+readable on narrow screens.
 The Self overview places its skill bars beside the compact portrait; both the portrait and
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
 overview, before the full identity and household details. Titles and Possessions use collapsed-by-default,

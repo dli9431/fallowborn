@@ -475,6 +475,9 @@ textarea.modjson, textarea.savetext {
 }
 
 /* household paper dolls and exact equipment slots */
+.equipment-modal #gm-title {
+  flex: 1 1 auto; text-align: center; white-space: pre-line;
+}
 .paper-sheet {
   display: grid; grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
   gap: 12px; align-items: start; margin: 4px 0 12px;

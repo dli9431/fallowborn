@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.5';
+  FB.VERSION = '1.65.6';
   FB.CHANGELOG = [
+    { v: '1.65.6', date: '2026-07-26', changes: [
+      'Equipment sheets now center their headings and split character names from the Equipment label on mobile.'
+    ] },
     { v: '1.65.5', date: '2026-07-26', changes: [
       'Generic dialogs no longer show a shared Back button in their headers on embedded mobile layouts.'
     ] },
