@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.7';
+  FB.VERSION = '1.65.8';
   FB.CHANGELOG = [
+    { v: '1.65.8', date: '2026-07-26', changes: [
+      'The Land tab’s Notable folk list now shows the county holder, direct vassals, and liege chain.'
+    ] },
     { v: '1.65.7', date: '2026-07-26', changes: [
       'Drawer and dialog exit controls now share consistent bottom-centered footers.',
       'Birthplace selection now advances without a redundant Next step, and fully zoomed-out mobile map dragging stays stable.'

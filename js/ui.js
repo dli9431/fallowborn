@@ -2424,6 +2424,146 @@ window.FB = window.FB || {};
     return out;
   }
 
+  /* Political notables for the Land panel are resolved from the live realm
+     tree. This stays presentation-only: no roster is saved, and ordinary map
+     browsing never asks provNotables to generate local characters. */
+  function landRulerRealm(s, rid) {
+    return s.realms && s.realms[rid];
+  }
+  function landRulerValid(s, rid) {
+    if (rid === 'player') {
+      const me = s.player && s.chars && s.chars[s.player.charId];
+      return !!(me && !me.dead);
+    }
+    const r = landRulerRealm(s, rid);
+    return !!(r && r.alive && r.ruler && r.ruler.name);
+  }
+  function landRulerLiege(s, rid) {
+    if (rid === 'player') {
+      const playerRealm = landRulerRealm(s, 'player');
+      return (playerRealm && playerRealm.alive && playerRealm.liege) ||
+        (s.player && s.player.liege) || null;
+    }
+    const r = landRulerRealm(s, rid);
+    return r && r.alive ? (r.liege || null) : null;
+  }
+  function landRulerRealmName(s, rid) {
+    const r = landRulerRealm(s, rid);
+    if (r && r.name) return r.name;
+    return rid === 'player' ? FB.T('Your realm') : rid;
+  }
+  function landRulerRank(s, rid) {
+    const r = landRulerRealm(s, rid);
+    return r && r.rank ? r.rank : (rid === 'player'
+      ? Math.max(1, (s.player.tier || 4) - 3) : 0);
+  }
+  function landRulers(s, pid) {
+    const out = [], seen = {};
+    const holder = (s.holder && s.holder[pid]) ||
+      (s.owner && s.owner[pid]);
+    if (!holder) return out;
+    function add(rid, kind, subject) {
+      if (!rid || seen[rid] || !landRulerValid(s, rid)) return false;
+      seen[rid] = 1;
+      out.push({ id:rid, kind:kind, subject:subject || null });
+      return true;
+    }
+
+    add(holder, 'holder', null);
+
+    /* Every realm sworn exactly to the holder belongs here. Rank and names
+       make the order stable even when object insertion order differs. */
+    const vassals = [];
+    for (const rid in (s.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(s.realms, rid)) continue;
+      const r = s.realms[rid];
+      if (rid !== holder && r && r.alive && r.liege === holder &&
+          landRulerValid(s, rid)) vassals.push(rid);
+    }
+    vassals.sort(function (a, b) {
+      const rankDiff = landRulerRank(s, b) - landRulerRank(s, a);
+      if (rankDiff) return rankDiff;
+      const an = String(landRulerRealmName(s, a)).toLowerCase();
+      const bn = String(landRulerRealmName(s, b)).toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
+    for (const rid of vassals) add(rid, 'vassal', holder);
+
+    /* Walk separately from the vassal list so its breadth stays between the
+       holder and the upward chain. seen also contains malformed cycles. */
+    let subject = holder, liege = landRulerLiege(s, holder), guard = 0;
+    while (liege && guard++ < 20) {
+      if (!add(liege, 'liege', subject)) break;
+      subject = liege;
+      liege = landRulerLiege(s, liege);
+    }
+    return out;
+  }
+  function landRulerRelationship(s, entry) {
+    const subject = landRulerRealmName(s, entry.subject);
+    if (entry.kind === 'holder') {
+      return landRulerLiege(s, entry.id)
+        ? FB.T('Holds this county')
+        : FB.T('Holds this county · sovereign');
+    }
+    if (entry.kind === 'vassal') {
+      return FB.T('Direct vassal of {realm}', { realm:subject });
+    }
+    return landRulerLiege(s, entry.id)
+      ? FB.T('Liege of {realm}', { realm:subject })
+      : FB.T('Sovereign over {realm}', { realm:subject });
+  }
+  function landRulerUsesFavor(s, rid) {
+    if (rid === s.player.liege) return true;
+    const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
+    const r = landRulerRealm(s, rid);
+    return chain.indexOf(rid) >= 0 || !!(r && r.liege === 'player');
+  }
+  function landRulerRow(s, entry) {
+    const rid = entry.id;
+    const relationship = landRulerRelationship(s, entry);
+    const realmName = landRulerRealmName(s, rid);
+    let art, heading, age, martial, action, standing;
+    if (rid === 'player') {
+      const me = s.chars[s.player.charId];
+      art = FB.faceTag(me, 36, 42);
+      heading = FB.T('{title} · {name}', {
+        title:FB.styledTitle(s), name:FB.fullName(me)
+      });
+      age = FB.ageOf(me, s.date.year);
+      martial = FB.skillOf(me, 'mar');
+      action = ' data-cid="' + esc(me.id) + '" title="' +
+        esc(FB.T('Open your character sheet')) + '"';
+      standing = '<span class="cop op-mid">' + esc(FB.T('You')) + '</span>';
+    } else {
+      const r = landRulerRealm(s, rid);
+      const op = Math.round(FB.realmOpinionOf(s, rid));
+      const favor = landRulerUsesFavor(s, rid);
+      art = FB.crestTag(rid, 36, 42);
+      heading = FB.T('{title} {name}', {
+        title:FB.realmRankTitle(s, r), name:r.ruler.name
+      });
+      age = r.ruler.age;
+      martial = r.ruler.mar;
+      action = ' data-liege="' + esc(rid) + '" title="' +
+        esc(FB.T('Open this realm ruler’s sheet')) + '"';
+      standing = '<span class="cop ' + FB.opClass(op) + '">' +
+        esc(favor
+          ? FB.T('Favor {favor}', { favor:signedOpinion(op) })
+          : FB.T('Opinion {opinion}', { opinion:signedOpinion(op) })) + '</span>';
+    }
+    return '<button type="button" class="charrow actionbtn"' + action + '>' +
+      art + '<span><span class="cname">' + esc(heading) + '</span><br>' +
+      '<span class="cmeta">' + esc(FB.T('{realm} · {relationship}', {
+        realm:realmName, relationship:relationship
+      })) + '</span><br><span class="cmeta">' +
+      esc(FB.T('age {age} · ⚔ martial {martial}', {
+        age:age, martial:martial
+      })) + '</span></span>' + standing + '</button>';
+  }
+
   function renderProv() {
     const s = FB.state;
     const pid = selectedProv || s.player.provinceId;
@@ -2617,18 +2757,31 @@ window.FB = window.FB || {};
           { year: FB.dateAtTurn(s, s.pacts[rid]).year })) + '</div>';
       }
       h += panelh('Notable folk');
-      const nb = FB.provNotables(s, pid);
-      if (nb.length) {
-        for (const c of nb) {
-          let meta = epithetText(s, c) ||
-            (c.role ? roleName(c.role) : '');
-          meta = (meta ? meta + ' · ' : '') +
-            FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
-          h += charRow(s, c, meta, true);
-        }
-        h += '<div class="hint" style="margin:4px 0 0">Tap a person for their sheet — and your dealings with them.</div>';
+      const rulers = landRulers(s, pid);
+      if (rulers.length) {
+        for (const ruler of rulers) h += landRulerRow(s, ruler);
+        h += '<div class="hint" style="margin:4px 0 0">' +
+          esc(FB.T('Select a ruler for their realm sheet; select yourself for your character sheet.')) +
+          '</div>';
       } else {
-        h += '<div class="cmeta" style="font-size:13px">No one of note.</div>';
+        /* Defensive fallback for malformed saves or exceptional settled
+           counties whose political ruler cannot be resolved. */
+        const nb = FB.provNotables(s, pid);
+        if (nb.length) {
+          for (const c of nb) {
+            let meta = epithetText(s, c) ||
+              (c.role ? roleName(c.role) : '');
+            meta = (meta ? meta + ' · ' : '') +
+              FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
+            h += charRow(s, c, meta, true);
+          }
+          h += '<div class="hint" style="margin:4px 0 0">' +
+            esc(FB.T('Tap a person for their sheet — and your dealings with them.')) +
+            '</div>';
+        } else {
+          h += '<div class="cmeta" style="font-size:13px">' +
+            esc(FB.T('No one of note.')) + '</div>';
+        }
       }
     }
     h += '<div style="margin-top:10px"><button class="btn small" id="btn-center-home">⌂ Center on home</button></div>';
