@@ -14,14 +14,18 @@ localized labels because keyboard hints do not apply.
 and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below).
 `modalClass` may contain multiple whitespace-separated classes; open and history-restore
 paths apply and clear each token individually. A dialog
-that dismisses from a footer button rather than the (mobile-invisible) backdrop puts that
-button in a `.gm-footer` — centered on desktop, and on mobile a large tap target pinned to
-the bottom middle of the sheet.
+that dismisses, cancels, goes back, finishes, or begins from a terminal control puts that
+control in a `.gm-footer`. `UI.openModal` normalizes legacy loose Close/Done/Cancel/Back
+buttons into that footer while leaving substantive choices in the scrolling body. Footer
+controls are centered, 200 px wide, and at least 52 px high on every layout; multiple
+controls wrap as equal-sized rows rather than changing width.
 
 **Mobile layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). On phones the Deeds/Land/Chronicle panel takes the full
 width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` — toggled in
 `setTab`, opened by tapping the mobile-only topbar portrait, closed by `#btn-closeself`).
+The drawer Close uses the same footer control at the bottom middle, immediately above the
+fixed time bar.
 The redundant topbar portrait is hidden when the Self panel is persistently visible on
 desktop. The time controls become a fixed thumb-zone bar above the drawer (hidden by
 `body.picking` during
@@ -48,13 +52,11 @@ control and instead rely on their modal-specific visible controls. Direct play o
 only; gameplay actions and mandatory event decisions are never made undoable. If the History
 API is unavailable or rejects an entry, all existing visible controls remain the fallback.
 
-Two families of dialog break the bottom-sheet default, both with the footer button pinned to
-the bottom middle so a long body needs no scroll to shut and nothing reaches for the top edge
-to dismiss: the Changelog (`.changelog-modal`) stays an evenly margined centered panel, while
-the Menu, Automation, and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to
-edge. Both share a flex-column card with a scrolling `#gm-body` under a sticky, centered
-`.gm-footer`; the full-screen flavour additionally makes `#gm-body` a column and gives the
-footer `margin-top:auto`, so the Close sits at the very bottom even when the body is short.
+Every generic modal uses a flex-column card with a scrolling `#gm-body` and a sticky,
+centered `.gm-footer`, so its terminal controls remain at the bottom middle while long
+content scrolls behind them. Two families break only the bottom-sheet framing: the Changelog
+(`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
+and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
 Ordinary modals (including event, settlement, and resource dialogs), the nested equipment
 picker, and the travel destination picker float above the device's bottom safe area with a
 complete rounded frame. Only deliberate full-screen sheets and the Self/Kin drawer meet the
@@ -70,8 +72,10 @@ New Game proceeds through bookmark → social scenario → province → characte
 cards use the same responsive grid and native-button keyboard behavior as scenario
 cards. Selecting one activates its world before the province picker is shown, so the
 preview owner colors, county details, headings, era help, Observe mode, and character
-birth year all read the same active definition. Returning from scenarios goes back to
-the bookmark list without wiring another set of map listeners.
+birth year all read the same active definition. Tapping a settled birthplace or choosing
+**Random Province** proceeds directly to character creation; there is no redundant Next
+step. Returning from scenarios goes back to the bookmark list without wiring another set
+of map listeners.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only

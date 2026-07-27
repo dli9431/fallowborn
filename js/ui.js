@@ -3242,6 +3242,54 @@ window.FB = window.FB || {};
     fallback();
   }
 
+  /* Dialog builders historically put exit controls in several places:
+     loose after the body, inside an action list, or in a real footer. Gather
+     Close/Done/Cancel/Back-style controls into one footer without making
+     substantive choices (confirm, buy, appoint, etc.) look like exits. */
+  function normalizeModalFooter(root) {
+    if (!root) return;
+    const legacy = root.querySelectorAll('button.gm-footer');
+    for (let i = 0; i < legacy.length; i++) {
+      const button = legacy[i];
+      const wrapper = document.createElement('div');
+      wrapper.className = 'gm-footer';
+      button.classList.remove('gm-footer');
+      button.parentNode.insertBefore(wrapper, button);
+      wrapper.appendChild(button);
+    }
+
+    const buttons = root.querySelectorAll(
+      'button[id$="-cancel"], button[id$="-close"], button[id$="-back"], ' +
+      'button[id$="-done"], button[id^="gm-ok"]');
+    if (!buttons.length) return;
+
+    let footer = null;
+    for (let i = 0; i < root.children.length; i++) {
+      if (root.children[i].classList.contains('gm-footer')) {
+        footer = root.children[i];
+        break;
+      }
+    }
+    if (!footer) {
+      footer = document.createElement('div');
+      footer.className = 'gm-footer';
+      root.appendChild(footer);
+    }
+
+    for (let i = 0; i < buttons.length; i++) {
+      const button = buttons[i];
+      const oldParent = button.parentNode;
+      button.classList.remove('actionbtn');
+      button.classList.remove('gm-footer');
+      button.classList.add('btn');
+      if (oldParent !== footer) footer.appendChild(button);
+      if (oldParent !== root && oldParent !== footer &&
+        !oldParent.children.length && !oldParent.textContent.trim()) {
+        oldParent.parentNode.removeChild(oldParent);
+      }
+    }
+  }
+
   function focusFirstModalControl() {
     setTimeout(function () {
       if ($('genmodal').classList.contains('hidden')) return;
@@ -3317,6 +3365,7 @@ window.FB = window.FB || {};
     $('gm-title').textContent = FB.translateKnown(title);
     FB.localizeTree($('gm-title'));
     $('gm-body').innerHTML = bodyHtml;
+    normalizeModalFooter($('gm-body'));
     FB.localizeTree($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch) {
@@ -7585,6 +7634,7 @@ window.FB = window.FB || {};
         esc(FB.T('Back')) + '">&#8592; <span>' + esc(FB.T('Back')) + '</span></button>' +
         '<h3 id="equip-picker-title">' + esc(pickerTitle) +
         '</h3></div><div class="equip-picker-body">' + h + '</div></div>';
+      normalizeModalFooter(overlay.querySelector('.equip-picker-body'));
       UI._equipPickerReturnFocus = document.activeElement;
       pickerRoot.appendChild(overlay);
       overlay.querySelector('#equip-picker-history-back')

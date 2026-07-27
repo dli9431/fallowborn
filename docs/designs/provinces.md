@@ -38,6 +38,10 @@ definition, installs it in the legacy top-level fields, and lazily caches one ra
 bookmark id. Switching dates replaces `FB.world` and the map's backing canvases but
 does not install a second set of pointer or keyboard listeners.
 
+At minimum zoom, a mobile viewport can be larger than the permitted map span on one
+axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the
+pan clamp; dragging therefore remains stable while the other axis can still move.
+
 **Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) lights
 up every province sharing the clicked one's group key (strong tint + golden outer border).
 `groupOf` comes from `mapGroupOf` in ui.js and follows the map filter (`R` key / 🗺 HUD

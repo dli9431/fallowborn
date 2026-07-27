@@ -235,8 +235,17 @@ window.FB = window.FB || {};
     const el = M.canvas;
     const vw = el.width / M.zoom, vh = el.height / M.zoom;
     const mar = 120 / M.zoom;
-    M.viewX = FB.clamp(M.viewX, -mar - vw * 0.2, FB.world.W + mar - vw * 0.8);
-    M.viewY = FB.clamp(M.viewY, -mar - vh * 0.2, FB.world.H + mar - vh * 0.8);
+    function axis(value, viewport, worldSize) {
+      const min = -mar - viewport * 0.2;
+      const max = worldSize + mar - viewport * 0.8;
+      /* At minimum zoom a tall or narrow mobile viewport can see more than
+         the permitted map span on one axis. Reversed clamp bounds make small
+         drags flip between their two distant endpoints; pin that surplus
+         axis to the centered midpoint instead. */
+      return min <= max ? FB.clamp(value, min, max) : (min + max) / 2;
+    }
+    M.viewX = axis(M.viewX, vw, FB.world.W);
+    M.viewY = axis(M.viewY, vh, FB.world.H);
   }
 
   M.render = function () {

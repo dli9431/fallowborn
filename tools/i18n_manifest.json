@@ -34600,17 +34600,6 @@
         "text": "Arab"
       }
     },
-    "src.08b08686": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js",
-        "index.html"
-      ],
-      "source": {
-        "text": "No province chosen — a random home will be found."
-      }
-    },
     "src.08b3ecce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86810,16 +86799,6 @@
         "text": "🏰 Domain {held}/{cap} held directly"
       }
     },
-    "src.dce2da08": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "Next"
-      }
-    },
     "src.dcee8a37": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94880,6 +94859,17 @@
       ],
       "source": {
         "text": "Beg sanctuary of the {temple}."
+      }
+    },
+    "src.fd6b758b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "No province chosen yet. Tap the map or use Random Province."
       }
     },
     "src.fd7515b8": {
@@ -103574,12 +103564,12 @@
         "text": "No prerequisites."
       }
     },
-    "ui:No province chosen — a random home will be found.": {
+    "ui:No province chosen yet. Tap the map or use Random Province.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "No province chosen — a random home will be found."
+        "text": "No province chosen yet. Tap the map or use Random Province."
       }
     },
     "ui:No qualifying destination can be reached.": {

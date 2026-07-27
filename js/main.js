@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.65.6';
+  FB.VERSION = '1.65.7';
   FB.CHANGELOG = [
+    { v: '1.65.7', date: '2026-07-26', changes: [
+      'Drawer and dialog exit controls now share consistent bottom-centered footers.',
+      'Birthplace selection now advances without a redundant Next step, and fully zoomed-out mobile map dragging stays stable.'
+    ] },
     { v: '1.65.6', date: '2026-07-26', changes: [
       'Equipment sheets now center their headings and split character names from the Equipment label on mobile.'
     ] },
@@ -555,15 +559,6 @@ window.FB = window.FB || {};
       const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
       G.pickProvince(FB.pick(cands));
     });
-    $('btn-pick-next').addEventListener('click', function () {
-      if (!G.pending.provinceId) {
-        const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
-        G.pickProvince(FB.pick(cands));
-      }
-      G.pickMode = false;
-      document.body.classList.remove('picking');
-      showChargen();
-    });
     $('cg-reroll').addEventListener('click', function () {
       const sex = document.querySelector('input[name=cg-sex]:checked').value;
       $('cg-name').value = FB.randomName(G.pending.culture, sex);
@@ -737,22 +732,26 @@ window.FB = window.FB || {};
   }
 
   G.pickProvince = function (pr) {
-    if (!pr) return;
+    if (!pr) return false;
     if (pr.wasteland) {
       FB.ui.toast('No one is born in {province}. Pick a settled land.', { province: pr.name });
-      return;
+      return false;
     }
     G.pending.provinceId = pr.id;
     G.pending.culture = pr.culture;
     G.pending.religion = pr.religion;
     FB.map.select(pr.id);
     updatePickInfo();
+    G.pickMode = false;
+    document.body.classList.remove('picking');
+    showChargen();
+    return true;
   };
 
   function updatePickInfo() {
     const el = $('pickinfo');
     if (!G.pending || !G.pending.provinceId) {
-      el.textContent = FB.T('No province chosen — a random home will be found.');
+      el.textContent = FB.T('No province chosen yet. Tap the map or use Random Province.');
       return;
     }
     const pr = FB.world.byId[G.pending.provinceId];

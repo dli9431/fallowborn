@@ -61,11 +61,12 @@
   <div id="pickprov" class="screen hidden">
     <h2 data-i18n="Where were you born?">Where were you born?</h2>
     <p class="hint" data-i18n="Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.">Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.</p>
-    <div id="pickinfo" class="pickinfo" data-i18n="No province chosen — a random home will be found.">No province chosen &mdash; a random home will be found.</div>
+    <div id="pickinfo" class="pickinfo"
+      data-i18n="No province chosen yet. Tap the map or use Random Province.">No province chosen yet. Tap the map or use Random Province.</div>
     <div class="row gap wrap">
       <button id="btn-pick-back" class="btn" data-i18n="Back">Back</button>
-      <button id="btn-pick-random" class="btn" data-i18n="Random Province">Random Province</button>
-      <button id="btn-pick-next" class="btn primary" data-i18n="Next">Next</button>
+      <button id="btn-pick-random" class="btn primary"
+        data-i18n="Random Province">Random Province</button>
     </div>
   </div>
 
@@ -142,11 +143,14 @@
           <div id="lefttabs">
             <button class="tab active" data-tab="char" data-i18n="Self">Self</button>
             <button class="tab" data-tab="family" data-i18n="Kin">Kin</button>
-            <button id="btn-closeself" class="tab" aria-label="Close" data-i18n-aria-label="Close">&#10005;</button>
           </div>
           <div id="leftbody">
             <div id="tab-char" class="tabpane active"></div>
             <div id="tab-family" class="tabpane"></div>
+          </div>
+          <div class="drawer-footer">
+            <button type="button" id="btn-closeself" class="btn"
+              data-i18n="Close">Close</button>
           </div>
         </div>
         <div id="side">
