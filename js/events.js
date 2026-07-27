@@ -557,6 +557,7 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const sp = state.chars[spId];
     if (!sp) return;
+    if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(state, sp.id);
     if (FB.clearLoadout) FB.clearLoadout(state, sp.id);
     FB.endRoyalCompact(state, sp);
     if (me.spouseId === sp.id) me.spouseId = null;
@@ -588,7 +589,7 @@ window.FB = window.FB || {};
 
   FB.beginCourtship = function (state, c) {
     const p = state.player;
-    if (!c || c.dead || c.id === p.charId || !FB.socialAttentionCapacity()) return false;
+    if (!FB.canCourt(state, c, true) || !FB.socialAttentionCapacity()) return false;
     if (p.courtingId && p.courtingId !== c.id) {
       /* Redirecting a suit carries the same slight as a deliberate breakoff. */
       FB.clearCourtship(state, { penalty:true, news:true });
@@ -601,7 +602,8 @@ window.FB = window.FB || {};
   FB.canPropose = function (state) {
     const p = state.player;
     const c = p.flags.courting && p.courtingId && state.chars[p.courtingId];
-    return !!(c && !c.dead && c.opinion >= FB.relationshipOpinionThreshold());
+    return !!(c && FB.canCourt(state, c, true) &&
+      c.opinion >= FB.relationshipOpinionThreshold());
   };
 
   /* The one true way to kill a character: severs marriage links and roles.
@@ -615,6 +617,7 @@ window.FB = window.FB || {};
     if (FB.removeRetainer && FB.retainerRecord && FB.retainerRecord(state, c.id)) {
       FB.removeRetainer(state, c.id, 'death');
     }
+    if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(state, c.id);
     if (c.id !== state.player.charId && FB.clearLoadout) FB.clearLoadout(state, c.id);
     if (me && (me.spouseId === c.id || c.spouseId === me.id)) FB.endRoyalCompact(state, c);
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
@@ -642,7 +645,7 @@ window.FB = window.FB || {};
   };
 
   /* Can the player begin courting this character? */
-  FB.canCourt = function (state, c) {
+  FB.canCourt = function (state, c, allowCurrent) {
     const me = state.chars[state.player.charId];
     if (!c || c.dead || c.id === me.id) return false;
     if (c.royalLine && FB.royalCompactOf(state)) return false;
@@ -653,7 +656,7 @@ window.FB = window.FB || {};
     if (!FB.canWed(state) || FB.spouseOf(state, c)) return false;
     if (c.betrothedId) return false; // pledged to another
     // actual kin only (dynasty names like "of Ribe" are shared by strangers)
-    if (me.childrenIds.indexOf(c.id) >= 0) return false;
+    if (FB.playerDescendantKind(state, c.id)) return false;
     if (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) return false;
     if (me.fatherId && me.fatherId === c.fatherId) return false;
     if (me.motherId && me.motherId === c.motherId) return false;
@@ -662,7 +665,7 @@ window.FB = window.FB || {};
     const krel = FB.kinOf(state).byId[c.id];
     if (krel && krel !== 'Cousin') return false;
     if (state.player.profession === 'monk' && FB.religionOf(me.religion).group !== 'muslim') return false;
-    if (state.player.courtingId === c.id) return false;
+    if (!allowCurrent && state.player.courtingId === c.id) return false;
     // the great families do not entertain suits from far beneath them
     if (FB.stationOf(c) - FB.playerStation(state) >= 3) return false;
     return true;
@@ -869,16 +872,23 @@ window.FB = window.FB || {};
     state.player.suitorIds = null;
   };
 
-  /* ---------- arranged matches for the player's children ----------
-     A parent sounds out three families (stations around the player's own,
-     stored on the child as matchIds so the same three wait until a pledge is
-     sealed or the child weds elsewhere). Sealing betroths the pair; the
-     yearly kin tick weds them once both are sixteen. Dowries follow the
-     custom of the age: a daughter's family settles hers when the pledge is
-     sealed (returned by killChar if death unmakes it), a son's bride brings
-     hers to the wedding. */
+  /* ---------- arranged matches for managed descendants ----------
+     The head sounds out three families for a resident child or grandchild,
+     stored on the descendant as matchIds so the same three wait until a
+     pledge is sealed or the descendant weds elsewhere. */
+  function managedMatchKind(state, descendant) {
+    if (!descendant || descendant.dead ||
+        FB.ageOf(descendant, state.date.year) < 12 ||
+        FB.spousesOf(state, descendant).length || descendant.betrothedId) return null;
+    return FB.playerDescendantKind(state, descendant.id);
+  }
+
   FB.spawnMatchCandidates = function (state, child) {
     const out = [];
+    if (!managedMatchKind(state, child)) {
+      if (child && FB.discardMatches) FB.discardMatches(state, child, null);
+      return out;
+    }
     if (child.matchIds) {
       for (const id of child.matchIds) {
         const m = state.chars[id];
@@ -930,7 +940,26 @@ window.FB = window.FB || {};
     child.matchIds = null;
   };
 
+  FB.cleanupManagedMatches = function (state) {
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (c && c.matchIds && !managedMatchKind(state, c)) {
+        FB.discardMatches(state, c, null);
+      }
+    }
+  };
+
   FB.sealKinMatch = function (state, child, cand) {
+    const kind = managedMatchKind(state, child);
+    const listed = child && child.matchIds &&
+      child.matchIds.indexOf(cand && cand.id) >= 0;
+    const prestigeNeed = cand ?
+      Math.max(0, FB.stationOf(cand) - FB.playerStation(state)) * 20 : 0;
+    if (!kind || !listed || !cand || cand.dead || cand.role !== 'match' ||
+        FB.spousesOf(state, cand).length || cand.betrothedId ||
+        cand.sex === child.sex || state.player.courtingId === cand.id ||
+        state.player.gold < (cand.dowryAsk || 0) ||
+        state.player.prestige < prestigeNeed) return false;
     const p = state.player;
     FB.discardMatches(state, child, cand.id);
     child.betrothedId = cand.id;
@@ -947,14 +976,21 @@ window.FB = window.FB || {};
     if (FB.ageOf(child, y) >= 16 && FB.ageOf(cand, y) >= 16) {
       FB.doKinWedding(state, child, cand);
     }
+    return true;
   };
 
-  /* the pledged wedding of a player's child, fired from sealKinMatch or the
-     yearly kin tick; settles the bride's dowry and the standing of the match */
+  /* A pledged descendant's wedding, fired from sealKinMatch or the yearly
+     kin tick; settles the bride's dowry and the standing of the match. */
   FB.doKinWedding = function (state, k, sp) {
+    if (!k || !sp || k.dead || sp.dead || FB.spousesOf(state, k).length ||
+        FB.spousesOf(state, sp).length) return false;
     const B = FBDATA.balance, p = state.player;
-    /* A child establishing another household leaves their outfit in the
-       shared family armory. The current head's own pledged wedding is exempt. */
+    const descendantKind = FB.playerDescendantKind(state, k.id);
+    /* A descendant establishing another household leaves work and equipment
+       assignments behind. The current head's own pledged wedding is exempt. */
+    if (k.id !== p.charId && FB.unassignEnterpriseWorker) {
+      FB.unassignEnterpriseWorker(state, k.id);
+    }
     if (k.id !== p.charId && FB.clearLoadout) FB.clearLoadout(state, k.id);
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
@@ -962,15 +998,27 @@ window.FB = window.FB || {};
     if (k.id === state.player.charId && FB.receiveMarriageLivelihood) {
       FB.receiveMarriageLivelihood(state, sp);
     }
-    FB.news(state, FB.msg('news.event.kin_wedding', {
-      forms: {
-        select: 'value', param: 'sex', cases: {
-          f: '💒 Your daughter {child} weds {spouse}, as was pledged.',
-          m: '💒 Your son {child} weds {spouse}, as was pledged.',
-          other: '💒 Your child {child} weds {spouse}, as was pledged.'
+    if (descendantKind === 'grandchild') {
+      FB.news(state, FB.msg('news.event.grandchild_wedding', {
+        forms: {
+          select: 'value', param: 'sex', cases: {
+            f: '💒 Your granddaughter {child} weds {spouse}, as was pledged.',
+            m: '💒 Your grandson {child} weds {spouse}, as was pledged.',
+            other: '💒 Your grandchild {child} weds {spouse}, as was pledged.'
+          }
         }
-      }
-    }, { sex: k.sex, child: k.name, spouse: sp.name }));
+      }, { sex:k.sex, child:k.name, spouse:sp.name }));
+    } else {
+      FB.news(state, FB.msg('news.event.kin_wedding', {
+        forms: {
+          select: 'value', param: 'sex', cases: {
+            f: '💒 Your daughter {child} weds {spouse}, as was pledged.',
+            m: '💒 Your son {child} weds {spouse}, as was pledged.',
+            other: '💒 Your child {child} weds {spouse}, as was pledged.'
+          }
+        }
+      }, { sex:k.sex, child:k.name, spouse:sp.name }));
+    }
     if (sp.dowryDue) {
       p.gold += sp.dowryDue;
       FB.news(state, FB.msg('news.event.bride_dowry',
@@ -990,6 +1038,7 @@ window.FB = window.FB || {};
           '🗣 The child of your house weds beneath it, and folk mark it.', {}));
       }
     }
+    return true;
   };
 
   /* ---------- pure text parameter materialization ----------

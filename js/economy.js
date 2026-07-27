@@ -81,7 +81,11 @@ window.FB = window.FB || {};
   function dependentOfPlayer(state, c) {
     const me = playerChar(state);
     return !!(me && c && (c.spouseId === me.id || me.spouseId === c.id ||
-      (me.childrenIds || []).indexOf(c.id) >= 0));
+      FB.playerDescendantKind(state, c.id)));
+  }
+  function managedCareerCharacter(state, c) {
+    return !!(state && c && !c.dead && FB.isHouseholdCharacter &&
+      FB.isHouseholdCharacter(state, c.id));
   }
   function workerBusy(state, cid) {
     const list = state.player.enterprises || [];
@@ -241,6 +245,7 @@ window.FB = window.FB || {};
   };
 
   FB.careerChoices = function (state, c) {
+    if (!managedCareerCharacter(state, c)) return [];
     if (c.id === state.player.charId && state.player.tier >= 3) return [];
     const age = FB.ageOf(c, state.date.year);
     const religionGroup = FB.religionOf(c.religion).group;
@@ -350,6 +355,7 @@ window.FB = window.FB || {};
   };
 
   FB.religiousAdvance = function (state, c) {
+    if (!managedCareerCharacter(state, c)) return null;
     const path = FB.religiousPathOf(state, c);
     if (!path || !path.next) return null;
     const step = path.next;
@@ -374,6 +380,7 @@ window.FB = window.FB || {};
 
   FB.takeReligiousStep = function (state, c) {
     c = c || playerChar(state);
+    if (!managedCareerCharacter(state, c)) return false;
     const advance = FB.religiousAdvance(state, c);
     if (!advance || advance.blocked) return false;
     const path = advance.path;
@@ -395,7 +402,7 @@ window.FB = window.FB || {};
 
   FB.beginCareer = function (state, c, profession) {
     const def = FBDATA.careers[profession];
-    if (!c || !def) return false;
+    if (!managedCareerCharacter(state, c) || !def) return false;
     if (c.id === state.player.charId && state.player.tier >= 3) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     const age = FB.ageOf(c, state.date.year);
@@ -423,17 +430,27 @@ window.FB = window.FB || {};
 
   FB.householdMembers = function (state) {
     const me = playerChar(state);
-    const out = [], seen = {};
+    const out = [], seen = {}, married = {};
     function add(c) {
       if (!c || c.dead || seen[c.id]) return;
       seen[c.id] = 1;
       out.push(c);
     }
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      const sp = c && c.spouseId && state.chars[c.spouseId];
+      if (!c || c.dead || !sp || sp.dead) continue;
+      married[c.id] = 1;
+      married[sp.id] = 1;
+    }
     add(me);
     for (const sp of FB.spousesOf(state, me)) add(sp);
-    for (const id of (me.childrenIds || [])) {
-      const c = state.chars[id];
-      if (c && !c.dead && (!FB.spouseOf(state, c) || c.id === state.player.charId)) add(c);
+    for (const child of FB.childrenOf(state, me)) {
+      if (FB.playerDescendantKind(state, child.id) && !married[child.id]) add(child);
+      for (const grandchild of FB.childrenOf(state, child)) {
+        if (FB.playerDescendantKind(state, grandchild.id) === 'grandchild' &&
+            !married[grandchild.id]) add(grandchild);
+      }
     }
     return out;
   };
@@ -916,7 +933,7 @@ window.FB = window.FB || {};
      members add food, clothing, and quarters at the standard their station is
      expected to maintain. War in the player's sovereign realm makes those
      necessities dearer without changing retainers, schooling, or other
-     authored costs. Married children have their own households. */
+     authored costs. Married descendants have their own households. */
   FB.householdUpkeepParts = function (state) {
     const p = state.player;
     const baseScale = FBDATA.balance.householdUpkeep || [1,1,2,4,6,9,14,20];
@@ -946,23 +963,22 @@ window.FB = window.FB || {};
     return FB.householdUpkeepParts(state).total;
   };
 
-  /* A minor player and each unmarried child may receive instruction. The
-     focus is the subject; edu.school names a paid institution, while tutorId
-     keeps the existing named household/neighbour teacher. */
+  FB.educationStudentEligible = function (state, c) {
+    if (!c || c.dead) return false;
+    const age = FB.ageOf(c, state.date.year);
+    if (age < 6 || age >= 16) return false;
+    if (c.id === state.player.charId) return true;
+    return !!(FB.playerDescendantKind(state, c.id) &&
+      !FB.spousesOf(state, c).length);
+  };
+
+  /* A minor player and each resident unmarried child or grandchild may
+     receive instruction. The focus is the subject; edu.school names a paid
+     institution, while tutorId keeps the existing named teacher. */
   FB.educationStudents = function (state) {
-    const me = playerChar(state);
-    const out = [], seen = {};
-    function add(c) {
-      if (!c || c.dead || seen[c.id]) return;
-      const age = FB.ageOf(c, state.date.year);
-      if (age < 6 || age >= 16) return;
-      seen[c.id] = 1;
-      out.push(c);
-    }
-    add(me);
-    for (const id of (me.childrenIds || [])) {
-      const c = state.chars[id];
-      if (c && (!FB.spouseOf(state, c) || c.id === me.id)) add(c);
+    const out = [];
+    for (const c of FB.householdMembers(state)) {
+      if (FB.educationStudentEligible(state, c)) out.push(c);
     }
     return out;
   };
@@ -1005,9 +1021,7 @@ window.FB = window.FB || {};
 
   FB.schoolingAvailable = function (state, c, id) {
     const def = FBDATA.schooling[id];
-    if (!def || !c) return false;
-    const age = FB.ageOf(c, state.date.year);
-    if (age < 6 || age >= 16) return false;
+    if (!def || !FB.educationStudentEligible(state, c)) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) return false;
     if (def.focuses && (!c.edu || def.focuses.indexOf(c.edu.focus) < 0)) return false;
@@ -1122,7 +1136,24 @@ window.FB = window.FB || {};
         if (enterprise.workerId === p.charId) enterprise.workerId = null;
       }
     }
+    const household = {};
+    for (const worker of FB.householdWorkers(state)) household[worker.id] = 1;
+    for (const enterprise of p.enterprises) {
+      if (enterprise.workerId && !household[enterprise.workerId]) {
+        enterprise.workerId = null;
+      }
+    }
     return p.enterprises;
+  };
+
+  FB.unassignEnterpriseWorker = function (state, cid) {
+    let changed = false;
+    for (const enterprise of ((state.player && state.player.enterprises) || [])) {
+      if (enterprise.workerId !== cid) continue;
+      enterprise.workerId = null;
+      changed = true;
+    }
+    return changed;
   };
 
   /* Old event requirements named productive holdings. Keep those authored
@@ -1347,6 +1378,7 @@ window.FB = window.FB || {};
   };
 
   FB.guildAdvance = function (state, c) {
+    if (!managedCareerCharacter(state, c)) return null;
     if (c && c.id === state.player.charId && state.player.tier >= 3) return null;
     const career = FB.careerOf(state, c);
     const def = career && FBDATA.careers[career.profession];
@@ -1369,6 +1401,7 @@ window.FB = window.FB || {};
 
   FB.takeGuildStep = function (state, c) {
     c = c || playerChar(state);
+    if (!managedCareerCharacter(state, c)) return false;
     if (c.id === state.player.charId && state.player.tier >= 3) return false;
     const career = FB.careerOf(state, c);
     const step = FB.guildAdvance(state, c);

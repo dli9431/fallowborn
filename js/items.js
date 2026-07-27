@@ -64,28 +64,7 @@ window.FB = window.FB || {};
        so their final loadout can be shown and snapshotted. */
     add(me, true);
     if (!me) return out;
-    for (const id in state.chars) {
-      const c = state.chars[id];
-      if (!c || c.dead || c.id === me.id) continue;
-      if (me.spouseId === c.id || c.spouseId === me.id) add(c, false);
-    }
-    for (let i = 0; i < (me.childrenIds || []).length; i++) {
-      const c = state.chars[me.childrenIds[i]];
-      if (!c || c.dead) continue;
-      let married = false;
-      if (c.spouseId && state.chars[c.spouseId] && !state.chars[c.spouseId].dead) {
-        married = true;
-      } else {
-        for (const id in state.chars) {
-          const other = state.chars[id];
-          if (other && !other.dead && other.spouseId === c.id) {
-            married = true;
-            break;
-          }
-        }
-      }
-      if (!married || c.id === state.player.charId) add(c, false);
-    }
+    for (const c of FB.householdMembers(state)) add(c, false);
     /* Paid retainers belong to the managed household for equipment and
        career dealings, but remain distinct from resident family upkeep. */
     for (let i = 0; i < ((state.player && state.player.retainers) || []).length; i++) {
@@ -676,8 +655,8 @@ window.FB = window.FB || {};
   };
 
   /* Household membership can change wholesale at succession. Keep only the
-     new head, their spouses, and their resident unmarried children assigned;
-     every removed reference already remains in the shared armory. */
+     new head, their spouses, retainers, and resident unmarried descendants
+     assigned; every removed reference already remains in the shared armory. */
   FB.reconcileHouseholdLoadouts = function (state) {
     FB.ensureItems(state);
     const household = directHouseholdIds(state);

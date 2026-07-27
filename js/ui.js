@@ -1503,7 +1503,11 @@ window.FB = window.FB || {};
     if (c.id === me.spouseId) return FB.T('Your spouse');
     if (me.fatherId === c.id) return FB.T('Your father');
     if (me.motherId === c.id) return FB.T('Your mother');
-    if (me.childrenIds.indexOf(c.id) >= 0) return FB.T('Your child');
+    const descendantKind = FB.playerDescendantKind(s, c.id);
+    if (descendantKind === 'child') return FB.T('Your child');
+    if (descendantKind === 'grandchild') {
+      return FB.T(c.sex === 'f' ? 'Your granddaughter' : 'Your grandson');
+    }
     if ((c.role === 'sibling' && c.dyn === me.dyn) ||
       (me.fatherId && me.fatherId === c.fatherId) ||
       (me.motherId && me.motherId === c.motherId)) return FB.T('Your sibling');
@@ -1529,7 +1533,8 @@ window.FB = window.FB || {};
         ? 'they are already your wedded wife.'
         : 'they are already your wedded husband.');
     }
-    if (me.childrenIds.indexOf(c.id) >= 0 || (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
+    if (FB.playerDescendantKind(s, c.id) ||
+      (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
       (me.fatherId && me.fatherId === c.fatherId) || (me.motherId && me.motherId === c.motherId) ||
       (c.role === 'sibling' && c.dyn === me.dyn)) return FB.T('they are too close in blood.');
     const krel = FB.kinOf(s).byId[c.id];
@@ -6042,7 +6047,8 @@ window.FB = window.FB || {};
   UI.showCareerPicker = function (cid) {
     const s = FB.state;
     const c = s.chars[cid];
-    if (!c || c.dead) return;
+    if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
+        FB.ageOf(c, s.date.year) < 10) return;
     const age = FB.ageOf(c, s.date.year);
     const career = FB.careerOf(s, c);
     const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
@@ -6737,6 +6743,7 @@ window.FB = window.FB || {};
     const c = s.chars[cid];
     if (!c) return;
     const me = s.chars[s.player.charId];
+    const descendantKind = FB.playerDescendantKind(s, c.id);
     const isHousehold = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
     const retainer = !c.dead && FB.retainerRecord ? FB.retainerRecord(s, c.id) : null;
@@ -6755,7 +6762,7 @@ window.FB = window.FB || {};
     }
     h += '<div class="gm-list" style="margin-top:10px">';
     const isFamily = FB.spousesOf(s, me).some(function (sp) { return sp.id === c.id; }) ||
-      me.childrenIds.indexOf(c.id) >= 0 ||
+      !!descendantKind ||
       (c.role === 'sibling' && c.dyn === me.dyn);
     if (isHousehold) {
       h += '<button class="actionbtn" id="cm-equipment">' +
@@ -6936,8 +6943,9 @@ window.FB = window.FB || {};
           position:positionName(s, retainer.office), pay:retainer.pay || 0
         })) + '</span></button>';
     }
-    const isYoungChild = (me.childrenIds.indexOf(c.id) >= 0 || c.id === me.id) && FB.ageOf(c, s.date.year) < 16;
-    if (isYoungChild) {
+    const isManagedMinor = (descendantKind || c.id === me.id) && isHousehold &&
+      FB.ageOf(c, s.date.year) < 16;
+    if (isManagedMinor) {
       const self = c.id === me.id;
       h += upbringingNote(s, c);
       h += '<button class="actionbtn" id="cm-edufocus">' +
@@ -6954,8 +6962,8 @@ window.FB = window.FB || {};
           : 'Instruction raises their yearly learning chance; paid lessons charge each season.')) +
         '</span></button>';
     }
-    // a parent may pledge an unwed child's hand from age twelve
-    if (me.childrenIds.indexOf(c.id) >= 0 && !FB.spouseOf(s, c)) {
+    // the household head may pledge a resident descendant's hand from age twelve
+    if (descendantKind && isHousehold && !FB.spouseOf(s, c)) {
       const bt = c.betrothedId ? s.chars[c.betrothedId] : null;
       if (bt && !bt.dead) {
         h += '<div class="progressnote">' + esc(FB.T(
@@ -7163,16 +7171,17 @@ window.FB = window.FB || {};
   };
 
   /* ================= arranged match picker =================
-     Three families sounded out for a child's hand — the same three wait
-     (stored on the child) until a pledge is sealed or the child weds
-     elsewhere. A daughter's dowry is paid when the pledge is sealed; a
-     son's bride brings hers to the wedding. Matches above the player's
-     station want renown before they bless it. */
+     Three families sounded out for a managed descendant's hand — the same
+     three wait until a pledge is sealed or the descendant weds elsewhere.
+     A daughter's or granddaughter's dowry is paid at the pledge; a son's or
+     grandson's bride brings hers to the wedding. */
   UI.showMatchPicker = function (cid) {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const c = s.chars[cid];
-    if (!c || c.dead || FB.spouseOf(s, c) || c.betrothedId) return;
+    if (!c || c.dead || !FB.playerDescendantKind(s, cid) ||
+        !FB.isHouseholdCharacter(s, cid) || FB.ageOf(c, s.date.year) < 12 ||
+        FB.spouseOf(s, c) || c.betrothedId) return;
     const cands = FB.spawnMatchCandidates(s, c);
     const ps = FB.playerStation(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -7208,8 +7217,8 @@ window.FB = window.FB || {};
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
         if (!m) return;
+        if (!FB.sealKinMatch(s, c, m)) return;
         UI.closeModal();
-        FB.sealKinMatch(s, c, m);
         FB.game.passDay({ skipFocus: true });
       });
     });
@@ -7707,7 +7716,9 @@ window.FB = window.FB || {};
   UI.showEduFocus = function (cid) {
     const s = FB.state;
     const c = s.chars[cid];
-    if (!c) return;
+    if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
+        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        FB.ageOf(c, s.date.year) >= 16) return;
     const self = c.id === s.player.charId;
     let h = '<div class="gm-list">';
     for (const k of FB.SKILLS) {
@@ -7768,7 +7779,9 @@ window.FB = window.FB || {};
   UI.showTutorPick = function (cid) {
     const s = FB.state;
     const c = s.chars[cid];
-    if (!c) return;
+    if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
+        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        FB.ageOf(c, s.date.year) >= 16) return;
     const me = s.chars[s.player.charId];
     const self = c.id === me.id;
     const focus = c.edu && c.edu.focus;
