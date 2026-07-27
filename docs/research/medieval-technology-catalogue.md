@@ -245,7 +245,7 @@ moment of invention.
 
 ## Candidate backlog
 
-These researched candidates are not live. Their omission is a design/content decision,
+These 33 researched candidates are not live. Their omission is a design/content decision,
 not a claim that they were unimportant.
 
 | Candidate | Region and period | Summary and likely dependencies | Why excluded for now | Sources |
@@ -272,6 +272,17 @@ not a claim that they were unimportant.
 | Gunpowder artillery | Eurasia, c. 1280–1350 | Powder propels projectiles from tubes; `gunpowder_knowledge` + `bell_casting`. | Campaigns continue past 1300, but artillery requires a separate siege transition. | NEEDHAM/DEVRIES |
 | Paper currency | East/Central Asia, c. 900–1300 | State-backed paper instruments circulate value; `paper_making` + `tax_assessment`. | Outside-map institutional origin and incompatible with the current coin-price model. | NEEDHAM/SPUFFORD |
 | Marine insurance | Mediterranean, c. 1200–1400 | Risk is priced separately from maritime credit; `sea_loans` + `notarial_contracts`. | The current partnership outcome table bundles risk and finance. | DE_ROOVER/LOPEZ |
+| Ore mining and drainage adits | Central and northern Europe, c. 950–1300 | Shafts, galleries, windlasses, and gravity drains extend systematic metal extraction; `bloomery_iron` + `water_power`. | The economy begins with finished materials and has no mines, ore deposits, extraction enterprises, or raw-material prices. | RAMMELSBERG/SINGER |
+| Tide mills | Atlantic Europe, c. 600–1300 | Impounded tides drive horizontal waterwheels; `water_power` + `harbor_works`. | The single mill building does not distinguish river, tidal, or other power sites. | MCERLEAN/GIES |
+| Organized salterns | European and Mediterranean coasts and brine districts, ancient–1300 | Evaporation ponds, brine hearths, and open pans produce salt at settlement scale; `wheel_thrown_pottery` + `cooperage`. | Salt appears in prose but is not a commodity, preservation input, or producible enterprise. | SALTERNS/HOFFMANN |
+| Stained-glass workshops | Latin and Byzantine worlds, c. 800–1300 | Colored sheet glass, vitreous paint, lead cames, and solder form monumental windows; `glassblowing` + `lime_mortar`. | Buildings have no decoration, fabric, or monument-prestige upgrade layer. | THEOPHILUS/GIES |
+| Water clocks and court automata | Byzantine and Islamic worlds, c. 800–1200 | Floats, siphons, gears, and regulated water flows drive clocks and display mechanisms; `water_lifting_devices` + `geometry` + `astronomical_observation`. | The game has neither civic timekeeping nor a court commission and mechanical-display system. | HILL/SINGER |
+| Birch-bark documents | Rus’, c. 1000–1300 | Prepared birch bark supports inexpensive letters, accounts, and ordinary written communication; `classical_grammar`. | Literacy is modeled through codices, parchment, and paper rather than regional everyday writing media. | FRANKLIN/GRANT |
+| Hammams and heated public baths | Byzantine and Islamic cities, c. 500–1300 | Furnaces, heated rooms, piped water, and drainage sustain public bathing; `irrigation_channels` + `lime_mortar` + `soap_boiling`. | A bathhouse exists only as a modding example; the live game lacks urban public works and hygiene buildings. | PETERSEN/HILL |
+| Malting kilns and commercial brewing | Europe, c. 500–1300 | Controlled germination and kiln drying prepare grain for dependable brewing; `quern_stones` + `cooperage`. | Brewing exists only as a modding example, without a drink commodity, brewery enterprise, or grain-processing chain. | PATRICK/GIES |
+| Mordant textile dyeing | Europe, North Africa, and the Middle East, ancient–1300 | Madder, weld, woad, alum, and controlled dye baths produce durable colored cloth; `horizontal_loom` + `commercial_arithmetic`. | Dyed cloth is a household standard, but dye crops, mordants, and workshop quality are not modeled. | CARDON/SINGER |
+| Updraft pottery and tile kilns | Europe and the Mediterranean, c. 900–1300 | Reintroduced updraft firing supports specialized pottery, roof tile, and decorated floor-tile industries; `wheel_thrown_pottery` + `improved_furnaces`. | Existing pottery technologies abstract firing and the game has no ceramic or architectural-tile production chain. | MCCARTHY/SINGER |
+| Wall fireplaces and chimneys | Latin Europe, c. 1100–1300 | Wall hearths, smoke hoods, and flues move smoke outside increasingly divided elite buildings; `lime_mortar`. | Adoption remains elite and late near the game boundary, while household architecture, comfort, and indoor-air quality are not modeled. | GIES/SINGER |
 
 ## Bibliography and source codes
 
@@ -288,6 +299,8 @@ not a claim that they were unimportant.
 - **CAMPBELL** — Tony Campbell, “Portolan Charts from the Late Thirteenth Century to
   1500,” in J. B. Harley and David Woodward, eds., *The History of Cartography*, vol. 1
   (University of Chicago Press, 1987).
+- **CARDON** — Dominique Cardon, *Natural Dyes: Sources, Tradition, Technology and
+  Science* (Archetype Publications, 2007).
 - **CIPOLLA** — Carlo M. Cipolla, *Clocks and Culture, 1300–1700* (Norton, 1978).
 - **DE_ROOVER** — Raymond de Roover, *Money, Banking and Credit in Mediaeval Bruges*
   (Mediaeval Academy of America, 1948).
@@ -295,6 +308,8 @@ not a claim that they were unimportant.
   2nd ed. (University of Toronto Press, 2012).
 - **FEUERBACH** — Ann Feuerbach, “Crucible Damascus Steel: A Fascination for Almost
   2,000 Years,” *JOM* 58, no. 5 (2006), 48–50.
+- **FRANKLIN** — Simon Franklin, *Writing, Society and Culture in Early Rus,
+  c. 950–1300* (Cambridge University Press, 2002).
 - **GIES** — Frances and Joseph Gies, *Cathedral, Forge, and Waterwheel: Technology and
   Invention in the Middle Ages* (HarperCollins, 1994), used with the more technical
   SINGER synthesis.
@@ -316,8 +331,18 @@ not a claim that they were unimportant.
   (Cambridge University Press, 1976).
 - **MAKDISI** — George Makdisi, *The Rise of Colleges: Institutions of Learning in
   Islam and the West* (Edinburgh University Press, 1981).
+- **MCCARTHY** — Michael R. McCarthy and Catherine M. Brooks, *Medieval Pottery in
+  Britain AD 900–1600* (Leicester University Press, 1988).
+- **MCERLEAN** — Thomas McErlean and Norman Crothers, *Harnessing the Tides: The Early
+  Medieval Tide Mills at Nendrum Monastery, Strangford Lough* (TSO Northern Ireland,
+  2007).
 - **NEEDHAM** — Joseph Needham et al., *Science and Civilisation in China*, especially
   vols. 4–5 (Cambridge University Press, 1965–1986).
+- **PATRICK** — Amber Patrick, *The Buildings of the Malting Industry: The Production
+  of Malt from Prehistory to the 21st Century* (Liverpool University Press and Historic
+  England, 2023).
+- **PETERSEN** — Andrew Petersen, *Dictionary of Islamic Architecture* (Routledge,
+  1996).
 - **PORMANN** — Peter E. Pormann and Emilie Savage-Smith, *Medieval Islamic Medicine*
   (Edinburgh University Press, 2007).
 - **PRYOR** — John H. Pryor,
@@ -328,12 +353,20 @@ not a claim that they were unimportant.
   rev. F. M. Powicke and A. B. Emden (Oxford University Press, 1936).
 - **RASHED** — Roshdi Rashed, *The Development of Arabic Mathematics: Between
   Arithmetic and Algebra* (Kluwer, 1994).
+- **RAMMELSBERG** — UNESCO World Heritage Centre,
+  [*Mines of Rammelsberg, Historic Town of Goslar and Upper Harz Water Management
+  System*](https://whc.unesco.org/en/list/623/), consulted 2026.
+- **SALTERNS** — Historic England,
+  [*Pre-industrial Salterns: Introductions to Heritage Assets*](https://historicengland.org.uk/images-books/publications/iha-preindustrial-salterns/heag225-pre-industrial-salterns/),
+  2025.
 - **SINGER** — Charles Singer et al., eds., *A History of Technology*, vol. 2,
   *The Mediterranean Civilizations and the Middle Ages* (Oxford University Press, 1956).
 - **SPUFFORD** — Peter Spufford, *Money and Its Use in Medieval Europe* (Cambridge
   University Press, 1988).
 - **STRICKLAND** — Matthew Strickland and Robert Hardy, *The Great Warbow: From Hastings
   to the Mary Rose* (Sutton, 2005).
+- **THEOPHILUS** — Theophilus, *On Divers Arts*, trans. John G. Hawthorne and Cyril
+  Stanley Smith (University of Chicago Press, 1963).
 - **UNGER** — Richard W. Unger, *The Ship in the Medieval Economy, 600–1600* (Croom
   Helm, 1980).
 - **WHITE** — Lynn White Jr., *Medieval Technology and Social Change* (Oxford

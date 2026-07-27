@@ -328,12 +328,11 @@ window.FB = window.FB || {};
      knowledge is then unioned over that baseline. */
   FB.ensureRealmTech = function (state) {
     state.realmTech = state.realmTech || {};
-    if (state.realmTechMigration === 2) {
-      for (var existing in state.realmTech) if (own(state.realmTech, existing)) {
-        state.realmTech[existing] = normalizeRecord(state.realmTech[existing]);
-      }
-      return state.realmTech;
-    }
+    /* rawTechRecord normalizes the one record a caller actually reads. Once
+       migration 2 has landed, sweeping every sovereign here turns each helper
+       lookup into a whole-world rewrite; catalogue rendering performs hundreds
+       of those lookups and can lock the load/menu UI on existing saves. */
+    if (state.realmTechMigration === 2) return state.realmTech;
 
     var saved = {}, rid;
     for (rid in state.realmTech) if (own(state.realmTech, rid)) {

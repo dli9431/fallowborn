@@ -7,7 +7,9 @@ modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyh
 code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
 `UI.openModal` also takes `{modalClass}` to tag `#genmodal` with a per-dialog CSS modifier
 (cleared on the next open): the Changelog uses `changelog-modal`, and the Menu, Automation,
-and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below). A dialog
+and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below).
+`modalClass` may contain multiple whitespace-separated classes; open and history-restore
+paths apply and clear each token individually. A dialog
 that dismisses from a footer button rather than the (mobile-invisible) backdrop puts that
 button in a `.gm-footer` — centered on desktop, and on mobile a large tap target pinned to
 the bottom middle of the sheet.
@@ -185,7 +187,10 @@ status, and text filters; Active/Available/Exposed/Completed/All views; and chro
 grouping from inherited foundations through the thirteenth century and beyond. Entries
 open keyboard-focusable details with clickable prerequisite chips, attestation and
 regional-adoption windows, historical context, effects, unlocks, exposure, and an exact
-base/history/exposure/progress cost breakdown. Sovereigns receive start controls for free
+base/history/exposure/progress cost breakdown. The effects section names only concrete
+gameplay changes—numeric modifiers and content actually gated by the technology—and is
+omitted when there are none; historical practice/rule tags and per-entry bibliography stay
+in the design/research documentation. Sovereigns receive start controls for free
 slots; eligible tier-3+ vassals receive advocacy controls. Foreign ruler sheets show the
 same nation's completed/exposed totals and active projects read-only.
 Independent counts and higher also get a compact political-attention summary above those

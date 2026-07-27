@@ -132,19 +132,19 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:light_tillage','career:farmer','enterprise:field_strip'] });
   add('ard_plough','Ard Plough','🌾','agriculture',[-500,500],[500,720],['scratch_plough'],
     'A framed ard gives draft animals a steadier cut through cultivated ground.',
-    { leaders:TRADITIONS, unlocks:['practice:ard_tillage'] });
+    { leaders:TRADITIONS, unlocks:['practice:ard_tillage'], fx:{ tax:0.005 } });
   add('crop_rotation','Two-Course Rotation','🌿','agriculture',[-400,600],[-100,400],['scratch_plough'],
     'Alternating crop and fallow protects exhausted soil.',
-    { leaders:TRADITIONS, unlocks:['practice:crop_rotation'] });
+    { leaders:TRADITIONS, unlocks:['practice:crop_rotation'], fx:{ tax:0.005 } });
   add('fallowing','Managed Fallow','🌱','agriculture',[-500,500],[-150,350],[],
     'Grazed fallow returns manure and fertility to worked land.',
-    { leaders:TRADITIONS, unlocks:['practice:managed_fallow'] });
+    { leaders:TRADITIONS, unlocks:['practice:managed_fallow'], fx:{ tax:0.005 } });
   add('manuring','Systematic Manuring','🐂','agriculture',[-300,600],[500,720],['fallowing'],
     'Dung is gathered and spread where its fertility is most useful.',
-    { leaders:TRADITIONS, unlocks:['practice:manuring'] });
+    { leaders:TRADITIONS, unlocks:['practice:manuring'], fx:{ tax:0.005 } });
   add('irrigation_channels','Irrigation Channels','💧','agriculture',[-1000,600],[-500,350],[],
     'Maintained channels carry water beyond the riverbank.',
-    { leaders:['islamic','persianate','byzantine','northeast_african'], unlocks:['practice:irrigation'] });
+    { leaders:['islamic','persianate','byzantine','northeast_african'], unlocks:['practice:irrigation'], fx:{ tax:0.005 } });
   add('olive_press','Lever Oil Press','🏺','agriculture',[-500,500],[500,680],[],
     'Lever and screw presses extract more oil from each harvest.',
     { leaders:['byzantine','islamic','latin','northeast_african'], unlocks:['enterprise:press_business'] });
@@ -156,7 +156,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:iron_harvest_tools'] });
   add('ox_yokes','Improved Ox Yokes','🐂','agriculture',[-500,500],[-100,400],[],
     'Well-fitted yokes let teams pull without choking or galling.',
-    { leaders:TRADITIONS, unlocks:['practice:ox_teams'] });
+    { leaders:TRADITIONS, unlocks:['practice:ox_teams'], fx:{ tax:0.005 } });
   add('water_lifting_devices','Water-Lifting Devices','💧','agriculture',[-300,700],[520,760],['irrigation_channels'],
     'Wheels and bucket chains raise water to higher fields.',
     { leaders:['islamic','persianate','byzantine','northeast_african'], unlocks:['practice:water_lifting'] });
@@ -218,13 +218,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:pottery'] });
   add('glassblowing','Glassblowing','🧪','crafts',[-100,500],[500,650],[],
     'Inflated glass permits thin vessels, lamps, and window pieces.',
-    { leaders:['byzantine','islamic','northeast_african'], unlocks:['practice:glasswork'] });
+    { leaders:['byzantine','islamic','northeast_african'], unlocks:['practice:glasswork'], fx:{ trade:0.005 } });
   add('tanning','Vegetable Tanning','🦬','crafts',[-500,500],[-100,350],[],
     'Bark liquors turn hides into durable leather.',
     { leaders:TRADITIONS, unlocks:['practice:tanning'] });
   add('spindle_whorl','Spindle and Distaff','🧶','crafts',[-1000,500],[-500,250],[],
     'Portable spinning tools turn prepared fiber into consistent thread.',
-    { leaders:TRADITIONS, unlocks:['practice:spinning'] });
+    { leaders:TRADITIONS, unlocks:['practice:spinning'], fx:{ trade:0.005 } });
   add('warp_weighted_loom','Warp-Weighted Loom','🧵','crafts',[-800,600],[500,700],['spindle_whorl'],
     'Weighted warp threads keep broad cloth under even tension.',
     { leaders:TRADITIONS, unlocks:['practice:weaving'] });
@@ -233,10 +233,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:cooperage'] });
   add('quern_stones','Rotary Querns','⚙','crafts',[-500,500],[480,620],[],
     'Rotary stones grind grain more steadily than saddle querns.',
-    { leaders:TRADITIONS, unlocks:['practice:rotary_grinding'] });
+    { leaders:TRADITIONS, unlocks:['practice:rotary_grinding'], fx:{ tax:0.005 } });
   add('lost_wax_casting','Lost-Wax Casting','🔔','crafts',[-1000,600],[500,720],[],
     'Disposable wax models permit complex cast metal forms.',
-    { leaders:TRADITIONS, unlocks:['practice:lost_wax_casting'] });
+    { leaders:TRADITIONS, unlocks:['practice:lost_wax_casting'], fx:{ costs:{ build:-0.01 } } });
   add('pattern_welding','Pattern-Welded Blades','🗡','crafts',[200,800],[450,760],['bloomery_iron'],
     'Twisted iron and steel bars combine toughness with a hard edge.',
     { leaders:['nordic','latin','slavic'], unlocks:['rule:pattern_welded_arms'] });
@@ -248,7 +248,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['practice:horizontal_weaving','enterprise:workshop_business'] });
   add('water_power','Water-Power Gearing','⚙','crafts',[100,700],[400,760],['quern_stones'],
     'Shafts and gears turn flowing water into useful rotary motion.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:water_power'] });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:water_power'], fx:{ costs:{ enterprise:-0.01 } } });
   add('undershot_watermill','Undershot Watermill','⚙','crafts',[100,700],[450,780],['water_power'],
     'A current striking low paddles drives millstones without a steep fall.',
     { leaders:['byzantine','latin','islamic'], unlocks:['building:mill'] });
@@ -260,7 +260,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','latin'], unlocks:['rule:trip_hammers'], fx:{ costs:{ enterprise:-0.025 } } });
   add('paper_making','Papermaking','📄','crafts',[650,950],[760,1010],[],
     'Pulped fibers formed in molds provide a cheaper writing surface.',
-    { leaders:['islamic','persianate'], unlocks:['rule:paper_supply'], sources:['BLOOM','SINGER'] });
+    { leaders:['islamic','persianate'], unlocks:['rule:paper_supply'], fx:{ research:0.1 }, sources:['BLOOM','SINGER'] });
   add('distillation','Alembic Distillation','⚗','crafts',[700,1050],[820,1080],['glassblowing'],
     'Controlled heating and condensation separate volatile substances.',
     { leaders:['islamic','persianate','byzantine'], unlocks:['practice:distillation'], fx:{ health:0.002 }, sources:['PORMANN','SINGER'] });
@@ -301,7 +301,7 @@ window.FBDATA = window.FBDATA || {};
   /* Commerce, transport, and infrastructure — 24. */
   add('road_surveys','Surveyed Roads','🛣','commerce',[-500,500],[500,720],[],
     'Measured grades, drainage, and chosen alignments make roads durable.',
-    { leaders:TRADITIONS, unlocks:['rule:surveyed_roads'] });
+    { leaders:TRADITIONS, unlocks:['rule:surveyed_roads'], fx:{ movement:0.005 } });
   add('stone_bridgebuilding','Stone Bridgebuilding','🌉','commerce',[-500,600],[520,760],['lime_mortar'],
     'Masonry piers and arches carry roads over dangerous crossings.',
     { leaders:TRADITIONS, unlocks:['building:bridge'] });
@@ -313,7 +313,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['rule:weights_measures','career:merchant'] });
   add('market_tolls','Regulated Market Tolls','🏪','commerce',[-300,600],[500,700],['weights_measures'],
     'Known tolls and protected market days regularize local exchange.',
-    { leaders:TRADITIONS, unlocks:['rule:regulated_tolls'] });
+    { leaders:TRADITIONS, unlocks:['rule:regulated_tolls'], fx:{ tax:0.005 } });
   add('pack_saddles','Pack Saddles','🐴','commerce',[-500,600],[-100,400],[],
     'Balanced frames let animals carry bulky loads over poor roads.',
     { leaders:TRADITIONS, unlocks:['rule:pack_transport'] });
@@ -381,22 +381,22 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:parchment'] });
   add('classical_grammar','Classical Grammar','✒','learning',[-500,600],[-100,430],[],
     'Formal grammar preserves learned languages across generations.',
-    { leaders:TRADITIONS, unlocks:['practice:learned_literacy'] });
+    { leaders:TRADITIONS, unlocks:['practice:learned_literacy'], fx:{ education:0.005 } });
   add('arithmetic','Written Arithmetic','➗','learning',[-500,600],[-100,430],[],
     'Written procedures make calculation teachable and repeatable.',
     { leaders:TRADITIONS, unlocks:['practice:arithmetic','schooling:merchant'] });
   add('geometry','Practical Geometry','📐','learning',[-500,600],[500,700],['arithmetic'],
     'Rules of measure guide surveyors, builders, and astronomers.',
-    { leaders:TRADITIONS, unlocks:['practice:geometry'] });
+    { leaders:TRADITIONS, unlocks:['practice:geometry'], fx:{ research:0.1 } });
   add('herbals','Materia Medica','🌿','learning',[-400,600],[-50,430],[],
     'Catalogues of substances preserve recipes and warnings for healers.',
-    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine'] });
+    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine'], fx:{ health:0.001 } });
   add('surgical_instruments','Surgical Instruments','🩺','learning',[-300,600],[520,740],['bloomery_iron'],
     'Purpose-made probes, knives, forceps, and cauteries support manual treatment.',
     { leaders:TRADITIONS, unlocks:['practice:surgery'] });
   add('astronomical_observation','Astronomical Observation','🌙','learning',[-500,600],[500,720],['geometry'],
     'Long observation links the movements of the sky to calendars and seasons.',
-    { leaders:TRADITIONS, unlocks:['practice:astronomy'] });
+    { leaders:TRADITIONS, unlocks:['practice:astronomy'], fx:{ research:0.1 } });
   add('scriptoria',{ default:'Scriptoria', muslim:'Paper Workshops' },'📜','learning',[500,850],[570,850],['manuscript_codex'],
     'Organized copying communities preserve and multiply difficult texts.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:scriptoria'], fx:{ research:0.25 } });
@@ -452,22 +452,22 @@ window.FBDATA = window.FBDATA || {};
   /* Governance, law, and institutions — 25. */
   add('written_law','Written Law Codes','⚖','governance',[-600,600],[-100,430],[],
     'Promulgated texts make some rules portable beyond a judge’s memory.',
-    { leaders:TRADITIONS, unlocks:['practice:written_law'] });
+    { leaders:TRADITIONS, unlocks:['practice:written_law'], fx:{ tax:0.005 } });
   add('census_records','Census Records','📋','governance',[-500,600],[500,700],['written_law'],
     'Enumerations connect households and land to public obligations.',
-    { leaders:TRADITIONS, unlocks:['practice:census'] });
+    { leaders:TRADITIONS, unlocks:['practice:census'], fx:{ tax:0.005 } });
   add('land_registers','Land Registers','📜','governance',[-500,600],[500,700],['written_law'],
     'Written surveys preserve boundaries, tenures, and assessed holdings.',
-    { leaders:TRADITIONS, unlocks:['practice:land_records'] });
+    { leaders:TRADITIONS, unlocks:['practice:land_records'], fx:{ tax:0.005 } });
   add('tax_assessment','Regular Tax Assessment','🪙','governance',[-500,600],[520,740],['census_records'],
     'Recorded categories and schedules make revenue less dependent on ad hoc taking.',
-    { leaders:TRADITIONS, unlocks:['practice:tax_assessment'] });
+    { leaders:TRADITIONS, unlocks:['practice:tax_assessment'], fx:{ tax:0.01 } });
   add('diplomatic_correspondence','Diplomatic Correspondence','📨','governance',[-500,600],[-50,430],['classical_grammar'],
     'Formal letters preserve negotiation across distance and succession.',
-    { leaders:TRADITIONS, unlocks:['practice:diplomatic_letters'] });
+    { leaders:TRADITIONS, unlocks:['practice:diplomatic_letters'], fx:{ research:0.1 } });
   add('bureaucratic_offices','Bureaucratic Offices','🏛','governance',[-400,600],[500,720],['written_law'],
     'Named offices divide recurring public work among accountable servants.',
-    { leaders:TRADITIONS, unlocks:['practice:public_offices'] });
+    { leaders:TRADITIONS, unlocks:['practice:public_offices'], fx:{ tax:0.005 } });
   add('capitularies','Royal Capitularies','📜','governance',[650,900],[760,920],['written_law','diplomatic_correspondence'],
     'Chaptered royal orders circulate policy among assemblies and local officers.',
     { leaders:['latin'], unlocks:['rule:capitularies'], fx:{ levy:0.01 } });
@@ -485,7 +485,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin'], unlocks:['rule:manorial_courts'], fx:{ tax:0.01 } });
   add('customary_law','Recorded Customary Law','📖','governance',[800,1150],[950,1170],['written_law'],
     'Written statements stabilize customs once carried mainly by memory.',
-    { leaders:['latin','slavic','nordic'], unlocks:['rule:recorded_custom'] });
+    { leaders:['latin','slavic','nordic'], unlocks:['rule:recorded_custom'], fx:{ tax:0.005 } });
   add('royal_judges','Itinerant Royal Judges','⚖','governance',[900,1200],[1030,1220],['customary_law','diplomatic_correspondence'],
     'Delegated judges carry royal pleas and procedure into the provinces.',
     { leaders:['latin','byzantine'], unlocks:['rule:itinerant_justice'], fx:{ tax:0.01 } });
@@ -532,7 +532,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['unit:levy','career:soldier'] });
   add('composite_bow','Composite Bow','🏹','warfare',[-1000,700],[-400,400],[],
     'Laminated horn, sinew, and wood store great power in a short bow.',
-    { leaders:['steppe','persianate','islamic','byzantine'], unlocks:['unit:archers'] });
+    { leaders:['steppe','persianate','islamic','byzantine'], unlocks:['unit:archers'], fx:{ units:{ arch:10 }, aiUnits:{ arch:0.01 } } });
   add('iron_weaponry','Iron Weaponry','⚔','warfare',[-1000,500],[-500,300],['bloomery_iron'],
     'Reliable iron spearheads, blades, and tools equip organized forces.',
     { leaders:TRADITIONS, unlocks:['rule:iron_arms'] });
@@ -541,13 +541,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['steppe','persianate','byzantine','islamic'], unlocks:['rule:lamellar_armor'] });
   add('torsion_artillery','Torsion Artillery','🎯','warfare',[-400,600],[520,760],['geometry'],
     'Twisted skeins drive engines that cast bolts or stones against troops and walls.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:torsion_engines'] });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:torsion_engines'], fx:{ siege:0.01 } });
   add('fortified_camps','Fortified Camps','⛺','warfare',[-500,600],[500,700],['spear_shield_drill'],
     'Ditches, banks, and ordered camp streets protect armies at rest.',
-    { leaders:TRADITIONS, unlocks:['rule:fortified_camps'] });
+    { leaders:TRADITIONS, unlocks:['rule:fortified_camps'], fx:{ movement:0.005 } });
   add('cavalry_saddles','Framed Cavalry Saddles','🐎','warfare',[100,700],[350,650],[],
     'Rigid saddles stabilize mounted fighters and spread a rider’s weight.',
-    { leaders:['steppe','persianate','byzantine'], unlocks:['unit:cavalry'] });
+    { leaders:['steppe','persianate','byzantine'], unlocks:['unit:cavalry'], fx:{ units:{ cav:10 }, aiUnits:{ cav:0.01 } } });
   add('stirrups','Stirrup Cavalry','🐎','warfare',[400,800],[520,820],['cavalry_saddles'],
     'Paired stirrups improve mounted control, archery, and close combat.',
     { leaders:['steppe','persianate','byzantine'], notCultures:['greek'], unlocks:['rule:stirrup_cavalry'], fx:{ units:{ cav:20 }, aiUnits:{ cav:0.025 } } });
@@ -610,7 +610,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['unit:retinue'], fx:{ units:{ ret:25 }, aiUnits:{ ret:0.03 } } });
   add('naval_levies','Organized Naval Levies','⚓','warfare',[800,1200],[980,1230],['harbor_works'],
     'Ports assess ships, crews, and service for planned royal fleets.',
-    { leaders:['byzantine','nordic','islamic','latin'], unlocks:['rule:naval_levies'] });
+    { leaders:['byzantine','nordic','islamic','latin'], unlocks:['rule:naval_levies'], fx:{ levy:0.005 } });
   add('incendiary_weapons','Incendiary Weapons','🔥','warfare',[600,1100],[780,1120],['distillation','siege_engineering'],
     'Prepared combustible mixtures attack ships, engines, and wooden defenses.',
     { leaders:['byzantine','islamic'], unlocks:['rule:incendiaries'], fx:{ siege:0.025 }, confidence:'medium', sources:['PRYOR','DEVRIES'] });
@@ -627,16 +627,16 @@ window.FBDATA = window.FBDATA || {};
   /* Seafaring and navigation — 18. */
   add('mortise_tenon_shipbuilding','Mortise-and-Tenon Shipbuilding','⛵','seafaring',[-1000,600],[480,650],[],
     'Interlocking planks create strong shell-built hulls.',
-    { leaders:TRADITIONS, unlocks:['practice:shell_built_hulls'] });
+    { leaders:TRADITIONS, unlocks:['practice:shell_built_hulls'], fx:{ trade:0.005 } });
   add('square_sail','Square Sails','⛵','seafaring',[-1000,600],[-400,350],[],
     'Broad square sails drive cargo and war craft efficiently before the wind.',
-    { leaders:TRADITIONS, unlocks:['practice:square_sails'] });
+    { leaders:TRADITIONS, unlocks:['practice:square_sails'], fx:{ movement:0.005 } });
   add('steering_oars','Quarter Steering Oars','🛶','seafaring',[-700,700],[480,680],[],
     'Large side-mounted oars give helmsmen leverage over substantial hulls.',
     { leaders:TRADITIONS, unlocks:['practice:steering_oars'] });
   add('coastal_piloting','Coastal Piloting','🗺','seafaring',[-1000,700],[480,650],[],
     'Remembered landmarks, winds, currents, and anchorages guide coastal voyages.',
-    { leaders:TRADITIONS, unlocks:['practice:coastal_piloting'] });
+    { leaders:TRADITIONS, unlocks:['practice:coastal_piloting'], fx:{ movement:0.005 } });
   add('sounding_lead','Sounding Lead','⚓','seafaring',[-500,700],[520,700],['coastal_piloting'],
     'A weighted line measures depth and samples the seabed near hidden hazards.',
     { leaders:TRADITIONS, unlocks:['practice:soundings'] });
@@ -645,7 +645,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['building:harbor'] });
   add('clinker_shipbuilding','Clinker Shipbuilding','🛶','seafaring',[300,850],[500,850],['mortise_tenon_shipbuilding'],
     'Overlapping planks make light, flexible hulls suited to northern seas.',
-    { leaders:['nordic','latin','slavic','baltic_finnic'], unlocks:['rule:clinker_hulls'] });
+    { leaders:['nordic','latin','slavic','baltic_finnic'], unlocks:['rule:clinker_hulls'], fx:{ trade:0.005 } });
   add('lateen_sail','Lateen Sail','⛵','seafaring',[200,850],[500,850],['square_sail'],
     'A fore-and-aft triangular sail improves control across variable winds.',
     { leaders:['byzantine','islamic','northeast_african'], unlocks:['rule:lateen_rig'], fx:{ movement:0.015 } });

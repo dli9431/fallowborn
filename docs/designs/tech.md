@@ -151,6 +151,15 @@ schooling, household standards, careers, enterprises, credit, and trade partners
 Warfare technologies alter the existing levy/archer/cavalry/retinue classes, movement,
 quality, siege progress, and composition; they do not add a second unit taxonomy.
 
+The in-game detail sheet reports only effects that gameplay consumes: numeric `fx`,
+concrete typed unlocks, and content or contracts gated by `requiresTech`. Every technology
+used as a prerequisite for another technology also provides a modest direct benefit; early
+foundations keep smaller bonuses than the later entries they enable so inherited 867
+knowledge does not overwhelm the starting balance. Historical `practice:*`, `rule:*`, and
+`unit:*` catalogue tags are documentation metadata and are not presented as mechanics.
+Per-entry confidence and source references remain in the research catalogue rather than
+the play UI.
+
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
 composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,
@@ -168,7 +177,8 @@ Save format remains 3. `realmTechMigration:2` marks the one-time graph migration
 completed id, progress value, and reserve, historically backfills every living sovereign
 through the current year and derived traditions, and then unions the legacy state. Old
 `state.tech` and `player.research` are still imported into the effective player
-sovereign.
+sovereign. After that one-time migration, records normalize lazily at their individual
+access boundary; ordinary technology lookups do not rescan every sovereign record.
 
 Runtime mods are normalized before validation: `branch` becomes `domain`, scalar or array
 `req` is accepted, and `yearMin` becomes an inferred soft history window rather than a

@@ -3136,6 +3136,14 @@ window.FB = window.FB || {};
   let genericNavSnapshot = null;
   let genericViewSerial = 0;
 
+  function setModalClasses(gm, value) {
+    const previous = String(UI._gmModalClass || '').match(/\S+/g) || [];
+    for (const token of previous) gm.classList.remove(token);
+    const next = String(value || '').match(/\S+/g) || [];
+    UI._gmModalClass = next.join(' ');
+    for (const token of next) gm.classList.add(token);
+  }
+
   function captureModalView(view) {
     const body = $('gm-body');
     view.title = $('gm-title').textContent;
@@ -3160,9 +3168,7 @@ window.FB = window.FB || {};
     $('gm-title').textContent = view.title;
     body.appendChild(view.body);
     body.scrollTop = view.scrollTop || 0;
-    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
-    UI._gmModalClass = view.modalClass || '';
-    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
+    setModalClasses(gm, view.modalClass);
     UI._gmDismiss = view.dismiss;
     UI._gmReturnFocus = view.returnFocus;
     UI._gmReturnAction = view.returnAction;
@@ -3210,9 +3216,7 @@ window.FB = window.FB || {};
     UI._gmReturnFocus = genericNavSnapshot.returnFocus;
     UI._gmReturnAction = genericNavSnapshot.returnAction;
     const gm = $('genmodal');
-    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
-    UI._gmModalClass = genericNavSnapshot.modalClass;
-    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
+    setModalClasses(gm, genericNavSnapshot.modalClass);
     gm.classList.remove('hidden');
     if (!genericNavSnapshot.noFocus) focusFirstModalControl();
   }
@@ -3268,9 +3272,7 @@ window.FB = window.FB || {};
     gm.classList.remove('hidden');
     /* per-dialog modifier class (e.g. the changelog's even-margin sheet) —
        drop the previous one before applying this dialog's */
-    if (UI._gmModalClass) gm.classList.remove(UI._gmModalClass);
-    UI._gmModalClass = (opts && opts.modalClass) || '';
-    if (UI._gmModalClass) gm.classList.add(UI._gmModalClass);
+    setModalClasses(gm, opts && opts.modalClass);
     $('gm-title').textContent = FB.translateKnown(title);
     FB.localizeTree($('gm-title'));
     $('gm-body').innerHTML = bodyHtml;
@@ -6236,10 +6238,10 @@ window.FB = window.FB || {};
   function techScalarEffects(def) {
     const fx = def.fx || {}, out = [];
     const percentKeys = {
-      tax:FB.T('tax'), levy:FB.T('levy'), battle:FB.T('battle odds'),
+      tax:FB.T('tax income'), levy:FB.T('levy size'), battle:FB.T('battle odds'),
       health:FB.T('yearly health'), siege:FB.T('siege progress'),
-      movement:FB.T('army movement'), education:FB.T('education'),
-      finance:FB.T('finance'), trade:FB.T('trade')
+      movement:FB.T('army movement speed'), education:FB.T('education success chance'),
+      finance:FB.T('credit capacity'), trade:FB.T('merchant and craft income')
     };
     for (const key in percentKeys) {
       if (!fx[key]) continue;
@@ -6281,9 +6283,7 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function techUnlockText(s, unlock) {
-    const split = unlock.indexOf(':');
-    const kind = unlock.slice(0, split), target = unlock.slice(split + 1);
+  function techUnlockText(s, kind, target) {
     const table = kind === 'building' ? FBDATA.buildings :
       kind === 'career' ? FBDATA.careers :
       kind === 'enterprise' ? FBDATA.enterprises :
@@ -6294,21 +6294,93 @@ window.FB = window.FB || {};
       kind === 'enterprise' ? 'enterprise' :
       kind === 'schooling' ? 'schooling' : 'householdStandard';
     if (table && table[target]) {
-      return FB.T('Unlocks {content}', {
-        content:dt(s, dataKind, target, table[target], 'name')
-      });
+      const content = dt(s, dataKind, target, table[target], 'name');
+      if (kind === 'building') {
+        return FB.T('Allows construction of {content}.', { content:content });
+      }
+      if (kind === 'career') {
+        return FB.T('Makes training and work in {content} available.', { content:content });
+      }
+      if (kind === 'enterprise') {
+        return FB.T('Allows households to establish {content}.', { content:content });
+      }
+      if (kind === 'schooling') {
+        return FB.T('Makes {content} available for children.', { content:content });
+      }
+      return FB.T('Makes the {content} household standard available.', { content:content });
     }
     if (kind === 'research_slot') {
-      return FB.T('Unlocks research slot {slot}', { slot:target });
+      return FB.T('Adds national research slot {slot}.', { slot:target });
     }
-    if (kind === 'unit') {
-      const unit = target === 'archers' ? FB.T('archers') :
-        target === 'cavalry' ? FB.T('cavalry') :
-        target === 'retinue' ? FB.T('men-at-arms') : FB.T('levy');
-      return FB.T('Unlocks {unit} access', { unit:unit });
+    return '';
+  }
+
+  function techRequiresId(requirement, id) {
+    if (Array.isArray(requirement)) return requirement.indexOf(id) >= 0;
+    return requirement === id;
+  }
+
+  function techGameplayUnlocks(s, id, def) {
+    const out = [], seen = {};
+    function add(key, text) {
+      if (!text || seen[key]) return;
+      seen[key] = true;
+      out.push(text);
     }
-    return kind === 'practice' ? FB.T('Unlocks a historical practice') :
-      FB.T('Changes a realm rule');
+    function addContent(kind, target) {
+      add(kind + ':' + target, techUnlockText(s, kind, target));
+    }
+
+    for (const unlock of (def.unlocks || [])) {
+      const split = typeof unlock === 'string' ? unlock.indexOf(':') : -1;
+      if (split < 1) continue;
+      addContent(unlock.slice(0, split), unlock.slice(split + 1));
+    }
+
+    const tables = [
+      { kind:'building', data:FBDATA.buildings },
+      { kind:'career', data:FBDATA.careers },
+      { kind:'enterprise', data:FBDATA.enterprises },
+      { kind:'schooling', data:FBDATA.schooling }
+    ];
+    for (const entry of tables) {
+      for (const target in (entry.data || {})) {
+        if (!Object.prototype.hasOwnProperty.call(entry.data, target) ||
+            !entry.data[target]) continue;
+        if (techRequiresId(entry.data[target].requiresTech, id)) {
+          addContent(entry.kind, target);
+        }
+      }
+    }
+
+    for (const standardId in (FBDATA.householdStandards || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.householdStandards, standardId)) continue;
+      const standard = FBDATA.householdStandards[standardId];
+      if (!standard) continue;
+      if (techRequiresId(standard.requiresTech, id)) {
+        addContent('householdStandard', standardId);
+      }
+      for (let level = 0; level < (standard.levels || []).length; level++) {
+        if (!techRequiresId(standard.levels[level].requiresTech, id)) continue;
+        add('householdStandard:' + standardId + ':level:' + level,
+          FB.T('Makes {standard}: {level} available.', {
+            standard:dt(s, 'householdStandard', standardId, standard, 'name'),
+            level:dt(s, 'householdStandard', standardId, standard,
+              'levels.' + level + '.name')
+          }));
+      }
+    }
+
+    for (const financeId in (FBDATA.finance || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.finance, financeId) ||
+          !FBDATA.finance[financeId]) continue;
+      if (!techRequiresId(FBDATA.finance[financeId].requiresTech, id)) continue;
+      const financeName = financeId === 'tradePartnership'
+        ? FB.tradePartnershipName(s) : financeKindName(financeId);
+      add('finance:' + financeId,
+        FB.T('Makes {content} available.', { content:financeName }));
+    }
+    return out;
   }
 
   function techPrerequisiteButtons(s, def) {
@@ -6480,25 +6552,17 @@ window.FB = window.FB || {};
         progress:researchNumber(record.progress[id]), cost:researchNumber(cost.total)
       }))) : '') +
       '<div class="panelh">' + esc(FB.T('Prerequisites')) + '</div>' +
-      techPrerequisiteButtons(s, def) +
-      '<div class="panelh">' + esc(FB.T('Effects and unlocks')) + '</div><div class="tech-effects">';
+      techPrerequisiteButtons(s, def);
     const effects = techScalarEffects(def);
-    for (const effect of effects) h += '<div>• ' + esc(effect) + '</div>';
-    for (const unlock of (def.unlocks || [])) {
-      h += '<div>• ' + esc(techUnlockText(s, unlock)) + '</div>';
+    const unlocks = techGameplayUnlocks(s, id, def);
+    if (effects.length || unlocks.length) {
+      h += '<div class="panelh">' + esc(FB.T('In-game effects')) +
+        '</div><div class="tech-effects">';
+      for (const effect of effects) h += '<div>• ' + esc(effect) + '</div>';
+      for (const unlock of unlocks) h += '<div>• ' + esc(unlock) + '</div>';
+      h += '</div>';
     }
-    if (!effects.length && !(def.unlocks || []).length) {
-      h += '<div class="hint">' + esc(FB.T('Knowledge prerequisite only.')) + '</div>';
-    }
-    const confidenceNames = {
-      high:FB.T('high'),
-      medium:FB.T('medium'),
-      modded:FB.T('modded')
-    };
-    h += '</div><div class="hint">' + esc(FB.T('Confidence: {confidence} · sources: {sources}', {
-      confidence:confidenceNames[def.confidence] || def.confidence,
-      sources:(def.sources || []).join(', ')
-    })) + '</div><div class="gm-footer">';
+    h += '<div class="gm-footer">';
     const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
     if (canChoose && item.available &&
         record.active.length < FB.techSlotCount(s, rid)) {

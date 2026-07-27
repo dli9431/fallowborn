@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.64.0';
+  FB.VERSION = '1.64.1';
   FB.CHANGELOG = [
+    { v: '1.64.1', date: '2026-07-26', changes: [
+      'Technology screens now open reliably from saved games and restore the correct menu when closed.',
+      'Technology details now name concrete gameplay effects, and every prerequisite technology grants a modest direct benefit.'
+    ] },
     { v: '1.64.0', date: '2026-07-26', changes: [
       'Technology now follows historical regional adoption and spreads through neighboring realms, alliances, wars, shared traditions, and faith networks.'
     ] },
