@@ -15,7 +15,8 @@ paid service:
 
 - pilgrimage uses authored sites filtered by the traveler’s exact religion or
   religion group;
-- trade accepts developed counties at or above the purpose’s `minDev`;
+- trade routes the player into the self-founded venture setup, whose finance
+  definition accepts developed counties at or above `minDevelopment`;
 - study uses authored learned/urban sites;
 - paid service reads the current capitals of living realms, including generated
   vassal realms.
@@ -28,6 +29,10 @@ two-argument compatibility path; passing the optional state applies the active m
 transport multiplier to the complete cost and rounds up. `FB.travelLegDays(state)` is the
 shared preview/departure helper: a leg takes `balance.travelLegDays` (three by default),
 or the active transport level's three, two, or one days.
+`FB.travelRouteOverhead` applies the same transport multiplier to the route portion
+alone. Self-founded ventures use that helper so their selected 10/20/50-gold stake is
+always charged in full. `FB.developedMarketDestinations` supplies the same reachable
+map/list choices to Finance and Travel without applying the personal travel cooldown.
 
 Arrival begins a destination stay rather than an immediate return-or-settle choice.
 The traveler must remain for `balance.travelMinStayDays` (90) before returning,
@@ -40,6 +45,9 @@ The departure cooldown begins when `FB.travelStart` actually spends the cost, no
 when the purpose or destination picker opens. Pilgrimage is once per character
 (the legacy Pilgrim trait also counts); every other purpose may repeat except at a
 destination already completed by that character. Succession clears the history.
+Dispatching a venture does not start or consult this cooldown and may revisit a
+market. Accompanying one uses ordinary travel eligibility and preserves the
+per-character completed-destination rule.
 The destination picker remembers whether time was already paused: canceling it or
 confirming departure restores a running clock, while a game that was paused before
 the picker remains paused. Leaving the current game closes the picker without
@@ -95,7 +103,16 @@ after a year and four work stories, uses an explicit confirmation, writes
 `player.travelSettlement`, and cannot succeed again during the same character’s
 life. Succession clears that lifetime marker for the heir.
 
+An accompanied self-founded venture adds only `travel.venture`: its kind, selected
+stake, separately paid overhead, destination/route snapshot, status, and irreversible
+settlement fields. No matching finance investment record is created. The normal trade
+capstone scales its former 12/25/3-gold outcomes from the selected stake (1.2× cautious,
+2.5× bold success, 0.3× bold failure). Turning back before arrival, death, succession,
+imprisonment, personal war, or leaving tiers 1–2 discards or cancels this travel-owned
+record without a refund or later payout.
+
 The public surface is `FB.travelLocation`, `FB.travelRoute`,
-`FB.travelDestinations`, `FB.travelCost`, `FB.travelLegDays`, `FB.travelStart`, `FB.travelTick`,
+`FB.developedMarketDestinations`, `FB.travelDestinations`, `FB.travelCost`,
+`FB.travelRouteOverhead`, `FB.travelLegDays`, `FB.travelStart`, `FB.travelTick`,
 `FB.travelStayDays`, `FB.travelReturnEligible`, `FB.travelSettlementEligible`,
 `FB.travelTurnBack`, `FB.travelReturn`, `FB.travelSettle`, and `FB.travelCancel`.

@@ -1535,6 +1535,18 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.financeActivePartnerships = function (state) {
+    return FB.financeActiveInvestments(state).filter(function (inv) {
+      return !inv.kind || inv.kind === 'trade_partnership';
+    });
+  };
+
+  FB.financeActiveTradeVentures = function (state) {
+    return FB.financeActiveInvestments(state).filter(function (inv) {
+      return inv.kind === 'trade_venture';
+    });
+  };
+
   FB.financeHasDefault = function (state) {
     for (const loan of FB.financeActiveLoans(state)) {
       if (loan.status === 'default') return true;
@@ -1885,6 +1897,287 @@ window.FB = window.FB || {};
     return false;
   }
 
+  function tradeVentureDef() {
+    return FBDATA.finance && FBDATA.finance.tradeVenture;
+  }
+
+  function tradeVentureNumber(value, fallback) {
+    const number = Number(value);
+    return value !== undefined && isFinite(number) ? number : fallback;
+  }
+
+  function tradeVentureLimit() {
+    const def = tradeVentureDef();
+    return Math.max(0, Math.floor(tradeVentureNumber(
+      def && def.activeLimit, 1)));
+  }
+
+  FB.tradeVentureStakes = function () {
+    const def = tradeVentureDef();
+    const source = def && Array.isArray(def.stakes) ? def.stakes : [10,20,50];
+    const out = [];
+    for (let i = 0; i < source.length; i++) {
+      const stake = Math.floor(Number(source[i]) || 0);
+      if (stake > 0 && out.indexOf(stake) < 0) out.push(stake);
+    }
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  };
+
+  FB.activeTradeVentures = function (state) {
+    const out = FB.financeActiveTradeVentures(state).slice();
+    const travel = state && state.player && state.player.travel;
+    if (travel && travel.venture && travel.venture.kind === 'trade_venture' &&
+        travel.venture.status === 'active') {
+      out.push(travel.venture);
+    }
+    return out;
+  };
+
+  FB.tradeVentureActive = function (state) {
+    const active = FB.activeTradeVentures(state);
+    return active.length ? active[0] : null;
+  };
+
+  FB.tradeVentureEligible = function (state, mode) {
+    if (!state || !state.player) return FB.T('No household is ready to trade.');
+    const p = state.player;
+    const c = state.chars[p.charId];
+    if (!c || FB.ageOf(c, state.date.year) < 16) {
+      return FB.T('Only an adult can form a trade venture.');
+    }
+    if (p.tier < 1 || p.tier > 2) {
+      return FB.T('Only freeholders and gentry can form a trade venture.');
+    }
+    if (p.travel) return FB.T('A traveler cannot organize another venture.');
+    if (p.flags && p.flags.in_prison) {
+      return FB.T('A prisoner cannot organize a trade venture.');
+    }
+    if (FB.atWarPersonally(state)) {
+      return FB.T('You cannot form a trade venture while personally at war.');
+    }
+    if (FB.activeTradeVentures(state).length >= tradeVentureLimit()) {
+      return FB.T('The household already has an active self-founded venture.');
+    }
+    if (mode === 'accompany' && FB.travelEligible) {
+      const travelEligible = FB.travelEligible(state);
+      if (travelEligible !== true) return travelEligible;
+    }
+    return true;
+  };
+
+  FB.tradeVentureMarkets = function (state) {
+    const def = tradeVentureDef() || {};
+    if (!FB.developedMarketDestinations) return [];
+    return FB.developedMarketDestinations(state,
+      tradeVentureNumber(def.minDevelopment, 4), {
+      purpose:'trade',
+      ignoreHistory:true,
+      overheadOnly:true
+    });
+  };
+
+  function tradeVentureMarket(state, destinationId) {
+    const markets = FB.tradeVentureMarkets(state);
+    for (let i = 0; i < markets.length; i++) {
+      if (markets[i].destinationId === destinationId) return markets[i];
+    }
+    return null;
+  }
+
+  function tradeVentureBands(def, strategy) {
+    const fallback = {
+      cautious:[
+        { below:0.10, outcome:'loss', multiplier:0 },
+        { below:0.30, outcome:'partial', multiplier:0.75 },
+        { below:0.95, outcome:'profit', multiplier:1.25 },
+        { outcome:'exceptional', multiplier:1.60 }
+      ],
+      bold:[
+        { below:0.25, outcome:'loss', multiplier:0 },
+        { below:0.40, outcome:'partial', multiplier:0.50 },
+        { below:0.93, outcome:'profit', multiplier:1.70 },
+        { outcome:'exceptional', multiplier:2.75 }
+      ]
+    };
+    const source = def && def.outcomes && Array.isArray(def.outcomes[strategy])
+      ? def.outcomes[strategy] : fallback[strategy];
+    const out = [];
+    for (let i = 0; i < source.length; i++) {
+      const item = source[i] || {};
+      const band = {
+        outcome:String(item.outcome || (i === 0 ? 'loss' : 'profit')),
+        multiplier:Math.max(0, Number(item.multiplier) || 0)
+      };
+      if (item.below !== undefined && isFinite(Number(item.below))) {
+        band.below = FB.clamp(Number(item.below), 0, 1);
+      }
+      out.push(band);
+    }
+    return out.length ? out : fallback[strategy];
+  }
+
+  function tradeVentureStrategyPreview(def, strategy, modifier) {
+    const bands = tradeVentureBands(def, strategy);
+    const probabilities = [];
+    let previous = 0;
+    let lossChance = 0;
+    for (let i = 0; i < bands.length; i++) {
+      const band = bands[i];
+      const limit = band.below === undefined
+        ? 1 : FB.clamp(band.below - modifier, 0, 1);
+      const probability = Math.max(0, limit - previous);
+      probabilities.push(probability);
+      if (band.multiplier === 0) lossChance += probability;
+      previous = Math.max(previous, limit);
+    }
+    return {
+      strategy:strategy,
+      bands:bands,
+      probabilities:probabilities,
+      lossChance:FB.clamp(lossChance, 0, 1)
+    };
+  }
+
+  FB.tradeVenturePreview = function (state, stake, destinationId) {
+    const def = tradeVentureDef();
+    stake = Math.floor(Number(stake) || 0);
+    if (!def || FB.tradeVentureStakes().indexOf(stake) < 0) return null;
+    const market = tradeVentureMarket(state, destinationId);
+    if (!market) return null;
+    const mods = def.modifiers || {};
+    const c = state.chars[state.player.charId];
+    const career = currentCareer(state);
+    const stewardship = FB.skillOf(c, 'ste') /
+      Math.max(1, tradeVentureNumber(mods.stewardshipDivisor, 200));
+    let guild = 0;
+    if (career && (career.profession === 'merchant' ||
+        career.profession === 'craftsman')) {
+      guild = (FB.guildIncomeMultiplier(career) - 1) /
+        Math.max(1, tradeVentureNumber(mods.guildDivisor, 2));
+    }
+    const tradeHouse = hasTradeHouse(state)
+      ? tradeVentureNumber(mods.tradeHouse, 0.03) : 0;
+    const nationalTrade = Math.max(0,
+      FB.techBonus ? FB.techBonus(state, 'trade') : 0);
+    const householdRaw = stewardship + guild + tradeHouse + nationalTrade;
+    const household = Math.min(
+      Math.max(0, tradeVentureNumber(mods.householdBonusCap, 0.20)),
+      householdRaw);
+    const destinationDevelopment = Number(market.development) || 1;
+    const destination = Math.min(
+      Math.max(0, tradeVentureNumber(mods.destinationDevelopmentCap, 0.08)),
+      destinationDevelopment /
+        Math.max(1, tradeVentureNumber(
+          mods.destinationDevelopmentDivisor, 100)));
+    const routeRisk = Math.min(
+      Math.max(0, tradeVentureNumber(mods.routeRiskCap, 0.12)),
+      market.legs * Math.max(0,
+        tradeVentureNumber(mods.routeRiskPerLeg, 0.006)));
+    const modifier = household + destination - routeRisk;
+    const timing = def.timing || {};
+    const durationDays = Math.max(
+      Math.max(1, tradeVentureNumber(timing.minimumDays, 90)),
+      Math.max(0, tradeVentureNumber(timing.preparationDays, 30)) +
+        market.days * 2);
+    const dueTurn = state.turn + Math.ceil(durationDays);
+    return {
+      stake:stake,
+      destinationId:market.destinationId,
+      destinationRealm:market.destinationRealm || null,
+      route:market.route.slice(),
+      legs:market.legs,
+      oneWayDays:market.days,
+      roundTripDays:market.days * 2,
+      legDays:market.legDays,
+      overhead:market.cost,
+      totalCost:stake + market.cost,
+      durationDays:Math.ceil(durationDays),
+      dueTurn:dueTurn,
+      dueDate:FB.dateAtTurn(state, dueTurn),
+      development:destinationDevelopment,
+      modifiers:{
+        stewardship:stewardship,
+        guild:guild,
+        tradeHouse:tradeHouse,
+        nationalTrade:nationalTrade,
+        householdRaw:householdRaw,
+        household:household,
+        destination:destination,
+        routeRisk:routeRisk,
+        total:modifier
+      },
+      strategies:{
+        cautious:tradeVentureStrategyPreview(def, 'cautious', modifier),
+        bold:tradeVentureStrategyPreview(def, 'bold', modifier)
+      }
+    };
+  };
+
+  FB.tradeVentureCanStart = function (state, mode, stake, destinationId) {
+    const eligible = FB.tradeVentureEligible(state, mode);
+    if (eligible !== true) return eligible;
+    const preview = FB.tradeVenturePreview(state, stake, destinationId);
+    if (!preview) return FB.T('That stake or market is not available.');
+    if (state.player.gold + 0.000001 < preview.totalCost) {
+      return FB.T('The stake and route overhead cost {money:cost}; you have {money:gold}.', {
+        cost:preview.totalCost, gold:Math.floor(state.player.gold)
+      });
+    }
+    if (mode === 'accompany') {
+      const choices = FB.travelDestinations ? FB.travelDestinations(state, 'trade') : [];
+      let found = false;
+      for (let i = 0; i < choices.length; i++) {
+        if (choices[i].destinationId === destinationId) { found = true; break; }
+      }
+      if (!found) {
+        return FB.T('This character has already completed a trade journey to that market.');
+      }
+    }
+    return true;
+  };
+
+  FB.startTradeVenture = function (state, stake, destinationId, strategy, source) {
+    if (strategy !== 'cautious' && strategy !== 'bold') return null;
+    if (FB.tradeVentureCanStart(state, 'dispatch', stake, destinationId) !== true) {
+      return null;
+    }
+    const preview = FB.tradeVenturePreview(state, stake, destinationId);
+    const selected = preview.strategies[strategy];
+    const e = FB.ensureEconomy(state);
+    const inv = {
+      id:e.nextId++,
+      kind:'trade_venture',
+      destinationId:preview.destinationId,
+      destinationRealm:preview.destinationRealm,
+      route:preview.route.slice(),
+      legs:preview.legs,
+      legDays:preview.legDays,
+      destinationDevelopment:preview.development,
+      strategy:strategy,
+      stake:preview.stake,
+      overhead:preview.overhead,
+      durationDays:preview.durationDays,
+      dueTurn:preview.dueTurn,
+      dueDate:preview.dueDate,
+      modifiers:preview.modifiers,
+      bands:selected.bands,
+      lossChance:selected.lossChance,
+      source:String(source || 'finance'),
+      status:'active'
+    };
+    e.investments.push(inv);
+    state.player.gold -= preview.totalCost;
+    const destination = FB.world.byId[preview.destinationId];
+    FB.news(state, FB.msg('news.finance.trade_venture_started',
+      '🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road.', {
+        stake:preview.stake,
+        overhead:preview.overhead,
+        destination:destination ? destination.name : preview.destinationId
+      }));
+    return inv;
+  };
+
   FB.tradeInvestmentStakes = function (state) {
     const partnership = FBDATA.finance && FBDATA.finance.tradePartnership;
     if (partnership && partnership.requiresTech &&
@@ -1900,7 +2193,7 @@ window.FB = window.FB || {};
   };
 
   FB.canStartTradeInvestment = function (state, stake) {
-    if (FB.financeActiveInvestments(state).length >=
+    if (FB.financeActivePartnerships(state).length >=
       (FBDATA.balance.financeMaxInvestments || 3)) return false;
     if (state.player.gold < stake) return false;
     return FB.tradeInvestmentStakes(state).indexOf(stake) >= 0;
@@ -1910,7 +2203,7 @@ window.FB = window.FB || {};
     stake = Math.floor(Number(stake) || 0);
     const eventOffer = source === 'caravan_event' &&
       (stake === 20 || stake === 50) &&
-      FB.financeActiveInvestments(state).length <
+      FB.financeActivePartnerships(state).length <
         (FBDATA.balance.financeMaxInvestments || 3) &&
       state.player.gold >= stake;
     if (!eventOffer && !FB.canStartTradeInvestment(state, stake)) return null;
@@ -1932,7 +2225,7 @@ window.FB = window.FB || {};
     return inv;
   };
 
-  function matureInvestment(state, inv) {
+  function maturePartnership(state, inv) {
     if (inv.status !== 'active' || state.turn < inv.dueTurn) return;
     const roll = FB.rng();
     let outcome, payout;
@@ -1968,13 +2261,68 @@ window.FB = window.FB || {};
     }, { outcome:outcome, payout:payout }));
   }
 
+  FB.resolveTradeVenture = function (state, inv) {
+    if (!inv || inv.kind !== 'trade_venture' || inv.status !== 'active' ||
+        state.turn < inv.dueTurn) return false;
+    const roll = FB.rng();
+    const modifier = inv.modifiers && isFinite(Number(inv.modifiers.total))
+      ? Number(inv.modifiers.total) : 0;
+    const adjustedRoll = roll + modifier;
+    const bands = Array.isArray(inv.bands) && inv.bands.length
+      ? inv.bands : tradeVentureBands(tradeVentureDef(), inv.strategy);
+    let selected = bands[bands.length - 1];
+    for (let i = 0; i < bands.length; i++) {
+      if (bands[i].below === undefined || adjustedRoll < bands[i].below) {
+        selected = bands[i];
+        break;
+      }
+    }
+    const payout = Math.round(
+      inv.stake * Math.max(0, Number(selected.multiplier) || 0) * 100) / 100;
+    const outcome = String(selected.outcome || 'profit');
+    /* Commit the sole seeded roll and its result before touching the purse or
+       publishing the Chronicle entry. Reloads cannot reroll or double-pay. */
+    inv.roll = roll;
+    inv.adjustedRoll = adjustedRoll;
+    inv.outcome = outcome;
+    inv.multiplier = Number(selected.multiplier) || 0;
+    inv.payout = payout;
+    inv.status = 'resolved';
+    inv.resolvedTurn = state.turn;
+    state.player.gold += payout;
+    const destination = FB.world.byId[inv.destinationId];
+    FB.news(state, FB.msg('news.finance.trade_venture_matured', {
+      forms: {
+        select:'value', param:'outcome', cases:{
+          loss:'🌊 The household’s venture to {destination} is lost with every coin invested.',
+          partial:'🧭 The venture to {destination} limps home with {money:payout}.',
+          profit:'🧭 The venture to {destination} returns {money:payout}.',
+          exceptional:'✨ The venture to {destination} returns a remarkable {money:payout}.',
+          other:'🧭 The household’s venture to {destination} is resolved.'
+        }
+      }
+    }, {
+      outcome:outcome,
+      payout:payout,
+      destination:destination ? destination.name : inv.destinationId
+    }));
+    return true;
+  };
+
+  FB.financeDay = function (state) {
+    const ventures = FB.financeActiveTradeVentures(state);
+    for (let i = 0; i < ventures.length; i++) {
+      if (ventures[i].dueTurn <= state.turn) FB.resolveTradeVenture(state, ventures[i]);
+    }
+  };
+
   FB.financeSeason = function (state) {
     FB.ensureEconomy(state);
     collectAssignedRevenue(state);
     const loans = FB.financeActiveLoans(state);
     for (const loan of loans) processLoan(state, loan);
-    const investments = FB.financeActiveInvestments(state);
-    for (const inv of investments) matureInvestment(state, inv);
+    const investments = FB.financeActivePartnerships(state);
+    for (const inv of investments) maturePartnership(state, inv);
   };
 
   FB.financeYear = function (state) {
@@ -2121,7 +2469,7 @@ window.FB = window.FB || {};
      system as the Finance panel. The registry exists before events.js loads. */
   FB.fns = FB.fns || {};
   FB.fns.finance_can_invest = function (state) {
-    return FB.financeActiveInvestments(state).length <
+    return FB.financeActivePartnerships(state).length <
       (FBDATA.balance.financeMaxInvestments || 3);
   };
   FB.fns.finance_trade_20 = function (state) {

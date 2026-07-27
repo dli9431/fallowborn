@@ -131,6 +131,15 @@ window.FB = window.FB || {};
     return Math.max(1, balance('travelLegDays', 3));
   };
 
+  FB.travelRouteOverhead = function (routeOrLegs, state) {
+    const legs = typeof routeOrLegs === 'number'
+      ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
+    const base = Math.ceil(2 + legs * 2 * 0.25);
+    const mult = state && FB.householdStandardEffects
+      ? FB.householdStandardEffects(state).travelCost : 1;
+    return Math.ceil(base * mult);
+  };
+
   FB.travelCost = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
@@ -170,15 +179,19 @@ window.FB = window.FB || {};
     return true;
   }
 
-  function addDestination(state, out, seen, purposeId, pid, realmId) {
+  function addDestination(state, out, seen, purposeId, pid, realmId, opts) {
     const p = state.player;
+    opts = opts || {};
     if (!pid || pid === p.provinceId || seen[pid] || !settled(pid)) return;
-    if (purposeId === 'pilgrimage' &&
-      (historyHas(state, 'pilgrimage') || me(state).traits.indexOf('pilgrim') >= 0)) return;
-    if (purposeId !== 'pilgrimage' && historyHas(state, purposeId, pid)) return;
+    if (!opts.ignoreHistory) {
+      if (purposeId === 'pilgrimage' &&
+        (historyHas(state, 'pilgrimage') || me(state).traits.indexOf('pilgrim') >= 0)) return;
+      if (purposeId !== 'pilgrimage' && historyHas(state, purposeId, pid)) return;
+    }
     const route = FB.travelRoute(p.provinceId, pid);
     if (!route || !route.length) return;
     const legDays = FB.travelLegDays(state);
+    const pr = FB.world.byId[pid];
     seen[pid] = 1;
     out.push({
       purpose:purposeId,
@@ -188,9 +201,38 @@ window.FB = window.FB || {};
       legs:route.length,
       days:route.length * legDays,
       legDays:legDays,
-      cost:FB.travelCost(purposeId, route, state)
+      development:(state.dev && state.dev[pid]) || (pr && pr.dev0) || 1,
+      cost:opts.overheadOnly
+        ? FB.travelRouteOverhead(route, state)
+        : FB.travelCost(purposeId, route, state)
     });
   }
+
+  function sortDestinations(out) {
+    out.sort(function (a, b) {
+      if (a.legs !== b.legs) return a.legs - b.legs;
+      const ap = FB.world.byId[a.destinationId];
+      const bp = FB.world.byId[b.destinationId];
+      return (ap ? ap.name : '').localeCompare(bp ? bp.name : '');
+    });
+    return out;
+  }
+
+  FB.developedMarketDestinations = function (state, minDev, opts) {
+    const out = [];
+    const seen = {};
+    opts = opts || {};
+    minDev = Math.max(1, Number(minDev) || 4);
+    if (!state || !state.player || !FB.world) return out;
+    for (let i = 0; i < FB.world.provs.length; i++) {
+      const pr = FB.world.provs[i];
+      if (!pr.wasteland && (state.dev[pr.id] || pr.dev0 || 1) >= minDev) {
+        addDestination(state, out, seen, opts.purpose || 'trade',
+          pr.id, null, opts);
+      }
+    }
+    return sortDestinations(out);
+  };
 
   FB.travelDestinations = function (state, purposeId) {
     const def = purpose(purposeId);
@@ -208,11 +250,11 @@ window.FB = window.FB || {};
       }
     } else if (def.mode === 'developed') {
       const minDev = def.minDev || 4;
-      for (let i = 0; i < FB.world.provs.length; i++) {
-        const pr = FB.world.provs[i];
-        if (!pr.wasteland && (state.dev[pr.id] || pr.dev0 || 1) >= minDev) {
-          addDestination(state, out, seen, purposeId, pr.id, null);
-        }
+      const markets = FB.developedMarketDestinations(state, minDev, {
+        purpose:purposeId
+      });
+      for (let i = 0; i < markets.length; i++) {
+        out.push(markets[i]);
       }
     } else if (def.mode === 'capitals') {
       for (const rid in state.realms) {
@@ -222,16 +264,11 @@ window.FB = window.FB || {};
         }
       }
     }
-    out.sort(function (a, b) {
-      if (a.legs !== b.legs) return a.legs - b.legs;
-      const ap = FB.world.byId[a.destinationId];
-      const bp = FB.world.byId[b.destinationId];
-      return (ap ? ap.name : '').localeCompare(bp ? bp.name : '');
-    });
-    return out;
+    return sortDestinations(out);
   };
 
-  FB.travelStart = function (state, purposeId, destinationId, destinationRealm) {
+  FB.travelStart = function (state, purposeId, destinationId, destinationRealm,
+      venturePayload) {
     if (FB.travelEligible(state) !== true) return false;
     const def = purpose(purposeId);
     if (!def) return false;
@@ -244,11 +281,36 @@ window.FB = window.FB || {};
         break;
       }
     }
-    if (!choice || state.player.gold < choice.cost) return false;
+    if (!choice) return false;
 
     const p = state.player;
     const legDays = choice.legDays || FB.travelLegDays(state);
-    p.gold -= choice.cost;
+    let venture = null;
+    let upfront = choice.cost;
+    let overhead = choice.cost;
+    if (venturePayload && venturePayload.kind === 'trade_venture' &&
+        purposeId === 'trade' && FB.tradeVenturePreview &&
+        FB.tradeVentureCanStart) {
+      const stake = Math.floor(Number(venturePayload.stake) || 0);
+      if (FB.tradeVentureCanStart(state, 'accompany', stake, destinationId) !== true) {
+        return false;
+      }
+      const preview = FB.tradeVenturePreview(state, stake, destinationId);
+      if (!preview) return false;
+      overhead = preview.overhead;
+      upfront = preview.totalCost;
+      venture = {
+        kind:'trade_venture',
+        stake:preview.stake,
+        overhead:preview.overhead,
+        destinationId:preview.destinationId,
+        route:preview.route.slice(),
+        startedTurn:state.turn,
+        status:'active'
+      };
+    }
+    if (state.player.gold < upfront) return false;
+    p.gold -= upfront;
     p.cooldowns.take_road = state.turn;
     p.travel = {
       purpose:purposeId,
@@ -263,19 +325,30 @@ window.FB = window.FB || {};
       legDaysLeft:legDays,
       legDays:legDays,
       startTurn:state.turn,
-      cost:choice.cost,
+      cost:upfront,
+      overhead:overhead,
       encounters:{culture:0,road:0},
       seenCultures:{},
       seenEvents:{},
       completed:false
     };
+    if (venture) p.travel.venture = venture;
     p.travel.seenCultures[me(state).culture] = 1;
     clearQueued(state);
-    FB.news(state, FB.msg('news.travel.departed',
-      '🧭 Set out from {home} for {destination}.', {
-        home:FB.world.byId[p.travel.homeId].name,
-        destination:FB.world.byId[p.travel.destinationId].name
-      }));
+    if (venture) {
+      FB.news(state, FB.msg('news.travel.trade_venture_departed',
+        '🧭 Set out for {destination} with {money:stake} invested and {money:overhead} paid for the road.', {
+          destination:FB.world.byId[p.travel.destinationId].name,
+          stake:venture.stake,
+          overhead:venture.overhead
+        }));
+    } else {
+      FB.news(state, FB.msg('news.travel.departed',
+        '🧭 Set out from {home} for {destination}.', {
+          home:FB.world.byId[p.travel.homeId].name,
+          destination:FB.world.byId[p.travel.destinationId].name
+        }));
+    }
     if (FB.map) {
       FB.map.travelPreview = null;
       FB.map.travelTargets = null;
@@ -461,6 +534,10 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
+    if (t.phase === 'outbound' && t.venture && t.venture.status === 'active') {
+      t.venture.status = 'cancelled';
+      t.venture.cancelledTurn = state.turn;
+    }
     const route = (t.visited || [t.homeId]).slice(0, -1).reverse();
     if (t.currentId !== t.homeId && (!route.length || route[route.length - 1] !== t.homeId)) {
       route.push(t.homeId);
@@ -534,10 +611,17 @@ window.FB = window.FB || {};
     const t = p.travel;
     p.travel = null;
     if (!silent) {
-      FB.news(state, FB.msg('news.travel.cancelled',
-        '🧭 The journey ends as your station or obligations change. The household remains at {home}.', {
-          home:FB.world.byId[t.homeId].name
-        }));
+      if (t.venture && t.venture.status === 'active') {
+        FB.news(state, FB.msg('news.travel.trade_venture_cancelled',
+          '🧭 The accompanied venture ends without a payout. The household remains at {home}.', {
+            home:FB.world.byId[t.homeId].name
+          }));
+      } else {
+        FB.news(state, FB.msg('news.travel.cancelled',
+          '🧭 The journey ends as your station or obligations change. The household remains at {home}.', {
+            home:FB.world.byId[t.homeId].name
+          }));
+      }
       if (FB.validateFocus) FB.validateFocus(state);
     }
     if (FB.map) FB.map.request();
@@ -569,9 +653,43 @@ window.FB = window.FB || {};
     queueItem(state, 'travel_arrival_choice', t);
   };
 
+  FB.travelTradeSettle = function (state, outcome, multiplier) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'trade') return false;
+    const venture = t.venture;
+    if (venture) {
+      if (venture.status !== 'active') {
+        FB.travelCapstoneDone(state);
+        return false;
+      }
+      const payout = Math.round(venture.stake * multiplier * 100) / 100;
+      venture.outcome = outcome;
+      venture.multiplier = multiplier;
+      venture.payout = payout;
+      venture.status = 'resolved';
+      venture.resolvedTurn = state.turn;
+      state.player.gold += payout;
+    } else {
+      /* Compatibility for direct/mod calls to the original fixed-stake trade
+         journey, whose ten-gold stake was embedded in purpose.cost. */
+      state.player.gold += Math.round(10 * multiplier * 100) / 100;
+    }
+    FB.travelCapstoneDone(state);
+    return true;
+  };
+
   FB.fns = FB.fns || {};
   FB.fns.travel_capstone_done = function (state) {
     FB.travelCapstoneDone(state);
+  };
+  FB.fns.travel_trade_cautious = function (state) {
+    FB.travelTradeSettle(state, 'cautious', 1.2);
+  };
+  FB.fns.travel_trade_bold_success = function (state) {
+    FB.travelTradeSettle(state, 'bold_success', 2.5);
+  };
+  FB.fns.travel_trade_bold_failure = function (state) {
+    FB.travelTradeSettle(state, 'bold_failure', 0.3);
   };
   FB.fns.travel_study_career = function (state) {
     const c = me(state);

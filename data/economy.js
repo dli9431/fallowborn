@@ -370,5 +370,35 @@ FBDATA.finance = {
   },
   tradePartnership: {
     termSeasons:4, risk:0.25, profitShare:0.45, requiresTech:'sea_loans'
+  },
+  tradeVenture: {
+    stakes:[10,20,50],
+    activeLimit:1,
+    minDevelopment:4,
+    timing:{ minimumDays:90, preparationDays:30 },
+    outcomes:{
+      cautious:[
+        { below:0.10, outcome:'loss', multiplier:0 },
+        { below:0.30, outcome:'partial', multiplier:0.75 },
+        { below:0.95, outcome:'profit', multiplier:1.25 },
+        { outcome:'exceptional', multiplier:1.60 }
+      ],
+      bold:[
+        { below:0.25, outcome:'loss', multiplier:0 },
+        { below:0.40, outcome:'partial', multiplier:0.50 },
+        { below:0.93, outcome:'profit', multiplier:1.70 },
+        { outcome:'exceptional', multiplier:2.75 }
+      ]
+    },
+    modifiers:{
+      stewardshipDivisor:200,
+      guildDivisor:2,
+      tradeHouse:0.03,
+      householdBonusCap:0.20,
+      destinationDevelopmentDivisor:100,
+      destinationDevelopmentCap:0.08,
+      routeRiskPerLeg:0.006,
+      routeRiskCap:0.12
+    }
   }
 };

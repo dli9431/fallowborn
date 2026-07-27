@@ -177,7 +177,10 @@ The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet
 obligations are ordered by deadline before metrics so the urgent contract remains first on
 a narrow phone. The sheet shows purse, price index, last movement and purse adjustment,
 reliable net income, credit capacity and defaults, exact loan faces/current values/dates,
-pledges, and investment maturities. Borrowing, investment, debasement, and recoinage use a
+pledges, and investment maturities. Passive partnerships are labeled as backing another
+merchant. A separate self-founded venture section shows its destination, strategy, stake,
+separately paid overhead, and exact resolution date, and opens the shared stake/market
+setup. Borrowing, investment, debasement, and recoinage use a
 final confirmation whose first action receives focus; every term and default consequence is
 visible above the buttons. The money source sheet also carries a non-recurring **Coin and
 prices this year** line.
@@ -250,6 +253,12 @@ Map taps and list buttons select the same county and preview the settled-only
 route; the final confirmation states county legs, days each way, and exact cost.
 It also states the 90-day destination stay and whether this character’s one lifetime
 permanent move remains available.
+The Trade Venture purpose and Coin & Credit’s **Form your own venture…** action share
+that picker. Their setup chooses 10/20/50 gold, lists only reachable development-4+
+markets, and previews stake, transport-adjusted route overhead, road time, exact
+dispatch date, and cautious/bold loss risk before any payment. Dispatch controls remain
+available during the personal travel cooldown; the accompanied option displays its
+ordinary travel/cooldown rejection in place.
 The picker pauses time, supports the normal map keyboard navigation, number keys,
 Tab, Enter, and Escape, and becomes a bottom sheet on narrow screens. During a
 journey the map keeps the gold household flag at home, draws a separate traveler

@@ -15,8 +15,8 @@ numeric in game gold; the Finance sheet and durable messages pass those numbers 
 `FB.money` at display time. `smallestPerGold` rounding is never written back to the
 purse or a contract, so affordability and settlement use the original values.
 
-`FB.ensureEconomy` lazily creates JSON-safe price, shock, loan, investment,
-default, and stable-id state. Old version-3 saves therefore begin at a price
+`FB.ensureEconomy` lazily creates JSON-safe price, shock, loan, partnership,
+self-founded venture, default, and stable-id state. Old version-3 saves therefore begin at a price
 index of 1 on their next annual tick; no past inflation is reconstructed.
 `FB.addPricePressure(state, amount, years, source)` adds deterministic saved
 shocks. Lean harvests and pestilence add scarcity/disruption pressure, plague
@@ -62,6 +62,8 @@ moneychanging, notarial contracts open merchant advances, exchequer accounts ope
 revenue credit, and sea loans open trade partnerships. Mint assaying is required for
 sovereign debasement and recoinage. These gates are checked when offers/actions are
 enumerated; an already signed contract remains enforceable if sovereignty later changes.
+Self-founded trade ventures are a household action for adult freeholders and gentry and
+do not require sea-loans technology.
 Finance and trade scalar technology bonuses are capped by `FBDATA.techCaps`. The finance
 bonus multiplies computed credit capacity before outstanding debt is subtracted; the
 trade bonus multiplies staffed merchant and craft enterprise yield.
@@ -76,7 +78,37 @@ guild rank open larger stakes. At maturity a single stored seeded roll produces
 loss, partial recovery, ordinary profit, or exceptional profit. The existing
 Caravan event uses the same contract path. The Finance sheet calls the form a
 commenda, qirad, or trade partnership as appropriate. There is no passive
-interest-bearing savings account.
+interest-bearing savings account. These records are explicitly presented as backing
+another merchant and retain their independent three-partnership capacity.
+
+**Self-founded ventures are separate household investments.** Any adult tier-1/2
+protagonist may choose a configured stake, select a reachable development-4+ market,
+and pay route overhead separately from the invested capital. Maintained transport may
+reduce the overhead and route time but never the stake. The household may have one
+active self-founded venture by default regardless of its passive partnership count.
+
+A venture dispatched from home records the destination, exact route, cautious/bold
+strategy, stake, overhead, due turn, outcome bands, and a formation-time modifier
+snapshot. Its duration is `max(90, 30 + round-trip route days)`. Stewardship, merchant
+or craft guild privilege, a Trading House, national trade knowledge, and destination
+development improve its eventual roll; route length adds risk. Positive household
+bonuses are capped before the destination and route adjustments. `FB.financeDay`
+resolves the record on its exact due day, stores the one seeded roll and payout before
+publishing the result, and pays the current household head. Promotion and succession
+therefore do not cancel or retarget it.
+
+An accompanied venture is stored only inside `player.travel`. Its selected stake and
+separate overhead are charged at departure, while the existing road encounters,
+destination stay, cautious return, bold Stewardship bargain, return journey, and
+settlement rules remain the travel system’s responsibility. The old ten-gold direct
+`FB.travelStart("trade")` compatibility path remains valid for mods, but the core UI
+routes Trade Venture through the stake-and-market setup.
+
+The owned-venture API is `FB.tradeVentureStakes`, `FB.tradeVentureEligible`,
+`FB.tradeVentureMarkets`, `FB.tradeVenturePreview`, `FB.tradeVentureCanStart`,
+`FB.startTradeVenture`, `FB.activeTradeVentures`, `FB.tradeVentureActive`, and
+`FB.resolveTradeVenture`. `FB.financeActivePartnerships` and
+`FB.financeActiveTradeVentures` keep the two investment capacities explicit.
 
 Independent Kings and Emperors may debase the coin once every five years for
 seigniorage. The action previews the exact grant and price shock, damages
@@ -84,7 +116,7 @@ prestige, popular trust, council relations, and future terms, and never rewrites
 signed contracts. A later costly recoinage applies negative price pressure and
 restores lender confidence gradually.
 
-Tunables live in `FBDATA.balance`; contract terms live in `FBDATA.finance`
+Tunables live in `FBDATA.balance`; contract and venture terms live in `FBDATA.finance`
 (`data/economy.js`) and may be overridden by runtime mods. The Finance sheet is
 a no-day-cost deed and keeps the nearest deadline at the top on narrow screens.
 Routine checks remain silent; signing, repayment, arrears, default, inheritance,

@@ -1081,6 +1081,8 @@ window.FB = window.FB || {};
       return seasonBoundary ? 'season' : 'day';
     }
 
+    if (FB.financeDay) FB.financeDay(s);
+
     if (seasonBoundary) {
       const upkeep = FB.householdUpkeep(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;

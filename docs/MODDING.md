@@ -131,7 +131,7 @@ A JSON mod is one object with any of these keys:
   "travelSites": [ ... ],
   "finance":    {
     "pledge": { ... }, "merchant": { ... }, "revenue": { ... },
-    "tradePartnership": { ... }
+    "tradePartnership": { ... }, "tradeVenture": { ... }
   },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
@@ -959,6 +959,9 @@ by key, and site objects replace by their required stable `id`.
 - A purpose carries localized `name`/`desc`, optional `icon`, added upfront
   `cost`, and one destination `mode`: `sites`, `developed` (with `minDev`), or
   `capitals` (the current capitals of living realms).
+- The core `trade` purpose retains its embedded `cost`/`stake` only for direct
+  compatibility calls. The player-facing flow reads stake, market threshold,
+  timing, outcomes, and modifiers from `finance.tradeVenture`.
 - A site carries `id`, `purpose`, and `provinceId`; optional `religions` and
   `religionGroups` restrict it to the traveler’s faith.
 - Routes use settled, non-wasteland adjacency. Entries in `straits` therefore
@@ -968,12 +971,19 @@ by key, and site objects replace by their required stable `id`.
   transport; `FB.travelLegDays(state)` supplies the matching leg duration. Departure
   stores both cost and leg duration so later data or household changes do not alter a
   journey already underway.
+- `FB.travelRouteOverhead(routeOrLegs, state)` prices only the route. The shared
+  `FB.developedMarketDestinations(state, minDev, opts)` helper supplies settled,
+  reachable choices to both ordinary travel and self-founded venture setup.
 - Travel events are normal event objects with `trigger:{"never":true}` and
   top-level `travel:{"kind":"culture|road|capstone|decision|work"}`. A capstone
   or work event may add `"purpose":"id"`. Culture/road events are drawn without
   repetition up to the journey caps; destination work events repeat but never
   immediately repeat the last story. The core driver queues a purpose’s capstone
   by the id `travel_capstone_<purpose id>`.
+- Core trade-capstone settlement uses `travel_trade_cautious`,
+  `travel_trade_bold_success`, and `travel_trade_bold_failure`; these scale the
+  selected accompanied stake and then perform the ordinary capstone completion.
+  `travel_capstone_done` remains the generic unscaled completion handler.
 - `balance.travelLegDays`, `travelCooldownDays`, `travelCultureEventCap`, and
   `travelRoadEventCap` tune the road. `travelMinStayDays`,
   `travelWorkEventMinDays`, `travelWorkEventMaxDays`, `travelSettleOfferDays`,
@@ -982,7 +992,7 @@ by key, and site objects replace by their required stable `id`.
 ## Finance contracts
 
 `FBDATA.finance` (in `data/economy.js`, mod key `finance`) defines the three
-player-originated loan families and the trade partnership:
+player-originated loan families, passive trade partnerships, and self-founded ventures:
 
 ```json
 { "finance": {
@@ -993,6 +1003,33 @@ player-originated loan families and the trade partnership:
   },
   "tradePartnership": {
     "termSeasons": 4, "risk": 0.25, "profitShare": 0.45
+  },
+  "tradeVenture": {
+    "stakes": [10, 20, 50],
+    "activeLimit": 1,
+    "minDevelopment": 4,
+    "timing": { "minimumDays": 90, "preparationDays": 30 },
+    "outcomes": {
+      "cautious": [
+        { "below": 0.10, "outcome": "loss", "multiplier": 0 },
+        { "below": 0.30, "outcome": "partial", "multiplier": 0.75 },
+        { "below": 0.95, "outcome": "profit", "multiplier": 1.25 },
+        { "outcome": "exceptional", "multiplier": 1.60 }
+      ],
+      "bold": [
+        { "below": 0.25, "outcome": "loss", "multiplier": 0 },
+        { "below": 0.40, "outcome": "partial", "multiplier": 0.50 },
+        { "below": 0.93, "outcome": "profit", "multiplier": 1.70 },
+        { "outcome": "exceptional", "multiplier": 2.75 }
+      ]
+    },
+    "modifiers": {
+      "stewardshipDivisor": 200, "guildDivisor": 2,
+      "tradeHouse": 0.03, "householdBonusCap": 0.20,
+      "destinationDevelopmentDivisor": 100,
+      "destinationDevelopmentCap": 0.08,
+      "routeRiskPerLeg": 0.006, "routeRiskCap": 0.12
+    }
   }
 } }
 ```
@@ -1005,6 +1042,21 @@ player-originated loan families and the trade partnership:
 - `collateralRatio` caps a pledged principal against the asset's base value.
 - A trade partnership consumes `risk` once at maturity; `profitShare` sizes the
   profitable return. The resolved roll and payout are stored in the save.
+- `tradeVenture.stakes`, `activeLimit`, and `minDevelopment` control formation.
+  Duration is the larger of `timing.minimumDays` and
+  `timing.preparationDays + round-trip route days`.
+- Each ordered outcome band applies when the formation-adjusted roll is below
+  `below`; the final band omits `below`. `multiplier` is applied to the stake.
+  Formation snapshots every modifier and the selected bands into the investment.
+- Stewardship contributes `skill / stewardshipDivisor`; merchant/craft guild
+  privilege contributes `(FB.guildIncomeMultiplier - 1) / guildDivisor`; a
+  Trading House adds `tradeHouse`; national `trade` technology adds its scalar
+  bonus. Those household terms cap at `householdBonusCap`. Destination development
+  then adds `development / destinationDevelopmentDivisor` up to its cap, while
+  route length subtracts `routeRiskPerLeg` per one-way county leg up to its cap.
+- Self-founded ventures do not read `requiresTech`. Transport modifies route
+  overhead and leg duration only, never a configured stake. Dispatched ventures
+  use exact-day resolution; passive partnerships retain season-boundary maturity.
 - Finance and price bounds, pressure, loan count, capacity, arrears, default,
   revenue-share, and coinage tunables are the `price*` and `finance*` keys under
   `FBDATA.balance`.
