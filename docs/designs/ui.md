@@ -305,6 +305,16 @@ guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Roy
 Council summary/link, and the computed levy ledger). Empty sections explain what is
 absent rather than inventing placeholder people.
 
+Network → Household also opens the responsive **Household Plan**. Its desktop modal uses a
+wide seven-column table ordered as household head, resident family, then paid retainers.
+On narrow or short layouts, each person becomes a stacked card and every cell repeats its
+localized column label. Education, instruction, work/standing, assignment, match, and
+equipment summaries are derived from their owning APIs; actionable cells are native
+buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touch sizes,
+and browser-history Back. Picker cancellation and no-day changes re-render the plan, while
+day-spending career, enterprise-purchase, and match choices keep their existing
+close-and-advance behavior.
+
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,
 enterprise strength, tax effect, scope, and exact days remaining; empty slots say None.

@@ -280,6 +280,14 @@ an heir with a regard penalty, keeping inherited service distinct from inherited
 friendship. Each office has one holder; two unpaid seasons or regard at −40 ends service,
 and marriage replaces a paid contract with ordinary spouse membership.
 
+**The Household Plan is a derived overview, not character state.** Network → Household
+opens one row for the living household head, each resident family member, and each paid
+retainer, in that order. The row reads the existing education, instruction, career, guild,
+religious-standing, enterprise, office, marriage, and loadout records without introducing a
+policy or assignment record. Applicable cells open the same detailed pickers as character
+sheets and Work & Enterprises. No-day changes return to a freshly derived plan; choices
+that already spend a day keep their ordinary close-and-advance behavior.
+
 **Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
 career's `apprenticeAge` may be placed with that trade from their sheet. It costs the
 career's entry fee, adds vocational experience and the career skill during the yearly life

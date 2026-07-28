@@ -199,7 +199,7 @@ unchanged except where a shared summary or entry point must call them.
 
 ## Suggested delivery order
 
-1. Household Plan read-only overview with links to existing pickers.
+1. [x] Household Plan read-only overview with links to existing pickers.
 2. Shared person-assignment component.
 3. Education policy and enterprise-staffing preview.
 4. Per-character Equip Best.

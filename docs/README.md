@@ -157,6 +157,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    remaining days. A charter cannot be renewed or revoked early.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
    Its household block also shows active standard icons/levels and their seasonal upkeep.
+   Open **Household Plan…** there to scan every living managed family member and retainer
+   in one place: education, instruction and fees, work and standing, enterprise or office
+   assignments, match eligibility, and equipped-item/slot counts. Select an available cell
+   to use the same detailed controls found on character and Work & Enterprises sheets.
    Established households can hire a limited number of paid retainers as stewards, factors,
    captains, or tutors. Their seasonal contracts pass to an heir, but their personal loyalties
    may not. The same tab shows every source and modifier behind the current levy instead of
