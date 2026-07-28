@@ -204,6 +204,15 @@ sheets also expose the same arranged-match picker. Career, guild, religious-stan
 enterprise, and equipment controls use managed household eligibility at both render and
 action time, so a stale sheet cannot manage someone who has married out or otherwise left.
 
+Person-selection flows for education tutors, enterprise workers, household retainers,
+and council offices use the shared `UI.personAssignmentCard`. The component is a
+render-only native button: it consistently presents the candidate, eligibility,
+expected benefit or yield, cost or pay, present occupation or assignment, relevant
+Standing, and any replacement consequence. Each picker still computes eligibility and
+performs assignment through its own existing mechanic, so the common presentation does
+not merge the underlying roles. Cards retain modal number keys, native keyboard
+activation, focus styling, and a stacked narrow-screen layout.
+
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending
 a day when the character is local; while courting, the suitor holds that slot until the

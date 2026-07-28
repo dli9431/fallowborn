@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.80.0';
+  FB.VERSION = '1.80.1';
   FB.CHANGELOG = [
+    { v: '1.80.1', date: '2026-07-28', changes: [
+      'Tutor, enterprise, retainer, and council pickers now show consistent candidate cards with benefits, costs, assignments, and replacement consequences.'
+    ] },
     { v: '1.80.0', date: '2026-07-28', changes: [
       'The Network tab now opens a Household Plan ledger for reviewing and managing every living family member and retainer.'
     ] },

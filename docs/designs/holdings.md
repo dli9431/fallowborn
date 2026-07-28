@@ -70,6 +70,9 @@ paid through the household contract ledger; staffing an enterprise does not turn
 person into family or grant a second wage. Legacy Orchard, Press, Shop, Stall, and
 Trading House holdings migrate lazily to equivalent enterprise instances; household
 rights, equipment, and cultural capital remain unique holdings.
+The staffing picker uses the shared person-assignment card to preview each eligible
+worker's live yield, occupation, Regard, present enterprise, and every worker or enterprise
+that reassignment would displace; `FB.assignEnterprise` remains the sole mutation path.
 
 Enterprise yield consumes the shared computed benefits shown in Network: guild rank,
 the legacy guild-member work benefit, and position/retainer enterprise modifiers. These
