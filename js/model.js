@@ -143,6 +143,7 @@ window.FB = window.FB || {};
     FB.vacateReligiousHeads(state, realmId);
     realm.alive = false;
     realm.war = null;
+    if (FB.papacyRealmDied) FB.papacyRealmDied(state, realmId);
     if (FB.breakAlliance) FB.breakAlliance(state, realmId);
     return true;
   };
@@ -494,7 +495,11 @@ window.FB = window.FB || {};
     if (c.role === 'notable' && c.dyn) return 3; // the lord’s house shares his name
     return 0;
   };
-  FB.playerStation = function (state) { return FB.clamp(state.player.tier, 0, 4); };
+  FB.playerStation = function (state) {
+    if ((FB.playerCardinal && FB.playerCardinal(state)) ||
+        (FB.playerPope && FB.playerPope(state))) return 4;
+    return FB.clamp(state.player.tier, 0, 4);
+  };
 
   /* Authoritative NPC residence. Household members and paid retainers remain
      at the household home while its head travels. A materialized royal child
@@ -713,6 +718,8 @@ window.FB = window.FB || {};
     const p = state.player;
     const me = state.chars[p.charId];
     const rel = FB.religionOf(me.religion);
+    if (FB.playerPope && FB.playerPope(state)) return FB.T('Pope');
+    if (FB.playerCardinal && FB.playerCardinal(state)) return FB.T('Cardinal');
     const headed = FB.religionsHeadedBy(state, 'player');
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     let t = FB.titleWordFor(state, p.tier);
@@ -749,6 +756,14 @@ window.FB = window.FB || {};
     if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
     const arr = FBDATA.titles[group] || FBDATA.titles.christian;
     const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) };
+    if (FB.playerPope && FB.playerPope(state)) {
+      snap.special = 'pope';
+      return snap;
+    }
+    if (FB.playerCardinal && FB.playerCardinal(state)) {
+      snap.special = 'cardinal';
+      return snap;
+    }
     const headed = FB.religionsHeadedBy(state, 'player');
     if (headed.length) {
       const headReligion = headed[0];
@@ -805,7 +820,8 @@ window.FB = window.FB || {};
     const specialWords = {
       craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
       scholar: 'Scholar', monk: 'Monk', nun: 'Nun', imam: 'Imam', godi: 'Godi', priest: 'Priest',
-      bishop: 'Bishop', grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi'
+      bishop: 'Bishop', cardinal: 'Cardinal', pope: 'Pope',
+      grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi'
     };
     const title = snapshot.special && specialWords[snapshot.special]
       ? (snapshot.special === 'nun' ? FB.T('Nun') : FB.T(specialWords[snapshot.special]))

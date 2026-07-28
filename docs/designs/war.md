@@ -35,6 +35,14 @@ this war.
 
 ## War against a religious head
 
+During a Catholic schism, sanctions and commands are scoped through the realm's saved
+obedience. No new Catholic great holy war may be called, and forming the rival obedience
+cancels a campaign still gathering; a campaign already launched completes from its saved
+`callerClaimantId` / `callerObedienceId` snapshot. Capturing Rome transfers the Roman
+territorial office to the claimant recognized by the conqueror without automatically
+reuniting the Church. Losing Rome or a decisive war by a claimant or last patron removes
+15 authority. See [papacy.md](papacy.md).
+
 `FB.sameFaithHeadWarPolicy` is the shared target check. It reads the exact attacker's
 religion, the live office assignment, and `religion.head.sameFaithWar`; it never matches
 realm names. Catholic player causes against the active Papacy remain legal when an

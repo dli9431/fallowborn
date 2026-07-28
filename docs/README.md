@@ -188,6 +188,13 @@ become muezzins, imams, and khatibs. These are not treated as one interchangeabl
 priesthood: Islamic learning and judicial appointment form their own path. Every resident
 spouse and dependent child can pursue a rank, not only the player.
 
+Catholic Bishops may petition the Pope for appointment as a **Cardinal** once their age,
+Learning, standing, and Papal favor qualify. Cardinals belong to a named College and vote
+in Papal elections whose rules change with the century; an elected player hands secular
+land to the lawful heir while governing the Church through the **Papacy** deed. That screen
+also shows Papal authority, investiture policy, sanctions, and—if rival claimants divide
+Catholic rulers—the durable obediences of a schism.
+
 ### The feudal ladder
 
 Every county on the map belongs to someone: a count, who answers to a duke, who answers to

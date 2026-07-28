@@ -140,6 +140,7 @@ A JSON mod is one object with any of these keys:
   "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."] },
+  "papacy":    { ...complete Catholic Papacy definition... },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
   "balance":   { "freedomCost": 30, "coinageSymbol": "£" },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
@@ -1493,6 +1494,37 @@ Realm-death and recovery code should use `FB.markRealmDead`,
 `FB.canRestoreReligiousHead` / `FB.restoreReligiousHead`, and
 `FB.canClaimReligiousHead` / `FB.claimReligiousHead` so assignments, vacancy clocks,
 and durable notices remain consistent.
+
+### Catholic Papacy definition
+
+`FBDATA.papacy` (in `data/papacy.js`, mod key `papacy`) defines the Catholic College,
+election eras, Roman titles, regnal-name seeds, authority, investiture,
+excommunication, schism, and Papal-economy constants. Unlike id-keyed tables, this
+top-level value is atomic: a later mod replaces the whole object. Supply a complete
+copy, including:
+
+- `targetCollege`, `hardCap`, `annualAppointments`, and `cardinalRequirements`;
+- `authority` bands, action gates, starting bookmark values, and adjustments;
+- ordered `elections`, `cardinalOrders`, `romanTitles`, `blocs`, `tactics`,
+  `regnalNames`, and `regnalSeeds`;
+- complete `investiture.policies`, `excommunication`, `schism`, and `balance` tables.
+
+Ids and numeric values are locale-neutral mechanics. The `name` and `desc` fields on
+authority bands, election laws, orders, blocs, tactics, and investiture policies are
+pure-display text and fall back to the mod's authored English.
+
+Saved Catholic governance lives in `state.papacy`, not in the definition. Its stable
+collections are `obediences`, `cardinals`, `elections`, `realmObedience`,
+`investiture`, `excommunications`, `archive`, and `regnalNameCounts`, plus temporary
+continuity and decision records. Do not store rendered text in them. Cardinal and
+obedience ids referenced by a save are protected by the ordinary active-mod
+fingerprint.
+
+`state.religiousHeads.catholic` deliberately remains the territorial Roman-office
+pointer. Catholic-aware code should use `FB.popeRecognizedBy`,
+`FB.papalObedienceForRealm`, `FB.romanPope`, and `FB.papacyInSchism` when recognition
+matters; generic code may continue to use `FB.religiousHeadOf`. Other religions do not
+use `state.papacy`.
 
 ### Great holy-war definitions
 

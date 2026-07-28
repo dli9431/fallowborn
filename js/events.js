@@ -592,6 +592,7 @@ window.FB = window.FB || {};
      that permits it may hold several wives; everyone else weds one at a time. */
   FB.canWed = function (state) {
     const me = state.chars[state.player.charId];
+    if (FB.papacyCelibate && FB.papacyCelibate(state, me)) return false;
     const n = FB.spousesOf(state, me).length;
     if (n === 0) return true;
     if (me.sex !== 'm') return false;
@@ -699,6 +700,7 @@ window.FB = window.FB || {};
   FB.killChar = function (state, c) {
     if (!c || c.dead) return;
     const me = state.chars[state.player.charId];
+    const papalClaimant = FB.isPapalClaimant && FB.isPapalClaimant(state, c);
     FB.socialAttentionWithdraw(state, c.id, true);
     if (state.roles.friend === c.id) FB.clearFriendship(state, false);
     if (FB.removeRetainer && FB.retainerRecord && FB.retainerRecord(state, c.id)) {
@@ -711,7 +713,7 @@ window.FB = window.FB || {};
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, c.id);
-    if (FB.royalCharDied) FB.royalCharDied(state, c);
+    if (!papalClaimant && FB.royalCharDied) FB.royalCharDied(state, c);
     if (c.betrothedId && c.dowryAsk) {
       state.player.gold += c.dowryAsk;
       delete c.dowryAsk;
@@ -730,12 +732,15 @@ window.FB = window.FB || {};
       if (state.roles[r] === c.id) delete state.roles[r];
     }
     if (state.player.courtingId === c.id) FB.clearCourtship(state);
+    if (FB.papacyCharacterDied) FB.papacyCharacterDied(state, c);
   };
 
   /* Can the player begin courting this character? */
   FB.canCourt = function (state, c, allowCurrent) {
     const me = state.chars[state.player.charId];
     if (!c || c.dead || c.id === me.id) return false;
+    if (FB.papacyCelibate &&
+        (FB.papacyCelibate(state, me) || FB.papacyCelibate(state, c))) return false;
     if (c.royalLine && FB.royalCompactOf(state)) return false;
     if (FB.royalCloseKin && FB.royalCloseKin(state, me, c)) return false;
     const y = state.date.year;
@@ -1516,6 +1521,10 @@ window.FB = window.FB || {};
         else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
         if (me.traits.indexOf('comely') >= 0) c += 0.08;
         if (me.traits.indexOf('homely') >= 0) c -= 0.08;
+        if (s && s.religion === 'catholic' &&
+            FB.playerExcommunicated && FB.playerExcommunicated(state)) {
+          c -= 0.2;
+        }
         if (s && s.royalLine) {
           c += FB.realmOpinionOf(state, s.royalLine.realmId) / 400;
           return FB.clamp(c, 0.05, 0.9);
@@ -2412,6 +2421,11 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    if (FB.papacyCelibate &&
+        (FB.papacyCelibate(state, me) || FB.papacyCelibate(state, s))) {
+      FB.clearCourtship(state, { news:true });
+      return false;
+    }
     const weddingTravel = p.travel && p.tier >= 3 &&
       p.travel.purpose === 'relationship' &&
       p.travel.phase === 'arrived' &&

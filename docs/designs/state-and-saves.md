@@ -1,5 +1,16 @@
 # Game state & saves
 
+Catholic elective state is additive and keeps save version 3. `state.papacy` stores
+`obediences`, full-character Cardinal office records, elections and ballots,
+`realmObedience`, sovereign investiture policies, per-obedience excommunications and
+grounds, compact dead-Cardinal `archive`, regnal-name counts, and temporary dynastic
+`custody` for a player Pope. `FB.ensurePapacy` lazily creates the structure, recognizes
+the current Catholic territorial head's ruler as the incumbent, and generates a
+bookmark-appropriate College without replacing that Pope mid-reign. Missing nested
+collections repair independently, so a version-3 save may wake during a vacancy,
+conclave, schism, policy demand, or Papal player handoff. See
+[papacy.md](papacy.md).
+
 Religious-head state is additive and keeps save version 3.
 `state.religiousHeads` maps an exact religion id to a realm id or to `null` for an
 explicit vacancy. New games seed missing entries from optional

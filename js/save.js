@@ -170,6 +170,9 @@ window.FB = window.FB || {};
     if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(FB.state);
     backfillParents(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    /* The elective Papacy is an additive subsystem. Old saves retain their
+       reigning Roman Pope and receive a date-appropriate College around him. */
+    if (FB.ensurePapacyState) FB.ensurePapacyState(FB.state);
     /* Dynasty scholarship and innovations from older version-3 lives become
        the effective sovereign nation's first technology record. */
     if (FB.ensureRealmTech) FB.ensureRealmTech(FB.state);

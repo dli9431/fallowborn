@@ -47,6 +47,13 @@ career rank names and household-standard level names/descriptions, use the same
 structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
+The Catholic Papacy is a top-level atomic definition. A mod with `papacy` replaces
+`FBDATA.papacy` as one complete value before a campaign begins; nested arrays and tables
+are not deep-merged. This keeps election eras, thresholds, ids, and saved Papal state
+coherent. A replacement must therefore retain the full schema described in
+`docs/MODDING.md`; ordinary religion-head metadata still controls the territorial Roman
+office.
+
 Trait definitions remain replaced or added by id under the top-level `traits` key.
 `class` selects Disposition, Formation, Reputation, or Condition grouping; omission
 preserves compatibility by placing the trait under Other. Omission of `noRandom` also

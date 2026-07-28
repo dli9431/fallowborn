@@ -873,7 +873,12 @@ window.FB = window.FB || {};
 
   FB.playerExcommunicated = function (state) {
     const c = state && state.chars && state.chars[state.player.charId];
-    return !!(c && c.traits && c.traits.indexOf('excommunicated') >= 0);
+    if (c && c.religion === 'catholic' && state.papacy &&
+        FB.playerExcommunicatedBy) {
+      return !!FB.playerExcommunicatedBy(state);
+    }
+    return !!(c && c.traits &&
+      c.traits.indexOf('excommunicated') >= 0);
   };
 
   FB.applySacrilegiousWarConsequences = function (state, religionId) {
@@ -883,9 +888,24 @@ window.FB = window.FB || {};
     state.player.piety = Math.max(0, state.player.piety *
       (B.religiousHeadWarPietyRetained !== undefined
         ? B.religiousHeadWarPietyRetained : 0));
-    FB.adjustReligionRealmOpinions(state, religionId,
-      B.religiousHeadWarOpinion !== undefined ? B.religiousHeadWarOpinion : -40);
+    const opinionLoss = B.religiousHeadWarOpinion !== undefined
+      ? B.religiousHeadWarOpinion : -40;
+    if (religionId === 'catholic' && FB.adjustPapalSupporterOpinions) {
+      const recognized = FB.papalObedienceForCharacter &&
+        FB.papalObedienceForCharacter(state, c);
+      FB.adjustPapalSupporterOpinions(state, recognized, opinionLoss);
+    } else {
+      FB.adjustReligionRealmOpinions(state, religionId, opinionLoss);
+    }
+    if (religionId === 'catholic' && FB.addPapalGround) {
+      const obedienceId = FB.papalObedienceForCharacter &&
+        FB.papalObedienceForCharacter(state, c);
+      FB.addPapalGround(state, c, 'attack_pope', obedienceId);
+    }
     FB.addTrait(c, 'excommunicated');
+    if (religionId === 'catholic' && FB.ensureLegacyPapalSentence) {
+      FB.ensureLegacyPapalSentence(state);
+    }
     FB.news(state, FB.msg('news.religion.sacrilegious_war',
       '⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated.', {
         realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
@@ -894,6 +914,11 @@ window.FB = window.FB || {};
   };
 
   FB.canSeekAbsolution = function (state) {
+    if (FB.papalAbsolutionStatus) {
+      return !!FB.papalAbsolutionStatus(
+        state, state.player.charId
+      ).ready;
+    }
     if (!FB.playerExcommunicated(state) || state.player.war) return false;
     if (!FB.religiousHeadOf(state, 'catholic')) return false;
     if (state.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
@@ -906,6 +931,7 @@ window.FB = window.FB || {};
   };
 
   FB.seekAbsolution = function (state) {
+    if (FB.papalAbsolve) return FB.papalAbsolve(state, state.player.charId);
     if (!FB.canSeekAbsolution(state)) return false;
     const c = state.chars[state.player.charId];
     const gold = FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100);
@@ -1013,6 +1039,9 @@ window.FB = window.FB || {};
     FB.ensureRealmSuccession(state, canonicalId);
     FB.transferProvince(state, meta.seat, canonicalId);
     if (!FB.assignReligiousHead(state, religionId, canonicalId)) return false;
+    if (FB.papacyReligiousHeadRestored) {
+      FB.papacyReligiousHeadRestored(state, religionId, canonicalId);
+    }
     if (controllerId === 'player') {
       state.player.piety += FB.religiousHeadBalance('religiousHeadRestorePiety', 200);
       state.player.prestige += FB.religiousHeadBalance('religiousHeadRestorePrestige', 150);
@@ -1794,12 +1823,17 @@ window.FB = window.FB || {};
   FB.realmStrength = function (state, realmId) {
     rcEnsure(state);
     const realm = state.realms[realmId];
+    let strength;
     if (realm && realm.liege) {
-      let strength = 0;
+      strength = 0;
       for (const pid of FB.realmTerritory(state, realmId)) strength += state.dev[pid] || 1;
-      return strength;
+    } else {
+      strength = rc.strength[realmId] || 0;
     }
-    return rc.strength[realmId] || 0;
+    if (FB.papacyRealmStrengthMultiplier) {
+      strength *= FB.papacyRealmStrengthMultiplier(state, realmId);
+    }
+    return strength;
   };
 
   /* counties a realm holds DIRECTLY (holder === realm id) */
@@ -1917,6 +1951,9 @@ window.FB = window.FB || {};
     }
     if (state.player && FB.invalidateGuildMonopolies) {
       FB.invalidateGuildMonopolies(state);
+    }
+    if (FB.papacyProvinceTransferred) {
+      FB.papacyProvinceTransferred(state, pid, from, toRealm);
     }
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
@@ -2184,6 +2221,7 @@ window.FB = window.FB || {};
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
+    if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
 
     // realm AI
@@ -2191,22 +2229,30 @@ window.FB = window.FB || {};
       const r = state.realms[id];
       if (!r.alive || id === 'player') continue;
       FB.ensureRealmSuccession(state, id);
-      tickRoyalFamily(state, id);
+      const papalTerritorialRealm = FB.papacyTerritorialRealm &&
+        FB.papacyTerritorialRealm(state, id);
+      const papalClaimantId = FB.papacyClaimantForRealm &&
+        FB.papacyClaimantForRealm(state, id);
+      if (!papalTerritorialRealm) tickRoyalFamily(state, id);
       // a vassal house's standing at its liege's court drifts with the years
       if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
       // ruler ages & dies
       r.ruler.age++;
       const q = Math.max(0, (r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02) -
         (FB.techBonus ? FB.techBonus(state, 'health', id) : 0));
-      if (FB.chance(q)) {
-        const succession = FB.refreshRealmSuccession(state, id);
+      if ((!papalTerritorialRealm || papalClaimantId) &&
+          papalClaimantId !== state.player.charId && FB.chance(q)) {
+        const succession = papalClaimantId ? r.succession :
+          FB.refreshRealmSuccession(state, id);
         // Escheat is now the last resort for a genuinely exhausted count line.
-        if (r.liege && r.rank === 1 && (!succession || !succession.heirId) &&
+        if (!papalClaimantId && r.liege && r.rank === 1 &&
+            (!succession || !succession.heirId) &&
             FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
         const oldGeneration = r.ruler.generation;
         const rulerMember = succession && succession.members[succession.rulerMemberId];
-        const rulerChar = rulerMember && rulerMember.charId &&
-          state.chars[rulerMember.charId];
+        const rulerChar = papalClaimantId
+          ? state.chars[papalClaimantId]
+          : rulerMember && rulerMember.charId && state.chars[rulerMember.charId];
         if (rulerChar && !rulerChar.dead && FB.killChar) {
           const playerChar = state.chars[state.player.charId];
           const wasPlayerSpouse = playerChar &&
@@ -2224,15 +2270,21 @@ window.FB = window.FB || {};
             if (FB.promoteSpouse) FB.promoteSpouse(state);
           }
         } else {
-          if (rulerMember) rulerMember.alive = false;
-          FB.advanceRealmSuccession(state, id);
+          if (papalClaimantId && FB.startPapalElection) {
+            FB.startPapalElection(state, null, 'death');
+          } else {
+            if (rulerMember) rulerMember.alive = false;
+            FB.advanceRealmSuccession(state, id);
+          }
         }
         // Defensive repair for malformed saves whose materialized ruler was
         // already dead but had not advanced the compact succession record.
-        if (r.alive && r.ruler.generation === oldGeneration) {
+        if (!papalClaimantId && r.alive && r.ruler.generation === oldGeneration) {
           FB.advanceRealmSuccession(state, id);
         }
-        if (FB.game.observe || id === FB.playerRealmId(state) || id === state.player.liege) {
+        if (!papalClaimantId &&
+            (FB.game.observe || id === FB.playerRealmId(state) ||
+              id === state.player.liege)) {
           FB.news(state, FB.msg('news.world.ruler_succeeds',
             '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
             { realm: r.name, ruler: r.ruler.name }));
@@ -2291,8 +2343,16 @@ window.FB = window.FB || {};
           }
         }
         war.years++;
-        if (!state.realms[loser].alive) { r.war = null; }
+        if (!state.realms[loser].alive) {
+          if (FB.papacyDecisiveWarLost) {
+            FB.papacyDecisiveWarLost(state, loser);
+          }
+          r.war = null;
+        }
         else if (war.years >= 3 || FB.chance(0.35) || (war.captures || 0) >= 2) {
+          if (FB.papacyDecisiveWarLost) {
+            FB.papacyDecisiveWarLost(state, loser);
+          }
           r.war = null; // peace
         }
         if (!r.alive) continue;
@@ -2555,6 +2615,13 @@ window.FB = window.FB || {};
     }
 
     for (const unit of ['levy', 'arch', 'cav', 'ret']) {
+      const papalMultiplier = FB.papacyRealmStrengthMultiplier
+        ? FB.papacyRealmStrengthMultiplier(state, 'player') : 1;
+      if (papalMultiplier !== 1 && comp[unit]) {
+        add(unit, 'papal_policy', comp[unit] * (papalMultiplier - 1), {
+          rate:papalMultiplier - 1
+        });
+      }
       const rounded = Math.round(comp[unit]);
       const adjustment = rounded - comp[unit];
       if (Math.abs(adjustment) > 0.0001) {
@@ -2849,7 +2916,7 @@ window.FB = window.FB || {};
           if (FB.mergeRealmTech) FB.mergeRealmTech(state, uid, 'player');
           FB.markRealmDead(state, 'player');
           FB.breakAlliance(state, 'player');
-          if (old.rank >= 3) {
+          if (old.rank >= 3 && !opts.papalTransition) {
             const rightful = state.chars[p.charId];
             rightful.restorationRight = {
               realmId: uid,
@@ -2863,9 +2930,11 @@ window.FB = window.FB || {};
         for (const vid in state.realms) {
           if (state.realms[vid].liege === 'player') state.realms[vid].liege = uid;
         }
-        FB.news(state, FB.msg('news.world.usurped',
-          '🏴 {ruler} seizes the seat — the realm endures; your house does not.',
-          { ruler: u.ruler.name }));
+        if (!opts.papalTransition) {
+          FB.news(state, FB.msg('news.world.usurped',
+            '🏴 {ruler} seizes the seat — the realm endures; your house does not.',
+            { ruler: u.ruler.name }));
+        }
       } else {
         // a vassal's fiefs escheat to his liege
         if (FB.mergeRealmTech) {
@@ -2875,17 +2944,19 @@ window.FB = window.FB || {};
           state.owner[pid] = FB.topRealm(state, p.liege);
           state.holder[pid] = p.liege;
         }
-        FB.news(state, FB.msg('news.world.player_fiefs_escheat', {
-          forms: {
-            select: 'value', param: 'holder', cases: {
-              realm: '📜 Your fiefs escheat to {liege}.',
-              other: '📜 Your fiefs escheat to your liege.'
+        if (!opts.papalTransition) {
+          FB.news(state, FB.msg('news.world.player_fiefs_escheat', {
+            forms: {
+              select: 'value', param: 'holder', cases: {
+                realm: '📜 Your fiefs escheat to {liege}.',
+                other: '📜 Your fiefs escheat to your liege.'
+              }
             }
-          }
-        }, {
-          holder: state.realms[p.liege] ? 'realm' : 'other',
-          liege: state.realms[p.liege] ? state.realms[p.liege].name : ''
-        }));
+          }, {
+            holder: state.realms[p.liege] ? 'realm' : 'other',
+            liege: state.realms[p.liege] ? state.realms[p.liege].name : ''
+          }));
+        }
       }
       p.provs = [];
     }
@@ -2898,13 +2969,17 @@ window.FB = window.FB || {};
     FB.setPlayerTier(state, 2);
     p.liege = null; p.liegeOp = 0; p.liegeOps = {};
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
-    p.pop = 0;
-    p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
+    if (!opts.papalTransition) {
+      p.pop = 0;
+      p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
+    }
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     if (opts.flee) FB.movePlayerRandom(state);
-    FB.news(state, FB.msg('news.world.cast_down',
-      '⬇ Cast down. The family keeps its coffers and its name — but not an acre.', {}));
+    if (!opts.papalTransition) {
+      FB.news(state, FB.msg('news.world.cast_down',
+        '⬇ Cast down. The family keeps its coffers and its name — but not an acre.', {}));
+    }
   };
 
   /* Check whether accumulated victories or defeats settle the war.
@@ -2921,6 +2996,9 @@ window.FB = window.FB || {};
     // defeats first: once the tribute offer can be declined, wins and losses
     // can BOTH pass the threshold — a broken campaign ends even so
     if (w.losses >= NEED) {
+      if (FB.papacyDecisiveWarLost) {
+        FB.papacyDecisiveWarLost(state, 'player');
+      }
       if (w.defending) {
         FB.warLoseProvince(state);
       } else {

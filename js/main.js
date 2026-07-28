@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.77.0';
+  FB.VERSION = '1.78.0';
   FB.CHANGELOG = [
+    { v: '1.78.0', date: '2026-07-28', changes: [
+      'Catholic bishops can now become Cardinals, elect Popes under changing historical rules, govern Papal authority and investiture, and confront rival obediences during a schism.'
+    ] },
     { v: '1.77.0', date: '2026-07-27', changes: [
       'Raised hosts can now de-muster during ordinary wars, with surviving troops depending on where they stand.',
       'Sunni kings and emperors can now contest a sitting Caliph in an office-only succession war.'
@@ -888,6 +891,7 @@ window.FB = window.FB || {};
       alliances: [],
       religiousHeads: {},
       religiousHeadVacancies: {},
+      papacy: null,
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
@@ -973,6 +977,8 @@ window.FB = window.FB || {};
       dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
     }
 
+    if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
@@ -1035,6 +1041,7 @@ window.FB = window.FB || {};
       alliances: [],
       religiousHeads: {},
       religiousHeadVacancies: {},
+      papacy: null,
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
@@ -1067,6 +1074,7 @@ window.FB = window.FB || {};
       born: start.year - 30, quality: 0, traitsN: 0
     });
     state.player.charId = me.id;
+    if (FB.ensurePapacyState) FB.ensurePapacyState(state);
 
     G.observe = true;
     G.paused = false;
@@ -1101,6 +1109,13 @@ window.FB = window.FB || {};
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
     if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
+    const papalDecision = FB.papacyPendingDecision &&
+      FB.papacyPendingDecision(s);
+    if (!G.observe && papalDecision) {
+      G.setPaused(true);
+      if (FB.ui.showPapacy) FB.ui.showPapacy(papalDecision);
+      return undefined;
+    }
     if (!G.observe && FB.greatHolyWarSettlementNeedsPlayer &&
         FB.greatHolyWarSettlementNeedsPlayer(s)) {
       G.setPaused(true);
@@ -1132,6 +1147,7 @@ window.FB = window.FB || {};
     }
     FB.scriptedTick(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
+    if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (FB.modifierTick) FB.modifierTick(s);
 
@@ -1162,6 +1178,7 @@ window.FB = window.FB || {};
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.papacySeason) FB.papacySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
       FB.educationSeason(s);
@@ -1807,19 +1824,24 @@ window.FB = window.FB || {};
     const s = FB.state;
     const p = s.player;
     const me = s.chars[p.charId];
+    const papalClaimant = FB.isPapalClaimant &&
+      FB.isPapalClaimant(s, me);
     if (FB.travelCancel) FB.travelCancel(s, '', true);
     const causeMsg = cause && typeof cause === 'object' && typeof cause.key === 'string'
       ? FB.message(cause.key, cause.params) : null;
     const causeText = causeMsg
       ? FB.renderMessage(causeMsg, { state: s, viewer: p.charId })
       : String(cause === undefined || cause === null ? '' : cause);
+    const titleDataAtDeath = FB.titleSnapshot(s);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
     if (FB.endRoyalCompact) FB.endRoyalCompact(s);
     if (FB.breakAlliance) FB.breakAlliance(s, 'player');
-    if (FB.royalCharDied) FB.royalCharDied(s, me);
+    if (FB.papacyCharacterDied) FB.papacyCharacterDied(s, me, { preserve:true });
+    if (!papalClaimant && FB.royalCharDied) FB.royalCharDied(s, me);
     p.dead = true;
-    recordLegend(s, me, causeMsg, causeText, provenance);
+    recordLegend(s, me, causeMsg, causeText, provenance,
+      titleDataAtDeath);
     if (causeMsg) {
       FB.news(s, FB.msg('news.life.death', '☠ {cause}',
         { cause: FB.messageParam(causeMsg) }));
@@ -1833,14 +1855,14 @@ window.FB = window.FB || {};
   /* the chronicle keeps one entry per life the player lived; the end screen
      reads this roll. Saves from before the roll existed grow it at the
      first death after they load. */
-  function recordLegend(s, me, causeMsg, causeText, provenance) {
+  function recordLegend(s, me, causeMsg, causeText, provenance, titleData) {
     if (!s.legends) s.legends = [];
     const legend = {
       id: me.id,
       name: FB.fullName(me),
       born: me.born,
       died: s.date.year,
-      titleData: FB.titleSnapshot(s),
+      titleData: titleData || FB.titleSnapshot(s),
       quipMsg: legendQuip(s, me, causeMsg, causeText),
       loadout:FB.snapshotLoadout ? FB.snapshotLoadout(s, me.id) : {}
     };
@@ -2080,6 +2102,8 @@ window.FB = window.FB || {};
       s.realms.player.liege = p.liege || null;
       s.realms.player.religion = heir.religion;
     }
+    if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
+    if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.repairAlliances) FB.repairAlliances(s);
 
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(s);

@@ -707,6 +707,61 @@ def extract_structured(inv: Inventory) -> None:
                                 TOKEN_RE.findall(record["text"]),
                             )
 
+    # The Papacy definition is one atomic mod value rather than an id-keyed
+    # FBDATA table. Its display-bearing sub-tables still receive stable,
+    # owner-aware keys so runtime mods and stale translations fall back safely.
+    papacy_path = DATA / "papacy.js"
+    papacy = node_object(find_assignment(papacy_path, "FBDATA", "papacy")) or {}
+    papacy_rel = papacy_path.relative_to(ROOT).as_posix()
+
+    def add_papacy_rows(
+        rows_node: Node | None,
+        namespace: str,
+        fields: tuple[str, ...] = ("name",),
+    ) -> None:
+        for row_node in node_array(rows_node) or []:
+            row = node_object(row_node) or {}
+            row_id = node_string(row.get("id"))
+            if not row_id:
+                continue
+            for field in fields:
+                for branch, record, line in branch_records(row.get(field)):
+                    inv.add(
+                        f"{namespace}.{row_id}.{field}.{branch}",
+                        record,
+                        f"{papacy_rel}:{line}",
+                        f"{namespace} {row_id}, {field}, faith branch {branch}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
+
+    authority = node_object(papacy.get("authority")) or {}
+    add_papacy_rows(
+        authority.get("bands"),
+        "papalAuthorityBand",
+    )
+    add_papacy_rows(papacy.get("elections"), "papalElectionLaw")
+    add_papacy_rows(papacy.get("cardinalOrders"), "papalCardinalOrder")
+    add_papacy_rows(papacy.get("blocs"), "papalCardinalBloc")
+    add_papacy_rows(
+        papacy.get("tactics"),
+        "papalElectionTactic",
+        ("name", "desc"),
+    )
+    investiture = node_object(papacy.get("investiture")) or {}
+    policies = node_object(investiture.get("policies")) or {}
+    for policy_id, policy_node in policies.items():
+        policy = node_object(policy_node) or {}
+        for field in ("name", "desc"):
+            for branch, record, line in branch_records(policy.get(field)):
+                inv.add(
+                    f"papalInvestiturePolicy.{policy_id}.{field}.{branch}",
+                    record,
+                    f"{papacy_rel}:{line}",
+                    f"papalInvestiturePolicy {policy_id}, {field}, "
+                    f"faith branch {branch}.",
+                    TOKEN_RE.findall(record["text"]),
+                )
+
     # World names are display data, but ruler profiles are proper names. The
     # compact county rows and realm(...) bookmark helper calls need a narrow
     # static extractor so historical ruler names never enter the catalogs.

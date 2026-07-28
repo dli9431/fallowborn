@@ -501,7 +501,14 @@ window.FB = window.FB || {};
     },
     run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
   { id: 'seek_absolution', label: '🕊 Seek absolution…', noConsume: true,
-    desc: function () {
+    desc: function (s) {
+      const status = FB.papalAbsolutionStatus &&
+        FB.papalAbsolutionStatus(s, s.player.charId);
+      if (status) {
+        return FB.T('Petition your recognized Pope for absolution. The offering is {money:gold} and the penance costs {piety} piety.', {
+          gold:status.offering, piety:status.piety
+        });
+      }
       return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion.', {
         gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
         piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
@@ -512,6 +519,10 @@ window.FB = window.FB || {};
       return adult(s) && FB.playerExcommunicated && FB.playerExcommunicated(s);
     },
     can: function (s) {
+      if (FB.papalAbsolutionStatus) {
+        const status = FB.papalAbsolutionStatus(s, s.player.charId);
+        return status.ready ? true : status.reason;
+      }
       if (s.player.war) return FB.T('You must first make peace.');
       if (!FB.religiousHeadOf(s, 'catholic')) return FB.T('The Papacy is vacant; no Pope can absolve you.');
       if (s.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
@@ -526,6 +537,17 @@ window.FB = window.FB || {};
     },
     run: function () {
       if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
+    } },
+  { id: 'papacy', label: '⛪ Papacy & College…', noConsume: true,
+    desc: function () {
+      return FB.T('Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.');
+    },
+    show: function (s) {
+      const c = me(s);
+      return adult(s) && c && c.religion === 'catholic' && !!FB.ensurePapacy;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();
     } },
   { id: 'restore_papacy', label: '✝ Restore the Papacy…', noConsume: true,
     desc: function () {
@@ -636,6 +658,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       if (!adult(s) || s.greatHolyWar) return false;
+      if (FB.playerPope && FB.playerPope(s)) return true;
       for (const religionId in FBDATA.religions) {
         const religion = FBDATA.religions[religionId];
         const head = religion && religion.head && religion.head.greatHolyWar &&
@@ -645,6 +668,11 @@ window.FB = window.FB || {};
       return false;
     },
     can: function (s) {
+      if (FB.playerPope && FB.playerPope(s)) {
+        return FB.canCallGreatHolyWar(s, 'catholic', null, 'player')
+          ? true
+          : FB.T('Papal authority, schism, the target list, or the campaign cooldown prevents a new call.');
+      }
       for (const religionId in FBDATA.religions) {
         const religion = FBDATA.religions[religionId];
         const head = religion && religion.head && religion.head.greatHolyWar &&
@@ -1292,14 +1320,16 @@ window.FB = window.FB || {};
     const positions = taxable * (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0);
     const monopoly = taxable *
       (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
-    const beforeLiege = taxable + national + council + positions + monopoly;
+    const papacy = taxable *
+      (FB.papacyInvestitureTaxRate ? FB.papacyInvestitureTaxRate(state) : 0);
+    const beforeLiege = taxable + national + council + positions + monopoly + papacy;
     const liege = p.liege
       ? -beforeLiege * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
     return {
       rents:rents, rentBase:rentBase, rentTraits:rentTraits,
       dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
-      monopoly:monopoly, liege:liege, total:beforeLiege + liege
+      monopoly:monopoly, papacy:papacy, liege:liege, total:beforeLiege + liege
     };
   };
 
@@ -1437,6 +1467,7 @@ window.FB = window.FB || {};
       add('gold', FB.T('National technology'), tax.national);
       add('gold', FB.T('Royal Seneschal'), tax.council);
       add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
+      add('gold', FB.T('Investiture policy'), tax.papacy);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
           const def = FBDATA.positions[source.id];
@@ -2149,8 +2180,10 @@ window.FB = window.FB || {};
 
   FB.envoyChance = function (state, rid) {
     const p = state.player, m = state.chars[p.charId], B = FBDATA.balance;
-    const chance = 0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600 +
+    let chance = 0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600 +
       FB.realmOpinionOf(state, rid) / B.foreignOpinionEnvoyDivisor;
+    if (FB.playerExcommunicated && FB.playerExcommunicated(state) &&
+        FB.realmReligionId(state, rid) === 'catholic') chance -= 0.2;
     return FB.clamp(chance, 0.1, 0.9);
   };
 

@@ -229,6 +229,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
     if (mod.titles) for (const k in mod.titles) FBDATA.titles[k] = mod.titles[k];
+    if (own(mod, 'papacy')) FBDATA.papacy = mod.papacy;
     if (own(mod, 'currency')) {
       FBDATA.currency = mod.currency;
       currencySupplied = true;

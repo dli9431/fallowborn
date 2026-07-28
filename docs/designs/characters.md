@@ -1,5 +1,14 @@
 # Characters: skills & growing up
 
+**Cardinals and Popes are personal Catholic offices.** Both Catholic vocation paths
+reach Bishop normally, after which a qualified Bishop may petition for appointment to
+the College. Cardinal sets station 4 and a 3.5 seasonal piety yield without granting a
+county or secular tier. Cardinals and Popes cannot court or marry, but their existing
+children and ordinary family links remain valid. Living Cardinals stay full characters
+for travel, gifts, friendship, rivalry, and mortality; unrelated dead Cardinals compact
+into the Papal archive while genealogy-critical family members remain as minimal dead
+characters. See [papacy.md](papacy.md).
+
 **Skills grow on an uncapped diminishing-return curve.** Every skill gain (focus
 training, event `skills` effects, education, coming of age) goes through
 `FB.gainSkill` (model.js). Below `balance.skillSoftCap` (20) each point lands;

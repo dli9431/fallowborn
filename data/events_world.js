@@ -131,5 +131,14 @@ FBDATA.events.push(
     { label:'Return marked goods to their owners.', require:{ societalRoles:['lord','crowned'] },
       desc:'Costly honesty carries across the sea.',
       effects:{ gold:-5, prestige:10, piety:5 } }
+  ]},
+{ id:'papal_absolution_petition', title:'A Petition for Absolution',
+  trigger:{ flags:['papal_event_only'] }, childhood:true, wartime:true, weight:0,
+  text:'{target}, ruler of {realm}, asks you to lift a sentence of excommunication. The envoys claim the recorded offense has been remedied and offer submission to your judgment.',
+  options:[
+    { label:'Grant absolution.', desc:'The penitent returns to communion.',
+      effects:{ custom:'papal_grant_absolution' } },
+    { label:'Refuse the petition.', desc:'The sentence remains in force.',
+      effects:{ custom:'papal_refuse_absolution' } }
   ]}
 );

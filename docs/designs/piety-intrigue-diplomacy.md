@@ -36,10 +36,14 @@ than a spent currency. Every attained rank may add a small seasonal piety contri
 as well. See [characters.md](characters.md) for the Catholic and Muslim paths.
 
 A Catholic ruler who confirms a sacrilegious war against the active Papacy forfeits all
-current piety, loses standing with every living Catholic realm, and gains the personal
-`excommunicated` trait. Excommunication blocks blessings. At peace, a living Pope may
-grant absolution for 100 gold and 100 piety, clearing the trait and repairing part of the
-Catholic opinion loss; succession and a qualifying Papal restoration also clear it.
+current piety and creates a recognized ground for excommunication. Papal sentences are
+personal and tied to the issuing obedience. Recognizing realms apply the opinion,
+realm-strength, marriage, pact, and great-holy-war penalties; death clears the sentence.
+Absolution requires peace, a rank-scaled offering, piety, and remedy or penance for the
+saved cause. Investiture policy likewise belongs to each independent Catholic sovereign:
+lay, canonical, and post-1122 concordat choices trade tax and strength against seasonal
+piety. Authority gates formal demands, arbitrary sanctions, councils, and Catholic great
+holy wars. See [papacy.md](papacy.md).
 
 Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
 focus accrue power with discovery risk, then a resolution event fires (`plot` named

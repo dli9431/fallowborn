@@ -320,6 +320,8 @@ window.FB = window.FB || {};
   };
 
   FB.religiousRankTitle = function (state, c, path) {
+    if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return FB.T('Pope');
+    if (FB.isCardinal && FB.isCardinal(state, c)) return FB.T('Cardinal');
     path = path || FB.religiousPathOf(state, c);
     if (!path || !path.step) return '';
     const id = path.step.id;
@@ -1465,7 +1467,11 @@ window.FB = window.FB || {};
       const profession = career && career.profession;
       const workMult = profession === 'monk' || profession === 'priest'
         ? FB.householdWorkMultiplier(state, profession) : 1;
-      if (religious && religious.step.pietyYield) amount += religious.step.pietyYield * workMult;
+      if (religious && religious.step.pietyYield) {
+        amount += (FB.papacyPietyYield ?
+          FB.papacyPietyYield(state, c, religious.step.pietyYield) :
+          religious.step.pietyYield) * workMult;
+      }
       if (c.id === me.id) continue;
       const def = career && FBDATA.careers[career.profession];
       if (def && def.piety) amount += def.piety * workMult;

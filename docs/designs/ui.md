@@ -1,5 +1,14 @@
 # UI: keyboard & mobile
 
+The Papacy deed opens `fullsheet-modal papacy-modal`: a responsive two-column summary
+collapses to one column on narrow/short screens, and the College grid does the same.
+Every elector, obedience, election tactic, regnal name, policy, sanction, and governance
+action is a native button or labeled checkbox, so normal modal focus, number-key hints,
+screen-reader labels, sticky footer behavior, and browser-history navigation apply.
+Mandatory Papal name, investiture, sponsorship, and deposition choices pause time and
+reopen this sheet until resolved. The Work picker exposes “Petition for the red hat”
+with exact unmet requirements. See [papacy.md](papacy.md).
+
 **Keyboard support is a requirement** (`js/keys.js` + focus management in `ui.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via

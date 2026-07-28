@@ -46,6 +46,14 @@ returns that local office to the county’s count.
 
 ## Religious head offices
 
+The Catholic office has an elective personal layer described in
+[papacy.md](papacy.md). `state.religiousHeads.catholic` still identifies the living
+realm controlling the Roman territorial office, while `FB.popeRecognizedBy`,
+`FB.papalObedienceForRealm`, and `FB.papalObedienceForCharacter` resolve the claimant
+recognized by a viewpoint. This distinction matters only during a durable schism.
+The Papal States keep their realm, vassals, and revenue during a vacancy under the
+Camerlengo and never advance through `realm.succession`.
+
 Central religious leadership is an office assignment, not a territorial tier.
 `FBDATA.religions[id].head` supplies the global fallback `realm`, localized `title`,
 recovery policy, required seat or alternative claim-county sets, and the policy for
