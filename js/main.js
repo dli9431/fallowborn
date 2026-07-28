@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.80.3';
+  FB.VERSION = '1.80.4';
   FB.CHANGELOG = [
+    { v: '1.80.4', date: '2026-07-28', changes: [
+      'Pregnancies now continue across succession, preserving the newborn’s recorded parents and family line.'
+    ] },
     { v: '1.80.3', date: '2026-07-28', changes: [
       'Assets and lasting effects now share clear summaries of their costs, benefits, scope, duration, and transfer rules throughout the game.'
     ] },
@@ -1754,24 +1757,37 @@ window.FB = window.FB || {};
     const me = s.chars[p.charId];
     const sp = FB.spouseOf(s, me);
     if (s.pregnant) {
-      if (s.turn >= s.pregnant.due) {
-        const mother = s.chars[s.pregnant.motherId];
-        const father = s.chars[s.pregnant.fatherId];
+      const pregnancy = s.pregnant;
+      const mother = s.chars[pregnancy.motherId];
+      const father = s.chars[pregnancy.fatherId];
+      /* Pregnancy belongs to its recorded parents, not to whichever member
+         of the dynasty is currently playable. A dead mother ends it; a dead
+         father does not prevent the surviving mother from giving birth. */
+      if (!mother || mother.dead) {
         s.pregnant = null;
-        if (mother && !mother.dead) {
-          const baby = FB.makeCharacter(s, {
-            culture: me.culture, religion: me.religion, born: s.date.year,
-            traits: FB.inheritTraits(father, mother), traitsN: 0,
-            fatherId: father ? father.id : null, motherId: mother.id,
-            dyn: me.dyn
-          });
-          baby.health = 7;
-          me.childrenIds.push(baby.id);
-          if (father && father !== me && father.childrenIds.indexOf(baby.id) < 0) father.childrenIds.push(baby.id);
-          if (mother && mother !== me && mother.childrenIds.indexOf(baby.id) < 0) mother.childrenIds.push(baby.id);
-          if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
-          FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
+        return;
+      }
+      if (s.turn >= pregnancy.due) {
+        const lineParent = s.chars[pregnancy.lineParentId] ||
+          (mother.id === me.id || (father && father.id === me.id)
+            ? me : (father || mother));
+        s.pregnant = null;
+        const baby = FB.makeCharacter(s, {
+          culture: lineParent.culture, religion: lineParent.religion,
+          born: s.date.year,
+          traits: FB.inheritTraits(father, mother), traitsN: 0,
+          fatherId: father ? father.id : null, motherId: mother.id,
+          dyn: lineParent.dyn
+        });
+        baby.health = 7;
+        const parents = [father, mother];
+        for (const parent of parents) {
+          if (parent && parent.childrenIds.indexOf(baby.id) < 0) {
+            parent.childrenIds.push(baby.id);
+          }
         }
+        if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
+        FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
       }
       return;
     }
@@ -1797,7 +1813,12 @@ window.FB = window.FB || {};
       if (s.player.flags.blessed_union) fert *= 1.6;
       if (FB.chance(fert)) {
         delete s.player.flags.blessed_union; // the prayer is answered
-        s.pregnant = { due: s.turn + 270, motherId: mother.id, fatherId: father.id };
+        s.pregnant = {
+          due: s.turn + 270,
+          motherId: mother.id,
+          fatherId: father.id,
+          lineParentId: me.id
+        };
         if (mother.id === me.id) FB.news(s, FB.msg('news.life.player_pregnant',
           '🤰 You are with child.', {}));
         else FB.news(s, FB.msg('news.life.spouse_pregnant',
@@ -2032,6 +2053,13 @@ window.FB = window.FB || {};
       return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated' &&
         ev.id !== 'station_farewell';
     });
+    /* Old saves did not record which parent supplied the playable line's
+       culture, faith, and dynasty. Capture that identity before succession
+       changes the player pointer so a posthumous child retains it. */
+    if (s.pregnant && !s.pregnant.lineParentId &&
+        (s.pregnant.motherId === old.id || s.pregnant.fatherId === old.id)) {
+      s.pregnant.lineParentId = old.id;
+    }
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
@@ -2053,7 +2081,6 @@ window.FB = window.FB || {};
     p.stationFarewell = null;
     if (FB.clearItemOffer) FB.clearItemOffer(s); // the peddler moves on
     else p.itemOffer = null;
-    if (!livingAbdication) s.pregnant = null;
     /* The predecessor's equipment stays in place through the transition.
        Succession returns every assignment outside the new household to the
        armory, while an heir who owned gifts outside it brings those exact

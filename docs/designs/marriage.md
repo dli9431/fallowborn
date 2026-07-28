@@ -99,7 +99,9 @@ petition via the `annulment_plea` event (`annulment` named chance, yearly cooldo
 every wife can conceive, the first holds the spouse role). The spouse sheet carries a
 🛑 No more children toggle (`player.flags.noChildren`) that skips the conception rolls in
 `birthTick` — a pregnancy already begun still comes to term, and kin households are
-unaffected. The `widow_veil` plot
+unaffected. Pregnancy follows its recorded parents across succession: a surviving
+mother still gives birth after the father dies, and the newborn is linked as the new
+protagonist's sibling rather than child. The `widow_veil` plot
 (map_data.js → `plot_spouse_end`) murders the current spouse.
 
 Catholic Bishoprics, Cardinalates, and Papal claims are personally celibate offices.

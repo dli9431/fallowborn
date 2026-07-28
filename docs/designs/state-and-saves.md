@@ -219,6 +219,15 @@ spouse receive `homeProvinceId` in the destination; their marriage and family
 links remain ordinary character state, while household enumeration follows the
 new protagonist.
 
+Pregnancy is family state rather than current-protagonist state. Its saved record
+is `{due,motherId,fatherId,lineParentId}`, where `lineParentId` identifies the parent
+whose culture, faith, and dynasty the playable line supplies to the newborn. A
+father's death and succession preserve the record; when it comes due, the child is
+linked only to the recorded parents, so the new protagonist sees a sibling rather
+than gaining a child. A missing `lineParentId` from an older save is captured from
+the outgoing protagonist during succession and otherwise falls back to a recorded
+parent. A dead or missing mother ends the pregnancy on the next daily birth tick.
+
 `state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and
