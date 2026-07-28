@@ -11,20 +11,32 @@ duke and count vassals) redraw the map of Europe, Russia to the Urals, the Middl
 and North Africa around you. Target platform is browser + mobile, distributed via
 itch.io as a plain zipped folder.
 
-- **Zero-dependency vanilla JavaScript. No build step, no package.json, no test framework, no
-  server.** Open `index.html` in a modern browser and the game runs — including from `file://`.
+- **Zero-dependency vanilla JavaScript at runtime. No build step or root package is required to
+  play or distribute the game.** Open `index.html` in a modern browser and the game runs,
+  including from `file://`. Development-only Playwright dependencies are isolated under
+  `tests/e2e/` and are never part of a deployed artifact.
 - No external assets of any kind (no fonts, images, CDNs). All art is procedural: canvas-drawn
   map, generated heraldry, system emoji. The folder must stay fully self-contained so it works
   inside the itch.io iframe.
 
 ## Build, run, and test
 
-There is no build. **Testing is manual, by the human, in a browser.**
+There is no game build. The approved development-only Playwright harness lives under
+`tests/e2e/` and may run the real committed `index.html` in headless Chromium from both
+`file://` and its own local static server. It must not import game scripts as Node modules or
+introduce runtime dependencies into the game.
 
-> **Hard rule from the project owner: never run or test the game inside a shell.** No servers,
-> no headless browsers, no node-driven smoke tests of game logic. `node --check <file>` for
-> syntax validation is the accepted ceiling. After changes, ask the user to open `index.html`
-> and test manually, telling them what to look at.
+From `tests/e2e/`:
+
+- `npm ci` installs the pinned test dependency graph.
+- `npx playwright install chromium` installs the pinned local browser revision.
+- `npm run check` runs the fast `node --check` syntax gate.
+- `npm run test:chromium` runs the file and served-origin Chromium suite.
+- `npm test` runs the configured browser suite.
+
+Do not launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic,
+bounded, and isolated in fresh browser contexts. Manual testing remains required for appearance,
+touch behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
 
 Deployment: zip the folder (`index.html` at the zip root) to itch.io as an HTML5 project, or in
 practice the owner runs `notes/deploy.cmd` (butler push). It ships to **two independent targets** —

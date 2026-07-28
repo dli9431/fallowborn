@@ -1,0 +1,17 @@
+{
+  "name": "fallowborn-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development-only browser regression tests for Fallowborn",
+  "scripts": {
+    "check": "node support/check-js.js",
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium-file --project=chromium-served",
+    "test:file": "playwright test --project=chromium-file",
+    "test:served": "playwright test --project=chromium-served",
+    "verify:runtime": "node support/verify-runtime-manifest.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}

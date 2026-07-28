@@ -4,22 +4,27 @@ FROM nginx:alpine
 # applied at build time. Coolify provides the deployed commit as SOURCE_COMMIT
 # when available; otherwise we fall back to FB.VERSION read from js/main.js.
 # This file and nginx.conf are infra only: not loaded by the game (so running
-# from file:// is unaffected) and removed from the served root below.
+# from file:// is unaffected). The explicit COPY list is the deployment
+# boundary. Development and repository files never enter the document root.
 ARG SOURCE_COMMIT=
 
-COPY . /usr/share/nginx/html
+COPY index.html LICENSE /usr/share/nginx/html/
+COPY css/ /usr/share/nginx/html/css/
+COPY data/ /usr/share/nginx/html/data/
+COPY docs/ /usr/share/nginx/html/docs/
+COPY js/ /usr/share/nginx/html/js/
+COPY mods/ /usr/share/nginx/html/mods/
+COPY static/ /usr/share/nginx/html/static/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Append ?v=<fingerprint> to css/js/data/mods asset URLs in index.html so every
 # deploy mints fresh URLs and auto-busts edge + browser caches. Uses -r (ERE)
-# for BusyBox sed compatibility. Then drop VCS metadata and build files from the
-# served root, including tracked development-only i18n pipeline state. The log
-# line lets you confirm a real SHA won (vs the fallback).
+# for BusyBox sed compatibility. The log line lets you confirm a real SHA won
+# (vs the fallback).
 RUN set -eu; \
     V="${SOURCE_COMMIT:-}"; \
     [ -n "$V" ] || V="$(sed -n -r "s/.*FB\.VERSION[[:space:]]*=[[:space:]]*'([^']+)'.*/\1/p" /usr/share/nginx/html/js/main.js | head -n1)"; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" /usr/share/nginx/html/index.html; \
-    rm -rf /usr/share/nginx/html/.git /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/nginx.conf /usr/share/nginx/html/i18n; \
     echo "stamped ?v=$V"
 
 # Report container health so Coolify can wait for a healthy container before
