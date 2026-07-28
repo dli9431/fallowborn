@@ -303,6 +303,19 @@ years and protagonist succession. Missing fields mean home instruction, no expos
 previous story. A legacy generated hired tutor is recognized by its character role and
 lazily gains `school:'master'`; no save-version migration is required.
 
+Household education automation is additive at the same save version.
+`player.educationPolicy:{focus,instructionMode,feeCap}` belongs to the household and
+therefore survives protagonist succession. Missing or invalid fields normalize to
+`{focus:null,instructionMode:'manual',feeCap:0}`, so an old save starts with both
+dimensions disabled. `character.edu.policy` records `focus` and `instruction` provenance
+as `manual`, `policy`, or (for instruction only) `waiting`, plus the chosen instruction
+identity needed to distinguish explicit home teaching from an empty slot and to recognize
+a lost policy tutor. Existing non-empty focus, school, or tutor fields in an old save are
+marked manual on restore (with the same inference as a lazy fallback). Missing provenance
+remains an empty choice. Policy application
+changes none of `lessonBoost` or `schoolTerms`, and every field is plain JSON preserved by
+slot saves, autosave, export/import, and succession without migration.
+
 Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
 price index, persistent pressure and shocks, loans, trade investments, stable contract ids,
 default history, and coinage history. Every record is plain JSON, so slots, autosave,

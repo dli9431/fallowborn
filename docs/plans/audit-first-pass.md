@@ -81,7 +81,7 @@ does not make the allocations interchangeable.
 
 ## Automate in the first pass
 
-### 1. Household education policy
+### 1. Household education policy — complete
 
 Allow an opt-in default education subject and an instruction policy such as "best
 available under this seasonal fee cap."
@@ -206,12 +206,13 @@ unchanged except where a shared summary or entry point must call them.
 
 1. [x] Household Plan read-only overview with links to existing pickers.
 2. Shared person-assignment component.
-3. Education policy and enterprise-staffing preview.
-4. Per-character Equip Best.
-5. Manor plot batch purchase.
-6. Descendant match recommendation.
-7. Shared asset/effect rows and Ongoing Commitments summary.
-8. Test with a large household across childhood, adulthood, marriage, death, and
+3. [x] Household education policy.
+4. [ ] Enterprise-staffing preview.
+5. Per-character Equip Best.
+6. Manor plot batch purchase.
+7. Descendant match recommendation.
+8. Shared asset/effect rows and Ongoing Commitments summary.
+9. Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.
 
 ## Completion criteria

@@ -1399,6 +1399,94 @@ window.FB = window.FB || {};
     return out;
   };
 
+  function educationPolicyDefaults(value) {
+    const policy = value && typeof value === 'object' && !Array.isArray(value) ?
+      value : {};
+    return {
+      focus:FB.SKILLS.indexOf(policy.focus) >= 0 ? policy.focus : null,
+      instructionMode:policy.instructionMode === 'best' ? 'best' : 'manual',
+      feeCap:Math.max(0, isFinite(Number(policy.feeCap)) ? Number(policy.feeCap) : 0)
+    };
+  }
+
+  function educationChoiceKey(c) {
+    if (c && c.edu && c.edu.tutorId) return 'tutor:' + c.edu.tutorId;
+    if (c && c.edu && c.edu.school) return 'school:' + c.edu.school;
+    return 'home';
+  }
+
+  function educationPolicyRecord(c, create) {
+    if (!c) return null;
+    if (!c.edu) {
+      if (!create) return null;
+      c.edu = {};
+    }
+    let record = c.edu.policy;
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      if (!create) return null;
+      record = {};
+      c.edu.policy = record;
+    }
+    if (record.focus !== 'manual' && record.focus !== 'policy') {
+      delete record.focus;
+    }
+    if (record.instruction !== 'manual' && record.instruction !== 'policy' &&
+        record.instruction !== 'waiting') {
+      delete record.instruction;
+    }
+    if (typeof record.instructionChoice !== 'string') {
+      delete record.instructionChoice;
+    }
+    return record;
+  }
+
+  function normalizeEducationCharacter(c) {
+    if (!c || !c.edu) return null;
+    const existing = educationPolicyRecord(c, false);
+    const needsFocus = !!c.edu.focus && (!existing || !existing.focus);
+    const needsInstruction = !!(c.edu.school || c.edu.tutorId) &&
+      (!existing || !existing.instruction);
+    if (!needsFocus && !needsInstruction) return existing;
+    const record = educationPolicyRecord(c, true);
+    if (needsFocus) record.focus = 'manual';
+    if (needsInstruction) {
+      record.instruction = 'manual';
+      record.instructionChoice = educationChoiceKey(c);
+    }
+    return record;
+  }
+
+  /* Household education policy is additive save state. Existing non-empty
+     education choices in old saves become explicit manual choices the first
+     time the subsystem sees them; an implicit home fallback remains an empty
+     slot which a newly enabled policy may fill. */
+  FB.ensureEducationPolicy = function (state, scanCharacters) {
+    if (!state || !state.player) return educationPolicyDefaults(null);
+    state.player.educationPolicy =
+      educationPolicyDefaults(state.player.educationPolicy);
+    if (scanCharacters) {
+      for (const id in state.chars) normalizeEducationCharacter(state.chars[id]);
+    }
+    return state.player.educationPolicy;
+  };
+
+  FB.educationPolicyProvenance = function (state, c, dimension) {
+    FB.ensureEducationPolicy(state);
+    const record = normalizeEducationCharacter(c);
+    return record && record[dimension] || null;
+  };
+
+  FB.markEducationManual = function (state, c, dimension, choice) {
+    FB.ensureEducationPolicy(state);
+    normalizeEducationCharacter(c);
+    const record = educationPolicyRecord(c, true);
+    record[dimension] = 'manual';
+    if (dimension === 'instruction') {
+      record.instructionChoice = choice || educationChoiceKey(c);
+    }
+    return record;
+  };
+
   /* Old saves with a one-off hired master have no school id. Recognize the
      generated tutor role and move them onto the recurring personal-master
      arrangement lazily. */
@@ -1435,42 +1523,440 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.schoolingAvailable = function (state, c, id) {
+  /* The shared availability result feeds both the detailed picker and policy
+     selection. `focus` may be a preview value not yet written to the child. */
+  FB.educationArrangementAvailability = function (state, c, id, focus) {
     const def = FBDATA.schooling[id];
-    if (!def || !FB.educationStudentEligible(state, c)) return false;
-    if (def.tierMin !== undefined && state.player.tier < def.tierMin) return false;
-    if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
-    if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) return false;
-    if (def.focuses && (!c.edu || def.focuses.indexOf(c.edu.focus) < 0)) return false;
-    return true;
+    const age = c ? FB.ageOf(c, state.date.year) : -1;
+    if (!def || !c || c.dead) return { available:false, reason:'student' };
+    if (!focus) return { available:false, reason:'focus' };
+    if (age < 6) return { available:false, reason:'young' };
+    if (age >= 16) return { available:false, reason:'old' };
+    if (!FB.educationStudentEligible(state, c)) {
+      return { available:false, reason:'student' };
+    }
+    if (def.tierMin !== undefined && state.player.tier < def.tierMin) {
+      return { available:false, reason:'tier' };
+    }
+    if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) {
+      return { available:false, reason:'tech' };
+    }
+    if (def.devMin && (state.dev[state.player.provinceId] || 1) < def.devMin) {
+      return { available:false, reason:'development' };
+    }
+    if (def.focuses && def.focuses.indexOf(focus) < 0) {
+      return { available:false, reason:'unsupported' };
+    }
+    return { available:true, reason:null };
+  };
+
+  FB.schoolingAvailable = function (state, c, id) {
+    return FB.educationArrangementAvailability(
+      state, c, id, c && c.edu && c.edu.focus).available;
+  };
+
+  function schoolingFee(state, id) {
+    const def = id && FBDATA.schooling[id];
+    return def ? (Number(def.cost) || 0) *
+      FB.techCostFactor(state, 'training') : 0;
+  }
+
+  function educationKnownTutors(state, c) {
+    const out = [], seen = {};
+    const me = state.chars[state.player.charId];
+    function add(id, source, first) {
+      const tutor = id === 'self' ? me : state.chars[id];
+      if (!id || !tutor || tutor.dead || seen[id]) return;
+      seen[id] = 1;
+      const entry = { id:id, tutor:tutor, source:source };
+      if (first) out.unshift(entry);
+      else out.push(entry);
+    }
+    const currentId = c && c.edu && c.edu.tutorId;
+    let current = null;
+    if (currentId === 'self') current = c.id === me.id ? null : me;
+    else if (currentId) current = state.chars[currentId];
+    if (current && current.dead) current = null;
+    if (current && (c.edu.school === 'master' || current.role === 'tutor')) {
+      add(current.id, 'personal_master', true);
+    }
+    if (c && c.id === state.player.charId) {
+      add(me.fatherId, 'father');
+      add(me.motherId, 'mother');
+    } else {
+      add('self', 'self');
+      for (const spouse of FB.spousesOf(state, me)) add(spouse.id, 'spouse');
+    }
+    for (const role of ['priest', 'friend', 'lord']) {
+      if (role === 'lord' && FB.playerStation(state) < 2) continue;
+      const tutor = FB.getRole(state, role, false);
+      if (tutor && (role !== 'lord' || tutor.opinion >= 0)) {
+        add(tutor.id, role);
+      }
+    }
+    for (const record of (FB.retainerRecords ? FB.retainerRecords(state) : [])) {
+      if (record.office === 'tutor') add(record.charId, 'household_tutor');
+    }
+    if (current) {
+      add(currentId === 'self' ? 'self' : current.id, 'current_tutor');
+    }
+    return out;
+  }
+
+  function educationBaseAvailability(state, c, focus, requireFocus) {
+    const age = c ? FB.ageOf(c, state.date.year) : -1;
+    if (!c || c.dead) return { available:false, reason:'student' };
+    if (requireFocus && !focus) return { available:false, reason:'focus' };
+    if (age < 6) return { available:false, reason:'young' };
+    if (age >= 16) return { available:false, reason:'old' };
+    if (!FB.educationStudentEligible(state, c)) {
+      return { available:false, reason:'student' };
+    }
+    return { available:true, reason:null };
+  }
+
+  function educationCoreChance(state, c, option, focus) {
+    const B = FBDATA.balance;
+    const cap = B.educationChanceCap || 0.9;
+    const tech = FB.techBonus ? FB.techBonus(state, 'education') : 0;
+    let chance = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
+    if (option && option.kind === 'school' && option.def &&
+        option.def.chance !== undefined) {
+      chance = Number(option.def.chance) || 0;
+    } else if (option && option.kind === 'tutor' && option.tutor) {
+      chance = (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
+        FB.skillOf(option.tutor, focus) *
+        (B.educationTutorSkillChance === undefined ? 0.04 :
+          B.educationTutorSkillChance);
+    }
+    return Math.min(cap, chance + tech);
+  }
+
+  FB.educationProjectedChance = function (state, c, option, focus) {
+    const cap = FBDATA.balance.educationChanceCap || 0.9;
+    return Math.min(cap, educationCoreChance(state, c, option, focus) +
+      FB.holdingBonus(state, 'edu') +
+      (FB.householdStandardEffect ?
+        FB.householdStandardEffect(state, 'education') : 0));
+  };
+
+  /* Discover every deterministic instruction choice. Schools keep their data
+     order, followed by already-known tutors in the existing relationship
+     order, then home. Hiring a generated personal master is intentionally not
+     represented here and remains a manual-only picker action. */
+  FB.educationOptions = function (state, c, focus) {
+    const chosenFocus = focus === undefined ? c && c.edu && c.edu.focus : focus;
+    const out = [];
+    let order = 0;
+    for (const id in FBDATA.schooling) {
+      if (id === 'master') continue;
+      const def = FBDATA.schooling[id];
+      const availability =
+        FB.educationArrangementAvailability(state, c, id, chosenFocus);
+      const option = {
+        kind:'school', id:'school:' + id, schoolId:id, def:def,
+        fee:schoolingFee(state, id), available:availability.available,
+        reason:availability.reason, order:order++,
+        annualMortality:Math.min(1,
+          Math.max(0, Number(def.annualMortality) || 0))
+      };
+      option.chance = FB.educationProjectedChance(
+        state, c, option, chosenFocus);
+      out.push(option);
+    }
+    for (const entry of educationKnownTutors(state, c)) {
+      const paidMaster = entry.tutor.role === 'tutor';
+      const availability = paidMaster ?
+        FB.educationArrangementAvailability(state, c, 'master', chosenFocus) :
+        educationBaseAvailability(state, c, chosenFocus, true);
+      const option = {
+        kind:'tutor', id:'tutor:' + entry.id, tutorId:entry.id,
+        tutor:entry.tutor, tutorSource:entry.source,
+        schoolId:paidMaster ? 'master' : null,
+        fee:paidMaster ? schoolingFee(state, 'master') : 0,
+        available:availability.available, reason:availability.reason,
+        order:order++, annualMortality:0
+      };
+      option.chance = FB.educationProjectedChance(
+        state, c, option, chosenFocus);
+      out.push(option);
+    }
+    const homeAvailability =
+      educationBaseAvailability(state, c, chosenFocus, true);
+    const home = {
+      kind:'home', id:'home', schoolId:null, tutorId:null, fee:0,
+      available:homeAvailability.available, reason:homeAvailability.reason,
+      order:order, annualMortality:0
+    };
+    home.chance = FB.educationProjectedChance(state, c, home, chosenFocus);
+    out.push(home);
+    return out;
+  };
+
+  FB.educationBestOption = function (state, c, focus, feeCap) {
+    const cap = Math.max(0, isFinite(Number(feeCap)) ? Number(feeCap) : 0);
+    let best = null;
+    for (const option of FB.educationOptions(state, c, focus)) {
+      if (!option.available || option.fee > cap + 0.0001) continue;
+      if (!best || option.chance > best.chance + 0.0000001 ||
+          (Math.abs(option.chance - best.chance) <= 0.0000001 &&
+            (option.fee < best.fee - 0.0001 ||
+              (Math.abs(option.fee - best.fee) <= 0.0001 &&
+                option.order < best.order)))) {
+        best = option;
+      }
+    }
+    return best;
+  };
+
+  FB.educationCurrentOption = function (state, c, focus) {
+    const options = FB.educationOptions(state, c, focus);
+    const key = educationChoiceKey(c);
+    for (const option of options) if (option.id === key) return option;
+    for (const option of options) if (option.kind === 'home') return option;
+    return null;
   };
 
   FB.schoolingCost = function (state, c) {
-    const id = FB.schoolingId(state, c);
-    const def = id && FBDATA.schooling[id];
-    if (id === 'master' && !FB.educationTutor(state, c, false)) return 0;
-    return c && c.edu && c.edu.focus && def && FB.schoolingAvailable(state, c, id) ?
-      (def.cost || 0) * FB.techCostFactor(state, 'training') : 0;
+    const focus = c && c.edu && c.edu.focus;
+    const option = FB.educationCurrentOption(state, c, focus);
+    return focus && option && option.available ? option.fee : 0;
   };
 
   /* Full-year directed-learning chance supplied by the current teacher or
      school, before household "Letters" and before partial-term accounting. */
   FB.educationInstructionChance = function (state, c) {
-    const B = FBDATA.balance;
-    const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
-    const cap = B.educationChanceCap || 0.9;
-    const tech = FB.techBonus ? FB.techBonus(state, 'education') : 0;
-    if (!c || !c.edu || !c.edu.focus) return Math.min(cap, base + tech);
-    const id = FB.schoolingId(state, c);
-    const def = id && FBDATA.schooling[id];
-    if (def && FB.schoolingAvailable(state, c, id) && def.chance !== undefined) {
-      return Math.min(cap, def.chance + tech);
+    const focus = c && c.edu && c.edu.focus;
+    const option = FB.educationCurrentOption(state, c, focus);
+    if (!option || !option.available) {
+      return educationCoreChance(state, c, { kind:'home' }, focus);
     }
-    const tutor = FB.educationTutor(state, c, false);
-    if (!tutor) return Math.min(cap, base + tech);
-    return Math.min(cap, (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
-      FB.skillOf(tutor, c.edu && c.edu.focus) *
-      (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance) + tech);
+    return educationCoreChance(state, c, option, focus);
+  };
+
+  function policyFocusNotice(state, c, focus) {
+    FB.news(state, FB.msg('news.education.policy_focus', {
+      forms:{
+        select:'value', param:'subject', cases:{
+          self:{
+            select:'value', param:'focus', cases:{
+              dip:'🎓 Your household policy assigns diplomacy as your education focus.',
+              mar:'🎓 Your household policy assigns martial skill as your education focus.',
+              ste:'🎓 Your household policy assigns stewardship as your education focus.',
+              int:'🎓 Your household policy assigns intrigue as your education focus.',
+              lea:'🎓 Your household policy assigns learning as your education focus.',
+              other:'🎓 Your household policy assigns an education focus.'
+            }
+          },
+          other:{
+            select:'value', param:'focus', cases:{
+              dip:'🎓 Household policy assigns diplomacy as {name}’s education focus.',
+              mar:'🎓 Household policy assigns martial skill as {name}’s education focus.',
+              ste:'🎓 Household policy assigns stewardship as {name}’s education focus.',
+              int:'🎓 Household policy assigns intrigue as {name}’s education focus.',
+              lea:'🎓 Household policy assigns learning as {name}’s education focus.',
+              other:'🎓 Household policy assigns {name} an education focus.'
+            }
+          }
+        }
+      }
+    }, {
+      subject:c.id === state.player.charId ? 'self' : 'other',
+      focus:focus, name:c.name
+    }));
+  }
+
+  function policyInstructionNotice(state, c, option) {
+    const params = {
+      subject:c.id === state.player.charId ? 'self' : 'other',
+      kind:option.kind, name:c.name
+    };
+    if (option.kind === 'school') {
+      params.school = FB.dataParam('schooling', option.schoolId);
+    } else if (option.kind === 'tutor') {
+      params.tutor = option.tutor ? option.tutor.name : '';
+    }
+    FB.news(state, FB.msg('news.education.policy_instruction', {
+      forms:{
+        select:'value', param:'subject', cases:{
+          self:{
+            select:'value', param:'kind', cases:{
+              school:'🎓 Your household policy arranges lessons at {school}.',
+              tutor:'🎓 Your household policy assigns {tutor} to your lessons.',
+              home:'🎓 Your household policy assigns instruction at home.',
+              other:'🎓 Your household policy arranges your instruction.'
+            }
+          },
+          other:{
+            select:'value', param:'kind', cases:{
+              school:'🎓 Household policy arranges {name}’s lessons at {school}.',
+              tutor:'🎓 Household policy assigns {tutor} to {name}’s lessons.',
+              home:'🎓 Household policy assigns {name} instruction at home.',
+              other:'🎓 Household policy arranges {name}’s instruction.'
+            }
+          }
+        }
+      }
+    }, params));
+  }
+
+  function policyWaitingNotice(state, c) {
+    FB.news(state, FB.msg('news.education.policy_waiting_focus', {
+      forms:{
+        select:'value', param:'subject', cases:{
+          self:'🎓 Household policy cannot arrange your instruction until an education focus is chosen.',
+          other:'🎓 Household policy cannot arrange {name}’s instruction until an education focus is chosen.'
+        }
+      }
+    }, {
+      subject:c.id === state.player.charId ? 'self' : 'other', name:c.name
+    }));
+  }
+
+  function applyEducationOption(c, option) {
+    c.edu = c.edu || {};
+    c.edu.school = option.schoolId || null;
+    c.edu.tutorId = option.tutorId || null;
+    delete c.edu.schoolUnpaid;
+  }
+
+  /* Preview only dimensions which are still empty (or waiting for a focus).
+     Earlier policy choices and explicit overrides remain exactly where they
+     are when the household policy is edited. */
+  FB.educationPolicyPreview = function (state, draft) {
+    FB.ensureEducationPolicy(state);
+    const policy = educationPolicyDefaults(draft);
+    const out = [];
+    for (const c of FB.educationStudents(state)) {
+      const record = normalizeEducationCharacter(c) || {};
+      let focus = c.edu && c.edu.focus || null;
+      const focusAffected = !record.focus && !focus && !!policy.focus;
+      if (focusAffected) focus = policy.focus;
+      const instructionAffected = policy.instructionMode === 'best' &&
+        (!record.instruction || record.instruction === 'waiting');
+      if (!focusAffected && !instructionAffected) continue;
+      const option = instructionAffected && focus ?
+        FB.educationBestOption(state, c, focus, policy.feeCap) :
+        FB.educationCurrentOption(state, c, focus);
+      let effective = option;
+      if (option && !option.available && focus) {
+        const choices = FB.educationOptions(state, c, focus);
+        for (const choice of choices) {
+          if (choice.kind === 'home') {
+            effective = choice;
+            break;
+          }
+        }
+      }
+      out.push({
+        c:c, focus:focus, option:option,
+        focusAffected:focusAffected,
+        instructionAffected:instructionAffected,
+        waitingFocus:instructionAffected && !focus,
+        instructionUnavailable:!!(option && !option.available),
+        projectedChance:effective && effective.available ? effective.chance : null,
+        seasonalFee:option && option.available ? option.fee : 0,
+        riskOption:option && option.available ? option : null
+      });
+    }
+    return out;
+  };
+
+  /* Apply only empty dimensions. A policy-selected tutor which disappeared
+     is the sole refill case: explicit tutor loss stays an explicit empty
+     override, while a prior policy school/home choice is never upgraded just
+     because policy terms or available options later change. */
+  FB.applyEducationPolicy = function (state, options) {
+    const policy = FB.ensureEducationPolicy(state);
+    const opts = options || {};
+    const dimensions = opts.dimensions || { focus:true, instruction:true };
+    const ids = opts.ids || null;
+    const changed = [];
+    for (const c of FB.educationStudents(state)) {
+      if (ids && !ids[c.id]) continue;
+      normalizeEducationCharacter(c);
+      const record = educationPolicyRecord(c, true);
+      if (dimensions.instruction && record.instruction === 'policy' &&
+          record.instructionChoice &&
+          record.instructionChoice.indexOf('tutor:') === 0) {
+        const expected = record.instructionChoice.slice(6);
+        const actual = c.edu && c.edu.tutorId;
+        if (actual && !FB.educationTutor(state, c, true)) {
+          delete record.instruction;
+          delete record.instructionChoice;
+        } else if (!actual && expected) {
+          delete record.instruction;
+          delete record.instructionChoice;
+        } else if (actual && String(actual) !== expected) {
+          record.instruction = 'manual';
+          record.instructionChoice = educationChoiceKey(c);
+        }
+      }
+      if (dimensions.focus && !record.focus && !c.edu.focus && policy.focus) {
+        c.edu.focus = policy.focus;
+        record.focus = 'policy';
+        changed.push({ c:c, dimension:'focus', focus:policy.focus });
+        policyFocusNotice(state, c, policy.focus);
+      }
+      if (!dimensions.instruction || policy.instructionMode !== 'best' ||
+          (record.instruction && record.instruction !== 'waiting')) continue;
+      if (!c.edu.focus) {
+        if (record.instruction !== 'waiting') {
+          record.instruction = 'waiting';
+          record.instructionChoice = 'waiting-focus';
+          changed.push({ c:c, dimension:'instruction', waitingFocus:true });
+          policyWaitingNotice(state, c);
+        }
+        continue;
+      }
+      const selected =
+        FB.educationBestOption(state, c, c.edu.focus, policy.feeCap);
+      if (!selected) continue;
+      applyEducationOption(c, selected);
+      record.instruction = 'policy';
+      record.instructionChoice = selected.id;
+      changed.push({ c:c, dimension:'instruction', option:selected });
+      policyInstructionNotice(state, c, selected);
+    }
+    return changed;
+  };
+
+  FB.setEducationPolicy = function (state, value) {
+    state.player.educationPolicy = educationPolicyDefaults(value);
+    const policy = FB.ensureEducationPolicy(state);
+    if (policy.instructionMode !== 'best') {
+      for (const id in state.chars) {
+        const record = educationPolicyRecord(state.chars[id], false);
+        if (record && record.instruction === 'waiting') {
+          delete record.instruction;
+          delete record.instructionChoice;
+        }
+      }
+    }
+    FB.applyEducationPolicy(state);
+    return policy;
+  };
+
+  FB.followEducationPolicy = function (state, c, dimension) {
+    if (!c || (dimension !== 'focus' && dimension !== 'instruction')) return false;
+    FB.ensureEducationPolicy(state);
+    const record = educationPolicyRecord(c, true);
+    if (dimension === 'focus') {
+      c.edu.focus = null;
+      delete record.focus;
+    } else {
+      c.edu.school = null;
+      c.edu.tutorId = null;
+      delete c.edu.schoolUnpaid;
+      delete record.instruction;
+      delete record.instructionChoice;
+    }
+    const ids = {};
+    ids[c.id] = 1;
+    const dimensions = { focus:false, instruction:false };
+    dimensions[dimension] = true;
+    FB.applyEducationPolicy(state, { ids:ids, dimensions:dimensions });
+    return true;
   };
 
   FB.schoolingSeasonCost = function (state) {
@@ -1496,6 +1982,7 @@ window.FB = window.FB || {};
   FB.educationSeason = function (state) {
     const B = FBDATA.balance;
     const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
+    FB.applyEducationPolicy(state);
     for (const c of FB.educationStudents(state)) {
       if (!c.edu || !c.edu.focus) continue;
       const id = FB.schoolingId(state, c);

@@ -921,6 +921,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
+        educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
@@ -1070,6 +1071,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
+        educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null

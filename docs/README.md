@@ -161,6 +161,14 @@ Time passes **day by day** (90-day seasons, 360-day years).
    in one place: education, instruction and fees, work and standing, enterprise or office
    assignments, match eligibility, and equipped-item/slot counts. Select an available cell
    to use the same detailed controls found on character and Work & Enterprises sheets.
+   The Education Policy above that ledger can fill empty education focuses and choose the
+   strongest currently available school, known tutor, or home instruction under a seasonal
+   fee cap for each child. It previews every immediate choice before saving, never hires a
+   personal master, never replaces an existing manual or policy choice, and does not reserve
+   the quoted coin. A later unaffordable fee still pauses that term normally. Use Follow
+   household policy in either detailed picker to clear and reconsider only that child’s
+   focus or instruction; completed terms and lesson progress remain intact. The policy
+   passes to each succeeding household head.
    Established households can hire a limited number of paid retainers as stewards, factors,
    captains, or tutors. Their seasonal contracts pass to an heir, but their personal loyalties
    may not. The same tab shows every source and modifier behind the current levy instead of
