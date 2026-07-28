@@ -4681,7 +4681,13 @@ window.FB = window.FB || {};
       esc(FB.T('Not yet')) + '</button></div>';
     openModal(FB.T('Contest the Caliphate?'), h);
     $('caliph-war-confirm').addEventListener('click', function () {
-      FB.startPlayerWar(s, FB.caliphateWarCause(s));
+      const liveCause = FB.caliphateWarCause(s);
+      if (!liveCause || !FB.startPlayerWar(s, liveCause)) {
+        UI.toast(FB.T('The succession war can no longer be declared.'));
+        UI.closeModal();
+        UI.refresh();
+        return;
+      }
       UI.closeModal();
       UI.refresh();
     });

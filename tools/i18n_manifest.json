@@ -136,6 +136,14 @@
         "text": "💰 Demand extraordinary taxes"
       }
     },
+    "action.demuster_host.label.default": {
+      "context": "action demuster_host, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🏳 De-muster the host"
+      }
+    },
     "action.foreign_policy.label.default": {
       "context": "action foreign_policy, visible label.",
       "glossary": [],
@@ -25500,6 +25508,17 @@
         "text": "⚔ Battle at {province} — {winner} breaks the host of {loser}."
       }
     },
+    "news.army.demusters": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "men",
+        "province"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "🏳 The host de-musters at {province} — {men} men return to the muster rolls."
+      }
+    },
     "news.army.disbands": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -27349,6 +27368,17 @@
         "text": "⛪ You grant {seat} to the restored {realm}. {ruler} is chosen {title}."
       }
     },
+    "news.religion.head_seized": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "realm",
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate."
+      }
+    },
     "news.religion.head_vacant": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -27729,6 +27759,36 @@
       "location": "js/world.js",
       "source": {
         "text": "🕊 The campaign is abandoned. The banners come home."
+      }
+    },
+    "news.war.caliphate_claim_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🕊 The succession war ends — your realm no longer has a lawful Sunni claimant to the office of {title}."
+      }
+    },
+    "news.war.caliphate_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained."
+      }
+    },
+    "news.war.caliphate_unresolved": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🕊 The succession war ends without the office of {title} changing hands."
       }
     },
     "news.war.campaign_failed": {
@@ -34612,16 +34672,6 @@
         "text": "Guadix"
       }
     },
-    "src.01ad87d8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "(made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it)."
-      }
-    },
     "src.01b3176a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -34995,6 +35045,16 @@
         "text": "Received a settlement from the house of {late}."
       }
     },
+    "src.0342f40f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your demesne needs at least {needed} counties (now {current})."
+      }
+    },
     "src.034db87c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35003,6 +35063,16 @@
       ],
       "source": {
         "text": "Your child"
+      }
+    },
+    "src.0385e361": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🕊 The succession war ends — your realm no longer has a lawful Sunni claimant to the office of {title}."
       }
     },
     "src.0387d37b": {
@@ -35893,6 +35963,16 @@
       ],
       "source": {
         "text": "The accusation lands as slander. The steward fines insolence as well as defeat."
+      }
+    },
+    "src.06c1a336": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained."
       }
     },
     "src.06d9529b": {
@@ -37598,6 +37678,16 @@
       ],
       "source": {
         "text": "The lessons are yours to spend now."
+      }
+    },
+    "src.0ca836ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days."
       }
     },
     "src.0cbc662b": {
@@ -39514,6 +39604,16 @@
       ],
       "source": {
         "text": "Broken mod (bad JSON)"
+      }
+    },
+    "src.13633307": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again."
       }
     },
     "src.13644b93": {
@@ -41434,6 +41534,16 @@
         "text": ": missing required technology"
       }
     },
+    "src.1a2300ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🏳 De-muster the host"
+      }
+    },
     "src.1a2343db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42062,16 +42172,6 @@
       ],
       "source": {
         "text": "Neighbors at odds trust a fair tongue."
-      }
-    },
-    "src.1d627743": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent."
       }
     },
     "src.1d64cac9": {
@@ -43315,6 +43415,16 @@
       ],
       "source": {
         "text": "Steward"
+      }
+    },
+    "src.21e59fc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The succession war can no longer be declared."
       }
     },
     "src.21ea13e0": {
@@ -45288,6 +45398,16 @@
       ],
       "source": {
         "text": "💍 Your sister {name} weds {spouse}."
+      }
+    },
+    "src.28c56ff6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
     "src.28e1ff5c": {
@@ -47784,6 +47904,16 @@
         "text": "You need at least 200 prestige to rally men to your banner (now {current})."
       }
     },
+    "src.3303c96c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "(made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering."
+      }
+    },
     "src.330dc320": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49700,6 +49830,16 @@
         "text": "greatHolyWar has an invalid minDate."
       }
     },
+    "src.3ac5f4da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your defensive alliance forbids an attack on the Caliph’s realm."
+      }
+    },
     "src.3acc0fda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49808,6 +49948,16 @@
       ],
       "source": {
         "text": "There is a young man of the next quarter — quick to laugh, quicker to blush — and you had half a mind to make him yours. But the war has swallowed the season: the amir’s men are calling up every unwed youth who can level a spear, and this morning he stands in the muster with a borrowed shield on his arm and no notion that you exist. By dusk the column will be a smudge of dust on the war-road, and him with it. A woman does not ride with an army, they say — but they have not read the old tales as closely as you have."
+      }
+    },
+    "src.3b1b43cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties."
       }
     },
     "src.3b1fd1e6": {
@@ -54480,6 +54630,16 @@
         "text": "Report the plotters to the liege."
       }
     },
+    "src.4c068ee2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Contest the Caliphate?"
+      }
+    },
     "src.4c08465f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56973,6 +57133,16 @@
       ],
       "source": {
         "text": "Take what the field offers before the sky takes it back."
+      }
+    },
+    "src.5500a854": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Wrest the Sunni office from {realm} in a succession war — the Caliphate passes to the victor, the loser keeps his lands."
       }
     },
     "src.551073c8": {
@@ -61247,6 +61417,16 @@
         "text": "Clerical student"
       }
     },
+    "src.64caf8ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Send the host home where it stands. On foreign soil the host scatters — no men return to the rolls, and the next muster must wait {days} days."
+      }
+    },
     "src.64ce2752": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62198,6 +62378,16 @@
         "text": "{campaign} for {kingdom} · {phase}"
       }
     },
+    "src.687d3a14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "A sworn peace pact protects the Caliph’s realm."
+      }
+    },
     "src.688546df": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62276,6 +62466,16 @@
       ],
       "source": {
         "text": "Take their baptism."
+      }
+    },
+    "src.68ffad35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Send the field host home."
       }
     },
     "src.69006564": {
@@ -66052,16 +66252,6 @@
       ],
       "source": {
         "text": "Defenders"
-      }
-    },
-    "src.7637a77a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety."
       }
     },
     "src.76548f74": {
@@ -81830,6 +82020,16 @@
         "text": "The birds keep; hunger is patient too."
       }
     },
+    "src.b02df594": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate."
+      }
+    },
     "src.b0356df7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85488,6 +85688,16 @@
         "text": "Pereyaslavl"
       }
     },
+    "src.bd55c37c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety."
+      }
+    },
     "src.bd57ce32": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88316,6 +88526,16 @@
         "text": "Refuse, with thanks."
       }
     },
+    "src.c79b2f47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Declare the succession war"
+      }
+    },
     "src.c79cfed4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89126,6 +89346,16 @@
       ],
       "source": {
         "text": "Kazakh Steppe"
+      }
+    },
+    "src.cb194667": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "The sitting Caliph cannot be contested from this world state."
       }
     },
     "src.cb1fa266": {
@@ -97877,6 +98107,16 @@
         "text": "Settled the empty land of {province}."
       }
     },
+    "src.eca3651d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Succession war for the office of {title}"
+      }
+    },
     "src.eca53dcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99226,6 +99466,16 @@
       ],
       "source": {
         "text": "Spurn him grandly. You have outgrown the blushing boy from the muster line."
+      }
+    },
+    "src.f14fb8c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🏳 The host de-musters at {province} — {men} men return to the muster rolls."
       }
     },
     "src.f1580daa": {
@@ -101932,6 +102182,16 @@
         "text": "🪁 Play"
       }
     },
+    "src.fbae890b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🕊 The succession war ends without the office of {title} changing hands."
+      }
+    },
     "src.fbba9334": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102090,6 +102350,16 @@
       ],
       "source": {
         "text": "Turn victory into a step up the ladder."
+      }
+    },
+    "src.fc4b1865": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Send the host home where it stands. On your realm’s land only {pct}% return to the rolls — {men} preserved; the next muster must wait {days} days."
       }
     },
     "src.fc4da061": {
@@ -108134,6 +108404,14 @@
         "text": "A stranger of real accomplishment."
       }
     },
+    "ui:A sworn peace pact protects the Caliph’s realm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "A sworn peace pact protects the Caliph’s realm."
+      }
+    },
     "ui:A sworn peace pact protects the only realm you have cause against.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -108751,6 +109029,17 @@
         "text": "At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success)."
       }
     },
+    "ui:At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men",
+        "minimum"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again."
+      }
+    },
     "ui:At the current daily rate, Regard is not advancing toward +{threshold}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -108797,15 +109086,16 @@
         "text": "At war — policy is suspended"
       }
     },
-    "ui:Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety.": {
+    "ui:Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety.": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "counties",
         "piety",
         "prestige"
       ],
       "location": "js/actions.js",
       "source": {
-        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and spends {piety} piety."
+        "text": "Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety."
       }
     },
     "ui:Attack the Papacy?": {
@@ -109802,6 +110092,14 @@
         "text": "Constable"
       }
     },
+    "ui:Contest the Caliphate?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Contest the Caliphate?"
+      }
+    },
     "ui:Continue": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -110042,6 +110340,26 @@
       "location": "js/ui.js",
       "source": {
         "text": "Decide nothing today"
+      }
+    },
+    "ui:Declare the succession war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Declare the succession war"
+      }
+    },
+    "ui:Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capital",
+        "realm",
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
     "ui:Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler.": {
@@ -114381,6 +114699,47 @@
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
       }
     },
+    "ui:Send the field host home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Send the field host home."
+      }
+    },
+    "ui:Send the host home where it stands. On foreign soil the host scatters — no men return to the rolls, and the next muster must wait {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Send the host home where it stands. On foreign soil the host scatters — no men return to the rolls, and the next muster must wait {days} days."
+      }
+    },
+    "ui:Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "men"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days."
+      }
+    },
+    "ui:Send the host home where it stands. On your realm’s land only {pct}% return to the rolls — {men} preserved; the next muster must wait {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "men",
+        "pct"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Send the host home where it stands. On your realm’s land only {pct}% return to the rolls — {men} preserved; the next muster must wait {days} days."
+      }
+    },
     "ui:Seneschal": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -114588,16 +114947,17 @@
         "text": "Spend {money:amount} and restore the coin"
       }
     },
-    "ui:Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent.": {
+    "ui:Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties.": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "counties",
         "piety",
         "prestige",
         "title"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent."
+        "text": "Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties."
       }
     },
     "ui:Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)": {
@@ -114681,6 +115041,16 @@
       "location": "js/economy.js",
       "source": {
         "text": "Student of the Faith"
+      }
+    },
+    "ui:Succession war for the office of {title}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Succession war for the office of {title}"
       }
     },
     "ui:Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.": {
@@ -115201,6 +115571,14 @@
         "text": "The settlement council awaits a decision."
       }
     },
+    "ui:The sitting Caliph cannot be contested from this world state.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "The sitting Caliph cannot be contested from this world state."
+      }
+    },
     "ui:The stake and route overhead cost {money:cost}; you have {money:gold}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -115210,6 +115588,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "The stake and route overhead cost {money:cost}; you have {money:gold}."
+      }
+    },
+    "ui:The succession war can no longer be declared.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The succession war can no longer be declared."
       }
     },
     "ui:The target crown": {
@@ -115973,6 +116359,16 @@
         "text": "Worn here"
       }
     },
+    "ui:Wrest the Sunni office from {realm} in a succession war — the Caliphate passes to the victor, the loser keeps his lands.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Wrest the Sunni office from {realm} in a succession war — the Caliphate passes to the victor, the loser keeps his lands."
+      }
+    },
     "ui:You": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -116301,12 +116697,31 @@
         "text": "Your current lawful heir is {heir}."
       }
     },
+    "ui:Your defensive alliance forbids an attack on the Caliph’s realm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your defensive alliance forbids an attack on the Caliph’s realm."
+      }
+    },
     "ui:Your defensive alliance forbids an attack on the only realm you have cause against.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Your defensive alliance forbids an attack on the only realm you have cause against."
+      }
+    },
+    "ui:Your demesne needs at least {needed} counties (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your demesne needs at least {needed} counties (now {current})."
       }
     },
     "ui:Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again.": {

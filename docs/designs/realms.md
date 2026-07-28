@@ -103,7 +103,10 @@ office, not land). Victory by siege reassigns the office to the player realm thr
 the same `FB.assignReligiousHead` path: no county changes hands, the defeated realm
 survives, and its ruler's styling simply follows the lost office. The AI never
 contests a sitting office this way; its vacancy claim above is unchanged apart from
-the new size gate. See [war.md](war.md).
+the new size gate. Office ownership is compared through the holder's live sovereign,
+so a vassal-attached office remains contestable. A successor who is no longer a Sunni
+sovereign king or emperor loses the personal claim, ending the campaign without land.
+See [war.md](war.md).
 
 **Realms form a liege hierarchy.** Every realm has a `rank` (1 count … 4 emperor) and a
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,

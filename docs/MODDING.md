@@ -24,20 +24,22 @@ with this common shape:
 
 ```json
 {
-  "type": "dejure | fabricated | restoration",
+  "type": "dejure | fabricated | restoration | caliphate",
   "target": "<province id>",
   "enemy": "<sovereign realm id>",
   "titleKind": "duchy | kingdom | empire | null",
   "titleId": "<de jure title id or null>",
   "titleName": "<display title or null>",
-  "blocked": "pact | alliance | null"
+  "blocked": "war | pact | alliance | null"
 }
 ```
 
 Only fields relevant to the cause are present. `restoration` targets the claimant
-crown's current capital; `fabricated` refers to `player.fabricatedClaim.pid`; `dejure`
-uses the most specific title the player actually holds. Passing `true` as the second
-argument includes pact/alliance-blocked records for explanatory UI. `FB.warTargets`
+crown's current capital; `caliphate` targets the sitting Sunni office holder's
+sovereign capital and can transfer only that office; `fabricated` refers to
+`player.fabricatedClaim.pid`; `dejure` uses the most specific title the player actually
+holds. Passing `true` as the second argument includes war/pact/alliance-blocked records
+for explanatory UI. `FB.warTargets`
 still returns province ids, and `FB.startPlayerWar` accepts either a current semantic
 record or a compatible string target. New wars persist the normalized subset as
 `player.war.casus`; missing `casus` on an old in-progress war invokes legacy capture.
@@ -1741,7 +1743,8 @@ again), `armyReinforceRate` (the fraction of its mustered size a host resting on
 land refills per day), `armyDemusterKeepOwn` / `armyDemusterKeepRealm` /
 `armyDemusterKeepOther` (the share of a voluntarily de-mustered host preserved for the
 war's next muster — standing on the player's own county / elsewhere in the player's
-sovereign realm / anywhere else), `aiHostPerDev` (AI host size = realm development ×
+sovereign realm / anywhere else; the cap is applied after levy modifiers and the
+ordinary `armyMinMen` floor cannot add replacements), `aiHostPerDev` (AI host size = realm development ×
 `levyPerDev` ×
 this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).

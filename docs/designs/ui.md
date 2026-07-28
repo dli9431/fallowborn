@@ -226,7 +226,9 @@ The Self sheet's faith block names the live religious head or the number of days
 office has been vacant, and states excommunication separately from the trait chip.
 Faith & Community contains the contextual absolution, Papal-restoration, and
 Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
-confirmation sheets. A Catholic Papal conquest is marked as sacrilege in the war list
+confirmation sheets. The occupied Caliphate deed remains visible but disabled while
+the player realm is already at war or committed to a great holy war, and its final
+confirmation revalidates the live succession cause. A Catholic Papal conquest is marked as sacrilege in the war list
 and uses its own second confirmation; no penalty is applied until that final button.
 A separate personal-attention summary names the assigned character, current Regard, fixed
 daily rate, estimated active days to the relationship threshold, and whether progress is

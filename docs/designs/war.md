@@ -20,12 +20,15 @@ store only a descriptive `border` cause.
 
 The `caliphate` cause is the religious twin of restoration, offered by the Claim the
 Caliphate deed while a sitting Caliph holds the Sunni office (`FB.caliphateWarCause`:
-a sovereign Sunni player king or emperor against the holder's sovereign realm). It
-likewise ignores adjacency, and the seasonal tick re-pins the target to the holder's
-current capital. Victory by siege transfers the office to the player realm and awards
+a sovereign Sunni player king or emperor against the holder's sovereign realm, even
+when the office is attached to one of that sovereign's vassals). It likewise ignores
+adjacency, and the seasonal tick re-pins the target to the enemy sovereign's current
+capital. Victory by siege transfers the office to the player realm and awards
 `religiousHeadClaimWarPrestige` prestige — no county changes hands and the defeated
-realm survives. If the office passes to a third party mid-war, the tick ends the war
-quietly with nothing gained. The tribute offer after three field wins remains a
+realm survives. The seasonal and capture paths both re-check the sovereign holder and
+the player's Sunni sovereign eligibility. If either has changed, the war ends with
+nothing gained; capture never falls through to ordinary county conquest. The tribute
+offer after three field wins remains a
 legitimate exit (take the gold and go home), and an in-preparation great holy war of
 the deposed holder collapses as a vacancy when the office moves. The AI never declares
 this war.
@@ -94,10 +97,12 @@ it disperses where it stands and only part of it returns to the muster rolls —
 `balance.armyDemusterKeepRealm` (half) elsewhere in the player's sovereign realm,
 `balance.armyDemusterKeepOther` (nothing) anywhere else. The returned men are kept on
 the war as `state.player.war.musterPool` and cap each own class of the war's next
-muster (the great levy still swells what is left; hired companies and allied
-reinforcements are raised fresh), and the de-muster itself starts the same rearm wait
-as a shattering — so a beaten player cannot de-muster and immediately re-raise a full
-levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
+muster after levy modifiers are calculated; hired companies and allied reinforcements
+are raised fresh. The ordinary `armyMinMen` floor does not create replacements after
+a de-muster: if the preserved men plus fresh mercenaries/allies remain below it, the
+muster deed explains the shortage and stays disabled. The de-muster itself starts the
+same rearm wait as a shattering — so a beaten player cannot de-muster and immediately
+re-raise a full levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
 single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so the daily

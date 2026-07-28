@@ -234,47 +234,74 @@ window.FB = window.FB || {};
 
   /* ---------- raising & disbanding ---------- */
 
-  FB.raisePlayerHost = function (state) {
-    FB.armiesEnsure(state);
+  /* One calculation feeds both the Deeds estimate and the actual host. A
+     voluntary de-muster is a hard ceiling on the returning own troops: levy
+     modifiers are applied before that ceiling, while hired companies and
+     defensive allies still answer independently. The ordinary minimum muster
+     may seed a fresh war, but never manufactures replacements after a
+     voluntary de-muster. */
+  function playerMusterPlan(state) {
     const p = state.player, w = p.war;
     const greatHost = FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(state);
     if (!w && !greatHost) return null;
-    const existing = FB.playerHost(state);
-    if (existing) return existing;
-    const down = state.armyDown['player'];
-    if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
     const cs = B().mercCompanySize || 150;
     const comp = FB.playerComposition(state);
     const units = {
       levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
       mercs: (w && w.mercCos || 0) * cs
     };
+    if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
     /* a voluntary de-muster sent only part of the standing host home: the
        war's next muster fields no more of each own class than returned
-       (the great levy still swells what is left; hired companies and
-       allied reinforcements are raised fresh) */
-    if (w && w.musterPool) {
+       after campaign levy modifiers; hired companies and allied
+       reinforcements are raised fresh */
+    const limited = !!(w && w.musterPool);
+    if (limited) {
       const pool = w.musterPool;
       units.levy = Math.min(units.levy, pool.levy || 0);
       units.arch = Math.min(units.arch, pool.arch || 0);
       units.cav = Math.min(units.cav, pool.cav || 0);
       units.ret = Math.min(units.ret, pool.ret || 0);
-      delete w.musterPool;
     }
-    if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
     const allied = w && w.defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
     let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
     const floor = B().armyMinMen || 40;
-    if (men < floor) { units.levy += floor - men; men = floor; }
+    if (!limited && men < floor) { units.levy += floor - men; men = floor; }
+    return {
+      units:units, allied:allied, men:men, floor:floor,
+      limited:limited, greatHost:greatHost
+    };
+  }
+
+  FB.playerMusterPreview = function (state) {
+    const plan = playerMusterPlan(state);
+    if (!plan) return null;
+    return {
+      men:plan.men, minimum:plan.floor,
+      canRaise:plan.men >= plan.floor, limited:plan.limited
+    };
+  };
+
+  FB.raisePlayerHost = function (state) {
+    FB.armiesEnsure(state);
+    const p = state.player, w = p.war;
+    const existing = FB.playerHost(state);
+    if (existing) return existing;
+    const down = state.armyDown['player'];
+    if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
+    const plan = playerMusterPlan(state);
+    if (!plan || plan.men < plan.floor) return null;
+    if (plan.limited) delete w.musterPool;
+    const units = plan.units, allied = plan.allied, men = plan.men;
     const home = playerHome(state);
     const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
     state.armies.push(host);
-    if (greatHost && FB.greatHolyWarMarkMuster) {
+    if (plan.greatHost && FB.greatHolyWarMarkMuster) {
       FB.greatHolyWarMarkMuster(state, 'player');
     }
     FB.news(state, FB.msg('news.army.player_musters',

@@ -2614,6 +2614,32 @@ window.FB = window.FB || {};
      the season boundary; this tick advances exhaustion, lets the ENEMY make
      its move, and queues a war-council event. Its options act through the
      FB.fns.war_* handlers below. */
+  function caliphateWarEnemyHoldsOffice(state, war) {
+    const head = FB.religiousHeadOf(state, 'sunni');
+    return !!(head && FB.topRealm(state, head.id) === war.enemy);
+  }
+
+  function caliphateWarClaimantEligible(state) {
+    return !!(FB.caliphateWarClaimantEligible &&
+      FB.caliphateWarClaimantEligible(state));
+  }
+
+  function endCaliphateWarForLostClaim(state) {
+    FB.news(state, FB.msg('news.war.caliphate_claim_lost',
+      '🕊 The succession war ends — your realm no longer has a lawful Sunni claimant to the office of {title}.', {
+        title: FB.dataParam('religion', 'sunni', 'head.title')
+      }));
+    FB.endPlayerWar(state);
+  }
+
+  function endCaliphateWarForLostOffice(state) {
+    FB.news(state, FB.msg('news.war.caliphate_lost',
+      '🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained.', {
+        title: FB.dataParam('religion', 'sunni', 'head.title')
+      }));
+    FB.endPlayerWar(state);
+  }
+
   FB.playerWarTick = function (state) {
     const p = state.player;
     const w = p.war;
@@ -2629,13 +2655,11 @@ window.FB = window.FB || {};
        party and the saved vacancy is claimed elsewhere): the war's object is
        gone — end it quietly rather than dragging to exhaustion */
     if (!w.defending && w.casus && w.casus.type === 'caliphate') {
-      const head = FB.religiousHeadOf(state, 'sunni');
-      if (!head || head.id !== w.enemy) {
-        FB.news(state, FB.msg('news.war.caliphate_lost',
-          '🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained.', {
-            title: FB.dataParam('religion', 'sunni', 'head.title')
-          }));
-        FB.endPlayerWar(state); return;
+      if (!caliphateWarClaimantEligible(state)) {
+        endCaliphateWarForLostClaim(state); return;
+      }
+      if (!caliphateWarEnemyHoldsOffice(state, w)) {
+        endCaliphateWarForLostOffice(state); return;
       }
     }
     if (!w.defending && w.casus &&
@@ -2694,22 +2718,30 @@ window.FB = window.FB || {};
     const pid = w && w.target;
     if (w && w.casus && w.casus.type === 'caliphate') {
       const enemy = state.realms[w.enemy];
-      const head = FB.religiousHeadOf(state, 'sunni');
-      if (enemy && enemy.alive && head && head.id === w.enemy) {
-        if (!(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
-        if (FB.assignReligiousHead(state, 'sunni', FB.playerRealmId(state) || 'player')) {
-          p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
-          FB.news(state, FB.msg('news.religion.head_seized',
-            '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
-              title: FB.dataParam('religion', 'sunni', 'head.title'),
-              realm: enemy.name
-            }));
-          FB.endPlayerWar(state);
-          return;
-        }
+      if (!caliphateWarClaimantEligible(state)) {
+        endCaliphateWarForLostClaim(state); return;
       }
-      /* the office slipped to a third party before the breach: fall through
-         to an ordinary conquest of the besieged capital below */
+      if (!enemy || !enemy.alive || !caliphateWarEnemyHoldsOffice(state, w)) {
+        endCaliphateWarForLostOffice(state); return;
+      }
+      const claimantRealm = FB.playerRealmId(state);
+      if (claimantRealm &&
+          FB.assignReligiousHead(state, 'sunni', claimantRealm)) {
+        p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
+        FB.news(state, FB.msg('news.religion.head_seized',
+          '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
+            title: FB.dataParam('religion', 'sunni', 'head.title'),
+            realm: enemy.name
+          }));
+        FB.endPlayerWar(state);
+        return;
+      }
+      FB.news(state, FB.msg('news.war.caliphate_unresolved',
+        '🕊 The succession war ends without the office of {title} changing hands.', {
+          title: FB.dataParam('religion', 'sunni', 'head.title')
+        }));
+      FB.endPlayerWar(state);
+      return;
     }
     if (w && w.casus && w.casus.type === 'restoration') {
       const enemy = state.realms[w.enemy];

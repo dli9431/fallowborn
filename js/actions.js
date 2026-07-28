@@ -580,6 +580,12 @@ window.FB = window.FB || {};
     can: function (s) {
       if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim the Caliphate.');
       if (!FB.religiousHeadVacancy(s, 'sunni')) {
+        const playerRealm = FB.playerRealmId(s);
+        if (s.player.war ||
+            (FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, 'player')) ||
+            (playerRealm && FB.isRealmAtWar(s, playerRealm))) {
+          return FB.warLockedReason(s);
+        }
         const cause = FB.caliphateWarCause(s);
         if (!cause) return FB.T('The sitting Caliph cannot be contested from this world state.');
         const blocked = diplomacyBlocksWar(s, cause.enemy);
@@ -1063,9 +1069,9 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showSettleWaste) FB.ui.showSettleWaste(); } },
   { id: 'muster_host', label: '🚩 Muster the host',
     desc: function (s) {
-      const w = s.player.war;
+      const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
       return FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
-        { men: FB.playerLevy(s) + ((w && w.mercCos) || 0) * (FBDATA.balance.mercCompanySize || 150) });
+        { men: preview ? preview.men : FB.playerLevy(s) });
     },
     show: function (s) {
       if (!s.player.war && !(FB.playerGreatHolyWarHostActive &&
@@ -1073,6 +1079,15 @@ window.FB = window.FB || {};
       if (FB.playerHost && FB.playerHost(s)) return false; // already in the field
       const down = (s.armyDown || {})['player'];
       return down === undefined || s.turn - down >= FBDATA.balance.armyRearmDays;
+    },
+    can: function (s) {
+      const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
+      if (preview && !preview.canRaise) {
+        return FB.T('At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again.', {
+          minimum:preview.minimum, men:preview.men
+        });
+      }
+      return true;
     },
     run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
   { id: 'demuster_host', label: '🏳 De-muster the host',
@@ -2620,11 +2635,15 @@ window.FB = window.FB || {};
      contest a sitting Caliph. The stake is the office, not land, so no shared
      border is required — victory transfers the Caliphate, the loser keeps his
      realm. Returns a warCauses-shaped record or null. */
-  FB.caliphateWarCause = function (state) {
+  FB.caliphateWarClaimantEligible = function (state) {
     const p = state.player;
     const c = state.chars[p.charId];
-    if (!c || !adult(state) || c.religion !== 'sunni' || p.tier < 6) return null;
-    if (!FB.isPlayerSovereign(state)) return null;
+    return !!(c && !c.dead && c.religion === 'sunni' && p.tier >= 6 &&
+      FB.isPlayerSovereign(state));
+  };
+
+  FB.caliphateWarCause = function (state) {
+    if (!adult(state) || !FB.caliphateWarClaimantEligible(state)) return null;
     const head = FB.religiousHeadOf(state, 'sunni');
     if (!head) return null;
     const enemy = FB.topRealm(state, head.id);
@@ -2820,6 +2839,12 @@ window.FB = window.FB || {};
       for (const c of FB.warCauses(state)) if (c.target === target) { cause = c; break; }
     }
     if (!cause || !cause.target || cause.blocked) return false;
+    if (cause.type === 'caliphate') {
+      const liveCaliphate = FB.caliphateWarCause(state);
+      if (!liveCaliphate || liveCaliphate.enemy !== cause.enemy ||
+          liveCaliphate.target !== cause.target) return false;
+      cause = liveCaliphate;
+    }
     const enemy = cause.enemy || state.owner[cause.target];
     if (!enemy || diplomacyBlocksWar(state, enemy)) return false;
     const c = state.chars[state.player.charId];

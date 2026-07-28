@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.76.0';
+  FB.VERSION = '1.77.0';
   FB.CHANGELOG = [
+    { v: '1.77.0', date: '2026-07-27', changes: [
+      'Raised hosts can now de-muster during ordinary wars, with surviving troops depending on where they stand.',
+      'Sunni kings and emperors can now contest a sitting Caliph in an office-only succession war.'
+    ] },
     { v: '1.76.0', date: '2026-07-27', changes: [
       'Great holy-war leaders can now reinforce a live field host with pilgrims, mercenaries, landless cavalry, or adventurers through wartime events.'
     ] },
