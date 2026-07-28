@@ -48018,6 +48018,16 @@
         "text": "Let a small concession prove that the words have weight."
       }
     },
+    "src.2be49131": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep daily focuses together"
+      }
+    },
     "src.2bf75eea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78369,6 +78379,16 @@
         "text": "Barony"
       }
     },
+    "src.923d7464": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Show all daily focuses before the category groups; deeds remain grouped."
+      }
+    },
     "src.924185d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90179,6 +90199,16 @@
       ],
       "source": {
         "text": "Riding Horses and Covered Wagon"
+      }
+    },
+    "src.bbbb7e0e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Deeds panel"
       }
     },
     "src.bbbbcddb": {
@@ -117124,6 +117154,14 @@
         "text": "Declining grants the land to a generated cadet ruler and converts your share into piety and prestige."
       }
     },
+    "ui:Deeds panel": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Deeds panel"
+      }
+    },
     "ui:Deeds — done at once unless noted": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -118807,6 +118845,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Keep current projects, but leave future slots for you to choose."
+      }
+    },
+    "ui:Keep daily focuses together": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep daily focuses together"
       }
     },
     "ui:Keep in service": {
@@ -122553,6 +122599,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}"
+      }
+    },
+    "ui:Show all daily focuses before the category groups; deeds remain grouped.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Show all daily focuses before the category groups; deeds remain grouped."
       }
     },
     "ui:Sickness has taken hold.": {

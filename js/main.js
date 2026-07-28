@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.80.1';
+  FB.VERSION = '1.80.2';
   FB.CHANGELOG = [
+    { v: '1.80.2', date: '2026-07-28', changes: [
+      'Settings can now keep all daily focuses together above the categorized deeds.'
+    ] },
     { v: '1.80.1', date: '2026-07-28', changes: [
       'Tutor, enterprise, retainer, and council pickers now show consistent candidate cards with benefits, costs, assignments, and replacement consequences.'
     ] },
@@ -1277,6 +1280,16 @@ window.FB = window.FB || {};
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
+  G.uiPrefs = { combinedFocuses:false };
+  try {
+    const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
+    if (storedUiPrefs && typeof storedUiPrefs === 'object') {
+      G.uiPrefs.combinedFocuses = !!storedUiPrefs.combinedFocuses;
+    }
+  } catch (e) { /* keep defaults */ }
+  G.saveUiPrefs = function () {
+    try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
+  };
   G.setPaused = function (v) {
     G.paused = !!v;
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();

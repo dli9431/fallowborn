@@ -248,6 +248,10 @@ The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Famil
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
 with `aria-expanded`; closed actions are not rendered, so number-key selection can never
 activate an invisible deed. The current daily focus remains pinned above the groups.
+Settings offers a browser-local **Keep daily focuses together** preference (`fb_ui`).
+When enabled, every available focus appears in one block above the category accordions;
+the accordions continue to split and count deeds by category. The categorized layout
+remains the default.
 The Self sheet's faith block names the live religious head or the number of days its
 office has been vacant, and states excommunication separately from the trait chip.
 Faith & Community contains the contextual absolution, Papal-restoration, and
