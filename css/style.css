@@ -461,6 +461,74 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .gm-body-text h4 { color: #d8b24a; margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }
 .gm-body-text ul { padding-left: 18px; }
+
+/* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
+   cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
+.household-plan-modal .modalcard { width: min(98vw, 1280px); }
+.household-plan-intro { margin-bottom: 8px; }
+.household-plan-wrap {
+  min-height: 0; overflow-x: auto; padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.household-plan-table {
+  width: 100%; min-width: 1120px; border-spacing: 0; border-collapse: separate;
+  table-layout: fixed; font-size: 12px;
+}
+.household-plan-table th {
+  padding: 7px 8px; color: #d8b24a; background: #211a12;
+  border-top: 1px solid #55452a; border-bottom: 1px solid #55452a;
+  text-align: left; font-size: 12px;
+}
+.household-plan-table th:first-child {
+  border-left: 1px solid #55452a; border-radius: 8px 0 0 0;
+}
+.household-plan-table th:last-child {
+  border-right: 1px solid #55452a; border-radius: 0 8px 0 0;
+}
+.household-plan-table th:nth-child(1) { width: 15%; }
+.household-plan-table th:nth-child(2) { width: 12%; }
+.household-plan-table th:nth-child(3) { width: 18%; }
+.household-plan-table th:nth-child(4) { width: 17%; }
+.household-plan-table th:nth-child(5) { width: 17%; }
+.household-plan-table th:nth-child(6) { width: 10%; }
+.household-plan-table th:nth-child(7) { width: 11%; }
+.household-plan-table td {
+  height: 1px; padding: 0; vertical-align: top; background: #241d15;
+  border-right: 1px solid #40331f; border-bottom: 1px solid #40331f;
+}
+.household-plan-table td:first-child { border-left: 1px solid #40331f; }
+.household-plan-table tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+.household-plan-table tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+.household-plan-table tr:not(.household-plan-retainer) +
+  tr.household-plan-retainer td {
+  border-top: 2px solid #7a6234;
+}
+.household-plan-action.actionbtn, .household-plan-static {
+  width: 100%; min-height: 100%; margin: 0; padding: 9px 8px;
+  border: 0; border-radius: 0; background: transparent;
+  color: #d9c9a5; font-size: 12px; line-height: 1.35; text-align: left;
+}
+.household-plan-action.actionbtn:hover {
+  background: #33291b; box-shadow: inset 0 0 0 1px #a5842f;
+}
+.household-plan-action .keyhint { float: left; margin-right: 4px; }
+.household-plan-primary {
+  display: block; color: #ead8a8; font-weight: bold;
+}
+.household-plan-secondary, .household-plan-tertiary {
+  display: block; margin-top: 2px; color: #a99a7b;
+}
+.household-plan-action .household-plan-secondary,
+.household-plan-action .household-plan-tertiary,
+.household-plan-action .household-plan-warning {
+  clear: both;
+}
+.household-plan-warning {
+  display: block; margin-top: 3px; color: #db8b65;
+}
+.household-plan-person { display: flex; align-items: flex-start; gap: 7px; }
+.household-plan-person > span { min-width: 0; }
+
 .papacy-summary {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px; margin-bottom: 10px;
@@ -862,6 +930,39 @@ textarea.modjson, textarea.savetext {
     border: 2px solid #7a6234; border-radius: 14px;
     padding: 16px;
   }
+  /* The wide household ledger becomes one labeled card per person. Keep the
+     table semantics in the DOM while making every column explicit on screen. */
+  .household-plan-wrap { overflow: visible; padding: 0; }
+  .household-plan-table, .household-plan-table tbody,
+  .household-plan-table tr, .household-plan-table td {
+    display: block; width: 100%; min-width: 0;
+  }
+  .household-plan-table { font-size: 14px; }
+  .household-plan-table thead {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .household-plan-table tr {
+    margin-bottom: 12px; overflow: hidden; border: 1px solid #55452a;
+    border-radius: 10px; background: #241d15;
+  }
+  .household-plan-table tr.household-plan-head { border-color: #a5842f; }
+  .household-plan-table tr:not(.household-plan-retainer) +
+    tr.household-plan-retainer td { border-top: 0; }
+  .household-plan-table td, .household-plan-table td:first-child {
+    display: grid; grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
+    align-items: stretch; height: auto; border: 0; border-bottom: 1px solid #40331f;
+    border-radius: 0;
+  }
+  .household-plan-table td:last-child { border-bottom: 0; }
+  .household-plan-table td::before {
+    content: attr(data-label); padding: 11px 9px; color: #b99d61;
+    background: #211a12; font-size: 12px; font-weight: bold;
+  }
+  .household-plan-action.actionbtn, .household-plan-static {
+    min-height: 48px; padding: 10px; font-size: 14px;
+  }
+  .household-plan-person { align-items: center; }
   .equip-picker-overlay.embedded-history-back .equip-picker-heading {
     position: sticky; top: 0; z-index: 2;
     background: linear-gradient(180deg, #2c2418 82%, rgba(44,36,24,.92));

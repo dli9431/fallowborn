@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.79.0';
+  FB.VERSION = '1.80.0';
   FB.CHANGELOG = [
+    { v: '1.80.0', date: '2026-07-28', changes: [
+      'The Network tab now opens a Household Plan ledger for reviewing and managing every living family member and retainer.'
+    ] },
     { v: '1.79.0', date: '2026-07-28', changes: [
       'Lay and vocational religious standing now remain visible together, with only the stronger piety yield applied.',
       'Catholic abbots and bishops now receive contested appointments, and bishops govern personal non-hereditary sees with their own income, household, powers, and events.'

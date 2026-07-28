@@ -2124,6 +2124,11 @@ window.FB = window.FB || {};
     if (retainers.length) {
       h += kv('Retainer contracts each season', esc(FB.money(FB.retainerSeasonCost(s))));
     }
+    h += '<button class="actionbtn" id="network-household-plan">📋 ' +
+      esc(FB.T('Household Plan…')) + '<span class="adesc">' +
+      esc(FB.T(
+        'Review education, work, assignments, matches, and equipment for every managed person.')) +
+      '</span></button>';
     for (const c of family) {
       const career = FB.careerOf(s, c);
       const def = career && FBDATA.careers[career.profession];
@@ -2479,6 +2484,8 @@ window.FB = window.FB || {};
     box.innerHTML = h;
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    const householdPlan = $('network-household-plan');
+    if (householdPlan) householdPlan.addEventListener('click', UI.showHouseholdPlan);
     const hire = $('network-hire');
     if (hire) hire.addEventListener('click', UI.showRetainerHire);
     box.querySelectorAll('[data-retainer-manage]').forEach(function (button) {
@@ -7940,6 +7947,357 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* ================= consolidated household plan ================= */
+  const HOUSEHOLD_PLAN_RETURN = 'household-plan';
+
+  function returnsToHouseholdPlan(returnContext) {
+    return returnContext === HOUSEHOLD_PLAN_RETURN;
+  }
+
+  function householdPlanHistoryOptions(returnContext) {
+    if (!returnsToHouseholdPlan(returnContext)) return null;
+    return {
+      historyView:true,
+      historyBackRender:function () { UI.showHouseholdPlan(); }
+    };
+  }
+
+  /* No-day changes made from the plan re-render it from authoritative state.
+     Discard any intermediate modal views as their browser-history entries
+     unwind, leaving the refreshed plan as the visible generic modal. */
+  function finishHouseholdPlanReturn(returnContext, fallback) {
+    if (!returnsToHouseholdPlan(returnContext)) {
+      fallback();
+      return;
+    }
+    UI.showHouseholdPlan();
+    mobileNavClosedAll('modal-view', true);
+  }
+
+  function householdPlanLines(primary, secondary, tertiary, warning) {
+    return '<span class="household-plan-primary">' + esc(primary) + '</span>' +
+      (secondary ? '<span class="household-plan-secondary">' +
+        esc(secondary) + '</span>' : '') +
+      (tertiary ? '<span class="household-plan-tertiary">' +
+        esc(tertiary) + '</span>' : '') +
+      (warning ? '<span class="household-plan-warning">' +
+        esc(warning) + '</span>' : '');
+  }
+
+  function householdPlanCell(label, content, action, cid, target) {
+    let h = '<td data-label="' + esc(label) + '">';
+    if (action) {
+      h += '<button type="button" class="actionbtn household-plan-action" ' +
+        'data-household-plan-action="' + esc(action) + '" data-household-plan-cid="' +
+        esc(cid) + '"' + (target ? ' data-household-plan-target="' +
+          esc(target) + '"' : '') + '>' + content + '</button>';
+    } else {
+      h += '<div class="household-plan-static">' + content + '</div>';
+    }
+    return h + '</td>';
+  }
+
+  function householdPlanPerson(s, c, kind, retainer) {
+    let relationship = FB.T('Resident family');
+    if (kind === 'head') relationship = FB.T('Household head');
+    else if (kind === 'retainer') {
+      relationship = FB.T('Paid retainer · {office}', {
+        office:positionName(s, retainer.office)
+      });
+    } else {
+      const head = s.chars[s.player.charId];
+      const isSpouse = FB.spousesOf(s, head).some(function (spouse) {
+        return spouse.id === c.id;
+      });
+      relationship = isSpouse ? FB.T('Your spouse') :
+        (relationText(s, c) || relationship);
+    }
+    return '<div class="household-plan-person">' + FB.faceTag(c, 32, 38) +
+      '<span>' + householdPlanLines(FB.fullName(c), relationship,
+        FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) })) + '</span></div>';
+  }
+
+  function householdPlanEducation(s, c) {
+    const age = FB.ageOf(c, s.date.year);
+    const focus = c.edu && c.edu.focus ? FB.skillName(c.edu.focus) : '';
+    if (age >= 16) {
+      return {
+        content:householdPlanLines(FB.T('Completed'),
+          focus ? FB.T('Focus: {focus}', { focus:focus }) :
+            FB.T('No directed study')),
+        action:null
+      };
+    }
+    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+      return {
+        content:householdPlanLines(FB.T('Not applicable'),
+          FB.T('Education is managed for the household head and descendants')),
+        action:null
+      };
+    }
+    return {
+      content:householdPlanLines(
+        focus || FB.T('No focus chosen'),
+        focus ? FB.T('Directed study') : FB.T('Choose a subject')),
+      action:'education'
+    };
+  }
+
+  function householdPlanInstruction(s, c) {
+    const age = FB.ageOf(c, s.date.year);
+    if (age >= 16) {
+      return {
+        content:householdPlanLines(FB.T('Completed'),
+          FB.T('Instruction ended at age 16')),
+        action:null
+      };
+    }
+    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+      return {
+        content:householdPlanLines(FB.T('Not applicable'),
+          FB.T('Instruction is managed for the household head and descendants')),
+        action:null
+      };
+    }
+    const schoolId = FB.schoolingId(s, c);
+    const school = schoolId && FBDATA.schooling[schoolId];
+    const tutor = FB.educationTutor(s, c, false);
+    let instruction = FB.T('Home instruction');
+    if (school) {
+      const schoolName = dt(s, 'schooling', schoolId, school, 'name');
+      instruction = schoolId === 'master' && tutor
+        ? FB.T('{school} · {tutor}', { school:schoolName, tutor:tutor.name })
+        : schoolName;
+    } else if (tutor) {
+      instruction = FB.T('Tutor: {name}', { name:tutor.name });
+    }
+    const chance = Math.round(Math.min(FBDATA.balance.educationChanceCap || 0.9,
+      FB.educationInstructionChance(s, c) + FB.holdingBonus(s, 'edu') +
+      (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0)) * 100);
+    const fee = FB.schoolingCost(s, c);
+    const details = fee
+      ? FB.T('{chance}% yearly · {money:amount} each season', {
+        chance:chance, amount:fee
+      })
+      : FB.T('{chance}% yearly · free', { chance:chance });
+    let warning = '';
+    if (c.edu && c.edu.schoolUnpaid) {
+      warning = FB.T('Fee unpaid · term paused');
+    } else if (age < 6) {
+      warning = FB.T('Lessons begin at age 6');
+    }
+    return {
+      content:householdPlanLines(instruction, details, null, warning),
+      action:'instruction'
+    };
+  }
+
+  function householdPlanWork(s, c) {
+    const age = FB.ageOf(c, s.date.year);
+    if (age < 10) {
+      return {
+        content:householdPlanLines(FB.T('Too young for work or training'),
+          FB.T('No apprenticeship yet')),
+        action:null
+      };
+    }
+    const career = FB.careerOf(s, c);
+    const def = career && FBDATA.careers[career.profession];
+    const guild = def && def.guild
+      ? FB.T('Guild: {rank}', { rank:FB.guildTitle(career) })
+      : FB.T('Guild: not applicable');
+    const religious = FB.religiousPathOf(s, c);
+    const faith = religious
+      ? FB.T('Religious standing: {rank}', {
+        rank:FB.religiousRankTitle(s, c, religious)
+      })
+      : FB.T('Religious standing: not applicable');
+    return {
+      content:householdPlanLines(FB.careerTitle(s, c), guild, faith),
+      action:'work'
+    };
+  }
+
+  function householdPlanAssignment(s, c, enterprises, retainer) {
+    const age = FB.ageOf(c, s.date.year);
+    const staffed = [];
+    const staffedIds = [];
+    for (const enterprise of enterprises) {
+      if (enterprise.workerId !== c.id) continue;
+      const def = FBDATA.enterprises[enterprise.type];
+      if (!def) continue;
+      staffed.push(dt(s, 'enterprise', enterprise.type, def, 'name'));
+      staffedIds.push(enterprise.uid);
+    }
+    const offices = [];
+    if (retainer) offices.push(positionName(s, retainer.office));
+    if (c.id === s.player.charId) {
+      for (const id of FB.playerPositionIds(s)) offices.push(positionName(s, id));
+    }
+    let primary = staffed.length
+      ? FB.T('Enterprise: {assignments}', { assignments:staffed.join(', ') })
+      : FB.T('No enterprise assignment');
+    let secondary = offices.length
+      ? FB.T('Office: {offices}', { offices:offices.join(', ') })
+      : FB.T('No household or earned office');
+    if (!staffed.length && !offices.length) {
+      primary = FB.T('No assignment');
+      secondary = FB.T('No enterprise or office');
+    }
+    return {
+      content:householdPlanLines(primary, secondary),
+      action:age >= 10 ? 'assignment' : null,
+      target:staffedIds.length === 1 ? staffedIds[0] : null
+    };
+  }
+
+  function householdPlanMatch(s, c) {
+    const spouse = FB.spouseOf(s, c);
+    if (spouse) {
+      return {
+        content:householdPlanLines(FB.T('Married'),
+          FB.T('Spouse: {name}', { name:spouse.name })),
+        action:null
+      };
+    }
+    if (c.betrothedId) {
+      const betrothed = s.chars[c.betrothedId];
+      return {
+        content:householdPlanLines(FB.T('Betrothed'),
+          betrothed && !betrothed.dead
+            ? FB.T('Promised to {name}', { name:betrothed.name })
+            : FB.T('A pledge is recorded')),
+        action:null
+      };
+    }
+    if (!FB.playerDescendantKind(s, c.id)) {
+      return {
+        content:householdPlanLines(FB.T('Not applicable'),
+          FB.T('Descendant matching only')),
+        action:null
+      };
+    }
+    const age = FB.ageOf(c, s.date.year);
+    if (age < 12) {
+      return {
+        content:householdPlanLines(FB.T('Underage'),
+          FB.T('Eligible from age 12')),
+        action:null
+      };
+    }
+    return {
+      content:householdPlanLines(FB.T('Eligible'),
+        FB.T('No match arranged')),
+      action:'match'
+    };
+  }
+
+  function householdPlanEquipment(s, c) {
+    const loadout = FB.loadoutOf(s, c.id);
+    let occupied = 0;
+    for (const slot of FB.ITEM_SLOTS) if (loadout[slot]) occupied++;
+    return {
+      content:householdPlanLines(
+        FB.T('Unique items: {count}', {
+          count:FB.equippedItemRefs(s, c.id).length
+        }),
+        FB.T('Occupied slots: {used} of {total}', {
+          used:occupied, total:FB.ITEM_SLOTS.length
+        })),
+      action:'equipment'
+    };
+  }
+
+  UI.showHouseholdPlan = function () {
+    const s = FB.state;
+    if (!s || UI.eventsBusy()) return;
+    const head = s.chars[s.player.charId];
+    if (!head || head.dead) return;
+    const rows = [];
+    const seen = {};
+    function add(c, kind, retainer) {
+      if (!c || c.dead || seen[c.id]) return;
+      seen[c.id] = 1;
+      rows.push({ c:c, kind:kind, retainer:retainer || null });
+    }
+    add(head, 'head');
+    for (const c of FB.householdMembers(s)) {
+      if (c.id !== head.id) add(c, 'family');
+    }
+    for (const record of FB.retainerRecords(s)) {
+      add(s.chars[record.charId], 'retainer', record);
+    }
+
+    const enterprises = FB.enterpriseList(s);
+    const labels = {
+      person:FB.T('Person'),
+      education:FB.T('Education'),
+      instruction:FB.T('Instruction'),
+      work:FB.T('Work & standing'),
+      assignment:FB.T('Assignment'),
+      match:FB.T('Match'),
+      equipment:FB.T('Equipment')
+    };
+    const headers = [
+      labels.person, labels.education, labels.instruction, labels.work,
+      labels.assignment, labels.match, labels.equipment
+    ];
+    let h = '<div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
+      'Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls.')) +
+      '</p></div><div class="household-plan-wrap"><table class="household-plan-table">' +
+      '<thead><tr>';
+    for (const header of headers) h += '<th scope="col">' + esc(header) + '</th>';
+    h += '</tr></thead><tbody>';
+    for (const row of rows) {
+      const c = row.c;
+      const education = householdPlanEducation(s, c);
+      const instruction = householdPlanInstruction(s, c);
+      const work = householdPlanWork(s, c);
+      const assignment = householdPlanAssignment(s, c, enterprises, row.retainer);
+      const match = householdPlanMatch(s, c);
+      const equipment = householdPlanEquipment(s, c);
+      h += '<tr class="household-plan-' + row.kind + '">' +
+        householdPlanCell(labels.person, householdPlanPerson(s, c, row.kind, row.retainer),
+          null, c.id) +
+        householdPlanCell(labels.education, education.content, education.action, c.id) +
+        householdPlanCell(labels.instruction, instruction.content, instruction.action, c.id) +
+        householdPlanCell(labels.work, work.content, work.action, c.id) +
+        householdPlanCell(labels.assignment, assignment.content, assignment.action, c.id,
+          assignment.target) +
+        householdPlanCell(labels.match, match.content, match.action, c.id) +
+        householdPlanCell(labels.equipment, equipment.content, equipment.action, c.id) +
+        '</tr>';
+    }
+    h += '</tbody></table></div><div class="gm-footer">' +
+      '<button type="button" class="btn" id="household-plan-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('📋 Household Plan'), h, {
+      modalClass:'fullsheet-modal household-plan-modal'
+    });
+    FB.paintFaces($('gm-body'), s);
+    const actions = $('gm-body').querySelectorAll('[data-household-plan-action]');
+    for (let i = 0; i < actions.length; i++) {
+      actions[i].addEventListener('click', function () {
+        const action = actions[i].getAttribute('data-household-plan-action');
+        const cid = actions[i].getAttribute('data-household-plan-cid');
+        const target = actions[i].getAttribute('data-household-plan-target');
+        if (action === 'education') UI.showEduFocus(cid, HOUSEHOLD_PLAN_RETURN);
+        else if (action === 'instruction') UI.showTutorPick(cid, HOUSEHOLD_PLAN_RETURN);
+        else if (action === 'work') UI.showCareerPicker(cid, HOUSEHOLD_PLAN_RETURN);
+        else if (action === 'assignment' && target) {
+          UI.showEnterpriseManage(target, HOUSEHOLD_PLAN_RETURN);
+        } else if (action === 'assignment') {
+          UI.showLivelihoods(HOUSEHOLD_PLAN_RETURN);
+        } else if (action === 'match') {
+          UI.showMatchPicker(cid, HOUSEHOLD_PLAN_RETURN);
+        } else if (action === 'equipment') {
+          UI.showEquipmentModal(cid, 'close', HOUSEHOLD_PLAN_RETURN);
+        }
+      });
+    }
+    $('household-plan-close').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= household livelihoods & enterprises ================= */
   UI.showRetainerHire = function () {
     const s = FB.state;
@@ -8066,7 +8424,7 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () { UI.showRetainerManage(cid); });
   };
 
-  UI.showLivelihoods = function () {
+  UI.showLivelihoods = function (returnContext) {
     const s = FB.state;
     const me = s.chars[s.player.charId];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -8118,23 +8476,31 @@ window.FB = window.FB || {};
         '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('🧰 Work & Enterprises'), h);
+    openModal(FB.T('🧰 Work & Enterprises'), h,
+      householdPlanHistoryOptions(returnContext));
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-career]').forEach(function (b) {
-      b.addEventListener('click', function () { UI.showCareerPicker(b.dataset.career); });
+      b.addEventListener('click', function () {
+        UI.showCareerPicker(b.dataset.career, returnContext);
+      });
     });
     document.querySelectorAll('[data-enterprise]').forEach(function (b) {
-      b.addEventListener('click', function () { UI.showEnterpriseManage(b.dataset.enterprise); });
+      b.addEventListener('click', function () {
+        UI.showEnterpriseManage(b.dataset.enterprise, returnContext);
+      });
     });
     document.querySelectorAll('[data-enterprise-settlement]').forEach(function (b) {
       b.addEventListener('click', function () {
-        UI.showEnterpriseMarket(parseInt(b.dataset.enterpriseSettlement, 10));
+        UI.showEnterpriseMarket(parseInt(b.dataset.enterpriseSettlement, 10),
+          returnContext);
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      finishHouseholdPlanReturn(returnContext, UI.closeModal);
+    });
   };
 
-  UI.showCareerPicker = function (cid) {
+  UI.showCareerPicker = function (cid, returnContext) {
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
@@ -8259,9 +8625,13 @@ window.FB = window.FB || {};
           })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    const historyOptions = { historyView:true };
+    if (returnsToHouseholdPlan(returnContext)) {
+      historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    }
     openModal(landedSelf
       ? FB.T('Former calling of {name}', { name:c.name })
-      : FB.T('Work of {name}', { name:c.name }), h, { historyView:true });
+      : FB.T('Work of {name}', { name:c.name }), h, historyOptions);
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
@@ -8279,11 +8649,11 @@ window.FB = window.FB || {};
     if (religious) religious.addEventListener('click', function () {
       const advance = FB.religiousAdvance(s, c);
       if (advance && advance.step.id === 'abbot') {
-        UI.showAbbotElection(c.id);
+        UI.showAbbotElection(c.id, returnContext);
         return;
       }
       if (advance && advance.step.id === 'bishop') {
-        UI.showBishopAppointment(c.id);
+        UI.showBishopAppointment(c.id, returnContext);
         return;
       }
       if (!FB.takeReligiousStep(s, c)) return;
@@ -8292,14 +8662,16 @@ window.FB = window.FB || {};
     });
     const cardinal = $('career-cardinal');
     if (cardinal) cardinal.addEventListener('click', function () {
-      UI.showCardinalPetition(c.id);
+      UI.showCardinalPetition(c.id, returnContext);
     });
     $('gm-cancel').addEventListener('click', function () {
-      modalHistoryBack(UI.showLivelihoods);
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(UI.showLivelihoods);
+      });
     });
   };
 
-  UI.showAbbotElection = function (cid) {
+  UI.showAbbotElection = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const status = c && FB.abbotAppointmentStatus &&
@@ -8321,9 +8693,11 @@ window.FB = window.FB || {};
       esc(FB.T('Stand for election')) +
       '</button><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Election of the religious superior'), h, {
-      historyView:true
-    });
+    const historyOptions = { historyView:true };
+    if (returnsToHouseholdPlan(returnContext)) {
+      historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    }
+    openModal(FB.T('Election of the religious superior'), h, historyOptions);
     const election = $('abbot-election');
     if (election) election.addEventListener('click', function () {
       const result = FB.seekAbbotAppointment(s, c);
@@ -8336,11 +8710,13 @@ window.FB = window.FB || {};
       FB.game.passDay({ skipFocus:true });
     });
     $('gm-cancel').addEventListener('click', function () {
-      UI.showCareerPicker(cid);
+      finishHouseholdPlanReturn(returnContext, function () {
+        UI.showCareerPicker(cid);
+      });
     });
   };
 
-  UI.showBishopAppointment = function (cid) {
+  UI.showBishopAppointment = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const status = c && FB.bishopAppointmentStatus &&
@@ -8390,7 +8766,11 @@ window.FB = window.FB || {};
       })) + '</button>' +
       '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) +
       '</button></div>';
-    openModal(FB.T('Appointment to a bishopric'), h, { historyView:true });
+    const historyOptions = { historyView:true };
+    if (returnsToHouseholdPlan(returnContext)) {
+      historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    }
+    openModal(FB.T('Appointment to a bishopric'), h, historyOptions);
     function petition(endowed) {
       const result = FB.seekBishopAppointment(s, c, endowed);
       UI.closeModal();
@@ -8404,7 +8784,9 @@ window.FB = window.FB || {};
     const endow = $('bishop-endow');
     if (endow) endow.addEventListener('click', function () { petition(true); });
     $('gm-cancel').addEventListener('click', function () {
-      UI.showCareerPicker(cid);
+      finishHouseholdPlanReturn(returnContext, function () {
+        UI.showCareerPicker(cid);
+      });
     });
   };
 
@@ -8527,7 +8909,7 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
-  UI.showCardinalPetition = function (cid, returnTo) {
+  UI.showCardinalPetition = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const status = c && FB.cardinalPetitionStatus &&
@@ -8546,12 +8928,21 @@ window.FB = window.FB || {};
       esc(FB.T('Petition for {money:gold}', { gold:status.cost })) +
       '</button><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Petition for the red hat'), h, { historyView:true });
+    const historyOptions = { historyView:true };
+    if (returnsToHouseholdPlan(returnContext)) {
+      historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    }
+    openModal(FB.T('Petition for the red hat'), h, historyOptions);
     const petition = $('papal-petition');
     if (petition) petition.addEventListener('click', function () {
       const result = FB.petitionForCardinal(s, c);
-      UI.closeModal();
-      UI.refresh();
+      if (returnsToHouseholdPlan(returnContext)) {
+        UI.refresh();
+        finishHouseholdPlanReturn(returnContext, UI.closeModal);
+      } else {
+        UI.closeModal();
+        UI.refresh();
+      }
       UI.toast(result && result.accepted
         ? FB.T('{name} is appointed to the College of Cardinals.', {
           name:c.name
@@ -8559,8 +8950,10 @@ window.FB = window.FB || {};
         : FB.T('Rome refuses the petition.'));
     });
     $('gm-cancel').addEventListener('click', function () {
-      if (returnTo === 'bishopric') UI.showBishopric();
-      else UI.showCareerPicker(cid);
+      if (returnContext === 'bishopric') UI.showBishopric();
+      else finishHouseholdPlanReturn(returnContext, function () {
+        UI.showCareerPicker(cid);
+      });
     });
   };
 
@@ -9323,7 +9716,7 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showEnterpriseMarket = function (settlement) {
+  UI.showEnterpriseMarket = function (settlement, returnContext) {
     const s = FB.state;
     const sts = FB.settlementsOf(s, s.player.provinceId);
     const place = sts[settlement] ? sts[settlement].name : '?';
@@ -9343,7 +9736,8 @@ window.FB = window.FB || {};
         '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h);
+    openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h,
+      householdPlanHistoryOptions(returnContext));
     document.querySelectorAll('[data-enterprise-buy]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
@@ -9351,10 +9745,12 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus:true });
       });
     });
-    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+    $('gm-cancel').addEventListener('click', function () {
+      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+    });
   };
 
-  UI.showEnterpriseManage = function (uid) {
+  UI.showEnterpriseManage = function (uid, returnContext) {
     const s = FB.state;
     let e = null;
     for (const item of FB.enterpriseList(s)) if (item.uid === uid) e = item;
@@ -9371,16 +9767,24 @@ window.FB = window.FB || {};
       (e.workerId ? '○ ' : '◉ ') + esc(FB.T('Leave it idle')) +
       '<span class="adesc">' + esc(FB.T('An idle enterprise produces no seasonal income.')) +
       '</span></button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h);
+    openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
+      householdPlanHistoryOptions(returnContext));
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
       b.addEventListener('click', function () {
         FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
-        UI.showLivelihoods();
-        UI.refresh();
+        if (returnsToHouseholdPlan(returnContext)) {
+          UI.refresh();
+          finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+        } else {
+          UI.showLivelihoods();
+          UI.refresh();
+        }
       });
     });
-    $('gm-cancel').addEventListener('click', UI.showLivelihoods);
+    $('gm-cancel').addEventListener('click', function () {
+      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+    });
   };
 
   /* ================= national technology ================= */
@@ -10406,13 +10810,16 @@ window.FB = window.FB || {};
     $('cm-close').addEventListener('click', UI.closeModal);
   };
 
-  UI.showEquipmentModal = function (cid, exitMode) {
+  UI.showEquipmentModal = function (cid, exitMode, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
     exitMode = exitMode === 'character' ? 'character' : 'close';
-    const returnMode = 'equipment:' + exitMode;
-    const closeLabel = exitMode === 'character' ? FB.T('Back to character') : FB.T('Close');
+    const householdPlan = returnsToHouseholdPlan(returnContext);
+    const returnMode = 'equipment:' +
+      (householdPlan ? HOUSEHOLD_PLAN_RETURN : exitMode);
+    const closeLabel = householdPlan ? FB.T('Back to Household Plan')
+      : (exitMode === 'character' ? FB.T('Back to character') : FB.T('Close'));
     const fullName = FB.fullName(c);
     const modalClass = ['fullsheet-modal', 'equipment-modal'].join(' ');
     const h = equipmentSheetHtml(s, c) +
@@ -10421,8 +10828,11 @@ window.FB = window.FB || {};
     openModal(FB.T('Equipment for {name}', { name:fullName }), h,
       {
         modalClass:modalClass,
-        historyView:exitMode === 'character',
-        historyBackRender:function () { UI.showCharModal(cid); }
+        historyView:exitMode === 'character' || householdPlan,
+        historyBackRender:function () {
+          if (householdPlan) UI.showHouseholdPlan();
+          else UI.showCharModal(cid);
+        }
       });
     if (mobileLayoutNow()) {
       $('gm-title').textContent = fullName + '\n' + FB.T('Equipment');
@@ -10430,7 +10840,9 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
     $('equipment-close').addEventListener('click', function () {
-      if (exitMode === 'character') {
+      if (householdPlan) {
+        finishHouseholdPlanReturn(returnContext, function () {});
+      } else if (exitMode === 'character') {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       }
       else UI.closeModal();
@@ -10442,7 +10854,7 @@ window.FB = window.FB || {};
      three wait until a pledge is sealed or the descendant weds elsewhere.
      A daughter's or granddaughter's dowry is paid at the pledge; a son's or
      grandson's bride brings hers to the wedding. */
-  UI.showMatchPicker = function (cid) {
+  UI.showMatchPicker = function (cid, returnContext) {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const c = s.chars[cid];
@@ -10479,7 +10891,11 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Decide nothing today</button>';
-    openModal(FB.T('A Match for {name}', { name: c.name }), h, { historyView:true });
+    const historyOptions = { historyView:true };
+    if (returnsToHouseholdPlan(returnContext)) {
+      historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    }
+    openModal(FB.T('A Match for {name}', { name: c.name }), h, historyOptions);
     document.querySelectorAll('[data-match]').forEach(function (b) {
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
@@ -10490,7 +10906,9 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCharModal(cid); });
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
+      });
     });
   };
 
@@ -10756,7 +11174,9 @@ window.FB = window.FB || {};
     }
     UI.refresh();
     const exitMode = equipmentExitMode(returnMode);
-    if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
+    if (exitMode === HOUSEHOLD_PLAN_RETURN) {
+      finishHouseholdPlanReturn(HOUSEHOLD_PLAN_RETURN, function () {});
+    } else if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
     else if (returnMode === 'character') {
       modalHistoryBack(function () { UI.showCharModal(cid); });
     } else if (returnMode === 'item') {
@@ -10832,7 +11252,9 @@ window.FB = window.FB || {};
         'There is no compatible object in the armory.')) + '</div>';
     }
     const equipmentExit = equipmentExitMode(returnMode);
-    const cancelLabel = equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close');
+    const cancelLabel = equipmentExit === HOUSEHOLD_PLAN_RETURN
+      ? FB.T('Back to Household Plan')
+      : (equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close'));
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(cancelLabel) + '</button>';
     const pickerTitle = FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) });
@@ -10900,7 +11322,14 @@ window.FB = window.FB || {};
       });
     }
     pickerRoot.querySelector('#gm-cancel').addEventListener('click', function () {
-      if (nested) UI.closeModal();
+      if (equipmentExit === HOUSEHOLD_PLAN_RETURN) {
+        if (nested) {
+          closeEquipmentPickerRaw($('equip-picker-overlay'), true);
+          mobileNavClosed('equipment-picker', true);
+        }
+        finishHouseholdPlanReturn(HOUSEHOLD_PLAN_RETURN, function () {});
+      }
+      else if (nested) UI.closeModal();
       else if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
       else if (returnMode === 'character') {
         modalHistoryBack(function () { UI.showCharModal(cid); });
@@ -10974,7 +11403,7 @@ window.FB = window.FB || {};
     int: 'Secrets, shadows, and leverage.',
     lea: 'Letters, law, and lore. (grants literacy at 16)'
   };
-  UI.showEduFocus = function (cid) {
+  UI.showEduFocus = function (cid, returnContext) {
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
@@ -10995,7 +11424,10 @@ window.FB = window.FB || {};
     openModal(self ? FB.T('🎓 Your education') :
       FB.T('🎓 Education of {name}', { name: c.name }), h, {
         historyView:true,
-        historyBackRender:function () { UI.showCharModal(cid); }
+        historyBackRender:function () {
+          if (returnsToHouseholdPlan(returnContext)) UI.showHouseholdPlan();
+          else UI.showCharModal(cid);
+        }
       });
     document.querySelectorAll('[data-edufocus]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -11028,16 +11460,20 @@ window.FB = window.FB || {};
             }
           }
         }, { subject: self ? 'self' : 'other', focus: k || 'other', name: c.name }));
-        modalHistoryBack(function () { UI.showCharModal(cid); });
+        finishHouseholdPlanReturn(returnContext, function () {
+          modalHistoryBack(function () { UI.showCharModal(cid); });
+        });
       });
     });
     $('edu-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCharModal(cid); });
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
+      });
     });
   };
 
   /* ---------- education: tutor picker ---------- */
-  UI.showTutorPick = function (cid) {
+  UI.showTutorPick = function (cid, returnContext) {
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
@@ -11235,7 +11671,10 @@ window.FB = window.FB || {};
     openModal(self ? FB.T('🧑‍🏫 Your schooling') :
       FB.T('🧑‍🏫 Instruction for {name}', { name: c.name }), h, {
         historyView:true,
-        historyBackRender:function () { UI.showCharModal(cid); }
+        historyBackRender:function () {
+          if (returnsToHouseholdPlan(returnContext)) UI.showHouseholdPlan();
+          else UI.showCharModal(cid);
+        }
       });
     document.querySelectorAll('[data-school]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -11256,7 +11695,9 @@ window.FB = window.FB || {};
           subject:self ? 'self' : 'other', name:c.name,
           school:FB.dataParam('schooling', id)
         }));
-        modalHistoryBack(function () { UI.showCharModal(cid); });
+        finishHouseholdPlanReturn(returnContext, function () {
+          modalHistoryBack(function () { UI.showCharModal(cid); });
+        });
       });
     });
     document.querySelectorAll('[data-tutor]').forEach(function (b) {
@@ -11316,11 +11757,15 @@ window.FB = window.FB || {};
             name: c.name
           }));
         }
-        modalHistoryBack(function () { UI.showCharModal(cid); });
+        finishHouseholdPlanReturn(returnContext, function () {
+          modalHistoryBack(function () { UI.showCharModal(cid); });
+        });
       });
     });
     $('tut-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCharModal(cid); });
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
+      });
     });
   };
 
