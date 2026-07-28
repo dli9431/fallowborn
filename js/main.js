@@ -1277,6 +1277,16 @@ window.FB = window.FB || {};
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
+  G.uiPrefs = { combinedFocuses:false };
+  try {
+    const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
+    if (storedUiPrefs && typeof storedUiPrefs === 'object') {
+      G.uiPrefs.combinedFocuses = !!storedUiPrefs.combinedFocuses;
+    }
+  } catch (e) { /* keep defaults */ }
+  G.saveUiPrefs = function () {
+    try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
+  };
   G.setPaused = function (v) {
     G.paused = !!v;
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();

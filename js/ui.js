@@ -1199,8 +1199,31 @@ window.FB = window.FB || {};
     let n = 0; // hotkey numbering covers only actions visible in open groups
     const focuses = FB.listFocuses(s);
     const instants = FB.listInstants(s);
+    const combinedFocuses = !!(FB.game.uiPrefs && FB.game.uiPrefs.combinedFocuses);
+    function appendFocus(f) {
+      const cur = s.player.focus === f.id;
+      const btn = document.createElement('button');
+      btn.className = 'actionbtn' + (cur ? ' focused' : '');
+      btn.innerHTML = hintFor(n) +
+        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
+        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
+      (function (id) {
+        btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
+      })(f.id);
+      box.appendChild(btn);
+      n++;
+    }
+    if (combinedFocuses && focuses.length) {
+      const fh = document.createElement('div');
+      fh.className = 'actionsubhead';
+      fh.textContent = FB.T('Daily focus — continues until changed');
+      box.appendChild(fh);
+      for (const f of focuses) appendFocus(f);
+    }
     for (const group of ACTION_GROUPS) {
-      const gf = focuses.filter(function (f) { return (FOCUS_GROUP[f.id] || 'realm') === group.id; });
+      const gf = combinedFocuses ? [] : focuses.filter(function (f) {
+        return (FOCUS_GROUP[f.id] || 'realm') === group.id;
+      });
       const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
       if (!gf.length && !ga.length) continue;
       const toggle = document.createElement('button');
@@ -1224,19 +1247,7 @@ window.FB = window.FB || {};
         fh.textContent = FB.T('Daily focus — continues until changed');
         box.appendChild(fh);
       }
-      for (const f of gf) {
-        const cur = s.player.focus === f.id;
-        const btn = document.createElement('button');
-        btn.className = 'actionbtn' + (cur ? ' focused' : '');
-        btn.innerHTML = hintFor(n) +
-          (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
-          '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
-        (function (id) {
-          btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
-        })(f.id);
-        box.appendChild(btn);
-        n++;
-      }
+      for (const f of gf) appendFocus(f);
       if (ga.length) {
         const ih = document.createElement('div');
         ih.className = 'actionsubhead';
@@ -12449,6 +12460,13 @@ window.FB = window.FB || {};
       (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
       esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Deeds panel')) + '</p></div>' +
+      '<label class="autorow"><input type="checkbox" id="set-combined-focuses"' +
+      (G.uiPrefs.combinedFocuses ? ' checked' : '') + '> <b>' +
+      esc(FB.T('Keep daily focuses together')) + '</b><span class="adesc">' +
+      esc(FB.T('Show all daily focuses before the category groups; deeds remain grouped.')) +
+      '</span></label>';
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
         '<label class="autorow"><input type="checkbox" id="set-obsquiet"' + (G.obsQuiet ? ' checked' : '') + '> ' +
@@ -12472,6 +12490,11 @@ window.FB = window.FB || {};
     });
     slider.addEventListener('change', function () { // commit once, on release
       G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
+    });
+    $('set-combined-focuses').addEventListener('change', function () {
+      G.uiPrefs.combinedFocuses = $('set-combined-focuses').checked;
+      G.saveUiPrefs();
+      if (FB.state && !G.observe) renderActions();
     });
     if (G.observe) {
       $('set-obsquiet').addEventListener('change', function () { G.obsQuiet = $('set-obsquiet').checked; });
