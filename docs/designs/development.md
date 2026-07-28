@@ -22,6 +22,12 @@ keeps the ledger open, and refreshes the exact next price; the ledger warns that
 further county copy costs 50% more. The Land-tab settlement path remains the exact-placement
 route.
 
+Build choices and standing settlement buildings use the shared asset/effect row.
+It identifies the county owner and exact settlement scope, separates the live
+construction quote from seasonal upkeep, lists all effects, states that the
+building follows conquest, and names demolition/ruin as its end condition.
+Ruins use the same row with no benefit or upkeep.
+
 Buildings are **per-settlement**: each of a province's 2–4 derived settlements
 (`FB.settlementsOf` — stable indices that only grow with development) may hold one copy of
 each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries;

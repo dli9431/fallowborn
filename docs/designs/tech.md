@@ -116,6 +116,12 @@ reserve the project would receive on the next seasonal distribution. The estimat
 include time spent completing missing prerequisites and may shorten when another active
 project completes.
 
+The detail sheet's shared asset/effect row identifies the sovereign nation and
+vassal-wide scope, effective research setup cost, occupied slot while active,
+concrete effects and unlocks, allegiance-based access rule, and permanent
+completion. Historical dates, exposure, progress, and clickable prerequisites
+remain separate supporting rows.
+
 ## Research slots, reserve, and completion
 
 A sovereign begins with one slot. `scholarly_networks` unlocks the second and

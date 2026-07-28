@@ -365,6 +365,37 @@ a.actionbtn { text-decoration: none; }
 .person-assignment-label { color: #8f8066; }
 .person-assignment-value { min-width: 0; color: #c4b494; }
 .person-assignment-row.consequence .person-assignment-value { color: #d0ad76; }
+.asset-effect-summary {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px; width: 100%; margin-top: 9px; overflow: hidden;
+  border: 1px solid #493c27; border-radius: 7px; background: #493c27;
+  text-align: left;
+}
+.asset-effect-cell {
+  display: flex; min-width: 0; min-height: 48px; padding: 6px 8px;
+  flex-direction: column; gap: 2px; background: #211a13;
+}
+.asset-effect-label {
+  color: #8f8066; font-size: 10px; font-weight: bold;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.asset-effect-value {
+  min-width: 0; color: #cbb994; font-size: 12px; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.asset-effect-cell.unaffordable .asset-effect-value { color: #d79579; }
+.asset-effect-effect, .asset-effect-transfer-rule { grid-column: span 2; }
+.fullsheet-modal .asset-effect-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.fullsheet-modal .asset-effect-effect,
+.fullsheet-modal .asset-effect-transfer-rule { grid-column: span 2; }
+.asset-owned-list { display: grid; gap: 8px; margin: 6px 0 10px; }
+.asset-owned-row {
+  padding: 9px 10px; border: 1px solid #55452a; border-radius: 8px;
+  background: #2a2216; color: #e0d0a8; font-size: 14px;
+}
+.asset-owned-row > b { display: block; color: #ecd9a0; }
 .actiongroup-toggle {
   display:flex; justify-content:space-between; gap:10px; width:100%; min-height:44px;
   margin:10px 0 6px; padding:9px 10px; border:1px solid #55452a; border-radius:8px;
@@ -1081,6 +1112,11 @@ textarea.modjson, textarea.savetext {
   }
   .person-assignment-rows { margin-left: 0; }
   .person-assignment-row { grid-template-columns: 1fr; gap: 0; padding: 3px 0; }
+  .asset-effect-summary,
+  .fullsheet-modal .asset-effect-summary { grid-template-columns: 1fr; }
+  .asset-effect-effect, .asset-effect-transfer-rule,
+  .fullsheet-modal .asset-effect-effect,
+  .fullsheet-modal .asset-effect-transfer-rule { grid-column: span 1; }
 }
 
 @media (max-width: 380px) {

@@ -45,7 +45,10 @@ duplicated. The Man-at-Arms starts in a Plain Ash Spear and Padded Jack; the Hed
 starts with a Well-made Broad Sword and Plain Round Shield.
 
 Item cards render the exact object and show actual quality-adjusted effects, value,
-wearer, and legal actions. Ordinary Plain/Well-made/Masterwork gifts and authored
+wearer, and legal actions. Their shared asset/effect row distinguishes armory or
+character ownership, equip-slot scope, no recurring cost, worn-only power,
+current transfer restrictions, and indefinite lifetime. Ordinary
+Plain/Well-made/Masterwork gifts and authored
 common/fine/famed heirlooms both use `balance.socialItemGiftOpinion` (+4/+8/+12 by
 default). An explicit item gift shares the recipient's
 `balance.socialGiftCooldownDays` clock with an explicit cash gift. Character recipients

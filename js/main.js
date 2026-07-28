@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.80.2';
+  FB.VERSION = '1.80.3';
   FB.CHANGELOG = [
+    { v: '1.80.3', date: '2026-07-28', changes: [
+      'Assets and lasting effects now share clear summaries of their costs, benefits, scope, duration, and transfer rules throughout the game.'
+    ] },
     { v: '1.80.2', date: '2026-07-28', changes: [
       'Settings can now keep all daily focuses together above the categorized deeds.'
     ] },

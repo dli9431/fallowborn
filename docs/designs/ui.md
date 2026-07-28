@@ -213,6 +213,17 @@ performs assignment through its own existing mechanic, so the common presentatio
 not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
 
+Asset and persistent-effect surfaces use the render-only
+`UI.assetEffectSummary`. Every row keeps the same owner, scope, setup cost,
+recurring cost, effect, transfer rule, and expiry order across household
+standards, permanent holdings, freehold plots, enterprises, buildings, items,
+temporary modifiers, and technology. Callers supply live values from their
+own APIs; the renderer escapes and labels them, applies the shared
+not-affordable cue, and points seasonal money to the existing resource
+ledger. Wide full sheets use a compact comparison grid, ordinary dialogs use
+two columns, and narrow layouts stack every labeled field. This shared
+presentation does not create a common asset record or mutation path.
+
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending
 a day when the character is local; while courting, the suitor holds that slot until the
