@@ -377,6 +377,59 @@ window.FB = window.FB || {};
     return '<div class="panelh">' + esc(FB.T(title)) + '</div>';
   }
 
+  /* Shared presentation for choosing a person for a role. Callers supply the
+     mechanic-specific eligibility and preview rows; the card owns only safe
+     markup, selection state, and the common keyboard/mobile button shape. */
+  function personAssignmentCard(options) {
+    const opts = options || {};
+    const eligible = opts.eligible !== false;
+    const disabled = !!opts.disabled || !eligible;
+    const selected = !!opts.selected;
+    const person = opts.person || null;
+    const name = opts.name || (person ? person.name : FB.T('Unknown candidate'));
+    const eligibility = opts.eligibility ||
+      (selected ? FB.T('Currently assigned') :
+        (eligible ? FB.T('Eligible') : FB.T('Unavailable')));
+    const data = opts.data || {};
+    const rows = opts.rows || [];
+    let attrs = '';
+    for (const key in data) {
+      if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+      const attr = String(key).replace(/([A-Z])/g, '-$1').toLowerCase();
+      attrs += ' data-' + attr + '="' + esc(data[key]) + '"';
+    }
+    if (opts.id) attrs += ' id="' + esc(opts.id) + '"';
+    let art = opts.art || '';
+    if (!art && person) art = FB.faceTag(person, 34, 40);
+    if (!art && opts.icon) {
+      art = '<span class="person-assignment-icon" aria-hidden="true">' +
+        esc(opts.icon) + '</span>';
+    }
+    let h = '<button type="button" class="actionbtn person-assignment-card' +
+      (selected ? ' selected' : '') + (!eligible ? ' unavailable' : '') +
+      '"' + attrs + (disabled ? ' disabled' : '') +
+      ' aria-pressed="' + (selected ? 'true' : 'false') + '">' +
+      '<span class="person-assignment-head">' +
+      '<span class="person-assignment-choice" aria-hidden="true">' +
+      (selected ? '◉' : '○') + '</span>' + art +
+      '<span class="person-assignment-name">' + esc(name) + '</span>' +
+      '<span class="person-assignment-eligibility">' + esc(eligibility) + '</span>' +
+      '</span>';
+    if (rows.length) {
+      h += '<span class="person-assignment-rows">';
+      for (const row of rows) {
+        if (!row || row.value === undefined || row.value === null || row.value === '') continue;
+        h += '<span class="person-assignment-row' +
+          (row.kind === 'consequence' ? ' consequence' : '') + '">' +
+          '<span class="person-assignment-label">' + esc(FB.T(row.label)) + '</span>' +
+          '<span class="person-assignment-value">' + esc(row.value) + '</span></span>';
+      }
+      h += '</span>';
+    }
+    return h + '</button>';
+  }
+  UI.personAssignmentCard = personAssignmentCard;
+
   let eventOpen = false;
   let pendingEvents = [];
 
@@ -6975,9 +7028,43 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  function councilAssignmentCard(s, seat, rid, oldRid, selected, data) {
+    const realm = rid && s.realms[rid];
+    if (!realm) return '';
+    const oldRealm = oldRid && s.realms[oldRid];
+    let consequence = FB.T('Gains +10 favor; no one is displaced from this vacant seat.');
+    if (selected) consequence = FB.T('Keeps the current office.');
+    else if (oldRealm) {
+      consequence = FB.T(
+        'Replaces {name}; the former officer loses 8 favor and the appointee gains 10 favor.',
+        { name:oldRealm.ruler.name });
+    }
+    return personAssignmentCard({
+      name:realm.ruler.name,
+      art:FB.crestTag(rid, 34, 40),
+      selected:selected,
+      disabled:selected,
+      eligibility:selected ? FB.T('Current officer') : FB.T('Eligible unseated vassal'),
+      data:data || {},
+      rows:[
+        { label:'Expected benefit', value:councilSeatDesc(seat.id) },
+        { label:'Cost / pay', value:selected
+          ? FB.T('No household wage')
+          : FB.T('No household wage; appointment lowers crown authority by 2.') },
+        { label:'Current position', value:FB.T('Ruler of {realm}', { realm:realm.name }) },
+        { label:'Standing', value:FB.T('Favor {favor}', {
+          favor:signedOpinion(FB.liegeOpOf(s, rid))
+        }) },
+        { label:'Current assignment', value:selected
+          ? councilSeatName(seat.id) : FB.T('No council office') },
+        { label:'Consequence', kind:'consequence', value:consequence }
+      ]
+    });
+  }
+
   /* the Royal Council (tier 6+): the great officers of the crown — seats,
      holders, tempers, and crown authority. Gifts and dismissals act at once;
-     appointing from a vacant seat lists the available vassals inline. */
+     appointment cards preview vacant seats and deliberate replacements. */
   UI.showCouncil = function () {
     const s = FB.state;
     const c = FB.councilEnsure(s);
@@ -6997,6 +7084,7 @@ window.FB = window.FB || {};
     }
     const seated = {};
     for (const seat of FB.councilSeats()) if (c.seats[seat.id]) seated[c.seats[seat.id]] = 1;
+    const unseated = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
     for (const seat of FB.councilSeats()) {
       const rid = c.seats[seat.id];
       const r = rid ? s.realms[rid] : null;
@@ -7014,18 +7102,19 @@ window.FB = window.FB || {};
           '<div style="margin-top:6px">' +
           '<button class="btn" data-council-gift="' + esc(rid) + '">🎁 ' +
           esc(FB.T('Offer a gift…')) + '</button> ' +
+          (unseated.length
+            ? '<button class="btn" data-council-assign="' + esc(seat.id) + '">🏛 ' +
+              esc(FB.T('Choose another officer…')) + '</button> '
+            : '') +
           '<button class="btn" data-dismiss="' + esc(seat.id) + '">' + esc(FB.T('Dismiss')) + '</button>' +
           '</div></div></div>';
       } else {
         h += '<div class="cmeta">' + esc(FB.T('Vacant.')) + '</div>';
-        const cand = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
-        if (cand.length) {
-          for (const vid of cand) {
-            const vr = s.realms[vid];
-            h += '<button class="actionbtn" data-appoint="' + esc(seat.id) + '|' + esc(vid) + '">🏛 ' + esc(vr.ruler.name) +
-              '<span class="adesc">' + esc(FB.T('{realm} · favor {favor}', {
-                realm: vr.name, favor: FB.liegeOpOf(s, vid)
-              })) + '</span></button>';
+        if (unseated.length) {
+          for (const vid of unseated) {
+            h += councilAssignmentCard(s, seat, vid, null, false, {
+              appoint:seat.id + '|' + vid
+            });
           }
         } else {
           h += '<div class="cmeta">' + esc(FB.T('No unseated vassal remains to raise — grant land to loyal men, and offices will follow.')) + '</div>';
@@ -7038,9 +7127,15 @@ window.FB = window.FB || {};
       const cv = $('crest_' + seat.id);
       if (cv && c.seats[seat.id]) FB.drawCrest(cv, c.seats[seat.id]);
     }
+    FB.paintCrests($('gm-body'));
     document.querySelectorAll('[data-council-gift]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         UI.showRulerGiftModal(btn.dataset.councilGift, 'council');
+      });
+    });
+    document.querySelectorAll('[data-council-assign]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showCouncilCandidates(btn.dataset.councilAssign);
       });
     });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
@@ -7057,6 +7152,57 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
+  };
+
+  UI.showCouncilCandidates = function (seatId) {
+    const s = FB.state;
+    const council = FB.councilEnsure(s);
+    const seat = FB.councilSeat(seatId);
+    if (!council || !seat) return;
+    const oldRid = council.seats[seatId] || null;
+    const seated = {};
+    for (const item of FB.councilSeats()) {
+      if (council.seats[item.id]) seated[council.seats[item.id]] = 1;
+    }
+    const candidates = FB.playerVassals(s).filter(function (rid) {
+      return !seated[rid];
+    });
+    let h = '<p class="hint">' + esc(FB.T(
+      'Choose an unseated vassal for this office. Appointment changes favor and crown authority immediately; it does not create a household pay contract.')) +
+      '</p><div class="gm-list">';
+    if (oldRid && s.realms[oldRid]) {
+      h += councilAssignmentCard(s, seat, oldRid, oldRid, true, {});
+    }
+    for (const rid of candidates) {
+      h += councilAssignmentCard(s, seat, rid, oldRid, false, {
+        councilCandidate:rid
+      });
+    }
+    if (!candidates.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No unseated vassal is available for this office.')) + '</div>';
+    }
+    h += '</div><button class="btn" id="council-candidates-back">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(seat.icon + ' ' + FB.T('Appoint {office}', {
+      office:councilSeatName(seat.id)
+    }), h, {
+      historyView:true,
+      historyBackRender:function () { UI.showCouncil(); }
+    });
+    FB.paintCrests($('gm-body'));
+    document.querySelectorAll('[data-council-candidate]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const rid = button.dataset.councilCandidate;
+        FB.councilAppoint(s, seat.id, rid);
+        if (!s.council || s.council.seats[seat.id] !== rid) return;
+        modalHistoryBack(function () { UI.showCouncil(); });
+        UI.refresh();
+      });
+    });
+    $('council-candidates-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCouncil(); });
+    });
   };
 
   /* the estates of the realm (vassal tiers 3-5): the terms of the player's
@@ -7963,22 +8109,76 @@ window.FB = window.FB || {};
     const def = FBDATA.positions[office];
     if (!def || def.kind !== 'retainer') return;
     const candidates = FB.retainerCandidates(s, office);
+    const benefit = positionEffectText(office) || positionDesc(s, office);
+    const pay = FB.T('{money:pay} on entry and {money:pay} each season', {
+      pay:def.pay || 0
+    });
+    function hireBlockReason(cid) {
+      if (s.player.tier < (def.minTier || 0)) {
+        return FB.T('Requires station {station}.', {
+          station:FB.stationName(def.minTier || 0)
+        });
+      }
+      if (FB.retainerRecords(s).length >= FB.retainerCapacity(s)) {
+        return FB.T('Household retainer capacity is full.');
+      }
+      if (FB.retainerOfficeRecord(s, office)) {
+        return FB.T('This household office is already filled.');
+      }
+      if (s.player.gold < (def.pay || 0)) {
+        return FB.T('Requires the first seasonal pay of {money:pay}.', {
+          pay:def.pay || 0
+        });
+      }
+      if (cid && !FB.canHireRetainer(s, office, cid)) {
+        return FB.T('This person is no longer eligible.');
+      }
+      return '';
+    }
     let h = '<p class="hint">' + esc(positionDesc(s, office)) + ' ' +
       esc(FB.T('Hiring settles the first seasonal pay of {money:pay} and spends the day.', {
         pay:def.pay || 0
       })) + '</p><div class="gm-list">';
     for (const c of candidates) {
-      h += '<button class="actionbtn" data-retainer-candidate="' + esc(c.id) + '">' +
-        FB.faceTag(c, 30, 36) + ' ' + esc(c.name) +
-        '<span class="adesc">' + esc(FB.T('{career} · regard {regard}', {
-          career:FB.careerTitle(s, c), regard:signedOpinion(c.opinion)
-        })) + '</span></button>';
+      const blocked = hireBlockReason(c.id);
+      h += personAssignmentCard({
+        person:c,
+        eligible:!blocked,
+        eligibility:blocked || FB.T('Eligible contact'),
+        data:{ retainerCandidate:c.id },
+        rows:[
+          { label:'Expected benefit', value:benefit },
+          { label:'Cost / pay', value:pay },
+          { label:'Occupation', value:FB.careerTitle(s, c) },
+          { label:'Standing', value:FB.T('Regard {regard}', {
+            regard:signedOpinion(c.opinion)
+          }) },
+          { label:'Current assignment', value:FB.T('No household office') },
+          { label:'Consequence', kind:'consequence',
+            value:FB.T('Adds this office; the current occupation remains unchanged.') }
+        ]
+      });
     }
-    h += '<button class="actionbtn" data-retainer-candidate=""' +
-      (!FB.canHireRetainer(s, office) ? ' disabled' : '') + '>➕ ' +
-      esc(FB.T('Hire a qualified local')) + '<span class="adesc">' +
-      esc(FB.T('A new named character enters the chronicle in this office.')) +
-      '</span></button></div><button class="btn" id="gm-cancel">' +
+    const localBlocked = hireBlockReason(null);
+    const profession = FBDATA.careers[def.profession];
+    h += personAssignmentCard({
+      name:FB.T('Hire a qualified local'),
+      icon:'➕',
+      eligible:!localBlocked,
+      eligibility:localBlocked || FB.T('Eligible local hire'),
+      data:{ retainerCandidate:'' },
+      rows:[
+        { label:'Expected benefit', value:benefit },
+        { label:'Cost / pay', value:pay },
+        { label:'Occupation', value:profession
+          ? dt(s, 'career', def.profession, profession, 'name') : def.profession },
+        { label:'Standing', value:FB.T('Unknown until hired') },
+        { label:'Current assignment', value:FB.T('New to the household') },
+        { label:'Consequence', kind:'consequence',
+          value:FB.T('A new named character enters the chronicle in this office.') }
+      ]
+    });
+    h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button>';
     openModal(def.icon + ' ' + positionName(s, office), h);
     FB.paintFaces($('gm-body'), s);
@@ -9071,12 +9271,70 @@ window.FB = window.FB || {};
     for (const item of FB.enterpriseList(s)) if (item.uid === uid) e = item;
     if (!e || !FBDATA.enterprises[e.type]) return;
     const def = FBDATA.enterprises[e.type];
+    function enterpriseLabel(item) {
+      const itemDef = item && FBDATA.enterprises[item.type];
+      if (!itemDef) return FB.T('Unknown enterprise');
+      const pr = FB.world.byId[item.provinceId];
+      const settlements = pr ? FB.settlementsOf(s, item.provinceId) : [];
+      const place = settlements[item.settlement]
+        ? settlements[item.settlement].name : (pr ? pr.name : FB.T('unknown place'));
+      return FB.T('{enterprise} in {place}', {
+        enterprise:dt(s, 'enterprise', item.type, itemDef, 'name'),
+        place:place
+      });
+    }
+    function workerAssignment(cid) {
+      for (const item of FB.enterpriseList(s)) {
+        if (item.workerId === cid) return item;
+      }
+      return null;
+    }
+    function assignmentConsequence(worker, current) {
+      if (current && current.uid === e.uid) return FB.T('Keeps the current assignment.');
+      const parts = [];
+      const displaced = e.workerId && s.chars[e.workerId];
+      if (displaced && displaced.id !== worker.id) {
+        parts.push(FB.T(
+          'Replaces {name}, who returns to ordinary household work.',
+          { name:displaced.name }));
+      }
+      if (current && current.uid !== e.uid) {
+        parts.push(FB.T('{enterprise} becomes idle.', {
+          enterprise:enterpriseLabel(current)
+        }));
+      }
+      return parts.length ? parts.join(' ') : FB.T('No one is displaced.');
+    }
     let h = '<div class="gm-body-text"><p>' + esc(dt(s, 'enterprise', e.type, def, 'desc')) +
       '</p></div><div class="gm-list">';
     for (const c of FB.enterpriseWorkers(s, e.type)) {
-      h += '<button class="actionbtn" data-enterprise-worker="' + c.id + '">' +
-        (e.workerId === c.id ? '◉ ' : '○ ') + FB.faceTag(c, 30, 36) + ' ' + esc(c.name) +
-        '<span class="adesc">' + esc(FB.careerTitle(s, c)) + '</span></button>';
+      const current = workerAssignment(c.id);
+      const preview = {
+        type:e.type, provinceId:e.provinceId, settlement:e.settlement,
+        workerId:c.id
+      };
+      h += personAssignmentCard({
+        person:c,
+        selected:e.workerId === c.id,
+        eligibility:e.workerId === c.id
+          ? FB.T('Currently assigned') : FB.T('Eligible worker'),
+        data:{ enterpriseWorker:c.id },
+        rows:[
+          { label:'Expected yield', value:FB.T('About {money:amount} each season', {
+            amount:Math.round(FB.enterpriseYield(s, preview) * 10) / 10
+          }) },
+          { label:'Cost / pay', value:FB.T('No assignment fee') },
+          { label:'Occupation', value:FB.careerTitle(s, c) },
+          { label:'Standing', value:FB.T('Regard {regard}', {
+            regard:signedOpinion(c.opinion)
+          }) },
+          { label:'Current assignment', value:current
+            ? (current.uid === e.uid ? FB.T('This enterprise') : enterpriseLabel(current))
+            : FB.T('No enterprise assignment') },
+          { label:'Consequence', kind:'consequence',
+            value:assignmentConsequence(c, current) }
+        ]
+      });
     }
     h += '<button class="actionbtn" data-enterprise-worker="">' +
       (e.workerId ? '○ ' : '◉ ') + esc(FB.T('Leave it idle')) +
@@ -10896,6 +11154,31 @@ window.FB = window.FB || {};
         }
       }, { focus: focus }), { state: s, viewer: s.player.charId });
     }
+    function instructionName() {
+      if (currentSchool === 'master' && existingTutor) return existingTutor.name;
+      if (currentSchool && FBDATA.schooling[currentSchool]) {
+        return dt(s, 'schooling', currentSchool, FBDATA.schooling[currentSchool], 'name');
+      }
+      if (c.edu && c.edu.tutorId === 'self') return FB.T('your own instruction');
+      if (c.edu && c.edu.tutorId && s.chars[c.edu.tutorId]) {
+        return s.chars[c.edu.tutorId].name;
+      }
+      return FB.T('home instruction');
+    }
+    function teachingAssignment(tutorId) {
+      const students = [];
+      for (const studentId in s.chars) {
+        const student = s.chars[studentId];
+        if (!student || student.dead || !student.edu ||
+            student.edu.tutorId !== tutorId ||
+            FB.ageOf(student, s.date.year) >= 16 ||
+            !FB.isHouseholdCharacter(s, student.id)) continue;
+        students.push(student.name);
+      }
+      return students.length
+        ? FB.T('Teaching {students}', { students:students.join(', ') })
+        : FB.T('No current teaching assignment');
+    }
     let h = '<div class="gm-list">';
     for (const id in FBDATA.schooling) {
       if (id === 'master') continue;
@@ -10919,13 +11202,29 @@ window.FB = window.FB || {};
     const masterAvailable = focus && FB.schoolingAvailable(s, c, 'master');
     for (const cd of cands) {
       const cur = c.edu && c.edu.tutorId === cd.id;
-      const detail = cd.c.role === 'tutor' ?
-        FB.T('{skill} · {money:amount} each season', {
-          skill:skillNote(cd.c), amount:masterFee
-        }) :
-        FB.T('{skill} · free', { skill:skillNote(cd.c) });
-      h += '<button class="actionbtn" data-tutor="' + cd.id + '">' + (cur ? '◉ ' : '○ ') + esc(cd.name) +
-        '<span class="adesc">' + esc(detail) + '</span></button>';
+      h += personAssignmentCard({
+        person:cd.c,
+        name:cd.name,
+        selected:cur,
+        eligibility:cur ? FB.T('Currently assigned') : FB.T('Eligible teacher'),
+        data:{ tutor:cd.id },
+        rows:[
+          { label:'Expected learning', value:skillNote(cd.c) },
+          { label:'Cost / pay', value:cd.c.role === 'tutor'
+            ? FB.T('{money:amount} each season', { amount:masterFee })
+            : FB.T('Free') },
+          { label:'Occupation', value:FB.careerTitle(s, cd.c) },
+          { label:'Standing', value:FB.T('Regard {regard}', {
+            regard:signedOpinion(cd.c.opinion)
+          }) },
+          { label:'Current assignment', value:teachingAssignment(cd.id) },
+          { label:'Consequence', kind:'consequence', value:cur
+            ? FB.T('Keeps the current instruction.')
+            : FB.T('Replaces {instruction} for {student}.', {
+                instruction:instructionName(), student:c.name
+              }) }
+        ]
+      });
     }
     if (currentSchool !== 'master') {
       const masterLock = schoolLockReason(masterDef);
@@ -10948,6 +11247,7 @@ window.FB = window.FB || {};
         historyView:true,
         historyBackRender:function () { UI.showCharModal(cid); }
       });
+    FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-school]').forEach(function (b) {
       b.addEventListener('click', function () {
         const id = b.getAttribute('data-school');

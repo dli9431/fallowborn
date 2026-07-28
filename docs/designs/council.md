@@ -41,6 +41,10 @@ generation-stamped 90-day recipient cooldown; the Council cannot provide a secon
 path. `FB.councilGift` remains as a compatibility wrapper around the shared cash helper.
 Opinion itself is the existing `player.liegeOps` store, so every older mechanism that
 moves vassal opinion (grants, demands, revolts) feeds the council for free.
+An occupied seat may also deliberately replace its holder with an unseated vassal through
+the same existing appointment mechanic. Council candidates use the shared
+person-assignment card to preview the office benefit, absence of household pay, current
+favor and position, and the appointment or replacement consequences.
 
 The Network Realm section is a summary and route into this interface, not another Council
 screen. It names occupied seats, active bonuses, vacancies, and the Constable contribution

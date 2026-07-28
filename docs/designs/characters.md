@@ -55,6 +55,8 @@ not teach martial. The Noble Academy instead requires household tier 2 (gentry) 
 effective sovereign's Scholarly Networks technology, has no development gate, and teaches
 all five education focuses. Personal masters remain generated characters, so their focused
 skill can exceed the academy's fixed chance; they can also pass on traits or die.
+Named tutor choices use the shared person-assignment card to show the projected learning,
+fee, occupation, Regard, existing students, and which current instruction will be replaced.
 
 **Paid schooling is seasonal.** Charity schools, merchant schools, the Noble Academy, and
 personal masters charge the exact training-cost-modified `FBDATA.schooling` fee at every
@@ -279,6 +281,9 @@ succession are handled by the shared retainer APIs in `js/economy.js`. Contracts
 an heir with a regard penalty, keeping inherited service distinct from inherited
 friendship. Each office has one holder; two unpaid seasons or regard at −40 ends service,
 and marriage replaces a paid contract with ordinary spouse membership.
+The retainer candidate picker uses the shared person-assignment card to preview the office
+effect, entry and seasonal pay, occupation, Regard, and additive-office consequence before
+the existing hire action spends the day.
 
 **Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
 career's `apprenticeAge` may be placed with that trade from their sheet. It costs the

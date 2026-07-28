@@ -321,6 +321,50 @@ a.actionbtn { text-decoration: none; }
 .actionbtn:disabled { opacity: .45; cursor: default; }
 .actionbtn .adesc { display: block; color: #97876a; font-size: 12px; }
 .actionbtn.done { border-style: dashed; opacity: .55; }
+.person-assignment-card { position: relative; padding: 10px 12px; }
+.person-assignment-card.selected {
+  border-color: #c9a24a; background: #342a1a;
+}
+.person-assignment-card.selected:disabled { opacity: 1; cursor: default; }
+.person-assignment-card > .keyhint {
+  position: absolute; top: 12px; left: 12px; margin: 0;
+}
+.person-assignment-card > .keyhint + .person-assignment-head { padding-left: 27px; }
+.person-assignment-head {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.person-assignment-choice {
+  flex: 0 0 auto; color: #d8b24a; font-size: 16px;
+}
+.person-assignment-head .pface, .person-assignment-head .crest {
+  flex: 0 0 auto;
+}
+.person-assignment-icon {
+  display: inline-flex; flex: 0 0 34px; width: 34px; min-height: 40px;
+  align-items: center; justify-content: center; font-size: 24px;
+}
+.person-assignment-name {
+  min-width: 0; flex: 1 1 auto; color: #ecd9a0; font-size: 14px;
+}
+.person-assignment-eligibility {
+  flex: 0 0 auto; max-width: 42%; padding: 2px 6px;
+  border: 1px solid #6b603f; border-radius: 999px;
+  color: #b9c98a; font-size: 11px; text-align: right;
+}
+.person-assignment-card.unavailable .person-assignment-eligibility {
+  color: #d09a78; border-color: #704737;
+}
+.person-assignment-rows {
+  display: block; margin: 8px 0 0 58px; padding-top: 5px;
+  border-top: 1px solid #463923;
+}
+.person-assignment-row {
+  display: grid; grid-template-columns: minmax(90px, .72fr) minmax(0, 1.5fr);
+  gap: 8px; padding: 2px 0; font-size: 12px; line-height: 1.35;
+}
+.person-assignment-label { color: #8f8066; }
+.person-assignment-value { min-width: 0; color: #c4b494; }
+.person-assignment-row.consequence .person-assignment-value { color: #d0ad76; }
 .actiongroup-toggle {
   display:flex; justify-content:space-between; gap:10px; width:100%; min-height:44px;
   margin:10px 0 6px; padding:9px 10px; border:1px solid #55452a; border-radius:8px;
@@ -928,6 +972,14 @@ textarea.modjson, textarea.savetext {
   .paper-sheet, .death-paper { grid-template-columns: 1fr; }
   .paper-sheet .paperdoll, .death-paper .paperdoll { width: 150px; }
   .item-card .itemart { width: 112px; height: 112px; }
+  .person-assignment-head {
+    display: grid; grid-template-columns: 18px 34px minmax(0, 1fr);
+  }
+  .person-assignment-eligibility {
+    grid-column: 3; max-width: 100%; justify-self: start; text-align: left;
+  }
+  .person-assignment-rows { margin-left: 0; }
+  .person-assignment-row { grid-template-columns: 1fr; gap: 0; padding: 3px 0; }
 }
 
 @media (max-width: 380px) {

@@ -50,6 +50,11 @@ that can display:
 The component is shared; the mechanics are not. A council office does not become a
 paid household job, and an enterprise worker does not acquire political authority.
 
+Implemented in the first pass as `UI.personAssignmentCard`, a render-only native
+button used by tutor, enterprise-worker, retainer, and council-officer selection.
+Each caller supplies its own eligibility, benefit, cost, current-assignment,
+Standing, and consequence text and continues to invoke its existing mechanic.
+
 ### 3. Shared asset and effect presentation
 
 Standards, holdings, freehold plots, enterprises, buildings, items, modifiers, and
