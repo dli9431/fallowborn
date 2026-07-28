@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+.dockerignore
+AGENTS.md
+CLAUDE.md
+CONTRIBUTING.md
+Dockerfile
+i18n
+tests
+tools
+*.zip

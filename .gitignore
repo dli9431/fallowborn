@@ -10,10 +10,15 @@ Desktop.ini
 *.swo
 *~
 
-# Node (only used for `node --check` syntax validation; no dependencies)
+# Node (development-only Playwright dependencies live under tests/e2e)
 node_modules/
 npm-debug.log*
 yarn-error.log*
+
+# Playwright generated output
+test-results/
+playwright-report/
+blob-report/
 
 # Python bytecode (from the i18n tooling: tools/i18n_catalog.py)
 __pycache__/
@@ -23,7 +28,7 @@ __pycache__/
 .env
 .env.*
 
-# Deployment artifacts (itch.io zips are built from the folder contents)
+# Deployment artifacts (itch.io zips are built from a fail-closed allowlist)
 *.zip
 
 # Developer notes — local-only working files (deploy scripts, devlogs, planning,
