@@ -54,6 +54,7 @@ muster_bred:{ name:'Muster-Bred', icon:'⚔', 'class':'formation', desc:'The lev
 rent_shrewd:{ name:'Rent-Shrewd', icon:'🧾', 'class':'reputation', desc:'Few dues escape a well-kept tally.', earned:'Profit from three Rent Days or extraordinary tax collections.', ste:1, inherit:0, noRandom:true, earn:{threshold:3}, estate:{rent:0.10} },
 hearth_steady:{ name:'Hearth-Steady', icon:'🔥', 'class':'disposition', desc:'Kin find a sure hand at the household fire.', earned:'Choose three supportive outcomes for spouse or child.', dip:1, inherit:0, noRandom:true, earn:{threshold:3}, household:{regard:0.25} },
 kinslayer:  { name:'Kinslayer', icon:'🩸', 'class':'reputation', desc:'Blood of their own blood.', earned:'Directly cause the death of a spouse or blood relative.', opinion:-20, inherit:0, noRandom:true },
+simoniac:   { name:'Simoniac', icon:'🪙', 'class':'reputation', desc:'Bought sacred office with silver.', earned:'Purchase a church office after a rejected appointment.', opinion:-10, inherit:0, noRandom:true },
 excommunicated: { name:'Excommunicated', icon:'⛓', 'class':'reputation', desc:'Cast out by the church.', earned:'Suffer formal condemnation by your faith’s religious authority.', opinion:-15, inherit:0, noRandom:true }
 };
 

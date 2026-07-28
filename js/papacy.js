@@ -207,7 +207,9 @@ window.FB = window.FB || {};
 
   FB.papacyCelibate = function (state, value) {
     var record = FB.papalOfficeOf(state, value);
-    return !!(record && (record.office === 'cardinal' || record.office === 'pope'));
+    var c = typeof value === 'string' ? state.chars[value] : value;
+    return !!((FB.bishopricOf && FB.bishopricOf(state, c)) ||
+      (record && (record.office === 'cardinal' || record.office === 'pope')));
   };
 
   FB.isCardinal = function (state, value) {
@@ -554,11 +556,7 @@ window.FB = window.FB || {};
     if (!c || c.dead || c.religion !== 'catholic') return false;
     var office = papalRecord(state, c.id);
     if (office && (office.office === 'cardinal' || office.office === 'pope')) return true;
-    if (c.id === state.player.charId && state.player.flags &&
-        state.player.flags.bishop) return true;
-    var ranks = c.religiousRanks || {};
-    return (ranks.catholic_monastic || 0) >= 4 ||
-      (ranks.catholic_clerical || 0) >= 5;
+    return !!(FB.bishopricOf && FB.bishopricOf(state, c));
   };
 
   function candidatePiety(state, c) {
@@ -594,6 +592,39 @@ window.FB = window.FB || {};
     return papacy.relationships[key];
   }
 
+  FB.papalOpinionOfCandidate = function (state, value, obedienceId) {
+    var papacy = FB.ensurePapacy(state);
+    var c = typeof value === 'string' ? state.chars[value] : value;
+    var obedience = papacy && papacy.obediences[
+      obedienceId || (c && FB.papalObedienceForCharacter(state, c)) ||
+      papacy.romanObedience
+    ];
+    return c && obedience ? papalOpinionOfCandidate(state, c, obedience) : 0;
+  };
+
+  FB.adjustPapalOpinionOfCandidate = function (state, value, amount, obedienceId) {
+    var papacy = FB.ensurePapacy(state);
+    var c = typeof value === 'string' ? state.chars[value] : value;
+    var obedience = papacy && papacy.obediences[
+      obedienceId || (c && FB.papalObedienceForCharacter(state, c)) ||
+      papacy.romanObedience
+    ];
+    var pope = obedience && obedience.claimantId &&
+      state.chars[obedience.claimantId];
+    if (!c || !pope) return 0;
+    if (c.id === state.player.charId ||
+        (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
+      pope.opinion = FB.clamp((Number(pope.opinion) || 0) +
+        (Number(amount) || 0), -100, 100);
+      return pope.opinion;
+    }
+    var key = pope.id + ':' + c.id;
+    papacy.relationships[key] = FB.clamp(
+      papalOpinionOfCandidate(state, c, obedience) + (Number(amount) || 0),
+      -100, 100);
+    return papacy.relationships[key];
+  };
+
   FB.cardinalPetitionStatus = function (state, value) {
     var papacy = FB.ensurePapacy(state);
     var c = typeof value === 'string' ? state.chars[value] : value;
@@ -605,7 +636,7 @@ window.FB = window.FB || {};
     if (c.sex !== 'm') missing.push(FB.T('a man'));
     if (hasLivingSpouse(state, c)) missing.push(FB.T('unmarried or widowed'));
     if (c.betrothedId) missing.push(FB.T('not betrothed'));
-    if (!FB.isCatholicBishop(state, c)) missing.push(FB.T('already a bishop'));
+    if (!FB.isCatholicBishop(state, c)) missing.push(FB.T('a Bishop'));
     if (FB.ageOf(c, state.date.year) < req.age) {
       missing.push(FB.T('age {needed} (now {current})', {
         needed:req.age, current:FB.ageOf(c, state.date.year)
@@ -1171,6 +1202,9 @@ window.FB = window.FB || {};
     var obedience = papacy.obediences[election.obedienceId];
     var c = state.chars[charId];
     if (!obedience || !c || c.dead) return false;
+    if (FB.releaseBishopric) {
+      FB.releaseBishopric(state, c, { papalTransition:true });
+    }
     var chosen = name || c.name;
     var count = (papacy.regnalNameCounts[chosen] || 0) + 1;
     papacy.regnalNameCounts[chosen] = count;

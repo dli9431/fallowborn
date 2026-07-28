@@ -1,9 +1,9 @@
 # Characters: skills & growing up
 
-**Cardinals and Popes are personal Catholic offices.** Both Catholic vocation paths
-reach Bishop normally, after which a qualified Bishop may petition for appointment to
-the College. Cardinal sets station 4 and a 3.5 seasonal piety yield without granting a
-county or secular tier. Cardinals and Popes cannot court or marry, but their existing
+**Bishops, Cardinals, and Popes are personal Catholic offices.** Both Catholic vocation
+paths qualify for an appointed Bishopric, after which a qualified Bishop may petition
+for appointment to the College. Cardinal sets station 4 and a 3.5 seasonal piety yield without granting a
+county or secular tier. Bishops, Cardinals, and Popes cannot court or marry, but their existing
 children and ordinary family links remain valid. Living Cardinals stay full characters
 for travel, gifts, friendship, rivalry, and mortality; unrelated dead Cardinals compact
 into the Papal archive while genealogy-critical family members remain as minimal dead
@@ -301,9 +301,11 @@ slot.
 lazily carry `c.religiousRanks`, a map from path id to attained step. Changing occupations
 selects a different path without erasing progress on the old one. Ordinary careers use a
 lay path built around almsgiving, pilgrimage, and patronage; `monk` and `priest` select a
-vocation path. The title and next step appear beside the character's livelihood, and the
-household may sponsor advancement when that character meets its age, Learning, vocational
-experience, piety, prestige, and gold requirements.
+vocation path. The title and next step appear beside the character's livelihood. Lay and
+vocation standings remain visible together; seasonal piety uses whichever attained standing
+has the higher yield instead of stacking both. The household may sponsor advancement when
+that character meets its personal age, Learning, and vocational-experience requirements and
+the house meets the shared piety and prestige thresholds.
 
 The paths are deliberately not symmetrical ordination trees. Catholic monastic standing is
 novice → professed brother/sister → prior/prioress → abbot/abbess, with a male abbot able to
@@ -314,8 +316,19 @@ khatib → chief imam. Islam has no ordained church hierarchy here: the learned 
 recognized teaching, legal authority, and appointments. Women may become abbesses and Muslim
 scholars or muftis; Catholic episcopal and modeled judicial appointments remain male-gated.
 
+Lower vocation ranks advance deterministically when their gates are met. Catholic Abbot or
+Abbess is instead a contested election, and Bishop is an investiture-aware appointment
+available to a qualified male Abbot or Archpriest. A failed episcopal petition may rarely
+produce a separate simony temptation; purchasing the mitre leaves a permanent reputation.
+See [papacy.md](papacy.md).
+
 Higher vocation offices raise a dependent's `station` for marriage and household society.
-For the player, abbot/qadi still raises tier to gentry and bishop/chief qadi to baron, preserving
-the religious alternate route into the secular game. Legacy `player.flags.abbot/bishop/qadi/
-chief_qadi` self-heal the matching character rank, and new ladder promotions set those flags
-so existing titles and events remain compatible.
+Abbot/qadi still raises the player to gentry, while chief qadi remains the Muslim alternate
+route to tier 3. A Catholic Bishop receives a personal, non-hereditary `c.bishopric` at the
+home county. The see grants tier-3 compatibility while the Bishop is otherwise unlanded, but
+is not a generic barony: it has its own income, household retinue, actions, events, and
+succession. A Bishop who later inherits real counties or a crown keeps the see alongside
+those lay titles. On death or elevation to Pope, the see returns to the Church; a see-only
+heir resumes as gentry and keeps the family's private property. Legacy
+`player.flags.abbot/bishop/qadi/chief_qadi` remain compatibility mirrors for old events and
+saves.

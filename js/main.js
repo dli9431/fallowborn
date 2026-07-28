@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.78.0';
+  FB.VERSION = '1.79.0';
   FB.CHANGELOG = [
+    { v: '1.79.0', date: '2026-07-28', changes: [
+      'Lay and vocational religious standing now remain visible together, with only the stronger piety yield applied.',
+      'Catholic abbots and bishops now receive contested appointments, and bishops govern personal non-hereditary sees with their own income, household, powers, and events.'
+    ] },
     { v: '1.78.0', date: '2026-07-28', changes: [
       'Catholic bishops can now become Cardinals, elect Popes under changing historical rules, govern Papal authority and investiture, and confront rival obediences during a schism.'
     ] },
@@ -1983,6 +1987,12 @@ window.FB = window.FB || {};
       if (!livingAbdication) FB.ui.gameOver();
       return false;
     }
+    /* A bishop's see is returned before the dynasty changes hands. Secular
+       counties remain in the ordinary succession; a see-only household falls
+       back to its established gentry standing. */
+    if (FB.releaseBishopric) {
+      FB.releaseBishopric(s, old, { succession:true });
+    }
     if (FB.travelCancel) FB.travelCancel(s, '', true);
     if (livingAbdication) {
       if (FB.endRoyalCompact) FB.endRoyalCompact(s);
@@ -2039,6 +2049,11 @@ window.FB = window.FB || {};
     const keep = {};
     for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
     p.flags = keep;
+    /* A chosen heir may already hold a separately appointed see. Activate
+       that personal office after clearing the predecessor's life flags. */
+    if (FB.activateBishopricForPlayer) {
+      FB.activateBishopricForPlayer(s, heir);
+    }
     p.fired = {}; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);

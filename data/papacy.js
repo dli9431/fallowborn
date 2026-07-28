@@ -18,6 +18,33 @@ window.FBDATA = window.FBDATA || {};
       petitionGold:25,
       refusalCooldownDays:720
     },
+    abbotAppointment:{
+      baseChance:0.55,
+      learningBonusPerPoint:0.025,
+      learningBonusMax:0.15,
+      layStandingBonus:0.03,
+      chanceMin:0.25,
+      chanceMax:0.85,
+      refusalCooldownDays:360
+    },
+    bishopric:{
+      income:6,
+      retinue:120,
+      baseChance:0.45,
+      learningBonusPerPoint:0.025,
+      learningBonusMax:0.15,
+      layStandingBonus:0.04,
+      supportBaseline:25,
+      supportDivisor:200,
+      supportBonusMax:0.20,
+      chanceMin:0.20,
+      chanceMax:0.90,
+      endowmentGold:50,
+      endowmentBonus:0.15,
+      endowedChanceMax:0.95,
+      refusalCooldownDays:720,
+      simonyOfferChance:0.15
+    },
     authority:{
       startByBookmark:{ '867':65, '1066':55 },
       bands:[

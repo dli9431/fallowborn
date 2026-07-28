@@ -30,10 +30,22 @@ opinion) so the temple's services stay within reach.
 **Piety also backs household religious standing.** The player resource is the house's pool
 of reputation and support, so it gates the advancement of the player, a spouse, or a
 dependent child; the candidate's age, Learning, and years in the vocation remain personal.
-Gold pays for alms, journeys, study, or endowment, while piety is normally a threshold rather
-than a spent currency. Every attained rank may add a small seasonal piety contribution through
-`FB.livelihoodPiety`; non-player clerical careers retain their underlying career contribution
-as well. See [characters.md](characters.md) for the Catholic and Muslim paths.
+Gold pays for alms, journeys, study, or an optional cathedral endowment, while piety is
+normally a threshold rather than a spent currency. Lay and vocation standings are both
+retained and displayed, but `FB.livelihoodPiety` uses only the higher seasonal yield. A
+Cardinal's office replaces both; non-player clerical careers retain their underlying career
+contribution as well. See [characters.md](characters.md) for the Catholic and Muslim paths.
+
+Catholic Abbot and Bishop are appointments rather than purchased ladder steps. Abbatial
+election weighs Learning and long lay standing. Episcopal appointment requires age 30,
+fourteen vocational years, Learning 12, 160 piety, 80 prestige, celibate availability, and
+standing as an Abbot or Archpriest. The realm's investiture policy determines the appointing
+authority and modifies support; Papal opinion contributes under canonical or concordat
+settlements. A cathedral endowment raises the chance without buying certainty. A Bishop's
+see adds seasonal temporalities and a 120-person household retinue, plus diocesan visitation,
+ecclesiastical judgment, a synod, and an extraordinary tithe. Those church powers coexist
+with homage, Estates, construction, feasts, and liege military service, but replace generic
+baron court, tax squeeze, monopoly, title-petition, private-war, and independence actions.
 
 A Catholic ruler who confirms a sacrilegious war against the active Papacy forfeits all
 current piety and creates a recognized ground for excommunication. Papal sentences are

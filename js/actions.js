@@ -321,9 +321,38 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id: 'shepherd_diocese', label: '🕯 Shepherd the diocese',
+    desc: function () {
+      return 'Visit, teach, correct, and reconcile. (+piety, +Common Voice, +Learning over time)';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    tick: function (s) {
+      s.player.piety += 4 / D;
+      s.player.pop = FB.clamp(s.player.pop + 2 / D, -100, 100);
+      if (skillDch(0.35)) skillUp(s, 'lea');
+    },
+    gain: function () { return { piety:4 }; } },
+  { id: 'administer_temporalities', label: '🔑 Administer the temporalities',
+    desc: function () {
+      return 'Oversee episcopal rents, officers, and obligations. (+income, +liege favor, +Stewardship over time)';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    tick: function (s) {
+      s.player.gold += FB.bishopricIncome(s) * 0.15 / D;
+      if (s.player.liege) FB.adjustLiegeOp(s, s.player.liege, 2 / D);
+      if (skillDch(0.30)) skillUp(s, 'ste');
+    },
+    gain: function (s) { return { gold:FB.bishopricIncome(s) * 0.15 }; } },
   { id: 'govern', label: '🏛 Govern the demesne',
     desc: function () { return 'Ledgers, judgments, and roads. (+revenue, +standing)'; },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function (s) {
+      return s.player.tier >= 3 &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     tick: function (s) {
       s.player.gold += FB.playerTax(s) * 0.15 / D;
       s.player.pop = FB.clamp(s.player.pop + 3 / D, -100, 100);
@@ -865,7 +894,10 @@ window.FB = window.FB || {};
           enterprise:Math.round(status.terms.enterpriseBonus * 100)
         });
     },
-    show: function (s) { return !!FB.guildMonopolyCareer(s); },
+    show: function (s) {
+      return !!FB.guildMonopolyCareer(s) &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     can: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
       return status.ready ? true : status.reason;
@@ -960,11 +992,17 @@ window.FB = window.FB || {};
 
   { id: 'hold_court', label: '⚖ Hold court', cd: 90,
     desc: function () { return 'Hear petitions and render judgment.'; },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function (s) {
+      return s.player.tier >= 3 &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
   { id: 'squeeze_taxes', label: '💰 Squeeze the taxes', cd: 180,
     desc: function () { return 'Extra silver now; grumbling later.'; },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function (s) {
+      return s.player.tier >= 3 &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     run: function (s) {
       const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
       FB.applyEffects(s, { gold: tax, popularOpinion: -6 });
@@ -983,7 +1021,10 @@ window.FB = window.FB || {};
             ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
         });
     },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function (s) {
+      return s.player.tier >= 3 &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     can: function (s) {
       const status = FB.guildMonopolyIssueStatus(s);
       return status.ready ? true : status.reason;
@@ -1002,6 +1043,54 @@ window.FB = window.FB || {};
       return 'Nothing more can be raised in your lands.';
     },
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
+  { id: 'bishopric', label: '⛪ The Bishopric…', noConsume: true,
+    desc: function () {
+      return 'Review the see, investiture, temporalities, episcopal household, powers, and path to the College of Cardinals.';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
+    } },
+  { id: 'visit_diocese', label: '🛤 Visit the diocese', cd: 180,
+    desc: function () {
+      return 'Make a pastoral circuit, inspect the clergy, or receive local notables.';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    run: function (s) { FB.queueEvent(s, 'bishop_visit_diocese', {}); } },
+  { id: 'ecclesiastical_court', label: '⚖ Hold ecclesiastical court', cd: 90,
+    desc: function () {
+      return 'Judge under canon law: mercifully, strictly, or for customary fees.';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    run: function (s) { FB.queueEvent(s, 'bishop_ecclesiastical_court', {}); } },
+  { id: 'convene_synod', label: '📜 Convene a synod', cd: 360,
+    desc: function () {
+      return 'Spend 10 gold to gather the clergy for reform, learning, or alms.';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    can: function (s) {
+      return s.player.gold >= 10 ? true : FB.T('Costs {money:10}.');
+    },
+    run: function (s) {
+      s.player.gold -= 10;
+      FB.queueEvent(s, 'bishop_synod', {});
+    } },
+  { id: 'extraordinary_tithe', label: '🪙 Levy an extraordinary tithe', cd: 360,
+    desc: function () {
+      return 'Collect fully, moderate the demand, or remit it for pastoral standing.';
+    },
+    show: function (s) {
+      return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
+    },
+    run: function (s) { FB.queueEvent(s, 'bishop_extraordinary_tithe', {}); } },
   { id: 'adopt_tech', label: '💡 Technology…', noConsume: true,
     desc: function (s) {
       const rid = FB.techRealmId(s);
@@ -1026,7 +1115,10 @@ window.FB = window.FB || {};
     run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
   { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1440,
     desc: function () { return 'Ask for greater lands and higher style.'; },
-    show: function (s) { return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege; },
+    show: function (s) {
+      return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     can: function (s) {
       if ((s.player.liegeOp || 0) < 65) return FB.T(
         'Your liege’s favor must be 65 or more (now {current}).',
@@ -1177,7 +1269,8 @@ window.FB = window.FB || {};
     desc: function () { return 'Press a de jure right, a fabricated county claim, or a crown-restoration right.'; },
     show: function (s) {
       const me = s.chars[s.player.charId];
-      return s.player.tier >= 3 || !!(me && me.restorationRight);
+      return !(FB.playerBishopricOnly && FB.playerBishopricOnly(s)) &&
+        (s.player.tier >= 3 || !!(me && me.restorationRight));
     },
     can: function (s) {
       return FB.warCauses(s).length ? true : FB.warLockedReason(s);
@@ -1199,7 +1292,10 @@ window.FB = window.FB || {};
         ? FB.T('Renounce {liege} and raise your own banner — it means war.', { liege: lg.name })
         : FB.T('Renounce your liege and raise your own banner — it means war.');
     },
-    show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
+    show: function (s) {
+      return s.player.tier >= 3 && !!s.player.liege && !s.player.war &&
+        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+    },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
       if (sovereign && FB.isRealmAtWar(s, sovereign)) return FB.T('At war with another realm');
@@ -1294,7 +1390,8 @@ window.FB = window.FB || {};
     for (const pid of (p.provs || [])) {
       rents += countyTaxBase(state, pid, B.taxPerDev);
     }
-    if (p.tier === 3) rents = Math.max(rents, 6);
+    const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
+    if (p.tier === 3 && !bishopric) rents = Math.max(rents, 6);
     rents *= FB.domainPenalty(state);
     const rentBase = rents;
     const rentTraits = [];
@@ -1322,14 +1419,16 @@ window.FB = window.FB || {};
       (FB.guildMonopolyTaxBonus ? FB.guildMonopolyTaxBonus(state) : 0);
     const papacy = taxable *
       (FB.papacyInvestitureTaxRate ? FB.papacyInvestitureTaxRate(state) : 0);
-    const beforeLiege = taxable + national + council + positions + monopoly + papacy;
+    const beforeLiege = taxable + national + council + positions + monopoly +
+      papacy + bishopric;
     const liege = p.liege
       ? -beforeLiege * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
     return {
       rents:rents, rentBase:rentBase, rentTraits:rentTraits,
       dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
-      monopoly:monopoly, papacy:papacy, liege:liege, total:beforeLiege + liege
+      monopoly:monopoly, papacy:papacy, bishopric:bishopric,
+      liege:liege, total:beforeLiege + liege
     };
   };
 
@@ -1468,6 +1567,7 @@ window.FB = window.FB || {};
       add('gold', FB.T('Royal Seneschal'), tax.council);
       add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
       add('gold', FB.T('Investiture policy'), tax.papacy);
+      add('gold', FB.T('Episcopal temporalities'), tax.bishopric);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
           const def = FBDATA.positions[source.id];
@@ -2862,6 +2962,7 @@ window.FB = window.FB || {};
 
   FB.startPlayerWar = function (state, causeOrTarget, opts) {
     if (state.player.war) return false;
+    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return false;
     opts = opts || {};
     const playerRealm = FB.playerRealmId(state);
@@ -2961,7 +3062,10 @@ window.FB = window.FB || {};
     if (!adult(state)) return 'study';
     if (afield(state)) return 'drill'; // disguised in the ranks — train at arms
     let want;
-    if (p.tier >= 3) want = 'govern';
+    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
+      want = 'shepherd_diocese';
+    }
+    else if (p.tier >= 3) want = 'govern';
     else if (p.tier === 2) want = 'manage_manor';
     else if (p.profession === 'monk') want = 'copy_books';
     else if (p.profession === 'priest') want = 'serve_church';

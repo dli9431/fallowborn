@@ -11,6 +11,15 @@ collections repair independently, so a version-3 save may wake during a vacancy,
 conclave, schism, policy demand, or Papal player handoff. See
 [papacy.md](papacy.md).
 
+Personal Bishopric state is also additive at save version 3.
+`character.bishopric` stores only JSON-safe office identity:
+`{seeProvinceId,appointedTurn,previousTier,appointerKind,appointerId,investiturePolicy}`.
+`character.bishopricVacatedTurn` prevents a returned see from being recreated by legacy
+rank compatibility. `FB.bishopricOf` lazily gives an old terminal Catholic rank or
+`player.flags.bishop` a home-county see, while an old player Pope is marked vacated.
+Ordinary death succession and Papal elevation release the office without transferring
+its abstract see, revenue, or retinue to the dynasty.
+
 Religious-head state is additive and keeps save version 3.
 `state.religiousHeads` maps an exact religion id to a realm id or to `null` for an
 explicit vacancy. New games seed missing entries from optional

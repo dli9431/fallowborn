@@ -1923,8 +1923,9 @@ window.FB = window.FB || {};
         FB.markRealmDead(state, rid);
         for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = fr.liege || null;
         if (state.player && state.player.liege === rid) {
-          // a baron is bound to his county, not to the dead lord's house:
-          // he answers to whoever holds his home now; landed vassals
+          // a baron or personal Bishop is bound to the home county, not to
+          // the dead lord's house: the office answers to whoever holds that
+          // county now; landed vassals
           // reattach upward to the dead liege's own liege
           let nl = fr.liege || null;
           if (state.player.tier === 3) {
@@ -1937,9 +1938,9 @@ window.FB = window.FB || {};
         fr.capital = terr[0];
       }
     }
-    // a baron is bound to his county: if his home itself changed hands he
-    // answers to its new holder — even when his old lord's house survives
-    // elsewhere, he kneels to the land's master, not to a memory
+    // a tier-3 baron or Bishop is bound to the home county: if it changes
+    // hands, the office answers to its new holder even while the old lord's
+    // house survives elsewhere
     if (state.player && state.player.tier === 3 && state.player.provinceId === pid &&
         state.player.liege !== toRealm && toRealm !== 'player' &&
         state.realms[toRealm] && state.realms[toRealm].alive) {
@@ -2538,8 +2539,13 @@ window.FB = window.FB || {};
           }
         }
       }
-    } else if (p.tier >= 3) {
+    } else if (p.tier >= 3 &&
+        !(FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId]))) {
       add('ret', 'barony_retinue', B.baronyRetinue || 120);
+    }
+    if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
+      add('ret', 'episcopal_household',
+        FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
     }
 
     if (p.tier >= 3) {
@@ -3552,7 +3558,17 @@ window.FB = window.FB || {};
      data; counties remain bare ids so the caller can render them compactly. */
   FB.playerTitles = function (state) {
     const p = state.player, out = [];
-    if (p.tier === 3) {
+    const bishopric = FB.bishopricOf &&
+      FB.bishopricOf(state, state.chars[p.charId]);
+    let bishopEntry = null;
+    if (bishopric) {
+      const see = FB.world && FB.world.byId[bishopric.seeProvinceId];
+      const bishopTitle = FB.rankTitleSnapshot(state, 3,
+        see ? see.name : bishopric.seeProvinceId);
+      bishopTitle.special = 'bishop';
+      bishopEntry = { d:'Bishopric', titleData:bishopTitle };
+    }
+    if (p.tier === 3 && !bishopric) {
       const pr = FB.world && FB.world.byId[p.provinceId];
       out.push({
         d: 'Barony',
@@ -3560,7 +3576,10 @@ window.FB = window.FB || {};
       });
       return { high: out, counties: [] };
     }
-    if (p.tier < 4) return { high: [], counties: [] };
+    if (p.tier < 4) return {
+      high:bishopEntry ? [bishopEntry] : out,
+      counties:[]
+    };
     for (const eid of FB.playerEmpires(state)) {
       out.push({
         d: 'Empire',
@@ -3579,6 +3598,7 @@ window.FB = window.FB || {};
         titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name)
       });
     }
+    if (bishopEntry) out.push(bishopEntry);
     return { high: out, counties: (p.provs || []).slice() };
   };
 
@@ -3587,11 +3607,12 @@ window.FB = window.FB || {};
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') p.liege = null;
-    // a baron is a status inside a county: he answers to whoever holds his
-    // home county. Reattach if the bond was lost (his lord's house died, or
+    // a baron or personal Bishop is a status inside a county and answers to
+    // whoever holds the home county. Reattach if the bond was lost (the
+    // lord's house died, or
     // an older save) or went stale — the county changed hands under a living
-    // lord, leaving him sworn to a lord who no longer holds his home. A
-    // baron is never "independent", nor a foreign lord's man
+    // lord, leaving the office sworn to a lord who no longer holds its home.
+    // A tier-3 office is never "independent", nor a foreign lord's man.
     if (p.tier === 3) {
       const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
       if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive && p.liege !== bh) p.liege = bh;

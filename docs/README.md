@@ -188,6 +188,14 @@ become muezzins, imams, and khatibs. These are not treated as one interchangeabl
 priesthood: Islamic learning and judicial appointment form their own path. Every resident
 spouse and dependent child can pursue a rank, not only the player.
 
+Catholic **Abbot/Abbess** and **Bishop** are contested appointments rather than ranks bought
+from a menu. A qualified Abbot or Archpriest may seek a Bishopric on merit under the realm's
+investiture policy, optionally endow the cathedral to improve the chance, or encounter a
+rare corrupt offer after a refusal. A Bishop's personal, non-hereditary see has its own
+income, household troops, focuses, diocesan powers, and events. It is not a generic barony:
+the Bishop keeps homage, the Estates, construction, feasts, and liege service, but does not
+gain ordinary baron taxes, court, monopolies, title petitions, private wars, or independence.
+
 Catholic Bishops may petition the Pope for appointment as a **Cardinal** once their age,
 Learning, standing, and Papal favor qualify. Cardinals belong to a named College and vote
 in Papal elections whose rules change with the century; an elected player hands secular

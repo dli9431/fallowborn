@@ -9,6 +9,14 @@ Mandatory Papal name, investiture, sponsorship, and deposition choices pause tim
 reopen this sheet until resolved. The Work picker exposes “Petition for the red hat”
 with exact unmet requirements. See [papacy.md](papacy.md).
 
+Religious progression keeps Lay standing and the active Vocation visible together. Abbot
+and Bishop rows open appointment previews instead of deducting a rank price; the previews
+name every unmet gate, appointing authority, current chance, cooldown, and optional
+cathedral endowment. An appointed player gains a Bishopric full-sheet from the Self panel.
+It shows the see, tenure, authority and investiture policy, Papal recognition and opinion,
+episcopal focus, temporalities, office piety, household retinue, non-hereditary succession,
+and the four church powers with their costs and cooldowns.
+
 **Keyboard support is a requirement** (`js/keys.js` + focus management in `ui.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via

@@ -18,14 +18,42 @@ election followed one uniform constitution.
 
 `data/papacy.js` centralizes the College target and cap, candidate requirements, Roman
 title churches, cardinal orders and blocs, election laws and tactics, Papal-name seeds,
-authority gates, investiture policies, excommunication costs, schism limits, and Papal
-income. Game logic belongs to `js/papacy.js`.
+authority gates, Abbot and Bishop appointment chances, investiture policies,
+excommunication costs, schism limits, and Papal income. Game logic belongs to
+`js/papacy.js`, with household religious progression in `js/economy.js`.
+
+## Bishoprics and investiture
+
+The Catholic monastic and clerical ladders end in eligibility for office rather than a
+purchased promotion. Abbot or Abbess uses a contested election with a 360-day refusal
+cooldown. A Bishop candidate must be a living Catholic man, unmarried or widowed and not
+betrothed or excommunicated, at least 30, an Abbot or Archpriest with fourteen vocational
+years, Learning 12+, and backed by 160 piety and 80 prestige. The initial player route is
+limited to gentry or below; gaining later lay titles does not strip an existing see.
+
+`state.papacy.investiture` selects the appointing authority through the candidate's
+independent sovereign. Lay investiture relies on the liege, canonical investiture on the
+recognized Pope, and concordat averages both opinions. The chance begins at 45%, adds
+up to 15 points for Learning above the threshold, 4 points per permanent lay-standing
+step, and an opinion term of up to ±20 points from the policy's appointing authority; it
+is clamped to 20–90%. An optional 50-gold cathedral endowment adds 15 points, capped at
+95%. Failure begins a 720-day
+candidate cooldown. A failed ordinary petition has a 15% chance to queue a separate
+200-gold simony offer; accepting appoints the candidate but gives the permanent Simoniac
+reputation and damages piety, popular standing, and Papal relations.
+
+Appointment saves a personal `character.bishopric` containing the see county, appointment
+turn, appointing authority, appointer id, and investiture policy. The abstract see supplies
+6 gold per season, a 120-person episcopal household, two Bishop focuses, four church powers,
+and a Bishop event pool. It is non-hereditary and creates no province ownership or realm
+node. If its holder later inherits secular land, both offices coexist. Cardinals retain
+their bishopric; a Pope vacates it. Death likewise returns the see to the Church, and a
+see-only dynasty successor continues as gentry with the family's private property.
 
 ## Cardinals
 
-Both Catholic monastic and clerical vocations reach Bishop through the ordinary
-livelihood ladder. A living Catholic man who is unmarried or widowed, not betrothed,
-already a Bishop, at least 35, Learning 14+, and backed by 250 piety, 150 prestige,
+A living Catholic man who is unmarried or widowed, not betrothed, already holds a
+Bishopric, is at least 35 with Learning 14+, and is backed by 250 piety, 150 prestige,
 and Papal opinion +25 may petition for the red hat for 25 gold. Refusal starts a saved
 720-day cooldown.
 
@@ -141,7 +169,7 @@ patron; the saved obedience persists until neither support remains.
 ## Player continuity and saves
 
 Election to the Papacy uses the ordinary abdication handoff: inheritable secular land and
-titles pass intact to the lawful heir, while a non-inheritable barony returns to its liege.
+titles pass intact to the lawful heir, while the personal Bishopric returns to the Church.
 Enterprises, holdings, manor, and land plots are suspended in
 `state.papacy.custody`. Portable gold and heirlooms remain with the Pope. A Roman Pope
 receives Papal States revenue; a landless rival receives a small patron stipend.

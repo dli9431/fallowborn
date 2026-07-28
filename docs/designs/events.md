@@ -21,6 +21,15 @@ spends the day before any option resolves, so paying, persuading, or withdrawing
 avoid either cost. Its choice hints intentionally disclose exact contract costs, odds,
 and failure penalties.
 
+Bishop powers use the same code-queued boundary. Diocesan visitation, ecclesiastical
+court, synod, and extraordinary tithe stamp their own cooldowns and queue exact events;
+their choices expose the religious, popular, liege, Papal, health, and resource tradeoffs.
+A separate five-event Bishop pool covers sanctuary, clergy misconduct, cathedral-chapter
+resistance, tithe disputes, and doubtful relics. Failed ordinary episcopal appointment may
+queue the rare simony event with the exact candidate in context. Its custom handler grants
+the see to that candidate, while the `papalOpinion` effect adjusts the recognized Pope's
+opinion of the context candidate (or the protagonist when no candidate is supplied).
+
 Great holy-war transitions use that same blocking path. The religious head's call
 queues `ghw_called` on the call day, and the first active-day tick queues
 `ghw_muster_complete` after the campaign hosts have had their raising pass. With

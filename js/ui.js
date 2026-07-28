@@ -920,7 +920,8 @@ window.FB = window.FB || {};
     craft_work:'work', trade_run:'work', copy_books:'faith', serve_church:'faith',
     militia:'war', drill:'war', stand_guard:'war', train_arms:'war', lead_host:'war',
     manage_manor:'realm', serve_lord:'realm', courtly_graces:'realm',
-    scheming:'realm', govern:'realm', patronize:'realm'
+    scheming:'realm', govern:'realm', patronize:'realm',
+    shepherd_diocese:'faith', administer_temporalities:'faith'
   };
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
@@ -937,6 +938,8 @@ window.FB = window.FB || {};
     scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
     travel_marriage_residence:'life', travel_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
+    bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
+    convene_synod:'faith', extraordinary_tithe:'faith',
     restore_papacy:'faith',
     claim_caliphate:'faith', call_great_holy_war:'faith',
     join_great_holy_war:'faith', renew_great_holy_war_vow:'faith',
@@ -1394,11 +1397,22 @@ window.FB = window.FB || {};
     let h = '<div class="progressnote">' + esc(former
       ? FB.T('🧰 Former calling — {career}', { career:detail })
       : FB.T('🧰 Work — {career}', { career:detail })) + '</div>';
-    const religious = FB.religiousPathOf(s, c);
-    if (religious) {
-      h += '<div class="progressnote">' + esc(FB.T('🛐 Religious standing — {rank}', {
-        rank:FB.religiousRankTitle(s, c, religious)
-      })) + '</div>';
+    const standings = FB.religiousStandings ? FB.religiousStandings(s, c) : [];
+    for (let i = 0; i < standings.length; i++) {
+      const standing = standings[i];
+      h += '<div class="progressnote">' + esc(FB.T(
+        standing.kind === 'lay'
+          ? '🕯 Lay standing — {rank}' : '🛐 Vocation — {rank}', {
+          rank:FB.religiousRankTitle(s, c, standing.path)
+        })) + '</div>';
+    }
+    const bishopric = FB.bishopricOf && FB.bishopricOf(s, c);
+    if (bishopric) {
+      const see = FB.world.byId[bishopric.seeProvinceId];
+      h += '<div class="progressnote">' + esc(FB.T(
+        '⛪ Episcopal office — Bishop of {see}', {
+          see:see ? see.name : bishopric.seeProvinceId
+        })) + '</div>';
     }
     return h;
   }
@@ -1643,6 +1657,13 @@ window.FB = window.FB || {};
       kv('House', esc(me.dyn || '—')) +
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me);
+    if (FB.hasBishopric && FB.hasBishopric(s, me)) {
+      h += '<button class="actionbtn" id="self-bishopric">⛪ ' +
+        esc(FB.T('Open the Bishopric')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements.')) +
+        '</span></button>';
+    }
     if (standardSummary) {
       h += kv('Active household standards', esc(standardSummary));
     }
@@ -1690,6 +1711,8 @@ window.FB = window.FB || {};
     if (stu) stu.addEventListener('click', function () { UI.showTutorPick(me.id); });
     const sw = $('self-work');
     if (sw) sw.addEventListener('click', UI.showLivelihoods);
+    const bishopric = $('self-bishopric');
+    if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
   }
 
   function charRow(s, c, meta, stats) {
@@ -1742,7 +1765,7 @@ window.FB = window.FB || {};
     const y = s.date.year;
     if (FB.papacyCelibate &&
         (FB.papacyCelibate(s, me) || FB.papacyCelibate(s, c))) {
-      return FB.T('the vows of a Cardinal or Pope forbid marriage.');
+      return FB.T('the vows of a Bishop, Cardinal, or Pope forbid marriage.');
     }
     if (c.id === me.spouseId || c.spouseId === me.id) {
       return FB.T(c.sex === 'f'
@@ -2043,6 +2066,7 @@ window.FB = window.FB || {};
         : FB.T('{realm} — vassal levy', { realm:r ? r.name : entry.rid });
     }
     if (entry.kind === 'barony_retinue') return FB.T('Standing barony household');
+    if (entry.kind === 'episcopal_household') return FB.T('Episcopal household');
     if (entry.kind === 'position') return positionName(s, entry.positionId);
     if (entry.kind === 'retainer') {
       const c = entry.charId && s.chars[entry.charId];
@@ -8163,15 +8187,42 @@ window.FB = window.FB || {};
         const faithTitle = FB.religiousRankTitle(s, c, {
           id:religiousAdvance.path.id, step:faithStep
         });
-        h += '<button class="actionbtn" id="career-religious"' +
-          (religiousAdvance.blocked ? ' disabled' : '') + '>🛐 ' +
-          esc(faithStep.gold
+        const abbotStatus = faithStep.id === 'abbot' &&
+          FB.abbotAppointmentStatus ? FB.abbotAppointmentStatus(s, c) : null;
+        const bishopStatus = faithStep.id === 'bishop' &&
+          FB.bishopAppointmentStatus ? FB.bishopAppointmentStatus(s, c) : null;
+        const officeStatus = bishopStatus || abbotStatus;
+        /* Appointment rows remain inspectable when ineligible so the modal
+           can explain every gate and modifier; only its confirm buttons lock. */
+        const blocked = officeStatus ? false : religiousAdvance.blocked;
+        let buttonLabel;
+        if (bishopStatus) {
+          buttonLabel = FB.T('Seek appointment to a bishopric — {chance}% chance', {
+            chance:Math.round(bishopStatus.chance * 100)
+          });
+        } else if (abbotStatus) {
+          buttonLabel = FB.T('Stand for election as {rank} — {chance}% chance', {
+            rank:faithTitle, chance:Math.round(abbotStatus.chance * 100)
+          });
+        } else {
+          buttonLabel = faithStep.gold
             ? FB.T('Seek the next religious rank — {rank} ({money:gold})', {
               rank:faithTitle, gold:faithStep.gold
             })
-            : FB.T('Seek the next religious rank — {rank}', { rank:faithTitle })) +
+            : FB.T('Seek the next religious rank — {rank}', { rank:faithTitle });
+        }
+        h += '<button class="actionbtn" id="career-religious"' +
+          (blocked ? ' disabled' : '') + '>🛐 ' + esc(buttonLabel) +
           '<span class="adesc">' +
-          esc(religiousAdvance.path.id.indexOf('_lay') >= 0
+          esc(officeStatus
+            ? (officeStatus.ready
+              ? (bishopStatus
+                ? FB.T('A free merit petition weighs Learning, permanent lay standing, investiture policy, and the appointing authority’s support.')
+                : FB.T('The community elects its superior; Learning and permanent lay standing improve the vote.'))
+              : FB.T('Unmet: {requirements}', {
+                requirements:officeStatus.missing.join('; ')
+              }))
+            : religiousAdvance.path.id.indexOf('_lay') >= 0
             ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
               age:faithStep.age || 0, piety:faithStep.piety || 0,
               prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
@@ -8180,14 +8231,14 @@ window.FB = window.FB || {};
               age:faithStep.age || 0, learning:faithStep.learning || 0,
               years:faithStep.years || 0, piety:faithStep.piety || 0,
               prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
-            })) + ' ' +
+            })) + (officeStatus ? '' : ' ' +
           esc(faithStep.station !== undefined || faithStep.tier
             ? FB.T('Recognition adds {piety} piety each season and raises social station.', {
               piety:faithStep.pietyYield || 0
             })
             : FB.T('Recognition adds {piety} piety each season.', {
               piety:faithStep.pietyYield || 0
-            })) +
+            }))) +
           '</span></button>';
       }
     }
@@ -8226,6 +8277,15 @@ window.FB = window.FB || {};
     });
     const religious = $('career-religious');
     if (religious) religious.addEventListener('click', function () {
+      const advance = FB.religiousAdvance(s, c);
+      if (advance && advance.step.id === 'abbot') {
+        UI.showAbbotElection(c.id);
+        return;
+      }
+      if (advance && advance.step.id === 'bishop') {
+        UI.showBishopAppointment(c.id);
+        return;
+      }
       if (!FB.takeReligiousStep(s, c)) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
@@ -8239,7 +8299,235 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showCardinalPetition = function (cid) {
+  UI.showAbbotElection = function (cid) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const status = c && FB.abbotAppointmentStatus &&
+      FB.abbotAppointmentStatus(s, c);
+    if (!status || !status.visible) return;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The religious community elects its superior. The vote costs no gold; Learning and permanent lay standing improve the chance. A refusal closes the election for one year.')) +
+      '</p></div>' +
+      kv('Election chance', esc(FB.T('{chance}%', {
+        chance:Math.round(status.chance * 100)
+      })));
+    if (status.missing.length) {
+      h += '<div class="progressnote">' + esc(FB.T('Unmet: {requirements}', {
+        requirements:status.missing.join('; ')
+      })) + '</div>';
+    }
+    h += '<div class="modal-actions"><button class="btn primary" id="abbot-election"' +
+      (status.ready ? '' : ' disabled') + '>' +
+      esc(FB.T('Stand for election')) +
+      '</button><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Election of the religious superior'), h, {
+      historyView:true
+    });
+    const election = $('abbot-election');
+    if (election) election.addEventListener('click', function () {
+      const result = FB.seekAbbotAppointment(s, c);
+      UI.closeModal();
+      UI.toast(result && result.accepted
+        ? FB.T('{name} is elected to lead the religious house.', {
+          name:c.name
+        })
+        : FB.T('The community elects another candidate.'));
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      UI.showCareerPicker(cid);
+    });
+  };
+
+  UI.showBishopAppointment = function (cid) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const status = c && FB.bishopAppointmentStatus &&
+      FB.bishopAppointmentStatus(s, c);
+    if (!status || !status.visible) return;
+    const policy = FBDATA.papacy.investiture.policies[status.policyId];
+    const authorityNames = {
+      lay:'Temporal sovereign',
+      canonical:'Recognized Pope',
+      concordat:'Pope and temporal sovereign',
+      chapter:'Cathedral chapter'
+    };
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'A bishopric is a non-hereditary church office. A merit petition is free; a disclosed cathedral endowment improves the lawful appointment chance but is spent whether the petition succeeds or fails.')) +
+      '</p></div>' +
+      kv('Investiture policy', esc(policy
+        ? dt(s, 'papalInvestiturePolicy', status.policyId, policy, 'name')
+        : status.policyId)) +
+      kv('Appointing authority', esc(FB.T(
+        authorityNames[status.appointerKind] || 'Church authority'))) +
+      kv('Authority support', esc(String(Math.round(status.support)))) +
+      kv('Learning and lay-standing result', esc(FB.T(
+        '{chance}% merit chance', {
+          chance:Math.round(status.chance * 100)
+        }))) +
+      kv('Cathedral endowment', esc(FB.T(
+        '{money:gold} · raises chance to {chance}%', {
+          gold:status.endowmentGold,
+          chance:Math.round(status.endowedChance * 100)
+        })));
+    if (status.missing.length) {
+      h += '<div class="progressnote">' + esc(FB.T('Unmet: {requirements}', {
+        requirements:status.missing.join('; ')
+      })) + '</div>';
+    }
+    h += '<div class="modal-actions">' +
+      '<button class="btn primary" id="bishop-merit"' +
+      (status.ready ? '' : ' disabled') + '>' +
+      esc(FB.T('Petition on merit — {chance}%', {
+        chance:Math.round(status.chance * 100)
+      })) + '</button>' +
+      '<button class="btn" id="bishop-endow"' +
+      (status.ready && status.canEndow ? '' : ' disabled') + '>' +
+      esc(FB.T('Endow the cathedral ({money:gold}) — {chance}%', {
+        gold:status.endowmentGold,
+        chance:Math.round(status.endowedChance * 100)
+      })) + '</button>' +
+      '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) +
+      '</button></div>';
+    openModal(FB.T('Appointment to a bishopric'), h, { historyView:true });
+    function petition(endowed) {
+      const result = FB.seekBishopAppointment(s, c, endowed);
+      UI.closeModal();
+      UI.toast(result && result.accepted
+        ? FB.T('{name} is invested as a Bishop.', { name:c.name })
+        : FB.T('The appointment is refused; another petition may be made in two years.'));
+      FB.game.passDay({ skipFocus:true });
+    }
+    const merit = $('bishop-merit');
+    if (merit) merit.addEventListener('click', function () { petition(false); });
+    const endow = $('bishop-endow');
+    if (endow) endow.addEventListener('click', function () { petition(true); });
+    $('gm-cancel').addEventListener('click', function () {
+      UI.showCareerPicker(cid);
+    });
+  };
+
+  UI.showBishopric = function () {
+    const s = FB.state;
+    const me = s && s.chars[s.player.charId];
+    const record = me && FB.bishopricOf && FB.bishopricOf(s, me);
+    if (!record) return;
+    const see = FB.world.byId[record.seeProvinceId];
+    const investiture = FB.investiturePolicyForPlayer &&
+      FB.investiturePolicyForPlayer(s);
+    const policyId = investiture && investiture.policy ||
+      record.investiturePolicy || 'canonical';
+    const policy = FBDATA.papacy.investiture.policies[policyId];
+    const papacy = FB.ensurePapacy(s);
+    const obedienceId = FB.papalObedienceForCharacter(s, me) ||
+      papacy.romanObedience;
+    const obedience = papacy.obediences[obedienceId];
+    const pope = obedience && obedience.claimantId &&
+      s.chars[obedience.claimantId];
+    const currentFocus = FB.focuses.filter(function (focus) {
+      return focus.id === s.player.focus;
+    })[0];
+    const religious = FB.religiousPathOf(s, me);
+    const officePiety = religious && religious.step
+      ? (FB.papacyPietyYield
+        ? FB.papacyPietyYield(s, me, religious.step.pietyYield || 0)
+        : religious.step.pietyYield || 0) : 0;
+    const authorityNames = {
+      lay:'Temporal sovereign',
+      canonical:'Recognized Pope',
+      concordat:'Pope and temporal sovereign',
+      chapter:'Cathedral chapter',
+      legacy:'Historical appointment'
+    };
+    const heldDays = Math.max(0, s.turn - (record.appointedTurn || 0));
+    let h = '<div class="papacy-summary"><section class="papacy-card">' +
+      panelh('The see') +
+      kv('Office', esc(FB.T('Bishop of {see}', {
+        see:see ? see.name : record.seeProvinceId
+      }))) +
+      kv('Tenure', esc(FB.T('{days} days', { days:heldDays }))) +
+      kv('Appointed by', esc(FB.T(
+        authorityNames[record.appointerKind] || 'Church authority'))) +
+      kv('Current investiture', esc(policy
+        ? dt(s, 'papalInvestiturePolicy', policyId, policy, 'name')
+        : policyId)) +
+      '</section><section class="papacy-card">' + panelh('Church standing') +
+      kv('Recognized Pope', esc(pope
+        ? FB.papalDisplayName(s, pope) : FB.T('The Apostolic See is vacant'))) +
+      kv('Papal opinion', esc(String(pope && FB.papalOpinionOfCandidate
+        ? Math.round(FB.papalOpinionOfCandidate(s, me, obedienceId)) : 0))) +
+      kv('Current focus', esc(currentFocus
+        ? dt(s, 'focus', currentFocus.id, currentFocus, 'label')
+        : FB.T('None'))) +
+      '</section><section class="papacy-card">' + panelh('Temporalities') +
+      kv('Seasonal revenue', esc(FB.T('{money:gold}', {
+        gold:FB.bishopricIncome(s)
+      }))) +
+      kv('Seasonal office piety', esc(String(officePiety))) +
+      kv('Episcopal household', esc(FB.T('{men} men-at-arms', {
+        men:FB.bishopricRetinue(s)
+      }))) +
+      kv('Succession', esc(FB.T(
+        'The see returns to the Church; private property and separate secular titles follow dynasty law.'))) +
+      '</section></div>';
+
+    const powerIds = [
+      'visit_diocese', 'ecclesiastical_court',
+      'convene_synod', 'extraordinary_tithe'
+    ];
+    const available = {};
+    for (const item of FB.listInstants(s)) available[item.a.id] = item;
+    h += panelh('Episcopal powers') + '<div class="gm-list">';
+    for (let i = 0; i < powerIds.length; i++) {
+      const item = available[powerIds[i]];
+      if (!item) continue;
+      h += '<button class="actionbtn" data-bishop-power="' + item.a.id + '"' +
+        (item.can ? '' : ' disabled') + '>' +
+        esc(dt(s, 'action', item.a.id, item.a, 'label')) +
+        '<span class="adesc">' + esc(item.can
+          ? FB.T('{description} · {days}-day cooldown', {
+            description:FB.translateKnown(item.a.desc(s)),
+            days:item.a.cd
+          }) : item.reason) +
+        '</span></button>';
+    }
+    h += '</div>';
+
+    const cardinal = FB.cardinalPetitionStatus &&
+      FB.cardinalPetitionStatus(s, me);
+    if (cardinal && cardinal.visible) {
+      h += panelh('College of Cardinals') +
+        '<button class="actionbtn" id="bishop-cardinal"' +
+        (cardinal.ready ? '' : ' disabled') + '>⛪ ' +
+        esc(FB.T('Petition for the red hat · {money:gold}', {
+          gold:cardinal.cost
+        })) + '<span class="adesc">' + esc(cardinal.ready
+          ? FB.T('All appointment requirements are met.')
+          : FB.T('Unmet: {requirements}', {
+            requirements:cardinal.missing.join('; ')
+          })) + '</span></button>';
+    }
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) +
+      '</button>';
+    openModal(FB.T('The Bishopric'), h, {
+      modalClass:'fullsheet-modal papacy-modal'
+    });
+    document.querySelectorAll('[data-bishop-power]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = button.dataset.bishopPower;
+        UI.closeModal();
+        FB.runInstant(s, id);
+      });
+    });
+    const cardinalButton = $('bishop-cardinal');
+    if (cardinalButton) cardinalButton.addEventListener('click', function () {
+      UI.showCardinalPetition(me.id, 'bishopric');
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showCardinalPetition = function (cid, returnTo) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const status = c && FB.cardinalPetitionStatus &&
@@ -8271,7 +8559,8 @@ window.FB = window.FB || {};
         : FB.T('Rome refuses the petition.'));
     });
     $('gm-cancel').addEventListener('click', function () {
-      UI.showCareerPicker(cid);
+      if (returnTo === 'bishopric') UI.showBishopric();
+      else UI.showCareerPicker(cid);
     });
   };
 

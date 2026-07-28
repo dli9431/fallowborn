@@ -732,7 +732,10 @@ window.FB = window.FB || {};
       };
       if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
     }
-    if (state.player.flags.bishop) t = FB.T('Bishop');
+    if (state.player.flags.bishop &&
+        (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
+      t = FB.T('Bishop');
+    }
     else if (state.player.flags.chief_qadi) t = FB.T('Grand Qadi');
     else if (state.player.flags.abbot && p.tier === 2) {
       t = me.sex === 'f' ? FB.T('Abbess') : FB.T('Abbot');
@@ -782,11 +785,17 @@ window.FB = window.FB || {};
         snap.special = p.profession;
       }
     }
-    if (p.flags.bishop) snap.special = 'bishop';
+    if (p.flags.bishop &&
+        (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
+      snap.special = 'bishop';
+      const bishopric = FB.bishopricOf && FB.bishopricOf(state, me);
+      const see = bishopric && FB.world && FB.world.byId[bishopric.seeProvinceId];
+      if (see) snap.place = see.name;
+    }
     else if (p.flags.chief_qadi) snap.special = 'grand_qadi';
     else if (p.flags.abbot && p.tier === 2) snap.special = me.sex === 'f' ? 'abbess' : 'abbot';
     else if (p.flags.qadi && p.tier === 2) snap.special = 'qadi';
-    if (p.tier === 4 && p.provs && p.provs.length) {
+    if (!snap.place && p.tier === 4 && p.provs && p.provs.length) {
       const pr = FB.world && FB.world.byId[p.provs[0]];
       if (pr) snap.place = pr.name;
     } else if (p.tier === 5 && FB.playerDuchy) {

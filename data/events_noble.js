@@ -1,5 +1,5 @@
 /* =========================================================================
-   Fallowborn — RULERSHIP EVENTS (tier 3+: barons, counts, dukes, kings)
+   Fallowborn — RULERSHIP EVENTS (tier 3+: bishops, barons, counts, dukes, kings)
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
@@ -97,14 +97,14 @@ FBDATA.events.push(
     { label:'Guard the stores and wait.', desc:'Spears on the granary door say enough.', effects:{ popularOpinion:-10 } }
   ]},
 { id:'church_relations', title:'The {holy} Comes Calling',
-  trigger:{ tierMin:3, chance:0.15 }, weight:6, cooldown:10,
+  trigger:{ tierMin:3, notFlags:['bishop'], chance:0.15 }, weight:6, cooldown:10,
   text:'The local {holy} arrives in state, praising your piety at length — and, at greater length, the leaking roof of the great {temple}.',
   options:[
     { label:'Fund the roof handsomely.', require:{ goldMin:15 }, desc:'Dry priests preach kindly of their patrons.', effects:{ gold:-15, piety:15, opinion:{role:'priest', amt:20} } },
     { label:'Promise prayers instead.', desc:'Words cost nothing and are spent as fast.', effects:{ piety:-2, opinion:{role:'priest', amt:-8} } }
   ]},
 { id:'heir_question', title:'The Succession',
-  trigger:{ tierMin:3, minAge:45, hasChildren:true, chance:0.15 }, weight:5, once:true,
+  trigger:{ tierMin:3, notFlags:['bishop'], minAge:45, hasChildren:true, chance:0.15 }, weight:5, once:true,
   text:'Your counselors raise it delicately: you will not live forever, and unsettled successions drown realms in blood.',
   options:[
     { label:'Name your heir plainly, now.', desc:'Choose who inherits, before witnesses.', effects:{ pickHeir:true, log:'Settled the succession.' } },
@@ -112,7 +112,7 @@ FBDATA.events.push(
     { label:'“I do not intend to die.”', desc:'Death, surely, will make an exception.', effects:{ prestige:2 } }
   ]},
 { id:'border_raid', title:'Smoke on the Border',
-  trigger:{ tierMin:3, chance:0.15, atWar:false }, weight:8, cooldown:8,
+  trigger:{ tierMin:3, notFlags:['bishop'], chance:0.15, atWar:false }, weight:8, cooldown:8,
   text:'Riders from over the border have burned two of your hamlets and driven off cattle. Your people look to you for an answer.',
   options:[
     { label:'Raid them back, twice as hard.', desc:'Answer smoke with smoke — if your riders are lucky.', chance:'battle',
@@ -129,6 +129,9 @@ FBDATA.events.push(
       effects:{ setFlag:'with_liege_host', focusSet:'lead_host', opinionLiege:10, prestige:4, log:'Rode to the liege’s war.' } },
     { label:'Send coin in your stead.', require:{ goldMin:20 }, desc:'Silver marches for you, and is noted.', effects:{ gold:-20, opinionLiege:-5 } },
     { label:'Pay scutage, by the estates’ charter. ({money:8})', require:{ goldMin:8, custom:'parliament_has_scutage' }, desc:'The estates voted silver for service — the liege must take the coin.', effects:{ gold:-8, opinionLiege:-2 } },
+    { label:'Claim episcopal immunity.', require:{ flags:['bishop'] },
+      desc:'Appeal to the church’s liberties; gain piety and Papal favor, but deeply offend the liege.',
+      effects:{ piety:6, papalOpinion:5, opinionLiege:-15 } },
     { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8 } }
   ]},
 { id:'title_request', title:'A Word With the Liege',
@@ -155,7 +158,7 @@ FBDATA.events.push(
     { label:'Rule alone.', desc:'Pride keeps poor company at night.', effects:{ opinion:{role:'spouse', amt:-10}, prestige:1 } }
   ]},
 { id:'independence_offer', title:'Whispers of a Crown',
-  trigger:{ tierMin:3, tierMax:4, isVassal:true, liegeAtWar:false, prestigeMin:200, chance:0.1 }, weight:5, cooldown:20,
+  trigger:{ tierMin:3, tierMax:4, notFlags:['bishop'], isVassal:true, liegeAtWar:false, prestigeMin:200, chance:0.1 }, weight:5, cooldown:20,
   text:'Discontented lords gather in your hall when the candles burn low. “Why kneel at all?” they murmur. “Your own banner. Your own crown.”',
   options:[
     { label:'Declare independence!', desc:'A crown of your own — and a war to keep it.', effects:{ declareIndependence:true, log:'Declared independence!' } },

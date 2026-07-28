@@ -565,6 +565,9 @@ clamped at the trait's `earn.threshold`, then the trait is awarded) ·
 `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
+`papalOpinion: n` (adjust the recognized Pope's opinion of `ctx.candidateId`, or of the
+protagonist when the context has no candidate; clamped to −100…100 and a no-op during a
+vacancy) ·
 `rivalContact: {role, score, cause}` (record an explicitly hostile encounter with that
 existing named role; `score` defaults to 1, `cause` is an opaque non-localized id, and
 contact with the active rival also adds `score × balance.rivalContactHeat` heat) ·
@@ -611,6 +614,8 @@ disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{
 the Noble Academy handlers `academy_introduction academy_student_focus
 academy_student_dip academy_student_ste academy_student_int academy_student_lea
 academy_withdraw` target the queued `ctx.studentId` and also live in `js/events.js`;
+the episcopal-simony handlers `bishop_simony_accept bishop_simony_clear` target the queued
+`ctx.candidateId` and also live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
 gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
@@ -927,9 +932,17 @@ character can learn and perform:
 
 Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
 career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
-faiths simply receive no core ladder. Formal religious offices may raise `character.station`,
-and the player's abbot/qadi/bishop/chief-qadi milestones also preserve the legacy tier and flag
-effects used by events and titles.
+faiths simply receive no core ladder. Lay standing and the active vocation remain separate;
+`FB.religiousStandings` exposes both and seasonal piety uses the higher rank yield rather
+than stacking them. Formal religious offices may raise `character.station`. Abbot/qadi and
+chief-qadi milestones preserve their legacy player tiers and flags.
+
+Catholic Bishop is a core personal office saved in `character.bishopric`, not an ordinary
+career rank or province title. `FB.bishopricOf`, `FB.hasBishopric`,
+`FB.installBishopric`, `FB.releaseBishopric`, `FB.bishopricIncome`, and
+`FB.bishopricRetinue` are the public engine surface. A see-only player uses tier 3 for
+compatibility, but office-aware actions and title rendering exclude generic barony powers.
+The office is non-hereditary and may coexist with separately inherited secular land.
 
 ## Positions and household retainers
 
@@ -1498,12 +1511,14 @@ and durable notices remain consistent.
 ### Catholic Papacy definition
 
 `FBDATA.papacy` (in `data/papacy.js`, mod key `papacy`) defines the Catholic College,
-election eras, Roman titles, regnal-name seeds, authority, investiture,
+election eras, Roman titles, regnal-name seeds, authority, Abbot and Bishop appointments,
+investiture,
 excommunication, schism, and Papal-economy constants. Unlike id-keyed tables, this
 top-level value is atomic: a later mod replaces the whole object. Supply a complete
 copy, including:
 
-- `targetCollege`, `hardCap`, `annualAppointments`, and `cardinalRequirements`;
+- `targetCollege`, `hardCap`, `annualAppointments`, `abbotAppointment`,
+  `bishopric`, and `cardinalRequirements`;
 - `authority` bands, action gates, starting bookmark values, and adjustments;
 - ordered `elections`, `cardinalOrders`, `romanTitles`, `blocs`, `tactics`,
   `regnalNames`, and `regnalSeeds`;

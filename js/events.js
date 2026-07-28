@@ -1814,6 +1814,28 @@ window.FB = window.FB || {};
   };
   FB.fns = FB.fns || {}; // registry for custom trigger/effect functions (world.js war handlers register earlier; mods may add)
 
+  FB.fns.bishop_simony_accept = function (state, ctx) {
+    const c = state.chars[ctx && ctx.candidateId || state.player.charId];
+    const legacyQueuedOffer = !(ctx && ctx.candidateId);
+    if (!c || c.dead ||
+        (!legacyQueuedOffer && c.bishopSimonyOfferTurn === undefined) ||
+        !FB.installBishopric) return false;
+    const status = FB.bishopAppointmentStatus
+      ? FB.bishopAppointmentStatus(state, c) : {};
+    delete c.bishopSimonyOfferTurn;
+    delete c.bishopPetitionRefusedTurn;
+    FB.addTrait(c, 'simoniac');
+    FB.installBishopric(state, c, status);
+    return true;
+  };
+
+  FB.fns.bishop_simony_clear = function (state, ctx) {
+    const c = state.chars[ctx && ctx.candidateId || state.player.charId];
+    if (!c) return false;
+    delete c.bishopSimonyOfferTurn;
+    return true;
+  };
+
   /* Ordinary feudal elevation rests on a house, not one remarkable career.
      New games record the generation that first reaches gentry; an heir must
      inherit that standing before the house may petition for a barony. Saves
@@ -1907,7 +1929,7 @@ window.FB = window.FB || {};
     p.tier = tier;
     if (oldTier < 2 && tier >= 2) FB.markGentryRise(state);
 
-    if (oldTier < 3 && tier >= 3) {
+    if (oldTier < 3 && tier >= 3 && opts.stationFarewell !== false) {
       p.stationFarewell = p.fired && p.fired.station_farewell ? null : {
           charId:p.charId,
           fromRole:oldRole,
@@ -2276,6 +2298,11 @@ window.FB = window.FB || {};
     if (fx.rivalHeat) FB.changeRivalHeat(state, fx.rivalHeat);
     if (fx.endRivalry) FB.endRivalry(state);
     if (fx.opinionLiege) p.liegeOp = FB.clamp((p.liegeOp || 0) + fx.opinionLiege, -100, 100);
+    if (fx.papalOpinion && FB.adjustPapalOpinionOfCandidate) {
+      const papalTarget = ctx && ctx.candidateId &&
+        state.chars[ctx.candidateId] || me;
+      FB.adjustPapalOpinionOfCandidate(state, papalTarget, fx.papalOpinion);
+    }
     if (fx.popularOpinion) {
       var amount = fx.popularOpinion;
       if (amount > 0 && FB.traitBonus) {
@@ -2851,6 +2878,7 @@ window.FB = window.FB || {};
 
   FB.doIndependence = function (state) {
     const p = state.player;
+    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
     if (oldLiege && FB.isRealmAtWar(state, oldLiege)) return false;
     if (!p.provs || !p.provs.length) {

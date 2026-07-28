@@ -19,9 +19,9 @@ window.FB = window.FB || {};
         prestigeGain:3, pietyYield:0.5 },
       { id:'prior', age:20, years:6, learning:7, piety:60, prestige:20,
         prestigeGain:8, pietyYield:1, station:1 },
-      { id:'abbot', age:24, years:10, learning:9, piety:100, prestige:40, gold:25,
+      { id:'abbot', age:24, years:10, learning:9, piety:100, prestige:40,
         prestigeGain:15, pietyYield:1.5, station:2, tier:2, flag:'abbot' },
-      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80, gold:100,
+      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80,
         prestigeGain:25, pietyYield:2.5, station:3, tier:3, flag:'bishop', maleOnly:true }
     ],
     catholic_clerical: [
@@ -34,7 +34,7 @@ window.FB = window.FB || {};
         prestigeGain:7, pietyYield:1, station:1 },
       { id:'archpriest', age:28, years:9, learning:9, piety:90, prestige:30,
         prestigeGain:12, pietyYield:1.5, station:2 },
-      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80, gold:100,
+      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80,
         prestigeGain:25, pietyYield:2.5, station:3, tier:3, flag:'bishop' }
     ],
     muslim_lay: [
@@ -250,9 +250,10 @@ window.FB = window.FB || {};
     const age = FB.ageOf(c, state.date.year);
     const religionGroup = FB.religionOf(c.religion).group;
     const current = FB.careerOf(state, c);
-    const playerClericalOffice = c.id === state.player.charId &&
+    const playerClericalOffice = (c.id === state.player.charId &&
       (state.player.flags.abbot || state.player.flags.bishop ||
-        state.player.flags.qadi || state.player.flags.chief_qadi);
+        state.player.flags.qadi || state.player.flags.chief_qadi)) ||
+      !!(FB.bishopricOf && FB.bishopricOf(state, c));
     const out = [];
     for (const id in FBDATA.careers) {
       const def = FBDATA.careers[id];
@@ -308,15 +309,35 @@ window.FB = window.FB || {};
     return index;
   }
 
-  FB.religiousPathOf = function (state, c) {
-    const pathId = religiousPathId(state, c);
-    if (!pathId) return null;
+  function religiousPathRecord(state, c, pathId) {
     const steps = RELIGIOUS_PATHS[pathId];
+    if (!steps) return null;
     const index = religiousRankIndex(state, c, pathId);
     return {
       id:pathId, steps:steps, index:index, step:steps[index],
       next:index + 1 < steps.length ? steps[index + 1] : null
     };
+  }
+
+  FB.religiousPathOf = function (state, c) {
+    const pathId = religiousPathId(state, c);
+    return pathId ? religiousPathRecord(state, c, pathId) : null;
+  };
+
+  /* Lay devotion is a permanent background standing. Entering a vocation
+     changes the active ladder but never erases the lay life that preceded it. */
+  FB.religiousStandings = function (state, c) {
+    if (!c) return [];
+    const activeId = religiousPathId(state, c);
+    if (!activeId) return [];
+    const layId = c.religion === 'catholic' ? 'catholic_lay' :
+      (FB.religionOf(c.religion).group === 'muslim' ? 'muslim_lay' : null);
+    const out = [];
+    if (layId) out.push({ kind:'lay', path:religiousPathRecord(state, c, layId) });
+    if (activeId !== layId) {
+      out.push({ kind:'vocation', path:religiousPathRecord(state, c, activeId) });
+    }
+    return out;
   };
 
   FB.religiousRankTitle = function (state, c, path) {
@@ -373,6 +394,393 @@ window.FB = window.FB || {};
     return { path:path, step:step, blocked:blocked };
   };
 
+  function livingSpouse(state, c) {
+    if (!c) return null;
+    if (c.spouseId && state.chars[c.spouseId] && !state.chars[c.spouseId].dead) {
+      return state.chars[c.spouseId];
+    }
+    for (const id in state.chars) {
+      const other = state.chars[id];
+      if (other && !other.dead && other.spouseId === c.id) return other;
+    }
+    return null;
+  }
+
+  function layStandingIndex(state, c) {
+    const pathId = c.religion === 'catholic' ? 'catholic_lay' :
+      (FB.religionOf(c.religion).group === 'muslim' ? 'muslim_lay' : null);
+    return pathId ? religiousRankIndex(state, c, pathId) : 0;
+  }
+
+  function catholicOfficeBalance(key) {
+    return FBDATA.papacy && FBDATA.papacy[key] || {};
+  }
+
+  /* A see is personal church office, not dynasty land. Old Bishop flags and
+     terminal Catholic ranks acquire a home-county record lazily. A vacated
+     marker prevents that compatibility path from recreating a returned see. */
+  FB.bishopricOf = function (state, c) {
+    if (!state || !c || c.religion !== 'catholic') return null;
+    if (c.papalOffice === 'pope' ||
+        (c.id === state.player.charId && state.player.flags &&
+          state.player.flags.pope)) {
+      if (c.bishopric) delete c.bishopric;
+      if (c.id === state.player.charId && state.player.flags) {
+        delete state.player.flags.bishop;
+      }
+      if (c.bishopricVacatedTurn === undefined) {
+        c.bishopricVacatedTurn = state.turn || 0;
+      }
+      return null;
+    }
+    if (c.bishopric && typeof c.bishopric === 'object' &&
+        !Array.isArray(c.bishopric)) return c.bishopric;
+    if (c.bishopricVacatedTurn !== undefined) return null;
+    const ranks = c.religiousRanks || {};
+    const legacyRank = (ranks.catholic_monastic || 0) >= 4 ||
+      (ranks.catholic_clerical || 0) >= 5;
+    const legacyFlag = c.id === state.player.charId && state.player.flags &&
+      state.player.flags.bishop;
+    if (!legacyRank && !legacyFlag) return null;
+    c.bishopric = {
+      seeProvinceId:c.id === state.player.charId
+        ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId),
+      appointedTurn:state.turn || 0,
+      previousTier:2,
+      appointerKind:'legacy',
+      appointerId:null,
+      investiturePolicy:'canonical'
+    };
+    return c.bishopric;
+  };
+
+  FB.hasBishopric = function (state, c) {
+    return !!FB.bishopricOf(state, c || playerChar(state));
+  };
+
+  FB.playerBishopricOnly = function (state) {
+    const c = playerChar(state);
+    return !!(FB.bishopricOf(state, c) &&
+      !(state.player.provs && state.player.provs.length));
+  };
+
+  FB.bishopricIncome = function (state, c) {
+    c = c || playerChar(state);
+    return FB.bishopricOf(state, c)
+      ? (catholicOfficeBalance('bishopric').income || 6) : 0;
+  };
+
+  FB.bishopricRetinue = function (state, c) {
+    c = c || playerChar(state);
+    return FB.bishopricOf(state, c)
+      ? (catholicOfficeBalance('bishopric').retinue || 120) : 0;
+  };
+
+  function setBishopRank(state, c) {
+    const activeId = religiousPathId(state, c);
+    const pathId = activeId === 'catholic_monastic'
+      ? activeId : 'catholic_clerical';
+    c.religiousRanks = c.religiousRanks || {};
+    c.religiousRanks[pathId] = RELIGIOUS_PATHS[pathId].length - 1;
+  }
+
+  FB.installBishopric = function (state, c, status, opts) {
+    opts = opts || {};
+    c = c || playerChar(state);
+    if (!c || c.dead || c.religion !== 'catholic') return false;
+    status = status || {};
+    delete c.bishopricVacatedTurn;
+    c.bishopric = {
+      seeProvinceId:status.seeProvinceId ||
+        (c.id === state.player.charId
+          ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId)),
+      appointedTurn:state.turn,
+      previousTier:2,
+      appointerKind:status.appointerKind || 'canonical',
+      appointerId:status.appointerId || null,
+      investiturePolicy:status.policyId || 'canonical'
+    };
+    setBishopRank(state, c);
+    c.station = Math.max(3, FB.stationOf(c));
+    if (c.id === state.player.charId) {
+      state.player.flags.bishop = 1;
+      if (state.player.tier < 3) {
+        FB.setPlayerTier(state, 3, { stationFarewell:false });
+      }
+      if (!opts.noReward) state.player.prestige += 25;
+      if (FB.validateFocus) FB.validateFocus(state);
+    }
+    return c.bishopric;
+  };
+
+  FB.releaseBishopric = function (state, c, opts) {
+    opts = opts || {};
+    c = c || playerChar(state);
+    const record = c && FB.bishopricOf(state, c);
+    if (!record) return false;
+    const playerOffice = c.id === state.player.charId;
+    const bishopricOnly = playerOffice && !(state.player.provs &&
+      state.player.provs.length);
+    delete c.bishopric;
+    c.bishopricVacatedTurn = state.turn;
+    if (playerOffice) {
+      delete state.player.flags.bishop;
+      if (bishopricOnly && state.player.tier === 3) {
+        FB.setPlayerTier(state, Math.max(2, record.previousTier || 2), {
+          attachLiege:false
+        });
+      }
+      if (FB.validateFocus) FB.validateFocus(state);
+    }
+    return record;
+  };
+
+  FB.activateBishopricForPlayer = function (state, c) {
+    c = c || playerChar(state);
+    const record = c && FB.bishopricOf(state, c);
+    if (!record || c.id !== state.player.charId) return false;
+    state.player.flags.bishop = 1;
+    if (!(state.player.provs && state.player.provs.length) &&
+        state.player.tier < 3) {
+      FB.setPlayerTier(state, 3, { stationFarewell:false });
+    }
+    return true;
+  };
+
+  FB.abbotAppointmentStatus = function (state, c) {
+    c = c || playerChar(state);
+    const path = c && FB.religiousPathOf(state, c);
+    const step = path && path.next;
+    const visible = !!(path && path.id === 'catholic_monastic' &&
+      step && step.id === 'abbot');
+    if (!visible) return { visible:false, ready:false, missing:[] };
+    const cfg = catholicOfficeBalance('abbotAppointment');
+    const advance = FB.religiousAdvance(state, c);
+    const missing = [];
+    const age = FB.ageOf(c, state.date.year);
+    const career = FB.careerOf(state, c);
+    if (age < step.age) missing.push(FB.T('age {needed} (now {current})', {
+      needed:step.age, current:age
+    }));
+    if (career.experience < step.years) {
+      missing.push(FB.T('{needed} vocational years (now {current})', {
+        needed:step.years, current:career.experience
+      }));
+    }
+    if (FB.skillOf(c, 'lea') < step.learning) {
+      missing.push(FB.T('Learning {needed} (now {current})', {
+        needed:step.learning, current:FB.skillOf(c, 'lea')
+      }));
+    }
+    if (state.player.piety < step.piety) {
+      missing.push(FB.T('{needed} piety (now {current})', {
+        needed:step.piety, current:Math.floor(state.player.piety)
+      }));
+    }
+    if (state.player.prestige < step.prestige) {
+      missing.push(FB.T('{needed} prestige (now {current})', {
+        needed:step.prestige, current:Math.floor(state.player.prestige)
+      }));
+    }
+    const elapsed = c.abbotPetitionRefusedTurn === undefined ? Infinity :
+      state.turn - c.abbotPetitionRefusedTurn;
+    const remaining = Math.max(0, (cfg.refusalCooldownDays || 360) - elapsed);
+    if (remaining) missing.push(FB.T('election cooldown ({days} days remain)', {
+      days:remaining
+    }));
+    const learningBonus = Math.min(cfg.learningBonusMax || 0.15,
+      Math.max(0, FB.skillOf(c, 'lea') - step.learning) *
+      (cfg.learningBonusPerPoint || 0.025));
+    const chance = FB.clamp((cfg.baseChance || 0.55) + learningBonus +
+      layStandingIndex(state, c) * (cfg.layStandingBonus || 0.03),
+    cfg.chanceMin || 0.25, cfg.chanceMax || 0.85);
+    return {
+      visible:true, ready:!!advance && !advance.blocked && !missing.length,
+      missing:missing, chance:chance, path:path, step:step
+    };
+  };
+
+  FB.seekAbbotAppointment = function (state, c) {
+    c = c || playerChar(state);
+    const status = FB.abbotAppointmentStatus(state, c);
+    if (!status.ready) return false;
+    if (!FB.chance(status.chance)) {
+      c.abbotPetitionRefusedTurn = state.turn;
+      state.player.piety += 3;
+      return { accepted:false, chance:status.chance };
+    }
+    delete c.abbotPetitionRefusedTurn;
+    c.religiousRanks[status.path.id] = status.path.index + 1;
+    c.station = Math.max(2, FB.stationOf(c));
+    if (c.id === state.player.charId) {
+      state.player.flags.abbot = 1;
+      if (state.player.tier < 2) {
+        FB.setPlayerTier(state, 2, { stationFarewell:false });
+      }
+    }
+    state.player.prestige += status.step.prestigeGain || 15;
+    FB.news(state, FB.msg('news.religion.abbot_elected',
+      '⛪ {name} is elected to govern the religious house.',
+      { name:FB.fullName(c) }));
+    return { accepted:true, chance:status.chance };
+  };
+
+  function bishopCandidateExcommunicated(state, c, obedienceId) {
+    if (c.traits && c.traits.indexOf('excommunicated') >= 0) return true;
+    return !!(FB.excommunicationOf &&
+      FB.excommunicationOf(state, c.id, obedienceId));
+  }
+
+  function localAppointmentSupport(state) {
+    if (state.player.liege) {
+      return {
+        opinion:FB.liegeOpOf ? FB.liegeOpOf(state, state.player.liege) :
+          (state.player.liegeOp || 0),
+        id:state.player.liege
+      };
+    }
+    const lord = FB.getRole(state, 'lord', true);
+    return { opinion:lord ? Number(lord.opinion) || 0 : 0, id:lord && lord.id || null };
+  }
+
+  FB.bishopAppointmentStatus = function (state, c) {
+    c = c || playerChar(state);
+    const path = c && FB.religiousPathOf(state, c);
+    const step = path && path.next;
+    const visible = !!(c && c.religion === 'catholic' && step &&
+      step.id === 'bishop');
+    if (!visible) return { visible:false, ready:false, missing:[] };
+    const cfg = catholicOfficeBalance('bishopric');
+    const missing = [];
+    const age = FB.ageOf(c, state.date.year);
+    const career = FB.careerOf(state, c);
+    const papacy = FB.ensurePapacy ? FB.ensurePapacy(state) : null;
+    const obedienceId = FB.papalObedienceForCharacter
+      ? FB.papalObedienceForCharacter(state, c)
+      : papacy && papacy.romanObedience;
+    const obedience = papacy && papacy.obediences[obedienceId];
+    const pope = obedience && obedience.claimantId &&
+      state.chars[obedience.claimantId];
+    const papalOpinion = pope && FB.papalOpinionOfCandidate
+      ? FB.papalOpinionOfCandidate(state, c, obedienceId) : 0;
+    const local = localAppointmentSupport(state);
+    const investiture = FB.investiturePolicyForPlayer
+      ? FB.investiturePolicyForPlayer(state) : null;
+    const policyId = investiture && investiture.policy || 'canonical';
+    let support = papalOpinion;
+    let appointerKind = 'canonical';
+    let appointerId = pope && pope.id || null;
+    if (policyId === 'lay') {
+      support = local.opinion;
+      appointerKind = 'lay';
+      appointerId = local.id;
+    } else if (policyId === 'concordat') {
+      support = (papalOpinion + local.opinion) / 2;
+      appointerKind = 'concordat';
+      appointerId = pope && pope.id || local.id;
+    } else if (!pope) {
+      support = 0;
+      appointerKind = 'chapter';
+      appointerId = null;
+    }
+    if (c.sex !== 'm') missing.push(FB.T('a man'));
+    if (livingSpouse(state, c)) missing.push(FB.T('unmarried or widowed'));
+    if (c.betrothedId) missing.push(FB.T('not betrothed'));
+    if (age < step.age) missing.push(FB.T('age {needed} (now {current})', {
+      needed:step.age, current:age
+    }));
+    if (career.experience < step.years) {
+      missing.push(FB.T('{needed} vocational years (now {current})', {
+        needed:step.years, current:career.experience
+      }));
+    }
+    if (FB.skillOf(c, 'lea') < step.learning) {
+      missing.push(FB.T('Learning {needed} (now {current})', {
+        needed:step.learning, current:FB.skillOf(c, 'lea')
+      }));
+    }
+    if (state.player.piety < step.piety) {
+      missing.push(FB.T('{needed} piety (now {current})', {
+        needed:step.piety, current:Math.floor(state.player.piety)
+      }));
+    }
+    if (state.player.prestige < step.prestige) {
+      missing.push(FB.T('{needed} prestige (now {current})', {
+        needed:step.prestige, current:Math.floor(state.player.prestige)
+      }));
+    }
+    if (bishopCandidateExcommunicated(state, c, obedienceId)) {
+      missing.push(FB.T('not excommunicated'));
+    }
+    if (c.id === state.player.charId && (state.player.tier > 2 ||
+        (state.player.provs && state.player.provs.length))) {
+      missing.push(FB.T('not already holding secular land or baronial rank'));
+    } else if (c.id !== state.player.charId && FB.stationOf(c) > 2) {
+      missing.push(FB.T('not already of noble or royal station'));
+    }
+    const elapsed = c.bishopPetitionRefusedTurn === undefined ? Infinity :
+      state.turn - c.bishopPetitionRefusedTurn;
+    const remaining = Math.max(0, (cfg.refusalCooldownDays || 720) - elapsed);
+    if (remaining) {
+      missing.push(FB.T('appointment cooldown ({days} days remain)', {
+        days:remaining
+      }));
+    }
+    const learningBonus = Math.min(cfg.learningBonusMax || 0.15,
+      Math.max(0, FB.skillOf(c, 'lea') - step.learning) *
+      (cfg.learningBonusPerPoint || 0.025));
+    const supportBonus = FB.clamp(
+      (support - (cfg.supportBaseline || 25)) / (cfg.supportDivisor || 200),
+      -(cfg.supportBonusMax || 0.20), cfg.supportBonusMax || 0.20);
+    const chance = FB.clamp((cfg.baseChance || 0.45) + learningBonus +
+      layStandingIndex(state, c) * (cfg.layStandingBonus || 0.04) +
+      supportBonus, cfg.chanceMin || 0.20, cfg.chanceMax || 0.90);
+    return {
+      visible:true, ready:!missing.length, missing:missing,
+      chance:chance,
+      endowedChance:FB.clamp(chance + (cfg.endowmentBonus || 0.15),
+        cfg.chanceMin || 0.20, cfg.endowedChanceMax || 0.95),
+      endowmentGold:cfg.endowmentGold || 50,
+      canEndow:state.player.gold >= (cfg.endowmentGold || 50),
+      support:support, localOpinion:local.opinion, papalOpinion:papalOpinion,
+      policyId:policyId, appointerKind:appointerKind, appointerId:appointerId,
+      obedienceId:obedienceId, path:path, step:step,
+      seeProvinceId:c.id === state.player.charId
+        ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId)
+    };
+  };
+
+  FB.seekBishopAppointment = function (state, c, endowed) {
+    c = c || playerChar(state);
+    const status = FB.bishopAppointmentStatus(state, c);
+    if (!status.ready || (endowed && !status.canEndow)) return false;
+    if (endowed) state.player.gold -= status.endowmentGold;
+    const chance = endowed ? status.endowedChance : status.chance;
+    if (!FB.chance(chance)) {
+      c.bishopPetitionRefusedTurn = state.turn;
+      const simony = FB.chance(
+        catholicOfficeBalance('bishopric').simonyOfferChance || 0.15);
+      if (simony) {
+        c.bishopSimonyOfferTurn = state.turn;
+        FB.queueEvent(state, 'bishops_mitre', { candidateId:c.id });
+      }
+      FB.news(state, FB.msg('news.religion.bishop_refused',
+        '⛪ The appointment of {name} is refused; another petition may be made in two years.',
+        { name:FB.fullName(c) }));
+      return { accepted:false, chance:chance, simony:simony };
+    }
+    delete c.bishopPetitionRefusedTurn;
+    delete c.bishopSimonyOfferTurn;
+    FB.installBishopric(state, c, status);
+    FB.news(state, FB.msg('news.religion.bishop_appointed',
+      '⛪ {name} is invested as Bishop of {province}.', {
+        name:FB.fullName(c),
+        province:FB.world.byId[status.seeProvinceId]
+          ? FB.world.byId[status.seeProvinceId].name : status.seeProvinceId
+      }));
+    return { accepted:true, chance:chance };
+  };
+
   function promotePlayerReligiously(state, step) {
     const p = state.player;
     if (step.flag) p.flags[step.flag] = 1;
@@ -387,6 +795,8 @@ window.FB = window.FB || {};
     if (!advance || advance.blocked) return false;
     const path = advance.path;
     const step = advance.step;
+    if ((path.id === 'catholic_monastic' && step.id === 'abbot') ||
+        step.id === 'bishop') return false; // contested offices use appointment flows
     state.player.gold -= step.gold || 0;
     state.player.prestige += step.prestigeGain || 0;
     c.religiousRanks[path.id] = path.index + 1;
@@ -1462,16 +1872,19 @@ window.FB = window.FB || {};
     const me = playerChar(state);
     for (const c of FB.householdMembers(state)) {
       if (FB.ageOf(c, state.date.year) < 16) continue;
-      const religious = FB.religiousPathOf(state, c);
       const career = FB.careerOf(state, c);
       const profession = career && career.profession;
       const workMult = profession === 'monk' || profession === 'priest'
         ? FB.householdWorkMultiplier(state, profession) : 1;
-      if (religious && religious.step.pietyYield) {
-        amount += (FB.papacyPietyYield ?
-          FB.papacyPietyYield(state, c, religious.step.pietyYield) :
-          religious.step.pietyYield) * workMult;
+      let bestYield = 0;
+      for (const standing of FB.religiousStandings(state, c)) {
+        const raw = standing.path && standing.path.step.pietyYield || 0;
+        const yieldAmount = standing.kind === 'vocation' ? raw * workMult : raw;
+        bestYield = Math.max(bestYield, yieldAmount);
       }
+      const officeYield = FB.papacyPietyYield
+        ? FB.papacyPietyYield(state, c, bestYield) : bestYield;
+      if (officeYield) amount += officeYield;
       if (c.id === me.id) continue;
       const def = career && FBDATA.careers[career.profession];
       if (def && def.piety) amount += def.piety * workMult;

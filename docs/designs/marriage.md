@@ -102,10 +102,12 @@ every wife can conceive, the first holds the spouse role). The spouse sheet carr
 unaffected. The `widow_veil` plot
 (map_data.js → `plot_spouse_end`) murders the current spouse.
 
-Catholic Cardinals and Papal claimants are personally celibate offices. `FB.canCourt`,
-`FB.canWed`, `FB.doMarry`, and the queued-wedding path all reject a living holder while
-preserving earlier marriages, children, legitimacy, and dynasty links. A widowed Bishop
-may therefore petition for the red hat, but cannot remarry once appointed.
+Catholic Bishoprics, Cardinalates, and Papal claims are personally celibate offices.
+`FB.canCourt`, `FB.canWed`, `FB.doMarry`, and the queued-wedding path all reject a living
+holder while preserving earlier marriages, children, legitimacy, and dynasty links. A
+candidate must be unmarried or widowed and not betrothed before episcopal appointment;
+a widowed Bishop may later petition for the red hat, but cannot remarry while holding
+either office.
 
 The household head arranges descendant matches: from age 12 an unwed resident child or
 grandchild's sheet offers three sounded-out families
