@@ -365,6 +365,74 @@ a.actionbtn { text-decoration: none; }
 .person-assignment-label { color: #8f8066; }
 .person-assignment-value { min-width: 0; color: #c4b494; }
 .person-assignment-row.consequence .person-assignment-value { color: #d0ad76; }
+.enterprise-worker-lock {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px;
+  align-items: start; margin: 0 0 10px; padding: 10px 12px;
+  border: 1px solid #55452a; border-radius: 8px;
+  background: #211b12; color: #ddcfae; cursor: pointer;
+}
+.enterprise-worker-lock input { margin-top: 3px; }
+.enterprise-worker-lock .adesc {
+  grid-column: 2; color: #97876a; font-size: 12px; line-height: 1.35;
+}
+.enterprise-worker-lock.disabled { opacity: .58; cursor: default; }
+.enterprise-staffing-hint { margin: 8px 0; }
+.enterprise-staffing-modal .modalcard { width: min(96vw, 820px); }
+.enterprise-staffing-notice {
+  margin-bottom: 10px; border-color: #a87932; color: #e0bd79;
+}
+.enterprise-staffing-totals {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px; align-items: center; margin-bottom: 12px; padding: 10px 12px;
+  border: 1px solid #66522f; border-radius: 8px; background: #211a12;
+}
+.enterprise-staffing-totals > div:not(.enterprise-staffing-arrow) {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.enterprise-staffing-totals span, .enterprise-staffing-comparison span {
+  color: #9f906f; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.enterprise-staffing-totals b { color: #ead8a8; font-size: 15px; }
+.enterprise-staffing-arrow { color: #d8b24a; font-size: 20px; }
+.enterprise-staffing-rows { display: grid; gap: 8px; }
+.enterprise-staffing-row {
+  padding: 10px 12px; border: 1px solid #55452a; border-radius: 8px;
+  background: #2a2216;
+}
+.enterprise-staffing-row.locked { border-color: #75673e; }
+.enterprise-staffing-row.unresolved { border-color: #704737; }
+.enterprise-staffing-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.enterprise-staffing-name {
+  min-width: 0; overflow-wrap: anywhere; color: #ecd9a0; font-weight: bold;
+}
+.enterprise-staffing-status {
+  flex: 0 1 auto; max-width: 48%; overflow-wrap: anywhere; padding: 2px 6px;
+  border: 1px solid #6b603f; border-radius: 999px;
+  color: #b9c98a; font-size: 11px; text-align: right;
+}
+.enterprise-staffing-row.unresolved .enterprise-staffing-status {
+  border-color: #704737; color: #d09a78;
+}
+.enterprise-staffing-place { margin-top: 2px; color: #97876a; font-size: 12px; }
+.enterprise-staffing-comparison {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px; margin-top: 8px;
+}
+.enterprise-staffing-comparison > div {
+  display: flex; flex-direction: column; min-width: 0; padding: 7px 8px;
+  border: 1px solid #463923; border-radius: 6px; background: #241d15;
+}
+.enterprise-staffing-comparison b {
+  overflow-wrap: anywhere; color: #d8c9a6; font-size: 13px;
+}
+.enterprise-staffing-comparison small { color: #9f906f; font-size: 11px; }
+.enterprise-staffing-change, .enterprise-staffing-reason {
+  margin-top: 7px; color: #c4b494; font-size: 12px; line-height: 1.4;
+}
+.enterprise-staffing-reason { color: #d09a78; }
 .actiongroup-toggle {
   display:flex; justify-content:space-between; gap:10px; width:100%; min-height:44px;
   margin:10px 0 6px; padding:9px 10px; border:1px solid #55452a; border-radius:8px;
@@ -1081,6 +1149,14 @@ textarea.modjson, textarea.savetext {
   }
   .person-assignment-rows { margin-left: 0; }
   .person-assignment-row { grid-template-columns: 1fr; gap: 0; padding: 3px 0; }
+  .enterprise-staffing-totals {
+    grid-template-columns: 1fr; gap: 5px; padding: 9px;
+  }
+  .enterprise-staffing-totals b { font-size: 13px; }
+  .enterprise-staffing-arrow { justify-self: center; transform: rotate(90deg); }
+  .enterprise-staffing-comparison { grid-template-columns: 1fr; }
+  .enterprise-staffing-head { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .enterprise-staffing-status { max-width: 100%; text-align: left; }
 }
 
 @media (max-width: 380px) {

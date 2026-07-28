@@ -100,7 +100,16 @@ Hover-only affordances need a tap path (item chips toast their description).
 The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only
 former calling. Career changes, guild steps, and personal enterprise assignment are
 removed while household occupations, religious-office advancement, and business
-staffing remain available.
+staffing remain available. Each staffed enterprise has a saved **Lock this worker to
+this enterprise** checkbox; locked pairings are marked in both this sheet and Household
+Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
+no-day static review of the maximum-yield result across all unlocked assignments. The
+review shows current/proposed totals, every kept or changed pairing, and every unresolved
+enterprise with its eligibility, lock-contention, or higher-yield-allocation reason.
+Apply is enabled only for a changed plan, revalidates stale reviews, and never spends
+time or money. Back remains available in the sticky footer; applying from Household Plan
+returns to its refreshed overview. When none is idle, the entry point is replaced by an
+all-staffed hint.
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
@@ -326,7 +335,9 @@ equipment summaries are derived from their owning APIs; actionable cells are nat
 buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touch sizes,
 and browser-history Back. Picker cancellation and no-day changes re-render the plan, while
 day-spending career, enterprise-purchase, and match choices keep their existing
-close-and-advance behavior.
+close-and-advance behavior. Its sticky footer also offers the enterprise-staffing preview
+whenever an enterprise is idle, and a successful no-day apply returns to this authoritative
+table rather than the intermediate Work & Enterprises sheet.
 
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,

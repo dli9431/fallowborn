@@ -92,6 +92,16 @@ window.FB = window.FB || {};
     for (const e of list) if (e.workerId === cid) return true;
     return false;
   }
+  function unlockEnterprise(enterprise) {
+    if (enterprise && enterprise.workerLocked !== undefined) {
+      delete enterprise.workerLocked;
+    }
+  }
+  function clearEnterpriseAssignment(enterprise) {
+    if (!enterprise) return;
+    enterprise.workerId = null;
+    unlockEnterprise(enterprise);
+  }
 
   FB.careerOf = function (state, c) {
     if (!c) return null;
@@ -165,6 +175,7 @@ window.FB = window.FB || {};
       }
     }
     if (c.id === state.player.charId) FB.syncPlayerCareer(state);
+    if (FB.enterpriseList && workerBusy(state, c.id)) FB.enterpriseList(state);
     return true;
   };
 
@@ -1267,9 +1278,7 @@ window.FB = window.FB || {};
       }
     }
     if (!record) return false;
-    for (const e of FB.enterpriseList(state)) {
-      if (e.workerId === cid) e.workerId = null;
-    }
+    if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(state, cid);
     for (const sid in state.chars) {
       const student = state.chars[sid];
       if (student.edu && student.edu.tutorId === cid) {
@@ -1686,17 +1695,34 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (p.tier >= 3) {
-      for (const enterprise of p.enterprises) {
-        if (enterprise.workerId === p.charId) enterprise.workerId = null;
-      }
-    }
-    const household = {};
-    for (const worker of FB.householdWorkers(state)) household[worker.id] = 1;
     for (const enterprise of p.enterprises) {
-      if (enterprise.workerId && !household[enterprise.workerId]) {
-        enterprise.workerId = null;
+      if (!enterprise.workerId) {
+        unlockEnterprise(enterprise);
+        continue;
       }
+      let eligible = false;
+      for (const worker of FB.enterpriseWorkers(state, enterprise.type)) {
+        if (worker.id === enterprise.workerId) {
+          eligible = true;
+          break;
+        }
+      }
+      if (!eligible) {
+        clearEnterpriseAssignment(enterprise);
+        continue;
+      }
+      if (enterprise.workerLocked !== true) unlockEnterprise(enterprise);
+    }
+    const claimed = {};
+    for (const enterprise of p.enterprises) {
+      if (!enterprise.workerId || !enterprise.workerLocked) continue;
+      if (claimed[enterprise.workerId]) clearEnterpriseAssignment(enterprise);
+      else claimed[enterprise.workerId] = 1;
+    }
+    for (const enterprise of p.enterprises) {
+      if (!enterprise.workerId || enterprise.workerLocked) continue;
+      if (claimed[enterprise.workerId]) clearEnterpriseAssignment(enterprise);
+      else claimed[enterprise.workerId] = 1;
     }
     return p.enterprises;
   };
@@ -1705,7 +1731,7 @@ window.FB = window.FB || {};
     let changed = false;
     for (const enterprise of ((state.player && state.player.enterprises) || [])) {
       if (enterprise.workerId !== cid) continue;
-      enterprise.workerId = null;
+      clearEnterpriseAssignment(enterprise);
       changed = true;
     }
     return changed;
@@ -1798,12 +1824,44 @@ window.FB = window.FB || {};
     const list = FB.enterpriseList(state);
     for (const e of list) if (e.uid === uid) { target = e; break; }
     if (!target) return false;
-    if (!cid) { target.workerId = null; return true; }
+    if (!cid) {
+      clearEnterpriseAssignment(target);
+      return true;
+    }
     let eligible = false;
     for (const c of FB.enterpriseWorkers(state, target.type)) if (c.id === cid) eligible = true;
     if (!eligible) return false;
-    for (const e of list) if (e.workerId === cid) e.workerId = null;
+    for (const e of list) {
+      if (e.uid === uid || e.workerId !== cid) continue;
+      clearEnterpriseAssignment(e);
+    }
+    if (target.workerId !== cid) unlockEnterprise(target);
     target.workerId = cid;
+    return true;
+  };
+
+  FB.setEnterpriseWorkerLock = function (state, uid, locked) {
+    let target = null;
+    for (const enterprise of FB.enterpriseList(state)) {
+      if (enterprise.uid === uid) {
+        target = enterprise;
+        break;
+      }
+    }
+    if (!target || !target.workerId) return false;
+    let eligible = false;
+    for (const worker of FB.enterpriseWorkers(state, target.type)) {
+      if (worker.id === target.workerId) {
+        eligible = true;
+        break;
+      }
+    }
+    if (!eligible) {
+      clearEnterpriseAssignment(target);
+      return false;
+    }
+    if (locked) target.workerLocked = true;
+    else unlockEnterprise(target);
     return true;
   };
 
@@ -1832,6 +1890,327 @@ window.FB = window.FB || {};
       amount *= 1 + (FB.techBonus ? FB.techBonus(state, 'trade') : 0);
     }
     return amount;
+  };
+
+  function staffingIdCompare(a, b) {
+    const aa = String(a === undefined || a === null ? '' : a);
+    const bb = String(b === undefined || b === null ? '' : b);
+    return aa < bb ? -1 : aa > bb ? 1 : 0;
+  }
+
+  function staffingObjectiveZero(length) {
+    const out = [];
+    for (let i = 0; i < length; i++) out.push(0);
+    return out;
+  }
+
+  function staffingObjectiveAdd(a, b) {
+    const out = [];
+    for (let i = 0; i < a.length; i++) out.push(a[i] + b[i]);
+    return out;
+  }
+
+  function staffingObjectiveNegate(value) {
+    const out = [];
+    for (let i = 0; i < value.length; i++) out.push(-value[i]);
+    return out;
+  }
+
+  function staffingObjectiveCompare(a, b) {
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+    }
+    return 0;
+  }
+
+  function staffingFlowEdge(graph, from, to, objective) {
+    const forward = {
+      to:to, reverse:graph[to].length, capacity:1, objective:objective
+    };
+    const backward = {
+      to:from, reverse:graph[from].length, capacity:0,
+      objective:staffingObjectiveNegate(objective)
+    };
+    graph[from].push(forward);
+    graph[to].push(backward);
+    return forward;
+  }
+
+  /* Successive maximum-cost augmenting paths over lexicographic objective
+     vectors. The first component is thousandth-rounded yield, the second
+     preserves current pairings, and one later component per sorted
+     enterprise makes character-id choices stable without unsafe scalar
+     weighting or RNG. */
+  function enterpriseStaffingMatching(rows, workerIds, enterpriseCount) {
+    const objectiveLength = 2 + enterpriseCount;
+    const source = 0;
+    const enterpriseStart = 1;
+    const workerStart = enterpriseStart + rows.length;
+    const sink = workerStart + workerIds.length;
+    const graph = [];
+    for (let i = 0; i <= sink; i++) graph.push([]);
+    const workerNodes = {};
+    for (let i = 0; i < workerIds.length; i++) {
+      workerNodes[String(workerIds[i])] = workerStart + i;
+      staffingFlowEdge(graph, workerStart + i, sink,
+        staffingObjectiveZero(objectiveLength));
+    }
+    for (let i = 0; i < rows.length; i++) {
+      const node = enterpriseStart + i;
+      staffingFlowEdge(graph, source, node,
+        staffingObjectiveZero(objectiveLength));
+      rows[i].flowEdges = [];
+      for (let j = 0; j < rows[i].eligible.length; j++) {
+        const candidate = rows[i].eligible[j];
+        const objective = staffingObjectiveZero(objectiveLength);
+        objective[0] = candidate.yield;
+        objective[1] = candidate.id === rows[i].currentWorkerId ? 1 : 0;
+        objective[2 + rows[i].stableIndex] = workerIds.length -
+          workerIds.indexOf(candidate.id);
+        const edge = staffingFlowEdge(graph, node,
+          workerNodes[String(candidate.id)], objective);
+        rows[i].flowEdges.push({ id:candidate.id, edge:edge });
+      }
+      staffingFlowEdge(graph, node, sink,
+        staffingObjectiveZero(objectiveLength));
+    }
+
+    for (let flow = 0; flow < rows.length; flow++) {
+      const distance = [];
+      const previousNode = [];
+      const previousEdge = [];
+      for (let i = 0; i <= sink; i++) distance.push(null);
+      distance[source] = staffingObjectiveZero(objectiveLength);
+      for (let pass = 0; pass < sink; pass++) {
+        let changed = false;
+        for (let from = 0; from <= sink; from++) {
+          if (!distance[from]) continue;
+          for (let edgeIndex = 0; edgeIndex < graph[from].length; edgeIndex++) {
+            const edge = graph[from][edgeIndex];
+            if (edge.capacity <= 0) continue;
+            const next = staffingObjectiveAdd(distance[from], edge.objective);
+            if (!distance[edge.to] ||
+                staffingObjectiveCompare(next, distance[edge.to]) > 0) {
+              distance[edge.to] = next;
+              previousNode[edge.to] = from;
+              previousEdge[edge.to] = edgeIndex;
+              changed = true;
+            }
+          }
+        }
+        if (!changed) break;
+      }
+      if (!distance[sink]) break;
+      let node = sink;
+      while (node !== source) {
+        const from = previousNode[node];
+        const edge = graph[from][previousEdge[node]];
+        edge.capacity -= 1;
+        graph[node][edge.reverse].capacity += 1;
+        node = from;
+      }
+    }
+
+    const result = {};
+    for (let i = 0; i < rows.length; i++) {
+      result[rows[i].uid] = null;
+      for (let j = 0; j < rows[i].flowEdges.length; j++) {
+        if (rows[i].flowEdges[j].edge.capacity === 0) {
+          result[rows[i].uid] = rows[i].flowEdges[j].id;
+          break;
+        }
+      }
+      delete rows[i].flowEdges;
+    }
+    return result;
+  }
+
+  function staffingYield(state, enterprise, workerId) {
+    if (!workerId) return 0;
+    return Math.round(FB.enterpriseYield(state, {
+      type:enterprise.type,
+      provinceId:enterprise.provinceId,
+      settlement:enterprise.settlement,
+      workerId:workerId
+    }) * 1000);
+  }
+
+  FB.enterpriseStaffingPlan = function (state) {
+    const enterprises = FB.enterpriseList(state).slice();
+    enterprises.sort(function (a, b) {
+      return staffingIdCompare(a.uid, b.uid);
+    });
+    const lockedWorkers = {};
+    const currentEnterprise = {};
+    for (const enterprise of enterprises) {
+      if (enterprise.workerId) currentEnterprise[enterprise.workerId] = enterprise.uid;
+      if (enterprise.workerLocked && enterprise.workerId) {
+        lockedWorkers[enterprise.workerId] = enterprise.uid;
+      }
+    }
+
+    const matchingRows = [];
+    const workerSet = {};
+    const signatureRows = [];
+    const eligibility = {};
+    for (let i = 0; i < enterprises.length; i++) {
+      const enterprise = enterprises[i];
+      const eligible = FB.enterpriseWorkers(state, enterprise.type).slice();
+      eligible.sort(function (a, b) { return staffingIdCompare(a.id, b.id); });
+      eligibility[enterprise.uid] = [];
+      const signatureEligible = [];
+      for (const worker of eligible) {
+        const amount = staffingYield(state, enterprise, worker.id);
+        eligibility[enterprise.uid].push(worker.id);
+        signatureEligible.push([worker.id, amount]);
+        if (!lockedWorkers[worker.id]) workerSet[worker.id] = worker.id;
+      }
+      signatureRows.push([
+        enterprise.uid, enterprise.type, enterprise.provinceId,
+        enterprise.settlement, enterprise.workerId || null,
+        enterprise.workerLocked ? 1 : 0, signatureEligible
+      ]);
+      if (enterprise.workerLocked) continue;
+      const row = {
+        uid:enterprise.uid,
+        stableIndex:i,
+        currentWorkerId:enterprise.workerId || null,
+        eligible:[]
+      };
+      for (let j = 0; j < signatureEligible.length; j++) {
+        if (lockedWorkers[signatureEligible[j][0]]) continue;
+        row.eligible.push({
+          id:signatureEligible[j][0],
+          yield:signatureEligible[j][1]
+        });
+      }
+      matchingRows.push(row);
+    }
+    const workerIds = [];
+    for (const workerId in workerSet) workerIds.push(workerSet[workerId]);
+    workerIds.sort(staffingIdCompare);
+    const matching = enterpriseStaffingMatching(
+      matchingRows, workerIds, enterprises.length);
+
+    let currentTotal = 0;
+    let proposedTotal = 0;
+    let changedCount = 0;
+    let idleCount = 0;
+    let lockedCount = 0;
+    let unresolvedCount = 0;
+    const rows = [];
+    for (const enterprise of enterprises) {
+      const currentWorkerId = enterprise.workerId || null;
+      const proposedWorkerId = enterprise.workerLocked
+        ? currentWorkerId : (matching[enterprise.uid] || null);
+      const currentYield = staffingYield(state, enterprise, currentWorkerId);
+      const proposedYield = staffingYield(state, enterprise, proposedWorkerId);
+      const proposedFromUid = proposedWorkerId &&
+        currentEnterprise[proposedWorkerId] !== enterprise.uid
+        ? currentEnterprise[proposedWorkerId] || null : null;
+      let status = 'unchanged';
+      let unresolvedReason = null;
+      if (enterprise.workerLocked) {
+        status = 'locked';
+        lockedCount++;
+      } else if (!proposedWorkerId) {
+        status = 'unresolved';
+        unresolvedCount++;
+        const eligibleIds = eligibility[enterprise.uid] || [];
+        if (!eligibleIds.length) {
+          unresolvedReason = 'no_eligible_worker';
+        } else {
+          let available = false;
+          for (const workerId of eligibleIds) {
+            if (!lockedWorkers[workerId]) {
+              available = true;
+              break;
+            }
+          }
+          unresolvedReason = available
+            ? 'allocated_higher_yield' : 'eligible_workers_locked';
+        }
+      } else if (proposedWorkerId !== currentWorkerId) {
+        status = currentWorkerId ? 'replaced' :
+          (proposedFromUid ? 'moved' : 'assigned');
+      }
+      if (!currentWorkerId) idleCount++;
+      if (currentWorkerId !== proposedWorkerId) changedCount++;
+      currentTotal += currentYield;
+      proposedTotal += proposedYield;
+      rows.push({
+        uid:enterprise.uid,
+        type:enterprise.type,
+        provinceId:enterprise.provinceId,
+        settlement:enterprise.settlement,
+        currentWorkerId:currentWorkerId,
+        proposedWorkerId:proposedWorkerId,
+        proposedFromUid:proposedFromUid,
+        currentYield:currentYield / 1000,
+        proposedYield:proposedYield / 1000,
+        workerLocked:!!enterprise.workerLocked,
+        status:status,
+        unresolvedReason:unresolvedReason
+      });
+    }
+    return {
+      signature:JSON.stringify([state.turn, signatureRows]),
+      currentTotal:currentTotal / 1000,
+      proposedTotal:proposedTotal / 1000,
+      idleCount:idleCount,
+      lockedCount:lockedCount,
+      unresolvedCount:unresolvedCount,
+      changedCount:changedCount,
+      changed:changedCount > 0,
+      rows:rows
+    };
+  };
+
+  function staffingPlansMatch(a, b) {
+    if (!a || !b || a.signature !== b.signature ||
+        !Array.isArray(a.rows) || a.rows.length !== b.rows.length) return false;
+    for (let i = 0; i < a.rows.length; i++) {
+      if (a.rows[i].uid !== b.rows[i].uid ||
+          (a.rows[i].proposedWorkerId || null) !==
+            (b.rows[i].proposedWorkerId || null) ||
+          !!a.rows[i].workerLocked !== !!b.rows[i].workerLocked) return false;
+    }
+    return true;
+  }
+
+  FB.applyEnterpriseStaffingPlan = function (state, plan) {
+    const fresh = FB.enterpriseStaffingPlan(state);
+    if (!staffingPlansMatch(plan, fresh)) {
+      return { ok:false, reason:'stale', plan:fresh };
+    }
+    if (!fresh.changed) {
+      return { ok:false, reason:'unchanged', plan:fresh };
+    }
+    const enterprises = FB.enterpriseList(state);
+    const snapshot = [];
+    for (const enterprise of enterprises) {
+      snapshot.push({
+        enterprise:enterprise,
+        workerId:enterprise.workerId || null,
+        workerLocked:!!enterprise.workerLocked
+      });
+      if (!enterprise.workerLocked) clearEnterpriseAssignment(enterprise);
+    }
+    for (const row of fresh.rows) {
+      if (row.workerLocked || !row.proposedWorkerId) continue;
+      if (!FB.assignEnterprise(state, row.uid, row.proposedWorkerId)) {
+        for (const saved of snapshot) {
+          saved.enterprise.workerId = saved.workerId;
+          if (saved.workerLocked) saved.enterprise.workerLocked = true;
+          else unlockEnterprise(saved.enterprise);
+        }
+        return {
+          ok:false, reason:'stale',
+          plan:FB.enterpriseStaffingPlan(state)
+        };
+      }
+    }
+    return { ok:true, reason:'applied', plan:FB.enterpriseStaffingPlan(state) };
   };
 
   FB.livelihoodBreakdown = function (state) {

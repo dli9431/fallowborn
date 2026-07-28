@@ -91,14 +91,14 @@ available under this seasonal fee cap."
 - Do not replace a valid explicit choice silently.
 - Notify the player when the policy makes or cannot make a choice.
 
-### 2. Staff idle enterprises
+### 2. Staff idle enterprises â€” complete
 
 Add a **Staff all idle enterprises** preview.
 
-- Maximize eligible expected yield.
-- Do not move explicitly locked workers.
-- Show every proposed worker-to-enterprise assignment before applying.
-- Leave unresolved enterprises visible with the reason they could not be staffed.
+- [x] Maximize eligible expected yield.
+- [x] Do not move explicitly locked workers.
+- [x] Show every proposed worker-to-enterprise assignment before applying.
+- [x] Leave unresolved enterprises visible with the reason they could not be staffed.
 
 ### 3. Equip Best
 
@@ -205,13 +205,14 @@ unchanged except where a shared summary or entry point must call them.
 ## Suggested delivery order
 
 1. [x] Household Plan read-only overview with links to existing pickers.
-2. Shared person-assignment component.
-3. Education policy and enterprise-staffing preview.
-4. Per-character Equip Best.
-5. Manor plot batch purchase.
-6. Descendant match recommendation.
-7. Shared asset/effect rows and Ongoing Commitments summary.
-8. Test with a large household across childhood, adulthood, marriage, death, and
+2. [x] Shared person-assignment component.
+3. [ ] Education policy.
+4. [x] Enterprise-staffing preview.
+5. Per-character Equip Best.
+6. Manor plot batch purchase.
+7. Descendant match recommendation.
+8. Shared asset/effect rows and Ongoing Commitments summary.
+9. Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.
 
 ## Completion criteria

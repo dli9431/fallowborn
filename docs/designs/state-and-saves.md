@@ -228,10 +228,18 @@ landing the old buildings in the head settlement (`s: 0`) — the same no-versio
 pattern as the other lazy inits.
 
 Livelihood state is additive and does not raise the save-format version. Careers live on
-characters; repeatable enterprises live in `player.enterprises`. Old characters gain a
-career deterministically from the current compatibility profession/station when first
-read. Old business-like holdings migrate once into enterprise instances in the home
-settlement, while all other holdings remain unchanged.
+characters; repeatable enterprises live in `player.enterprises` as
+`{uid,type,provinceId,settlement,workerId,workerLocked?}`. Only `workerLocked:true` is
+stored; absence means the current assignment is available to batch staffing. Old
+characters gain a career deterministically from the current compatibility
+profession/station when first read. Old business-like holdings migrate once into
+enterprise instances in the home settlement, while all other holdings remain unchanged.
+Valid locks pass through ordinary JSON snapshots and succession. `FB.enterpriseList`
+repairs them lazily without RNG: an idle, duplicate, departed, dead, rank-ineligible,
+career-ineligible, or guild-ineligible assignment loses both its worker id and lock.
+Manual reassignment and explicit unassignment clear affected locks as well. Staffing
+previews and their signatures are transient derived values and are never serialized, so
+the assistant remains an additive save-format-3 feature.
 
 Guild monopoly state is additive and keeps save format 3.
 `player.guildMonopolies = {incoming,outgoing}` is created lazily by

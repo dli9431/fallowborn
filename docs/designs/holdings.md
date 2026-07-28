@@ -60,9 +60,12 @@ Related: [development.md](development.md) for the tier-3+ equivalent (buildings)
 
 **Productive property is an enterprise, not a unique improvement.**
 `FBDATA.enterprises` (`data/economy.js`) defines repeatable family businesses. Instances
-live in `player.enterprises` as `{uid,type,provinceId,settlement,workerId}` and pass to
-heirs. One copy of a type may stand in each derived settlement, so a family may own
-several workshops or stalls; further copies grow dearer by
+live in `player.enterprises` as
+`{uid,type,provinceId,settlement,workerId,workerLocked?}` and pass to heirs.
+`workerLocked:true` preserves that explicit worker-enterprise pairing from batch
+staffing; a missing field means unlocked, so the addition remains compatible with
+save format 3. One copy of a type may stand in each derived settlement, so a family may
+own several workshops or stalls; further copies grow dearer by
 `balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing while idle.
 `FB.enterpriseWorkers` limits staffing to resident family or a paid retainer in the
 matching career (and, where required, guild rank). A retained factor or steward is still
@@ -72,7 +75,23 @@ Trading House holdings migrate lazily to equivalent enterprise instances; househ
 rights, equipment, and cultural capital remain unique holdings.
 The staffing picker uses the shared person-assignment card to preview each eligible
 worker's live yield, occupation, Regard, present enterprise, and every worker or enterprise
-that reassignment would displace; `FB.assignEnterprise` remains the sole mutation path.
+that reassignment would displace. Manual replacement or unassignment may override a lock
+and clears every affected lock. Lazy enterprise normalization also clears an assignment
+and its lock when the worker dies, leaves the managed household, becomes career/guild
+ineligible, or can no longer work personally after a rank change. Valid locks survive
+save/restore and succession.
+
+The opt-in staffing assistant is a no-day, preview-first batch operation.
+`FB.enterpriseStaffingPlan` fixes every valid locked pairing, then considers all
+remaining enterprises and eligible household workers, including workers on unlocked
+enterprises. It maximizes the sum of `FB.enterpriseYield` rounded per pairing to
+thousandths of seasonal currency. Equal totals preserve the most current assignments,
+then resolve by stable enterprise UID and character ID; no RNG is consumed. Locale-neutral
+rows record the current/proposed ids and yields, lock/status state, and one of
+`no_eligible_worker`, `eligible_workers_locked`, or `allocated_higher_yield` for each
+unresolved enterprise. `FB.applyEnterpriseStaffingPlan` rejects a stale signature for
+another review, clears only unlocked assignments, and reapplies the reviewed mapping
+through `FB.assignEnterprise`.
 
 Enterprise yield consumes the shared computed benefits shown in Network: guild rank,
 the legacy guild-member work benefit, and position/retainer enterprise modifiers. These

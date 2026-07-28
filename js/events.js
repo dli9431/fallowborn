@@ -1939,7 +1939,9 @@ window.FB = window.FB || {};
           queued:false
         };
       for (const enterprise of (p.enterprises || [])) {
-        if (enterprise.workerId === p.charId) enterprise.workerId = null;
+        if (enterprise.workerId !== p.charId) continue;
+        enterprise.workerId = null;
+        if (enterprise.workerLocked !== undefined) delete enterprise.workerLocked;
       }
     } else if (oldTier >= 3 && tier < 3) {
       p.stationFarewell = null;
