@@ -35,6 +35,12 @@ breaking ties. A lost or voluntarily reduced level gives no refund and must be b
 again at full setup cost. Every purchase and lapse writes a locale-neutral durable
 Chronicle descriptor.
 
+The household sheet presents each current or next standard through the shared
+asset/effect row: household owner and work/general scope, exact setup and live
+upkeep, current or next effect, succession/no-resale rule, and lapse condition.
+This is presentation only; the level map and seasonal lapse order remain
+authoritative.
+
 Profession outfits multiply positive vocational focus resources, resident-family wages
 or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid
 work only. Permanent Pack Mule, Fine Tools, Good Mail, Warhorse, and other holding/item
@@ -54,6 +60,11 @@ one-step manor purchase while preserving its total baseline cost: five plots at 
 each. The Free Farmer start owns its promised first plot. Legacy `has_farm` saves become
 one plot lazily, and legacy tier-2 saves built around the old assumed manor receive a
 complete holding unless their station came from the abbot/qadi path.
+
+The land market uses the same asset/effect row for each settlement, showing
+dynastic ownership, exact site, next-plot affordability, no upkeep, before/after
+seasonal yield, inheritance, and permanence. Permanent holdings and enterprises
+use that row as well, while retaining their separate pledge and staffing rules.
 
 Related: [development.md](development.md) for the tier-3+ equivalent (buildings),
 [realms.md](realms.md) for tiers.

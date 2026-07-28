@@ -123,6 +123,10 @@ and remaining days (or “Until the campaign ends”); hover exposes the descrip
 effects on pointer devices, while click, tap, Enter, or Space opens an accessible detail
 modal.
 
+The detail modal uses the shared asset/effect row to separate county/campaign
+ownership and scope, event-granted setup, seasonal upkeep, mechanical effects,
+transfer behavior, and exact expiry.
+
 Runtime JSON mods may provide a top-level `modifiers` object. Like traits and other
 id-keyed definitions, a later mod replaces the complete definition at a matching id.
 Catalog ids and numeric state remain locale-neutral; `name` and `desc` are structured

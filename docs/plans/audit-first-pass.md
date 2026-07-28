@@ -66,6 +66,14 @@ summary rows:
 Reuse cost, effect, source-ledger, affordability, and batch-action renderers. Keep
 each asset's ownership state and rules separate.
 
+Implemented as the render-only `UI.assetEffectSummary`, in the audit's fixed
+owner → scope → setup cost → recurring cost → effect → transfer rule → expiry
+order. Standards, permanent holdings, freehold plots, enterprises, buildings,
+items, modifiers, and technology now supply their own live values to the shared
+row. Money costs share one affordability cue, seasonal money points to the
+existing resource ledger, and the responsive layout stacks without changing any
+asset's owning state or mutation API.
+
 ### 4. Ongoing Commitments summary
 
 Provide one summary with direct edit links for:
@@ -210,7 +218,7 @@ unchanged except where a shared summary or entry point must call them.
 4. Per-character Equip Best.
 5. Manor plot batch purchase.
 6. Descendant match recommendation.
-7. Shared asset/effect rows and Ongoing Commitments summary.
+7. Shared asset/effect rows (implemented), then Ongoing Commitments summary.
 8. Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.
 

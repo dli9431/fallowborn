@@ -72,11 +72,6 @@ window.FB = window.FB || {};
     if (fx.desertion) parts.push(FB.T('{amount}% desertion per season', {
       amount:Math.round(fx.desertion * 100)
     }));
-    if (def.upkeep && def.upkeep.gold) {
-      parts.push(FB.T('{money:amount} upkeep each season', {
-        amount:def.upkeep.gold
-      }));
-    }
     return parts.join(' · ');
   }
   function modifierDurationText(s, record, scope) {
@@ -193,8 +188,8 @@ window.FB = window.FB || {};
     return FB.renderMessage(FB.msg('fx.ui.tech_cost_estimate', {
       forms: {
         select:'plural', param:'seasons', cases:{
-          one:'{cost} · about {seasons} season',
-          other:'{cost} · about {seasons} seasons'
+          one:'{cost} research · about {seasons} season',
+          other:'{cost} research · about {seasons} seasons'
         }
       }
     }, { cost:researchNumber(cost), seasons:seasons }), {
@@ -375,6 +370,67 @@ window.FB = window.FB || {};
   }
   function panelh(title) {
     return '<div class="panelh">' + esc(FB.T(title)) + '</div>';
+  }
+
+  /* Shared presentation for assets and persistent effects. The owning system
+     supplies every value; this renderer only keeps the audit's comparison
+     order, localization, affordability cue, and responsive markup common. */
+  function assetSummaryValue(value, fallback) {
+    const supplied = value !== undefined && value !== null && value !== '';
+    const source = supplied ? value : fallback;
+    if (source && typeof source === 'object') {
+      return {
+        text:source.text === undefined || source.text === null ? '' : String(source.text),
+        tone:source.tone || ''
+      };
+    }
+    return { text:String(source), tone:'' };
+  }
+
+  function assetEffectSummary(options) {
+    const opts = options || {};
+    const fields = [
+      { key:'owner', label:FB.T('Owner'), fallback:FB.T('Not applicable') },
+      { key:'scope', label:FB.T('Scope'), fallback:FB.T('Not applicable') },
+      { key:'setupCost', label:FB.T('Setup cost'), fallback:FB.T('None') },
+      { key:'recurringCost', label:FB.T('Recurring cost'), fallback:FB.T('None') },
+      { key:'effect', label:FB.T('Effect'), fallback:FB.T('No mechanical effect') },
+      { key:'transferRule', label:FB.T('Transfer rule'),
+        fallback:FB.T('Cannot be transferred') },
+      { key:'expiry', label:FB.T('Expiry'), fallback:FB.T('No fixed end') }
+    ];
+    let h = '<span class="asset-effect-summary' +
+      (opts.compact ? ' compact' : '') + '" role="group" aria-label="' +
+      esc(FB.T('Asset and effect summary')) + '">';
+    for (const field of fields) {
+      const value = assetSummaryValue(opts[field.key], field.fallback);
+      const fieldClass = field.key.replace(/([A-Z])/g, '-$1').toLowerCase();
+      h += '<span class="asset-effect-cell asset-effect-' + fieldClass +
+        (value.tone ? ' ' + esc(value.tone) : '') + '">' +
+        '<span class="asset-effect-label">' + esc(field.label) + '</span>' +
+        '<span class="asset-effect-value">' + esc(value.text) + '</span></span>';
+    }
+    return h + '</span>';
+  }
+  UI.assetEffectSummary = assetEffectSummary;
+
+  function assetMoneyCost(amount, affordable) {
+    const cost = FB.T('{money:amount}', { amount:Number(amount) || 0 });
+    return affordable === false
+      ? {
+        text:FB.T('{cost} · not affordable', { cost:cost }),
+        tone:'unaffordable'
+      }
+      : cost;
+  }
+
+  function assetSeasonalMoneyCost(amount) {
+    amount = Number(amount) || 0;
+    return amount
+      ? FB.T('{money:amount} each season · shown in Money each season', {
+        amount:amount
+      })
+      : FB.T('None');
   }
 
   /* Shared presentation for choosing a person for a role. Callers supply the
@@ -5799,17 +5855,46 @@ window.FB = window.FB || {};
      The deed is a fast county ledger: choose a province when necessary, then
      Raise Next repeatedly without leaving the dialog. The Land-tab settlement
      path still passes idx for exact placement. */
-  function buildingEffects(d) {
+  function buildingEffects(d, id) {
     const fx = [];
-    if (d.tax) fx.push(FB.T('+{money:amount} each season', { amount: d.tax }));
+    if (d.tax) fx.push(FB.T(
+      '+{money:amount} each season · shown in Money each season', {
+        amount:d.tax
+      }));
     if (d.piety) fx.push(FB.T('+{amount} piety each season', { amount: d.piety }));
     if (d.research) fx.push(FB.T('+{amount} national research each season', { amount: d.research }));
     if (d.levy) fx.push(FB.T('+{men} men to the levy', { men: d.levy }));
-    if (d.upkeep) fx.push(FB.T('−{money:amount} upkeep each season', { amount: d.upkeep }));
+    if (d.retinue) fx.push(FB.T('+{men} men-at-arms', { men:d.retinue }));
+    if (d.archers) fx.push(FB.T('+{men} archers', { men:d.archers }));
     if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
     if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
     if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
+    if (id === 'walls') fx.push(FB.T('+8% battle odds when defending the home county'));
+    if (id === 'granary') fx.push(FB.T('Unlocks granary choices during famine'));
     return fx;
+  }
+
+  function buildingScope(s, pid, idx, id) {
+    const settlements = FB.settlementsOf(s, pid);
+    const province = FB.world.byId[pid];
+    const place = settlements[idx] ? settlements[idx].name :
+      (province ? province.name : pid);
+    if (id === 'walls') {
+      return FB.T('{place}; defense applies in the home county', {
+        place:place
+      });
+    }
+    return FB.T('{place}; standing benefits count across the demesne', {
+      place:place
+    });
+  }
+
+  function buildingTransferRule() {
+    return FB.T('Belongs to the county and follows it through conquest');
+  }
+
+  function buildingExpiryRule() {
+    return FB.T('Until demolished; permanent ruins keep the site occupied');
   }
 
   function buildingUnavailableText(s, pid, id, d) {
@@ -5875,26 +5960,43 @@ window.FB = window.FB || {};
         const standing = FB.buildingCountIn(s, pid, id, false);
         const copies = FB.buildingCountIn(s, pid, id, true);
         const cost = FB.buildCost(s, pid, id);
-        const effects = buildingEffects(d).join(' · ');
+        const effects = buildingEffects(d, id).join(' · ');
+        const short = s.player.gold < cost;
         if (slots.length) {
-          const short = s.player.gold < cost;
           const repeat = copies
             ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
               { number: copies + 1, cost: cost })
             : FB.T('First copy in this county: {money:cost}.', { cost: cost });
           h += '<button class="actionbtn" data-bquick="' + esc(id) + '"' + (short ? ' disabled' : '') + '>' +
-            esc(FB.T('{icon} {name} — Raise Next for {money:cost}', {
-              icon: d.icon, name: dt(s, 'building', id, d, 'name'), cost: cost
+            esc(FB.T('{icon} {name} — Raise Next', {
+              icon: d.icon, name: dt(s, 'building', id, d, 'name')
             })) + '<span class="adesc">' +
             esc(FB.T('{standing} standing · next in {settlement}.', {
               standing: standing, settlement: sts[slots[0]].name
-            })) + ' ' + esc(repeat) + (effects ? ' ' + esc(effects) : '') +
-            (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
+            })) + ' ' + esc(repeat) + '</span>' + assetEffectSummary({
+              compact:true,
+              owner:FB.T('{province} county', { province:pr.name }),
+              scope:buildingScope(s, pid, slots[0], id),
+              setupCost:assetMoneyCost(cost, !short),
+              recurringCost:assetSeasonalMoneyCost(d.upkeep),
+              effect:effects,
+              transferRule:buildingTransferRule(),
+              expiry:buildingExpiryRule()
+            }) + '</button>';
         } else {
           h += '<button class="actionbtn" disabled>' + d.icon + ' ' +
             esc(dt(s, 'building', id, d, 'name')) + '<span class="adesc">' +
             esc(buildingUnavailableText(s, pid, id, d)) +
-            (effects ? ' ' + esc(effects) : '') + '</span></button>';
+            '</span>' + assetEffectSummary({
+              compact:true,
+              owner:FB.T('{province} county', { province:pr.name }),
+              scope:FB.T('No eligible settlement'),
+              setupCost:assetMoneyCost(cost, !short),
+              recurringCost:assetSeasonalMoneyCost(d.upkeep),
+              effect:effects,
+              transferRule:buildingTransferRule(),
+              expiry:buildingExpiryRule()
+            }) + '</button>';
         }
       }
       h += '</div><button class="btn" id="gm-cancel">' +
@@ -5941,11 +6043,19 @@ window.FB = window.FB || {};
           { number: copies + 1, cost: b.cost })
         : FB.T('First copy in this county: {money:cost}.', { cost: b.cost });
       h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {money:cost}', {
-          icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name'), cost: b.cost
+        esc(FB.T('{icon} {name}', {
+          icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name')
         })) + '<span class="adesc">' + esc(dt(s, 'building', b.id, b.def, 'desc')) +
-        ' ' + esc(repeat) + ' ' + esc(buildingEffects(b.def).join(' · ')) +
-        (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
+        ' ' + esc(repeat) + '</span>' + assetEffectSummary({
+          compact:true,
+          owner:FB.T('{province} county', { province:pr.name }),
+          scope:buildingScope(s, pid, idx, b.id),
+          setupCost:assetMoneyCost(b.cost, !short),
+          recurringCost:assetSeasonalMoneyCost(b.def.upkeep),
+          effect:buildingEffects(b.def, b.id).join(' · '),
+          transferRule:buildingTransferRule(),
+          expiry:buildingExpiryRule()
+        }) + '</button>';
     }
     h += '</div>';
     if (done.length) {
@@ -6024,12 +6134,32 @@ window.FB = window.FB || {};
         const d = FBDATA.buildings[id];
         if (!d) continue;
         if (e.ruined) {
-          h += '<div class="kv"><span>' + d.icon + ' ' +
-            esc(FB.T('Ruins of {building}', { building: dt(s, 'building', id, d, 'name') })) +
-            '</span><b>' + esc(FB.T('No benefit · no upkeep')) + '</b></div>';
+          h += '<div class="asset-owned-row"><b>' + d.icon + ' ' +
+            esc(FB.T('Ruins of {building}', {
+              building:dt(s, 'building', id, d, 'name')
+            })) + '</b>' + assetEffectSummary({
+              compact:true,
+              owner:FB.T('{province} county', { province:pr.name }),
+              scope:buildingScope(s, pid, idx, id),
+              setupCost:FB.T('Already spent'),
+              recurringCost:FB.T('None'),
+              effect:FB.T('No current benefit'),
+              transferRule:buildingTransferRule(),
+              expiry:FB.T('Permanent ruins; the site remains occupied')
+            }) + '</div>';
         } else {
-          h += '<div class="kv"><span>' + d.icon + ' ' + esc(dt(s, 'building', id, d, 'name')) +
-            '</span><b>' + esc(buildingEffects(d).join(' · ') || '—') + '</b></div>' +
+          h += '<div class="asset-owned-row"><b>' + d.icon + ' ' +
+            esc(dt(s, 'building', id, d, 'name')) + '</b>' +
+            assetEffectSummary({
+              compact:true,
+              owner:FB.T('{province} county', { province:pr.name }),
+              scope:buildingScope(s, pid, idx, id),
+              setupCost:FB.T('Paid when raised'),
+              recurringCost:assetSeasonalMoneyCost(d.upkeep),
+              effect:buildingEffects(d, id).join(' · '),
+              transferRule:buildingTransferRule(),
+              expiry:buildingExpiryRule()
+            }) + '</div>' +
             '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>' +
             '<button class="btn sett-demolish" data-demolish="' + esc(id) + '">' +
             esc(FB.T('Demolish…')) + '</button>';
@@ -7747,30 +7877,81 @@ window.FB = window.FB || {};
   };
 
   /* ================= household standards & permanent holdings ================= */
+  function householdStandardScope(s, def) {
+    if (def.kind !== 'work') return FB.T('Commoner household');
+    const career = FBDATA.careers && FBDATA.careers[def.profession];
+    return career
+      ? FB.T('{profession} work and enterprises', {
+        profession:dt(s, 'career', def.profession, career, 'name')
+      })
+      : FB.T('Matching household work and enterprises');
+  }
+
+  function householdStandardTransferRule() {
+    return FB.T('Passes to the next household head; cannot be sold or pledged');
+  }
+
+  function holdingEffectText(def) {
+    const fx = (def && def.fx) || {};
+    const parts = [];
+    if (fx.gold) parts.push(FB.T(
+      '{money:amount} each season · shown in Money each season', {
+        amount:fx.gold
+      }));
+    if (fx.prestige) parts.push(FB.T('{amount} prestige each season', {
+      amount:fx.prestige
+    }));
+    if (fx.piety) parts.push(FB.T('{amount} piety each season', {
+      amount:fx.piety
+    }));
+    if (fx.battle) parts.push(FB.T('+{amount}% battle odds', {
+      amount:Math.round(fx.battle * 100)
+    }));
+    if (fx.edu) parts.push(FB.T('+{amount}% education success chance', {
+      amount:Math.round(fx.edu * 1000) / 10
+    }));
+    if (fx.health) parts.push(FB.T(
+      '−{amount} percentage points yearly household mortality', {
+        amount:Math.round(fx.health * 10000) / 100
+      }));
+    return parts.join(' · ');
+  }
+
+  function holdingTransferRule(def) {
+    return def && (def.pledge === false || def.eventOnly)
+      ? FB.T('Passes to heirs; cannot secure credit')
+      : FB.T('Passes to heirs; may secure credit when eligible');
+  }
+
   function householdStandardRow(s, id) {
     const def = FBDATA.householdStandards[id];
     const level = FB.householdStandardLevel(s, id);
     const current = level && def.levels[level - 1];
     const active = FB.householdStandardActive(s, id);
     const next = level < def.levels.length ? def.levels[level] : null;
-    let detail = level
+    const detail = level
       ? FB.T('Level {level}: {name}', {
         level:level, name:householdStandardLevelName(s, id, level)
       })
       : FB.T('Baseline — no maintained improvement');
-    if (level) {
-      detail += active
-        ? FB.T(' · {money:upkeep}/season upkeep', { upkeep:Number(current.upkeep) || 0 })
-        : FB.T(' · dormant — no upkeep or benefit');
-    }
-    if (next) {
-      detail += FB.T(' · next setup {money:cost}', { cost:Number(next.cost) || 0 });
-    } else {
-      detail += FB.T(' · highest level');
-    }
     return '<button class="actionbtn household-standard" data-household-standard="' +
       esc(id) + '">' + esc((def.icon || '🏠') + ' ' + householdStandardName(s, id)) +
-      '<span class="adesc">' + esc(detail) + '</span></button>';
+      '<span class="adesc">' + esc(detail) + '</span>' +
+      assetEffectSummary({
+        compact:true,
+        owner:FB.T('Household dynasty'),
+        scope:householdStandardScope(s, def),
+        setupCost:next
+          ? assetMoneyCost(next.cost, s.player.gold >= (Number(next.cost) || 0))
+          : FB.T('Highest level reached'),
+        recurringCost:active && current
+          ? assetSeasonalMoneyCost(current.upkeep) : FB.T('None while dormant'),
+        effect:level && active
+          ? householdStandardLevelDesc(s, id, level)
+          : level ? FB.T('Dormant — no current benefit') : FB.T('No maintained improvement'),
+        transferRule:householdStandardTransferRule(),
+        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+      }) + '</button>';
   }
 
   function householdStandardPreview(s, id, level) {
@@ -7802,10 +7983,19 @@ window.FB = window.FB || {};
       const short = s.player.gold < t.def.cost;
       h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' +
         (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {money:cost}', {
-          icon:t.def.icon, name:dt(s, 'holding', t.id, t.def, 'name'), cost:t.def.cost
+        esc(FB.T('{icon} {name}', {
+          icon:t.def.icon, name:dt(s, 'holding', t.id, t.def, 'name')
         })) + '<span class="adesc">' + esc(dt(s, 'holding', t.id, t.def, 'desc')) +
-        (short ? ' ' + esc(FB.T('(not enough money)')) : '') + '</span></button>';
+        '</span>' + assetEffectSummary({
+          compact:true,
+          owner:FB.T('Household dynasty'),
+          scope:FB.T('Permanent family property'),
+          setupCost:assetMoneyCost(t.def.cost, !short),
+          recurringCost:FB.T('None'),
+          effect:holdingEffectText(t.def),
+          transferRule:holdingTransferRule(t.def),
+          expiry:FB.T('No fixed end; may be lost through events or default')
+        }) + '</button>';
     }
     if (!available.length) {
       h += '<div class="hint">' + esc(FB.T(
@@ -7815,13 +8005,25 @@ window.FB = window.FB || {};
     h += '</div>';
     const done = FB.holdingList(s);
     if (done.length) {
-      const names = done.map(function (id) {
+      h += '<div class="panelh">' + esc(FB.T('Owned property')) + '</div>' +
+        '<div class="asset-owned-list">';
+      for (const id of done) {
         const def = FBDATA.holdings[id];
-        return def ? def.icon + ' ' + dt(s, 'holding', id, def, 'name') : id;
-      });
-      h += '<div class="progressnote">' + esc(FB.T('Owned permanently: {holdings}', {
-        holdings:names.join(' · ')
-      })) + '</div>';
+        if (!def) continue;
+        h += '<div class="asset-owned-row"><b>' + def.icon + ' ' +
+          esc(dt(s, 'holding', id, def, 'name')) + '</b>' +
+          assetEffectSummary({
+            compact:true,
+            owner:FB.T('Household dynasty'),
+            scope:FB.T('Permanent family property'),
+            setupCost:FB.T('Already owned'),
+            recurringCost:FB.T('None'),
+            effect:holdingEffectText(def),
+            transferRule:holdingTransferRule(def),
+            expiry:FB.T('No fixed end; may be lost through events or default')
+          }) + '</div>';
+      }
+      h += '</div>';
     }
     return h;
   }
@@ -7906,27 +8108,36 @@ window.FB = window.FB || {};
       kv('Current level', esc(level
         ? FB.T('{level} — {name}', {
           level:level, name:householdStandardLevelName(s, id, level)
-        }) : FB.T('Baseline'))) +
-      kv('Current seasonal upkeep', esc(active && current
-        ? FB.money(Number(current.upkeep) || 0) : FB.money(0))) +
-      '<p' + (active || !level ? '' : ' class="op-bad"') + '>' +
-      esc(level
-        ? householdStandardLevelDesc(s, id, level) +
-          (active ? '' : ' ' + FB.T('Dormant: no upkeep or benefit right now.'))
-        : FB.T('No maintained improvement is active.')) + '</p></div><div class="gm-list">';
+        }) : FB.T('Baseline'))) + assetEffectSummary({
+        owner:FB.T('Household dynasty'),
+        scope:householdStandardScope(s, def),
+        setupCost:level ? FB.T('Paid when each level was established') : FB.T('None'),
+        recurringCost:active && current
+          ? assetSeasonalMoneyCost(current.upkeep) : FB.T('None while dormant'),
+        effect:level && active
+          ? householdStandardLevelDesc(s, id, level)
+          : level ? FB.T('Dormant — no current benefit') : FB.T('No maintained improvement'),
+        transferRule:householdStandardTransferRule(),
+        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+      }) + '</div><div class="gm-list">';
     if (next) {
       h += '<button class="actionbtn" id="household-standard-upgrade"' +
         (availability === true ? '' : ' disabled') + '>' +
         esc(FB.T('Improve to level {level}: {name}', {
           level:level + 1,
           name:householdStandardLevelName(s, id, level + 1)
-        })) + '<span class="adesc">' +
-        esc(FB.T('Setup {money:cost} · upkeep {money:upkeep}/season · {benefit}', {
-          cost:Number(next.cost) || 0,
-          upkeep:Number(next.upkeep) || 0,
-          benefit:householdStandardLevelDesc(s, id, level + 1)
-        })) + (availability === true ? '' : ' ' + esc(availability)) +
-        '</span></button>';
+        })) + (availability === true ? '' : '<span class="adesc">' +
+          esc(availability) + '</span>') + assetEffectSummary({
+          compact:true,
+          owner:FB.T('Household dynasty'),
+          scope:householdStandardScope(s, def),
+          setupCost:assetMoneyCost(next.cost,
+            s.player.gold >= (Number(next.cost) || 0)),
+          recurringCost:assetSeasonalMoneyCost(next.upkeep),
+          effect:householdStandardLevelDesc(s, id, level + 1),
+          transferRule:householdStandardTransferRule(),
+          expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+        }) + '</button>';
     }
     if (level) {
       h += '<button class="actionbtn danger" id="household-standard-reduce">' +
@@ -7968,9 +8179,15 @@ window.FB = window.FB || {};
     const netAfter = preview.net;
     const projected = s.player.gold - (Number(next.cost) || 0) + netAfter;
     let h = '<div class="gm-body-text">' +
-      kv('Setup cost now', esc(FB.money(Number(next.cost) || 0))) +
-      kv('New seasonal upkeep', esc(FB.money(Number(next.upkeep) || 0))) +
-      kv('New benefit', esc(householdStandardLevelDesc(s, id, level + 1))) +
+      assetEffectSummary({
+        owner:FB.T('Household dynasty'),
+        scope:householdStandardScope(s, def),
+        setupCost:assetMoneyCost(next.cost, true),
+        recurringCost:assetSeasonalMoneyCost(next.upkeep),
+        effect:householdStandardLevelDesc(s, id, level + 1),
+        transferRule:householdStandardTransferRule(),
+        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+      }) +
       kv('Projected seasonal net', '<span class="' +
         (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
         esc(fmtAmt(netAfter, true)) + '</span>') +
@@ -8019,8 +8236,18 @@ window.FB = window.FB || {};
         name:householdStandardLevelName(s, id, level)
       })) + '</p>' +
       kv('New level', esc(resultName)) +
-      kv('New seasonal upkeep', esc(FB.money(active && previous
-        ? Number(previous.upkeep) || 0 : 0))) +
+      assetEffectSummary({
+        owner:FB.T('Household dynasty'),
+        scope:householdStandardScope(s, def),
+        setupCost:FB.T('No refund; repurchase later at full setup cost'),
+        recurringCost:active && previous
+          ? assetSeasonalMoneyCost(previous.upkeep) : FB.T('None'),
+        effect:previous
+          ? householdStandardLevelDesc(s, id, level - 1)
+          : FB.T('No maintained improvement'),
+        transferRule:householdStandardTransferRule(),
+        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+      }) +
       kv('Projected seasonal net', '<span class="' +
         (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
         esc(fmtAmt(netAfter, true)) + '</span>') +
@@ -8069,17 +8296,34 @@ window.FB = window.FB || {};
       const short = p.gold < cost;
       const before = Math.round(FB.landGroupYield(count) * 10) / 10;
       const after = Math.round(FB.landGroupYield(count + 1) * 10) / 10;
+      const place = FB.T('{settlement}, {province}', {
+        settlement:settlements[i].name,
+        province:FB.world.byId[p.provinceId].name
+      });
       h += '<button class="actionbtn" data-land-settlement="' + i + '"' +
         (full || short ? ' disabled' : '') + '>🌾 ' +
         esc(FB.T('{settlement} — {count}/{max} plots', {
           settlement:settlements[i].name, count:count, max:max
-        })) + '<span class="adesc">' +
-        (full
-          ? esc(FB.T('A manor-sized holding is assembled here.'))
-          : esc(FB.T('Buy the next plot for {money:cost} · seasonal yield {money:before} → {money:after}.', {
-            cost:cost, before:before, after:after
-          })) + (short ? ' ' + esc(FB.T('(not enough money)')) : '')) +
-        '</span></button>';
+        })) + (full ? '<span class="adesc">' +
+          esc(FB.T('A manor-sized holding is assembled here.')) + '</span>' : '') +
+        assetEffectSummary({
+          compact:true,
+          owner:FB.T('Household dynasty'),
+          scope:place,
+          setupCost:full ? FB.T('Holding complete') : assetMoneyCost(cost, !short),
+          recurringCost:FB.T('None'),
+          effect:full
+            ? FB.T(
+              '{money:amount} seasonal yield from this holding; shown in Money each season', {
+                amount:before
+              })
+            : FB.T(
+              '{money:before} → {money:after} seasonal yield here; shown in Money each season', {
+              before:before, after:after
+            }),
+          transferRule:FB.T('Passes to heirs as family land in this settlement'),
+          expiry:FB.T('No fixed end')
+        }) + '</button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('🌾 Buy Freehold Land'), h);
@@ -8445,6 +8689,43 @@ window.FB = window.FB || {};
   };
 
   /* ================= household livelihoods & enterprises ================= */
+  function enterprisePlace(s, enterprise) {
+    const pr = enterprise && FB.world.byId[enterprise.provinceId];
+    const settlements = pr ? FB.settlementsOf(s, enterprise.provinceId) : [];
+    return settlements[enterprise && enterprise.settlement]
+      ? FB.T('{settlement}, {province}', {
+        settlement:settlements[enterprise.settlement].name,
+        province:pr.name
+      })
+      : (pr ? pr.name : FB.T('Unknown place'));
+  }
+
+  function enterpriseEffectText(s, enterprise, def, purchasePreview) {
+    if (purchasePreview) {
+      return FB.T(
+        'Base {money:amount} seasonal yield while staffed; the exact result appears in Money each season', {
+          amount:def.yield || 0
+        });
+    }
+    const worker = enterprise.workerId && s.chars[enterprise.workerId];
+    if (!worker || worker.dead) {
+      return FB.T('No income while idle; assign an eligible household worker');
+    }
+    return FB.T(
+      'About {money:amount} each season while worked by {name}; shown in Money each season', {
+      amount:Math.round(FB.enterpriseYield(s, enterprise) * 10) / 10,
+      name:worker.name
+    });
+  }
+
+  function enterpriseRecurringCost() {
+    return FB.T('No property upkeep; worker contracts remain separate');
+  }
+
+  function enterpriseTransferRule() {
+    return FB.T('Passes to heirs as family property; does not follow conquest');
+  }
+
   UI.showRetainerHire = function () {
     const s = FB.state;
     const used = FB.retainerRecords(s).length;
@@ -8656,16 +8937,21 @@ window.FB = window.FB || {};
       if (!def) continue;
       const worker = e.workerId && s.chars[e.workerId] && !s.chars[e.workerId].dead ?
         s.chars[e.workerId] : null;
-      const pr = FB.world.byId[e.provinceId];
-      const sts = pr ? FB.settlementsOf(s, e.provinceId) : [];
-      const place = sts[e.settlement] ? sts[e.settlement].name : (pr ? pr.name : '?');
       h += '<button class="actionbtn" data-enterprise="' + esc(e.uid) + '">' +
         esc(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name')) +
-        '<span class="adesc">' + esc(FB.T('{place} · {worker} · about {money:gold}/season', {
-          place:place,
-          worker:worker ? FB.T('worked by {name}', { name:worker.name }) : FB.T('idle — no worker'),
-          gold:Math.round(FB.enterpriseYield(s, e) * 10) / 10
-        })) + '</span></button>';
+        '<span class="adesc">' + esc(worker
+          ? FB.T('Worked by {name}', { name:worker.name })
+          : FB.T('Idle — no worker')) + '</span>' +
+        assetEffectSummary({
+          compact:true,
+          owner:FB.T('Household dynasty'),
+          scope:enterprisePlace(s, e),
+          setupCost:FB.T('Paid on purchase'),
+          recurringCost:enterpriseRecurringCost(),
+          effect:enterpriseEffectText(s, e, def, false),
+          transferRule:enterpriseTransferRule(),
+          expiry:FB.T('No fixed end')
+        }) + '</button>';
     }
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
@@ -9925,15 +10211,28 @@ window.FB = window.FB || {};
       '</p></div><div class="gm-list">';
     for (const item of FB.enterpriseAvailable(s, settlement)) {
       const short = s.player.gold < item.cost;
+      const preview = {
+        provinceId:s.player.provinceId,
+        settlement:settlement
+      };
       h += '<button class="actionbtn" data-enterprise-buy="' + item.id + '"' +
         (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name} — {money:gold}', {
-          icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name'), gold:item.cost
+        esc(FB.T('{icon} {name}', {
+          icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name')
         })) + '<span class="adesc">' + esc(dt(s, 'enterprise', item.id, item.def, 'desc')) +
         ' ' + esc(item.workers.length
           ? FB.T('{count} eligible household workers.', { count:item.workers.length })
           : FB.T('No eligible worker yet — it would stand idle.')) +
-        '</span></button>';
+        '</span>' + assetEffectSummary({
+          compact:true,
+          owner:FB.T('Household dynasty'),
+          scope:enterprisePlace(s, preview),
+          setupCost:assetMoneyCost(item.cost, !short),
+          recurringCost:enterpriseRecurringCost(),
+          effect:enterpriseEffectText(s, preview, item.def, true),
+          transferRule:enterpriseTransferRule(),
+          expiry:FB.T('No fixed end')
+        }) + '</button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h,
@@ -9991,7 +10290,15 @@ window.FB = window.FB || {};
       return parts.length ? parts.join(' ') : FB.T('No one is displaced.');
     }
     let h = '<div class="gm-body-text"><p>' + esc(dt(s, 'enterprise', e.type, def, 'desc')) +
-      '</p></div><div class="gm-list">';
+      '</p>' + assetEffectSummary({
+        owner:FB.T('Household dynasty'),
+        scope:enterprisePlace(s, e),
+        setupCost:FB.T('Paid on purchase'),
+        recurringCost:enterpriseRecurringCost(),
+        effect:enterpriseEffectText(s, e, def, false),
+        transferRule:enterpriseTransferRule(),
+        expiry:FB.T('No fixed end')
+      }) + '</div><div class="gm-list">';
     for (const c of FB.enterpriseWorkers(s, e.type)) {
       const current = workerAssignment(c.id);
       const preview = {
@@ -10466,6 +10773,7 @@ window.FB = window.FB || {};
     const s = FB.state, def = FBDATA.tech[id];
     if (!def) return UI.showTech();
     const rid = FB.techRealmId(s);
+    const realm = s.realms[rid];
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
     if (!item) return UI.showTech();
@@ -10475,11 +10783,25 @@ window.FB = window.FB || {};
     const estimatedSeasons = techEstimatedSeasons(s, rid, record, item, cost);
     const researchCostText = estimatedSeasons
       ? techCostEstimateText(s, cost.total, estimatedSeasons)
-      : researchNumber(cost.total);
+      : FB.T('{amount} research', { amount:researchNumber(cost.total) });
+    const effects = techScalarEffects(def);
+    const unlocks = techGameplayUnlocks(s, id, def);
+    const gameplayEffects = effects.concat(unlocks).join(' · ');
     let h = '<div class="tech-detail-meta">' +
       esc(techDomainName(def.domain)) + ' · ' + esc(techStatusText(item)) +
       '</div><div class="gm-body-text"><p>' +
-      esc(dt(s, 'tech', id, def, 'desc')) + '</p></div>' +
+      esc(dt(s, 'tech', id, def, 'desc')) + '</p>' +
+      assetEffectSummary({
+        owner:realm ? realm.name : rid,
+        scope:FB.T('Sovereign nation and every realm using its knowledge'),
+        setupCost:researchCostText,
+        recurringCost:item.completed
+          ? FB.T('None')
+          : FB.T('Occupies one national research slot while active'),
+        effect:gameplayEffects,
+        transferRule:FB.T('Follows sovereign allegiance, not dynasty or county ownership'),
+        expiry:FB.T('Permanent national knowledge once completed')
+      }) + '</div>' +
       kv('First attested', esc(FB.T('{from}–{to}', {
         from:techYear(cost.attested[0]), to:techYear(cost.attested[1])
       }))) +
@@ -10489,21 +10811,11 @@ window.FB = window.FB || {};
       kv('Exposure', esc(FB.T('{percent}% discount', {
         percent:exposureDiscount
       }))) +
-      kv('Research cost', esc(researchCostText)) +
       (record.progress[id] ? kv('Progress', esc(FB.T('{progress}/{cost}', {
         progress:researchNumber(record.progress[id]), cost:researchNumber(cost.total)
       }))) : '') +
       '<div class="panelh">' + esc(FB.T('Prerequisites')) + '</div>' +
       techPrerequisiteButtons(s, def);
-    const effects = techScalarEffects(def);
-    const unlocks = techGameplayUnlocks(s, id, def);
-    if (effects.length || unlocks.length) {
-      h += '<div class="panelh">' + esc(FB.T('In-game effects')) +
-        '</div><div class="tech-effects">';
-      for (const effect of effects) h += '<div>• ' + esc(effect) + '</div>';
-      for (const unlock of unlocks) h += '<div>• ' + esc(unlock) + '</div>';
-      h += '</div>';
-    }
     h += '<div class="gm-footer">';
     const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
     if (canChoose && item.available &&
@@ -11242,12 +11554,30 @@ window.FB = window.FB || {};
       { amount: (fx.prestige > 0 ? '+' : '') + fx.prestige }));
     if (fx.piety) parts.push(FB.T('{amount} piety a season',
       { amount: (fx.piety > 0 ? '+' : '') + fx.piety }));
-    if (fx.gold) parts.push(FB.T('{amount} gold a season',
-      { amount:(fx.gold > 0 ? '+' : '') + fx.gold }));
+    if (fx.gold) parts.push(FB.T('{money:amount} a season · shown in Money each season',
+      { amount:fx.gold }));
     if (fx.health) parts.push(FB.T('{amount}% health protection', {
       amount:(fx.health > 0 ? '+' : '') + Math.round(fx.health * 10000) / 100
     }));
     return parts.join(' · ');
+  }
+
+  function itemOwnerText(s, ref, owned) {
+    if (owned) return FB.T('Household armory');
+    const owner = FB.itemOwner ? FB.itemOwner(s, ref) : null;
+    if (!owner) return FB.T('Outside the household');
+    if (owner.kind === 'character' && s.chars[owner.id]) {
+      return FB.fullName(s.chars[owner.id]);
+    }
+    if (owner.kind === 'delivery') return FB.T('Courier delivery');
+    return FB.T('Household armory');
+  }
+
+  function itemTransferRule(owned, assigned, pledged) {
+    if (!owned) return FB.T('Controlled by its current owner');
+    if (pledged) return FB.T('Pledged; cannot be equipped, sold, or gifted');
+    if (assigned) return FB.T('Unequip before selling, gifting, or pledging');
+    return FB.T('May be equipped, sold, gifted, or pledged');
   }
 
   UI.showItemModal = function (id, viewOnly) {
@@ -11273,15 +11603,22 @@ window.FB = window.FB || {};
       '<p style="font-size:16px"><b>' + def.icon + ' ' + esc(name) +
       '</b> - <span class="cmeta">' + esc(quality) + '</span></p>' +
       '<p><i>' + esc(dt(s, 'item', item.defId, def, 'desc')) + '</i></p>' +
-      (fx ? '<p>⚜ ' + esc(fx) + '</p>' : '<p class="cmeta">No power but its worth.</p>') +
-      '<p class="cmeta">' + esc(FB.T('Slot: {slot}. Worth about {money:gold}.', {
-        slot:slot, gold:item.value
-      })) + '</p>' +
+      '<p class="cmeta">' + esc(FB.T('Worth about {money:gold}.', {
+        gold:item.value
+      })) + '</p>' + assetEffectSummary({
+        owner:itemOwnerText(s, id, owned),
+        scope:assigned
+          ? FB.T('{wearer} · {slot}', { wearer:itemWearerText(s, id), slot:slot })
+          : FB.T('{slot} equipment', { slot:slot }),
+        setupCost:FB.T('Varies by acquisition'),
+        recurringCost:FB.T('None'),
+        effect:fx,
+        transferRule:itemTransferRule(owned, assigned, pledged),
+        expiry:FB.T('No fixed end; leaves through sale, gift, loss, or destruction')
+      }) +
       (fx ? '<p class="cmeta">' + esc(FB.T(
         'Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.')) +
         '</p>' : '') +
-      (assigned ? '<p class="cmeta">' + esc(itemWearerText(s, id)) + '</p>' :
-        (owned ? '<p class="cmeta">' + esc(FB.T('In the family armory.')) + '</p>' : '')) +
       '</div></div>';
     if (owned && !pledged) {
       h += '<div class="gm-list">' +
@@ -12152,19 +12489,29 @@ window.FB = window.FB || {};
     const name = dt(s, 'modifier', id, def, 'name');
     const desc = dt(s, 'modifier', id, def, 'desc');
     const effects = modifierEffectText(s, id);
-    let h = '<div class="gm-body-text"><p><i>' + esc(desc) + '</i></p>' +
-      kv('Duration', esc(modifierDurationText(s, record, scope)));
+    const duration = modifierDurationText(s, record, scope);
+    let owner, effectScope, transfer;
     if (scope === 'county') {
       const province = FB.world.byId[pid];
-      h += kv('County', esc(province ? province.name : pid));
+      owner = province ? province.name : pid;
+      effectScope = FB.T('County economy, levies, and local events');
+      transfer = FB.T('Stays with the county when political control changes');
     } else {
-      h += kv('Scope', esc(FB.T('Your participation in this campaign')));
+      owner = FB.T('Your campaign service');
+      effectScope = FB.T('Your participation in this great holy war');
+      transfer = FB.T('Does not transfer to another campaign');
     }
-    h += effects
-      ? '<div class="panelh">' + esc(FB.T('Effects')) + '</div><p>' +
-        esc(effects) + '</p>'
-      : '<p class="hint">' + esc(FB.T('No active mechanical effects.')) + '</p>';
-    h += '</div><button class="btn" id="mm-close">' + esc(FB.T('Close')) + '</button>';
+    const h = '<div class="gm-body-text"><p><i>' + esc(desc) + '</i></p>' +
+      assetEffectSummary({
+        owner:owner,
+        scope:effectScope,
+        setupCost:FB.T('Granted by events or campaign state'),
+        recurringCost:assetSeasonalMoneyCost(def.upkeep && def.upkeep.gold),
+        effect:effects,
+        transferRule:transfer,
+        expiry:duration
+      }) + '</div><button class="btn" id="mm-close">' +
+      esc(FB.T('Close')) + '</button>';
     openModal(def.icon + ' ' + name, h);
     $('mm-close').addEventListener('click', UI.closeModal);
   };
@@ -12924,10 +13271,15 @@ window.FB = window.FB || {};
           const record = FB.state && modifierRecord(FB.state, id, scope, pid);
           if (!def || !record) { tip.classList.add('hidden'); return; }
           const effects = modifierEffectText(FB.state, id);
+          const upkeep = def.upkeep && def.upkeep.gold
+            ? assetSeasonalMoneyCost(def.upkeep.gold) : '';
           tip.innerHTML = '<b>' + def.icon + ' ' +
             esc(dt(FB.state, 'modifier', id, def, 'name')) + '</b><br>' +
             esc(dt(FB.state, 'modifier', id, def, 'desc')) +
-            (effects ? '<br><i>' + esc(effects) + '</i>' : '') +
+            (effects || upkeep ? '<br><i>' +
+              esc([effects, upkeep].filter(function (part) {
+                return !!part;
+              }).join(' · ')) + '</i>' : '') +
             '<br><i>' + esc(modifierDurationText(FB.state, record, scope)) + '</i>';
         } else if (chip.hasAttribute('data-ailment')) {
           const a = FBDATA.ailments[chip.getAttribute('data-ailment')];
