@@ -1454,7 +1454,9 @@ mapping is saved independently, may be reassigned to another realm, and may be
 explicitly vacant with `null`. `state.religiousHeadVacancies[religionId]` then records
 `{"turn":1234,"formerHolder":"papacy"}`. It is never inferred from capital faith or
 territorial rank, and absorbing or conquering the holder never makes the office
-hereditary. Religions without `head` metadata have no centralized office.
+hereditary. (Core adds one deliberate exception: a victorious player `caliphate`
+succession war reassigns a `claim` office to the victor's realm without moving land.)
+Religions without `head` metadata have no centralized office.
 
 `head.recovery` is `grant_seat` or `claim`. A `grant_seat` office requires `seat` and
 may set `restoredRank` (default 3); recovery grants that county to a fresh independent
@@ -1656,7 +1658,10 @@ Religious-office tuning uses `religiousHeadWarOpinion`,
 `religiousHeadAbsolutionPiety`, `religiousHeadAbsolutionOpinion`,
 `religiousHeadRestorePiety`, `religiousHeadRestorePrestige`,
 `religiousHeadRestoreOpinion`, `religiousHeadVacancyDays`,
-`religiousHeadClaimPrestige`, and `religiousHeadClaimPiety`.
+`religiousHeadClaimPrestige`, `religiousHeadClaimPiety`,
+`religiousHeadClaimMinRealm` (county floor for vacant-office claims: the player's
+demesne, an AI realm's whole bloc), and `religiousHeadClaimWarPrestige` (reward for
+winning the Sunni succession war).
 Great holy-war tuning uses the `greatHolyWar*` keys beside them: preparation,
 resolution/collapse cooldowns, deadline, volunteer cap, siege requirement/rate/decay,
 resolve shifts, withdrawal costs, and field-recruit sizes

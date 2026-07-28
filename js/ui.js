@@ -4642,10 +4642,11 @@ window.FB = window.FB || {};
     if (!s || !FB.canClaimReligiousHead(s, religionId, 'player')) return;
     const title = FB.religiousHeadTitle(s, religionId);
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent.', {
+      'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties.', {
         piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300),
         title:title,
-        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500)
+        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+        counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)
       })) + '</p></div><div class="gm-list">' +
       '<button type="button" class="actionbtn" id="head-claim-confirm">☪ ' +
       esc(FB.T('Claim the Caliphate')) + '</button>' +
@@ -4658,6 +4659,33 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('head-claim-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* The occupied-office half of the claim_caliphate deed: declare the
+     succession war instead of spending piety on a vacancy. */
+  UI.showCaliphateWarConfirmation = function () {
+    const s = FB.state;
+    const cause = s && FB.caliphateWarCause(s);
+    if (!cause) return;
+    const enemy = s.realms[cause.enemy];
+    const capital = FB.world.byId[cause.target];
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office.', {
+        realm:enemy ? enemy.name : '',
+        title:FB.religiousHeadTitle(s, 'sunni'),
+        capital:capital ? capital.name : ''
+      })) + '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="caliph-war-confirm">⚔ ' +
+      esc(FB.T('Declare the succession war')) + '</button>' +
+      '<button type="button" class="actionbtn" id="caliph-war-cancel">' +
+      esc(FB.T('Not yet')) + '</button></div>';
+    openModal(FB.T('Contest the Caliphate?'), h);
+    $('caliph-war-confirm').addEventListener('click', function () {
+      FB.startPlayerWar(s, FB.caliphateWarCause(s));
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('caliph-war-cancel').addEventListener('click', UI.closeModal);
   };
 
   function greatHolyWarRealmName(s, rid) {
@@ -5502,6 +5530,10 @@ window.FB = window.FB || {};
       if (cause.type === 'fabricated') causeText = FB.T('Fabricated county claim');
       else if (cause.type === 'restoration') {
         causeText = FB.T('Restore the crown of {title}', { title: cause.titleName || (realm ? realm.name : '') });
+      } else if (cause.type === 'caliphate') {
+        causeText = FB.T('Succession war for the office of {title}', {
+          title: FB.religiousHeadTitle(s, 'sunni')
+        });
       } else {
         const def = cause.titleKind === 'duchy' ? FBDATA.duchies[cause.titleId]
           : cause.titleKind === 'kingdom' ? FBDATA.kingdoms[cause.titleId]

@@ -18,6 +18,18 @@ and its vassal hierarchy intact. Defeat does not consume the right. Independence
 its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
 store only a descriptive `border` cause.
 
+The `caliphate` cause is the religious twin of restoration, offered by the Claim the
+Caliphate deed while a sitting Caliph holds the Sunni office (`FB.caliphateWarCause`:
+a sovereign Sunni player king or emperor against the holder's sovereign realm). It
+likewise ignores adjacency, and the seasonal tick re-pins the target to the holder's
+current capital. Victory by siege transfers the office to the player realm and awards
+`religiousHeadClaimWarPrestige` prestige — no county changes hands and the defeated
+realm survives. If the office passes to a third party mid-war, the tick ends the war
+quietly with nothing gained. The tribute offer after three field wins remains a
+legitimate exit (take the gold and go home), and an in-preparation great holy war of
+the deposed holder collapses as a vacancy when the office moves. The AI never declares
+this war.
+
 ## War against a religious head
 
 `FB.sameFaithHeadWarPolicy` is the shared target check. It reads the exact attacker's
@@ -40,7 +52,8 @@ Papal counties out of `FB.borderProvince`, protecting a Papal vassal subtree wit
 protecting its whole secular overlord. Non-Catholic attackers and religions whose
 policy is `ordinary` remain unrestricted. Conquest transfers only the besieged county:
 even the last county creates an explicit office vacancy through the realm-death
-boundary and never grants the religious office or defeated crown.
+boundary and never grants the religious office or defeated crown. The single exception
+is the player-only `caliphate` succession war above, whose whole stake is the office.
 
 Each sovereign may participate in only one active war. `FB.isRealmAtWar` treats both
 endpoints as occupied, including both sides of `player.war`; declarations, breakaways,

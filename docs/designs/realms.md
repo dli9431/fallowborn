@@ -70,7 +70,8 @@ becomes `null` exactly once, a durable vacancy notice is emitted, and
 `state.religiousHeadVacancies[religionId]` records `{turn,formerHolder}`. Losing only
 part of the office realm changes nothing. County conquest, inheritance, and absorption
 never grant the office; ordinary county conquest also never grants the defeated crown.
-Explicit recovery is the only office-assignment path. Loading an older save with a dead
+Explicit recovery — and the player-only Sunni succession war below — is the only
+office-assignment path. Loading an older save with a dead
 mapped realm silently normalizes it to the same saved vacancy shape without replaying
 news.
 
@@ -83,14 +84,26 @@ prestige, improves every living Catholic realm's opinion, and clears excommunica
 
 Sunni recovery uses `recovery:'claim'` with alternative county sets: Baghdad, or Mecca
 and Medina together. A sovereign player king or emperor meeting the prestige threshold
-may spend piety to attach the office to the existing player realm without moving land.
-After 360 vacant days, independent Sunni AI realms of rank 3+ that meet a county set are
+and a minimal demesne (`religiousHeadClaimMinRealm` counties, counted from
+`player.provs`) may spend piety to attach the office to the existing player realm
+without moving land.
+After 360 vacant days, independent Sunni AI realms of rank 3+ that meet a county set
+and the same size gate (counted over the whole realm bloc) are
 ordered by rank, realm strength, then stable realm id; the strongest claims. With no
 eligible realm, the explicit vacancy persists. `FB.canRestoreReligiousHead`,
 `FB.restoreReligiousHead`, `FB.canClaimReligiousHead`,
 `FB.controlsReligiousHeadClaim`, `FB.claimReligiousHead`, and
 `FB.religiousHeadRecoveryTick` are the shared policy surface; callers do not match
 Papacy/Caliphate realm names.
+
+A sitting Caliph is the one office that can also be taken by force. A sovereign Sunni
+player king or emperor gains a `caliphate` succession-war cause against the holder's
+sovereign realm (`FB.caliphateWarCause`; no shared border required — the stake is the
+office, not land). Victory by siege reassigns the office to the player realm through
+the same `FB.assignReligiousHead` path: no county changes hands, the defeated realm
+survives, and its ruler's styling simply follows the lost office. The AI never
+contests a sitting office this way; its vacancy claim above is unchanged apart from
+the new size gate. See [war.md](war.md).
 
 **Realms form a liege hierarchy.** Every realm has a `rank` (1 count … 4 emperor) and a
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,
