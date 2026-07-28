@@ -58,6 +58,27 @@ skill can exceed the academy's fixed chance; they can also pass on traits or die
 Named tutor choices use the shared person-assignment card to show the projected learning,
 fee, occupation, Regard, existing students, and which current instruction will be replaced.
 
+**Household education policy fills empty choices, never revises them.** Household Plan
+stores an optional default focus plus an independent “best instruction” mode and
+non-negative seasonal fee cap. When enabled, it applies immediately after confirmation
+and before every seasonal school settlement. That catches current empty slots and
+descendants who first become eligible at age six. Existing focuses and arrangements from
+older saves are treated as manual choices; later manual choices, including No directed
+study and explicit home instruction, are overrides. A policy edit affects only future
+empty slots. The per-child Follow household policy actions clear and reconsider only the
+chosen dimension, preserving the other dimension, `lessonBoost`, and `schoolTerms`.
+
+Instruction selection is deterministic and uses the same discovery rules as the manual
+picker: eligible schools in data order, already-known eligible tutors in relationship
+order, then home instruction. It maximizes the final projected yearly chance, then prefers
+the lower seasonal fee and finally the existing option order. The fee cap is tested
+separately for each child only when selecting an arrangement; it neither reserves coin
+nor cancels schooling whose later live fee exceeds the cap. Generated personal masters
+remain a deliberate manual hire and never enter the automatic pool. If no focus exists,
+instruction waits and reports that once. A lost manual tutor leaves a manual empty choice;
+a lost policy-selected tutor may be replaced from the currently eligible deterministic
+pool at the next policy pass.
+
 **Paid schooling is seasonal.** Charity schools, merchant schools, the Noble Academy, and
 personal masters charge the exact training-cost-modified `FBDATA.schooling` fee at every
 90-day boundary. An unaffordable fee pauses that term without cancelling the arrangement;

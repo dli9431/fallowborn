@@ -2725,6 +2725,9 @@ window.FB = window.FB || {};
     c.edu.school = null;
     c.edu.tutorId = null;
     delete c.edu.schoolUnpaid;
+    if (FB.markEducationManual) {
+      FB.markEducationManual(state, c, 'instruction', 'home');
+    }
     return true;
   };
 

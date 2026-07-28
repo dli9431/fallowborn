@@ -339,6 +339,16 @@ and browser-history Back. Picker cancellation and no-day changes re-render the p
 day-spending career, enterprise-purchase, and match choices keep their existing
 close-and-advance behavior.
 
+An **Education Policy** summary and native management button sit above the Household Plan
+ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,
+and non-negative number input, then requires a preview before saving. The preview names
+every currently affected eligible child and shows the proposed focus, instruction,
+projected yearly chance, per-child seasonal fee, and any institutional mortality warning.
+It explicitly states that existing choices stay unchanged, the cap is per child, and no
+coin is reserved. Education and instruction cells label policy choices, manual overrides,
+unrecorded choices, and instruction waiting for a focus. Both detailed pickers retain a
+Follow household policy action which clears and reapplies only that picker’s dimension.
+
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,
 enterprise strength, tax effect, scope, and exact days remaining; empty slots say None.

@@ -26525,6 +26525,99 @@
         }
       }
     },
+    "news.education.policy_focus": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": {
+              "cases": {
+                "dip": "🎓 Household policy assigns diplomacy as {name}’s education focus.",
+                "int": "🎓 Household policy assigns intrigue as {name}’s education focus.",
+                "lea": "🎓 Household policy assigns learning as {name}’s education focus.",
+                "mar": "🎓 Household policy assigns martial skill as {name}’s education focus.",
+                "other": "🎓 Household policy assigns {name} an education focus.",
+                "ste": "🎓 Household policy assigns stewardship as {name}’s education focus."
+              },
+              "param": "focus",
+              "select": "value"
+            },
+            "self": {
+              "cases": {
+                "dip": "🎓 Your household policy assigns diplomacy as your education focus.",
+                "int": "🎓 Your household policy assigns intrigue as your education focus.",
+                "lea": "🎓 Your household policy assigns learning as your education focus.",
+                "mar": "🎓 Your household policy assigns martial skill as your education focus.",
+                "other": "🎓 Your household policy assigns an education focus.",
+                "ste": "🎓 Your household policy assigns stewardship as your education focus."
+              },
+              "param": "focus",
+              "select": "value"
+            }
+          },
+          "param": "subject",
+          "select": "value"
+        }
+      }
+    },
+    "news.education.policy_instruction": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "school",
+        "tutor"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": {
+              "cases": {
+                "home": "🎓 Household policy assigns {name} instruction at home.",
+                "other": "🎓 Household policy arranges {name}’s instruction.",
+                "school": "🎓 Household policy arranges {name}’s lessons at {school}.",
+                "tutor": "🎓 Household policy assigns {tutor} to {name}’s lessons."
+              },
+              "param": "kind",
+              "select": "value"
+            },
+            "self": {
+              "cases": {
+                "home": "🎓 Your household policy assigns instruction at home.",
+                "other": "🎓 Your household policy arranges your instruction.",
+                "school": "🎓 Your household policy arranges lessons at {school}.",
+                "tutor": "🎓 Your household policy assigns {tutor} to your lessons."
+              },
+              "param": "kind",
+              "select": "value"
+            }
+          },
+          "param": "subject",
+          "select": "value"
+        }
+      }
+    },
+    "news.education.policy_waiting_focus": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "other": "🎓 Household policy cannot arrange {name}’s instruction until an education focus is chosen.",
+            "self": "🎓 Household policy cannot arrange your instruction until an education focus is chosen."
+          },
+          "param": "subject",
+          "select": "value"
+        }
+      }
+    },
     "news.education.school_chosen": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -36232,6 +36325,16 @@
         "text": "Before a war is fought it must be paid for. The paymaster counts thin coins into every calloused palm — your first soldier’s wage, earned as a man — and the quartermaster’s cart stands open beside him: dented iron and stiff leather for anyone who came without their own. Kit yourself now; tomorrow the column turns toward the enemy."
       }
     },
+    "src.03367f7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No choice recorded"
+      }
+    },
     "src.033c10ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -36290,6 +36393,16 @@
       ],
       "source": {
         "text": "🛡 The estates vote scutage — silver, not spears, when {liege} calls the banners (the aid rises to {pct}%)."
+      }
+    },
+    "src.03893c74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns diplomacy as {name}’s education focus."
       }
     },
     "src.03894ff8": {
@@ -36360,6 +36473,16 @@
       ],
       "source": {
         "text": "Cultivate hostility at this court every season, inviting greater danger."
+      }
+    },
+    "src.03cd3321": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Education Policy"
       }
     },
     "src.03d8924a": {
@@ -39227,6 +39350,16 @@
         "text": "You crack heads and emerge grinning, a small legend by morning."
       }
     },
+    "src.0d149489": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manual override"
+      }
+    },
     "src.0d159f69": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39587,6 +39720,16 @@
       ],
       "source": {
         "text": "Required for legitimacy"
+      }
+    },
+    "src.0e3b7431": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Use the household default: {focus}."
       }
     },
     "src.0e486826": {
@@ -40240,6 +40383,16 @@
         "text": "Church Patron"
       }
     },
+    "src.10bcfdd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the strongest available instruction costing no more than {money:amount} each season."
+      }
+    },
     "src.10c3d811": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40640,6 +40793,16 @@
       ],
       "source": {
         "text": "{summary} · fee unpaid; this term is paused"
+      }
+    },
+    "src.12127346": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Instruction chosen manually for each child"
       }
     },
     "src.1213f417": {
@@ -41201,6 +41364,16 @@
       ],
       "source": {
         "text": "{days} days remain."
+      }
+    },
+    "src.1379a4e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Default focus: {focus}"
       }
     },
     "src.137ec3b6": {
@@ -42388,6 +42561,16 @@
         "text": "Defend the sanctuary."
       }
     },
+    "src.172009a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns martial skill as your education focus."
+      }
+    },
     "src.172228ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42667,6 +42850,16 @@
       ],
       "source": {
         "text": "Transfer rule"
+      }
+    },
+    "src.181d2f59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unknown tutor"
       }
     },
     "src.182d974c": {
@@ -44723,6 +44916,16 @@
         "text": "★★ fair"
       }
     },
+    "src.1fbf242a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{chance}% yearly"
+      }
+    },
     "src.1fc1f575": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44994,6 +45197,16 @@
         "text": "Cardinal-bishop shortlist"
       }
     },
+    "src.20a46993": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Projected learning"
+      }
+    },
     "src.20bd7337": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45132,6 +45345,16 @@
       ],
       "source": {
         "text": "Converted to the local faith."
+      }
+    },
+    "src.2120d851": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose a subject for each empty eligible slot, or leave every child for manual selection."
       }
     },
     "src.212b324b": {
@@ -45524,6 +45747,16 @@
         "text": "These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend."
       }
     },
+    "src.22b5e28e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manual focus still required"
+      }
+    },
     "src.22bb20de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45702,16 +45935,6 @@
       ],
       "source": {
         "text": "{percent}% higher {category} cost"
-      }
-    },
-    "src.2336b016": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "○ No directed study"
       }
     },
     "src.23376c7c": {
@@ -46363,6 +46586,16 @@
       ],
       "source": {
         "text": "The old life has no claim upon this office."
+      }
+    },
+    "src.24ee2528": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 Preview Education Policy"
       }
     },
     "src.24fec001": {
@@ -47546,6 +47779,16 @@
       ],
       "source": {
         "text": "Take it out of his hide."
+      }
+    },
+    "src.29477599": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged."
       }
     },
     "src.2947a65e": {
@@ -49398,6 +49641,16 @@
       ],
       "source": {
         "text": "🧑‍🏫 Your schooling"
+      }
+    },
+    "src.2fef7ccc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Waiting for a focus"
       }
     },
     "src.30002c26": {
@@ -52677,6 +52930,16 @@
         "text": "Colchester"
       }
     },
+    "src.3b6a4601": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Policy will choose instruction after a focus is set"
+      }
+    },
     "src.3b6ac60b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54635,6 +54898,16 @@
         "text": "Empty Granaries"
       }
     },
+    "src.424d1170": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Waiting for an education focus"
+      }
+    },
     "src.42501fff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55631,6 +55904,16 @@
         "text": "The kin of {suitor} have taken your measure, and their looks are cold. Fine words at the gate, and behind them the plain question: what business has a {title} with their house?"
       }
     },
+    "src.455ec86f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Preview policy"
+      }
+    },
     "src.456f87fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56103,6 +56386,16 @@
         "text": "⛪ The office of {title} stands vacant after {realm} falls."
       }
     },
+    "src.46e50053": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🎓 Household Education Policy"
+      }
+    },
     "src.46ee63fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56362,6 +56655,16 @@
       ],
       "source": {
         "text": "Shelves of knowledge — and the people who argue over it. (+1 national research per season)"
+      }
+    },
+    "src.47bfa38a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns {name} instruction at home."
       }
     },
     "src.47c59181": {
@@ -56684,6 +56987,16 @@
       ],
       "source": {
         "text": "has invalid duchy"
+      }
+    },
+    "src.48f603ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review the children whose empty choices would be filled now. Existing manual and policy-selected choices remain unchanged."
       }
     },
     "src.4914e205": {
@@ -58240,6 +58553,16 @@
         "text": "Charm a honey-cake from the baker."
       }
     },
+    "src.4e1e6261": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns {name} an education focus."
+      }
+    },
     "src.4e4310f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58289,6 +58612,16 @@
       ],
       "source": {
         "text": "Gather two more witnesses."
+      }
+    },
+    "src.4e58b76b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically."
       }
     },
     "src.4e5eb73e": {
@@ -62698,6 +63031,16 @@
         "text": "A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this."
       }
     },
+    "src.5cfaf1e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No fee"
+      }
+    },
     "src.5d1011d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64655,6 +64998,16 @@
         "text": "🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} regard."
       }
     },
+    "src.63de8ae8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The household currently leaves each child’s focus for manual choice."
+      }
+    },
     "src.63e6658b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64743,6 +65096,16 @@
       ],
       "source": {
         "text": "No awards have yet been settled."
+      }
+    },
+    "src.643d08aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Best instruction up to {money:amount} per child each season"
       }
     },
     "src.644d9ac8": {
@@ -65748,6 +66111,16 @@
         "text": "Choose cash or an unequipped, unpledged item from the family armory."
       }
     },
+    "src.67e4f7b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns intrigue as {name}’s education focus."
+      }
+    },
     "src.67eaedd8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65896,6 +66269,16 @@
       ],
       "source": {
         "text": "Fine Tools"
+      }
+    },
+    "src.6861cb84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy cannot arrange your instruction until an education focus is chosen."
       }
     },
     "src.6861ec80": {
@@ -67100,6 +67483,16 @@
         "text": "💍 Your grandchild {name} weds {spouse}."
       }
     },
+    "src.6c699c20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns {tutor} to {name}’s lessons."
+      }
+    },
     "src.6c702033": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68228,6 +68621,16 @@
       ],
       "source": {
         "text": "The great offices have not formed yet. Open the Council to establish them."
+      }
+    },
+    "src.6ffa924d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Existing choice remains, but it is unavailable for this focus"
       }
     },
     "src.70040615": {
@@ -69493,6 +69896,16 @@
         "text": "Knight’s daughter"
       }
     },
+    "src.742d33af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns martial skill as {name}’s education focus."
+      }
+    },
     "src.7430c52c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69691,6 +70104,16 @@
       ],
       "source": {
         "text": "Keep clear of it."
+      }
+    },
+    "src.74d08cf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns {tutor} to your lessons."
       }
     },
     "src.74db3998": {
@@ -70303,6 +70726,16 @@
       ],
       "source": {
         "text": "Take his hand — you did not cross a war to lose him now."
+      }
+    },
+    "src.76ea2ada": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns learning as {name}’s education focus."
       }
     },
     "src.76f5e78d": {
@@ -71254,6 +71687,16 @@
       ],
       "source": {
         "text": "Calling in the light coin restores weight and confidence over time. Active contracts keep the denomination they were signed under."
+      }
+    },
+    "src.79d74755": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns diplomacy as your education focus."
       }
     },
     "src.79ea0ad1": {
@@ -73409,6 +73852,16 @@
         "text": "A Hauberk That Fits"
       }
     },
+    "src.8093b5af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Unknown school"
+      }
+    },
     "src.809f8a6a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73627,6 +74080,16 @@
       ],
       "source": {
         "text": "Recognized Pope"
+      }
+    },
+    "src.8121b1e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Edit policy"
       }
     },
     "src.81227daf": {
@@ -74992,6 +75455,16 @@
         "text": "Zoom out"
       }
     },
+    "src.859b510c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns instruction at home."
+      }
+    },
     "src.85b50a93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75432,6 +75905,16 @@
         "text": "Set straight, splinted, and slow to knit."
       }
     },
+    "src.87388365": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns stewardship as your education focus."
+      }
+    },
     "src.873dd1e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75832,6 +76315,16 @@
         "text": "Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience."
       }
     },
+    "src.884907bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manual for each child"
+      }
+    },
     "src.8849fd81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75870,6 +76363,16 @@
       ],
       "source": {
         "text": "The steward finds three errors before you finish the first column."
+      }
+    },
+    "src.885fbb66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manage policy…"
       }
     },
     "src.886232d0": {
@@ -76110,6 +76613,16 @@
       ],
       "source": {
         "text": "must be an array."
+      }
+    },
+    "src.895b963b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later."
       }
     },
     "src.895c22a7": {
@@ -78529,6 +79042,16 @@
         "text": "An invitation to ride with {lord} and his falcons — swift horses, gazelle on the plain, and the quiet talk between great men that shapes small futures."
       }
     },
+    "src.91879c95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy arranges {name}’s lessons at {school}."
+      }
+    },
     "src.918f210a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79007,6 +79530,16 @@
       ],
       "source": {
         "text": "{chance}%"
+      }
+    },
+    "src.9364394a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This instruction is not available to this child."
       }
     },
     "src.9376f2fd": {
@@ -80306,6 +80839,16 @@
         "text": "Never ill a day. The last day declined to comment."
       }
     },
+    "src.980e44eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The household currently leaves instruction for manual choice."
+      }
+    },
     "src.9819214b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80384,6 +80927,16 @@
       ],
       "source": {
         "text": "Keep every stalk."
+      }
+    },
+    "src.98314f1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Focus chosen manually for each child"
       }
     },
     "src.98377d47": {
@@ -83482,6 +84035,16 @@
         "text": "Dumbarton"
       }
     },
+    "src.a292c7e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
+      }
+    },
     "src.a29cbc52": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85179,6 +85742,16 @@
         "text": "Turov and Volhynia"
       }
     },
+    "src.a8a687fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy cannot arrange {name}’s instruction until an education focus is chosen."
+      }
+    },
     "src.a8addc75": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85750,6 +86323,16 @@
       ],
       "source": {
         "text": "The Infirmary"
+      }
+    },
+    "src.aab40143": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns an education focus."
       }
     },
     "src.aabc8f99": {
@@ -90511,6 +91094,16 @@
         "text": "Dust may yet yield what memory cannot."
       }
     },
+    "src.bb229f41": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Save and apply policy"
+      }
+    },
     "src.bb3d63bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90869,6 +91462,16 @@
       ],
       "source": {
         "text": "Commit every word to memory."
+      }
+    },
+    "src.bc57b1b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Focus"
       }
     },
     "src.bc5e79a5": {
@@ -93602,6 +94205,16 @@
         "text": "Bamberg"
       }
     },
+    "src.c5da6908": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible."
+      }
+    },
     "src.c5e289e3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95306,6 +95919,16 @@
         "text": "Dynasty"
       }
     },
+    "src.cbe1c376": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns intrigue as your education focus."
+      }
+    },
     "src.cbe72573": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96680,6 +97303,16 @@
         "text": "{stance} — suspended during war"
       }
     },
+    "src.d0b38fa8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Default education focus"
+      }
+    },
     "src.d0dc9f17": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97622,6 +98255,16 @@
         "text": "The campaign is active and the gathered hosts are now in the field."
       }
     },
+    "src.d4b06961": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy assigns learning as your education focus."
+      }
+    },
     "src.d4b27344": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97720,6 +98363,16 @@
       ],
       "source": {
         "text": "The reeve’s demand contradicts his own accounts. The bench notices."
+      }
+    },
+    "src.d52e9296": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy arranges your instruction."
       }
     },
     "src.d5335adc": {
@@ -99134,6 +99787,16 @@
         "text": "steppe"
       }
     },
+    "src.d98d9f33": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy arranges {name}’s instruction."
+      }
+    },
     "src.d9945c72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99514,6 +100177,16 @@
       ],
       "source": {
         "text": "Rest at the ale-house. ({money:2})"
+      }
+    },
+    "src.daf9076d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Follow household policy"
       }
     },
     "src.db0b633c": {
@@ -101627,6 +102300,16 @@
         "text": "The Long Wait"
       }
     },
+    "src.e2100dd2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Selected by household policy"
+      }
+    },
     "src.e212ee7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102128,6 +102811,16 @@
       ],
       "source": {
         "text": "Dust, worm-holes, and pious accounts — but no grant anyone can use."
+      }
+    },
+    "src.e406e5d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Household policy assigns stewardship as {name}’s education focus."
       }
     },
     "src.e4072a4d": {
@@ -102942,6 +103635,16 @@
       ],
       "source": {
         "text": "A war camp is a court under canvas: lords trade grievances, wagers, and promises between the watch-fires."
+      }
+    },
+    "src.e6ed73f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No instruction chance until a focus is chosen"
       }
     },
     "src.e6f649d0": {
@@ -104986,6 +105689,16 @@
         "text": "A Patron’s Notice"
       }
     },
+    "src.ee0f4d0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "New policy choice"
+      }
+    },
     "src.ee1682bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105135,6 +105848,16 @@
       ],
       "source": {
         "text": "Siege of {place}: {progress}/3"
+      }
+    },
+    "src.eedb1290": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seasonal fee cap per child"
       }
     },
     "src.eede557a": {
@@ -106637,6 +107360,16 @@
       ],
       "source": {
         "text": "Metz"
+      }
+    },
+    "src.f3df2ffd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Seasonal fee"
       }
     },
     "src.f3f740ab": {
@@ -108323,6 +109056,16 @@
         "text": "Rather than feed the feud another year, your enemy pays a smaller purse and names the matter closed."
       }
     },
+    "src.f988393d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Manage household education policy"
+      }
+    },
     "src.f9964642": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109504,6 +110247,16 @@
         "text": "The council now outweighs the crown: extraordinary taxes and revocations are beyond you until authority mends (below {limit})."
       }
     },
+    "src.fdb99c7c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Choose the strongest available instruction automatically"
+      }
+    },
     "src.fdbd05f6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109783,6 +110536,16 @@
       ],
       "source": {
         "text": "{season} {day}, {year}"
+      }
+    },
+    "src.fe96cf76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal education-policy-modal"
       }
     },
     "src.fe9e82b0": {
@@ -110173,6 +110936,16 @@
       ],
       "source": {
         "text": "The line breaks in moments. You wake wounded among the ashes."
+      }
+    },
+    "src.ffed12f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🎓 Your household policy arranges lessons at {school}."
       }
     },
     "src.fff1bdcd": {
@@ -116452,6 +117225,16 @@
         "text": "Belongs to the county and follows it through conquest"
       }
     },
+    "ui:Best instruction up to {money:amount} per child each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Best instruction up to {money:amount} per child each season"
+      }
+    },
     "ui:Betrothed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -117034,6 +117817,14 @@
         "text": "Choose a subject"
       }
     },
+    "ui:Choose a subject for each empty eligible slot, or leave every child for manual selection.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose a subject for each empty eligible slot, or leave every child for manual selection."
+      }
+    },
     "ui:Choose a target": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -117140,6 +117931,24 @@
       "location": "js/ui.js",
       "source": {
         "text": "Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household."
+      }
+    },
+    "ui:Choose the strongest available instruction automatically": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the strongest available instruction automatically"
+      }
+    },
+    "ui:Choose the strongest available instruction costing no more than {money:amount} each season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Choose the strongest available instruction costing no more than {money:amount} each season."
       }
     },
     "ui:Choose up to two qualified bishops. One family appointment per pontificate is tolerated; later relatives cost authority and Cardinal opinion.": {
@@ -117753,6 +118562,24 @@
         "text": "Deeds — done at once unless noted"
       }
     },
+    "ui:Default education focus": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Default education focus"
+      }
+    },
+    "ui:Default focus: {focus}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "focus"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Default focus: {focus}"
+      }
+    },
     "ui:Defend the faith for honor": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -118098,12 +118925,28 @@
         "text": "Earned: {guidance}"
       }
     },
+    "ui:Edit policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Edit policy"
+      }
+    },
     "ui:Education": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Education"
+      }
+    },
+    "ui:Education Policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Education Policy"
       }
     },
     "ui:Education is managed for the household head and descendants": {
@@ -118401,6 +119244,14 @@
         "text": "Excommunication"
       }
     },
+    "ui:Existing choice remains, but it is unavailable for this focus": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Existing choice remains, but it is unavailable for this focus"
+      }
+    },
     "ui:Expiry": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -118641,6 +119492,22 @@
         "text": "First missed payment:"
       }
     },
+    "ui:Focus": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Focus"
+      }
+    },
+    "ui:Focus chosen manually for each child": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Focus chosen manually for each child"
+      }
+    },
     "ui:Focus: {focus}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -118649,6 +119516,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Focus: {focus}"
+      }
+    },
+    "ui:Follow household policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Follow household policy"
       }
     },
     "ui:Follows sovereign allegiance, not dynasty or county ownership": {
@@ -119357,6 +120232,14 @@
         "text": "Instruction"
       }
     },
+    "ui:Instruction chosen manually for each child": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Instruction chosen manually for each child"
+      }
+    },
     "ui:Instruction ended at age 16": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -119925,12 +120808,28 @@
         "text": "Makes {standard}: {level} available."
       }
     },
+    "ui:Manage household education policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manage household education policy"
+      }
+    },
     "ui:Manage household service…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "Manage household service…"
+      }
+    },
+    "ui:Manage policy…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manage policy…"
       }
     },
     "ui:Manage {name}…": {
@@ -119941,6 +120840,30 @@
       "location": "js/ui.js",
       "source": {
         "text": "Manage {name}…"
+      }
+    },
+    "ui:Manual focus still required": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manual focus still required"
+      }
+    },
+    "ui:Manual for each child": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manual for each child"
+      }
+    },
+    "ui:Manual override": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Manual override"
       }
     },
     "ui:Manual research": {
@@ -120220,6 +121143,14 @@
         "text": "Neutral"
       }
     },
+    "ui:New policy choice": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "New policy choice"
+      }
+    },
     "ui:New to the household": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120321,6 +121252,14 @@
         "text": "No buildings stand in {settlement} yet."
       }
     },
+    "ui:No choice recorded": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No choice recorded"
+      }
+    },
     "ui:No coin is backing another merchant’s venture.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120359,6 +121298,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No current territorial claim"
+      }
+    },
+    "ui:No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible."
       }
     },
     "ui:No declared lean": {
@@ -120455,6 +121402,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No equipment bonuses."
+      }
+    },
+    "ui:No fee": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No fee"
       }
     },
     "ui:No fixed end": {
@@ -120559,6 +121514,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No income while idle; assign an eligible household worker"
+      }
+    },
+    "ui:No instruction chance until a focus is chosen": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No instruction chance until a focus is chosen"
       }
     },
     "ui:No journey is in progress.": {
@@ -121916,6 +122879,14 @@
         "text": "Policy toward {realm}"
       }
     },
+    "ui:Policy will choose instruction after a focus is set": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Policy will choose instruction after a focus is set"
+      }
+    },
     "ui:Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -122025,6 +122996,14 @@
         "text": "Preview"
       }
     },
+    "ui:Preview policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Preview policy"
+      }
+    },
     "ui:Prices, reliable income, loans, pledged property, and trade ventures.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -122071,6 +123050,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Professed Sister"
+      }
+    },
+    "ui:Projected learning": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Projected learning"
       }
     },
     "ui:Promise one, two, or three years of seasonal service. If the campaign ends earlier, remaining continuously enrolled through its resolution keeps the vow.": {
@@ -122981,6 +123968,14 @@
         "text": "Review the camps, target, and time remaining before the banners march."
       }
     },
+    "ui:Review the children whose empty choices would be filled now. Existing manual and policy-selected choices remain unchanged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review the children whose empty choices would be filled now. Existing manual and policy-selected choices remain unchanged."
+      }
+    },
     "ui:Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -123125,6 +124120,22 @@
         "text": "Sanctions require {authority} authority."
       }
     },
+    "ui:Save and apply policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Save and apply policy"
+      }
+    },
+    "ui:Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically."
+      }
+    },
     "ui:Scope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -123155,6 +124166,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "Search"
+      }
+    },
+    "ui:Seasonal fee": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seasonal fee"
+      }
+    },
+    "ui:Seasonal fee cap per child": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Seasonal fee cap per child"
       }
     },
     "ui:Seasonal host logistics: {money:amount}": {
@@ -123307,6 +124334,14 @@
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
       }
     },
+    "ui:Selected by household policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Selected by household policy"
+      }
+    },
     "ui:Send a legation": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -123396,6 +124431,14 @@
       "location": "js/main.js",
       "source": {
         "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
+      }
+    },
+    "ui:Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged."
       }
     },
     "ui:Set foreign policy": {
@@ -124075,6 +125118,14 @@
         "text": "The campaign’s partition"
       }
     },
+    "ui:The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
+      }
+    },
     "ui:The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -124197,6 +125248,14 @@
         "text": "The fatal event unfolded at {province}."
       }
     },
+    "ui:The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later."
+      }
+    },
     "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -124237,6 +125296,22 @@
       "location": "js/economy.js",
       "source": {
         "text": "The household already holds an incoming guild monopoly."
+      }
+    },
+    "ui:The household currently leaves each child’s focus for manual choice.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The household currently leaves each child’s focus for manual choice."
+      }
+    },
+    "ui:The household currently leaves instruction for manual choice.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The household currently leaves instruction for manual choice."
       }
     },
     "ui:The household is at its retainer capacity.": {
@@ -124624,6 +125699,14 @@
         "text": "This household office is already filled."
       }
     },
+    "ui:This instruction is not available to this child.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This instruction is not available to this child."
+      }
+    },
     "ui:This is a temporary ruler’s journey; it cannot relocate your court or household.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -124986,6 +126069,22 @@
         "text": "Unknown profession"
       }
     },
+    "ui:Unknown school": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unknown school"
+      }
+    },
+    "ui:Unknown tutor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Unknown tutor"
+      }
+    },
     "ui:Unknown until hired": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -125042,6 +126141,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building."
+      }
+    },
+    "ui:Use the household default: {focus}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "focus"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Use the household default: {focus}."
       }
     },
     "ui:Used for {claimant}": {
@@ -125206,6 +126315,22 @@
       "location": "js/travel.js",
       "source": {
         "text": "Wait until the current pregnancy ends before leaving this couple outside the managed household."
+      }
+    },
+    "ui:Waiting for a focus": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Waiting for a focus"
+      }
+    },
+    "ui:Waiting for an education focus": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Waiting for an education focus"
       }
     },
     "ui:Waqf Patron": {
@@ -128029,6 +129154,16 @@
         "text": "{chance}% merit chance"
       }
     },
+    "ui:{chance}% yearly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{chance}% yearly"
+      }
+    },
     "ui:{chance}% yearly directed-learning chance.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -130175,14 +131310,6 @@
         "text": "◉ Current focus: {focus}"
       }
     },
-    "ui:○ No directed study": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "○ No directed study"
-      }
-    },
     "ui:☠ {name} is Dead": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -130505,6 +131632,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "🎓 Hire a personal learned master ({money:amount} each season)"
+      }
+    },
+    "ui:🎓 Household Education Policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🎓 Household Education Policy"
+      }
+    },
+    "ui:🎓 Preview Education Policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🎓 Preview Education Policy"
       }
     },
     "ui:🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly": {

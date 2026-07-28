@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.80.4';
+  FB.VERSION = '1.81.0';
   FB.CHANGELOG = [
+    { v: '1.81.0', date: '2026-07-28', changes: [
+      'Household education policies can now fill empty study focuses and choose the strongest affordable instruction without replacing existing choices.'
+    ] },
     { v: '1.80.4', date: '2026-07-28', changes: [
       'Pregnancies now continue across succession, preserving the newborn’s recorded parents and family line.'
     ] },
@@ -927,6 +930,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
         holdings: [], enterprises: [], householdStandards: {},
+        educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
@@ -1076,6 +1080,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
         householdStandards: {},
+        educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null

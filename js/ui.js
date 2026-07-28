@@ -8418,6 +8418,70 @@ window.FB = window.FB || {};
         FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) })) + '</span></div>';
   }
 
+  function educationPolicyAnnotation(s, c, dimension) {
+    const provenance = FB.educationPolicyProvenance ?
+      FB.educationPolicyProvenance(s, c, dimension) : null;
+    if (provenance === 'policy') return FB.T('Selected by household policy');
+    if (provenance === 'manual') return FB.T('Manual override');
+    if (provenance === 'waiting') return FB.T('Waiting for an education focus');
+    return FB.T('No choice recorded');
+  }
+
+  function educationTutorOptionName(s, c, option) {
+    const tutor = option && option.tutor;
+    if (!tutor) return FB.T('Unknown tutor');
+    if (option.tutorSource === 'self') return FB.T('Teach them yourself');
+    if (option.tutorSource === 'father') {
+      return FB.T('{name} (your father)', { name:tutor.name });
+    }
+    if (option.tutorSource === 'mother') {
+      return FB.T('{name} (your mother)', { name:tutor.name });
+    }
+    if (option.tutorSource === 'spouse') {
+      return FB.T(tutor.sex === 'f' ? '{name} (your wife)' :
+        '{name} (your husband)', { name:tutor.name });
+    }
+    if (option.tutorSource === 'priest') {
+      const me = s.chars[s.player.charId];
+      return FB.T('{name} ({role})', {
+        name:tutor.name, role:FB.holyWord(me.religion)
+      });
+    }
+    if (option.tutorSource === 'friend' || option.tutorSource === 'lord') {
+      return FB.T('{name} ({role})', {
+        name:tutor.name,
+        role:option.tutorSource === 'friend' ? FB.T('friend') : FB.T('lord')
+      });
+    }
+    if (option.tutorSource === 'household_tutor') {
+      return FB.T('{name} (household tutor)', { name:tutor.name });
+    }
+    if (option.tutorSource === 'personal_master') {
+      return FB.T('{name} (personal master)', { name:tutor.name });
+    }
+    return tutor.name;
+  }
+
+  function educationOptionName(s, c, option) {
+    if (!option) return FB.T('Waiting for a focus');
+    if (option.kind === 'home') return FB.T('Home instruction');
+    if (option.kind === 'tutor') return educationTutorOptionName(s, c, option);
+    const def = option.schoolId && FBDATA.schooling[option.schoolId];
+    return def ? dt(s, 'schooling', option.schoolId, def, 'name') :
+      FB.T('Unknown school');
+  }
+
+  function educationRiskWarning(option) {
+    const annualMortality = option ?
+      Math.min(1, Math.max(0, Number(option.annualMortality) || 0)) : 0;
+    if (!annualMortality) return '';
+    return FB.T(
+      '⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).', {
+        termRisk:Math.round(annualMortality / 4 * 1000) / 10,
+        annualRisk:Math.round(annualMortality * 1000) / 10
+      });
+  }
+
   function householdPlanEducation(s, c) {
     const age = FB.ageOf(c, s.date.year);
     const focus = c.edu && c.edu.focus ? FB.skillName(c.edu.focus) : '';
@@ -8439,7 +8503,8 @@ window.FB = window.FB || {};
     return {
       content:householdPlanLines(
         focus || FB.T('No focus chosen'),
-        focus ? FB.T('Directed study') : FB.T('Choose a subject')),
+        focus ? FB.T('Directed study') : FB.T('Choose a subject'),
+        educationPolicyAnnotation(s, c, 'focus')),
       action:'education'
     };
   }
@@ -8463,6 +8528,8 @@ window.FB = window.FB || {};
     const schoolId = FB.schoolingId(s, c);
     const school = schoolId && FBDATA.schooling[schoolId];
     const tutor = FB.educationTutor(s, c, false);
+    const provenance = FB.educationPolicyProvenance ?
+      FB.educationPolicyProvenance(s, c, 'instruction') : null;
     let instruction = FB.T('Home instruction');
     if (school) {
       const schoolName = dt(s, 'schooling', schoolId, school, 'name');
@@ -8487,8 +8554,15 @@ window.FB = window.FB || {};
     } else if (age < 6) {
       warning = FB.T('Lessons begin at age 6');
     }
+    if (provenance === 'waiting') {
+      instruction = FB.T('Waiting for a focus');
+    }
     return {
-      content:householdPlanLines(instruction, details, null, warning),
+      content:householdPlanLines(instruction,
+        provenance === 'waiting'
+          ? FB.T('Policy will choose instruction after a focus is set')
+          : details,
+        educationPolicyAnnotation(s, c, 'instruction'), warning),
       action:'instruction'
     };
   }
@@ -8643,9 +8717,28 @@ window.FB = window.FB || {};
       labels.person, labels.education, labels.instruction, labels.work,
       labels.assignment, labels.match, labels.equipment
     ];
+    const educationPolicy = FB.ensureEducationPolicy(s);
+    const educationFocusSummary = educationPolicy.focus
+      ? FB.T('Default focus: {focus}', {
+          focus:FB.skillName(educationPolicy.focus)
+        })
+      : FB.T('Focus chosen manually for each child');
+    const educationInstructionSummary =
+      educationPolicy.instructionMode === 'best'
+        ? FB.T('Best instruction up to {money:amount} per child each season', {
+            amount:educationPolicy.feeCap
+          })
+        : FB.T('Instruction chosen manually for each child');
     let h = '<div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
       'Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls.')) +
-      '</p></div><div class="household-plan-wrap"><table class="household-plan-table">' +
+      '</p></div><div class="education-policy-summary"><div><strong>' +
+      esc(FB.T('Education Policy')) + '</strong><span>' +
+      esc(educationFocusSummary) + '</span><span>' +
+      esc(educationInstructionSummary) + '</span></div>' +
+      '<button type="button" class="btn" id="household-education-policy" aria-label="' +
+      esc(FB.T('Manage household education policy')) + '">' +
+      esc(FB.T('Manage policy…')) + '</button></div>' +
+      '<div class="household-plan-wrap"><table class="household-plan-table">' +
       '<thead><tr>';
     for (const header of headers) h += '<th scope="col">' + esc(header) + '</th>';
     h += '</tr></thead><tbody>';
@@ -8676,6 +8769,9 @@ window.FB = window.FB || {};
       modalClass:'fullsheet-modal household-plan-modal'
     });
     FB.paintFaces($('gm-body'), s);
+    $('household-education-policy').addEventListener('click', function () {
+      UI.showEducationPolicy();
+    });
     const actions = $('gm-body').querySelectorAll('[data-household-plan-action]');
     for (let i = 0; i < actions.length; i++) {
       actions[i].addEventListener('click', function () {
@@ -8698,6 +8794,158 @@ window.FB = window.FB || {};
     }
     $('household-plan-close').addEventListener('click', UI.closeModal);
   };
+
+  function educationPolicyDraft(value) {
+    const policy = value || FB.ensureEducationPolicy(FB.state);
+    return {
+      focus:FB.SKILLS.indexOf(policy.focus) >= 0 ? policy.focus : null,
+      instructionMode:policy.instructionMode === 'best' ? 'best' : 'manual',
+      feeCap:Math.max(0, isFinite(Number(policy.feeCap)) ?
+        Number(policy.feeCap) : 0)
+    };
+  }
+
+  function educationPolicyFocusOptions(selected) {
+    let h = '<option value=""' + (!selected ? ' selected' : '') + '>' +
+      esc(FB.T('Manual for each child')) + '</option>';
+    for (const focus of FB.SKILLS) {
+      h += '<option value="' + esc(focus) + '"' +
+        (selected === focus ? ' selected' : '') + '>' +
+        esc(FB.skillName(focus)) + '</option>';
+    }
+    return h;
+  }
+
+  function readEducationPolicyDraft() {
+    const focus = $('education-policy-focus');
+    const instruction = $('education-policy-instruction');
+    const cap = $('education-policy-cap');
+    const amount = cap ? Number(cap.value) : 0;
+    return educationPolicyDraft({
+      focus:focus && focus.value || null,
+      instructionMode:instruction && instruction.checked ? 'best' : 'manual',
+      feeCap:isFinite(amount) ? Math.max(0, amount) : 0
+    });
+  }
+
+  function showEducationPolicyConfig(value) {
+    const draft = educationPolicyDraft(value);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged.')) +
+      '</p></div><div class="education-policy-form">' +
+      '<label class="education-policy-field" for="education-policy-focus"><span>' +
+      esc(FB.T('Default education focus')) + '</span><select id="education-policy-focus">' +
+      educationPolicyFocusOptions(draft.focus) + '</select><small>' +
+      esc(FB.T('Choose a subject for each empty eligible slot, or leave every child for manual selection.')) +
+      '</small></label><label class="autorow education-policy-check">' +
+      '<input type="checkbox" id="education-policy-instruction"' +
+      (draft.instructionMode === 'best' ? ' checked' : '') + '> ' +
+      esc(FB.T('Choose the strongest available instruction automatically')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically.')) +
+      '</span></label><label class="education-policy-field" for="education-policy-cap"><span>' +
+      esc(FB.T('Seasonal fee cap per child')) +
+      '</span><input type="number" id="education-policy-cap" min="0" step="0.25" inputmode="decimal" value="' +
+      esc(draft.feeCap) + '"><small>' + esc(FB.T(
+        'The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises.')) +
+      '</small></label></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="education-policy-preview">' +
+      esc(FB.T('Preview policy')) + '</button>' +
+      '<button type="button" class="btn" id="education-policy-back">' +
+      esc(FB.T('Back to Household Plan')) + '</button></div>';
+    openModal(FB.T('🎓 Household Education Policy'), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal education-policy-modal',
+      historyBackRender:function () { UI.showHouseholdPlan(); }
+    });
+    function syncCap() {
+      const enabled = $('education-policy-instruction').checked;
+      $('education-policy-cap').disabled = !enabled;
+    }
+    $('education-policy-instruction').addEventListener('change', syncCap);
+    syncCap();
+    $('education-policy-preview').addEventListener('click', function () {
+      showEducationPolicyPreview(readEducationPolicyDraft());
+    });
+    $('education-policy-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showHouseholdPlan(); });
+    });
+  }
+  UI.showEducationPolicy = function () {
+    showEducationPolicyConfig(FB.ensureEducationPolicy(FB.state));
+  };
+
+  function educationPolicyPreviewCard(s, entry) {
+    const focus = entry.focus ? FB.skillName(entry.focus) :
+      FB.T('Manual focus still required');
+    const instruction = entry.waitingFocus ? FB.T('Waiting for a focus') :
+      educationOptionName(s, entry.c, entry.option);
+    const chance = entry.projectedChance !== null && !entry.waitingFocus
+      ? FB.T('{chance}% yearly', {
+          chance:Math.round(entry.projectedChance * 100)
+        })
+      : FB.T('No instruction chance until a focus is chosen');
+    const fee = entry.option && !entry.waitingFocus
+      ? (entry.seasonalFee
+          ? FB.T('{money:amount} each season', { amount:entry.seasonalFee })
+          : FB.T('Free'))
+      : FB.T('No fee');
+    const warning = educationRiskWarning(entry.riskOption);
+    return '<article class="education-policy-preview-card"><strong>' +
+      esc(FB.fullName(entry.c)) + '</strong><dl><div><dt>' +
+      esc(FB.T('Focus')) + '</dt><dd>' + esc(focus) +
+      (entry.focusAffected ? ' <small>' + esc(FB.T('New policy choice')) +
+        '</small>' : '') + '</dd></div><div><dt>' +
+      esc(FB.T('Instruction')) + '</dt><dd>' + esc(instruction) +
+      (entry.instructionAffected ? ' <small>' +
+        esc(FB.T('New policy choice')) + '</small>' :
+        (entry.instructionUnavailable ? ' <small>' +
+          esc(FB.T('Existing choice remains, but it is unavailable for this focus')) +
+          '</small>' : '')) +
+      '</dd></div><div><dt>' + esc(FB.T('Projected learning')) +
+      '</dt><dd>' + esc(chance) + '</dd></div><div><dt>' +
+      esc(FB.T('Seasonal fee')) + '</dt><dd>' + esc(fee) +
+      '</dd></div></dl>' + (warning ? '<p class="household-plan-warning">' +
+        esc(warning) + '</p>' : '') + '</article>';
+  }
+
+  function showEducationPolicyPreview(value) {
+    const s = FB.state;
+    const draft = educationPolicyDraft(value);
+    const preview = FB.educationPolicyPreview(s, draft);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review the children whose empty choices would be filled now. Existing manual and policy-selected choices remain unchanged.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later.')) +
+      '</p></div><div class="education-policy-preview-list">';
+    if (preview.length) {
+      for (const entry of preview) h += educationPolicyPreviewCard(s, entry);
+    } else {
+      h += '<p class="hint education-policy-empty">' + esc(FB.T(
+        'No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible.')) +
+        '</p>';
+    }
+    h += '</div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="education-policy-save">' +
+      esc(FB.T('Save and apply policy')) + '</button>' +
+      '<button type="button" class="btn" id="education-policy-edit">' +
+      esc(FB.T('Edit policy')) + '</button></div>';
+    openModal(FB.T('🎓 Preview Education Policy'), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal education-policy-modal',
+      historyBackRender:function () { showEducationPolicyConfig(draft); }
+    });
+    $('education-policy-save').addEventListener('click', function () {
+      FB.setEducationPolicy(s, draft);
+      FB.save.autosave();
+      UI.refresh();
+      UI.showHouseholdPlan();
+      mobileNavClosedAll('modal-view', true);
+    });
+    $('education-policy-edit').addEventListener('click', function () {
+      modalHistoryBack(function () { showEducationPolicyConfig(draft); });
+    });
+  }
 
   /* ================= household livelihoods & enterprises ================= */
   function enterprisePlace(s, enterprise) {
@@ -12016,6 +12264,8 @@ window.FB = window.FB || {};
         (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
         FB.ageOf(c, s.date.year) >= 16) return;
     const self = c.id === s.player.charId;
+    const policy = FB.ensureEducationPolicy(s);
+    const provenance = FB.educationPolicyProvenance(s, c, 'focus');
     let h = '<div class="gm-list">';
     for (const k of FB.SKILLS) {
       const cur = c.edu && c.edu.focus === k;
@@ -12023,8 +12273,18 @@ window.FB = window.FB || {};
         esc(FB.skillName(k)) + '<span class="adesc">' + esc(FB.L(EDU_DESC[k])) + '</span></button>';
     }
     h += '<button class="actionbtn" data-edufocus="">' +
-      esc(FB.T('○ No directed study')) + '<span class="adesc">' +
+      (provenance === 'manual' && (!c.edu || !c.edu.focus) ? '◉ ' : '○ ') +
+      esc(FB.T('No directed study')) + '<span class="adesc">' +
       esc(FB.T(self ? 'Find your own way.' : 'Let the child find their own way.')) +
+      '</span></button>';
+    h += '<button class="actionbtn" id="edu-follow-policy">' +
+      '↻ ' +
+      esc(FB.T('Follow household policy')) + '<span class="adesc">' +
+      esc(policy.focus
+        ? FB.T('Use the household default: {focus}.', {
+            focus:FB.skillName(policy.focus)
+          })
+        : FB.T('The household currently leaves each child’s focus for manual choice.')) +
       '</span></button>';
     h += '</div><button class="btn" id="edu-back">' + esc(FB.T('Back')) + '</button>';
     openModal(self ? FB.T('🎓 Your education') :
@@ -12040,6 +12300,7 @@ window.FB = window.FB || {};
         const k = b.getAttribute('data-edufocus');
         c.edu = c.edu || {};
         c.edu.focus = k || null;
+        FB.markEducationManual(s, c, 'focus', k || 'none');
         FB.news(s, FB.msg('news.education.focus', {
           forms: {
             select: 'value', param: 'subject', cases: {
@@ -12066,9 +12327,22 @@ window.FB = window.FB || {};
             }
           }
         }, { subject: self ? 'self' : 'other', focus: k || 'other', name: c.name }));
+        if (k && FB.educationPolicyProvenance(s, c, 'instruction') === 'waiting') {
+          const ids = {};
+          ids[c.id] = 1;
+          FB.applyEducationPolicy(s, {
+            ids:ids, dimensions:{ focus:false, instruction:true }
+          });
+        }
         finishHouseholdPlanReturn(returnContext, function () {
           modalHistoryBack(function () { UI.showCharModal(cid); });
         });
+      });
+    });
+    $('edu-follow-policy').addEventListener('click', function () {
+      FB.followEducationPolicy(s, c, 'focus');
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
     $('edu-back').addEventListener('click', function () {
@@ -12089,16 +12363,17 @@ window.FB = window.FB || {};
     const self = c.id === me.id;
     const focus = c.edu && c.edu.focus;
     const currentSchool = FB.schoolingId(s, c);
-    const B = FBDATA.balance;
-    function yearlyChance(chance) {
-      return Math.round(Math.min(B.educationChanceCap || 0.9,
-        chance + (FB.techBonus ? FB.techBonus(s, 'education') : 0) +
-        FB.holdingBonus(s, 'edu') +
-        (FB.householdStandardEffect ? FB.householdStandardEffect(s, 'education') : 0)) * 100);
-    }
-    function schoolFee(def) {
-      return (Number(def && def.cost) || 0) * FB.techCostFactor(s, 'training');
-    }
+    const policy = FB.ensureEducationPolicy(s);
+    const educationOptions = FB.educationOptions(s, c, focus);
+    const schoolOptions = educationOptions.filter(function (option) {
+      return option.kind === 'school';
+    });
+    const tutorOptions = educationOptions.filter(function (option) {
+      return option.kind === 'tutor';
+    });
+    const homeOption = educationOptions.filter(function (option) {
+      return option.kind === 'home';
+    })[0];
     function schoolTechNames(def) {
       const reqs = Array.isArray(def.requiresTech) ? def.requiresTech : [def.requiresTech];
       return reqs.filter(function (id) {
@@ -12108,17 +12383,19 @@ window.FB = window.FB || {};
         return tech ? dt(s, 'tech', id, tech, 'name') : id;
       });
     }
-    function schoolLockReason(def) {
-      const age = FB.ageOf(c, s.date.year);
-      if (!focus) return FB.T('Choose an education focus first.');
-      if (age < 6) return FB.T('Lessons begin at age 6.');
-      if (age >= 16) return FB.T('Lessons end at age 16.');
-      if (def.tierMin !== undefined && s.player.tier < def.tierMin) {
+    function optionLockReason(option) {
+      const def = option && option.schoolId &&
+        FBDATA.schooling[option.schoolId];
+      if (!option || option.available) return '';
+      if (option.reason === 'focus') return FB.T('Choose an education focus first.');
+      if (option.reason === 'young') return FB.T('Lessons begin at age 6.');
+      if (option.reason === 'old') return FB.T('Lessons end at age 16.');
+      if (option.reason === 'tier' && def) {
         return FB.T('Requires {rank} rank or higher.', {
           rank:FB.titleWordFor(s, def.tierMin)
         });
       }
-      if (def.requiresTech && !FB.techRequirementMet(s, def.requiresTech)) {
+      if (option.reason === 'tech' && def) {
         const names = schoolTechNames(def);
         return names.length === 1
           ? FB.T('Requires the national technology {technology}.', { technology:names[0] })
@@ -12126,92 +12403,26 @@ window.FB = window.FB || {};
               technologies:names.join(', ')
             });
       }
-      if (def.devMin && (s.dev[s.player.provinceId] || 1) < def.devMin) {
+      if (option.reason === 'development') {
         return FB.T('Requires a town or city in your home county.');
       }
-      if (def.focuses && def.focuses.indexOf(focus) < 0) {
+      if (option.reason === 'unsupported') {
         return FB.T('This school does not teach the chosen focus.');
       }
-      return '';
+      return FB.T('This instruction is not available to this child.');
     }
-    function schoolRiskWarning(def) {
-      const annualMortality = Math.min(1,
-        Math.max(0, Number(def.annualMortality) || 0));
-      if (!annualMortality) return '';
-      return FB.T(
-        '⚠ Each completed term adds {termRisk}% extra fatality risk at New Year ({annualRisk}% after four terms).', {
-          termRisk:Math.round(annualMortality / 4 * 1000) / 10,
-          annualRisk:Math.round(annualMortality * 1000) / 10
-        });
-    }
-    function tutorChance(t) {
-      return Math.min(B.educationChanceCap || 0.9,
-        (B.educationTutorBase === undefined ? 0.3 : B.educationTutorBase) +
-        (focus ? FB.skillOf(t, focus) : 0) *
-        (B.educationTutorSkillChance === undefined ? 0.04 : B.educationTutorSkillChance));
-    }
-    function skillNote(t) {
+    function skillNote(option) {
+      const t = option.tutor;
       if (focus) return FB.T('{skill} {value} · {chance}% yearly', {
         skill:FB.skillName(focus), value:FB.skillOf(t, focus),
-        chance:yearlyChance(tutorChance(t))
+        chance:Math.round(option.chance * 100)
       });
       let best = 'dip';
       for (const k of FB.SKILLS) if (FB.skillOf(t, k) > FB.skillOf(t, best)) best = k;
       return FB.T('best: {skill} {value}',
         { skill: FB.skillName(best), value: FB.skillOf(t, best) });
     }
-    const cands = [];
-    if (self) {
-      // a child player is taught by their elders, not by themselves
-      const f = me.fatherId ? s.chars[me.fatherId] : null;
-      const m = me.motherId ? s.chars[me.motherId] : null;
-      if (f && !f.dead) cands.push({
-        id: f.id, c: f, name: FB.T('{name} (your father)', { name: f.name })
-      });
-      if (m && !m.dead) cands.push({
-        id: m.id, c: m, name: FB.T('{name} (your mother)', { name: m.name })
-      });
-    } else {
-      cands.push({ id: 'self', c: me, name: FB.T('Teach them yourself') });
-      for (const sp of FB.spousesOf(s, me)) {
-        cands.push({
-          id: sp.id, c: sp,
-          name: FB.T(sp.sex === 'f' ? '{name} (your wife)' : '{name} (your husband)',
-            { name: sp.name })
-        });
-      }
-    }
-    for (const r of ['priest', 'friend', 'lord']) {
-      // the lord fosters only gentle children — a serf's child has no place in his hall
-      if (r === 'lord' && FB.playerStation(s) < 2) continue;
-      const rc = FB.getRole(s, r, false);
-      if (rc && !rc.dead && (r !== 'lord' || rc.opinion >= 0)) {
-        cands.push({
-          id: rc.id, c: rc,
-          name: FB.T('{name} ({role})', {
-            name: rc.name,
-            role: r === 'priest' ? FB.holyWord(me.religion) :
-              (r === 'friend' ? FB.T('friend') : FB.T('lord'))
-          })
-        });
-      }
-    }
-    for (const record of (FB.retainerRecords ? FB.retainerRecords(s) : [])) {
-      if (record.office !== 'tutor') continue;
-      const tutor = s.chars[record.charId];
-      if (!tutor || tutor.dead) continue;
-      cands.push({
-        id:tutor.id, c:tutor,
-        name:FB.T('{name} (household tutor)', { name:tutor.name })
-      });
-    }
     const existingTutor = FB.educationTutor(s, c, false);
-    if (currentSchool === 'master' && existingTutor) {
-      cands.unshift({
-        id:existingTutor.id, c:existingTutor,
-        name:FB.T('{name} (personal master)', { name:existingTutor.name })
-      });
-    }
     function masterDescription() {
       if (!focus) return FB.T('A stranger of real accomplishment.');
       return FB.renderMessage(FB.msg('fx.ui.hired_master_focus', {
@@ -12253,44 +12464,52 @@ window.FB = window.FB || {};
         : FB.T('No current teaching assignment');
     }
     let h = '<div class="gm-list">';
-    for (const id in FBDATA.schooling) {
-      if (id === 'master') continue;
-      const def = FBDATA.schooling[id];
-      const available = focus && FB.schoolingAvailable(s, c, id);
-      const cur = currentSchool === id;
+    for (const option of schoolOptions) {
+      const id = option.schoolId;
+      const def = option.def;
+      const cur = currentSchool === id && !(c.edu && c.edu.tutorId);
       let reason = FB.T('{chance}% yearly · {money:amount} each season', {
-        chance:yearlyChance(def.chance), amount:schoolFee(def)
+        chance:Math.round(option.chance * 100), amount:option.fee
       });
-      const locked = schoolLockReason(def);
+      const locked = optionLockReason(option);
       if (locked) reason = locked;
-      const warning = schoolRiskWarning(def);
+      const warning = educationRiskWarning(option);
       h += '<button class="actionbtn" data-school="' + id + '"' +
-        (!available ? ' disabled' : '') + '>' + (cur ? '◉ ' : '○ ') +
+        (!option.available ? ' disabled' : '') + '>' + (cur ? '◉ ' : '○ ') +
         def.icon + ' ' + esc(dt(s, 'schooling', id, def, 'name')) +
         '<span class="adesc">' + esc(reason) +
         (warning ? '<br>' + esc(warning) : '') + '</span></button>';
     }
     const masterDef = FBDATA.schooling.master;
-    const masterFee = schoolFee(masterDef);
-    const masterAvailable = focus && FB.schoolingAvailable(s, c, 'master');
-    for (const cd of cands) {
-      const cur = c.edu && c.edu.tutorId === cd.id;
+    const masterFee = (Number(masterDef && masterDef.cost) || 0) *
+      FB.techCostFactor(s, 'training');
+    const masterAvailability =
+      FB.educationArrangementAvailability(s, c, 'master', focus);
+    const masterOption = {
+      available:masterAvailability.available,
+      reason:masterAvailability.reason, schoolId:'master'
+    };
+    const masterAvailable = masterAvailability.available;
+    for (const option of tutorOptions) {
+      const cur = c.edu && String(c.edu.tutorId) === String(option.tutorId);
       h += personAssignmentCard({
-        person:cd.c,
-        name:cd.name,
+        person:option.tutor,
+        name:educationTutorOptionName(s, c, option),
         selected:cur,
-        eligibility:cur ? FB.T('Currently assigned') : FB.T('Eligible teacher'),
-        data:{ tutor:cd.id },
+        eligible:option.available || cur,
+        eligibility:cur ? FB.T('Currently assigned') :
+          (option.available ? FB.T('Eligible teacher') : optionLockReason(option)),
+        data:{ tutor:option.tutorId },
         rows:[
-          { label:'Expected learning', value:skillNote(cd.c) },
-          { label:'Cost / pay', value:cd.c.role === 'tutor'
-            ? FB.T('{money:amount} each season', { amount:masterFee })
+          { label:'Expected learning', value:skillNote(option) },
+          { label:'Cost / pay', value:option.fee
+            ? FB.T('{money:amount} each season', { amount:option.fee })
             : FB.T('Free') },
-          { label:'Occupation', value:FB.careerTitle(s, cd.c) },
+          { label:'Occupation', value:FB.careerTitle(s, option.tutor) },
           { label:'Standing', value:FB.T('Regard {regard}', {
-            regard:signedOpinion(cd.c.opinion)
+            regard:signedOpinion(option.tutor.opinion)
           }) },
-          { label:'Current assignment', value:teachingAssignment(cd.id) },
+          { label:'Current assignment', value:teachingAssignment(option.tutorId) },
           { label:'Consequence', kind:'consequence', value:cur
             ? FB.T('Keeps the current instruction.')
             : FB.T('Replaces {instruction} for {student}.', {
@@ -12300,7 +12519,7 @@ window.FB = window.FB || {};
       });
     }
     if (currentSchool !== 'master') {
-      const masterLock = schoolLockReason(masterDef);
+      const masterLock = optionLockReason(masterOption);
       h += '<button class="actionbtn" data-tutor="~hire"' +
         (!masterAvailable || s.player.gold < masterFee ? ' disabled' : '') +
         '>' + esc(FB.T('🎓 Hire a personal learned master ({money:amount} each season)', {
@@ -12308,12 +12527,26 @@ window.FB = window.FB || {};
         })) + '<span class="adesc">' +
         esc(masterLock || masterDescription()) + '</span></button>';
     }
-    h += '<button class="actionbtn" data-tutor="~none">' +
-      (currentSchool || (c.edu && c.edu.tutorId) ? '○ ' : '◉ ') +
+    const homeSelected = !currentSchool && !(c.edu && c.edu.tutorId) &&
+      c.edu && c.edu.policy && c.edu.policy.instructionChoice === 'home';
+    const homeReason = optionLockReason(homeOption) ||
+      FB.T('{chance}% yearly directed-learning chance.', {
+        chance:Math.round(homeOption.chance * 100)
+      });
+    h += '<button class="actionbtn" data-tutor="~none"' +
+      (!homeOption.available ? ' disabled' : '') + '>' +
+      (homeSelected ? '◉ ' : '○ ') +
       esc(FB.T('Home instruction (free)')) + '<span class="adesc">' +
-      esc(FB.T('{chance}% yearly directed-learning chance.', {
-        chance:yearlyChance(B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance)
-      })) + '</span></button>';
+      esc(homeReason) + '</span></button>';
+    h += '<button class="actionbtn" id="tut-follow-policy">' +
+      '↻ ' +
+      esc(FB.T('Follow household policy')) + '<span class="adesc">' +
+      esc(policy.instructionMode === 'best'
+        ? FB.T('Choose the strongest available instruction costing no more than {money:amount} each season.', {
+            amount:policy.feeCap
+          })
+        : FB.T('The household currently leaves instruction for manual choice.')) +
+      '</span></button>';
     h += '</div><button class="btn" id="tut-back">' + esc(FB.T('Back')) + '</button>';
     openModal(self ? FB.T('🧑‍🏫 Your schooling') :
       FB.T('🧑‍🏫 Instruction for {name}', { name: c.name }), h, {
@@ -12327,11 +12560,15 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-school]').forEach(function (b) {
       b.addEventListener('click', function () {
         const id = b.getAttribute('data-school');
-        if (!FB.schoolingAvailable(s, c, id)) return;
+        const selected = schoolOptions.filter(function (option) {
+          return option.schoolId === id;
+        })[0];
+        if (!selected || !selected.available) return;
         c.edu = c.edu || {};
         c.edu.school = id;
         c.edu.tutorId = null;
         delete c.edu.schoolUnpaid;
+        FB.markEducationManual(s, c, 'instruction', selected.id);
         FB.news(s, FB.msg('news.education.school_chosen', {
           forms: {
             select:'value', param:'subject', cases:{
@@ -12353,9 +12590,11 @@ window.FB = window.FB || {};
         const v = b.getAttribute('data-tutor');
         c.edu = c.edu || {};
         if (v === '~none') {
+          if (!homeOption.available) return;
           c.edu.tutorId = null;
           c.edu.school = null;
           delete c.edu.schoolUnpaid;
+          FB.markEducationManual(s, c, 'instruction', 'home');
           FB.news(s, FB.msg('news.education.home_instruction', {
             forms: {
               select: 'value', param: 'subject', cases: {
@@ -12377,6 +12616,7 @@ window.FB = window.FB || {};
           c.edu.tutorId = master.id;
           c.edu.school = 'master';
           delete c.edu.schoolUnpaid;
+          FB.markEducationManual(s, c, 'instruction', 'tutor:' + master.id);
           FB.news(s, FB.msg('news.education.master_hired', {
             forms: {
               select: 'value', param: 'subject', cases: {
@@ -12386,9 +12626,14 @@ window.FB = window.FB || {};
             }
           }, { subject: self ? 'self' : 'other', tutor: master.name, name: c.name }));
         } else {
+          const selected = tutorOptions.filter(function (option) {
+            return String(option.tutorId) === String(v);
+          })[0];
+          if (!selected || !selected.available) return;
           c.edu.tutorId = v;
-          c.edu.school = s.chars[v] && s.chars[v].role === 'tutor' ? 'master' : null;
+          c.edu.school = selected.schoolId || null;
           delete c.edu.schoolUnpaid;
+          FB.markEducationManual(s, c, 'instruction', selected.id);
           FB.news(s, FB.msg('news.education.tutor_chosen', {
             forms: {
               select: 'value', param: 'case', cases: {
@@ -12408,6 +12653,12 @@ window.FB = window.FB || {};
         finishHouseholdPlanReturn(returnContext, function () {
           modalHistoryBack(function () { UI.showCharModal(cid); });
         });
+      });
+    });
+    $('tut-follow-policy').addEventListener('click', function () {
+      FB.followEducationPolicy(s, c, 'instruction');
+      finishHouseholdPlanReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
     $('tut-back').addEventListener('click', function () {

@@ -119,7 +119,9 @@ Season boundaries also run `FB.livelihoodSeason`: wages from resident household 
 profits from staffed enterprises, and learned household piety enter the same measured
 season ledger as focus income and upkeep. `FB.householdStandardsSeason` follows it, then
 retainer settlement, then `FB.educationSeason`, so those household wages can meet standards,
-service, and school fees in the disclosed order. Education records one quarter of the
+service, and school fees in the disclosed order. `FB.educationSeason` first applies the
+saved household education policy to newly eligible or otherwise empty choices, then settles
+the resulting live arrangements. Education records one quarter of the
 arrangement's annual learning bonus for every paid term. New years run `FB.livelihoodYearly` for
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
