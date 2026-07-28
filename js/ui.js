@@ -8601,7 +8601,9 @@ window.FB = window.FB || {};
       if (enterprise.workerId !== c.id) continue;
       const def = FBDATA.enterprises[enterprise.type];
       if (!def) continue;
-      staffed.push(dt(s, 'enterprise', enterprise.type, def, 'name'));
+      const name = dt(s, 'enterprise', enterprise.type, def, 'name');
+      staffed.push(enterprise.workerLocked
+        ? FB.T('{enterprise} · 🔒 locked', { enterprise:name }) : name);
       staffedIds.push(enterprise.uid);
     }
     const offices = [];
@@ -8762,7 +8764,18 @@ window.FB = window.FB || {};
         householdPlanCell(labels.equipment, equipment.content, equipment.action, c.id) +
         '</tr>';
     }
-    h += '</tbody></table></div><div class="gm-footer">' +
+    let idleEnterprises = 0;
+    for (const enterprise of enterprises) if (!enterprise.workerId) idleEnterprises++;
+    h += '</tbody></table></div>' +
+      (!idleEnterprises && enterprises.length
+        ? '<div class="hint enterprise-staffing-hint">' +
+          esc(FB.T('All family enterprises are staffed.')) + '</div>'
+        : '') +
+      '<div class="gm-footer">' +
+      (idleEnterprises
+        ? '<button type="button" class="btn" id="household-plan-staff-enterprises">' +
+          esc(FB.T('Staff all idle enterprises…')) + '</button>'
+        : '') +
       '<button type="button" class="btn" id="household-plan-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('📋 Household Plan'), h, {
@@ -8790,6 +8803,11 @@ window.FB = window.FB || {};
         } else if (action === 'equipment') {
           UI.showEquipmentModal(cid, 'close', HOUSEHOLD_PLAN_RETURN);
         }
+      });
+    }
+    if ($('household-plan-staff-enterprises')) {
+      $('household-plan-staff-enterprises').addEventListener('click', function () {
+        UI.showEnterpriseStaffingPreview(HOUSEHOLD_PLAN_RETURN);
       });
     }
     $('household-plan-close').addEventListener('click', UI.closeModal);
@@ -9199,7 +9217,10 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-enterprise="' + esc(e.uid) + '">' +
         esc(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name')) +
         '<span class="adesc">' + esc(worker
-          ? FB.T('Worked by {name}', { name:worker.name })
+          ? FB.T('Worked by {name}{lock}', {
+            name:worker.name,
+            lock:e.workerLocked ? FB.T(' · 🔒 locked') : ''
+          })
           : FB.T('Idle — no worker')) + '</span>' +
         assetEffectSummary({
           compact:true,
@@ -9211,6 +9232,18 @@ window.FB = window.FB || {};
           transferRule:enterpriseTransferRule(),
           expiry:FB.T('No fixed end')
         }) + '</button>';
+    }
+    let idleEnterprises = 0;
+    for (const enterprise of enterprises) if (!enterprise.workerId) idleEnterprises++;
+    if (idleEnterprises) {
+      h += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
+        esc(FB.T('Staff all idle enterprises…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
+        '</span></button>';
+    } else if (enterprises.length) {
+      h += '<div class="hint enterprise-staffing-hint">' +
+        esc(FB.T('All family enterprises are staffed.')) + '</div>';
     }
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
@@ -9240,6 +9273,11 @@ window.FB = window.FB || {};
           returnContext);
       });
     });
+    if ($('enterprise-staffing-preview')) {
+      $('enterprise-staffing-preview').addEventListener('click', function () {
+        UI.showEnterpriseStaffingPreview(returnContext);
+      });
+    }
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, UI.closeModal);
     });
@@ -10540,11 +10578,17 @@ window.FB = window.FB || {};
         parts.push(FB.T(
           'Replaces {name}, who returns to ordinary household work.',
           { name:displaced.name }));
+        if (e.workerLocked) {
+          parts.push(FB.T('This enterprise’s staffing lock will be cleared.'));
+        }
       }
       if (current && current.uid !== e.uid) {
         parts.push(FB.T('{enterprise} becomes idle.', {
           enterprise:enterpriseLabel(current)
         }));
+        if (current.workerLocked) {
+          parts.push(FB.T('That enterprise’s staffing lock will be cleared.'));
+        }
       }
       return parts.length ? parts.join(' ') : FB.T('No one is displaced.');
     }
@@ -10557,7 +10601,15 @@ window.FB = window.FB || {};
         effect:enterpriseEffectText(s, e, def, false),
         transferRule:enterpriseTransferRule(),
         expiry:FB.T('No fixed end')
-      }) + '</div><div class="gm-list">';
+      }) + '</div><label class="enterprise-worker-lock' +
+      (!e.workerId ? ' disabled' : '') + '"><input type="checkbox" ' +
+      'id="enterprise-worker-lock"' + (e.workerLocked ? ' checked' : '') +
+      (!e.workerId ? ' disabled' : '') + '> <span>' +
+      esc(FB.T('Lock this worker to this enterprise')) + '</span>' +
+      '<span class="adesc">' + esc(e.workerId
+        ? FB.T('The staffing assistant will preserve this pairing. Manual changes may still replace it.')
+        : FB.T('Assign a worker before locking this enterprise.')) +
+      '</span></label><div class="gm-list">';
     for (const c of FB.enterpriseWorkers(s, e.type)) {
       const current = workerAssignment(c.id);
       const preview = {
@@ -10594,6 +10646,15 @@ window.FB = window.FB || {};
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
       householdPlanHistoryOptions(returnContext));
     FB.paintFaces($('gm-body'), s);
+    if ($('enterprise-worker-lock')) {
+      $('enterprise-worker-lock').addEventListener('change', function () {
+        if (!FB.setEnterpriseWorkerLock(s, uid, this.checked)) {
+          this.checked = false;
+          this.disabled = true;
+        }
+        UI.refresh();
+      });
+    }
     document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
       b.addEventListener('click', function () {
         FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
@@ -10607,6 +10668,172 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
+      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+    });
+  };
+
+  function enterpriseStaffingLabel(s, row) {
+    const def = row && FBDATA.enterprises[row.type];
+    const province = FB.world.byId[row.provinceId];
+    const settlements = province ? FB.settlementsOf(s, row.provinceId) : [];
+    const place = settlements[row.settlement]
+      ? settlements[row.settlement].name
+      : (province ? province.name : FB.T('unknown place'));
+    if (!def) {
+      return { name:FB.T('Unknown enterprise'), icon:'?', place:place };
+    }
+    return {
+      name:dt(s, 'enterprise', row.type, def, 'name'),
+      icon:def.icon,
+      place:place
+    };
+  }
+
+  function enterpriseStaffingStatus(row) {
+    const labels = {
+      locked:'🔒 ' + FB.T('Locked'),
+      unchanged:FB.T('Unchanged'),
+      assigned:FB.T('Assigned'),
+      moved:FB.T('Moved'),
+      replaced:FB.T('Replaced'),
+      unresolved:FB.T('Unresolved')
+    };
+    return labels[row.status] || labels.unchanged;
+  }
+
+  function enterpriseStaffingReason(row) {
+    if (row.unresolvedReason === 'no_eligible_worker') {
+      return FB.T(
+        'No household worker meets this enterprise’s career and guild requirements.');
+    }
+    if (row.unresolvedReason === 'eligible_workers_locked') {
+      return FB.T('Every eligible worker is locked to another enterprise.');
+    }
+    if (row.unresolvedReason === 'allocated_higher_yield') {
+      return FB.T(
+        'Eligible workers produce more total yield in the assignments shown elsewhere.');
+    }
+    return '';
+  }
+
+  function enterpriseStaffingChange(s, row, rowByUid) {
+    const current = row.currentWorkerId && s.chars[row.currentWorkerId];
+    const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
+    if (row.status === 'locked') {
+      return FB.T('Locked assignment; the assistant will not move this worker.');
+    }
+    if (row.status === 'unchanged') return FB.T('Kept in place.');
+    if (row.status === 'assigned') {
+      return FB.T('{name} is assigned from ordinary household work.', {
+        name:proposed ? proposed.name : FB.T('This worker')
+      });
+    }
+    if (row.status === 'moved') {
+      const source = rowByUid[row.proposedFromUid];
+      const label = source ? enterpriseStaffingLabel(s, source).name :
+        FB.T('another enterprise');
+      return FB.T('{name} moves here from {enterprise}.', {
+        name:proposed ? proposed.name : FB.T('This worker'),
+        enterprise:label
+      });
+    }
+    if (row.status === 'replaced') {
+      if (row.proposedFromUid) {
+        const source = rowByUid[row.proposedFromUid];
+        const label = source ? enterpriseStaffingLabel(s, source).name :
+          FB.T('another enterprise');
+        return FB.T('{incoming} moves here from {enterprise}, replacing {outgoing}.', {
+          incoming:proposed ? proposed.name : FB.T('The new worker'),
+          enterprise:label,
+          outgoing:current ? current.name : FB.T('the current worker')
+        });
+      }
+      return FB.T('{incoming} replaces {outgoing}.', {
+        incoming:proposed ? proposed.name : FB.T('The new worker'),
+        outgoing:current ? current.name : FB.T('the current worker')
+      });
+    }
+    if (current) {
+      return FB.T('{name} moves to another assignment, leaving this enterprise unresolved.', {
+        name:current.name
+      });
+    }
+    return enterpriseStaffingReason(row);
+  }
+
+  UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
+    const s = FB.state;
+    const plan = FB.enterpriseStaffingPlan(s);
+    const rowByUid = {};
+    for (const row of plan.rows) rowByUid[row.uid] = row;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review the complete result before applying it. Locked pairings stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.')) +
+      '</p></div>' +
+      (notice ? '<div class="hint enterprise-staffing-notice">' +
+        esc(notice) + '</div>' : '') +
+      '<div class="enterprise-staffing-totals">' +
+      '<div><span>' + esc(FB.T('Current total')) + '</span><b>' +
+      esc(FB.T('{money:amount} each season', { amount:plan.currentTotal })) +
+      '</b></div><div class="enterprise-staffing-arrow" aria-hidden="true">→</div>' +
+      '<div><span>' + esc(FB.T('Proposed total')) + '</span><b>' +
+      esc(FB.T('{money:amount} each season', { amount:plan.proposedTotal })) +
+      '</b></div></div>';
+    if (!plan.changed) {
+      h += '<div class="hint">' + esc(FB.T(
+        'The current assignments already produce the best available total yield.')) +
+        '</div>';
+    }
+    h += '<div class="enterprise-staffing-rows">';
+    for (const row of plan.rows) {
+      const label = enterpriseStaffingLabel(s, row);
+      const current = row.currentWorkerId && s.chars[row.currentWorkerId];
+      const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
+      const reason = row.status === 'unresolved'
+        ? enterpriseStaffingReason(row) : '';
+      const change = enterpriseStaffingChange(s, row, rowByUid);
+      h += '<div class="enterprise-staffing-row ' +
+        (row.status === 'unresolved' ? 'unresolved' :
+          (row.status === 'locked' ? 'locked' : '')) + '">' +
+        '<div class="enterprise-staffing-head"><span class="enterprise-staffing-name">' +
+        esc(label.icon + ' ' + label.name) + '</span><span class="enterprise-staffing-status">' +
+        esc(enterpriseStaffingStatus(row)) + '</span></div>' +
+        '<div class="enterprise-staffing-place">' + esc(label.place) + '</div>' +
+        '<div class="enterprise-staffing-comparison"><div><span>' +
+        esc(FB.T('Current')) + '</span><b>' +
+        esc(current ? current.name : FB.T('Idle')) + '</b><small>' +
+        esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
+        '</small></div><div><span>' + esc(FB.T('Proposed')) + '</span><b>' +
+        esc(proposed ? proposed.name : FB.T('Unresolved')) + '</b><small>' +
+        esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
+        '</small></div></div>' +
+        '<div class="enterprise-staffing-change">' +
+        esc(change) + '</div>' +
+        (reason && reason !== change
+          ? '<div class="enterprise-staffing-reason">' + esc(reason) + '</div>'
+          : '') +
+        '</div>';
+    }
+    h += '</div><div class="gm-footer">' +
+      '<button type="button" class="btn" id="enterprise-staffing-apply"' +
+      (!plan.changed ? ' disabled' : '') + '>' +
+      esc(FB.T('Apply staffing plan')) + '</button>' +
+      '<button type="button" class="btn" id="enterprise-staffing-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    const options = householdPlanHistoryOptions(returnContext) || {};
+    options.modalClass = 'enterprise-staffing-modal';
+    openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
+    $('enterprise-staffing-apply').addEventListener('click', function () {
+      const result = FB.applyEnterpriseStaffingPlan(s, plan);
+      if (!result.ok) {
+        UI.showEnterpriseStaffingPreview(returnContext, result.reason === 'stale'
+          ? FB.T('Household staffing changed after this review. A fresh plan is shown; review it before applying.')
+          : FB.T('There are no staffing changes to apply.'));
+        return;
+      }
+      UI.refresh();
+      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+    });
+    $('enterprise-staffing-back').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
     });
   };

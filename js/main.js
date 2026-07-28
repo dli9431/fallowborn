@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.81.0';
+  FB.VERSION = '1.82.0';
   FB.CHANGELOG = [
+    { v: '1.82.0', date: '2026-07-28', changes: [
+      'Family enterprises now offer a staffing preview that maximizes seasonal yield while preserving locked assignments.'
+    ] },
     { v: '1.81.0', date: '2026-07-28', changes: [
       'Household education policies can now fill empty study focuses and choose the strongest affordable instruction without replacing existing choices.'
     ] },

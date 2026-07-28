@@ -1046,10 +1046,20 @@ productive property:
   rank, and any matching active guild-monopoly percentages modify it. Incoming and
   outgoing percentages add, capped at +50%.
 - Instances live in `player.enterprises` as
-  `{uid,type,provinceId,settlement,workerId}`. One type may stand once per settlement,
-  but the family may own further copies elsewhere; repeat cost grows by
-  `balance.enterpriseRepeatCostGrowth`.
+  `{uid,type,provinceId,settlement,workerId,workerLocked?}`. Optional
+  `workerLocked:true` reserves a valid current pairing from batch staffing; missing or
+  false means unlocked. One type may stand once per settlement, but the family may own
+  further copies elsewhere; repeat cost grows by `balance.enterpriseRepeatCostGrowth`.
 - An idle or invalidly staffed enterprise earns nothing.
+- Runtime normalization removes both `workerId` and `workerLocked` when a worker dies,
+  leaves the household, becomes career/guild ineligible, or is manually replaced or
+  unassigned. Valid locks survive saves and succession.
+- The core staffing preview optimizes all unlocked instances together against all
+  eligible household workers. It maximizes `FB.enterpriseYield` rounded to thousandths,
+  preserves current pairings on a yield tie, then uses stable enterprise UID and
+  character ID order without RNG. Unstaffed rows report locale-neutral
+  `no_eligible_worker`, `eligible_workers_locked`, or `allocated_higher_yield`.
+  Applying a preview requires its current signature and therefore rejects stale plans.
 
 ## Overland travel
 
