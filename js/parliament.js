@@ -189,19 +189,46 @@ window.FB = window.FB || {};
     return obl.aid;
   };
 
-  /* once a year the liege may summon the estates: a war subsidy while he
-     fights, a demand for a greater aid when his coffers thin, a fellow lord's
-     grievance — or a quiet sitting of mixed business */
+  /* The locale-neutral agenda pool keeps annual cadence separate from story
+     eligibility. Local disputes stay attached to the snapshotted home county;
+     wartime service business replaces the peacetime charter/relief briefs. */
+  FB.parliamentSessionCandidates = function (state) {
+    if (!FB.parliamentActive(state)) return [];
+    const B = FBDATA.balance;
+    const terms = FB.parliamentTerms(state);
+    const pid = state.player.provinceId;
+    const has = function (id) {
+      return !!(pid && FB.hasModifier && FB.hasModifier(state, id, pid));
+    };
+    const out = ['parliament_session', 'parliament_grievance'];
+    if (FB.isRealmAtWar(state, state.player.liege)) {
+      out.push('parliament_subsidy', 'parliament_levy_concession');
+    } else {
+      if (!has('market_charter') && !has('contested_tolls')) {
+        out.push('parliament_market_charter');
+      }
+      if (!has('levy_exemption') && !has('settlement_grudge')) {
+        out.push('parliament_sanctuary_relief');
+      }
+    }
+    if (terms.aid < (B.parliamentAidMax || 0.40) - 0.001) {
+      out.push('parliament_aid_hike');
+    }
+    if (has('contested_tolls') || has('settlement_grudge')) {
+      out.push('parliament_local_redress');
+    }
+    return out;
+  };
+
+  /* Once a year the liege may summon the estates. The session chance remains
+     unchanged; the expanded candidate pool supplies the authored agenda. */
   FB.parliamentYearly = function (state) {
     if (!FB.parliamentActive(state)) return;
     const B = FBDATA.balance;
     if (!FB.chance(B.parliamentSessionChance || 0.5)) return;
-    const obl = FB.parliamentEnsure(state);
-    let id = 'parliament_session';
-    if (FB.isRealmAtWar(state, state.player.liege) && FB.chance(0.6)) id = 'parliament_subsidy';
-    else if (obl.aid < (B.parliamentAidMax || 0.40) - 0.001 && FB.chance(0.5)) id = 'parliament_aid_hike';
-    else if (FB.chance(0.35)) id = 'parliament_grievance';
-    FB.queueEvent(state, id, {});
+    FB.parliamentEnsure(state);
+    const candidates = FB.parliamentSessionCandidates(state);
+    if (candidates.length) FB.queueEvent(state, FB.pick(candidates), {});
   };
 
   /* ---------- event helpers (FB.fns.parliament_* — triggers & effects) ---------- */
@@ -211,6 +238,10 @@ window.FB = window.FB || {};
   FB.fns.parliament_has_scutage = function (state) { return FB.parliamentScutage(state); };
   FB.fns.parliament_redress_possible = function (state) {
     return FB.parliamentAid(state) > (FBDATA.balance.parliamentAidMin || 0.10) + 0.001;
+  };
+  FB.fns.parliament_aid_can_rise = function (state) {
+    return FB.parliamentAid(state) <
+      (FBDATA.balance.parliamentAidMax || 0.40) - 0.001;
   };
   FB.fns.parliament_scutage_possible = function (state) { return !FB.parliamentScutage(state); };
 
@@ -237,6 +268,17 @@ window.FB = window.FB || {};
   };
   FB.fns.parliament_redress_lost = function (state) {
     adjustLiegeStanding(state, -8, 'redress_lost');
+  };
+  FB.fns.parliament_trade_redress = function (state) {
+    const aid = FB.parliamentAidAdjust(state, -1);
+    if (aid === null) return;
+    adjustLiegeStanding(state, -5, 'trade_redress');
+    FB.news(state, FB.msg('news.parliament.trade_redress',
+      '⚖ The estates bind market charter and redress together — {liege}’s aid falls to {pct}%.',
+      {
+        liege:state.realms[state.player.liege].name,
+        pct:Math.round(aid * 100)
+      }));
   };
   FB.fns.parliament_scutage_pass = function (state) {
     const obl = FB.parliamentEnsure(state);

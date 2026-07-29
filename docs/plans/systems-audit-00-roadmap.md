@@ -25,7 +25,8 @@ not part of this numbered queue.
    authored content using the consolidated Standing and interaction contracts.
 6. [Institution and modifier content](systems-audit-06-institution-modifier-content.md)
    — institution stories and durable consequences, including cross-links from
-   step 5.
+   the existing plot/diplomacy catalog. **Implemented 2026-07-29; step 5 may add
+   further sources.**
 
 ## Dependency and concurrency map
 

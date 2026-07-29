@@ -29,9 +29,21 @@ Yearly it drifts back toward 50 (`FB.councilYearly`). Two thresholds matter:
 
 **Events** live in `data/events_council.js` — flattery, petitions, office-seekers,
 uncovered schemes (two flavors, gated on whether a Chamberlain sits watching), council
-feuds, a wartime subsidy, and the charter. Triggers and effects are the `council_*`
-custom fns in `js/council.js`; like the older vassal events, slot-day council events
-stay archetypal (no named tokens) and let the effect fns pick the councillor involved.
+feuds, a wartime subsidy, and the charter. Four substantial local decisions connect that
+board to the rest of the realm: a Treasurer-led market charter, a Constable-led wartime
+muster, pressure to prepare an over-limit domain for a lawful grant, and an Almoner-led
+sanctuary dispute. They grant bounded county modifiers for market rules, disputed tolls,
+service exemptions or burdens, road patrols, confirmed custom, and settlement
+grievances. The grant recommendation never transfers land: the player must still name
+and confirm a recipient through Governance's existing grant flow. Domain pressure is
+suppressed once Crown Authority reaches the charter threshold, where the existing
+charter confrontation owns that tension.
+
+Triggers and effects are the `council_*` custom fns in `js/council.js`; like the older
+vassal events, slot-day council events stay archetypal (no named ruler tokens) and let
+the effect fns pick the councillor involved. The new custom handlers mutate only Crown
+Authority and the relevant officer or board Standing. Modifier changes remain
+declarative event effects.
 
 **Interaction** is summarized in the landed ruler's **Governance** sheet and managed in
 the focused `UI.showCouncil` modal: the authority meter, every seat with its holder's

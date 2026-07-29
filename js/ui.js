@@ -81,6 +81,94 @@ window.FB = window.FB || {};
     return scope === 'campaign'
       ? FB.T('Until the campaign ends') : FB.T('No fixed end');
   }
+  function modifierSourceText(s, record, scope) {
+    const sourceId = record && record.sourceEventId;
+    const ev = sourceId && FB.eventById ? FB.eventById(sourceId) : null;
+    if (ev) {
+      return FB.T('Event: {event}', {
+        event:FB.eventText(s, s.player.charId, ev, 'title', {})
+      });
+    }
+    if (scope === 'campaign') return FB.T('Current campaign vow');
+    return FB.T('Direct system grant or an older save');
+  }
+  function eventModifierEffectPreview(s, fx, ctx) {
+    if (!fx) return '';
+    const parts = [];
+    function specOf(raw) {
+      return typeof raw === 'string' ? { id:raw } : raw;
+    }
+    if (fx.addModifier) {
+      const spec = specOf(fx.addModifier);
+      const def = spec && FBDATA.modifiers && FBDATA.modifiers[spec.id];
+      if (def) {
+        const name = dt(s, 'modifier', spec.id, def, 'name');
+        const effect = modifierEffectText(s, spec.id);
+        const upkeep = def.upkeep && def.upkeep.gold
+          ? assetSeasonalMoneyCost(def.upkeep.gold) : FB.T('no seasonal upkeep');
+        const duration = def.days === undefined
+          ? (def.scope === 'campaign'
+            ? FB.T('until the campaign ends') : FB.T('with no fixed end'))
+          : FB.T('for {days} days', { days:def.days });
+        if (def.scope === 'county') {
+          const pid = spec.pid || (ctx && ctx.locationId) ||
+            s.player.provinceId;
+          const province = FB.world.byId[pid];
+          parts.push(FB.T(
+            'Adds or refreshes {modifier} in {province} {duration}: {effects}; {upkeep}. It stays with the county after transfer.', {
+              modifier:name,
+              province:province ? province.name : pid,
+              duration:duration,
+              effects:effect || FB.T('no mechanical effect'),
+              upkeep:upkeep
+            }));
+        } else {
+          parts.push(FB.T(
+            'Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this great holy war.', {
+              modifier:name,
+              duration:duration,
+              effects:effect || FB.T('no mechanical effect'),
+              upkeep:upkeep
+            }));
+        }
+      }
+    }
+    if (fx.removeModifier) {
+      const spec = specOf(fx.removeModifier);
+      const def = spec && FBDATA.modifiers && FBDATA.modifiers[spec.id];
+      if (def) {
+        const name = dt(s, 'modifier', spec.id, def, 'name');
+        if (def.scope === 'county') {
+          const pid = spec.pid || (ctx && ctx.locationId) ||
+            s.player.provinceId;
+          const province = FB.world.byId[pid];
+          parts.push(FB.T(
+            'Ends {modifier} in {province}; its effects and upkeep stop.', {
+              modifier:name,
+              province:province ? province.name : pid
+            }));
+        } else {
+          parts.push(FB.T(
+            'Ends {modifier} for this great holy war.', {
+              modifier:name
+            }));
+        }
+      }
+    }
+    return parts.join(' ');
+  }
+  function eventModifierPreview(s, option, ctx) {
+    const parts = [];
+    const direct = eventModifierEffectPreview(s, option.effects, ctx);
+    const success = eventModifierEffectPreview(
+      s, option.success && option.success.effects, ctx);
+    const failure = eventModifierEffectPreview(
+      s, option.failure && option.failure.effects, ctx);
+    if (direct) parts.push(direct);
+    if (success) parts.push(FB.T('On success: {result}', { result:success }));
+    if (failure) parts.push(FB.T('On failure: {result}', { result:failure }));
+    return parts.join(' ');
+  }
   function modifierChips(s, records, scope, pid) {
     let h = '';
     for (const record of records) {
@@ -3906,6 +3994,26 @@ window.FB = window.FB || {};
     academy_student_int:1.5, academy_student_lea:1.5,
     academy_withdraw:-1
   };
+  function modifierFxScore(raw) {
+    const spec = typeof raw === 'string' ? { id:raw } : raw;
+    const def = spec && FBDATA.modifiers && FBDATA.modifiers[spec.id];
+    if (!def) return 0;
+    const fx = def.fx || {};
+    let value = 0;
+    value += (Number(fx.tax) || 0) * 40;
+    value += (Number(fx.levy) || 0) * 25;
+    value -= (Number(fx.buildingCost) || 0) * 30;
+    value += (Number(fx.commonVoice) || 0) * 0.3;
+    value -= (Number(fx.famine) || 0) * 12;
+    value -= (Number(fx.unrest) || 0) * 12;
+    value -= (Number(def.upkeep && def.upkeep.gold) || 0) * 0.5;
+    value -= (Number(fx.supplyUse) || 0) * 20;
+    value += (Number(fx.contribution) || 0) * 20;
+    value += (Number(fx.marchSpeed) || 0) * 15;
+    value += (Number(fx.battleOdds) || 0) * 20;
+    value -= (Number(fx.desertion) || 0) * 20;
+    return value;
+  }
   function fxScore(fx) {
     if (!fx) return 0;
     let v = 0;
@@ -3923,6 +4031,8 @@ window.FB = window.FB || {};
     if (fx.killChild || fx.killRole) v -= 10;
     if (fx.setFlag === 'ill') v -= 4;
     if (fx.addTrait === 'scarred' || fx.addTrait === 'craven') v -= 3;
+    if (fx.addModifier) v += modifierFxScore(fx.addModifier);
+    if (fx.removeModifier) v -= modifierFxScore(fx.removeModifier);
     if (fx.pickHeir) v -= 100;
     return v;
   }
@@ -4209,9 +4319,12 @@ window.FB = window.FB || {};
       const oi = ev.options ? ev.options.indexOf(o) : -1;
       const btn = document.createElement('button');
       btn.className = 'evopt';
+      const modifierPreview = eventModifierPreview(s, o, ctx);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
+        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '') +
+        (modifierPreview ? '<span class="odesc modifier-choice-preview">' +
+          esc(modifierPreview) + '</span>' : '');
       (function (opt) {
         btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
       })(o);
@@ -8051,7 +8164,29 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function governanceModifierConsequencesHtml(s, summary) {
+    const counties = summary.modifierCounties || [];
+    if (!counties.length) return '';
+    let h = '<div class="governance-subhead">' +
+      esc(FB.T('Active local consequences')) + '</div>';
+    for (const item of counties) {
+      const province = FB.world.byId[item.provinceId];
+      h += '<div class="governance-modifier-county">' +
+        governanceCountyLink(item.provinceId,
+          province ? province.name : item.provinceId,
+          FB.T('{count} active', { count:item.records.length })) +
+        '<div class="modifier-list">' +
+        modifierChips(s, item.records, 'county', item.provinceId) +
+        '</div></div>';
+    }
+    h += '<div class="hint">' + esc(FB.T(
+      'These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held.')) +
+      '</div>';
+    return h;
+  }
+
   function governanceInstitutionHtml(s, summary) {
+    const modifierConsequences = governanceModifierConsequencesHtml(s, summary);
     if (summary.institution === 'estates' && summary.estates) {
       const estates = summary.estates;
       const redress = FB.parliamentMotionStatus(s, 'redress');
@@ -8088,7 +8223,7 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T(
           'Review the terms and put an eligible yearly motion to the hall.')) +
         '</span></button>';
-      return h;
+      return h + modifierConsequences;
     }
     if (summary.institution === 'council' && summary.council) {
       const council = summary.council;
@@ -8147,7 +8282,7 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T(
           'Appoint officers, replace holders, dismiss councillors, and offer gifts.')) +
         '</span></button>';
-      return h;
+      return h + modifierConsequences;
     }
     return '<div class="progressnote">' + esc(FB.T(
       'No simulated institution applies. Independent counts and dukes govern their own domain without the liege’s Estates or a Royal Council.')) +
@@ -14682,6 +14817,7 @@ window.FB = window.FB || {};
     const desc = dt(s, 'modifier', id, def, 'desc');
     const effects = modifierEffectText(s, id);
     const duration = modifierDurationText(s, record, scope);
+    const source = modifierSourceText(s, record, scope);
     let owner, effectScope, transfer;
     if (scope === 'county') {
       const province = FB.world.byId[pid];
@@ -14694,6 +14830,7 @@ window.FB = window.FB || {};
       transfer = FB.T('Does not transfer to another campaign');
     }
     const h = '<div class="gm-body-text"><p><i>' + esc(desc) + '</i></p>' +
+      kv('Source', esc(source)) +
       assetEffectSummary({
         owner:owner,
         scope:effectScope,

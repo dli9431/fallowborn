@@ -3,10 +3,10 @@
 Date: 2026-07-29
 
 Status: step 6 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md). Base definitions and disjoint
-institution content may run alongside step 5 once the Governance contract is fixed;
-cross-links and final integration follow
-[plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md).
+[systems-audit roadmap](systems-audit-00-roadmap.md); implemented 2026-07-29 against
+the existing plot, border, and merchant catalog. The later
+[plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md) expansion
+may add further sources without changing the modifier contract.
 
 Related design:
 [Royal Council](../designs/council.md),

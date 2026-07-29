@@ -74,5 +74,92 @@ FBDATA.events.push(
       success:{ text:'Your seconding carries the hall; the old lord wins his judgment and grips your hand till it hurts. The liege’s clerks write something down.', effects:{ prestige:5, opinionLiege:-4, traitProgress:{id:'moot_speaker'} } },
       failure:{ text:'The hall is not with you today. The old lord’s suit fails, and you have damaged your Standing on a losing cause.', effects:{ opinionLiege:-8, prestige:-2, removeTrait:'moot_speaker' } } },
     { label:'Murmur sympathy, and drift away.', desc:'Another man’s quarrel, another man’s risk.', effects:{} }
+  ]},
+
+/* ---- authored institution consequences: trade, service, redress, faith ---- */
+{ id:'parliament_market_charter', title:'The Market Charter',
+  trigger:{ never:true }, /* selected by FB.parliamentSessionCandidates */
+  text:'Merchants and guild masters crowd the lower end of the hall while {liege}’s officers argue over tolls. A fixed charter would make trade predictable; a failed settlement would leave every bridge and market claiming a different due.',
+  options:[
+    { label:'Accept a fair charter and help enforce it. ({money:10})',
+      require:{ goldMin:10 },
+      desc:'Spend locally, gain the liege’s notice, and put the bargain in writing.',
+      effects:{ gold:-10, opinionLiege:5, popularOpinion:3,
+        addModifier:{id:'market_charter'} } },
+    { label:'Demand lower aid in return for your support.',
+      require:{ custom:'parliament_redress_possible' },
+      desc:'Put the trade bargain to the benches as a service concession.',
+      chance:'parliament_vote',
+      success:{ text:'The benches join trade and redress in one settlement. The charter passes, and the liege’s aid falls a step.',
+        effects:{ custom:'parliament_trade_redress',
+          addModifier:{id:'market_charter'}, prestige:4,
+          traitProgress:{id:'moot_speaker'} } },
+      failure:{ text:'The bargain collapses in accusation. Toll collectors return to the roads with rival instructions.',
+        effects:{ opinionLiege:-8, prestige:-3,
+          addModifier:{id:'contested_tolls'},
+          removeTrait:'moot_speaker' } } },
+    { label:'Reject the charter and keep every old claim alive.',
+      desc:'No one yields a right; no trader knows which right will be demanded next.',
+      effects:{ opinionLiege:-4, addModifier:{id:'contested_tolls'} } }
+  ]},
+{ id:'parliament_levy_concession', title:'Service Beyond Custom',
+  trigger:{ never:true }, /* selected while the liege realm is at war */
+  wartime:true,
+  text:'The liege’s captains ask the estates for service beyond custom. The benches answer with three prices: men now, silver every season, or guarded roads that keep the host supplied without stripping another field.',
+  options:[
+    { label:'Send the extraordinary muster.',
+      desc:'The county yields more spears and bears the resentment openly.',
+      effects:{ opinionLiege:10, prestige:2,
+        addModifier:{id:'muster_burden'} } },
+    { label:'Trade a higher aid for temporary exemption.',
+      require:{ custom:'parliament_aid_can_rise' },
+      desc:'The liege’s revenue rises one step; this county’s levy concession remains bounded.',
+      effects:{ custom:'parliament_aid_up', opinionLiege:-2,
+        addModifier:{id:'levy_exemption'} } },
+    { label:'Pay for patrols and supply officers. ({money:18})',
+      require:{ goldMin:18 },
+      desc:'Keep the roads open for the host without expanding the local muster.',
+      effects:{ gold:-18, opinionLiege:6, prestige:3,
+        addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'parliament_local_redress', title:'Redress for the County',
+  trigger:{ never:true }, /* selected when a local dispute is active */
+  text:'A delegation from {province} waits while the estates read the petitions. The quarrel is no abstraction now: toll receipts, sworn grievances, and names of households that still remember the last settlement.',
+  options:[
+    { label:'Settle the disputed tolls. ({money:15})',
+      require:{ goldMin:15, hasModifier:'contested_tolls' },
+      desc:'Compensate the rival claimants, end the toll dispute, and replace it with a measured charter.',
+      effects:{ gold:-15, popularOpinion:5,
+        removeModifier:{id:'contested_tolls'},
+        addModifier:{id:'market_charter'},
+        log:'Settled the county’s disputed tolls before the estates.' } },
+    { label:'Hear the grievance and confirm the old custom. ({money:10})',
+      require:{ goldMin:10, hasModifier:'settlement_grudge' },
+      desc:'Pay for redress, end the grudge, and bind the judgment by charter.',
+      effects:{ gold:-10, popularOpinion:6,
+        removeModifier:{id:'settlement_grudge'},
+        addModifier:{id:'custom_confirmed'},
+        log:'Won local redress through the estates.' } },
+    { label:'Let the petitions stand over.',
+      desc:'The active local consequence remains until another settlement or its natural expiry.',
+      effects:{ prestige:-2 } }
+  ]},
+{ id:'parliament_sanctuary_relief', title:'Sanctuary, Aid, and the Poor',
+  trigger:{ never:true }, /* selected in a peacetime sitting */
+  text:'The clergy ask the estates to protect sanctuary and relief in {province}; the liege’s officers answer that every exemption leaves another household to serve. The hall must decide whether legitimacy is bought with spears, silver, or mercy.',
+  options:[
+    { label:'Confirm sanctuary from the levy.',
+      desc:'A bounded exemption answers the clergy and the county together.',
+      effects:{ piety:8, popularOpinion:5, opinionLiege:-4,
+        addModifier:{id:'levy_exemption'} } },
+    { label:'Fund relief and patrol the roads. ({money:16})',
+      require:{ goldMin:16 },
+      desc:'Pay for public relief and the riders who keep it moving.',
+      effects:{ gold:-16, piety:4, opinionLiege:3,
+        addModifier:{id:'roads_patrolled'} } },
+    { label:'Give the liege the service demanded.',
+      desc:'The crown is pleased; the county remembers that its petition was refused.',
+      effects:{ opinionLiege:6, piety:-4,
+        addModifier:{id:'settlement_grudge'} } }
   ]}
 );

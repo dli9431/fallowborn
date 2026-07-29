@@ -346,6 +346,15 @@ buttons, ordinary number hints apply to political actions, and narrow layouts co
 to one column without hiding blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
+
+Governance's Institution section also repeats every active modifier record from the
+player's directly held counties. These are the same native-button chips as Land—not a
+second inventory—and open the same accessible detail sheet with semantic source,
+remaining days, exact effects, upkeep, expiry, and transfer behavior. Event choices
+that grant or remove a modifier append the same information in text before the choice;
+icons and color never carry a consequence alone. County transfer automatically removes
+the record from Governance while Land continues to show it on the selected county.
+
 Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
 guildmaster; its locked description exposes the exact missing technology, guild standing,
 Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes

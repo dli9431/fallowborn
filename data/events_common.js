@@ -487,7 +487,8 @@ FBDATA.events.push(
       success:{ text:'Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent.',
         effects:{ custom:'plot_discovery_success' } },
       failure:{ text:'Half-ready is not ready. The whole scheme collapses on your head in daylight.',
-        effects:{ custom:'plot_discovery_failure' } } }
+        effects:{ custom:'plot_discovery_failure',
+          addModifier:{id:'settlement_grudge'} } } }
   ]},
 { id:'plot_ruin_rival', title:'The Trap Closes', trigger:{ never:true },
   text:'Every thread is in place and {rival} suspects nothing. One word from you and the web draws tight.',
@@ -548,7 +549,8 @@ FBDATA.events.push(
       success:{ text:'The liege’s clerks stamp it without a second glance. The difference is yours, this year and after.',
         effects:{ custom:'plot_end', gold:25, skills:{int:2} } },
       failure:{ text:'An honest clerk — the rarest hazard. The liege’s displeasure arrives with an audit.',
-        effects:{ custom:'plot_end', gold:-15, opinionLiege:-25, prestige:-8 } } },
+        effects:{ custom:'plot_end', gold:-15, opinionLiege:-25, prestige:-8,
+          addModifier:{id:'contested_tolls'} } } },
     { label:'Burn the false ledger.', desc:'Ashes make poor evidence.', effects:{ custom:'plot_end', piety:3 } }
   ]},
 

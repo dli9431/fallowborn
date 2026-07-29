@@ -2646,7 +2646,20 @@ window.FB = window.FB || {};
       if (spec && typeof spec.id === 'string') {
         const def = FBDATA.modifiers && FBDATA.modifiers[spec.id];
         const pid = spec.pid || ctx.locationId || p.provinceId;
-        FB.addModifier(state, spec.id, def && def.scope === 'county' ? pid : null);
+        FB.addModifier(state, spec.id,
+          def && def.scope === 'county' ? pid : null, {
+            sourceEventId:ev && ev.id
+          });
+      }
+    }
+    if (fx.removeModifier && FB.removeModifier) {
+      const spec = typeof fx.removeModifier === 'string'
+        ? { id:fx.removeModifier } : fx.removeModifier;
+      if (spec && typeof spec.id === 'string') {
+        const def = FBDATA.modifiers && FBDATA.modifiers[spec.id];
+        const pid = spec.pid || ctx.locationId || p.provinceId;
+        FB.removeModifier(state, spec.id,
+          def && def.scope === 'county' ? pid : null, { notice:true });
       }
     }
     if (fx.holding) {

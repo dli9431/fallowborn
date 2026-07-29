@@ -191,5 +191,14 @@ the childhood event filter, [time.md](time.md) for slot days and autoresolve.
 Temporary modifier integration is described in [modifiers.md](modifiers.md). Event
 contexts snapshot `locationId`; top-level `tags` scale only negative signed effects
 through county/estate tag bonuses; and declarative content may use the `hasModifier`
-trigger or `addModifier:{id,pid?}` effect. The interpreter clones a scaled effect object
-and never rewrites the source event definition.
+trigger or `addModifier:{id,pid?}` / `removeModifier:{id,pid?}` effects. Grants record
+the event's stable id, never its rendered title, as the modifier's optional semantic
+source. The interpreter clones a scaled effect object and never rewrites the source
+event definition.
+
+The event modal derives modifier consequences from those ordinary effect objects.
+Before a choice, it states the modifier name, snapshotted county, catalog duration,
+exact supported effects, upkeep, and county-transfer rule. Chance branches label their
+success and failure consequences separately. Autoresolve scores the same modifier
+objects and applies them through the same interpreter path; presentation adds no
+parallel mutation.

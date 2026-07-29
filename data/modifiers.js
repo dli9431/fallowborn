@@ -16,6 +16,44 @@ FBDATA.modifiers = {
     scope:'county', days:3600,
     fx:{ commonVoice:8, levy:-0.05, unrest:-0.15 }
   },
+  market_charter: {
+    name:'Market Charter', icon:'⚖',
+    desc:'Measured tolls and protected stalls draw trade under a public charter.',
+    scope:'county', days:1440,
+    upkeep:{ gold:1 },
+    fx:{ tax:0.08, buildingCost:-0.08 }
+  },
+  contested_tolls: {
+    name:'Contested Tolls', icon:'🪙',
+    desc:'Rival claims at bridge and market turn trade into grievance.',
+    scope:'county', days:720,
+    fx:{ tax:-0.10, unrest:0.25 }
+  },
+  levy_exemption: {
+    name:'Levy Exemption', icon:'🕊',
+    desc:'A witnessed concession shelters this county from the full muster.',
+    scope:'county', days:1080,
+    fx:{ levy:-0.12, commonVoice:6 }
+  },
+  muster_burden: {
+    name:'Muster Burden', icon:'🛡',
+    desc:'An extraordinary call brings more spears at the cost of local patience.',
+    scope:'county', days:540,
+    fx:{ levy:0.15, commonVoice:-6, unrest:0.15 }
+  },
+  roads_patrolled: {
+    name:'Roads Patrolled', icon:'🏇',
+    desc:'Paid riders keep the markets open and trouble away from the roads.',
+    scope:'county', days:720,
+    upkeep:{ gold:1 },
+    fx:{ tax:0.04, unrest:-0.20 }
+  },
+  settlement_grudge: {
+    name:'Settlement Grudge', icon:'✊',
+    desc:'A coerced settlement is obeyed in public and resented in every village.',
+    scope:'county', days:900,
+    fx:{ commonVoice:-7, unrest:0.25 }
+  },
   oathbound_host: {
     name:'Oathbound Host', icon:'🕊',
     desc:'The host marches under a public vow.',

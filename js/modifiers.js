@@ -1,6 +1,7 @@
 /* Fallowborn — temporary county and player-participation campaign modifiers.
-   Records are small JSON-safe {id,endTurn?} values. County records stay with
-   their province; campaign records live on the active great holy war. */
+   Records are small JSON-safe {id,endTurn?,sourceEventId?} values. County
+   records stay with their province; campaign records live on the active
+   great holy war. */
 window.FB = window.FB || {};
 
 (function () {
@@ -31,6 +32,9 @@ window.FB = window.FB || {};
           !validEnd(raw)) continue;
       const next = { id:raw.id };
       if (own(raw, 'endTurn')) next.endTurn = raw.endTurn;
+      if (typeof raw.sourceEventId === 'string' && raw.sourceEventId) {
+        next.sourceEventId = raw.sourceEventId;
+      }
       if (!byId[raw.id]) {
         byId[raw.id] = next;
         order.push(raw.id);
@@ -38,6 +42,9 @@ window.FB = window.FB || {};
         delete byId[raw.id].endTurn;
       } else if (next.endTurn > byId[raw.id].endTurn) {
         byId[raw.id].endTurn = next.endTurn;
+      }
+      if (next.sourceEventId) {
+        byId[raw.id].sourceEventId = next.sourceEventId;
       }
     }
     const out = [];
@@ -117,6 +124,18 @@ window.FB = window.FB || {};
     const list = listFor(state, 'county', pid, false) || [];
     return list.filter(function (record) { return active(record, state); });
   };
+  /* Read-only projection for overview surfaces whose open/navigation contract
+     must not repair or create save state. Simulation and Land retain the
+     authoritative repairing reader above. */
+  FB.countyModifierSnapshot = function (state, pid) {
+    if (!state || !pid || !FB.world || !FB.world.byId ||
+        !FB.world.byId[pid]) return [];
+    const county = state.modifiers && state.modifiers.county;
+    const list = county && county[pid];
+    return repairList(list, 'county').filter(function (record) {
+      return active(record, state);
+    });
+  };
   FB.campaignModifierRecords = function (state) {
     const list = listFor(state, 'campaign', null, false) || [];
     return list.filter(function (record) { return active(record, state); });
@@ -138,10 +157,18 @@ window.FB = window.FB || {};
     if (record) {
       if (endTurn === null) delete record.endTurn;
       else record.endTurn = endTurn;
+      if (options && typeof options.sourceEventId === 'string' &&
+          options.sourceEventId) {
+        record.sourceEventId = options.sourceEventId;
+      }
       return true;
     }
     record = { id:id };
     if (endTurn !== null) record.endTurn = endTurn;
+    if (options && typeof options.sourceEventId === 'string' &&
+        options.sourceEventId) {
+      record.sourceEventId = options.sourceEventId;
+    }
     list.push(record);
     if (!(options && options.silent)) notice(state, id, def.scope, pid, true);
     return true;

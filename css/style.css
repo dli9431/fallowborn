@@ -536,6 +536,9 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   font-size: 12px; line-height: 1.45; cursor: help;
 }
 .modifier-list { padding: 2px 0 6px; }
+.modifier-choice-preview {
+  color: #c7b27a;
+}
 button.modifierchip {
   color: inherit; font-family: inherit; line-height: inherit; text-align: left;
 }
@@ -911,6 +914,11 @@ textarea.modjson, textarea.savetext {
   margin: 10px 0 5px; color: #bfa45d; font-size: 12px;
   letter-spacing: .04em; text-transform: uppercase;
 }
+.governance-modifier-county {
+  margin: 6px 0; padding: 7px 8px; border: 1px solid #463a25;
+  border-radius: 4px; background: #211b13;
+}
+.governance-modifier-county .modifier-list { padding: 4px 0 0; }
 .governance-vassal {
   margin: 8px 0; padding: 9px 10px;
   border: 1px solid #493c27; border-radius: 8px; background: #211a13;

@@ -252,6 +252,37 @@ window.FB = window.FB || {};
   }
   function schemer(state) { return memberByTemper(state, SCHEMER_TRAITS, undefined, -1); }
   function sycophant(state) { return memberByTemper(state, null, 20); }
+  function effectiveSeat(state, seatId) {
+    const summary = FB.councilSummary(state);
+    if (!summary || !summary.formed) return null;
+    for (const seat of summary.seats) {
+      if (seat.id === seatId && seat.effective) return seat;
+    }
+    return null;
+  }
+  function homeCounty(state) {
+    const pid = state.player.provinceId;
+    return pid && FB.world.byId[pid] ? pid : null;
+  }
+  function localModifier(state, id) {
+    const pid = homeCounty(state);
+    return !!(pid && FB.hasModifier && FB.hasModifier(state, id, pid));
+  }
+  function noteSeatDecision(state, seatId, authority, seatStanding, source) {
+    const seat = effectiveSeat(state, seatId);
+    FB.councilAuthority(state, authority);
+    if (seat && seat.holderId && seatStanding) {
+      adjustStanding(state, seat.holderId, seatStanding, source);
+    }
+  }
+  function noteBoardDecision(state, authority, memberStanding, source) {
+    FB.councilAuthority(state, authority);
+    for (const member of FB.councilMembers(state)) {
+      if (memberStanding) {
+        adjustStanding(state, member.rid, memberStanding, source);
+      }
+    }
+  }
 
   FB.fns = FB.fns || {};
   /* triggers */
@@ -259,6 +290,28 @@ window.FB = window.FB || {};
   FB.fns.council_two_members = function (state) { return FB.councilMembers(state).length >= 2; };
   FB.fns.council_has_schemer = function (state) { return !!schemer(state); };
   FB.fns.council_has_sycophant = function (state) { return !!sycophant(state); };
+  FB.fns.council_market_charter_due = function (state) {
+    return !!effectiveSeat(state, 'treasurer') && !!homeCounty(state) &&
+      !localModifier(state, 'market_charter') &&
+      !localModifier(state, 'contested_tolls');
+  };
+  FB.fns.council_muster_due = function (state) {
+    return !!effectiveSeat(state, 'constable') && !!homeCounty(state) &&
+      !localModifier(state, 'muster_burden') &&
+      !localModifier(state, 'levy_exemption');
+  };
+  FB.fns.council_domain_pressure_due = function (state) {
+    const summary = FB.councilSummary(state);
+    return !!summary && summary.formed &&
+      summary.authority < summary.charterAbove &&
+      summary.seats.some(function (seat) { return !!seat.holderId; }) &&
+      !!homeCounty(state) && FB.domainOver(state) > 0;
+  };
+  FB.fns.council_sanctuary_due = function (state) {
+    return !!effectiveSeat(state, 'almoner') && !!homeCounty(state) &&
+      !localModifier(state, 'levy_exemption') &&
+      !localModifier(state, 'contested_tolls');
+  };
   FB.fns.council_scheme_ripe = function (state) {
     // the plot thickens while no Chamberlain watches the shadows
     if (!schemer(state)) return false;
@@ -420,6 +473,42 @@ window.FB = window.FB || {};
     for (const m of ms.slice(0, 3)) {
       adjustStanding(state, m.rid, -6, 'feud_fail');
     }
+  };
+  FB.fns.council_market_concession = function (state) {
+    noteSeatDecision(state, 'treasurer', -3, 5, 'market_concession');
+  };
+  FB.fns.council_market_prerogative = function (state) {
+    noteSeatDecision(state, 'treasurer', 4, 8, 'market_prerogative');
+  };
+  FB.fns.council_toll_refusal = function (state) {
+    noteSeatDecision(state, 'treasurer', 2, -5, 'toll_refusal');
+  };
+  FB.fns.council_muster_impose = function (state) {
+    noteSeatDecision(state, 'constable', 3, 6, 'muster_impose');
+  };
+  FB.fns.council_muster_concede = function (state) {
+    noteSeatDecision(state, 'constable', -4, -6, 'muster_concede');
+  };
+  FB.fns.council_muster_supply = function (state) {
+    noteSeatDecision(state, 'constable', -1, 2, 'muster_supply');
+  };
+  FB.fns.council_domain_prepare = function (state) {
+    noteBoardDecision(state, -4, 3, 'domain_prepare');
+  };
+  FB.fns.council_domain_custom = function (state) {
+    noteBoardDecision(state, -2, 1, 'domain_custom');
+  };
+  FB.fns.council_domain_refuse = function (state) {
+    noteBoardDecision(state, 4, -5, 'domain_refuse');
+  };
+  FB.fns.council_sanctuary_confirm = function (state) {
+    noteSeatDecision(state, 'almoner', -3, 6, 'sanctuary_confirm');
+  };
+  FB.fns.council_sanctuary_tax = function (state) {
+    noteSeatDecision(state, 'almoner', 3, -8, 'sanctuary_tax');
+  };
+  FB.fns.council_sanctuary_relief = function (state) {
+    noteSeatDecision(state, 'almoner', -1, 4, 'sanctuary_relief');
   };
   FB.fns.council_war_chest = function (state) {
     const p = state.player;

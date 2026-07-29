@@ -22,9 +22,12 @@ not persist into a later campaign.
 ```
 
 County instances are stored as
-`state.modifiers.county[provinceId] = [{id,endTurn?}]`. They belong to the county rather
-than its current holder and therefore survive ownership changes. Campaign instances are
-stored as `state.greatHolyWar.modifiers = [{id,endTurn?}]`; they affect only the
+`state.modifiers.county[provinceId] = [{id,endTurn?,sourceEventId?}]`. They belong to the
+county rather than its current holder and therefore survive ownership changes. The
+optional `sourceEventId` is a locale-neutral pointer to the granting event; it lets Land
+and Governance name a surviving story source without saving rendered prose. Campaign
+instances are stored as
+`state.greatHolyWar.modifiers = [{id,endTurn?,sourceEventId?}]`; they affect only the
 protagonist's valid vow in that campaign.
 
 `FB.ensureModifiers(state)` lazily creates the county container, repairs both scopes,
@@ -36,7 +39,30 @@ format 3.
 `FB.modifierTick(state)` runs daily. It expires records at
 `state.turn >= record.endTurn` and emits localized Chronicle descriptors for gains and
 natural expiries. Adding an already-active id refreshes its catalog duration without
-stacking it or repeating the gain notice.
+stacking it or repeating the gain notice. A refreshed event grant also replaces the
+semantic source id with the most recent granting event.
+
+## Core county content
+
+The institution-content tranche adds six bounded county definitions:
+
+- `market_charter` — +8% county tax, −8% construction cost, and 1 gold seasonal
+  upkeep for 1,440 days;
+- `contested_tolls` — −10% county tax and +25% harmful `unrest` exposure for
+  720 days;
+- `levy_exemption` — −12% county levy and +6 effective Common Voice for
+  1,080 days;
+- `muster_burden` — +15% county levy, −6 effective Common Voice, and +15%
+  harmful `unrest` exposure for 540 days;
+- `roads_patrolled` — +4% county tax, −20% harmful `unrest` exposure, and
+  1 gold seasonal upkeep for 720 days;
+- `settlement_grudge` — −7 effective Common Voice and +25% harmful `unrest`
+  exposure for 900 days.
+
+Council and Estates choices grant all six. Plot discovery, a failed obligation scheme,
+a border response, and a foreign merchant compact provide cross-system sources.
+`parliament_local_redress` can end Contested Tolls or Settlement Grudge and replace the
+dispute with a positive charter; natural expiry remains the fallback.
 
 ## Public APIs
 
@@ -45,6 +71,8 @@ stacking it or repeating the gain notice.
 - `FB.hasModifier(state,id,pid?)` tests active records.
 - `FB.countyModifierRecords(state,pid)` and
   `FB.campaignModifierRecords(state)` return active records.
+- `FB.countyModifierSnapshot(state,pid)` returns the same repaired projection without
+  writing it back, for read-only overview surfaces.
 - `FB.modBonus(state,key,pid)` sums a county effect key.
 - `FB.campaignModBonus(state,key)` sums campaign effects only while the protagonist has a
   current, renewed, unwithdrawn vow.
@@ -94,8 +122,9 @@ These values never affect AI participants or ordinary-war-only hosts. `Oathbound
 is synchronized centrally: calling or answering a valid vow and renewing an inherited
 vow adds it; succession pending renewal, withdrawal, settlement, or campaign destruction
 removes it. Withdrawal costs are calculated before that removal. `Fractured Command` is
-fully authorable and testable through `FB.addModifier`, but core content deliberately has
-no grant path until a follow-up campaign system exists.
+a documented compatibility/test fixture: it is fully authorable through
+`FB.addModifier`, but core content deliberately has no grant path until a follow-up
+campaign system exists.
 
 ## Event integration
 
@@ -109,23 +138,29 @@ Positive rewards, chances, flags, custom handlers, metadata, and all other effec
 unchanged. The interpreter clones changed effect objects instead of mutating source event
 data.
 
-`addModifier:{id,pid?}` is an event effect. County targeting resolves explicit `pid`,
-then the queued event's `locationId`, then the player's current home province. Campaign
-targeting uses the matching active great holy war. `hasModifier` is a trigger and option
-requirement accepting either an id string or `{id,pid?}`. Event contexts snapshot
-`locationId` when queued so a delayed county event cannot drift with later travel.
+`addModifier:{id,pid?}` and `removeModifier:{id,pid?}` are event effects. County
+targeting resolves explicit `pid`, then the queued event's `locationId`, then the
+player's current home province. Campaign targeting uses the matching active great holy
+war. Event grants record the event id as `sourceEventId`; direct API callers may pass
+the same semantic option explicitly. `hasModifier` is a trigger and option requirement
+accepting either an id string or `{id,pid?}`. Event contexts snapshot `locationId` when
+queued so a delayed county event cannot drift with later travel.
 
 ## Presentation and mod replacement
 
-The selected Land county shows every active county record. The great holy-war service
-section shows campaign records. Each localized native-button chip includes icon, name,
-and remaining days (or “Until the campaign ends”); hover exposes the description and
-effects on pointer devices, while click, tap, Enter, or Space opens an accessible detail
-modal.
+The selected Land county shows every active county record. Governance repeats the exact
+records for directly held counties beneath the active institution, without becoming a
+modifier-management screen. The great holy-war service section shows campaign records.
+Each localized native-button chip includes icon, name, and remaining days (or “Until the
+campaign ends”); hover exposes the description and effects on pointer devices, while
+click, tap, Enter, or Space opens an accessible detail modal.
 
 The detail modal uses the shared asset/effect row to separate county/campaign
 ownership and scope, event-granted setup, seasonal upkeep, mechanical effects,
-transfer behavior, and exact expiry.
+transfer behavior, and exact expiry. When `sourceEventId` resolves, it also localizes
+the granting event title. Event options that add, refresh, or remove a modifier append
+a text preview naming the modifier, target county, duration, exact supported effects,
+upkeep, and transfer rule; chance branches label success and failure separately.
 
 Runtime JSON mods may provide a top-level `modifiers` object. Like traits and other
 id-keyed definitions, a later mod replaces the complete definition at a matching id.
