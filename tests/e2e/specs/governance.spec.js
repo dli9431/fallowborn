@@ -423,7 +423,7 @@ test('institution summaries stay read-only until their existing actions run',
     await startGovernanceGame(page, testInfo);
     await configureGovernance(page, 'baron');
     const legacyDefaults = await page.evaluate(function () {
-      var snapshot = JSON.parse(FB.save.serialize());
+      var snapshot = JSON.parse(FB.save.serialize()).state;
       var me = snapshot.chars[snapshot.player.charId];
       var realmId = FB.playerRealmId(snapshot);
       var sovereign = FB.topRealm(snapshot, realmId);
