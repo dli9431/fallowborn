@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.84.1';
+  FB.VERSION = '1.84.2';
   FB.CHANGELOG = [
+    { v: '1.84.2', date: '2026-07-29', changes: [
+      'Freeholders can now buy every remaining plot needed for a manor in one reviewed purchase from the land market.'
+    ] },
     { v: '1.84.1', date: '2026-07-29', changes: [
       'The Deeds panel’s commitments ledger can now be hidden in Settings, and its Daily focus shortcut places focus choices at the top of the panel.'
     ] },

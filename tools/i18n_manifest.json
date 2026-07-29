@@ -26144,6 +26144,17 @@
         "text": "The labor grinds you down."
       }
     },
+    "news.action.land_batch_bought": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "plots",
+        "settlement"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🌾 The household buys {plots} more plots at {settlement}, completing a manor-sized holding."
+      }
+    },
     "news.action.land_bought": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -36897,6 +36908,16 @@
         "text": "First attested"
       }
     },
+    "src.0535d30b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{plots} plots for {money:cost}. Review the complete purchase before paying."
+      }
+    },
     "src.05439d7c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38910,6 +38931,16 @@
       ],
       "source": {
         "text": "Standardized Coinage"
+      }
+    },
+    "src.0b2f4085": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count}/{needed} plots — ready to declare a manor once the household has enough standing"
       }
     },
     "src.0b3cf4ea": {
@@ -43434,6 +43465,16 @@
       ],
       "source": {
         "text": "Too rich for you."
+      }
+    },
+    "src.19836c09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Plots in this purchase"
       }
     },
     "src.1985109b": {
@@ -48111,6 +48152,16 @@
       ],
       "source": {
         "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
+      }
+    },
+    "src.2a04ea20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Total price"
       }
     },
     "src.2a078088": {
@@ -54155,6 +54206,16 @@
         "text": "Pure to the end, and faintly smug about it."
       }
     },
+    "src.3ed264b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Buy {plots} plots for {money:cost}"
+      }
+    },
     "src.3ee978c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58663,6 +58724,16 @@
       ],
       "source": {
         "text": "Instruction is managed for the household head and descendants"
+      }
+    },
+    "src.4d5c823d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The household cannot afford the complete batch. No plots will be purchased unless the full price is available."
       }
     },
     "src.4d5e9863": {
@@ -73994,6 +74065,16 @@
         "text": "A full belly sings no rebel songs."
       }
     },
+    "src.7f8805cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming."
+      }
+    },
     "src.7f92e26c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78901,6 +78982,16 @@
         "text": "⚔ {realm} will not let you go without a fight!"
       }
     },
+    "src.8f188476": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌾 The household buys {plots} more plots at {settlement}, completing a manor-sized holding."
+      }
+    },
     "src.8f19b841": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78990,6 +79081,16 @@
       ],
       "source": {
         "text": "Eligible unseated vassal"
+      }
+    },
+    "src.8f494bfd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Resulting seasonal yield"
       }
     },
     "src.8f49c48d": {
@@ -84427,6 +84528,16 @@
         "text": "This enterprise"
       }
     },
+    "src.a1af26e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Money remaining after purchase"
+      }
+    },
     "src.a1d195bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86783,6 +86894,16 @@
       ],
       "source": {
         "text": "religiousHeads must be an object mapping faith ids to realm ids."
+      }
+    },
+    "src.a9c29050": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} plots"
       }
     },
     "src.a9d4eac7": {
@@ -93548,6 +93669,16 @@
         "text": "The {holy} speaks well of you to the lord. (35 piety)"
       }
     },
+    "src.c10f4d21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Resulting cluster and manor progress"
+      }
+    },
     "src.c10fbd02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96208,6 +96339,16 @@
       ],
       "source": {
         "text": "The Measure of a Market"
+      }
+    },
+    "src.ca2d4e93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Buy remaining plots here…"
       }
     },
     "src.ca30bec7": {
@@ -111910,6 +112051,16 @@
         "text": "Keeps accounts, directs servants, and makes the household’s work run more cleanly."
       }
     },
+    "src.ffe13b49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🌾 Complete the holding at {settlement}?"
+      }
+    },
     "src.ffe287db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118514,6 +118665,25 @@
       "location": "js/ui.js",
       "source": {
         "text": "Buy productive property; further copies of one kind cost more."
+      }
+    },
+    "ui:Buy remaining plots here…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Buy remaining plots here…"
+      }
+    },
+    "ui:Buy {plots} plots for {money:cost}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "plots"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Buy {plots} plots for {money:cost}"
       }
     },
     "ui:Byzantine": {
@@ -126781,6 +126951,14 @@
         "text": "The household already holds an incoming guild monopoly."
       }
     },
+    "ui:The household cannot afford the complete batch. No plots will be purchased unless the full price is available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The household cannot afford the complete batch. No plots will be purchased unless the full price is available."
+      }
+    },
     "ui:The household currently leaves each child’s focus for manual choice.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -127340,6 +127518,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "This person is no longer eligible."
+      }
+    },
+    "ui:This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming."
       }
     },
     "ui:This ruler has already moved the capital once.": {
@@ -130949,6 +131137,16 @@
         "text": "{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices."
       }
     },
+    "ui:{count} plots": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} plots"
+      }
+    },
     "ui:{count} possible": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -130978,6 +131176,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{count} · about {money:gold}/season"
+      }
+    },
+    "ui:{count}/{needed} plots — ready to declare a manor once the household has enough standing": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "needed"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count}/{needed} plots — ready to declare a manor once the household has enough standing"
       }
     },
     "ui:{date} · {days} days": {
@@ -132136,6 +132345,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{place}; standing benefits count across the demesne"
+      }
+    },
+    "ui:{plots} plots for {money:cost}. Review the complete purchase before paying.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "plots"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{plots} plots for {money:cost}. Review the complete purchase before paying."
       }
     },
     "ui:{points}/2 points": {
@@ -133412,6 +133632,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "🌾 Buy Freehold Land"
+      }
+    },
+    "ui:🌾 Complete the holding at {settlement}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🌾 Complete the holding at {settlement}?"
       }
     },
     "ui:🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season": {
