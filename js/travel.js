@@ -512,7 +512,9 @@ window.FB = window.FB || {};
   function finishGiftDelivery(state, delivery) {
     if (delivery.recipientKind === 'ruler') {
       const r = state.realms[delivery.recipientId];
-      FB.adjustRealmOpinion(state, delivery.recipientId, delivery.effect);
+      const standing = FB.adjustStanding(state,
+        { kind:'realm', id:delivery.recipientId }, delivery.effect,
+        'gift:courier');
       if (FB.noteRulerGift) FB.noteRulerGift(state, delivery.recipientId);
       const usesFavor = FB.rulerGiftUsesFavor(state, delivery.recipientId);
       const rulerParams = {
@@ -520,44 +522,53 @@ window.FB = window.FB || {};
         item:delivery.item,
         recipient:r.ruler.name,
         realm:r.name,
-        value:Math.round(FB.realmOpinionOf(state, delivery.recipientId))
+        value:Math.round(standing)
       };
       if (delivery.giftKind === 'cash') {
-        FB.news(state, FB.msg(usesFavor
-          ? 'news.gift.courier_delivered_ruler_cash_favor'
-          : 'news.gift.courier_delivered_ruler_cash_opinion',
-        usesFavor
-          ? '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (favor {value})'
-          : '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (opinion {value})',
-        rulerParams));
+        if (usesFavor) {
+          FB.news(state, FB.msg(
+            'news.gift.courier_delivered_ruler_cash_favor',
+            '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (Standing {value})',
+            rulerParams));
+        } else {
+          FB.news(state, FB.msg(
+            'news.gift.courier_delivered_ruler_cash_opinion',
+            '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (Standing {value})',
+            rulerParams));
+        }
       } else {
-        FB.news(state, FB.msg(usesFavor
-          ? 'news.gift.courier_delivered_ruler_item_favor'
-          : 'news.gift.courier_delivered_ruler_item_opinion',
-        usesFavor
-          ? '🎁 Your courier delivers {item} to {recipient} of {realm}. (favor {value})'
-          : '🎁 Your courier delivers {item} to {recipient} of {realm}. (opinion {value})',
-        rulerParams));
+        if (usesFavor) {
+          FB.news(state, FB.msg(
+            'news.gift.courier_delivered_ruler_item_favor',
+            '🎁 Your courier delivers {item} to {recipient} of {realm}. (Standing {value})',
+            rulerParams));
+        } else {
+          FB.news(state, FB.msg(
+            'news.gift.courier_delivered_ruler_item_opinion',
+            '🎁 Your courier delivers {item} to {recipient} of {realm}. (Standing {value})',
+            rulerParams));
+        }
       }
     } else {
       const c = state.chars[delivery.recipientId];
       if (delivery.giftKind === 'item') {
         FB.transferItem(state, delivery.itemRef, c.id, { force:true });
       }
-      c.opinion = FB.clamp(c.opinion + delivery.effect, -100, 100);
+      const standing = FB.adjustStanding(state,
+        { kind:'character', id:c.id }, delivery.effect, 'gift:courier');
       if (FB.noteSocialGift) FB.noteSocialGift(state, c.id);
       const characterParams = {
         amount:delivery.amount,
         item:delivery.item,
         recipient:FB.fullName(c),
-        regard:Math.round(c.opinion)
+        regard:Math.round(standing)
       };
       FB.news(state, delivery.giftKind === 'cash'
         ? FB.msg('news.gift.courier_delivered_character_cash',
-          '🎁 Your courier delivers {money:amount} to {recipient}. (regard {regard})',
+          '🎁 Your courier delivers {money:amount} to {recipient}. (Standing {regard})',
           characterParams)
         : FB.msg('news.gift.courier_delivered_character_item',
-          '🎁 Your courier delivers {item} to {recipient}. (regard {regard})',
+          '🎁 Your courier delivers {item} to {recipient}. (Standing {regard})',
           characterParams));
     }
     removeDelivery(state, delivery);
@@ -1366,7 +1377,7 @@ window.FB = window.FB || {};
     if (rival) rival.homeProvinceId = t.homeId;
     clearQueued(state);
     p.provinceId = destination;
-    p.liege = null;
+    FB.changePlayerLiege(state, null, 'travel:flight');
     delete state.roles.lord;
     delete state.roles.priest;
     if (FB.clearCourtship) FB.clearCourtship(state);
@@ -1440,7 +1451,7 @@ window.FB = window.FB || {};
         FB.breakAlliance(state, 'player');
       }
       FB.setPlayerTier(state, 2, { attachLiege:false });
-      p.liege = null;
+      FB.changePlayerLiege(state, null, 'travel:marriage_residence');
       return relocateHousehold(state, destination, t,
         FB.msg('news.travel.marriage_residence_self', {
           forms: {

@@ -7,7 +7,7 @@ the day and use day-based cooldowns (`cd`). Focus-based skill training applies t
 `balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,
-household thrift into coin) and `courtly_graces` (tier ≥ 2, court favor and polish), and
+household thrift into coin) and `courtly_graces` (tier ≥ 2, Standing with the liege and courtly polish), and
 `FB.defaultFocus` maps female characters to them. The one exception: while a woman is *afield*
 in the *Sweet Polly Oliver* disguise chain (`afield()` in actions.js — any `polly_*` flag set),
 `listFocuses`/`defaultFocus` pare her whole menu down to a soldier's day — `drill`, `rest`,
@@ -28,7 +28,7 @@ also ends tier-1–2 travel immediately.
 
 Personal social attention is independent of the daily focus. On every ordinary player day,
 `FB.tickSocialAttention` adds the fixed `balance.socialAttentionDailyOpinion` to the
-assigned character's existing Regard, including a day filled by an instant deed. It does
+assigned character's existing Standing, including a day filled by an instant deed. It does
 not tick in Observe mode. At home it advances only for a locally resident target;
 while traveling it remains paused on outbound and return roads and advances after
 arrival only when the target resides in the traveler’s current county. The removed `court_suitor`
@@ -152,9 +152,9 @@ local cultivated relationships, an active courtship, and its assignment.
 
 For an independent count or higher, season boundaries also run
 `FB.tickForeignPolicy`. Saved Improve/Provoke assignments adjust neighboring sovereigns’
-opinion deterministically after the player’s war tick. On the winter boundary this happens
-before `FB.worldTick`, so the new opinion affects that year’s AI declarations; yearly
-opinion decay follows in `yearlyLife`.
+Standing deterministically after the player’s war tick. On the winter boundary this happens
+before `FB.worldTick`, so the new Standing affects that year’s AI declarations; yearly
+Standing decay follows in `yearlyLife`.
 
 On every normal day after the calendar advances, `FB.financeDay` resolves dispatched
 self-founded trade ventures whose exact saved `dueTurn` has arrived. This is independent

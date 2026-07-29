@@ -273,10 +273,13 @@ window.FB = window.FB || {};
     var obedience = papacy && papacy.obediences[
       obedienceId || papacy.romanObedience
     ];
-    if (!obedience || !FB.adjustRealmOpinion) return;
+    if (!obedience || !FB.adjustStanding) return;
     for (var i = 0; i < obedience.supporters.length; i++) {
       var rid = obedience.supporters[i];
-      if (rid !== 'player') FB.adjustRealmOpinion(state, rid, amount);
+      if (rid !== 'player') {
+        FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+          'papacy:supporters');
+      }
     }
   };
 
@@ -451,7 +454,8 @@ window.FB = window.FB || {};
           for (var i = 0; i < obedience.college.length; i++) {
             var other = state.chars[obedience.college[i]];
             if (other && !other.dead && other.dyn !== pope.dyn) {
-              other.opinion = FB.clamp((other.opinion || 0) - loss, -100, 100);
+              FB.adjustStanding(state, { kind:'character', id:other.id },
+                -loss, 'papacy:nepotism');
             }
           }
         }
@@ -581,7 +585,7 @@ window.FB = window.FB || {};
     if (!pope) return -100;
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
-      return Number(pope.opinion) || 0;
+      return FB.standingOf(state, { kind:'character', id:pope.id });
     }
     if (c.curialOpinion !== undefined) return Number(c.curialOpinion) || 0;
     var key = pope.id + ':' + c.id;
@@ -614,9 +618,8 @@ window.FB = window.FB || {};
     if (!c || !pope) return 0;
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
-      pope.opinion = FB.clamp((Number(pope.opinion) || 0) +
-        (Number(amount) || 0), -100, 100);
-      return pope.opinion;
+      return FB.adjustStanding(state, { kind:'character', id:pope.id },
+        amount, 'papacy:candidate');
     }
     var key = pope.id + ':' + c.id;
     papacy.relationships[key] = FB.clamp(
@@ -659,7 +662,7 @@ window.FB = window.FB || {};
     }
     var opinion = papalOpinionOfCandidate(state, c, obedience);
     if (opinion < req.papalOpinion) {
-      missing.push(FB.T('Papal opinion +{needed} (now {current})', {
+      missing.push(FB.T('Standing with the Pope +{needed} (now {current})', {
         needed:req.papalOpinion, current:Math.round(opinion)
       }));
     }
@@ -918,8 +921,12 @@ window.FB = window.FB || {};
   };
 
   function relationshipScore(state, elector, candidate) {
-    if (elector.id === state.player.charId) return Number(candidate.opinion) || 0;
-    if (candidate.id === state.player.charId) return Number(elector.opinion) || 0;
+    if (elector.id === state.player.charId) {
+      return FB.standingOf(state, { kind:'character', id:candidate.id });
+    }
+    if (candidate.id === state.player.charId) {
+      return FB.standingOf(state, { kind:'character', id:elector.id });
+    }
     var papacy = state.papacy;
     var key = elector.id < candidate.id
       ? elector.id + ':' + candidate.id : candidate.id + ':' + elector.id;
@@ -1037,7 +1044,9 @@ window.FB = window.FB || {};
     var base = obedience.authority / 160 + FB.skillOf(winner, 'dip') / 80;
     var assent = {
       clergy:FB.chance(FB.clamp(base + FB.skillOf(winner, 'lea') / 100, 0.2, 0.9)),
-      people:FB.chance(FB.clamp(base + (winner.opinion || 0) / 200, 0.2, 0.9)),
+      people:FB.chance(FB.clamp(base + FB.standingOf(state, {
+        kind:'character', id:winner.id
+      }) / 200, 0.2, 0.9)),
       imperial:FB.chance(FB.clamp(base +
         (election.backing[winner.id] || 0) / 40, 0.15, 0.9))
     };
@@ -1180,7 +1189,7 @@ window.FB = window.FB || {};
     p.holdings = [];
     p.landPlots = [];
     p.manor = null;
-    p.liege = null;
+    FB.changePlayerLiege(state, null, 'papacy:abdication');
     if (FB.setPlayerTier) FB.setPlayerTier(state, 2, { attachLiege:false });
     else p.tier = 2;
     p.provinceId = obedience.roman ? 'roma' :
@@ -1576,7 +1585,9 @@ window.FB = window.FB || {};
     if (!state.player.liege || !definition().investiture.policies[policyId]) return false;
     var sovereign = realmSovereign(state, state.player.liege);
     var chance = FB.clamp(0.25 + FB.skillOf(playerChar(state), 'dip') * 0.025 +
-      (state.player.liegeOp || 0) / 180, 0.1, 0.85);
+      FB.standingOf(state, {
+        kind:'realm', id:state.player.liege
+      }) / 180, 0.1, 0.85);
     if (!FB.chance(chance)) return { accepted:false };
     return { accepted:true, record:FB.setInvestiturePolicy(
       state, policyId, sovereign, false) };
@@ -2711,8 +2722,9 @@ window.FB = window.FB || {};
     papacy.audiences = papacy.audiences || {};
     if (papacy.audiences[key] === state.date.year) return false;
     papacy.audiences[key] = state.date.year;
-    if (realmId !== 'player' && FB.adjustRealmOpinion) {
-      FB.adjustRealmOpinion(state, realmId, 10);
+    if (realmId !== 'player' && FB.adjustStanding) {
+      FB.adjustStanding(state, { kind:'realm', id:realmId }, 10,
+        'papacy:audience');
     }
     state.player.piety += 10;
     return true;
@@ -2751,7 +2763,8 @@ window.FB = window.FB || {};
     var rank = realmRank(state, sovereign);
     var chance = FB.clamp(0.2 + obedience.authority / 180 +
       FB.skillOf(pope, 'dip') / 100 +
-      (FB.realmOpinionOf ? FB.realmOpinionOf(state, sovereign) / 300 : 0) -
+      (FB.standingOf
+        ? FB.standingOf(state, { kind:'realm', id:sovereign }) / 300 : 0) -
       rank * 0.04, 0.1, 0.85);
     var accepted = FB.chance(chance);
     if (accepted) {

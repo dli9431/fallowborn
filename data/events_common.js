@@ -20,7 +20,7 @@ FBDATA.events.push(
   text:'Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made.',
   trigger:{ never:true }, /* fired by the "Seek a match" action */
   options:[
-    { label:'Pursue this match.', desc:'Give them your personal attention until their regard is won.', effects:{ custom:'begin_courtship' } },
+    { label:'Pursue this match.', desc:'Give them your personal attention until their Standing is high enough.', effects:{ custom:'begin_courtship' } },
     { label:'Not this one.', desc:'Not every road to fortune needs taking.', effects:{ clearSuitor:true } }
   ]},
 { id:'proposal_made', title:'The Question Is Asked', charCard:'suitor',

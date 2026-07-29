@@ -2074,7 +2074,7 @@ window.FB = window.FB || {};
     var hadLand = !!(player.provs && player.provs.length);
     var wasSovereign = FB.isPlayerSovereign(state);
     if (award.rank < 3 && player.liege) exchangeOldPlayerLands(state);
-    player.liege = null;
+    FB.changePlayerLiege(state, null, 'holy_war:sovereign_award');
     FB.setPlayerTier(state, Math.max(player.tier, award.rank + 3), {
       attachLiege:false
     });
@@ -2131,7 +2131,9 @@ window.FB = window.FB || {};
     var sovereign = FB.isPlayerSovereign(state);
     if (!sovereign && player.provs && player.provs.length) exchangeOldPlayerLands(state);
     if (!sovereign) {
-      player.liege = main && main.rank > award.rank ? main.id : null;
+      FB.changePlayerLiege(state,
+        main && main.rank > award.rank ? main.id : null,
+        'holy_war:secondary_award');
       FB.setPlayerTier(state, Math.max(player.tier, award.rank + 3), {
         attachLiege:false
       });
@@ -2234,7 +2236,7 @@ window.FB = window.FB || {};
     var wasSovereign = FB.isPlayerSovereign(state);
     var liege = terms && terms.kind === 'vassal' ? terms.liege : null;
     if (asset.rank < 3 && player.liege) exchangeOldPlayerLands(state);
-    player.liege = liege;
+    FB.changePlayerLiege(state, liege, 'holy_war:crown_award');
     FB.setPlayerTier(state, Math.max(player.tier, asset.rank + 3), {
       attachLiege:false
     });
@@ -2263,14 +2265,16 @@ window.FB = window.FB || {};
     if (sovereign && terms && terms.kind === 'vassal' &&
         state.realms[terms.liege] &&
         state.realms[terms.liege].rank > state.realms.player.rank) {
-      player.liege = terms.liege;
-      state.realms.player.liege = terms.liege;
+      FB.changePlayerLiege(state, terms.liege,
+        'holy_war:package_vassalage');
     }
     if (!sovereign && player.provs && player.provs.length) exchangeOldPlayerLands(state);
     if (!sovereign) {
       var proposed = terms && terms.kind === 'vassal' ? terms.liege : mainId;
-      player.liege = proposed && state.realms[proposed] &&
-        state.realms[proposed].rank > asset.rank ? proposed : mainId;
+      FB.changePlayerLiege(state,
+        proposed && state.realms[proposed] &&
+          state.realms[proposed].rank > asset.rank ? proposed : mainId,
+        'holy_war:package_award');
       FB.setPlayerTier(state, Math.max(player.tier, asset.rank + 3), {
         attachLiege:false
       });

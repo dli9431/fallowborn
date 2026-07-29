@@ -14,7 +14,7 @@ successfully conquered.
 
 Defensive alliances complement pacts but do not replace them. AI crowns may form rare
 same-faith-group neighbor alliances; independent player kings and emperors may offer an
-adjacent sovereign king or emperor an alliance at opinion 60+, spending 25 gold and
+adjacent sovereign king or emperor an alliance at Standing 60+, spending 25 gold and
 using the ordinary envoy chance. A successful neighboring sovereign royal marriage is
 the other player route. Each realm may have one ally, partners cannot attack one
 another, and a compact ends when either stamped ruler generation changes.
@@ -23,7 +23,7 @@ another, and a compact ends when either stamped ruler generation changes.
 `seek_blessing` event sets `blessed_crops`/`blessed_war`/`blessed_union` flags the engine
 reads and consumes, sells an anointing against sickness, and offers three pure-effect
 spends — the clergy's good word with your lord (`opinionLiege`), masses for the family
-dead (prestige and popular opinion), and a blessing upon your house (spouse opinion)).
+dead (prestige and popular opinion), and a blessing upon your house (spouse Standing)).
 The `give_alms` deed closes the loop, turning gold into piety (with a little popular
 opinion) so the temple's services stay within reach.
 
@@ -40,7 +40,7 @@ Catholic Abbot and Bishop are appointments rather than purchased ladder steps. A
 election weighs Learning and long lay standing. Episcopal appointment requires age 30,
 fourteen vocational years, Learning 12, 160 piety, 80 prestige, celibate availability, and
 standing as an Abbot or Archpriest. The realm's investiture policy determines the appointing
-authority and modifies support; Papal opinion contributes under canonical or concordat
+authority and modifies support; Standing with the Pope contributes under canonical or concordat
 settlements. A cathedral endowment raises the chance without buying certainty. A Bishop's
 see adds seasonal temporalities and a 120-person household retinue, plus diocesan visitation,
 ecclesiastical judgment, a synod, and an extraordinary tithe. Those church powers coexist
@@ -49,7 +49,7 @@ baron court, tax squeeze, monopoly, title-petition, private-war, and independenc
 
 A Catholic ruler who confirms a sacrilegious war against the active Papacy forfeits all
 current piety and creates a recognized ground for excommunication. Papal sentences are
-personal and tied to the issuing obedience. Recognizing realms apply the opinion,
+personal and tied to the issuing obedience. Recognizing realms apply the Standing,
 realm-strength, marriage, pact, and great-holy-war penalties; death clears the sentence.
 Absolution requires peace, a rank-scaled offering, piety, and remedy or penance for the
 saved cause. Investiture policy likewise belongs to each independent Catholic sovereign:
@@ -70,16 +70,18 @@ toward claims and knives or is bought off by compensation, a witnessed oath, com
 or a duel (see [events.md](events.md) and [characters.md](characters.md)). An independent count or duke also has two points
 of **political attention**, a king three, and an emperor four. Each point can maintain an
 Improve or Provoke direction toward one adjacent sovereign court. The direction persists
-in `player.foreignPolicy` and changes that realm’s opinion of the current ruler at every
+in `player.foreignPolicy` and changes Standing with that realm’s ruler at every
 season boundary; Diplomacy increases the seasonal amount. War suspends a direction until
-peace, while a pact leaves it active because the pact—not opinion—is the hard guarantee
+peace, while a pact leaves it active because the pact—not Standing—is the hard guarantee
 against attack.
 
-Foreign opinion is the existing player-relative `player.liegeOps` store, exposed through
-`FB.realmOpinionOf` / `FB.adjustRealmOpinion`; it is not a realm-to-realm matrix. It shifts
+Foreign Standing uses the existing player-relative `player.liegeOps` backing store and the
+canonical typed `FB.standingOf` / `FB.adjustStanding` facade. The historical
+`FB.realmOpinionOf` / `FB.adjustRealmOpinion` names remain compatibility adapters; this
+is not a realm-to-realm matrix. Standing shifts
 envoy success and multiplies the annual chance that an adjacent AI realm attacks the
-player, but never forbids war. Opinion and political directions clear on succession;
-state-level pacts do not.
+player, but never forbids war. All predecessor Standing and political directions clear on
+protagonist succession; state-level pacts do not.
 
 Finance uses the same economic core across faiths. The UI selects complete culturally
 appropriate partnership phrases (including qirad and commenda) without a blanket

@@ -1612,8 +1612,16 @@ window.FB = window.FB || {};
 
     // popular opinion drifts toward 0
     p.pop = Math.round(p.pop * 0.85);
-    p.liegeOp = Math.round((p.liegeOp || 0) * 0.9);
-    if (p.liegeOps) for (const rid in p.liegeOps) p.liegeOps[rid] = Math.round(p.liegeOps[rid] * 0.9);
+    const standingRealms = p.liegeOps ? Object.keys(p.liegeOps) : [];
+    if (p.liege && standingRealms.indexOf(p.liege) < 0) {
+      standingRealms.push(p.liege);
+    }
+    for (const rid of standingRealms) {
+      const standing = FB.standingOf(s, { kind:'realm', id:rid });
+      const settled = Math.round(standing * 0.9);
+      FB.adjustStanding(s, { kind:'realm', id:rid },
+        settled - standing, 'time:annual_drift');
+    }
     if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
     if (FB.parliamentYearly) FB.parliamentYearly(s); // the liege may summon the estates to sit
   }
@@ -2095,6 +2103,12 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (FB.resetStandingsForSuccession) {
+      FB.resetStandingsForSuccession(s);
+    } else {
+      p.liegeOp = 0;
+      p.liegeOps = {};
+    }
     p.traitProgress = {};
     if (FB.cleanupManagedMatches) FB.cleanupManagedMatches(s);
     if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
@@ -2138,7 +2152,7 @@ window.FB = window.FB || {};
     p.fired = {}; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
-    p.liegeOp = 0; p.liegeOps = {}; p.foreignPolicy = {};
+    p.foreignPolicy = {};
     p.vassalLevyFavors = {};
     p.warService = 0; p.liegeGrants = 0;
     p.travelHistory = [];
@@ -2175,7 +2189,9 @@ window.FB = window.FB || {};
     // heirs of ruling houses keep the liege bond
     if (p.tier >= 3 && !p.liege && !FB.isPlayerSovereign(s)) {
       const rid = (s.holder && s.holder[p.provinceId]) || s.owner[p.provinceId];
-      if (rid && rid !== 'player') p.liege = rid;
+      if (rid && rid !== 'player') {
+        FB.changePlayerLiege(s, rid, 'succession:restore_liege');
+      }
     }
     if (heir.royalLine) {
       const rr = s.realms[heir.royalLine.realmId];

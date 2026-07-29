@@ -130,7 +130,7 @@ FBDATA.events.push(
     { label:'Send coin in your stead.', require:{ goldMin:20 }, desc:'Silver marches for you, and is noted.', effects:{ gold:-20, opinionLiege:-5 } },
     { label:'Pay scutage, by the estates’ charter. ({money:8})', require:{ goldMin:8, custom:'parliament_has_scutage' }, desc:'The estates voted silver for service — the liege must take the coin.', effects:{ gold:-8, opinionLiege:-2 } },
     { label:'Claim episcopal immunity.', require:{ flags:['bishop'] },
-      desc:'Appeal to the church’s liberties; gain piety and Papal favor, but deeply offend the liege.',
+      desc:'Appeal to the church’s liberties; gain piety and Standing with the Pope, but deeply offend the liege.',
       effects:{ piety:6, papalOpinion:5, opinionLiege:-15 } },
     { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8 } }
   ]},

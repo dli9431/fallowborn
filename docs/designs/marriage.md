@@ -6,7 +6,8 @@ Royal courtship uses the ordinary marriage rules. Ruler sheets in the player's l
 chain show their compact family and ordered succession, and an independent player king
 or emperor may also approach an adjacent sovereign royal court. Count and duke children
 have station 3; king and emperor children station 4. A royal proposal uses the normal
-proposal formula plus that realm's opinion divided by 400 and clamps at 5-90%. Only the
+proposal formula plus Standing with that realm's ruler divided by 400 and clamps at
+5-90%. Only the
 current protagonist may create a royal compact, and only one such compact may be active
 at once; adulthood, sex, kinship, doctrine, courtship, proposal, and spouse capacity
 remain the standard gates.
@@ -15,19 +16,19 @@ Every ordinary, matchmade, or royal courtship assigns the player's one
 `player.socialAttention` slot to that suitor while leaving the normal work/study focus
 alone. A proposal is unavailable until the suitor reaches the shared
 `balance.relationshipOpinionThreshold` (+40 by default); after that readiness gate, the
-existing proposal probability still weighs Regard, prestige, station, traits, and royal
-realm opinion. Starting another suit ends the former one with −20 Regard and records the
+existing proposal probability still weighs Standing, prestige, station, traits, and
+royal-realm Standing. Starting another suit ends the former one with −20 Standing and records the
 same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
 and permanent-relocation cleanup release the assignment.
 
 Beginning courtship requires county co-location. A remote ordinary or royal
 candidate opens the relationship-visit review; departure begins the suit and
-attention assignment atomically, road days pause progress, and Regard starts at
+attention assignment atomically, road days pause progress, and Standing starts changing at
 the target’s residence. Materialized royal children reside at their realm’s
 current capital. A ruler can likewise be materialized from their realm sheet and
 courted through the same visit, centralized `FB.canCourt` gates, and proposal flow,
 so either visit always follows capital movement. Proposals remain deliverable at
-distance once Regard reaches the threshold.
+distance once Standing reaches the threshold.
 
 Marriage to any listed child forms a dynastic tie, but only the visibly designated heir
 currently transmits the crown. The spouse succeeds first. Shared children form that

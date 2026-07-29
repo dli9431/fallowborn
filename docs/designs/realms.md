@@ -15,8 +15,9 @@ sheet. `FB.materializeRealmRuler` then creates or reuses the current
 and attaches one ordinary character with the ruler’s saved identity, culture, faith,
 age, Martial, trait, station, and current political standing. `FB.realmRulerCharacter`,
 `FB.realmIdForRulerCharacter`, and `FB.isReigningRealmRuler` preserve that identity
-through sheets, gifts, marriage, and succession. Personal Regard and the existing
-player-relative realm standing are one synchronized score while the character reigns.
+through sheets, gifts, marriage, and succession. Personal and political Standing are one
+synchronized score while the character reigns. The typed facade routes that person
+through the realm backing store, so character and realm interactions cannot diverge.
 
 The special `state.realms.player` node is the player's landed realm, not a synonym for
 independence. It may have a `liege`; `state.owner` continues to name the top sovereign
@@ -97,7 +98,7 @@ Roma and another county may grant Roma away. The bookmark's canonical Papacy is 
 as an independent rank-3 realm with a fresh ruler and succession, then assigned the
 office. After a 360-day vacancy, a qualified Catholic AI sovereign controlling Roma and
 other territory does this automatically. The player restoration awards piety and
-prestige, improves every living Catholic realm's opinion, and clears excommunication.
+prestige, improves Standing with every living Catholic ruler, and clears excommunication.
 
 Sunni recovery uses `recovery:'claim'` with alternative county sets: Baghdad, or Mecca
 and Medina together. A sovereign player king or emperor meeting the prestige threshold
@@ -135,16 +136,17 @@ promotions (`FB.checkTierPromotions` = majority of a duchy/kingdom/empire), real
 naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
 `FB.realmTerritory`, `FB.realmHeldCounties`, `FB.dejureOf`; owner/holder-derived lists
 are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no foreign
-policy; strong vassals occasionally break away (`balance.breakawayChance`). A sovereign’s foreign
-opinion and non-aggression pacts now modulate whether an adjacent AI realm attacks the
+policy; strong vassals occasionally break away (`balance.breakawayChance`). A
+sovereign’s Standing and non-aggression pacts now modulate whether an adjacent AI realm attacks the
 independent player — see [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md). The player
 interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /
 `swear_fealty` / independence — and, tiers 3–5, the **estates**: the liege's
 assembly where the terms of service, the aid and scutage, are voted on — see
 [parliament.md](parliament.md)) and, once sovereign, runs vassals of their own
 (`grant_land` — a single county via `FB.grantCounty` or a whole de jure duchy via
-`FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal opinion lives in
-`player.liegeOps`, taxes flow through `FB.playerTax` at `balance.vassalTaxRate` and a
+`FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal Standing retains its legacy
+backing in `player.liegeOps`, taxes flow through `FB.playerTax` at
+`balance.vassalTaxRate` and a
 share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
 
 The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
@@ -209,7 +211,8 @@ The Deeds tab offers three intra-realm paths to a neighbor's county, all followi
 grant pattern (`state.holder[pid]` flips to `'player'`, `owner` and the player's liege
 untouched, landless holders buried by `FB.realmBuryIfEmpty`): *Petition for a
 neighbor's fief* (`petition_county` → `UI.showPetitionCounty` → the `county_petition`
-event — gated on liege opinion, prestige, and the lifetime `player.warService` tally
+event — gated on Standing with the liege, prestige, and the lifetime
+`player.warService` tally
 built by riding with the liege's host, against the victim's `favor`); *Buy out a weak
 neighbor* (`buy_county`, a vassal-only gold sink for adjacent rank-1 counts with no
 vassals of their own); and *Settle the wasteland* (`settle_waste` → `FB.settleWaste`,
@@ -217,7 +220,7 @@ which turns a bordering wasteland province into a true county of the player's de
 settler culture and faith, belonging to no de jure duchy). Separately, a dying petty
 count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearly
 tick): the fief escheats to the liege unless a bordering player of the same sovereign
-wins the scramble (liege opinion, prestige, service) — and heirless fiefs of the
+wins the scramble (Standing with the liege, prestige, service) — and heirless fiefs of the
 player's own vassals simply return to the player's hand.
 AI rulers ordinarily stay lightweight `realm.ruler` objects (name, culture, age, martial,
 and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads
@@ -235,8 +238,9 @@ realm rank through `balance.rulerCashGiftCostByRank` (Count 10, Duke 15, King 25
 40 by default) and grant `balance.rulerCashGiftOpinion` (+15). Unequipped, unpledged items
 grant the same +4/+8/+12 quality-tier influence as personal item gifts and permanently
 leave the family armory; their semantic snapshot remains in the Chronicle. Direct and
-higher lieges and all vassals beneath the player gain Favor, while rulers outside that
-feudal chain gain Opinion. Both write the existing player-relative realm-opinion store.
+higher lieges, vassals beneath the player, and foreign rulers all gain Standing. Context
+changes the available consequences, not the meter; the compatibility backing remains the
+player-relative realm-opinion store.
 Cash and items share one 90-day ruler-recipient clock in `player.realmGiftTurns`. Each
 entry stores the gift turn and `realm.ruler.generation`, so succession makes the new ruler
 a fresh recipient without erasing unrelated clocks. Every accepted ruler gift spends one
@@ -245,6 +249,12 @@ home. Across a sovereign border it travels by saved courier from that home to th
 capital; standing and cooldown apply only on successful arrival. A dead or succeeded
 recipient, moved capital, or dead sender makes the courier finish outbound and return the
 exact cash or item without a cooldown.
+
+An AI ruler change never leaves the predecessor's Standing attached to the surviving
+realm id. A compact heir starts neutral. If the heir was materialized before accession,
+the exact person's already-tracked Standing becomes the realm score. Protagonist
+succession instead resets all personal and realm Standing because the current save shape
+does not store a pairwise heir relationship matrix.
 
 A materialized reigning ruler uses the compact realm’s yearly mortality roll, never
 ordinary character mortality. If married to the player they remain resident at the current

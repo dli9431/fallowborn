@@ -211,7 +211,7 @@ The courier surface is `FB.giftDeliveryEnsure`, `FB.giftDeliveryPreview`,
 `FB.giftDeliveryPending`, `FB.dispatchGiftDelivery`, and `FB.giftDeliveryTick`.
 `FB.socialVisitPreview(state, character)` returns an object with `eligible` and
 an optional localized `reason`, or the resolved destination, route, legs, leg
-duration, one-way days, cost, minimum stay, daily Regard rate, active days to
+duration, one-way days, cost, minimum stay, daily Standing rate, active days to
 the relationship threshold, and estimated days from departure. Passing
 `{courtship:true}` to `FB.socialVisitStart` begins a geographically valid suit
 as part of the same departure.

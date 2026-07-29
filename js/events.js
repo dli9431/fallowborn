@@ -14,6 +14,24 @@ window.FB = window.FB || {};
     return b.friendOpinionThreshold === undefined ? 40 : b.friendOpinionThreshold;
   };
 
+  function characterStanding(state, c) {
+    return c ? FB.standingOf(state, { kind:'character', id:c.id }) : 0;
+  }
+
+  function adjustCharacterStanding(state, c, amount, source) {
+    return c ? FB.adjustStanding(state, { kind:'character', id:c.id },
+      amount, source) : 0;
+  }
+
+  function realmStanding(state, rid) {
+    return rid ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+  }
+
+  function adjustRealmStanding(state, rid, amount, source) {
+    return rid ? FB.adjustStanding(state, { kind:'realm', id:rid },
+      amount, source) : 0;
+  }
+
   FB.friendContacts = function (state) {
     const p = state.player;
     if (!p.friendContacts || typeof p.friendContacts !== 'object' ||
@@ -50,8 +68,8 @@ window.FB = window.FB || {};
   };
 
   /* ---------- personal social attention ----------
-     Regard remains the only relationship score. This life-local assignment
-     merely says whose regard receives the fixed daily cultivation rate. */
+     Standing is the only relationship score. This life-local assignment
+     merely says whose Standing receives the fixed daily cultivation rate. */
   FB.socialAttentionCapacity = function () {
     const value = FBDATA.balance.socialAttentionCapacity;
     return Math.max(0, value === undefined ? 1 : Math.floor(value));
@@ -183,7 +201,7 @@ window.FB = window.FB || {};
 
   FB.socialAttentionDaysToThreshold = function (state, c) {
     const rate = FB.socialAttentionDailyOpinion();
-    const need = FB.relationshipOpinionThreshold() - (c ? c.opinion : 0);
+    const need = FB.relationshipOpinionThreshold() - characterStanding(state, c);
     if (need <= 0) return 0;
     if (rate <= 0) return null;
     return Math.max(0, Math.ceil(need / rate - 0.000000001));
@@ -197,7 +215,7 @@ window.FB = window.FB || {};
       const c = state.chars[ids[i]];
       if (!c || c.dead) continue;
       if (FB.socialAttentionPresence(state, c).status !== 'active') continue;
-      c.opinion = FB.clamp(c.opinion + rate, -100, 100);
+      adjustCharacterStanding(state, c, rate, 'social_attention');
       state.player.socialAttention[c.id].lastTurn = state.turn;
     }
   };
@@ -300,11 +318,11 @@ window.FB = window.FB || {};
       });
     }
     p.gold -= cost;
-    c.opinion = FB.clamp(c.opinion + boost, -100, 100);
+    const standing = adjustCharacterStanding(state, c, boost, 'gift:cash');
     FB.noteSocialGift(state, cid);
     FB.news(state, FB.msg('news.social.gift',
-      'Your gift pleases {name}. (regard {regard})',
-      { name:c.name, regard:Math.round(c.opinion) }));
+      'Your gift pleases {name}. (Standing {regard})',
+      { name:c.name, regard:Math.round(standing) }));
     return true;
   };
 
@@ -315,11 +333,12 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in contacts) {
       const c = state.chars[id];
-      if (friendEligible(state, c) && c.opinion >= threshold) out.push(c);
+      if (friendEligible(state, c) &&
+          characterStanding(state, c) >= threshold) out.push(c);
     }
     out.sort(function (a, b) {
       const ad = contacts[a.id], bd = contacts[b.id];
-      return b.opinion - a.opinion ||
+      return characterStanding(state, b) - characterStanding(state, a) ||
         (bd.lastTurn || 0) - (ad.lastTurn || 0) ||
         String(a.id).localeCompare(String(b.id));
     });
@@ -329,7 +348,8 @@ window.FB = window.FB || {};
   FB.canNameFriend = function (state, c) {
     const contacts = FB.friendContacts(state);
     const threshold = FB.relationshipOpinionThreshold();
-    return !!(friendEligible(state, c) && contacts[c.id] && c.opinion >= threshold &&
+    return !!(friendEligible(state, c) && contacts[c.id] &&
+      characterStanding(state, c) >= threshold &&
       state.roles.friend !== c.id);
   };
 
@@ -357,14 +377,16 @@ window.FB = window.FB || {};
       const c = state.chars[id];
       if (friendEligible(state, c)) out.push(c);
     }
-    out.sort(function (a, b) { return b.opinion - a.opinion; });
+    out.sort(function (a, b) {
+      return characterStanding(state, b) - characterStanding(state, a);
+    });
     return out;
   };
 
   FB.attentionFriendCandidate = function (state) {
     const known = FB.socialAttentionTarget(state);
     if (!known || !friendEligible(state, known) ||
-      known.opinion < FB.relationshipOpinionThreshold()) return null;
+      characterStanding(state, known) < FB.relationshipOpinionThreshold()) return null;
     return known;
   };
 
@@ -472,7 +494,8 @@ window.FB = window.FB || {};
     if (FB.spousesOf(state, me).some(function (sp) { return sp.id === c.id; })) return false;
     const peace = state.player.rivalPeace || {};
     if (peace[c.id] && peace[c.id] > state.turn) return false;
-    return c.opinion <= rivalBalance('rivalOpinionThreshold', -40);
+    return characterStanding(state, c) <=
+      rivalBalance('rivalOpinionThreshold', -40);
   }
 
   FB.startRivalry = function (state, c, initiator, cause, queueEvent) {
@@ -545,7 +568,7 @@ window.FB = window.FB || {};
     if (!candidates.length) return;
     candidates.sort(function (a, b) {
       return b.contact.score - a.contact.score ||
-        a.c.opinion - b.c.opinion ||
+        characterStanding(state, a.c) - characterStanding(state, b.c) ||
         b.contact.lastTurn - a.contact.lastTurn ||
         (a.c.id < b.c.id ? -1 : 1);
     });
@@ -554,7 +577,8 @@ window.FB = window.FB || {};
     const traits = pick.c.traits || [];
     for (const t of ['wrathful', 'proud', 'cruel', 'ambitious']) if (traits.indexOf(t) >= 0) mult += 0.2;
     for (const t of ['patient', 'humble', 'kind', 'content']) if (traits.indexOf(t) >= 0) mult -= 0.15;
-    const hostility = 1 + Math.max(0, -pick.c.opinion - 40) / 60;
+    const hostility = 1 +
+      Math.max(0, -characterStanding(state, pick.c) - 40) / 60;
     const baseChance = rivalBalance('rivalClaimChance', 0.05);
     if (baseChance <= 0) return;
     const chance = FB.clamp(baseChance *
@@ -648,7 +672,7 @@ window.FB = window.FB || {};
     if (sp.spouseId === me.id) sp.spouseId = null;
     if (state.roles.spouse === sp.id) delete state.roles.spouse;
     if (sp.role === 'spouse') sp.role = null;
-    sp.opinion = FB.clamp(sp.opinion - 50, -100, 100);
+    adjustCharacterStanding(state, sp, -50, 'relationship:divorce');
     FB.noteRivalContact(state, sp, 2, 'divorce');
     FB.promoteSpouse(state);
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, sp.id);
@@ -662,7 +686,7 @@ window.FB = window.FB || {};
     p.courtingId = null;
     delete p.flags.courting;
     if (c && !c.dead && opts.penalty) {
-      c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+      adjustCharacterStanding(state, c, -20, 'relationship:broken_courtship');
       FB.noteRivalContact(state, c, 1, 'broken_courtship');
     }
     if (c && opts.news) {
@@ -691,7 +715,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const c = p.flags.courting && p.courtingId && state.chars[p.courtingId];
     return !!(c && FB.canCourt(state, c, true) &&
-      c.opinion >= FB.relationshipOpinionThreshold());
+      characterStanding(state, c) >= FB.relationshipOpinionThreshold());
   };
 
   /* The one true way to kill a character: severs marriage links and roles.
@@ -1515,7 +1539,8 @@ window.FB = window.FB || {};
       }
       case 'proposal': {
         const s = FB.getRole(state, 'suitor');
-        let c = 0.3 + (s ? s.opinion : 0) / 180 + p.prestige / 600 + p.tier * 0.05;
+        let c = 0.3 + characterStanding(state, s) / 180 +
+          p.prestige / 600 + p.tier * 0.05;
         const gap = s ? FB.stationOf(s) - FB.playerStation(state) : 0;
         if (gap > 0) c -= gap * FBDATA.balance.proposalStationPenalty; // marrying up is hard
         else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
@@ -1525,8 +1550,10 @@ window.FB = window.FB || {};
             FB.playerExcommunicated && FB.playerExcommunicated(state)) {
           c -= 0.2;
         }
-        if (s && s.royalLine) {
-          c += FB.realmOpinionOf(state, s.royalLine.realmId) / 400;
+        if (s && s.royalLine &&
+            !(FB.isReigningRealmRuler &&
+              FB.isReigningRealmRuler(state, s))) {
+          c += realmStanding(state, s.royalLine.realmId) / 400;
           return FB.clamp(c, 0.05, 0.9);
         }
         return FB.clamp(c, 0.05, 0.95);
@@ -1542,7 +1569,7 @@ window.FB = window.FB || {};
       case 'rival_peace': {
         const rival = FB.getRole(state, 'rival', false);
         let c = 0.45 + FB.skillOf(me, 'dip') * 0.02;
-        if (rival) c += rival.opinion / 200;
+        if (rival) c += characterStanding(state, rival) / 200;
         c -= FB.rivalHeat(state) / 250;
         if (me.traits.indexOf('kind') >= 0) c += 0.08;
         if (me.traits.indexOf('proud') >= 0) c -= 0.05;
@@ -1581,7 +1608,7 @@ window.FB = window.FB || {};
         const lord = FB.getRole(state, 'lord', false);
         let c = 0.22 + FB.skillOf(me, 'dip') * 0.04 + p.prestige / 900;
         if (f.rights_evidence) c += 0.18;
-        if (lord) c += lord.opinion / 500;
+        if (lord) c += characterStanding(state, lord) / 500;
         return FB.clamp(c, 0.1, 0.9);
       }
       case 'rights_ste': {
@@ -1665,7 +1692,8 @@ window.FB = window.FB || {};
         // no land adjoining the player's to give → the suit fails outright
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
         return FB.liegeGrantChance(state,
-          FB.clamp(0.05 + (p.liegeOp || 0) / 450 + p.prestige / 1800, 0.02, 0.35));
+          FB.clamp(0.05 + realmStanding(state, p.liege) / 450 +
+            p.prestige / 1800, 0.02, 0.35));
       }
       case 'county_petition': {
         // stripping a disgraced vassal for the player's sake: the liege's love
@@ -1676,7 +1704,8 @@ window.FB = window.FB || {};
         if (!hr || !hr.alive) return 0;
         const fav = hr.favor || 0;
         return FB.liegeGrantChance(state,
-          FB.clamp(0.35 + FB.liegeOpOf(state, p.liege) / 300 + p.prestige / 1500 +
+          FB.clamp(0.35 + realmStanding(state, p.liege) / 300 +
+            p.prestige / 1500 +
             (p.warService || 0) / 80 - fav / 150, 0.1, 0.85));
       }
       case 'appeal_outcome': {
@@ -1684,14 +1713,14 @@ window.FB = window.FB || {};
         // high lord already feels about you (p.appealRid set by the picker)
         const rid = p.appealRid;
         let c = FBDATA.balance.appealBase + FB.skillOf(me, 'dip') * 0.025 + FB.skillOf(me, 'int') * 0.025;
-        if (rid) c += FB.liegeOpOf(state, rid) / 200;
+        if (rid) c += realmStanding(state, rid) / 200;
         return FB.clamp(c, 0.05, 0.9);
       }
       case 'vassal_comply': {
         // a vassal asked to surrender his fief (p.revokeRid set by the picker)
         const rid2 = p.revokeRid;
         let c2 = 0.35 + FB.skillOf(me, 'dip') * 0.025 + p.prestige / 800;
-        if (rid2) c2 += FB.liegeOpOf(state, rid2) / 150;
+        if (rid2) c2 += realmStanding(state, rid2) / 150;
         return FB.clamp(c2, 0.05, 0.95);
       }
       case 'parliament_vote': {
@@ -1702,10 +1731,10 @@ window.FB = window.FB || {};
         let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
         c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery
         // a trusting victim is easier to ensnare — when the plot in motion has
-        // a personal target, their opinion of the player counts too
+        // a personal target's Standing with the player counts too
         const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
         const tgt = trole ? FB.getRole(state, trole) : null;
-        if (tgt) c += tgt.opinion / 500;
+        if (tgt) c += characterStanding(state, tgt) / 500;
         return FB.clamp(c, 0.15, 0.9);
       }
       default: return 0.5;
@@ -1799,11 +1828,15 @@ window.FB = window.FB || {};
     if (tg.noRole && FB.getRole(state, tg.noRole, false)) return false;
     if (tg.roleOpinionAbove) {
       const c = FB.getRole(state, tg.roleOpinionAbove.role, false);
-      if (!c || c.opinion < tg.roleOpinionAbove.value) return false;
+      if (!c || characterStanding(state, c) < tg.roleOpinionAbove.value) {
+        return false;
+      }
     }
     if (tg.roleOpinionBelow) {
       const c = FB.getRole(state, tg.roleOpinionBelow.role, false);
-      if (!c || c.opinion > tg.roleOpinionBelow.value) return false;
+      if (!c || characterStanding(state, c) > tg.roleOpinionBelow.value) {
+        return false;
+      }
     }
     if (tg.rivalHeatMin !== undefined && FB.rivalHeat(state) < tg.rivalHeatMin) return false;
     if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
@@ -1952,7 +1985,9 @@ window.FB = window.FB || {};
 
     if (tier >= 3 && !p.liege && opts.attachLiege !== false) {
       const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
-      if (rid && rid !== 'player') p.liege = rid;
+      if (rid && rid !== 'player') {
+        FB.changePlayerLiege(state, rid, 'tier:attach_liege');
+      }
     }
     if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     if (FB.travelValidate) FB.travelValidate(state);
@@ -1965,7 +2000,7 @@ window.FB = window.FB || {};
     const lord = FB.getRole(state, 'lord', true);
     return FB.gentryEstablished(state) &&
       state.player.prestige >= B.baronyPrestige &&
-      !!lord && lord.opinion >= B.baronyOpinion;
+      !!lord && characterStanding(state, lord) >= B.baronyOpinion;
   };
 
   /* ---------- daily event selection ----------
@@ -2290,7 +2325,8 @@ window.FB = window.FB || {};
         }
         amt = Math.max(1, Math.round(amt * multiplier));
       }
-      if (c) c.opinion = FB.clamp(c.opinion + amt, -100, 100);
+      if (c) adjustCharacterStanding(state, c, amt,
+        'event:opinion_compatibility_effect');
     }
     if (fx.rivalContact) {
       const rc = fx.rivalContact;
@@ -2299,7 +2335,10 @@ window.FB = window.FB || {};
     }
     if (fx.rivalHeat) FB.changeRivalHeat(state, fx.rivalHeat);
     if (fx.endRivalry) FB.endRivalry(state);
-    if (fx.opinionLiege) p.liegeOp = FB.clamp((p.liegeOp || 0) + fx.opinionLiege, -100, 100);
+    if (fx.opinionLiege) {
+      adjustRealmStanding(state, p.liege, fx.opinionLiege,
+        'event:opinionLiege_compatibility_effect');
+    }
     if (fx.papalOpinion && FB.adjustPapalOpinionOfCandidate) {
       const papalTarget = ctx && ctx.candidateId &&
         state.chars[ctx.candidateId] || me;
@@ -2516,7 +2555,7 @@ window.FB = window.FB || {};
     for (const r in state.roles) {
       if (r !== 'spouse' && state.roles[r] === s.id) delete state.roles[r];
     }
-    s.opinion = FB.clamp(s.opinion + 30, -100, 100);
+    adjustCharacterStanding(state, s, 30, 'relationship:marriage');
     p.courtingId = null;
     delete p.flags.courting;
     p.marriedAt = state.turn;
@@ -2687,21 +2726,23 @@ window.FB = window.FB || {};
     }
     if (c) {
       FB.noteFriendContact(state, c);
-      c.opinion = FB.clamp(c.opinion + 15, -100, 100);
+      const standing = adjustCharacterStanding(state, c, 15,
+        'education:academy_introduction');
       ctx.contact = FB.fullName(c);
-      ctx.regard = Math.round(c.opinion);
+      ctx.regard = Math.round(standing);
     }
     FB.news(state, FB.msg('news.education.academy_introduction', {
       forms: {
         select:'value', param:'result', cases:{
-          new:'🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} regard.',
-          existing:'🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} regard.',
+          new:'🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} Standing.',
+          existing:'🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} Standing.',
           other:'🤝 The promised academy introduction finds no noble contact still able to receive it.'
         }
       }
     }, {
       result:result, student:student.name,
-      contact:c ? FB.fullName(c) : '', regard:c ? Math.round(c.opinion) : 0
+      contact:c ? FB.fullName(c) : '',
+      regard:c ? Math.round(characterStanding(state, c)) : 0
     }));
     return !!c;
   };
@@ -2873,7 +2914,9 @@ window.FB = window.FB || {};
       // local cast stays behind
       for (const r of ['lord', 'priest', 'friend', 'rival']) delete state.roles[r];
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
-      p.liege = p.tier >= 3 && rid && rid !== 'player' ? rid : null;
+      FB.changePlayerLiege(state,
+        p.tier >= 3 && rid && rid !== 'player' ? rid : null,
+        'travel:permanent_move');
       if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
       FB.news(state, FB.msg('news.event.moved',
         '🧭 You now dwell in {province}.', { province: FB.world.byId[dest].name }));
@@ -2893,7 +2936,7 @@ window.FB = window.FB || {};
       if (p.tier < 4) FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.transferProvince(state, p.provinceId, 'player');
     }
-    p.liege = null;
+    FB.changePlayerLiege(state, null, 'realm:independence');
     if (state.realms.player) state.realms.player.liege = null;
     FB.foundPlayerRealm(state);
     if (oldLiege && FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', oldLiege);
@@ -2937,15 +2980,10 @@ window.FB = window.FB || {};
       FB.recordLiegeGrant(state);
       const old = p.liege && state.realms[p.liege];
       if (old) {
-        // favor earned with the old lord stays on his name; the new liege
-        // keeps whatever opinion the player had already built with him
-        if (p.liegeOp) {
-          p.liegeOps = p.liegeOps || {};
-          p.liegeOps[old.id] = FB.clamp((p.liegeOps[old.id] || 0) + p.liegeOp, -100, 100);
-        }
-        p.liege = old.liege || null;
-        p.liegeOp = (p.liege && p.liegeOps && p.liegeOps[p.liege]) || 0;
-        if (p.liege && p.liegeOps) delete p.liegeOps[p.liege];
+        // Standing earned with the old lord stays on his name; the new liege
+        // keeps whatever Standing the player had already built with him.
+        const nextLiege = old.liege || null;
+        FB.changePlayerLiege(state, nextLiege, 'realm:liege_grant');
         FB.foundPlayerRealm(state);
         FB.invalidateRealmCache();
         // a granter left holding no county at all dissolves — any vassals of
@@ -3025,10 +3063,10 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive || !p.liege || rid === p.liege) return;
     const old = p.liege;
-    p.liege = rid;
+    FB.changePlayerLiege(state, rid, 'event:appeal_win');
     if (state.realms.player && state.realms.player.alive) state.realms.player.liege = rid;
-    FB.adjustLiegeOp(state, rid, 15);
-    FB.adjustLiegeOp(state, old, -25);
+    adjustRealmStanding(state, rid, 15, 'event:appeal_win');
+    adjustRealmStanding(state, old, -25, 'event:appeal_win');
     p.prestige += 8;
     FB.news(state, FB.msg('news.event.appeal_won', {
       forms: {
@@ -3048,8 +3086,10 @@ window.FB = window.FB || {};
     const p = state.player;
     const rid = p.appealRid || (ctx && ctx.rid);
     p.appealRid = null;
-    if (rid) FB.adjustLiegeOp(state, rid, -5);
-    if (p.liege) FB.adjustLiegeOp(state, p.liege, -15);
+    if (rid) adjustRealmStanding(state, rid, -5, 'event:appeal_lose');
+    if (p.liege) {
+      adjustRealmStanding(state, p.liege, -15, 'event:appeal_lose');
+    }
   };
 
   /* vassal breaks free unopposed */
@@ -3115,32 +3155,38 @@ window.FB = window.FB || {};
     const p = state.player;
     const rid = p.revokeRid || (ctx && ctx.rid);
     p.revokeRid = null;
-    FB.adjustLiegeOp(state, rid, -20);
+    adjustRealmStanding(state, rid, -20, 'event:vassal_refuse');
     FB.fns.vassal_crush(state, { rid: rid });
   };
-  /* small vassal-opinion nudges for the flavor events */
+  /* Small vassal-Standing nudges for the flavor events. */
   FB.fns.vassal_favor = function (state) {
     const vs = FB.playerVassals(state);
-    if (vs.length) FB.adjustLiegeOp(state, FB.pick(vs), 20);
+    if (vs.length) {
+      adjustRealmStanding(state, FB.pick(vs), 20, 'event:vassal_favor');
+    }
   };
   FB.fns.vassal_snub = function (state) {
     const vs = FB.playerVassals(state);
-    if (vs.length) FB.adjustLiegeOp(state, FB.pick(vs), -10);
+    if (vs.length) {
+      adjustRealmStanding(state, FB.pick(vs), -10, 'event:vassal_snub');
+    }
   };
   /* insist on the refused taxes: the surliest vassal pays up and hates it */
   FB.fns.vassal_insist = function (state) {
     const vs = FB.playerVassals(state);
     if (!vs.length) return;
     let worst = vs[0];
-    for (const v of vs) if (FB.liegeOpOf(state, v) < FB.liegeOpOf(state, worst)) worst = v;
+    for (const v of vs) {
+      if (realmStanding(state, v) < realmStanding(state, worst)) worst = v;
+    }
     let g = 0;
     for (const pid of FB.realmHeldCounties(state, worst)) g += Math.ceil((state.dev[pid] || 1) * FBDATA.balance.vassalTaxRate * 2);
     state.player.gold += g;
-    FB.adjustLiegeOp(state, worst, -20);
+    adjustRealmStanding(state, worst, -20, 'event:vassal_insist');
     FB.news(state, FB.msg('news.event.vassal_tax_paid',
       '💰 {realm} pays {money:gold} under protest.',
       { realm: state.realms[worst].name, gold: g }));
-    if (FB.liegeOpOf(state, worst) <= -50) {
+    if (realmStanding(state, worst) <= -50) {
       FB.queueEvent(state, 'vassal_revolt', { rid:worst });
     }
   };

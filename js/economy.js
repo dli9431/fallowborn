@@ -228,7 +228,9 @@ window.FB = window.FB || {};
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {
         const c = state.chars[record.charId];
-        if (!c || c.opinion <= -40) continue;
+        if (!c || FB.standingOf(state, {
+          kind:'character', id:c.id
+        }) <= -40) continue;
         const def = FB.positionDef(record.office);
         if (def && def.fx && def.fx[key]) {
           out.push({
@@ -645,13 +647,19 @@ window.FB = window.FB || {};
   function localAppointmentSupport(state) {
     if (state.player.liege) {
       return {
-        opinion:FB.liegeOpOf ? FB.liegeOpOf(state, state.player.liege) :
-          (state.player.liegeOp || 0),
+        opinion:FB.standingOf(state, {
+          kind:'realm', id:state.player.liege
+        }),
         id:state.player.liege
       };
     }
     const lord = FB.getRole(state, 'lord', true);
-    return { opinion:lord ? Number(lord.opinion) || 0 : 0, id:lord && lord.id || null };
+    return {
+      opinion:lord ? FB.standingOf(state, {
+        kind:'character', id:lord.id
+      }) : 0,
+      id:lord && lord.id || null
+    };
   }
 
   FB.bishopAppointmentStatus = function (state, c) {
@@ -1218,12 +1226,15 @@ window.FB = window.FB || {};
     for (const id of retainerCandidateIds(state)) {
       const c = state.chars[id];
       if (family[id] || FB.ageOf(c, state.date.year) < 16 ||
-          c.opinion <= -40 || (def.maleOnly && c.sex !== 'm')) continue;
+          FB.standingOf(state, { kind:'character', id:c.id }) <= -40 ||
+          (def.maleOnly && c.sex !== 'm')) continue;
       const career = FB.careerOf(state, c);
       if (career && career.profession === def.profession) out.push(c);
     }
     out.sort(function (a, b) {
-      return b.opinion - a.opinion || FB.skillOf(b, 'ste') - FB.skillOf(a, 'ste');
+      return FB.standingOf(state, { kind:'character', id:b.id }) -
+        FB.standingOf(state, { kind:'character', id:a.id }) ||
+        FB.skillOf(b, 'ste') - FB.skillOf(a, 'ste');
     });
     return out;
   };
@@ -1261,7 +1272,8 @@ window.FB = window.FB || {};
       charId:c.id, office:office, pay:def.pay || 0,
       startedTurn:state.turn, unpaid:0
     });
-    c.opinion = FB.clamp(c.opinion + 10, -100, 100);
+    FB.adjustStanding(state, { kind:'character', id:c.id }, 10,
+      'retainer:hired');
     FB.news(state, FB.msg('news.retainer.hired',
       '🗝 {name} enters the household as {office}; the first season’s pay is settled.',
       { name:c.name, office:FB.dataParam('position', office) }));
@@ -1290,11 +1302,13 @@ window.FB = window.FB || {};
     const c = state.chars[cid];
     if (c && c.role === 'retainer') c.role = null;
     if (reason === 'dismissed' && c) {
-      c.opinion = FB.clamp(c.opinion - 15, -100, 100);
+      FB.adjustStanding(state, { kind:'character', id:c.id }, -15,
+        'retainer:dismissed');
       FB.news(state, FB.msg('news.retainer.dismissed',
         '🗝 {name} is dismissed from household service.', { name:c.name }));
     } else if (reason === 'unpaid' && c) {
-      c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+      FB.adjustStanding(state, { kind:'character', id:c.id }, -20,
+        'retainer:unpaid_departure');
       FB.news(state, FB.msg('news.retainer.left_unpaid',
         '🪙 Two seasons without pay drive {name} from the household.', { name:c.name }));
     } else if (reason === 'disloyal' && c) {
@@ -1320,7 +1334,9 @@ window.FB = window.FB || {};
     const records = FB.retainerRecords(state).slice();
     for (const record of records) {
       const c = state.chars[record.charId];
-      if (c && c.opinion <= -40) {
+      if (c && FB.standingOf(state, {
+          kind:'character', id:c.id
+        }) <= -40) {
         FB.removeRetainer(state, record.charId, 'disloyal');
         continue;
       }
@@ -1331,7 +1347,10 @@ window.FB = window.FB || {};
         continue;
       }
       record.unpaid = (record.unpaid || 0) + 1;
-      if (c) c.opinion = FB.clamp(c.opinion - 10, -100, 100);
+      if (c) {
+        FB.adjustStanding(state, { kind:'character', id:c.id }, -10,
+          'retainer:missed_pay');
+      }
       if (record.unpaid >= 2) {
         FB.removeRetainer(state, record.charId, 'unpaid');
       } else if (c) {
@@ -1347,7 +1366,10 @@ window.FB = window.FB || {};
     if (!records.length) return;
     for (const record of records) {
       const c = state.chars[record.charId];
-      if (c) c.opinion = FB.clamp(c.opinion - 15, -100, 100);
+      if (c) {
+        FB.adjustStanding(state, { kind:'character', id:c.id }, -15,
+          'retainer:succession');
+      }
     }
     FB.news(state, FB.msg('news.retainer.succession',
       '🗝 The inherited household servants renew their service to the new head.',
@@ -1599,7 +1621,9 @@ window.FB = window.FB || {};
     for (const role of ['priest', 'friend', 'lord']) {
       if (role === 'lord' && FB.playerStation(state) < 2) continue;
       const tutor = FB.getRole(state, role, false);
-      if (tutor && (role !== 'lord' || tutor.opinion >= 0)) {
+      if (tutor && (role !== 'lord' || FB.standingOf(state, {
+        kind:'character', id:tutor.id
+      }) >= 0)) {
         add(tutor.id, role);
       }
     }
@@ -3053,7 +3077,7 @@ window.FB = window.FB || {};
         tier:3,
         scope:'province',
         scopeId:p.provinceId,
-        favor:lord.opinion || 0
+        standing:FB.standingOf(state, { kind:'character', id:lord.id })
       };
     }
     if (!p.liege) return null;
@@ -3067,7 +3091,7 @@ window.FB = window.FB || {};
       tier:FB.clamp((realm.rank || 1) + 3, 3, 7),
       scope:'liege',
       scopeId:realm.id,
-      favor:FB.liegeOpOf ? FB.liegeOpOf(state, realm.id) : 0
+      standing:FB.standingOf(state, { kind:'realm', id:realm.id })
     };
   };
 
@@ -3099,11 +3123,11 @@ window.FB = window.FB || {};
         ? FB.T('An independent landed ruler has no superior to petition.')
         : FB.T('No valid local grantor can hear this petition.')
     };
-    if (grantor.favor < 40) return {
+    if (grantor.standing < 40) return {
       ready:false,
-      reason:FB.T('{grantor} must hold at least 40 favor toward you; currently {favor}.', {
+      reason:FB.T('{grantor} must hold at least 40 Standing toward you; currently {standing}.', {
         grantor:grantor.rulerName,
-        favor:Math.round(grantor.favor)
+        standing:Math.round(grantor.standing)
       })
     };
     const terms = FB.guildMonopolyTerms(grantor.tier);
@@ -3293,9 +3317,10 @@ window.FB = window.FB || {};
     return record ? record.taxBonus : 0;
   };
 
-  function adjustPetitionGrantorFavor(state, ctx, amount) {
-    if (ctx && ctx.grantorKind === 'realm' && ctx.grantorId && FB.adjustLiegeOp) {
-      FB.adjustLiegeOp(state, ctx.grantorId, amount);
+  function adjustPetitionGrantorStanding(state, ctx, amount) {
+    if (ctx && ctx.grantorKind === 'realm' && ctx.grantorId) {
+      FB.adjustStanding(state, { kind:'realm', id:ctx.grantorId }, amount,
+        'guild_monopoly:petition');
       return;
     }
     let lord = ctx && ctx.grantorId ? state.chars[ctx.grantorId] : null;
@@ -3303,7 +3328,8 @@ window.FB = window.FB || {};
       lord = FB.getRole ? FB.getRole(state, 'lord', true) : null;
     }
     if (lord && !lord.dead) {
-      lord.opinion = FB.clamp((lord.opinion || 0) + amount, -100, 100);
+      FB.adjustStanding(state, { kind:'character', id:lord.id }, amount,
+        'guild_monopoly:petition');
     }
   }
 
@@ -3318,7 +3344,7 @@ window.FB = window.FB || {};
   };
   FB.fns.guild_monopoly_persuade_failure = function (state, ctx) {
     state.player.prestige = Math.max(0, state.player.prestige - 5);
-    adjustPetitionGrantorFavor(state, ctx, -8);
+    adjustPetitionGrantorStanding(state, ctx, -8);
     return true;
   };
 
@@ -3699,13 +3725,16 @@ window.FB = window.FB || {};
       (FBDATA.balance.financeDefaultPrestige || 15));
     if (state.player.tier >= 6 && FB.councilAuthority) {
       FB.councilAuthority(state, -5);
-      if (FB.councilMembers && FB.adjustLiegeOp) {
+      if (FB.councilMembers) {
         for (const member of FB.councilMembers(state)) {
-          FB.adjustLiegeOp(state, member.rid, -5);
+          FB.adjustStanding(state, { kind:'realm', id:member.rid }, -5,
+            'finance:default');
         }
       }
     } else if (state.player.tier >= 3 && state.player.liege) {
-      state.player.liegeOp = FB.clamp((state.player.liegeOp || 0) - 5, -100, 100);
+      FB.adjustStanding(state, {
+        kind:'realm', id:state.player.liege
+      }, -5, 'finance:default');
     }
     if (loan.defaultKind === 'collateral') {
       const asset = loan.collateral && loan.collateral.kind === 'item' && FB.itemParam
@@ -4301,8 +4330,11 @@ window.FB = window.FB || {};
     state.player.pop = FB.clamp((state.player.pop || 0) - 10 - e.debasements * 2, -100, 100);
     FB.addPricePressure(state, preview.pressure, preview.years, 'debasement');
     if (FB.councilAuthority) FB.councilAuthority(state, 5);
-    if (FB.councilMembers && FB.adjustLiegeOp) {
-      for (const member of FB.councilMembers(state)) FB.adjustLiegeOp(state, member.rid, -8);
+    if (FB.councilMembers) {
+      for (const member of FB.councilMembers(state)) {
+        FB.adjustStanding(state, { kind:'realm', id:member.rid }, -8,
+          'finance:debasement');
+      }
     }
     FB.news(state, FB.msg('news.finance.debasement',
       '💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer.',

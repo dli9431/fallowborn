@@ -33,9 +33,9 @@ limited to gentry or below; gaining later lay titles does not strip an existing 
 
 `state.papacy.investiture` selects the appointing authority through the candidate's
 independent sovereign. Lay investiture relies on the liege, canonical investiture on the
-recognized Pope, and concordat averages both opinions. The chance begins at 45%, adds
+recognized Pope, and concordat averages Standing with both authorities. The chance begins at 45%, adds
 up to 15 points for Learning above the threshold, 4 points per permanent lay-standing
-step, and an opinion term of up to ±20 points from the policy's appointing authority; it
+step, and a Standing term of up to ±20 points from the policy's appointing authority; it
 is clamped to 20–90%. An optional 50-gold cathedral endowment adds 15 points, capped at
 95%. Failure begins a 720-day
 candidate cooldown. A failed ordinary petition has a 15% chance to queue a separate
@@ -54,7 +54,7 @@ see-only dynasty successor continues as gentry with the family's private propert
 
 A living Catholic man who is unmarried or widowed, not betrothed, already holds a
 Bishopric, is at least 35 with Learning 14+, and is backed by 250 piety, 150 prestige,
-and Papal opinion +25 may petition for the red hat for 25 gold. Refusal starts a saved
+and Standing with the Pope +25 may petition for the red hat for 25 gold. Refusal starts a saved
 720-day cooldown.
 
 Cardinal is an appointed personal office, never a purchased ladder rank. It sets social
@@ -65,7 +65,8 @@ complete a queued wedding. Existing children and family links are unchanged.
 The target College has 12 Cardinals and a hard cap of 18. A Pope may hold one consistory
 per year and appoint up to two candidates while below target. One appointment from the
 Pope's dynasty is tolerated each pontificate; every later relative costs 5 authority
-and 10 opinion with each non-family Cardinal.
+and 10 Curial opinion with each non-family Cardinal. These Cardinal-to-Cardinal election
+relationships are pairwise and remain distinct from player-relative Standing.
 
 Every Cardinal is a full `state.chars` character with an order, bloc, Roman title church,
 relationships, residence, gifts, travel, and mortality. Appointees before 1100 relocate
@@ -132,7 +133,8 @@ Recognized grounds are attacking the Pope or Papal States, occupying Rome, refus
 lawful investiture ruling, or defying an accepted reunification. A justified sentence
 costs the issuing obedience 100 piety and has a two-year per-target cooldown. An arbitrary
 sentence needs 50 authority, costs 300 piety, removes 12 authority, and further harms
-Catholic opinion. Only realms recognizing the issuer apply the −25 opinion, −10% strength,
+Standing with Catholic rulers. Only realms recognizing the issuer apply the −25 Standing,
+−10% strength,
 marriage/diplomacy penalty, and Catholic great-holy-war exclusion.
 
 Sentences are personal and keyed by target plus obedience. Death clears them. Absolution

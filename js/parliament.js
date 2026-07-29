@@ -7,7 +7,7 @@
    service). Terms live on the liege realm (`liege.obl`) so they bind the
    realm, survive saves with no migration, and reset only when you kneel to a
    different lord. A voice in the hall scales with rank — a duke's word weighs
-   more than a baron's — plus diplomacy, prestige, and the liege's own favor
+   more than a baron's — plus diplomacy, prestige, and Standing with the liege
    (FB.parliamentVoteChance, the `parliament_vote` chance fn). Sessions arrive
    as queued events once a year (FB.parliamentYearly); between sittings the
    player can buy a motion of their own via the 🏛 Estates deed. The king-side
@@ -17,6 +17,18 @@ window.FB = window.FB || {};
 
 (function () {
   'use strict';
+
+  function liegeStanding(state) {
+    return FB.standingOf(state, {
+      kind:'realm', id:state.player.liege
+    });
+  }
+
+  function adjustLiegeStanding(state, amount, source) {
+    return FB.adjustStanding(state, {
+      kind:'realm', id:state.player.liege
+    }, amount, 'parliament:' + source);
+  }
 
   /* the estates sit for sworn lords below the crown: baron, count, duke */
   FB.parliamentActive = function (state) {
@@ -54,7 +66,8 @@ window.FB = window.FB || {};
     const p = state.player;
     const me = state.chars[p.charId];
     let c = 0.30 + ([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0);
-    c += FB.skillOf(me, 'dip') * 0.02 + p.prestige / 1200 + (p.liegeOp || 0) / 400;
+    c += FB.skillOf(me, 'dip') * 0.02 + p.prestige / 1200 +
+      liegeStanding(state) / 400;
     c += FB.traitBonus ? FB.traitBonus(me, 'assembly', 'voteChance') : 0;
     return FB.clamp(c, 0.1, 0.85);
   };
@@ -105,19 +118,19 @@ window.FB = window.FB || {};
   };
   FB.fns.parliament_aid_hike_rebuff = function (state) {
     // the hall refuses the crown's demand; the crown remembers the ringleader
-    FB.adjustLiegeOp(state, state.player.liege, -12);
+    adjustLiegeStanding(state, -12, 'aid_hike_rebuff');
   };
   FB.fns.parliament_redress_won = function (state) {
     const aid = FB.parliamentAidAdjust(state, -1);
     if (aid === null) return;
     // the liege is bound by the vote — and displeased with its author
-    FB.adjustLiegeOp(state, state.player.liege, -5);
+    adjustLiegeStanding(state, -5, 'redress_won');
     FB.news(state, FB.msg('news.parliament.aid_down',
       '⚖ The estates vote redress — {liege}’s cut of your revenue falls to {pct}%.',
       { liege: state.realms[state.player.liege].name, pct: Math.round(aid * 100) }));
   };
   FB.fns.parliament_redress_lost = function (state) {
-    FB.adjustLiegeOp(state, state.player.liege, -8);
+    adjustLiegeStanding(state, -8, 'redress_lost');
   };
   FB.fns.parliament_scutage_pass = function (state) {
     const obl = FB.parliamentEnsure(state);
@@ -127,7 +140,7 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     obl.aid = FB.clamp(Math.round((obl.aid + 0.02) * 100) / 100,
       B.parliamentAidMin || 0.10, B.parliamentAidMax || 0.40);
-    FB.adjustLiegeOp(state, state.player.liege, 5);
+    adjustLiegeStanding(state, 5, 'scutage_pass');
     FB.news(state, FB.msg('news.parliament.scutage',
       '🛡 The estates vote scutage — silver, not spears, when {liege} calls the banners (the aid rises to {pct}%).',
       { liege: state.realms[state.player.liege].name, pct: Math.round(obl.aid * 100) }));
@@ -137,7 +150,7 @@ window.FB = window.FB || {};
     const gold = FBDATA.balance.parliamentSubsidyGold || 20;
     if (p.gold < gold) return;
     p.gold -= gold;
-    FB.adjustLiegeOp(state, state.player.liege, 12);
+    adjustLiegeStanding(state, 12, 'subsidy_pay');
     FB.news(state, FB.msg('news.parliament.subsidy',
       '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
       { liege: state.realms[state.player.liege].name, gold: gold }));

@@ -78,7 +78,7 @@ of regular income instead.
 
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
-occupy that settlement slot. One-time development, opinion, and prestige already granted
+occupy that settlement slot. One-time development, Common Voice, and prestige already granted
 when it was raised are not reversed.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for

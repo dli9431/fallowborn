@@ -56,7 +56,7 @@ effective sovereign's Scholarly Networks technology, has no development gate, an
 all five education focuses. Personal masters remain generated characters, so their focused
 skill can exceed the academy's fixed chance; they can also pass on traits or die.
 Named tutor choices use the shared person-assignment card to show the projected learning,
-fee, occupation, Regard, existing students, and which current instruction will be replaced.
+fee, occupation, Standing, existing students, and which current instruction will be replaced.
 
 **Household education policy fills empty choices, never revises them.** Household Plan
 stores an optional default focus plus an independent “best instruction” mode and
@@ -120,7 +120,7 @@ organizers and commanders, not drilled soldiers — so female rulers keep the wa
 leadership deeds (`lead_host`, `muster_host`, `hire_mercs`, `declare_war`), and the
 replacement foci train what girls were actually schooled in: `keep_house`
 (household management, stewardship/diplomacy) and `courtly_graces` (hawking, letters,
-patronage — liege favor and prestige). Old saves self-heal: `FB.validateFocus` drops
+patronage — Standing with the liege and prestige). Old saves self-heal: `FB.validateFocus` drops
 a now-hidden martial focus and `FB.defaultFocus` re-maps it. The one road left for a woman who
 means to actually *fight* is the *Sweet Polly Oliver* event chain (events_peasant.js) — cutting
 her hair and following the war levy in disguise, which trains martial across about a year; see
@@ -135,11 +135,11 @@ orthogonal and uses the existing `inherit` probability. Event-earned entries dec
 `noRandom:true` and `inherit:0`; mods without `class` remain generation-compatible and
 display under Other. There is no trait cap.
 
-Root skill, health, fertility, and general-Regard fields retain their existing
+Root skill, health, fertility, and general-Standing fields retain their existing
 `FB.traitAgg` behavior. System-specific numeric effects live under named groups and are
 read with `FB.traitBonus(character, group, key)`. The first consumers are assembly
 votes/Common Voice, travel leg time/road incidents, direct levy, direct rent, and
-family Regard. `player.traitProgress` holds current-protagonist acquisition counters,
+family Standing. `player.traitProgress` holds current-protagonist acquisition counters,
 is repaired additively in old version-3 saves, and clears on succession. Definitions
 with `earn:{threshold:n}` are awarded by `FB.noteTraitProgress`; the resulting Chronicle
 notice stores a locale-neutral trait data reference. Event-driven removal resets the
@@ -150,8 +150,8 @@ The first progress traits are Moot-Speaker (three won estates votes), Roadwise (
 distinct completed non-targeted journeys), Muster-Bred (six war-service points),
 Rent-Shrewd (three profitable Rent Days or extraordinary tax collections), and
 Hearth-Steady (three supportive marriage/child outcomes). Hearth-Steady adds 25% to
-positive event Regard only when the target is a spouse or blood relative. It adds to
-the existing root trait-Regard multiplier before the one final rounding; losses and
+positive event Standing only when the target is a spouse or blood relative. It adds to
+the existing root trait-Standing multiplier before the one final rounding; losses and
 unrelated characters do not use it.
 
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
@@ -179,14 +179,17 @@ Paid care in the `child_fever` event follows the schooling ladder: the wise
 woman (3 gold, 60%), a physician (10, 75%), a renowned physician (30, 90%),
 beside free prayer (55%).
 
-**Regard earns its keep.** Every character carries one `opinion` of the player (−100…100).
-It gates deeds and events (courtship, petitions, `roleOpinionAbove/Below` triggers), and
+**Standing earns its keep.** Every eligible counterpart has one player-facing Standing
+toward the current protagonist (−100…100). Ordinary characters retain the compatibility
+field `character.opinion`; new code reads and writes it through
+`FB.standingOf(state, {kind:'character',id})` and `FB.adjustStanding`. It gates deeds and
+events (courtship, petitions, `roleOpinionAbove/Below` compatibility triggers), and
 three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggregate now
 scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
 add the target's `opinion/500` to success — a trusting victim is easier to undo.
 `player.socialAttention` is not another relationship meter: it names the one character
-whose existing Regard gains `balance.socialAttentionDailyOpinion` (+0.2 by default) each
+whose existing Standing gains `balance.socialAttentionDailyOpinion` (+0.2 by default) each
 ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does not change
 that fixed rate. `FB.characterResidence(state, character)` is the authoritative
 county for social presence: managed household members and retainers live at the
@@ -200,7 +203,7 @@ county, and continues alongside work, study, war, destination residence, and dee
 that consume a day. Observe mode never advances it.
 
 **Explicit gifts are recipient-bound.** Every living non-player character sheet offers one
-gift picker. Cash costs 5 gold for `balance.socialCashGiftOpinion` Regard (+4 by default);
+gift picker. Cash costs 5 gold for `balance.socialCashGiftOpinion` Standing (+4 by default);
 an unequipped, unpledged armory object grants the quality-tier value from
 `balance.socialItemGiftOpinion` (+4/+8/+12). Cash and items share the character-id clock in
 `player.socialGiftTurns`, so the same person may receive only one explicit gift every
@@ -209,28 +212,28 @@ Spouses, dependent children, retainers, and other managed household members may 
 cash, but not an armory object: their equipment remains family property managed through the
 shared loadouts. A materialized reigning ruler is never an ordinary recipient: both their
 realm and full-character sheets use ruler rank pricing, ruler-generation cooldowns, and
-Favor/Opinion rules. These are ordinary-character gifts and change only Regard; realm
-rulers use the realm gift rules in [realms.md](realms.md).
+Standing rules. These are ordinary-character gifts; realm rulers use the realm gift
+rules in [realms.md](realms.md), but both sheets resolve the same score.
 
 Character gifts remain immediate when the recipient’s residence belongs to the same
 sovereign realm as the player’s permanent home. Otherwise the paid cash or exact armory
-object enters `player.giftDeliveries` and travels home-to-residence. Regard and the
+object enters `player.giftDeliveries` and travels home-to-residence. Standing and the
 recipient cooldown begin only on arrival. Death, succession to a crown, or a change of
 residence makes the courier complete the outbound road and return the gift to the
 household’s then-current permanent home without starting a cooldown.
 
 **Rivalries grow out of contact.** The rival seat remains `state.roles.rival`, so old saves,
 events, and mods keep one canonical personal enemy. The player may deliberately name any
-non-family character at opinion ≤ −40. An NPC may claim the seat only if that exact,
+non-family character at Standing ≤ −40. An NPC may claim the seat only if that exact,
 already-existing character has a life-local entry in `player.rivalContacts`, written by an
 explicit hostile interaction (`FB.noteRivalContact` / event effect `rivalContact`), and is
-also at opinion ≤ `balance.rivalOpinionThreshold`. Merely losing opinion is not enough, and
+also at Standing ≤ `balance.rivalOpinionThreshold`. Merely losing Standing is not enough, and
 `{rival}` text or an `opinion` effect can never lazily invent a rival. Contacts expire after
 `balance.rivalContactMaxAge`; wrathful, proud, cruel, and ambitious characters are readier
 to declare, while patient, humble, kind, and content characters are slower.
 
-An active feud has life-local `player.rivalry` metadata with heat 0–100. Heat, not opinion,
-gates escalation: opinion measures willingness to make peace, while heat measures whether
+An active feud has life-local `player.rivalry` metadata with heat 0–100. Heat, not Standing,
+gates escalation: Standing measures willingness to make peace, while heat measures whether
 the quarrel is cooling, simmering, open, or a blood feud. Hostile deeds and event choices
 raise it; restraint and common cause lower it; a long quiet reduces it toward 5. The
 character sheet offers mediated settlement instead of unilateral deletion. `FB.endRivalry`
@@ -267,7 +270,7 @@ character's vocational `rank` from journeyman to master.
 Guildmaster is also the personal qualification for the **Petition for a guild monopoly**
 deed. The deed reads the protagonist's preserved character career, including at tier 3+,
 and is limited to core Craft and Trade professions. It requires 60 guild standing,
-Guild Charters in the effective sovereign nation, 40 favor with the grantor, and an empty
+Guild Charters in the effective sovereign nation, 40 Standing with the grantor, and an empty
 incoming slot. Low-station guildmasters petition their local lord with baron terms;
 landed vassals petition their direct liege with that realm's title-tier terms. An
 independent landed ruler has no superior to petition.
@@ -288,7 +291,7 @@ data does not define the shared relationship threshold.
 A remote assignment remains saved but paused. Its character sheet offers a
 repeatable targeted journey whose confirmation assigns attention and spends the
 road cost atomically. The quoted visit keeps the traveler at least 90 days;
-Regard starts on arrival, stops during the return, and resumes on a later visit.
+Standing starts changing on arrival, stops during the return, and resumes on a later visit.
 Naming a qualified friend and marriage proposals remain deliverable at distance. Gifts
 may instead require the saved courier journey described above.
 
@@ -298,12 +301,13 @@ character's career: a merchant may serve as factor, a soldier as captain, and a 
 tutor. Retainers may staff enterprises, teach children, and use household equipment, but
 do not bring family wages or piety and do not add resident-family upkeep. Capacity follows
 station through `balance.retainerCapacity`; seasonal pay, arrears, dismissal, death, and
-succession are handled by the shared retainer APIs in `js/economy.js`. Contracts pass to
-an heir with a regard penalty, keeping inherited service distinct from inherited
-friendship. Each office has one holder; two unpaid seasons or regard at −40 ends service,
+succession are handled by the shared retainer APIs in `js/economy.js`. Protagonist
+succession first resets all predecessor Standing to neutral; inherited contracts then
+renew at −15 Standing, keeping inherited service distinct from inherited friendship.
+Each office has one holder; two unpaid seasons or Standing at −40 ends service,
 and marriage replaces a paid contract with ordinary spouse membership.
 The retainer candidate picker uses the shared person-assignment card to preview the office
-effect, entry and seasonal pay, occupation, Regard, and additive-office consequence before
+effect, entry and seasonal pay, occupation, Standing, and additive-office consequence before
 the existing hire action spends the day.
 
 **The Household Plan is a derived overview, not character state.** Network → Household
