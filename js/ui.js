@@ -1321,7 +1321,8 @@ window.FB = window.FB || {};
 
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
-    let h = ongoingCommitmentsHtml(s);
+    let h = FB.game.uiPrefs && FB.game.uiPrefs.hideOngoingCommitments
+      ? '' : ongoingCommitmentsHtml(s);
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -1493,18 +1494,18 @@ window.FB = window.FB || {};
         n++;
       }
     }
-    function focusActionControl(selector, fallbackGroup) {
+    function focusActionControl(selector, fallbackGroup, scrollBlock) {
       const target = box.querySelector(selector) ||
         (fallbackGroup && box.querySelector(
           '[data-action-group="' + fallbackGroup + '"]'));
       if (!target) return;
-      target.scrollIntoView({ block:'nearest' });
+      target.scrollIntoView({ block:scrollBlock || 'nearest' });
       target.focus({ preventScroll:true });
     }
-    function revealActionControl(groupId, selector) {
+    function revealActionControl(groupId, selector, scrollBlock) {
       if (groupId) actionGroupsOpen[groupId] = true;
       renderActions();
-      focusActionControl(selector, groupId);
+      focusActionControl(selector, groupId, scrollBlock);
     }
     document.querySelectorAll('#ongoing-commitments button[data-commitment]').forEach(
       function (button) {
@@ -1515,7 +1516,7 @@ window.FB = window.FB || {};
             const group = focus ? (FOCUS_GROUP[focus.id] || 'realm') : 'work';
             revealActionControl(group, focus
               ? '[data-focus-id="' + focus.id + '"]'
-              : '[data-action-group="' + group + '"]');
+              : '[data-action-group="' + group + '"]', 'start');
           } else if (commitment === 'personal-attention') {
             const target = FB.socialAttentionTarget(s);
             if (target) {
@@ -13688,6 +13689,11 @@ window.FB = window.FB || {};
       (G.uiPrefs.combinedFocuses ? ' checked' : '') + '> <b>' +
       esc(FB.T('Keep daily focuses together')) + '</b><span class="adesc">' +
       esc(FB.T('Show all daily focuses before the category groups; deeds remain grouped.')) +
+      '</span></label>' +
+      '<label class="autorow"><input type="checkbox" id="set-hide-commitments"' +
+      (G.uiPrefs.hideOngoingCommitments ? ' checked' : '') + '> <b>' +
+      esc(FB.T('Hide ongoing commitments')) + '</b><span class="adesc">' +
+      esc(FB.T('Remove the ongoing commitments ledger from the Deeds panel.')) +
       '</span></label>';
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
@@ -13715,6 +13721,11 @@ window.FB = window.FB || {};
     });
     $('set-combined-focuses').addEventListener('change', function () {
       G.uiPrefs.combinedFocuses = $('set-combined-focuses').checked;
+      G.saveUiPrefs();
+      if (FB.state && !G.observe) renderActions();
+    });
+    $('set-hide-commitments').addEventListener('change', function () {
+      G.uiPrefs.hideOngoingCommitments = $('set-hide-commitments').checked;
       G.saveUiPrefs();
       if (FB.state && !G.observe) renderActions();
     });

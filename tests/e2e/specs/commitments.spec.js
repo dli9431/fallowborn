@@ -31,8 +31,15 @@ test('ongoing commitments route to their existing controls',
     const focusId = await page.evaluate(function () {
       return FB.state.player.focus;
     });
+    await page.setViewportSize({ width:1280, height:480 });
     await summary.locator('[data-commitment="focus"]').click();
-    await expect(page.locator('[data-focus-id="' + focusId + '"]')).toBeFocused();
+    const focusControl = page.locator('[data-focus-id="' + focusId + '"]');
+    await expect(focusControl).toBeFocused();
+    const focusAlignment = await focusControl.evaluate(function (control) {
+      return Math.abs(control.getBoundingClientRect().top -
+        document.getElementById('sidebody').getBoundingClientRect().top);
+    });
+    expect(focusAlignment).toBeLessThanOrEqual(12);
 
     await summary.locator('[data-commitment="research"]').click();
     await expect(page.getByRole('heading', {
@@ -45,6 +52,40 @@ test('ongoing commitments route to their existing controls',
     await expect(page.locator('#sidetabs [data-tab="network"]')).toHaveClass(
       /active/);
     await expect(page.locator('#network-connections')).toBeFocused();
+  });
+
+test('settings can hide and restore the ongoing commitments ledger',
+  async function ({ page }, testInfo) {
+    await page.locator('#btn-menu').click();
+    await page.locator('#m-settings').click();
+
+    const hideCommitments = page.getByRole('checkbox', {
+      name:/Hide ongoing commitments/
+    });
+    await expect(hideCommitments).not.toBeChecked();
+    await hideCommitments.check();
+    await expect(page.locator('#ongoing-commitments')).toHaveCount(0);
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return FB.game.uiPrefs.hideOngoingCommitments;
+      });
+    }).toBe(true);
+    if (testInfo.project.name.endsWith('-served')) {
+      await expect.poll(async function () {
+        return page.evaluate(function () {
+          const prefs = JSON.parse(localStorage.getItem('fb_ui') || '{}');
+          return prefs.hideOngoingCommitments;
+        });
+      }).toBe(true);
+    }
+
+    await hideCommitments.uncheck();
+    await expect(page.locator('#ongoing-commitments')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return FB.game.uiPrefs.hideOngoingCommitments;
+      });
+    }).toBe(false);
   });
 
 test('conditional commitments expose travel, finance, and political management',

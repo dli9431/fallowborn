@@ -262,7 +262,9 @@ available travel deeds, or Coin & Credit. A journey marks focus as paused and
 non-editable because travel replaces its daily tick; return travel is likewise
 read-only because no route decision remains. The ledger creates no
 shared capacity, saved record, or mutation path; it only consolidates status
-and navigation. On narrow screens its rows keep full-width touch targets and
+and navigation. The daily-focus route aligns the current focus control with the
+top of the scrolling panel so the surrounding choices do not remain below the
+fold. On narrow screens its rows keep full-width touch targets and
 move their action label beneath the status rather than overflowing the panel.
 
 Living character sheets also own personal relationship controls. **Cultivate relationship**
@@ -303,7 +305,8 @@ activate an invisible deed. The current daily focus remains pinned above the gro
 Settings offers a browser-local **Keep daily focuses together** preference (`fb_ui`).
 When enabled, every available focus appears in one block above the category accordions;
 the accordions continue to split and count deeds by category. The categorized layout
-remains the default.
+remains the default. The same browser-local settings offer **Hide ongoing commitments**;
+it removes the ledger from the Deeds panel without changing or cancelling any assignment.
 The Self sheet's faith block names the live religious head or the number of days its
 office has been vacant, and states excommunication separately from the trait chip.
 Faith & Community contains the contextual absolution, Papal-restoration, and

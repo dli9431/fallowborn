@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.84.0';
+  FB.VERSION = '1.84.1';
   FB.CHANGELOG = [
+    { v: '1.84.1', date: '2026-07-29', changes: [
+      'The Deeds panel’s commitments ledger can now be hidden in Settings, and its Daily focus shortcut places focus choices at the top of the panel.'
+    ] },
     { v: '1.84.0', date: '2026-07-29', changes: [
       'Counts and higher rulers can now move their capital and household home once per lifetime from the Land panel.'
     ] },
@@ -1308,11 +1311,12 @@ window.FB = window.FB || {};
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
-  G.uiPrefs = { combinedFocuses:false };
+  G.uiPrefs = { combinedFocuses:false, hideOngoingCommitments:false };
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
       G.uiPrefs.combinedFocuses = !!storedUiPrefs.combinedFocuses;
+      G.uiPrefs.hideOngoingCommitments = !!storedUiPrefs.hideOngoingCommitments;
     }
   } catch (e) { /* keep defaults */ }
   G.saveUiPrefs = function () {

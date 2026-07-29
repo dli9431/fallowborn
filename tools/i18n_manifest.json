@@ -95598,6 +95598,16 @@
         "text": "There is little to do now but bar the door and pray."
       }
     },
+    "src.c7c21722": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Remove the ongoing commitments ledger from the Deeds panel."
+      }
+    },
     "src.c7e38268": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98515,6 +98525,16 @@
       ],
       "source": {
         "text": "You pass a season in the great host: dusty marches, cold watches, and the endless labor that keeps an army together."
+      }
+    },
+    "src.d27151aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Hide ongoing commitments"
       }
     },
     "src.d29a17d5": {
@@ -121056,6 +121076,14 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
+    "ui:Hide ongoing commitments": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Hide ongoing commitments"
+      }
+    },
     "ui:High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -124806,6 +124834,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "Remain on the visit for {days} more days before returning home."
+      }
+    },
+    "ui:Remove the ongoing commitments ledger from the Deeds panel.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Remove the ongoing commitments ledger from the Deeds panel."
       }
     },
     "ui:Renew the vow": {
