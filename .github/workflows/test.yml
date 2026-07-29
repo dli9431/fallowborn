@@ -3,8 +3,6 @@ name: Test
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   chromium:
@@ -60,3 +58,35 @@ jobs:
           mkdir runtime-root
           docker cp "${container_id}:/usr/share/nginx/html/." runtime-root
           node tests/e2e/support/verify-runtime-manifest.js runtime-root
+
+  cross-browser:
+    name: Firefox and WebKit served-origin suite
+    needs: chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tests/e2e
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - name: Install test dependencies
+        run: npm ci
+      - name: Install Firefox and WebKit
+        run: npx playwright install --with-deps firefox webkit
+      - name: Run cross-browser tests
+        run: npm run test:cross-browser
+      - name: Upload cross-browser report and failure diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report-cross-browser
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 14

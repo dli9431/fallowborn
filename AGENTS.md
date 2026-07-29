@@ -31,6 +31,7 @@ From `tests/e2e/`:
 - `npm ci` installs the pinned test dependency graph.
 - `npx playwright install chromium` installs the pinned local browser revision.
 - `npm run check` runs the fast `node --check` syntax gate.
+- `npm run test:server` runs the in-process static-server lifecycle regression.
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` runs the configured browser suite.
 
@@ -61,6 +62,23 @@ same number and collide.
 
 **Default: commit directly onto `main`.** In the primary working directory, just commit your
 work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
+
+**Test gate for `main`.** Before making any commit directly on `main` or finalizing any merge
+into `main`, follow the [main integration workflow](docs/TESTS.md#main-integration-workflow)
+against the exact tree that will be committed:
+
+1. Add or update automated tests for every observable behavior change or bug fix. The tests must
+   exercise the expected behavior and land in the same commit or merge as the implementation.
+2. Run the relevant focused tests while developing, then run `npm run check` and
+   `npm run test:chromium` from `tests/e2e/` as the ordinary full integration gate.
+3. Run `npm run test:cross-browser` when browser-facing behavior changes and before a release.
+   Perform and record a specific manual check for behavior that the harness cannot cover.
+
+For a branch merge, add the tests on the branch with the behavior change, then rerun the
+integration gate after the merged tree is assembled and before the merge is finalized. A
+documentation-only change does not need an artificial gameplay test, but it still requires any
+checks relevant to the files or tooling it changes. CI is a backstop, not a replacement for this
+pre-commit or pre-merge verification.
 
 **Every integration commit that assigns `FB.VERSION` must include that exact version in its
 commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,

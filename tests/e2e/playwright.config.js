@@ -1,10 +1,25 @@
 const { defineConfig } = require('@playwright/test');
 
 const servedOrigin = 'http://127.0.0.1:4173';
+const firefoxUse = {
+  browserName: 'firefox',
+  baseURL: servedOrigin
+};
+
+if (process.platform === 'win32') {
+  // Restricted Windows sessions can block Firefox's sandboxed content subprocess.
+  // This affects only the synthetic local test browser; Linux CI keeps its sandbox.
+  firefoxUse.launchOptions = {
+    env: Object.assign({}, process.env, {
+      MOZ_DISABLE_CONTENT_SANDBOX: '1'
+    })
+  };
+}
 
 module.exports = defineConfig({
   testDir: './specs',
   outputDir: './test-results',
+  globalSetup: require.resolve('./support/global-setup'),
   timeout: 60 * 1000,
   expect: {
     timeout: 10 * 1000
@@ -35,12 +50,17 @@ module.exports = defineConfig({
       use: {
         baseURL: servedOrigin
       }
+    },
+    {
+      name: 'firefox-served',
+      use: firefoxUse
+    },
+    {
+      name: 'webkit-served',
+      use: {
+        browserName: 'webkit',
+        baseURL: servedOrigin
+      }
     }
-  ],
-  webServer: {
-    command: 'node support/static-server.js',
-    url: servedOrigin + '/',
-    reuseExistingServer: !process.env.CI,
-    timeout: 30 * 1000
-  }
+  ]
 });

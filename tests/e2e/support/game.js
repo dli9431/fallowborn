@@ -7,12 +7,13 @@ const { expect } = require('./fixture');
 const gameRoot = path.resolve(__dirname, '..', '..', '..');
 const indexPath = path.join(gameRoot, 'index.html');
 const browserHarnessPath = path.join(__dirname, 'browser-harness.js');
+const holyWarHarnessPath = path.join(__dirname, 'holywar-harness.js');
 const servedOrigin = 'http://127.0.0.1:4173';
 
 const START_CODE = 'CADENCE-867-farmer-london-f-Ada';
 
 function targetUrl(testInfo) {
-  return testInfo.project.name === 'chromium-served'
+  return testInfo.project.name.endsWith('-served')
     ? servedOrigin + '/'
     : pathToFileURL(indexPath).href;
 }
@@ -51,11 +52,31 @@ async function startDeterministicGame(page) {
   }).toBe(true);
 }
 
+async function waitForUiRefresh(page) {
+  await page.evaluate(function () {
+    return new Promise(function (resolve) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(resolve);
+      });
+    });
+  });
+}
+
 async function injectBrowserHarness(page) {
   await page.addScriptTag({ path: browserHarnessPath });
   await expect.poll(function () {
     return page.evaluate(function () {
       return !!(window.FBTEST && FBTEST.checkInvariants && FBTEST.advanceDays);
+    });
+  }).toBe(true);
+}
+
+async function injectHolyWarHarness(page) {
+  await page.addScriptTag({ path: holyWarHarnessPath });
+  await expect.poll(function () {
+    return page.evaluate(function () {
+      return !!(window.FBTEST && FBTEST.makeGreatHolyWar &&
+        FBTEST.resolveGreatHolyWar);
     });
   }).toBe(true);
 }
@@ -104,9 +125,11 @@ async function openMenu(page) {
 module.exports = {
   START_CODE,
   injectBrowserHarness,
+  injectHolyWarHarness,
   lifeSnapshot,
   openGame,
   openMenu,
   startDeterministicGame,
-  targetUrl
+  targetUrl,
+  waitForUiRefresh
 };

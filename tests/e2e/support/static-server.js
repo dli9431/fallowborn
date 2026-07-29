@@ -7,7 +7,7 @@ const { URL } = require('url');
 
 const gameRoot = path.resolve(__dirname, '..', '..', '..');
 const host = '127.0.0.1';
-const port = Number(process.env.FALLOWBORN_TEST_PORT || 4173);
+const defaultPort = Number(process.env.FALLOWBORN_TEST_PORT || 4173);
 const allowedRootFiles = new Set(['index.html', 'LICENSE']);
 const allowedDirectories = new Set([
   'css',
@@ -47,51 +47,101 @@ function resolveRequest(requestUrl) {
   return absolute;
 }
 
-const server = http.createServer(function (request, response) {
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    response.writeHead(405, { Allow: 'GET, HEAD' });
-    response.end();
-    return;
-  }
+function createServer() {
+  return http.createServer(function (request, response) {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      response.writeHead(405, { Allow: 'GET, HEAD' });
+      response.end();
+      return;
+    }
 
-  const absolute = resolveRequest(request.url);
-  if (!absolute) {
-    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    response.end('Not found');
-    return;
-  }
-
-  fs.stat(absolute, function (statError, stat) {
-    if (statError || !stat.isFile()) {
+    const absolute = resolveRequest(request.url);
+    if (!absolute) {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end('Not found');
       return;
     }
-    const type = contentTypes[path.extname(absolute).toLowerCase()] ||
-      'application/octet-stream';
-    response.writeHead(200, {
-      'Cache-Control': 'no-store',
-      'Content-Length': stat.size,
-      'Content-Type': type
+
+    fs.stat(absolute, function (statError, stat) {
+      if (statError || !stat.isFile()) {
+        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        response.end('Not found');
+        return;
+      }
+      const type = contentTypes[path.extname(absolute).toLowerCase()] ||
+        'application/octet-stream';
+      response.writeHead(200, {
+        'Cache-Control': 'no-store',
+        'Content-Length': stat.size,
+        'Content-Type': type
+      });
+      if (request.method === 'HEAD') {
+        response.end();
+        return;
+      }
+      fs.createReadStream(absolute).pipe(response);
     });
-    if (request.method === 'HEAD') {
-      response.end();
-      return;
-    }
-    fs.createReadStream(absolute).pipe(response);
   });
-});
-
-server.listen(port, host, function () {
-  process.stdout.write('Fallowborn test server listening on http://' + host + ':' + port + '\n');
-});
-
-function close() {
-  server.close(function () {
-    process.exit(0);
-  });
-  if (server.closeAllConnections) server.closeAllConnections();
 }
 
-process.on('SIGINT', close);
-process.on('SIGTERM', close);
+function start(options) {
+  const settings = options || {};
+  const server = createServer();
+  const port = settings.port === undefined ? defaultPort : settings.port;
+  return new Promise(function (resolve, reject) {
+    function onError(error) {
+      server.removeListener('listening', onListening);
+      reject(error);
+    }
+    function onListening() {
+      server.removeListener('error', onError);
+      resolve(server);
+    }
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port, settings.host || host);
+  });
+}
+
+function close(server) {
+  if (!server || !server.listening) return Promise.resolve();
+  return new Promise(function (resolve, reject) {
+    server.close(function (error) {
+      if (error) reject(error);
+      else resolve();
+    });
+    if (server.closeAllConnections) server.closeAllConnections();
+  });
+}
+
+async function runCommand() {
+  const server = await start();
+  const address = server.address();
+  process.stdout.write('Fallowborn test server listening on http://' +
+    address.address + ':' + address.port + '\n');
+  let closing = false;
+  function shutdown() {
+    if (closing) return;
+    closing = true;
+    close(server).catch(function (error) {
+      process.stderr.write(error.stack || String(error));
+      process.exitCode = 1;
+    });
+  }
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+
+if (require.main === module) {
+  runCommand().catch(function (error) {
+    process.stderr.write((error.stack || String(error)) + '\n');
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  close,
+  defaultPort,
+  host,
+  start
+};

@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -93,6 +94,7 @@ test('conditional commitments expose travel, finance, and political management',
         capacity:FB.politicalAttentionCapacity(s)
       };
     });
+    await waitForUiRefresh(page);
     expect(setup.journey).not.toBeNull();
     expect(setup.capacity).toBeGreaterThan(0);
 
