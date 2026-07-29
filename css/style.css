@@ -955,7 +955,7 @@ textarea.modjson, textarea.savetext {
 }
 .governance-sections {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px; align-items: start;
+  flex: 0 0 auto; gap: 10px; align-items: start;
 }
 .governance-card {
   min-width: 0; padding: 11px 12px;

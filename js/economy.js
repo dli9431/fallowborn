@@ -303,8 +303,8 @@ window.FB = window.FB || {};
   }
 
   function religiousRankIndex(state, c, pathId) {
-    c.religiousRanks = c.religiousRanks || {};
-    let index = c.religiousRanks[pathId] || 0;
+    const ranks = c.religiousRanks || {};
+    let index = ranks[pathId] || 0;
     if (state.player && c.id === state.player.charId) {
       const flags = state.player.flags || {};
       if (pathId === 'catholic_monastic') {
@@ -318,7 +318,6 @@ window.FB = window.FB || {};
       }
     }
     index = FB.clamp(index, 0, RELIGIOUS_PATHS[pathId].length - 1);
-    c.religiousRanks[pathId] = index;
     return index;
   }
 
@@ -639,6 +638,7 @@ window.FB = window.FB || {};
       return { accepted:false, chance:status.chance };
     }
     delete c.abbotPetitionRefusedTurn;
+    c.religiousRanks = c.religiousRanks || {};
     c.religiousRanks[status.path.id] = status.path.index + 1;
     c.station = Math.max(2, FB.stationOf(c));
     if (c.id === state.player.charId) {
@@ -834,6 +834,7 @@ window.FB = window.FB || {};
         step.id === 'bishop') return false; // contested offices use appointment flows
     state.player.gold -= step.gold || 0;
     state.player.prestige += step.prestigeGain || 0;
+    c.religiousRanks = c.religiousRanks || {};
     c.religiousRanks[path.id] = path.index + 1;
     if (step.station !== undefined) {
       c.station = Math.max(FB.stationOf(c), step.station);

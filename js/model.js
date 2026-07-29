@@ -189,9 +189,8 @@ window.FB = window.FB || {};
   FB.religionsHeadedBy = function (state, realmId) {
     const out = [];
     if (!state || !realmId) return out;
-    FB.ensureReligiousHeads(state);
     for (const id in FBDATA.religions) {
-      const head = FB.religiousHeadOf(state, id);
+      const head = FB.religiousHeadSnapshot(state, id);
       if (head && head.id === realmId) out.push(id);
     }
     return out;

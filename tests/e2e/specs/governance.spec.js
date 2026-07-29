@@ -422,6 +422,22 @@ test('institution summaries stay read-only until their existing actions run',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);
     await configureGovernance(page, 'baron');
+    const legacyDefaults = await page.evaluate(function () {
+      var snapshot = JSON.parse(FB.save.serialize());
+      var me = snapshot.chars[snapshot.player.charId];
+      var realmId = FB.playerRealmId(snapshot);
+      var sovereign = FB.topRealm(snapshot, realmId);
+      delete me.religiousRanks;
+      if (snapshot.papacy && snapshot.papacy.investiture) {
+        delete snapshot.papacy.investiture[sovereign];
+      }
+      var before = JSON.stringify(snapshot);
+      FB.religiousStandings(snapshot, me);
+      FB.investiturePolicyForPlayer(snapshot);
+      return before === JSON.stringify(snapshot);
+    });
+    expect(legacyDefaults).toBe(true);
+
     const estates = await page.evaluate(function () {
       var s = FB.state;
       var liege = s.realms[s.player.liege];

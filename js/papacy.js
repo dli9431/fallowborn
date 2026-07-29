@@ -1446,10 +1446,33 @@ window.FB = window.FB || {};
     return record;
   }
 
+  function investitureRecordSnapshot(state, sovereign) {
+    if (!state || !sovereign) return null;
+    var papacy = state.papacy;
+    var records = papacy && papacy.investiture;
+    var record = records && records[sovereign];
+    if (record && typeof record === 'object' && !Array.isArray(record)) {
+      if (definition().investiture.policies[record.policy]) return record;
+      var repaired = copyObject(record);
+      repaired.policy = 'lay';
+      return repaired;
+    }
+    var roman = FB.religiousHeadSnapshot &&
+      FB.religiousHeadSnapshot(state, 'catholic');
+    return {
+      sovereign:sovereign,
+      policy:roman && roman.id === sovereign ? 'canonical' : 'lay',
+      setTurn:state.turn,
+      demandedTurn:null,
+      demandObedience:null,
+      refusedTurn:null
+    };
+  }
+
   FB.investiturePolicyForRealm = function (state, rid) {
     var sovereign = realmSovereign(state, rid);
     if (!sovereign || realmReligion(state, sovereign) !== 'catholic') return null;
-    return ensureInvestitureRecord(state, sovereign);
+    return investitureRecordSnapshot(state, sovereign);
   };
 
   FB.investiturePolicyForPlayer = function (state) {

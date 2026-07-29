@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.90.0';
+  FB.VERSION = '1.90.1';
   FB.CHANGELOG = [
+    { v: '1.90.1', date: '2026-07-29', changes: [
+      'Standing stays synchronized for reigning rulers, and Governance remains stable on narrow screens and older saves.'
+    ] },
     { v: '1.90.0', date: '2026-07-29', changes: [
       'Character and ruler sheets now use consistent interaction cards that group available actions, commitments, costs, consequences, and blocked reasons.'
     ] },

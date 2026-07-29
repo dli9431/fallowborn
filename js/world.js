@@ -1523,9 +1523,10 @@ window.FB = window.FB || {};
   };
 
   /* Personal and political Standing are two views of one score while this
-     exact character reigns. The marker
-     lets direct legacy writes on either side reconcile without losing the
-     other side's change. */
+     exact character reigns. The marker lets direct legacy writes on either
+     side reconcile. If old code has changed both legacy fields since the last
+     canonical sync, the exact materialized character is the authoritative
+     compatibility view. */
   function reconciledRealmRulerStanding(state, rid, c) {
     const stored = storedRealmStanding(state, rid);
     if (!c) return stored;
@@ -1535,7 +1536,7 @@ window.FB = window.FB || {};
     let value;
     if (stored !== marker && personal === marker) value = stored;
     else if (personal !== marker && stored === marker) value = personal;
-    else if (personal !== marker && stored !== marker) value = stored;
+    else if (personal !== marker && stored !== marker) value = personal;
     else value = marker;
     return FB.clamp(Number(value) || 0, -100, 100);
   }
