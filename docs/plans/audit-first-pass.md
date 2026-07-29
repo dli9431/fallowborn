@@ -87,6 +87,15 @@ Provide one summary with direct edit links for:
 These remain separate capacity systems. The summary removes hunting across screens; it
 does not make the allocations interchangeable.
 
+Implemented in the Deeds panel as the render-only `UI.ongoingCommitmentsHtml`.
+The responsive ledger always shows the daily focus, personal attention, and
+national research, adds political attention when the player has that capacity,
+and adds active travel and financial contracts when present. Its native-button
+rows route to the existing focus group, character or Network relationship
+surface, Foreign Policy picker, Technology sheet, travel deeds, and Finance
+sheet. Travel visibly pauses the daily focus instead of allowing it to be
+changed, and no commitment records or capacities are merged.
+
 ## Automate in the first pass
 
 ### 1. Household education policy — complete
@@ -219,7 +228,7 @@ unchanged except where a shared summary or entry point must call them.
 5. Per-character Equip Best.
 6. Manor plot batch purchase.
 7. Descendant match recommendation.
-8. Shared asset/effect rows (implemented), then Ongoing Commitments summary.
+8. [x] Shared asset/effect rows and Ongoing Commitments summary.
 9. Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.
 

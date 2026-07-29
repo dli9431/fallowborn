@@ -368,8 +368,10 @@ window.FB = window.FB || {};
   function kv(label, value) {
     return '<div class="kv"><span>' + esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
   }
-  function panelh(title) {
-    return '<div class="panelh">' + esc(FB.T(title)) + '</div>';
+  function panelh(title, id) {
+    return '<div class="panelh"' +
+      (id ? ' id="' + esc(id) + '" tabindex="-1"' : '') + '>' +
+      esc(FB.T(title)) + '</div>';
   }
 
   /* Shared presentation for assets and persistent effects. The owning system
@@ -1059,6 +1061,247 @@ window.FB = window.FB || {};
     swear_fealty:'war'
   };
 
+  function currentFocusDef(s) {
+    for (const focus of FB.focuses) {
+      if (focus.id === s.player.focus) return focus;
+    }
+    return null;
+  }
+
+  function personalAttentionCommitmentText(s) {
+    const target = FB.socialAttentionTarget(s);
+    const capacity = FB.socialAttentionCapacity();
+    const rate = FB.socialAttentionDailyOpinion();
+    if (!target) {
+      return FB.T('0/{capacity} assigned · +{rate} Regard/day when assigned', {
+        capacity:capacity, rate:rate
+      });
+    }
+    const days = FB.socialAttentionDaysToThreshold(s, target);
+    const threshold = FB.relationshipOpinionThreshold();
+    const progress = days === null
+      ? FB.T('not advancing toward +{threshold}', { threshold:threshold })
+      : (days
+        ? FB.T('{days} days to +{threshold}', {
+          days:days, threshold:threshold
+        })
+        : FB.T('ready at +{threshold}', { threshold:threshold }));
+    const params = {
+      name:FB.fullName(target),
+      regard:signedRelationshipOpinion(target.opinion),
+      progress:progress
+    };
+    const presence = FB.socialAttentionPresence(s, target);
+    if (presence.status === 'on-road') {
+      return FB.T('{name} · Regard {regard} · {progress} · paused while on the road',
+        params);
+    }
+    if (presence.status === 'remote') {
+      const residence = presence.residenceId && FB.world.byId[presence.residenceId];
+      params.province = residence ? residence.name : FB.T('another county');
+      return FB.T(
+        '{name} · Regard {regard} · {progress} · paused—target is in {province}',
+        params);
+    }
+    return FB.T('{name} · Regard {regard} · {progress}', params);
+  }
+
+  function politicalAttentionCommitmentText(s, capacity) {
+    const assigned = FB.foreignPolicyAssignments(s);
+    const assignments = assigned.map(function (rid) {
+      const r = s.realms[rid];
+      return FB.T('{realm} {direction}', {
+        realm:r ? r.name : rid,
+        direction:FB.foreignPolicyStance(s, rid) > 0 ? '↑' : '↓'
+      });
+    }).join(' · ');
+    return assignments
+      ? FB.T('{used}/{capacity} assigned · {assignments}', {
+        used:assigned.length, capacity:capacity, assignments:assignments
+      })
+      : FB.T('0/{capacity} assigned · no active directions', {
+        capacity:capacity
+      });
+  }
+
+  function researchCommitmentText(s) {
+    const rid = FB.techRealmId(s);
+    const realm = s.realms[rid];
+    const record = FB.realmTechRecord(s, rid);
+    const slots = FB.techSlotCount(s, rid);
+    const projects = record.active.map(function (id) {
+      const def = FBDATA.tech[id];
+      return def ? dt(s, 'tech', id, def, 'name') : id;
+    }).join(', ');
+    let policy;
+    if (rid === 'player' && FB.isPlayerSovereign(s)) {
+      policy = FB.game.auto && FB.game.auto.research
+        ? techAutomationModeName(FB.game.auto.researchMode)
+        : FB.T('Manual selection');
+    } else {
+      policy = FB.T('Directed by {realm}', {
+        realm:realm ? realm.name : FB.T('the sovereign')
+      });
+    }
+    return projects
+      ? FB.T('{used}/{slots} slots · {projects} · policy: {policy}', {
+        used:record.active.length, slots:slots, projects:projects, policy:policy
+      })
+      : FB.T('0/{slots} slots occupied · policy: {policy}', {
+        slots:slots, policy:policy
+      });
+  }
+
+  function travelCommitmentText(s, travel) {
+    const here = FB.world.byId[travel.currentId];
+    const destination = FB.world.byId[travel.destinationId];
+    const def = FBDATA.travelPurposes[travel.purpose];
+    const purposeName = def
+      ? dt(s, 'travelPurpose', travel.purpose, def, 'name') : travel.purpose;
+    const phase = travel.phase === 'outbound' ? FB.T('outbound')
+      : (travel.phase === 'return' ? FB.T('returning home')
+        : FB.T('at the destination'));
+    const days = travel.remainingRoute && travel.remainingRoute.length
+      ? travel.legDaysLeft +
+        Math.max(0, travel.remainingRoute.length - 1) * travel.legDays
+      : 0;
+    let status = FB.T('{purpose} · {phase} · {location} → {destination}', {
+      purpose:purposeName,
+      phase:phase,
+      location:here ? here.name : '?',
+      destination:destination ? destination.name : '?'
+    });
+    if (days) {
+      status += ' · ' + FB.T('{days} travel days remain', { days:days });
+    } else if (travel.phase === 'arrived' && FB.travelStayDays) {
+      const stayed = FB.travelStayDays(s);
+      status += ' · ' + (travel.purpose === 'relationship'
+        ? FB.T('{days} days into the visit', { days:stayed })
+        : (s.player.tier >= 3
+          ? FB.T('{days} days in guest residence', { days:stayed })
+          : FB.T('{days} days living and working here', { days:stayed })));
+    }
+    if (travel.venture) {
+      status += ' · ' + (travel.venture.status === 'resolved'
+        ? FB.T('venture settled: {money:payout} returned', {
+          payout:travel.venture.payout || 0
+        })
+        : (travel.venture.status === 'cancelled'
+          ? FB.T('accompanied venture cancelled')
+          : FB.T('{money:stake} accompanied venture at risk', {
+            stake:travel.venture.stake
+          })));
+    }
+    return status;
+  }
+
+  function financeCommitmentText(s) {
+    const loans = FB.financeActiveLoans ? FB.financeActiveLoans(s) : [];
+    const partnerships = FB.financeActivePartnerships
+      ? FB.financeActivePartnerships(s) : [];
+    const ventures = FB.financeActiveTradeVentures
+      ? FB.financeActiveTradeVentures(s) : [];
+    const parts = [];
+    if (loans.length) {
+      parts.push(FB.T('Loans: {count}', { count:loans.length }));
+    }
+    if (partnerships.length) {
+      parts.push(FB.T('Backed ventures: {count}', {
+        count:partnerships.length
+      }));
+    }
+    if (ventures.length) {
+      parts.push(FB.T('Dispatched ventures: {count}', { count:ventures.length }));
+    }
+    return parts.join(' · ');
+  }
+
+  function ongoingCommitmentRow(options) {
+    const opts = options || {};
+    const tag = opts.disabled ? 'div' : 'button';
+    return '<' + tag +
+      (opts.disabled ? '' : ' type="button"') +
+      ' class="ongoing-commitment-row' +
+      (opts.disabled ? ' disabled' : '') + '" data-commitment="' +
+      esc(opts.id) + '"' +
+      (opts.disabled ? ' aria-disabled="true"' : '') + '>' +
+      '<span class="ongoing-commitment-icon" aria-hidden="true">' +
+      esc(opts.icon) + '</span><span class="ongoing-commitment-copy"><b>' +
+      esc(opts.label) + '</b><small>' + esc(opts.status) + '</small></span>' +
+      '<span class="ongoing-commitment-edit">' + esc(opts.action) +
+      '</span></' + tag + '>';
+  }
+
+  function ongoingCommitmentsHtml(s) {
+    const focus = currentFocusDef(s);
+    const travel = s.player.travel;
+    const attentionTarget = FB.socialAttentionTarget(s);
+    const attentionCapacity = FB.politicalAttentionCapacity(s);
+    const finance = financeCommitmentText(s);
+    let h = '<section class="ongoing-commitments" id="ongoing-commitments" ' +
+      'aria-labelledby="ongoing-commitments-title"><div class="ongoing-commitments-head">' +
+      '<h3 id="ongoing-commitments-title">' + esc(FB.T('Ongoing commitments')) +
+      '</h3><p>' + esc(FB.T(
+        'These assignments keep their own capacities, rules, and consequences.')) +
+      '</p></div><div class="ongoing-commitment-list">';
+    h += ongoingCommitmentRow({
+      id:'focus',
+      icon:'◉',
+      label:FB.T('Daily focus'),
+      status:focus
+        ? dt(s, 'focus', focus.id, focus, 'label') +
+          (travel ? ' · ' + FB.T('paused while traveling') : '')
+        : FB.T('No focus selected'),
+      action:travel ? FB.T('Paused') : FB.T('Change…'),
+      disabled:!!travel
+    });
+    h += ongoingCommitmentRow({
+      id:'personal-attention',
+      icon:'🤝',
+      label:FB.T('Personal attention'),
+      status:personalAttentionCommitmentText(s),
+      action:attentionTarget ? FB.T('Review…') : FB.T('Choose…')
+    });
+    if (attentionCapacity) {
+      h += ongoingCommitmentRow({
+        id:'political-attention',
+        icon:'🕊',
+        label:FB.T('Political attention'),
+        status:politicalAttentionCommitmentText(s, attentionCapacity),
+        action:FB.T('Manage…')
+      });
+    }
+    h += ongoingCommitmentRow({
+      id:'research',
+      icon:'💡',
+      label:FB.T('National research'),
+      status:researchCommitmentText(s),
+      action:FB.techRealmId(s) === 'player' && FB.isPlayerSovereign(s)
+        ? FB.T('Manage…') : FB.T('Review…')
+    });
+    if (travel) {
+      h += ongoingCommitmentRow({
+        id:'travel',
+        icon:'🧭',
+        label:FB.T('Travel'),
+        status:travelCommitmentText(s, travel),
+        action:travel.phase === 'return' ? FB.T('In progress') : FB.T('Options…'),
+        disabled:travel.phase === 'return'
+      });
+    }
+    if (finance) {
+      h += ongoingCommitmentRow({
+        id:'finance',
+        icon:'📜',
+        label:FB.T('Financial contracts'),
+        status:finance,
+        action:FB.T('Review…')
+      });
+    }
+    return h + '</div></section>';
+  }
+  UI.ongoingCommitmentsHtml = ongoingCommitmentsHtml;
+
   function renderActiveTab() {
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
       if (activeTab === 'prov') renderProv(); else renderLog();
@@ -1078,51 +1321,7 @@ window.FB = window.FB || {};
 
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
-    let h = '';
-    const travel = s.player.travel;
-    if (travel) {
-      const here = FB.world.byId[travel.currentId];
-      const destination = FB.world.byId[travel.destinationId];
-      const def = FBDATA.travelPurposes[travel.purpose];
-      const purposeName = def
-        ? dt(s, 'travelPurpose', travel.purpose, def, 'name') : travel.purpose;
-      const phase = travel.phase === 'outbound' ? FB.T('outbound')
-        : (travel.phase === 'return' ? FB.T('returning home') : FB.T('at the destination'));
-      const days = travel.remainingRoute && travel.remainingRoute.length
-        ? travel.legDaysLeft + Math.max(0, travel.remainingRoute.length - 1) * travel.legDays
-        : 0;
-      let stayText = '';
-      if (travel.phase === 'arrived' && FB.travelStayDays) {
-        const stayed = FB.travelStayDays(s);
-        stayText = travel.purpose === 'relationship'
-          ? FB.T('{days} days into the visit', { days:stayed })
-          : (s.player.tier >= 3
-            ? FB.T('{days} days in guest residence', { days:stayed })
-            : FB.T('{days} days living and working here', { days:stayed }));
-      }
-      h += '<div class="progressnote">🧭 ' + esc(FB.T(
-        '{purpose} · {phase} · now in {location} · destination {destination}', {
-          purpose:purposeName,
-          phase:phase,
-          location:here ? here.name : '?',
-          destination:destination ? destination.name : '?'
-        })) + (days ? ' · ' + esc(FB.T('{days} travel days remain', {days:days})) : '') +
-        (stayText ? ' · ' + esc(stayText) : '') +
-        (travel.venture
-          ? '<br><span class="hint">' + esc(
-            travel.venture.status === 'resolved'
-              ? FB.T('Venture settled: {money:payout} returned from a {money:stake} stake.', {
-                payout:travel.venture.payout || 0, stake:travel.venture.stake
-              })
-              : (travel.venture.status === 'cancelled'
-                ? FB.T('The accompanied venture was cancelled without a payout.')
-                : FB.T('Accompanied venture: {money:stake} invested; turning back or forced cancellation pays nothing.', {
-                  stake:travel.venture.stake
-                }))) + '</span>'
-          : '') +
-        '</div>';
-    }
-    h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
+    let h = ongoingCommitmentsHtml(s);
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -1164,25 +1363,6 @@ window.FB = window.FB || {};
           campaign:greatName,
           kingdom:greatKingdom ? greatKingdom.name : great.targetKingdom,
           status:greatStatus
-        })) + '</div>';
-    }
-    const attentionCapacity = FB.politicalAttentionCapacity(s);
-    if (attentionCapacity) {
-      const assigned = FB.foreignPolicyAssignments(s);
-      const assignmentText = assigned.map(function (rid) {
-        const r = s.realms[rid], stance = FB.foreignPolicyStance(s, rid);
-        return FB.T('{realm} {direction} {opinion}', {
-          realm: r.name,
-          direction: stance > 0 ? '↑' : '↓',
-          opinion: signedOpinion(FB.realmOpinionOf(s, rid))
-        });
-      }).join(' · ');
-      h += '<div class="progressnote">' + esc(assignmentText
-        ? FB.T('🕊 Political attention {used}/{capacity} · {assignments}', {
-          used: assigned.length, capacity: attentionCapacity, assignments: assignmentText
-        })
-        : FB.T('🕊 Political attention {used}/{capacity} · no assignments', {
-          used: 0, capacity: attentionCapacity
         })) + '</div>';
     }
     const hl = FB.holdingList(s);
@@ -1234,23 +1414,8 @@ window.FB = window.FB || {};
         }
       }
       if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
-      const techRealm = FB.techRealmId(s);
-      const techRecord = FB.realmTechRecord(s, techRealm);
-      const techActiveId = techRecord.active && techRecord.active[0];
-      const techActive = techActiveId && FBDATA.tech[techActiveId];
-      h += '<div class="progressnote">💡 ' + esc(techLevelsText(s, techRealm)) +
-        (techActive ? ' · ' + esc(FB.T('Researching {technology}', {
-          technology:dt(s, 'tech', techActiveId, techActive, 'name')
-        })) : '') + '</div>';
     }
     h += nextStepHint(s);
-    let currentFocus = null;
-    for (const focus of FB.focuses) if (focus.id === s.player.focus) currentFocus = focus;
-    if (currentFocus && !travel) {
-      h += '<div class="progressnote">' + esc(FB.T('◉ Current focus: {focus}', {
-        focus:dt(s, 'focus', currentFocus.id, currentFocus, 'label')
-      })) + '</div>';
-    }
     box.innerHTML = h;
     let n = 0; // hotkey numbering covers only actions visible in open groups
     const focuses = FB.listFocuses(s);
@@ -1260,6 +1425,7 @@ window.FB = window.FB || {};
       const cur = s.player.focus === f.id;
       const btn = document.createElement('button');
       btn.className = 'actionbtn' + (cur ? ' focused' : '');
+      btn.setAttribute('data-focus-id', f.id);
       btn.innerHTML = hintFor(n) +
         (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
         '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
@@ -1285,6 +1451,7 @@ window.FB = window.FB || {};
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];
       toggle.className = 'actiongroup-toggle';
+      toggle.setAttribute('data-action-group', group.id);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.innerHTML = '<span>' + esc(FB.T(group.label)) + '</span><span>' +
         esc(String(gf.length + ga.length)) + ' ' +
@@ -1326,6 +1493,55 @@ window.FB = window.FB || {};
         n++;
       }
     }
+    function focusActionControl(selector, fallbackGroup) {
+      const target = box.querySelector(selector) ||
+        (fallbackGroup && box.querySelector(
+          '[data-action-group="' + fallbackGroup + '"]'));
+      if (!target) return;
+      target.scrollIntoView({ block:'nearest' });
+      target.focus({ preventScroll:true });
+    }
+    function revealActionControl(groupId, selector) {
+      if (groupId) actionGroupsOpen[groupId] = true;
+      renderActions();
+      focusActionControl(selector, groupId);
+    }
+    document.querySelectorAll('#ongoing-commitments button[data-commitment]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const commitment = button.dataset.commitment;
+          if (commitment === 'focus') {
+            const focus = currentFocusDef(s);
+            const group = focus ? (FOCUS_GROUP[focus.id] || 'realm') : 'work';
+            revealActionControl(group, focus
+              ? '[data-focus-id="' + focus.id + '"]'
+              : '[data-action-group="' + group + '"]');
+          } else if (commitment === 'personal-attention') {
+            const target = FB.socialAttentionTarget(s);
+            if (target) {
+              UI.showCharModal(target.id);
+            } else {
+              setTab('network');
+              const heading = $('network-connections');
+              if (heading) {
+                heading.scrollIntoView({ block:'start' });
+                heading.focus({ preventScroll:true });
+              }
+            }
+          } else if (commitment === 'political-attention') {
+            UI.showForeignPolicy();
+          } else if (commitment === 'research') {
+            UI.showTech();
+          } else if (commitment === 'travel') {
+            revealActionControl('life',
+              '[data-action-id="travel_turn_back"], ' +
+              '[data-action-id="travel_marriage_residence"], ' +
+              '[data-action-id="travel_settle_here"]');
+          } else if (commitment === 'finance') {
+            UI.showFinance();
+          }
+        });
+      });
     FB.localizeTree(box);
   }
 
@@ -2287,7 +2503,7 @@ window.FB = window.FB || {};
 
     /* Connections: regard is shown separately from the one canonical friend
        so warmth can no longer masquerade as the event relationship. */
-    h += panelh('Connections');
+    h += panelh('Connections', 'network-connections');
     h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
     const friend = FB.getRole(s, 'friend', false);
     if (friend) {

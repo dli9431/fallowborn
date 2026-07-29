@@ -321,6 +321,48 @@ a.actionbtn { text-decoration: none; }
 .actionbtn:disabled { opacity: .45; cursor: default; }
 .actionbtn .adesc { display: block; color: #97876a; font-size: 12px; }
 .actionbtn.done { border-style: dashed; opacity: .55; }
+.ongoing-commitments {
+  margin-bottom: 10px; overflow: hidden;
+  border: 1px solid #65512d; border-radius: 9px; background: #211a12;
+}
+.ongoing-commitments-head {
+  padding: 9px 10px 8px; border-bottom: 1px solid #493b25;
+  background: linear-gradient(180deg, #302719, #282015);
+}
+.ongoing-commitments-head h3 {
+  margin: 0; color: #d8b24a; font-size: 15px; font-weight: normal;
+}
+.ongoing-commitments-head p {
+  margin: 2px 0 0; color: #8f8066; font-size: 11px; line-height: 1.35;
+}
+.ongoing-commitment-list {
+  display: grid; gap: 1px; background: #493b25;
+}
+.ongoing-commitment-row {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 7px; align-items: center; width: 100%; min-width: 0; min-height: 52px;
+  margin: 0; padding: 7px 9px; border: 0; border-radius: 0;
+  background: #241d15; color: #ddcfae; font: inherit; text-align: left;
+}
+button.ongoing-commitment-row { cursor: pointer; }
+button.ongoing-commitment-row:hover,
+button.ongoing-commitment-row:focus-visible { background: #302619; }
+.ongoing-commitment-row.disabled { opacity: .72; }
+.ongoing-commitment-icon {
+  color: #d8b24a; font-size: 19px; text-align: center;
+}
+.ongoing-commitment-copy { min-width: 0; }
+.ongoing-commitment-copy b {
+  display: block; color: #ecd9a0; font-size: 13px; font-weight: normal;
+}
+.ongoing-commitment-copy small {
+  display: block; min-width: 0; margin-top: 1px; color: #97876a;
+  font-size: 11px; line-height: 1.35; overflow-wrap: anywhere;
+}
+.ongoing-commitment-edit {
+  color: #d8b24a; font-size: 11px; white-space: nowrap;
+}
+.ongoing-commitment-row.disabled .ongoing-commitment-edit { color: #8f8066; }
 .person-assignment-card { position: relative; padding: 10px 12px; }
 .person-assignment-card.selected {
   border-color: #c9a24a; background: #342a1a;
@@ -1055,6 +1097,10 @@ textarea.modjson, textarea.savetext {
   .tab { font-size: 14px; min-height: 48px; }
   .actionbtn { min-height: 48px; font-size: 15px; padding: 10px 12px; }
   .actionbtn .adesc { font-size: 13px; }
+  .ongoing-commitment-row { min-height: 58px; padding: 9px 10px; }
+  .ongoing-commitment-copy b { font-size: 14px; }
+  .ongoing-commitment-copy small,
+  .ongoing-commitment-edit { font-size: 12px; }
   .evopt { min-height: 52px; font-size: 15px; }
   .evopt .odesc { font-size: 13px; }
   .btn { min-height: 44px; }
@@ -1257,6 +1303,12 @@ textarea.modjson, textarea.savetext {
 }
 
 @media (max-width: 380px) {
+  .ongoing-commitment-row {
+    grid-template-columns: 25px minmax(0, 1fr);
+  }
+  .ongoing-commitment-edit {
+    grid-column: 2; justify-self: start; margin-top: -2px;
+  }
   .item-card { align-items: center; flex-direction: column; }
   .item-card .itemart { width: 128px; height: 128px; }
 }
