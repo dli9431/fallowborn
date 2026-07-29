@@ -35,11 +35,15 @@ breaking ties. A lost or voluntarily reduced level gives no refund and must be b
 again at full setup cost. Every purchase and lapse writes a locale-neutral durable
 Chronicle descriptor.
 
-The household sheet presents each current or next standard through the shared
-asset/effect row: household owner and work/general scope, exact setup and live
-upkeep, current or next effect, succession/no-resale rule, and lapse condition.
-This is presentation only; the level map and seasonal lapse order remain
-authoritative.
+The household sheet is a compact catalogue rather than a stack of complete
+asset ledgers. Each row keeps the icon, name, current level, current or next
+effect, next setup price, and live upkeep visible in the same scan pattern as
+the technology catalogue. Opening a standard supplies the complete shared
+asset/effect row: household owner and work/general scope, exact setup and
+upkeep, effect, succession/no-resale rule, and lapse condition. Permanent
+property uses the same compact row in the catalogue, with owned property
+visually distinguished from purchases. This is presentation only; the level
+map and seasonal lapse order remain authoritative.
 
 Profession outfits multiply positive vocational focus resources, resident-family wages
 or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid

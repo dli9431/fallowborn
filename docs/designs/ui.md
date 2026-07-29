@@ -165,13 +165,17 @@ definition is active.
 
 The commoner **Better the household…** deed opens the full-screen-capable Household
 standards & property sheet. It shows active standards upkeep, reliable seasonal net, and
-the projected purse after one season before listing five general standards, relevant
-profession outfits, and permanent holdings as separate sections. Each standard row opens
-a native-button detail view. Upgrade confirmation states setup cost, complete new upkeep,
-benefit, seasonal net, and projected purse; a negative projection warns without disabling
-an otherwise affordable purchase. Reduction requires a second explicit confirmation that
-names the lost level and no-refund/re-purchase rule. `UI.showHoldings` remains an alias to
-this sheet for older deeds and mods.
+the projected purse after one season in a compact three-cell summary before listing five
+general standards, relevant profession outfits, and permanent holdings as separate
+catalogue sections. The catalogue follows Technology's dense scan rhythm: one row shows
+the icon, name, level/status, current or next effect, next setup price, and current upkeep.
+Owned property uses the same compact row treatment and a distinct completed state. Each
+standard remains a native button and opens the complete asset/effect detail view. Upgrade
+confirmation states setup cost, complete new upkeep, benefit, seasonal net, and projected
+purse; a negative projection warns without disabling an otherwise affordable purchase.
+Reduction requires a second explicit confirmation that names the lost level and
+no-refund/re-purchase rule. `UI.showHoldings` remains an alias to this sheet for older
+deeds and mods.
 
 Maintained transport and outfits are explicitly described as expenses rather than
 productive or combat property. The permanent section keeps Pack Mule, Fine Tools, Good
@@ -255,15 +259,18 @@ not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
 
 Asset and persistent-effect surfaces use the render-only
-`UI.assetEffectSummary`. Every row keeps the same owner, scope, setup cost,
-recurring cost, effect, transfer rule, and expiry order across household
-standards, permanent holdings, freehold plots, enterprises, buildings, items,
-temporary modifiers, and technology. Callers supply live values from their
-own APIs; the renderer escapes and labels them, applies the shared
-not-affordable cue, and points seasonal money to the existing resource
-ledger. Wide full sheets use a compact comparison grid, ordinary dialogs use
-two columns, and narrow layouts stack every labeled field. This shared
-presentation does not create a common asset record or mutation path.
+`UI.assetEffectSummary`. Detailed asset views keep the same owner, scope,
+setup cost, recurring cost, effect, transfer rule, and expiry order across
+household-standard details, freehold plots, enterprises, buildings, items,
+temporary modifiers, and technology. Dense catalogue overviews may summarize
+self-evident fields and keep rule differences inline; Better Household does so
+to keep standards and permanent property scannable, while each standard row
+opens its complete detail view. Callers supply live values from their own
+APIs; the renderer escapes and labels them, applies the shared not-affordable
+cue, and points seasonal money to the existing resource ledger. Wide full
+sheets use a compact comparison grid, ordinary dialogs use two columns, and
+narrow layouts stack every labeled field. This shared presentation does not
+create a common asset record or mutation path.
 
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. It always shows the current daily

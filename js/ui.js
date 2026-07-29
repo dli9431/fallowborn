@@ -9843,34 +9843,64 @@ window.FB = window.FB || {};
       : FB.T('Passes to heirs; may secure credit when eligible');
   }
 
+  function householdCatalogueEntry(options) {
+    const opts = options || {};
+    return '<span class="household-entry-layout">' +
+      '<span class="household-entry-icon" aria-hidden="true">' +
+      esc(opts.icon || '🏠') + '</span>' +
+      '<span class="household-entry-copy"><b>' + esc(opts.name || '') + '</b>' +
+      (opts.status ? '<small class="household-entry-status">' +
+        esc(opts.status) + '</small>' : '') +
+      (opts.effect ? '<small class="household-entry-effect">' +
+        esc(opts.effect) + '</small>' : '') + '</span>' +
+      '<span class="household-entry-cost' +
+      (opts.unaffordable ? ' unaffordable' : '') + '"><b>' +
+      esc(opts.cost || '') + '</b><small>' +
+      esc(opts.costLabel || '') + '</small><small>' +
+      esc(opts.recurring || '') + '</small></span></span>';
+  }
+
   function householdStandardRow(s, id) {
     const def = FBDATA.householdStandards[id];
     const level = FB.householdStandardLevel(s, id);
     const current = level && def.levels[level - 1];
     const active = FB.householdStandardActive(s, id);
     const next = level < def.levels.length ? def.levels[level] : null;
-    const detail = level
+    const status = level
       ? FB.T('Level {level}: {name}', {
         level:level, name:householdStandardLevelName(s, id, level)
       })
-      : FB.T('Baseline — no maintained improvement');
-    return '<button class="actionbtn household-standard" data-household-standard="' +
-      esc(id) + '">' + esc((def.icon || '🏠') + ' ' + householdStandardName(s, id)) +
-      '<span class="adesc">' + esc(detail) + '</span>' +
-      assetEffectSummary({
-        compact:true,
-        owner:FB.T('Household dynasty'),
-        scope:householdStandardScope(s, def),
-        setupCost:next
-          ? assetMoneyCost(next.cost, s.player.gold >= (Number(next.cost) || 0))
+      : FB.T('Baseline');
+    const effect = level
+      ? (active
+        ? householdStandardLevelDesc(s, id, level)
+        : FB.T('Dormant — no current benefit'))
+      : (next
+        ? FB.T('Next level: {name} — {effect}', {
+          name:householdStandardLevelName(s, id, level + 1),
+          effect:householdStandardLevelDesc(s, id, level + 1)
+        })
+        : FB.T('No maintained improvement'));
+    const short = next && s.player.gold < (Number(next.cost) || 0);
+    return '<button class="actionbtn household-entry household-standard' +
+      (level && active ? ' household-entry-active' : '') +
+      (level && !active ? ' household-entry-dormant' : '') +
+      '" data-household-standard="' + esc(id) + '">' +
+      householdCatalogueEntry({
+        icon:def.icon || '🏠',
+        name:householdStandardName(s, id),
+        status:status,
+        effect:effect,
+        cost:next ? FB.money(Number(next.cost) || 0) : FB.T('Completed'),
+        costLabel:next
+          ? (short ? FB.T('not enough money') : FB.T('Next setup'))
           : FB.T('Highest level reached'),
-        recurringCost:active && current
-          ? assetSeasonalMoneyCost(current.upkeep) : FB.T('None while dormant'),
-        effect:level && active
-          ? householdStandardLevelDesc(s, id, level)
-          : level ? FB.T('Dormant — no current benefit') : FB.T('No maintained improvement'),
-        transferRule:householdStandardTransferRule(),
-        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+        recurring:active && current
+          ? FB.T('{money:amount}/season', {
+            amount:Number(current.upkeep) || 0
+          })
+          : level ? FB.T('Dormant') : FB.T('No upkeep'),
+        unaffordable:short
       }) + '</button>';
   }
 
@@ -9894,58 +9924,57 @@ window.FB = window.FB || {};
   }
 
   function permanentHoldingsHtml(s) {
-    let h = '<div class="panelh">' + esc(FB.T('Permanent household property')) +
-      '</div><div class="hint">' + esc(FB.T(
-        'Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses.')) +
-      '</div><div class="gm-list">';
+    let h = '<section class="household-catalogue-section" id="household-property" ' +
+      'aria-labelledby="household-property-title"><h4 id="household-property-title">' +
+      esc(FB.T('Permanent household property')) +
+      '</h4><p class="household-section-hint">' + esc(FB.T(
+        'Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property.')) +
+      '</p><div class="household-catalogue-list">';
     const available = FB.holdingAvailable(s);
     for (const t of available) {
       const short = s.player.gold < t.def.cost;
-      h += '<button class="actionbtn" data-holding="' + esc(t.id) + '"' +
+      h += '<button class="actionbtn household-entry household-property-entry" ' +
+        'data-holding="' + esc(t.id) + '"' +
         (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name}', {
-          icon:t.def.icon, name:dt(s, 'holding', t.id, t.def, 'name')
-        })) + '<span class="adesc">' + esc(dt(s, 'holding', t.id, t.def, 'desc')) +
-        '</span>' + assetEffectSummary({
-          compact:true,
-          owner:FB.T('Household dynasty'),
-          scope:FB.T('Permanent family property'),
-          setupCost:assetMoneyCost(t.def.cost, !short),
-          recurringCost:FB.T('None'),
-          effect:holdingEffectText(t.def),
-          transferRule:holdingTransferRule(t.def),
-          expiry:FB.T('No fixed end; may be lost through events or default')
+        householdCatalogueEntry({
+          icon:t.def.icon,
+          name:dt(s, 'holding', t.id, t.def, 'name'),
+          status:dt(s, 'holding', t.id, t.def, 'desc'),
+          effect:holdingEffectText(t.def) +
+            (t.def.pledge === false ? ' · ' + holdingTransferRule(t.def) : ''),
+          cost:FB.money(t.def.cost),
+          costLabel:short ? FB.T('not enough money') : FB.T('Setup cost'),
+          recurring:FB.T('No upkeep'),
+          unaffordable:short
         }) + '</button>';
     }
     if (!available.length) {
-      h += '<div class="hint">' + esc(FB.T(
+      h += '<div class="household-empty">' + esc(FB.T(
         'No further permanent holding is available for this station and profession.')) +
         '</div>';
     }
     h += '</div>';
     const done = FB.holdingList(s);
     if (done.length) {
-      h += '<div class="panelh">' + esc(FB.T('Owned property')) + '</div>' +
-        '<div class="asset-owned-list">';
+      h += '<h5>' + esc(FB.T('Owned property')) +
+        '</h5><div class="household-catalogue-list household-owned-list">';
       for (const id of done) {
         const def = FBDATA.holdings[id];
         if (!def) continue;
-        h += '<div class="asset-owned-row"><b>' + def.icon + ' ' +
-          esc(dt(s, 'holding', id, def, 'name')) + '</b>' +
-          assetEffectSummary({
-            compact:true,
-            owner:FB.T('Household dynasty'),
-            scope:FB.T('Permanent family property'),
-            setupCost:FB.T('Already owned'),
-            recurringCost:FB.T('None'),
+        h += '<div class="household-entry household-property-entry ' +
+          'household-entry-owned">' + householdCatalogueEntry({
+            icon:def.icon,
+            name:dt(s, 'holding', id, def, 'name'),
+            status:holdingTransferRule(def),
             effect:holdingEffectText(def),
-            transferRule:holdingTransferRule(def),
-            expiry:FB.T('No fixed end; may be lost through events or default')
+            cost:FB.T('Owned'),
+            costLabel:FB.T('Permanent property'),
+            recurring:FB.T('No upkeep')
           }) + '</div>';
       }
       h += '</div>';
     }
-    return h;
+    return h + '</section>';
   }
 
   UI.showHousehold = function () {
@@ -9954,29 +9983,34 @@ window.FB = window.FB || {};
     const upkeep = FB.householdStandardsUpkeep(s);
     const net = FB.reliableGoldIncome(s);
     const projected = s.player.gold + net;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend.')) +
-      '</p>' + kv('Standards upkeep each season', esc(FB.money(upkeep))) +
+    let h = '<div class="household-summary">' +
+      kv('Standards upkeep each season', esc(FB.money(upkeep))) +
       kv('Reliable seasonal net', '<span class="' +
         (net < 0 ? 'op-bad' : net > 0 ? 'op-good' : '') + '">' +
         esc(fmtAmt(net, true)) + '</span>') +
       kv('Projected purse after one season', '<span class="' +
         (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
-      (projected < 0 ? '<p class="op-bad">' + esc(FB.T(
+      '</div><p class="household-intro">' + esc(FB.T(
+        'Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details.')) +
+      '</p>' + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
         'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
-        '</p>' : '') + '</div>';
+        '</p>' : '');
 
-    h += '<div class="panelh">' + esc(FB.T('Living standards')) + '</div>' +
-      '<div class="gm-list">';
+    h += '<section class="household-catalogue-section" id="household-living" ' +
+      'aria-labelledby="household-living-title"><h4 id="household-living-title">' +
+      esc(FB.T('Living standards')) +
+      '</h4><div class="household-catalogue-list">';
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
       if (def.kind === 'work') continue;
       h += householdStandardRow(s, id);
     }
-    h += '</div><div class="panelh">' + esc(FB.T('Work outfits')) + '</div>' +
-      '<div class="hint">' + esc(FB.T(
-        'An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat.')) +
-      '</div><div class="gm-list">';
+    h += '</div></section><section class="household-catalogue-section" ' +
+      'id="household-outfits" aria-labelledby="household-outfits-title">' +
+      '<h4 id="household-outfits-title">' + esc(FB.T('Work outfits')) +
+      '</h4><p class="household-section-hint">' + esc(FB.T(
+        'Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat.')) +
+      '</p><div class="household-catalogue-list">';
     let outfits = 0;
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
@@ -9987,14 +10021,14 @@ window.FB = window.FB || {};
       outfits++;
     }
     if (!outfits) {
-      h += '<div class="hint">' + esc(FB.T(
+      h += '<div class="household-empty">' + esc(FB.T(
         'No practiced household profession currently has a relevant outfit.')) + '</div>';
     }
-    h += '</div>' + permanentHoldingsHtml(s) +
+    h += '</div></section>' + permanentHoldingsHtml(s) +
       '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
     openModal(FB.T('🏠 Household standards & property'), h, {
-      modalClass:'fullsheet-modal'
+      modalClass:'fullsheet-modal household-modal'
     });
     document.querySelectorAll('[data-household-standard]').forEach(function (button) {
       button.addEventListener('click', function () {

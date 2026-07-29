@@ -37139,6 +37139,16 @@
         "text": "Outshine the emir and men will talk — including the emir."
       }
     },
+    "src.054fcb60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Next level: {name} — {effect}"
+      }
+    },
     "src.055cc745": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42271,16 +42281,6 @@
         "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
       }
     },
-    "src.145d6b9b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses."
-      }
-    },
     "src.146304c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42621,6 +42621,16 @@
       ],
       "source": {
         "text": "County of"
+      }
+    },
+    "src.1577eeac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat."
       }
     },
     "src.15827bd7": {
@@ -46543,16 +46553,6 @@
         "text": "Muezzin"
       }
     },
-    "src.22b4995a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend."
-      }
-    },
     "src.22b5e28e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47993,6 +47993,16 @@
       ],
       "source": {
         "text": "Survive the shield-wall or return from distinguished war service."
+      }
+    },
+    "src.26b33cde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal household-modal"
       }
     },
     "src.26b5cadf": {
@@ -52765,6 +52775,16 @@
         "text": "Mail Hauberks"
       }
     },
+    "src.36e39d1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Dormant"
+      }
+    },
     "src.36e82943": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56907,6 +56927,16 @@
       ],
       "source": {
         "text": "Passau"
+      }
+    },
+    "src.4447d085": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Next setup"
       }
     },
     "src.444d7db1": {
@@ -66844,16 +66874,6 @@
       ],
       "source": {
         "text": "Lime Mortar"
-      }
-    },
-    "src.63c373f3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Baseline — no maintained improvement"
       }
     },
     "src.63cbf192": {
@@ -79050,6 +79070,16 @@
       ],
       "source": {
         "text": "Tutor a younger pupil."
+      }
+    },
+    "src.8922a21e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Owned"
       }
     },
     "src.8922f2c7": {
@@ -91627,16 +91657,6 @@
         "text": "Specialists calculate engines, earthworks, approaches, and bombardment."
       }
     },
-    "src.b1b84fce": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Already owned"
-      }
-    },
     "src.b1bb597d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98808,16 +98828,6 @@
         "text": "Let the masters associate prosperity with your name."
       }
     },
-    "src.c8a1053c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "No fixed end; may be lost through events or default"
-      }
-    },
     "src.c8a59f58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99268,6 +99278,16 @@
       ],
       "source": {
         "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
+      }
+    },
+    "src.ca4b55cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details."
       }
     },
     "src.ca4ee790": {
@@ -101967,6 +101987,16 @@
         "text": "open"
       }
     },
+    "src.d36441ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Permanent property"
+      }
+    },
     "src.d3860c88": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103557,6 +103587,16 @@
       ],
       "source": {
         "text": "Banner obligation"
+      }
+    },
+    "src.d887abd5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property."
       }
     },
     "src.d88aa15c": {
@@ -108371,16 +108411,6 @@
         "text": "Évora"
       }
     },
-    "src.e805bb42": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat."
-      }
-    },
     "src.e809327d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110123,6 +110153,16 @@
         "text": "Keep the old ways."
       }
     },
+    "src.edc98f22": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No upkeep"
+      }
+    },
     "src.edd42c9d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111154,16 +111194,6 @@
       ],
       "source": {
         "text": "Spear and Shield Drill"
-      }
-    },
-    "src.f0df2698": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Permanent family property"
       }
     },
     "src.f0e4e59d": {
@@ -121590,14 +121620,6 @@
         "text": "Already on the road."
       }
     },
-    "ui:Already owned": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Already owned"
-      }
-    },
     "ui:Already returning home.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -121720,14 +121742,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "An inherited campaign vow"
-      }
-    },
-    "ui:An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "An outfit improves paid focus work, resident-family wages or religious yield, and staffed enterprises for its profession. It sleeps without an eligible worker. Soldier outfits never improve combat."
       }
     },
     "ui:Another sentence may be issued in {days} days.": {
@@ -122519,14 +122533,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Baseline"
-      }
-    },
-    "ui:Baseline — no maintained improvement": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Baseline — no maintained improvement"
       }
     },
     "ui:Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.": {
@@ -124633,6 +124639,14 @@
         "text": "Done"
       }
     },
+    "ui:Dormant": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Dormant"
+      }
+    },
     "ui:Dormant — no current benefit": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -124701,6 +124715,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Duke"
+      }
+    },
+    "ui:Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details."
       }
     },
     "ui:Each realm may have one ally; the compact ends when either ruler changes.": {
@@ -126010,14 +126032,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Holding complete"
-      }
-    },
-    "ui:Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Holdings are bought once, pass to heirs, and may be productive, saleable, pledgeable, or useful in combat. Pack Mules, Fine Tools, Good Mail, and Warhorses remain property; maintained transport and work outfits above are living expenses."
       }
     },
     "ui:Holds this county": {
@@ -127624,6 +127638,17 @@
         "text": "New to the household"
       }
     },
+    "ui:Next level: {name} — {effect}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "effect",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Next level: {name} — {effect}"
+      }
+    },
     "ui:Next rank: {rank} — requires {requirements}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -127633,6 +127658,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Next rank: {rank} — requires {requirements}."
+      }
+    },
+    "ui:Next setup": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Next setup"
       }
     },
     "ui:No Council office": {
@@ -127907,14 +127940,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "No fixed end; leaves through sale, gift, loss, or destruction"
-      }
-    },
-    "ui:No fixed end; may be lost through events or default": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "No fixed end; may be lost through events or default"
       }
     },
     "ui:No fixed end; may lapse when upkeep cannot be paid": {
@@ -128469,6 +128494,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No unseated vassal remains to raise — grant land to loyal men, and offices will follow."
+      }
+    },
+    "ui:No upkeep": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No upkeep"
       }
     },
     "ui:No valid local grantor can hear this petition.": {
@@ -129247,6 +129280,14 @@
         "text": "Overlord"
       }
     },
+    "ui:Owned": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Owned"
+      }
+    },
     "ui:Owned property": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129521,14 +129562,6 @@
         "text": "Peace-pact partner"
       }
     },
-    "ui:Permanent family property": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Permanent family property"
-      }
-    },
     "ui:Permanent household property": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129543,6 +129576,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Permanent national knowledge once completed"
+      }
+    },
+    "ui:Permanent property": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Permanent property"
       }
     },
     "ui:Permanent ruins; the site remains occupied": {
@@ -130084,6 +130125,14 @@
         "text": "Professed Sister"
       }
     },
+    "ui:Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat."
+      }
+    },
     "ui:Projected learning": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -130116,6 +130165,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Pronounce the divorce"
+      }
+    },
+    "ui:Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property."
       }
     },
     "ui:Propose marriage": {
@@ -133610,14 +133667,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "These assignments keep their own capacities, rules, and consequences."
-      }
-    },
-    "ui:These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "These standards sit above basic food and shelter. Each improvement has a setup cost and replaces the previous level’s seasonal upkeep. Benefits are deliberately smaller than their cost: prosperity is something the family may visibly spend."
       }
     },
     "ui:They are not yet of age.": {

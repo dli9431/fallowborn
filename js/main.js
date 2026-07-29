@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.90.1';
+  FB.VERSION = '1.90.2';
   FB.CHANGELOG = [
+    { v: '1.90.2', date: '2026-07-29', changes: [
+      'Household standards, work outfits, and permanent property now use a compact catalogue with full details available from each row.'
+    ] },
     { v: '1.90.1', date: '2026-07-29', changes: [
       'Standing stays synchronized for reigning rulers, and Governance remains stable on narrow screens and older saves.'
     ] },
