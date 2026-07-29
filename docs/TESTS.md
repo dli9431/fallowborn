@@ -115,7 +115,7 @@ artificial gameplay test.
 `firefox-served` and `webkit-served`
 
 - Run the same unchanged served game in Firefox and WebKit.
-- Start only after the Chromium CI job succeeds.
+- May be run manually after Chromium when the owner wants a staged compatibility check.
 - Cover clean boot, ordinary player journeys, and the representative settlement-council
   keyboard and responsive-layout contract.
 - Keep direct `file://` determinism and bounded simulation canaries on Chromium, where they
@@ -167,7 +167,7 @@ interacting with the replaced controls.
 
 On Windows only, the Firefox project disables Mozilla's content-process sandbox for its synthetic
 local test browser. Restricted Windows sessions can otherwise block Firefox from spawning a tab
-subprocess before a page exists. Linux CI retains the normal Firefox sandbox.
+subprocess before a page exists. Other environments retain the normal Firefox sandbox.
 
 `support/browser-harness.js` is injected into the loaded page. It provides bounded day advancement
 and invariant checks without adding test-only APIs to shipped game code. Its simulation limits
@@ -206,28 +206,12 @@ These directories and `node_modules/` are ignored by Git. To inspect a retained 
 npx playwright show-trace test-results/<case>/trace.zip
 ```
 
-## Continuous integration
+## Runtime manifest verification
 
-`.github/workflows/test.yml` runs only when the owner starts it manually with GitHub's
-`workflow_dispatch` control. It does not run automatically on pushes or pull requests. Its
-Chromium job:
+The repository has no GitHub Actions workflow. Test execution and runtime-manifest verification
+are both owner-initiated local operations.
 
-1. installs Node and runs `npm ci` from `tests/e2e/`;
-2. runs the JavaScript syntax gate;
-3. installs only Chromium and its Linux system dependencies;
-4. runs the file and served-origin suite;
-5. uploads Playwright reports and failure diagnostics.
-
-After Chromium succeeds, the compatibility job installs Firefox and WebKit and runs their
-served-origin projects. Keeping this job downstream makes Chromium the fast failure gate and
-avoids spending compatibility-runner time on an already broken primary suite.
-
-A separate CI job builds the nginx image, copies out `/usr/share/nginx/html`, and runs
-`support/verify-runtime-manifest.js` against the actual document root. This confirms that only
-`index.html`, `LICENSE`, `css/`, `data/`, `docs/`, `js/`, `mods/`, and `static/` ship, and that
-runtime asset URLs in the deployed `index.html` have a cache-busting version stamp.
-
-The same verifier can check a stamped local staging directory:
+The verifier can check a stamped local staging directory:
 
 ```sh
 npm run verify:runtime -- <path-to-staged-document-root>

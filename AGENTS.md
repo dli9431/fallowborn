@@ -79,8 +79,7 @@ merge into `main`, follow the [main integration workflow](docs/TESTS.md#main-int
 
 For a branch merge, add the tests on the branch with the behavior change, but leave all
 execution to the owner. A documentation-only change does not need an artificial gameplay test.
-The manually dispatched GitHub workflow is also owner-controlled and is not an agent
-pre-commit or pre-merge step.
+There is no GitHub Actions test workflow. The owner runs any desired test commands locally.
 
 **Every integration commit that assigns `FB.VERSION` must include that exact version in its
 commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,
