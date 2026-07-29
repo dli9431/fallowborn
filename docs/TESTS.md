@@ -39,7 +39,7 @@ For an owner-initiated manual run from `tests/e2e/`:
 # Fast syntax check for shipped and test JavaScript
 npm run check
 
-# Static-server start and clean-close regression
+# Static-server lifecycle and offline-cache atomicity regressions
 npm run test:server
 
 # Run only test files affected since the last successful tracked run
@@ -145,6 +145,10 @@ storage behaves like origin-backed storage.
 The initial suite covers:
 
 - clean boot from both targets;
+- hosted-surface isolation: `file://` and the local served origin expose
+  `FB.platform.isPlay === false`, add no install manifest metadata, and acquire no worker;
+- service-worker online navigation leaves the last completely installed cached HTML untouched,
+  so a failed update still falls back to one internally consistent release;
 - uncaught page exceptions and unexpected console errors;
 - failed local requests and HTTP 4xx or 5xx responses;
 - unexpected external network requests;
@@ -230,11 +234,15 @@ are both owner-initiated local operations.
 The verifier can check a stamped local staging directory:
 
 ```sh
-npm run verify:runtime -- <path-to-staged-document-root>
+npm run verify:runtime -- <path-to-staged-document-root> itch
+npm run verify:runtime -- <path-to-built-nginx-document-root> play
 ```
 
 It is expected to reject the committed source root because the committed `index.html` must remain
-unstamped for `file://` compatibility.
+unstamped for `file://` compatibility. The `play` target additionally requires a fully substituted
+service worker whose fingerprint and generated versioned-asset list match the document and every
+shipped language catalog, plus a valid install manifest with correctly sized PNG icons. Omitting
+the target argument retains auto-detection for existing local staging workflows.
 
 ## What remains manual
 

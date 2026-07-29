@@ -9,6 +9,12 @@ manors, baronies, and — if fortune and cunning allow — crowns.
 
 Open `index.html` in any modern browser. That's it — no build step, no server, no dependencies.
 
+- On **play.fallowborn.com**, one complete online visit prepares the game for offline play. Once
+  **Available offline** appears on the title screen, the hosted URL can be refreshed, closed, and
+  reopened without connectivity, including in the selected language. Supporting browsers can
+  also install it from their address bar or browser menu. Offline availability is not permanent:
+  clearing site data removes both cached game files and local saves, and browsers may evict cache
+  storage under pressure, so export important lives as text.
 - **Desktop (mouse):** drag to pan the map, scroll to zoom (county names appear as you zoom
   in — small counties name themselves only close up), click provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —

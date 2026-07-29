@@ -2,7 +2,8 @@
 
 Date: 2026-07-29
 
-Status: implementation plan. Not yet implemented.
+Status: implemented in repository source on 2026-07-29. Owner-run deployment and browser QA
+remain pending.
 
 Deployment background and the two distribution targets: [deployment.md](../deployment.md).
 
@@ -16,7 +17,7 @@ to:
 - close and reopen the game while offline; and
 - load the selected language catalog while offline.
 
-The existing open page already runs without a network connection. This plan adds reliable
+The existing open page already runs without a network connection. The implementation adds reliable
 offline navigation and asset loading.
 
 ## Scope and constraints
@@ -108,9 +109,9 @@ uses. Two sources cover everything the game loads:
 
 1. **`index.html`.** Every `css/`, `js/`, `data/`, and `mods/` reference in the document.
    The Docker build already matches exactly this set to apply the `?v=` stamp, so the
-   generator reuses that pattern. Today this yields 46 assets: 1 stylesheet, 25 engine
-   scripts, and 20 data files. It also means `js/platform.js`, and any future bundled mod,
-   picks itself up as soon as it gets a script tag.
+   generator reuses that pattern. It currently yields 46 assets: 1 stylesheet,
+   25 engine scripts, and 20 data files. Any future bundled mod or engine script picks
+   itself up as soon as it gets a tag.
 2. **`data/lang_*.js`.** Only `data/lang_en.js` appears in the document; `js/i18n.js` loads
    the other catalogs dynamically. A directory glob covers the shipped locales and picks up
    any locale added later without an edit here.
@@ -123,17 +124,22 @@ substitution ever fails, the worker attempts to precache a path that does not ex
 mode: a broken build leaves the previous complete bundle in place rather than shipping a
 half-cached one.
 
-## Files affected when implemented
+## Implemented files
 
 - `sw.js`, new service worker, committed as a template with two placeholders;
-- `js/platform.js`, new, the origin gate described under *Platform gate*;
-- `index.html`, one script tag for `js/platform.js` before `js/main.js`;
-- `js/main.js`, hosted-build registration and the normal version/changelog bump;
+- `js/util.js`, narrow the existing platform detector and add play-only install metadata;
+- `index.html`, the hidden title-screen readiness status;
+- `js/main.js`, hosted-build registration and readiness handling; the normal
+  version/changelog bump remains an integration step;
 - `nginx.conf`, no-cache handling for the worker;
 - `Dockerfile`, deployment-fingerprint and asset-list substitution;
 - `docs/deployment.md`, record the worker in the hosted-target description;
-- optionally `manifest.webmanifest`, manifest markup, and new icon files; and
-- optionally UI code and localized copy for an offline-readiness indicator.
+- `manifest.webmanifest` plus dedicated 192px, 512px, and maskable install icons;
+- `css/style.css` and title markup for the offline-readiness indicator; and
+- deployment, design, player, and test documentation plus automated isolation/artifact checks.
+
+`FB.VERSION`, `FB.CHANGELOG`, and generated i18n catalogs remain integration-owned artifacts.
+They are assigned or regenerated only when the owner requests the final direct commit or merge.
 
 ## Service worker
 
@@ -164,8 +170,12 @@ var VERSIONED_ASSETS = [
 
 var STATIC_ASSETS = [
   '/index.html',
+  '/manifest.webmanifest',
   '/static/favicon-32.png',
-  '/static/apple-touch-icon.png'
+  '/static/apple-touch-icon.png',
+  '/static/icon-192.png',
+  '/static/icon-512.png',
+  '/static/icon-maskable-512.png'
 ];
 
 var PRECACHE_ASSETS = STATIC_ASSETS.concat(VERSIONED_ASSETS.map(function (path) {
@@ -187,10 +197,14 @@ self.addEventListener('activate', function (event) {
     caches.keys().then(function (names) {
       return Promise.all(names.map(function (name) {
         if (name.indexOf(CACHE_PREFIX) === 0 && name !== CACHE_NAME) {
-          return caches.delete(name);
+          return caches.delete(name).then(null, function () {
+            return false;
+          });
         }
         return Promise.resolve(false);
       }));
+    }, function () {
+      return [];
     }).then(function () {
       return self.clients.claim();
     })
@@ -199,15 +213,7 @@ self.addEventListener('activate', function (event) {
 
 function navigationResponse(request) {
   return fetch(request).then(function (response) {
-    if (!response || !response.ok) return response;
-
-    return caches.open(CACHE_NAME).then(function (cache) {
-      return cache.put('/index.html', response.clone()).then(function () {
-        return response;
-      }, function () {
-        return response;
-      });
-    });
+    return response;
   }, function () {
     return caches.open(CACHE_NAME).then(function (cache) {
       return cache.match('/index.html');
@@ -234,7 +240,11 @@ function assetResponse(request) {
           return Promise.reject(new Error('Offline asset is not cached'));
         });
       });
+    }, function () {
+      return fetch(request);
     });
+  }, function () {
+    return fetch(request);
   });
 }
 
@@ -256,6 +266,12 @@ self.addEventListener('fetch', function (event) {
 });
 ```
 
+Online navigation deliberately does not write into the active worker's cache. The active
+cache belongs to the last completely installed release; replacing its HTML before the next
+worker finishes precaching could mix a new document with an old or partial asset bundle.
+Only the install handler seeds cached `index.html`, so a failed update leaves the previous
+offline release internally consistent.
+
 There is deliberately no asset list to maintain here. The build derives it, so adding,
 renaming, or removing a shipped file needs no edit to `sw.js` and cannot silently break
 offline play. See *Generated asset list* for why, and *Docker build substitution* for how.
@@ -269,25 +285,28 @@ exact URL to override a new asset while online.
 
 ## Platform gate
 
-The registration snippet below gates on `FB.platform.isPlay`. **No `FB.platform` object
-exists in `js/` today.** It has to be added as part of this work; without it the snippet
-throws at boot. Add `js/platform.js` and load it from `index.html` before `js/main.js`:
+Registration gates on `FB.platform.isPlay`. The draft plan assumed no platform seam existed,
+but `js/util.js` gained a general distribution detector before implementation began. The
+implementation reuses it, narrows `isPlay` to the exact HTTPS origin, and adds manifest metadata
+there instead of introducing a second competing object:
 
 ```js
-/* Fallowborn - which surface is this build running on. */
-window.FB = window.FB || {};
+const isPlay = proto === 'https:' && host === 'play.fallowborn.com';
 
-(function () {
-  'use strict';
-
-  var loc = window.location || {};
-  var https = String(loc.protocol || '').indexOf('http') === 0;
-
-  FB.platform = {
-    name: 'browser',
-    isPlay: https && loc.hostname === 'play.fallowborn.com'
-  };
-})();
+if (FB.platform.isPlay) {
+  try {
+    const theme = document.createElement('meta');
+    const manifest = document.createElement('link');
+    theme.name = 'theme-color';
+    theme.content = '#171310';
+    manifest.rel = 'manifest';
+    manifest.href = '/manifest.webmanifest';
+    document.head.appendChild(theme);
+    document.head.appendChild(manifest);
+  } catch (error) {
+    /* Install metadata is progressive enhancement. */
+  }
+}
 ```
 
 Gate on the origin, not on "not `file://`". The game also runs from an itch-owned origin
@@ -296,14 +315,9 @@ allowlist. An explicit hostname is the narrowest gate and matches the scope cons
 the top of this plan. If a staging origin is ever added, extend the check rather than
 loosening it to any HTTPS host.
 
-Shape `FB.platform` as a general-purpose surface-detection seam rather than a single
-offline boolean. Storage, lifecycle, and share behavior all differ by surface today and are
-currently decided ad hoc at their call sites; a seam that can absorb them later is worth
-more than a one-off flag, and a second competing abstraction added afterwards would be
-worse than one designed for extension now.
-
-Because `js/platform.js` is a new shipped script it needs a tag in `index.html`, and the
-generated precache list picks it up from there automatically.
+`FB.platform` remains the general-purpose surface-detection seam used by other feature gates.
+Storage, lifecycle, and share behavior can extend that object without creating a one-off offline
+boolean.
 
 ## Registration
 
@@ -328,13 +342,14 @@ For a visible readiness indicator, listen for `controllerchange` and check
 normal page finished rendering. The first installation is ready only after `cache.addAll()`
 finishes and the worker activates.
 
-Suggested player-facing state:
+Implemented player-facing state:
 
-- while installing: no message, or `Preparing offline play...`;
+- while installing: no message;
 - after activation and control: `Available offline`; and
 - after an installation failure: keep the game playable and omit the readiness claim.
 
-Any new visible text must go through the game's i18n process during integration. See
+The status text is routed through `FB.T`; generated preview-locale catalogs are refreshed during
+integration. Any new visible text must go through the game's i18n process. See
 [i18n-authoring.md](../i18n-authoring.md).
 
 ## nginx configuration
@@ -353,6 +368,9 @@ An exact nginx location wins over the existing regular-expression JavaScript loc
 ensure that Cloudflare does not override this response with a long edge-cache TTL. The
 `updateViaCache: 'none'` registration option is a second safeguard, not a reason to serve
 the worker as immutable.
+
+The implemented configuration also gives `/manifest.webmanifest` an exact no-cache location
+with `application/manifest+json`.
 
 Keep the existing behavior for:
 
@@ -376,16 +394,20 @@ RUN set -eu; \
     root=/usr/share/nginx/html; \
     V="${SOURCE_COMMIT:-}"; \
     [ -n "$V" ] || V="$(sed -n -r "s/.*FB\.VERSION[[:space:]]*=[[:space:]]*'([^']+)'.*/\1/p" "$root/js/main.js" | head -n1)"; \
+    [ -n "$V" ]; \
+    grep -q "'__FB_ASSET_LIST__'" "$root/sw.js"; \
+    grep -q "__FB_CACHE_KEY__" "$root/sw.js"; \
     { grep -o -E '(src|href)="(css|js|data|mods)/[^"?#]+"' "$root/index.html" \
         | sed -r 's/^(src|href)="//; s/"$//'; \
       ls "$root"/data/lang_*.js | sed "s|^$root/||"; \
     } | awk '!seen[$0]++' | sed "s|.*|  '/&',|" > /tmp/fb-assets.txt; \
+    ASSET_COUNT="$(wc -l < /tmp/fb-assets.txt | tr -d ' ')"; \
     sed -i -e "/'__FB_ASSET_LIST__'/r /tmp/fb-assets.txt" \
            -e "/'__FB_ASSET_LIST__'/d" "$root/sw.js"; \
     sed -i "s/__FB_CACHE_KEY__/$V/g" "$root/sw.js"; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" "$root/index.html"; \
     rm -f /tmp/fb-assets.txt; \
-    echo "stamped ?v=$V, precaching $(grep -c \"^  '/\" "$root/sw.js") assets"
+    echo "stamped ?v=$V, precaching $ASSET_COUNT versioned assets"
 ```
 
 Notes on the shell, which runs under BusyBox in `nginx:alpine`:
@@ -425,12 +447,12 @@ Both placeholders are intentionally left intact in the committed file. Registrat
 limited to the play host, and the play Docker build is responsible for replacing them. The
 itch build and `file://` never register a worker, so they never read the template.
 
-## Optional web app manifest
+## Web app manifest
 
-Offline refresh does not require a web app manifest. Add one only if Fallowborn should also
-be installable to a home screen or desktop app launcher.
+Offline refresh does not require a web app manifest, but the implementation includes one so the
+play-host build can also be installed to a home screen or desktop app launcher.
 
-Create `manifest.webmanifest`:
+`manifest.webmanifest`:
 
 ```json
 {
@@ -466,19 +488,20 @@ Create `manifest.webmanifest`:
 }
 ```
 
-Add these elements to the document head:
+The play-only platform gate injects equivalent metadata rather than committing it directly to
+the document head:
 
 ```html
 <meta name="theme-color" content="#171310">
 <link rel="manifest" href="/manifest.webmanifest">
 ```
 
-The existing icons are 32 by 32 and 180 by 180. Retain them for favicon and Apple touch
-use, but create dedicated 192 by 192 and 512 by 512 PNGs for broad installability. The
-maskable icon should have an opaque background and keep important artwork inside the
-central safe area so operating-system masks do not crop it.
+The existing 32 by 32 favicon and 180 by 180 Apple touch icon remain in place. Dedicated
+192 by 192 and 512 by 512 PNGs provide broad installability. The maskable icon has an opaque
+background and keeps important artwork inside the central safe area so operating-system masks
+do not crop it.
 
-If the optional manifest is adopted:
+The manifest implementation:
 
 - add `manifest.webmanifest` and all manifest icons to `STATIC_ASSETS`;
 - confirm nginx returns the manifest as `application/manifest+json` or another valid JSON
@@ -505,6 +528,10 @@ Expected release flow:
 7. Activation claims pages and deletes older Fallowborn caches.
 8. Later offline navigations receive the cached current `index.html` and assets.
 
+Until step 6 completes, the previous worker keeps its own cached `index.html` unchanged.
+If the new precache fails, the next offline navigation therefore returns the previous
+complete release rather than a mixture of release generations.
+
 The normal `FB.VERSION` and `FB.CHANGELOG` integration rules still apply. The service
 worker is not a replacement for the existing asset cache-bust discipline. See
 [VERSIONS.md](../VERSIONS.md).
@@ -527,8 +554,8 @@ hand-auditing the list.
    every `css/`, `js/`, `data/`, and `mods/` reference in `index.html`, plus every
    `data/lang_*.js`, with `data/lang_en.js` appearing once. Before this work the document
    carries 46 assets (1 stylesheet, 25 scripts, 20 data files) and 5 catalogs load
-   dynamically, so 51 entries. Adding `js/platform.js` makes it 52. Derive the expected
-   number from the document at the time of the check rather than from this figure.
+   dynamically, so 51 entries. Derive the expected number from the document at the time of
+   the check rather than from this figure.
 4. Confirm the build log line reports the same count.
 5. Confirm `js/papacy.js` and `data/papacy.js` are present. They are the files an earlier
    hand-written list had already lost, so they are the useful canary.
@@ -581,7 +608,7 @@ page, so it exercises both cached navigation and the dynamic catalog fallback.
    `localhost:4173`, so the hostname gate should already exclude it; verify rather than
    assume, because a stray registration would leak cached assets across test runs.
 
-### Optional manifest
+### Installable manifest
 
 1. Confirm that the browser recognizes the manifest without warnings.
 2. Confirm that 192 by 192 and 512 by 512 icons are detected.
@@ -602,7 +629,7 @@ page, so it exercises both cached navigation and the dynamic catalog fallback.
 - Old Fallowborn caches are removed without touching unrelated origin caches.
 - Registration or Cache Storage failure never prevents ordinary online play.
 - `file://` and itch behavior remain unchanged.
-- If included, the manifest installs cleanly but is not required for offline operation.
+- The manifest installs cleanly but is not required for offline operation.
 - The served worker's asset list is generated, complete, and matches `index.html` plus the
   shipped catalogs, with no placeholder text surviving.
 - Adding, renaming, or removing a shipped `js/` or `data/` file requires no edit to `sw.js`

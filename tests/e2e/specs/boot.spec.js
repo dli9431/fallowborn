@@ -7,14 +7,32 @@ test('boots the real game without browser, asset, or network errors',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
 
-    const contract = await page.evaluate(function () {
+    const contract = await page.evaluate(async function () {
+      let registrations = null;
+      if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        try {
+          registrations = (await navigator.serviceWorker.getRegistrations()).length;
+        } catch (error) {
+          registrations = -1;
+        }
+      }
+      const scripts = Array.from(document.scripts).map(function (script) {
+        return script.getAttribute('src') || '';
+      });
       return {
         protocol: location.protocol,
         version: FB.VERSION,
         bookmark: FB.activeBookmark && FB.activeBookmark.id,
         state: FB.state,
-        scripts: document.scripts.length,
-        stylesheets: document.styleSheets.length
+        scripts: scripts.length,
+        stylesheets: document.styleSheets.length,
+        platform: FB.platform,
+        platformOrder: scripts.indexOf('js/util.js') < scripts.indexOf('js/main.js'),
+        manifests: document.querySelectorAll('link[rel="manifest"]').length,
+        themeColors: document.querySelectorAll('meta[name="theme-color"]').length,
+        offlineStatusHidden: document.getElementById('offline-status')
+          .classList.contains('hidden'),
+        registrations: registrations
       };
     });
 
@@ -25,4 +43,15 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.state).toBeNull();
     expect(contract.scripts).toBeGreaterThan(40);
     expect(contract.stylesheets).toBe(1);
+    expect(contract.platform.name).toBe('local');
+    expect(contract.platform.isPlay).toBe(false);
+    expect(contract.platform.isItch).toBe(false);
+    expect(contract.platform.isLocal).toBe(true);
+    expect(contract.platform.isFile).toBe(
+      testInfo.project.name === 'chromium-file');
+    expect(contract.platformOrder).toBe(true);
+    expect(contract.manifests).toBe(0);
+    expect(contract.themeColors).toBe(0);
+    expect(contract.offlineStatusHidden).toBe(true);
+    expect([null, -1, 0]).toContain(contract.registrations);
   });

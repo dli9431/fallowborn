@@ -85,6 +85,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* which world the title screen will spawn (shown only when mods are stored) */
 .modnote { color: #c9a24a; font-size: 13px; margin: -16px 0 22px; max-width: 480px; }
 .credits { color: #6a5f4f; font-size: 12px; margin-top: 30px; max-width: 480px; }
+.offline-status {
+  margin-top: 7px; color: #9daf75; font-size: 12px;
+}
 .loadbarwrap { width: min(70vw, 360px); height: 10px; background: #33291f; border-radius: 5px; margin-top: 16px; overflow: hidden; }
 #loadbar { height: 100%; width: 0%; background: linear-gradient(90deg, #a07828, #e0c060); transition: width .15s; }
 #loadmsg { color: #b8a888; font-style: italic; }
@@ -116,6 +119,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-size: clamp(15px, 2.1vh, 17px);
 }
 #title .credits { margin-top: clamp(10px, 3vh, 30px); }
+#title .offline-status { margin-top: clamp(4px, 1vh, 7px); }
 
 .btn {
   background: #33291d; color: #e0d0a8; border: 1px solid #66522f; border-radius: 6px;

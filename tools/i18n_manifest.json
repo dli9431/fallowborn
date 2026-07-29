@@ -58075,6 +58075,16 @@
         "text": "Soldier’s work outfit"
       }
     },
+    "src.4941013f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Available offline"
+      }
+    },
     "src.4943b649": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120755,6 +120765,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Available motions: redress — {redress}; scutage — {scutage}."
+      }
+    },
+    "ui:Available offline": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Available offline"
       }
     },
     "ui:Back": {

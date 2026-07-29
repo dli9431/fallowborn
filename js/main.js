@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.88.0';
+  FB.VERSION = '1.89.0';
   FB.CHANGELOG = [
+    { v: '1.89.0', date: '2026-07-29', changes: [
+      'play.fallowborn.com now prepares a complete offline copy after one online visit and can be installed from supported browsers.'
+    ] },
     { v: '1.88.0', date: '2026-07-29', changes: [
       'Territorial rulers now have a Governance sheet for realm structure, demesne, vassals, military service, and their Council or Estates.'
     ] },
@@ -499,6 +502,37 @@ window.FB = window.FB || {};
     ] }
   ];
 
+  function refreshOfflineStatus() {
+    const note = document.getElementById('offline-status');
+    let ready = false;
+    try {
+      ready = FB.platform.isPlay && 'serviceWorker' in navigator &&
+        !!navigator.serviceWorker.controller;
+    } catch (error) {
+      ready = false;
+    }
+    if (!note) return;
+    note.classList.toggle('hidden', !ready);
+    if (ready) note.textContent = FB.T('Available offline');
+  }
+
+  /* Offline refresh belongs only to the first-party hosted surface. A failed
+     registration is progressive-enhancement failure and must not stop boot. */
+  if (FB.platform.isPlay && 'serviceWorker' in navigator) {
+    try {
+      navigator.serviceWorker.addEventListener('controllerchange', refreshOfflineStatus);
+      navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      }).catch(function () {
+        /* Ordinary online play remains available without the offline shell. */
+      });
+    } catch (error) {
+      /* Older or restricted browsers may reject registration synchronously. */
+    }
+  }
+  refreshOfflineStatus();
+
   function $(id) { return document.getElementById(id); }
 
   /* ================= scenarios ================= */
@@ -609,6 +643,7 @@ window.FB = window.FB || {};
       FB.mods.applyStored();
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
+      refreshOfflineStatus();
       FB.activateBookmark(FBDATA.defaultBookmark || '867',
         function (frac, msg) {
           $('loadbar').style.width = Math.round(frac * 100) + '%';

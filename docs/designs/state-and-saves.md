@@ -143,6 +143,12 @@ part of `FB.state`, a save slot, a start seed, RNG state, or deterministic simul
 Save metadata stores `titleData` and renders its slot label in the locale active at display
 time; older metadata with a frozen `title` remains readable.
 
+The play host's service-worker Cache Storage is likewise outside `FB.state` and the save
+contract. It stores only a deployable game shell; saves and `fb_lang` remain in `localStorage`.
+Cache Storage is evictable, and clearing site data can remove both stores, so offline readiness
+must never be presented as durable save backup. Exported save text remains the portable,
+player-controlled recovery path.
+
 Currency presentation follows the same boundary. `FBDATA.currency` belongs to the
 active data/mod set, not `FB.state`; `player.gold` and financial contract values
 remain ordinary numbers. Durable messages store numeric money parameters and call
