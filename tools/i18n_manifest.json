@@ -79812,6 +79812,16 @@
         "text": "“Is that a DOG in the Gospel?” Scraping vellum for a month."
       }
     },
+    "src.93793032": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{province} ({count} possible)"
+      }
+    },
     "src.937d655d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118704,6 +118714,14 @@
         "text": "Counties ({count})"
       }
     },
+    "ui:County": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "County"
+      }
+    },
     "ui:County economy, levies, and local events": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -131242,6 +131260,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{progress}/{cost} research"
+      }
+    },
+    "ui:{province} ({count} possible)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{province} ({count} possible)"
       }
     },
     "ui:{province} county": {

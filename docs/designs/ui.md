@@ -113,9 +113,11 @@ all-staffed hint.
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
-repeat copies in one county become 50% dearer each time. Exact settlement placement and
-permanent demolition remain available from the Land-tab settlement view. Province settlement
-lists wrap between places, never inside a settlement name, so each link stays readable.
+repeat copies in one county become 50% dearer each time. A sticky native county selector stays
+in reach above the scrolling ledger, including on narrow touch layouts, and switches directly
+among all held counties. Exact settlement placement and permanent demolition remain available
+from the Land-tab settlement view. Province settlement lists wrap between places, never inside
+a settlement name, so each link stays readable.
 The Land tab's **Notable folk** list is ruler-first: it shows the county holder, all of
 that holder's direct vassal realms, then every liege through the sovereign, without a
 row cap or duplicates. AI entries are native focusable rows with procedural crests and

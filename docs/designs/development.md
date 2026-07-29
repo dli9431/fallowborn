@@ -17,10 +17,11 @@ development or change development-driven calculations.
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent
-building-first county ledger. **Raise Next** places the work in the next open settlement,
-keeps the ledger open, and refreshes the exact next price; the ledger warns that each
-further county copy costs 50% more. The Land-tab settlement path remains the exact-placement
-route.
+building-first county ledger. A sticky native county selector remains visible while the
+ledger scrolls, so touch and keyboard players can move directly between every held county.
+**Raise Next** places the work in the next open settlement, keeps the ledger open, and
+refreshes the exact next price; the ledger warns that each further county copy costs 50%
+more. The Land-tab settlement path remains the exact-placement route.
 
 Build choices and standing settlement buildings use the shared asset/effect row.
 It identifies the county owner and exact settlement scope, separates the live

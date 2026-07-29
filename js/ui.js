@@ -5927,6 +5927,35 @@ window.FB = window.FB || {};
     return FB.T('No open settlement remains.');
   }
 
+  function buildingOpenCount(s, pid) {
+    let open = 0;
+    const sts = FB.settlementsOf(s, pid);
+    for (let idx = 0; idx < sts.length; idx++) {
+      open += FB.buildable(s, pid, idx).length;
+    }
+    return open;
+  }
+
+  /* Keep county choice in reach while the long building ledger scrolls.
+     Native selects use the platform's dependable full-screen picker on
+     phones and remain keyboard-accessible on desktop. */
+  function buildingCountyPicker(s, provs, pid) {
+    if (provs.length < 2) return '';
+    let h = '<label class="building-county-picker"><span>' +
+      esc(FB.T('County')) + '</span><select id="gm-building-county">';
+    for (const id of provs) {
+      const pr = FB.world.byId[id];
+      const open = buildingOpenCount(s, id);
+      h += '<option value="' + esc(id) + '"' +
+        (id === pid ? ' selected' : '') +
+        (open || id === pid ? '' : ' disabled') + '>' +
+        esc(FB.T('{province} ({count} possible)', {
+          province:pr.name, count:open
+        })) + '</option>';
+    }
+    return h + '</select></label>';
+  }
+
   UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
     const provs = FB.demesne(s);
@@ -5934,9 +5963,7 @@ window.FB = window.FB || {};
       let h = '<div class="gm-list">';
       for (const id of provs) {
         const pr = FB.world.byId[id];
-        let open = 0;
-        const sts = FB.settlementsOf(s, id);
-        for (let ix = 0; ix < sts.length; ix++) open += FB.buildable(s, id, ix).length;
+        const open = buildingOpenCount(s, id);
         h += '<button class="actionbtn" data-bprov="' + esc(id) + '"' + (open ? '' : ' disabled') + '>🏘 ' + esc(pr.name) +
           '<span class="adesc">' + esc(FB.T(
             'development {development} · {built} built · {remaining}', {
@@ -5960,7 +5987,8 @@ window.FB = window.FB || {};
     const sts = FB.settlementsOf(s, pid);
     if (idx === undefined || idx === null) {
       const growth = Math.round(((FBDATA.balance.buildingRepeatCostGrowth || 1.5) - 1) * 100);
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      let h = buildingCountyPicker(s, provs, pid) +
+        '<div class="gm-body-text"><p>' + esc(FB.T(
         'Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building.')) +
         '</p><p><b>' + esc(FB.T(
           'Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price.',
@@ -6024,6 +6052,12 @@ window.FB = window.FB || {};
           UI.showBuildings(pid, null, { scrollTop: scrollTop, focusId: focusId });
         });
       });
+      const countyPicker = $('gm-building-county');
+      if (countyPicker) {
+        countyPicker.addEventListener('change', function () {
+          UI.showBuildings(countyPicker.value);
+        });
+      }
       if (keep) {
         $('gm-body').scrollTop = keep.scrollTop || 0;
         setTimeout(function () {

@@ -604,6 +604,19 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .gm-body-text h4 { color: #d8b24a; margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }
 .gm-body-text ul { padding-left: 18px; }
+.building-county-picker {
+  position: sticky; top: 0; z-index: 2;
+  flex: 0 0 auto;
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 0 10px;
+  background: linear-gradient(180deg, #2b2318 78%, rgba(43,35,24,.92));
+  color: #d8b24a; font-size: 14px; font-weight: bold;
+}
+.building-county-picker select {
+  width: 100%; min-width: 0; min-height: 42px; padding: 7px 9px;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #211a12; color: #eadbb6; font: inherit;
+}
 
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
@@ -1059,6 +1072,7 @@ textarea.modjson, textarea.savetext {
   .evopt .odesc { font-size: 13px; }
   .btn { min-height: 44px; }
   .btn.small { min-height: 40px; min-width: 44px; }
+  .building-county-picker select { min-height: 48px; }
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }
   .kv { font-size: 14px; padding: 4px 0; }

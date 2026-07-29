@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.82.0';
+  FB.VERSION = '1.82.1';
   FB.CHANGELOG = [
+    { v: '1.82.1', date: '2026-07-28', changes: [
+      'Building works now keep county selection visible on mobile so rulers can raise buildings throughout their lands.'
+    ] },
     { v: '1.82.0', date: '2026-07-28', changes: [
       'Family enterprises now offer a staffing preview that maximizes seasonal yield while preserving locked assignments.'
     ] },
