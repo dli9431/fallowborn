@@ -968,13 +968,278 @@ window.FB = window.FB || {};
   /* ---------- arranged matches for managed descendants ----------
      The head sounds out three families for a resident child or grandchild,
      stored on the descendant as matchIds so the same three wait until a
-     pledge is sealed or the descendant weds elsewhere. */
+     pledge is sealed or the descendant weds elsewhere. The optional household
+     assistant ranks those same families; it never creates a pledge itself. */
+  function matchLimit(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    return isFinite(n) ? Math.max(0, n) : null;
+  }
+
+  function matchPolicyDefaults(value) {
+    value = value && typeof value === 'object' ? value : {};
+    const station = Number(value.minStation);
+    return {
+      enabled:!!value.enabled,
+      minStation:FB.clamp(isFinite(station) ? Math.floor(station) : 0, 0, 3),
+      maxDowry:matchLimit(value.maxDowry),
+      maxGold:matchLimit(value.maxGold),
+      maxPrestige:matchLimit(value.maxPrestige)
+    };
+  }
+
+  function matchPolicyKey(value) {
+    const policy = matchPolicyDefaults(value);
+    function keyPart(v) { return v === null ? '*' : String(v); }
+    return [
+      policy.enabled ? '1' : '0',
+      policy.minStation,
+      keyPart(policy.maxDowry),
+      keyPart(policy.maxGold),
+      keyPart(policy.maxPrestige)
+    ].join('|');
+  }
+
+  FB.ensureMatchPolicy = function (state, scanCharacters) {
+    if (!state || !state.player) return matchPolicyDefaults(null);
+    state.player.matchPolicy = matchPolicyDefaults(state.player.matchPolicy);
+    if (scanCharacters) {
+      for (const id in state.chars) {
+        const c = state.chars[id];
+        if (!c) continue;
+        const record = c.matchRecommendation;
+        if (!record || typeof record !== 'object' ||
+            typeof record.policyKey !== 'string' ||
+            (record.candidateId !== null &&
+              typeof record.candidateId !== 'string')) {
+          delete c.matchRecommendation;
+        }
+      }
+    }
+    return state.player.matchPolicy;
+  };
+
   function managedMatchKind(state, descendant) {
     if (!descendant || descendant.dead ||
         FB.ageOf(descendant, state.date.year) < 12 ||
-        FB.spousesOf(state, descendant).length || descendant.betrothedId) return null;
+        FB.spousesOf(state, descendant).length || descendant.betrothedId ||
+        (FB.isHouseholdCharacter &&
+          !FB.isHouseholdCharacter(state, descendant.id))) return null;
     return FB.playerDescendantKind(state, descendant.id);
   }
+
+  function parentIds(c) {
+    const out = [];
+    if (c && c.fatherId) out.push(c.fatherId);
+    if (c && c.motherId && c.motherId !== c.fatherId) out.push(c.motherId);
+    return out;
+  }
+
+  function ancestorDepths(state, c) {
+    const out = {};
+    let frontier = parentIds(c);
+    for (let depth = 1; depth <= 2; depth++) {
+      const next = [];
+      for (const id of frontier) {
+        if (out[id] !== undefined && out[id] <= depth) continue;
+        out[id] = depth;
+        const parent = state.chars[id];
+        if (parent) next.push.apply(next, parentIds(parent));
+      }
+      frontier = next;
+    }
+    return out;
+  }
+
+  /* Ordinary full characters use recorded parentage. Parent/child,
+     grandparent/grandchild, siblings, and aunt-or-uncle/niece-or-nephew are
+     barred; cousins remain eligible, matching FB.canCourt. Compact royal
+     characters layer their lightweight-tree check on top. */
+  function closeMatchKin(state, a, b) {
+    if (!a || !b || a.id === b.id) return true;
+    if (FB.royalCloseKin && FB.royalCloseKin(state, a, b)) return true;
+    const aa = ancestorDepths(state, a);
+    const ba = ancestorDepths(state, b);
+    if (aa[b.id] !== undefined || ba[a.id] !== undefined) return true;
+    for (const id in aa) {
+      if (ba[id] !== undefined && aa[id] + ba[id] < 4) return true;
+    }
+    return false;
+  }
+
+  /* Shared authoritative terms for the picker, assistant, and final pledge.
+     Policy limits are deliberately absent: they guide recommendations but
+     never disable a manual choice. */
+  FB.kinMatchTerms = function (state, child, cand) {
+    const station = cand ? FB.stationOf(cand) : 0;
+    const dowry = cand ? Math.max(0, Number(cand.dowryAsk) || 0) : 0;
+    const prestigeNeed = cand ?
+      Math.max(0, station - FB.playerStation(state)) * 20 : 0;
+    let reason = null;
+    if (!managedMatchKind(state, child)) reason = 'descendant';
+    else if (!cand || cand.dead || cand.role !== 'match') reason = 'candidate';
+    else if (FB.ageOf(cand, state.date.year) < 12) reason = 'age';
+    else if (FB.spousesOf(state, cand).length || cand.betrothedId) reason = 'pledged';
+    else if (cand.sex === child.sex) reason = 'doctrine';
+    else if (cand.religion !== child.religion) reason = 'faith';
+    else if (closeMatchKin(state, child, cand)) reason = 'kinship';
+    else if (FB.papacyCelibate &&
+        (FB.papacyCelibate(state, child) ||
+          FB.papacyCelibate(state, cand))) reason = 'doctrine';
+    else if (cand.royalLine) reason = 'compact';
+    else if (state.player.courtingId === cand.id) reason = 'courtship';
+    else if (state.player.gold + 0.0001 < dowry) reason = 'gold';
+    else if (state.player.prestige + 0.0001 < prestigeNeed) reason = 'prestige';
+    return {
+      ok:!reason,
+      reason:reason,
+      station:station,
+      dowry:dowry,
+      goldCost:dowry,
+      prestigeNeed:prestigeNeed
+    };
+  };
+
+  function policyReason(policy, terms) {
+    if (!terms.ok) return terms.reason;
+    if (terms.station < policy.minStation) return 'minimum-station';
+    if (policy.maxDowry !== null &&
+        terms.dowry > policy.maxDowry + 0.0001) return 'maximum-dowry';
+    if (policy.maxGold !== null &&
+        terms.goldCost > policy.maxGold + 0.0001) return 'maximum-gold';
+    if (policy.maxPrestige !== null &&
+        terms.prestigeNeed > policy.maxPrestige + 0.0001) {
+      return 'maximum-prestige';
+    }
+    return null;
+  }
+
+  FB.matchPolicyRecommendation = function (state, child, value, candidates) {
+    const policy = matchPolicyDefaults(value);
+    if (!policy.enabled) {
+      return { child:child, candidate:null, terms:null, reason:'disabled' };
+    }
+    if (!managedMatchKind(state, child)) {
+      return { child:child, candidate:null, terms:null, reason:'descendant' };
+    }
+    const evaluated = (candidates || FB.spawnMatchCandidates(state, child))
+      .map(function (candidate, order) {
+        const terms = FB.kinMatchTerms(state, child, candidate);
+        return {
+          candidate:candidate,
+          terms:terms,
+          reason:policyReason(policy, terms),
+          order:order
+        };
+      });
+    const choices = evaluated.filter(function (entry) { return !entry.reason; });
+    choices.sort(function (a, b) {
+      if (a.terms.station !== b.terms.station) {
+        return b.terms.station - a.terms.station;
+      }
+      if (a.terms.goldCost !== b.terms.goldCost) {
+        return a.terms.goldCost - b.terms.goldCost;
+      }
+      if (a.terms.prestigeNeed !== b.terms.prestigeNeed) {
+        return a.terms.prestigeNeed - b.terms.prestigeNeed;
+      }
+      const aAge = Math.abs(FB.ageOf(a.candidate, state.date.year) -
+        FB.ageOf(child, state.date.year));
+      const bAge = Math.abs(FB.ageOf(b.candidate, state.date.year) -
+        FB.ageOf(child, state.date.year));
+      return aAge !== bAge ? aAge - bAge : a.order - b.order;
+    });
+    if (!choices.length) {
+      return {
+        child:child,
+        candidate:null,
+        terms:null,
+        reason:'limits',
+        rejections:evaluated
+      };
+    }
+    return {
+      child:child,
+      candidate:choices[0].candidate,
+      terms:choices[0].terms,
+      reason:null
+    };
+  };
+
+  function matchPolicyChildren(state) {
+    const out = [];
+    const members = FB.householdMembers ? FB.householdMembers(state) : [];
+    for (const c of members) if (managedMatchKind(state, c)) out.push(c);
+    return out;
+  }
+
+  FB.matchPolicyPreview = function (state, value) {
+    const policy = matchPolicyDefaults(value);
+    const out = [];
+    for (const child of matchPolicyChildren(state)) {
+      out.push(FB.matchPolicyRecommendation(state, child, policy));
+    }
+    return out;
+  };
+
+  function matchRecommendationNotice(state, entry) {
+    if (entry.candidate) {
+      FB.news(state, FB.msg('news.match.policy_recommendation',
+        '💍 The match assistant recommends {match} for {child}. Review the match in Household Plan.',
+        { match:entry.candidate.name, child:entry.child.name }));
+    } else {
+      FB.news(state, FB.msg('news.match.policy_no_recommendation',
+        '💍 The match assistant finds no sounded-out family within your limits for {child}.',
+        { child:entry.child.name }));
+    }
+  }
+
+  FB.recommendDescendantMatches = function (state, options) {
+    const policy = FB.ensureMatchPolicy(state);
+    const opts = options || {};
+    if (!policy.enabled) return [];
+    const key = matchPolicyKey(policy);
+    const out = FB.matchPolicyPreview(state, policy);
+    for (const entry of out) {
+      const previous = entry.child.matchRecommendation;
+      const candidateId = entry.candidate ? entry.candidate.id : null;
+      const changed = !previous || previous.policyKey !== key ||
+        previous.candidateId !== candidateId;
+      entry.child.matchRecommendation = {
+        candidateId:candidateId,
+        policyKey:key
+      };
+      if (changed && opts.notify !== false) matchRecommendationNotice(state, entry);
+    }
+    return out;
+  };
+
+  FB.setMatchPolicy = function (state, value) {
+    state.player.matchPolicy = matchPolicyDefaults(value);
+    const policy = FB.ensureMatchPolicy(state);
+    if (!policy.enabled) {
+      for (const id in state.chars) {
+        if (state.chars[id]) delete state.chars[id].matchRecommendation;
+      }
+      return policy;
+    }
+    FB.recommendDescendantMatches(state);
+    return policy;
+  };
+
+  FB.matchRecommendationOf = function (state, child) {
+    const policy = FB.ensureMatchPolicy(state);
+    const record = child && child.matchRecommendation;
+    if (!policy.enabled || !record ||
+        record.policyKey !== matchPolicyKey(policy) ||
+        !record.candidateId ||
+        !child.matchIds ||
+        child.matchIds.indexOf(record.candidateId) < 0) return null;
+    const candidate = state.chars[record.candidateId];
+    const terms = FB.kinMatchTerms(state, child, candidate);
+    if (policyReason(policy, terms)) return null;
+    return { candidate:candidate, terms:terms };
+  };
 
   FB.spawnMatchCandidates = function (state, child) {
     const out = [];
@@ -1023,6 +1288,8 @@ window.FB = window.FB || {};
 
   /* the families not chosen are told no and forgotten */
   FB.discardMatches = function (state, child, keptId) {
+    if (!child) return;
+    delete child.matchRecommendation;
     if (!child.matchIds) return;
     for (const id of child.matchIds) {
       const m = state.chars[id];
@@ -1038,6 +1305,8 @@ window.FB = window.FB || {};
       const c = state.chars[id];
       if (c && c.matchIds && !managedMatchKind(state, c)) {
         FB.discardMatches(state, c, null);
+      } else if (c && c.matchRecommendation && !managedMatchKind(state, c)) {
+        delete c.matchRecommendation;
       }
     }
   };
@@ -1046,13 +1315,8 @@ window.FB = window.FB || {};
     const kind = managedMatchKind(state, child);
     const listed = child && child.matchIds &&
       child.matchIds.indexOf(cand && cand.id) >= 0;
-    const prestigeNeed = cand ?
-      Math.max(0, FB.stationOf(cand) - FB.playerStation(state)) * 20 : 0;
-    if (!kind || !listed || !cand || cand.dead || cand.role !== 'match' ||
-        FB.spousesOf(state, cand).length || cand.betrothedId ||
-        cand.sex === child.sex || state.player.courtingId === cand.id ||
-        state.player.gold < (cand.dowryAsk || 0) ||
-        state.player.prestige < prestigeNeed) return false;
+    const terms = FB.kinMatchTerms(state, child, cand);
+    if (!kind || !listed || !terms.ok) return false;
     const p = state.player;
     FB.discardMatches(state, child, cand.id);
     child.betrothedId = cand.id;

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.85.0';
+  FB.VERSION = '1.86.0';
   FB.CHANGELOG = [
+    { v: '1.86.0', date: '2026-07-29', changes: [
+      'Household Plan now offers an optional descendant match assistant that recommends families within saved station and expense limits without making a pledge.'
+    ] },
     { v: '1.85.0', date: '2026-07-29', changes: [
       'Each managed character’s Equipment sheet can now preview and apply the strongest available outfit.'
     ] },
@@ -956,6 +959,10 @@ window.FB = window.FB || {};
         capitalRelocation: null,
         holdings: [], enterprises: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
+        matchPolicy: {
+          enabled:false, minStation:0, maxDowry:null,
+          maxGold:null, maxPrestige:null
+        },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
@@ -1107,6 +1114,10 @@ window.FB = window.FB || {};
         capitalRelocation: null,
         householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
+        matchPolicy: {
+          enabled:false, minStation:0, maxDowry:null,
+          maxGold:null, maxPrestige:null
+        },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null
@@ -1464,6 +1475,9 @@ window.FB = window.FB || {};
           '💒 You wed {name}, as your late parent pledged.', { name: b.name }));
       }
     }
+
+    // the assistant may sound out eligible descendants, but never pledges them
+    if (FB.recommendDescendantMatches) FB.recommendDescendantMatches(s);
 
     // the wider family weds, bears children, and is mourned
     kinLifeTick(s);

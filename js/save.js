@@ -181,6 +181,7 @@ window.FB = window.FB || {};
     if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.ensureHouseholdStandards) FB.ensureHouseholdStandards(FB.state);
     if (FB.ensureEducationPolicy) FB.ensureEducationPolicy(FB.state, true);
+    if (FB.ensureMatchPolicy) FB.ensureMatchPolicy(FB.state, true);
     if (FB.ensureTraitProgress) FB.ensureTraitProgress(FB.state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(FB.state);
     else if (FB.ensureGuildMonopolies) FB.ensureGuildMonopolies(FB.state);

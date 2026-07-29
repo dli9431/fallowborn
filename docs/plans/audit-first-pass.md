@@ -134,7 +134,7 @@ apply. The reviewed plan is rejected if assignments change before confirmation;
 manual slot controls remain beside it and no household-wide or loot-triggered
 automation was added.
 
-### 4. Descendant match assistant
+### 4. Descendant match assistant — complete
 
 Recommend a match for an eligible child or grandchild using player-set limits:
 
@@ -145,6 +145,16 @@ Recommend a match for an eligible child or grandchild using player-set limits:
 
 The default is a recommendation and notification, not an automatic proposal or
 marriage. Full automatic selection may be an explicit later policy.
+
+Implemented as an opt-in saved policy above the Household Plan. It reviews the
+ordinary three persistent families for each eligible resident child or grandchild,
+filters them through minimum station, dowry, immediate-gold, prestige-requirement,
+current-resource, faith, close-kin, doctrine, and royal-compact gates, then ranks the
+remaining choices by station and lower expense. The preview names every affected
+descendant and exact terms before saving. A saved recommendation is marked in the
+Household Plan and moved to the top of the ordinary match picker, with a Chronicle
+notice when it is first made or no family qualifies. The assistant never pledges,
+spends, passes a day, or disables a manual choice outside its limits.
 
 ### 5. Buy remaining manor plots — complete
 
@@ -239,7 +249,7 @@ unchanged except where a shared summary or entry point must call them.
 4. [x] Enterprise-staffing preview.
 5. [x] Per-character Equip Best.
 6. [x] Manor plot batch purchase.
-7. Descendant match recommendation.
+7. [x] Descendant match recommendation.
 8. [x] Shared asset/effect rows and Ongoing Commitments summary.
 9. Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.

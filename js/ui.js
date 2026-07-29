@@ -9135,9 +9135,44 @@ window.FB = window.FB || {};
         action:null
       };
     }
+    const recommendation = FB.matchRecommendationOf ?
+      FB.matchRecommendationOf(s, c) : null;
+    if (recommendation) {
+      const m = recommendation.candidate;
+      const terms = recommendation.terms;
+      const expense = terms.dowry
+        ? FB.T('Dowry {money:amount}', { amount:terms.dowry })
+        : (m.dowryDue
+            ? FB.T('Bride brings {money:amount}', { amount:m.dowryDue })
+            : FB.T('No gold spent'));
+      const prestige = terms.prestigeNeed
+        ? FB.T('Needs {prestige} prestige', {
+            prestige:terms.prestigeNeed
+          })
+        : FB.T('No prestige requirement');
+      return {
+        content:householdPlanLines(
+          FB.T('Recommended: {name}', { name:m.name }),
+          FB.T('{station} · age {age}', {
+            station:FB.stationName(terms.station),
+            age:FB.ageOf(m, s.date.year)
+          }),
+          FB.T('{expense} · {prestige}', {
+            expense:expense, prestige:prestige
+          }),
+          FB.T('Review only · no pledge has been made')),
+        action:'match'
+      };
+    }
+    const policy = FB.ensureMatchPolicy ? FB.ensureMatchPolicy(s) : null;
     return {
-      content:householdPlanLines(FB.T('Eligible'),
-        FB.T('No match arranged')),
+      content:householdPlanLines(
+        policy && policy.enabled
+          ? FB.T('No recommendation')
+          : FB.T('Eligible'),
+        policy && policy.enabled
+          ? FB.T('No sounded-out family meets the assistant limits')
+          : FB.T('No match arranged')),
       action:'match'
     };
   }
@@ -9163,6 +9198,10 @@ window.FB = window.FB || {};
     if (!s || UI.eventsBusy()) return;
     const head = s.chars[s.player.charId];
     if (!head || head.dead) return;
+    const matchPolicy = FB.ensureMatchPolicy(s);
+    if (matchPolicy.enabled && FB.recommendDescendantMatches) {
+      FB.recommendDescendantMatches(s, { notify:false });
+    }
     const rows = [];
     const seen = {};
     function add(c, kind, retainer) {
@@ -9204,15 +9243,53 @@ window.FB = window.FB || {};
             amount:educationPolicy.feeCap
           })
         : FB.T('Instruction chosen manually for each child');
+    let recommendationCount = 0;
+    for (const row of rows) {
+      if (FB.matchRecommendationOf(s, row.c)) recommendationCount++;
+    }
+    const matchPolicyState = matchPolicy.enabled
+      ? FB.T('Assistant on · current recommendations: {count}', {
+          count:recommendationCount
+        })
+      : FB.T('Assistant off · descendant matches remain manual');
+    const matchPolicyStation = FB.T('Minimum station: {station}', {
+      station:FB.stationName(matchPolicy.minStation)
+    });
+    const matchDowrySummary = matchPolicy.maxDowry === null
+      ? FB.T('Dowry cap: none')
+      : FB.T('Dowry cap: {money:amount}', {
+          amount:matchPolicy.maxDowry
+        });
+    const matchGoldSummary = matchPolicy.maxGold === null
+      ? FB.T('Gold-spend cap: none')
+      : FB.T('Gold-spend cap: {money:amount}', {
+          amount:matchPolicy.maxGold
+        });
+    const matchPrestigeSummary = matchPolicy.maxPrestige === null
+      ? FB.T('Prestige requirement cap: none')
+      : FB.T('Prestige requirement cap: {amount}', {
+          amount:matchPolicy.maxPrestige
+        });
+    const matchPolicyExpenses = [
+      matchDowrySummary, matchGoldSummary, matchPrestigeSummary
+    ].join(' · ');
     let h = '<div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
       'Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls.')) +
-      '</p></div><div class="education-policy-summary"><div><strong>' +
+      '</p></div><div class="household-policy-summary education-policy-summary"><div><strong>' +
       esc(FB.T('Education Policy')) + '</strong><span>' +
       esc(educationFocusSummary) + '</span><span>' +
       esc(educationInstructionSummary) + '</span></div>' +
       '<button type="button" class="btn" id="household-education-policy" aria-label="' +
       esc(FB.T('Manage household education policy')) + '">' +
       esc(FB.T('Manage policy…')) + '</button></div>' +
+      '<div class="household-policy-summary match-policy-summary"><div><strong>' +
+      esc(FB.T('Descendant Match Assistant')) + '</strong><span>' +
+      esc(matchPolicyState) + '</span><span>' +
+      esc(matchPolicyStation) + '</span><span>' +
+      esc(matchPolicyExpenses) + '</span></div>' +
+      '<button type="button" class="btn" id="household-match-policy" aria-label="' +
+      esc(FB.T('Manage descendant match assistant')) + '">' +
+      esc(FB.T('Manage assistant…')) + '</button></div>' +
       '<div class="household-plan-wrap"><table class="household-plan-table">' +
       '<thead><tr>';
     for (const header of headers) h += '<th scope="col">' + esc(header) + '</th>';
@@ -9257,6 +9334,9 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     $('household-education-policy').addEventListener('click', function () {
       UI.showEducationPolicy();
+    });
+    $('household-match-policy').addEventListener('click', function () {
+      UI.showMatchPolicy();
     });
     const actions = $('gm-body').querySelectorAll('[data-household-plan-action]');
     for (let i = 0; i < actions.length; i++) {
@@ -9435,6 +9515,250 @@ window.FB = window.FB || {};
     });
     $('education-policy-edit').addEventListener('click', function () {
       modalHistoryBack(function () { showEducationPolicyConfig(draft); });
+    });
+  }
+
+  /* ================= descendant match assistant =================
+     A saved household policy ranks the ordinary three sounded-out families.
+     Previewing and saving never pledge a match, spend resources, or pass a
+     day; the existing arranged-match picker remains the decision surface. */
+  function matchPolicyDraft(value) {
+    const policy = value || FB.ensureMatchPolicy(FB.state);
+    function limit(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(v);
+      return isFinite(n) ? Math.max(0, n) : null;
+    }
+    const station = Number(policy.minStation);
+    return {
+      enabled:!!policy.enabled,
+      minStation:FB.clamp(isFinite(station) ? Math.floor(station) : 0, 0, 3),
+      maxDowry:limit(policy.maxDowry),
+      maxGold:limit(policy.maxGold),
+      maxPrestige:limit(policy.maxPrestige)
+    };
+  }
+
+  function matchPolicyStationOptions(selected) {
+    let h = '';
+    for (let station = 0; station <= 3; station++) {
+      h += '<option value="' + station + '"' +
+        (station === selected ? ' selected' : '') + '>' +
+        esc(FB.stationName(station)) + '</option>';
+    }
+    return h;
+  }
+
+  function matchPolicyInputValue(value) {
+    return value === null ? '' : String(value);
+  }
+
+  function readMatchPolicyDraft() {
+    function value(id) {
+      const input = $(id);
+      return input && input.value !== '' ? Number(input.value) : null;
+    }
+    return matchPolicyDraft({
+      enabled:$('match-policy-enabled').checked,
+      minStation:Number($('match-policy-station').value),
+      maxDowry:value('match-policy-dowry'),
+      maxGold:value('match-policy-gold'),
+      maxPrestige:value('match-policy-prestige')
+    });
+  }
+
+  function showMatchPolicyConfig(value) {
+    const draft = matchPolicyDraft(value);
+    const noLimit = FB.T('No limit');
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Ask the household to recommend one of the same three families available in manual descendant matching.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'The assistant ranks qualifying families by station, then lower immediate expense. It never pledges a match, spends resources, or advances the day.')) +
+      '</p></div><div class="education-policy-form match-policy-form">' +
+      '<label class="autorow education-policy-check match-policy-check">' +
+      '<input type="checkbox" id="match-policy-enabled"' +
+      (draft.enabled ? ' checked' : '') + '> ' +
+      esc(FB.T('Recommend descendant matches')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Eligible resident children and grandchildren are reviewed now and each New Year.')) +
+      '</span></label><label class="education-policy-field" for="match-policy-station"><span>' +
+      esc(FB.T('Minimum acceptable station')) +
+      '</span><select id="match-policy-station">' +
+      matchPolicyStationOptions(draft.minStation) + '</select><small>' +
+      esc(FB.T('Lower-station families remain available in the manual picker.')) +
+      '</small></label><label class="education-policy-field" for="match-policy-dowry"><span>' +
+      esc(FB.T('Maximum dowry')) +
+      '</span><input type="number" id="match-policy-dowry" min="0" step="1" inputmode="decimal" placeholder="' +
+      esc(noLimit) + '" value="' + esc(matchPolicyInputValue(draft.maxDowry)) +
+      '"><small>' + esc(FB.T(
+        'Limits the dowry written into a recommended pledge. Leave blank for no limit.')) +
+      '</small></label><label class="education-policy-field" for="match-policy-gold"><span>' +
+      esc(FB.T('Maximum immediate gold expenditure')) +
+      '</span><input type="number" id="match-policy-gold" min="0" step="1" inputmode="decimal" placeholder="' +
+      esc(noLimit) + '" value="' + esc(matchPolicyInputValue(draft.maxGold)) +
+      '"><small>' + esc(FB.T(
+        'At present a daughter’s or granddaughter’s dowry is the only immediate gold expense, so the tighter gold or dowry cap applies.')) +
+      '</small></label><label class="education-policy-field" for="match-policy-prestige"><span>' +
+      esc(FB.T('Maximum prestige requirement')) +
+      '</span><input type="number" id="match-policy-prestige" min="0" step="1" inputmode="decimal" placeholder="' +
+      esc(noLimit) + '" value="' + esc(matchPolicyInputValue(draft.maxPrestige)) +
+      '"><small>' + esc(FB.T(
+        'Prestige gates a match above your station but is not spent by the pledge. Leave blank for no limit.')) +
+      '</small></label></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="match-policy-preview">' +
+      esc(FB.T('Preview recommendations')) + '</button>' +
+      '<button type="button" class="btn" id="match-policy-back">' +
+      esc(FB.T('Back to Household Plan')) + '</button></div>';
+    openModal(FB.T('💍 Descendant Match Assistant'), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal match-policy-modal',
+      historyBackRender:function () { UI.showHouseholdPlan(); }
+    });
+    function syncFields() {
+      const enabled = $('match-policy-enabled').checked;
+      for (const id of [
+        'match-policy-station', 'match-policy-dowry',
+        'match-policy-gold', 'match-policy-prestige'
+      ]) $(id).disabled = !enabled;
+    }
+    $('match-policy-enabled').addEventListener('change', syncFields);
+    syncFields();
+    $('match-policy-preview').addEventListener('click', function () {
+      showMatchPolicyPreview(readMatchPolicyDraft());
+    });
+    $('match-policy-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showHouseholdPlan(); });
+    });
+  }
+
+  UI.showMatchPolicy = function () {
+    showMatchPolicyConfig(FB.ensureMatchPolicy(FB.state));
+  };
+
+  function matchPolicyRejectionText(entry) {
+    const seen = {};
+    const reasons = [];
+    for (const rejected of (entry.rejections || [])) {
+      const reason = rejected.reason;
+      if (!reason || seen[reason]) continue;
+      seen[reason] = 1;
+      if (reason === 'minimum-station') {
+        reasons.push(FB.T('At least one family is below the minimum station.'));
+      } else if (reason === 'maximum-dowry') {
+        reasons.push(FB.T('At least one family is above the dowry cap.'));
+      } else if (reason === 'maximum-gold') {
+        reasons.push(FB.T('At least one family is above the immediate gold cap.'));
+      } else if (reason === 'maximum-prestige') {
+        reasons.push(FB.T(
+          'At least one family is above the prestige requirement cap.'));
+      } else if (reason === 'gold') {
+        reasons.push(FB.T('At least one match is not currently affordable in gold.'));
+      } else if (reason === 'prestige') {
+        reasons.push(FB.T(
+          'At least one match is not currently supported by your prestige.'));
+      } else if (reason === 'faith') {
+        reasons.push(FB.T('At least one match is blocked by faith.'));
+      } else if (reason === 'kinship') {
+        reasons.push(FB.T('At least one match is blocked by close kinship.'));
+      } else if (reason === 'compact') {
+        reasons.push(FB.T('At least one match is blocked by royal-compact rules.'));
+      } else if (reason === 'doctrine') {
+        reasons.push(FB.T('At least one match is blocked by marriage doctrine.'));
+      } else if (reason === 'age') {
+        reasons.push(FB.T('At least one candidate is not yet old enough.'));
+      } else {
+        reasons.push(FB.T('At least one family is no longer eligible.'));
+      }
+    }
+    return reasons.length ? reasons.join(' ') : FB.T(
+      'None of the three sounded-out families fits every limit and current resource gate.');
+  }
+
+  function matchPolicyPreviewCard(s, entry) {
+    let match = FB.T('No qualifying family');
+    let station = FB.T('Not applicable');
+    let age = FB.T('Not applicable');
+    let dowry = FB.T('No gold spent');
+    let gold = FB.T('No immediate gold expense');
+    let prestige = FB.T('No prestige requirement');
+    let note = matchPolicyRejectionText(entry);
+    if (entry.candidate) {
+      const candidate = entry.candidate;
+      const terms = entry.terms;
+      match = (epithetText(s, candidate)
+        ? epithetText(s, candidate) + ' — ' : '') + candidate.name;
+      station = FB.stationName(terms.station);
+      age = String(FB.ageOf(candidate, s.date.year));
+      dowry = terms.dowry
+        ? FB.T('{money:amount} paid at the pledge', {
+            amount:terms.dowry
+          })
+        : (candidate.dowryDue
+            ? FB.T('{money:amount} received at the wedding', {
+                amount:candidate.dowryDue
+              })
+            : FB.T('None'));
+      gold = terms.goldCost
+        ? FB.T('{money:amount}', { amount:terms.goldCost })
+        : FB.T('None');
+      prestige = terms.prestigeNeed
+        ? String(terms.prestigeNeed)
+        : FB.T('None');
+      note = FB.T('Recommendation only · no pledge has been made');
+    } else if (entry.reason === 'disabled') {
+      note = FB.T(
+        'The assistant is off. Existing and future descendant matches remain manual.');
+    }
+    return '<article class="education-policy-preview-card match-policy-preview-card">' +
+      '<strong>' + esc(FB.fullName(entry.child)) + '</strong><dl><div><dt>' +
+      esc(FB.T('Recommended match')) + '</dt><dd>' + esc(match) +
+      '</dd></div><div><dt>' + esc(FB.T('Station')) + '</dt><dd>' +
+      esc(station) + '</dd></div><div><dt>' + esc(FB.T('Age')) +
+      '</dt><dd>' + esc(age) + '</dd></div><div><dt>' +
+      esc(FB.T('Dowry')) + '</dt><dd>' + esc(dowry) +
+      '</dd></div><div><dt>' + esc(FB.T('Gold spent now')) +
+      '</dt><dd>' + esc(gold) + '</dd></div><div><dt>' +
+      esc(FB.T('Prestige required')) + '</dt><dd>' + esc(prestige) +
+      '</dd></div></dl><p class="' +
+      (entry.candidate ? 'hint' : 'household-plan-warning') + '">' +
+      esc(note) + '</p></article>';
+  }
+
+  function showMatchPolicyPreview(value) {
+    const s = FB.state;
+    const draft = matchPolicyDraft(value);
+    const preview = FB.matchPolicyPreview(s, draft);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review every currently eligible descendant before saving these limits.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'Only a recommendation marker and Chronicle notice will be created. Open the ordinary match picker to make any pledge.')) +
+      '</p></div><div class="education-policy-preview-list match-policy-preview-list">';
+    if (preview.length) {
+      for (const entry of preview) h += matchPolicyPreviewCard(s, entry);
+    } else {
+      h += '<p class="hint education-policy-empty">' + esc(FB.T(
+        'No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12.')) +
+        '</p>';
+    }
+    h += '</div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="match-policy-save">' +
+      esc(FB.T('Save assistant limits')) + '</button>' +
+      '<button type="button" class="btn" id="match-policy-edit">' +
+      esc(FB.T('Edit limits')) + '</button></div>';
+    openModal(FB.T('💍 Preview Match Recommendations'), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal match-policy-modal',
+      historyBackRender:function () { showMatchPolicyConfig(draft); }
+    });
+    $('match-policy-save').addEventListener('click', function () {
+      FB.setMatchPolicy(s, draft);
+      FB.save.autosave();
+      UI.refresh();
+      UI.showHouseholdPlan();
+      mobileNavClosedAll('modal-view', true);
+    });
+    $('match-policy-edit').addEventListener('click', function () {
+      modalHistoryBack(function () { showMatchPolicyConfig(draft); });
     });
   }
 
@@ -12525,21 +12849,41 @@ window.FB = window.FB || {};
     if (!c || c.dead || !FB.playerDescendantKind(s, cid) ||
         !FB.isHouseholdCharacter(s, cid) || FB.ageOf(c, s.date.year) < 12 ||
         FB.spouseOf(s, c) || c.betrothedId) return;
-    const cands = FB.spawnMatchCandidates(s, c);
+    let cands = FB.spawnMatchCandidates(s, c);
+    const matchPolicy = FB.ensureMatchPolicy(s);
+    if (matchPolicy.enabled) {
+      FB.recommendDescendantMatches(s, { notify:false });
+    }
+    const recommendation = FB.matchRecommendationOf(s, c);
+    const recommendedId = recommendation && recommendation.candidate.id;
+    cands = cands.map(function (candidate, order) {
+      return { candidate:candidate, order:order };
+    }).sort(function (a, b) {
+      if (a.candidate.id === recommendedId) return -1;
+      if (b.candidate.id === recommendedId) return 1;
+      return a.order - b.order;
+    }).map(function (entry) { return entry.candidate; });
     const ps = FB.playerStation(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Families willing to hear an offer for {name}’s hand:', { name: c.name })) +
-      '</p></div><div class="gm-list">';
+      '</p>' + (recommendedId ? '<p class="hint">' + esc(FB.T(
+        'The assistant’s recommendation is listed first. Every family remains your decision.')) +
+        '</p>' : '') +
+      '</div><div class="gm-list">';
     for (const m of cands) {
       if (s.player.courtingId === m.id) continue; // no pledging your own paramour
       const gap = FB.stationOf(m) - ps;
-      const need = gap > 0 ? gap * 20 : 0;
-      const ask = m.dowryAsk || 0;
-      const ok = s.player.gold >= ask && s.player.prestige >= need;
+      const terms = FB.kinMatchTerms(s, c, m);
+      const need = terms.prestigeNeed;
+      const ask = terms.dowry;
+      const ok = terms.ok;
       const details = [
         FB.stationName(FB.stationOf(m)),
         FB.T('age {age}', { age: FB.ageOf(m, s.date.year) })
       ];
+      if (m.id === recommendedId) {
+        details.unshift(FB.T('Recommended by your assistant limits'));
+      }
       if (ask) details.push(FB.T('their kin ask a dowry of {money:gold}', { gold: ask }));
       if (m.dowryDue) {
         details.push(FB.T('she would bring a dowry of {money:gold}', { gold: m.dowryDue }));
@@ -12550,11 +12894,26 @@ window.FB = window.FB || {};
           : FB.T('needs {prestige} prestige (you have {current})',
             { prestige: need, current: Math.floor(s.player.prestige) }));
       } else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
-      h += '<button class="actionbtn" data-match="' + m.id + '"' + (ok ? '' : ' disabled') +
+      if (!ok && terms.reason !== 'gold' && terms.reason !== 'prestige') {
+        const blocked = terms.reason === 'faith'
+          ? FB.T('blocked by faith')
+          : terms.reason === 'kinship'
+            ? FB.T('blocked by close kinship')
+            : terms.reason === 'compact'
+              ? FB.T('royal compacts are reserved for the household head')
+              : terms.reason === 'doctrine'
+                ? FB.T('blocked by marriage doctrine')
+                : FB.T('no longer eligible');
+        details.push(blocked);
+      }
+      h += '<button class="actionbtn' +
+        (m.id === recommendedId ? ' match-policy-recommended' : '') +
+        '" data-match="' + m.id + '"' + (ok ? '' : ' disabled') +
         '>💍 ' + esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
         '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Decide nothing today</button>';
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Decide nothing today')) + '</button>';
     const historyOptions = { historyView:true };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
