@@ -2,11 +2,11 @@
 
 Date: 2026-07-29
 
-Status: planned after the
-[large-list readability](large-list-readability.md) pass, which follows
-[interaction-card consolidation](interaction-cards.md). This is step 5 after the
-systems-audit first pass. Data-first authoring may proceed independently when it does
-not overlap an active integration.
+Status: step 5 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md). Data-first authoring may run
+alongside steps 2–4 after Standing lands, but final UI integration follows
+[interaction-card consolidation](systems-audit-03-interaction-cards.md) and the
+[large-list readability](systems-audit-04-large-list-readability.md) pass.
 
 Related design:
 [piety, intrigue, and diplomacy](../designs/piety-intrigue-diplomacy.md),
@@ -211,7 +211,8 @@ Use existing:
 - Standing adjustments;
 - event queues and flags;
 - temporary modifiers once the
-  [institution/modifier plan](institution-modifier-content.md) lands.
+  [institution/modifier plan](systems-audit-06-institution-modifier-content.md)
+  lands.
 
 Discovery outcomes should include some combination of:
 

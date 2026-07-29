@@ -2,8 +2,9 @@
 
 Date: 2026-07-29
 
-Status: planned after the active [Standing integration](standing.md). This is step 2
-after the systems-audit first pass.
+Status: step 2 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), planned after the active
+[Standing integration](systems-audit-01-standing.md).
 
 Related design:
 [realms](../designs/realms.md),

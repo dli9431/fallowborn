@@ -2,10 +2,11 @@
 
 Date: 2026-07-28
 
-Status: design finding following the
-[systems audit](../2026-07-27-systems-audit.md). This plan supersedes the audit's
-conservative recommendation to preserve Regard, Favor, and Opinion as three
-player-facing meters.
+Status: step 1 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md); implementation is currently
+in progress. This design finding follows the
+[systems audit](../2026-07-27-systems-audit.md) and supersedes its conservative
+recommendation to preserve Regard, Favor, and Opinion as three player-facing meters.
 
 ## Finding
 

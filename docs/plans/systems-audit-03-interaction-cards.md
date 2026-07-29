@@ -2,9 +2,11 @@
 
 Date: 2026-07-29
 
-Status: planned after [Standing](standing.md) and the
-[Governance shell](governance-shell.md). This is step 3 after the systems-audit first
-pass. The [large-list readability](large-list-readability.md) pass follows as step 4
+Status: step 3 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), planned after
+[Standing](systems-audit-01-standing.md) and the
+[Governance shell](systems-audit-02-governance-shell.md). The
+[large-list readability](systems-audit-04-large-list-readability.md) pass follows
 and owns roster-scale scanning in Network and Work & Enterprises.
 
 Related design:
@@ -34,7 +36,7 @@ distinct.
 This plan owns the detail and action surface for one target. It does not own filtering,
 collapsing, searching, or needs-attention ordering in a long Network roster. It should
 leave compact, stable row routes for the subsequent
-[large-list readability](large-list-readability.md) pass.
+[large-list readability](systems-audit-04-large-list-readability.md) pass.
 
 ## Dependencies
 

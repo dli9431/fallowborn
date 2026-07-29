@@ -188,7 +188,7 @@ These follow the household pass rather than expanding its scope:
    obligations and crown authority mechanically separate.
 2. Consistent character and realm interaction cards for Standing, gifts, attention,
    envoys, pacts, alliances, courtship, and war causes. Implement the unified
-   [Standing plan](../standing.md) as part of this work.
+   [Standing plan](../systems-audit-01-standing.md) as part of this work.
 3. A single **Trade Venture** setup and review flow, owned by Finance, with `dispatch`
    or `accompany` chosen last. Travel remains a shortcut into the same flow.
 4. One military status surface for host, stance, route, logistics, enemy or camp,
@@ -272,5 +272,6 @@ unchanged except where a shared summary or entry point must call them.
 Later player feedback confirmed that reducing repeated actions did not fully solve
 scan density: Work & Enterprises becomes less readable as household work and enterprise
 rows accumulate, and Network has the same problem with many characters. The separate
-[large-list readability plan](../large-list-readability.md) addresses that presentation
-gap after interaction-card consolidation without reopening this pass's mechanics.
+[large-list readability plan](../systems-audit-04-large-list-readability.md)
+addresses that presentation gap after interaction-card consolidation without
+reopening this pass's mechanics.

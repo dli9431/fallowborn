@@ -2,10 +2,10 @@
 
 Date: 2026-07-29
 
-Status: planned after
-[interaction-card consolidation](interaction-cards.md). This is a newly inserted
-step 4 after the systems-audit first pass; the plot/diplomacy and
-institution/modifier content plans follow as steps 5 and 6.
+Status: step 4 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), planned after
+[interaction-card consolidation](systems-audit-03-interaction-cards.md). The
+plot/diplomacy and institution/modifier content plans follow as steps 5 and 6.
 
 Related design:
 [UI](../designs/ui.md),

@@ -66,8 +66,10 @@ becomes harder to read as Household work and Family enterprises grow, and **Netw
 becomes harder to scan as it accumulates named characters. Household automation reduces
 click burden, and interaction cards consolidate actions for one target, but neither makes
 the long overview lists legible. Treat this as a separate
-[large-list readability plan](plans/large-list-readability.md) after interaction-card
-consolidation and before the later content passes.
+[large-list readability plan](plans/systems-audit-04-large-list-readability.md)
+after interaction-card consolidation and before the later content passes. The
+[numbered roadmap](plans/systems-audit-00-roadmap.md) records integration order and
+safe parallel work.
 
 The systems that can safely be left alone for a while are technology, ordinary war, great holy
 war and settlement, overland travel mechanics, world/realm simulation, the event interpreter,
@@ -126,7 +128,7 @@ The Household Plan solves cross-screen administration, not list density by itsel
 Work & Enterprises and Network surfaces additionally need counted sections, stable
 needs-attention ordering, progressive disclosure, and local filtering/search while preserving
 their distinct ownership and action routes. That follow-up is specified in
-[large-list readability](plans/large-list-readability.md).
+[large-list readability](plans/systems-audit-04-large-list-readability.md).
 
 ## Scorecard: household, land, and economy
 
@@ -401,22 +403,31 @@ These are not direct gameplay loops, but they materially constrain all feature w
 
 ## Recommended implementation order
 
-1. **Household Plan and policies**: consolidate existing character management without changing
-   mechanics.
-2. **Equip-best, staff-best, and manor batch purchase**: small, bounded reductions in repeated
-   clicks.
-3. **Governance shell**: Estates, Council, liege/vassal terms, domain, and direct action links.
-4. **Realm/character interaction card consistency**: gifts, attention, envoys, pacts, alliances,
-   courtship, and war causes in predictable places.
-5. **Large-list readability**: make Work & Enterprises and Network scale through counted
+The [numbered systems-audit roadmap](plans/systems-audit-00-roadmap.md) is the
+authoritative current queue. The later Standing finding inserted a new prerequisite
+before Governance, so its active-plan numbers intentionally differ from this audit's
+original recommendation numbers.
+
+1. [x] **Household Plan and policies**: implemented in the archived
+   [first pass](plans/archive/audit-first-pass.md).
+2. [x] **Equip-best, staff-best, and manor batch purchase**: implemented in the same
+   first pass.
+3. [ ] **Governance shell**: active roadmap
+   [step 02](plans/systems-audit-02-governance-shell.md), after Standing.
+4. [ ] **Realm/character interaction card consistency**: active roadmap
+   [step 03](plans/systems-audit-03-interaction-cards.md).
+5. [ ] **Large-list readability**: active roadmap
+   [step 04](plans/systems-audit-04-large-list-readability.md), covering counted
    sections, stable needs-attention ordering, progressive disclosure, and local
    filtering/search.
-6. **Single Trade Venture flow**: Finance as the main home, Travel as a shortcut, mode chosen
-   last.
-7. **Plot and diplomacy content** using existing state and event hooks.
-8. **Modifier and institution content** as durable consequences of those stories.
-9. Reassess click and scan burden in a large multi-generation household before adding
-   another major simulation system.
+6. [x] **Single Trade Venture flow**: implemented with Finance as the main home,
+   Travel as a shortcut, and execution mode chosen last.
+7. [ ] **Plot and diplomacy content**: active roadmap
+   [step 05](plans/systems-audit-05-plots-diplomacy-content.md).
+8. [ ] **Modifier and institution content**: active roadmap
+   [step 06](plans/systems-audit-06-institution-modifier-content.md).
+9. [ ] Reassess click and scan burden in a large multi-generation household after
+   the numbered queue and before adding another major simulation system.
 
 ## Source map used for this audit
 

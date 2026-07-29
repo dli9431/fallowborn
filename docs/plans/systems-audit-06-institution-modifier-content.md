@@ -2,9 +2,11 @@
 
 Date: 2026-07-29
 
-Status: planned after
-[plot and diplomacy content](plots-diplomacy-content.md). This is step 6 after the
-systems-audit first pass.
+Status: step 6 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md). Base definitions and disjoint
+institution content may run alongside step 5 once the Governance contract is fixed;
+cross-links and final integration follow
+[plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md).
 
 Related design:
 [Royal Council](../designs/council.md),
