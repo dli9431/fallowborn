@@ -53,7 +53,9 @@ window.FB = window.FB || {};
     if (typeof value === 'object' && value.defId && FB.resolveItemSnapshot) {
       return FB.resolveItemSnapshot(value);
     }
-    return state && FB.resolveItem ? FB.resolveItem(state, value) : null;
+    return state && FB.resolveItemReadOnly
+      ? FB.resolveItemReadOnly(state, value)
+      : (state && FB.resolveItem ? FB.resolveItem(state, value) : null);
   }
 
   /* Every item picture goes through this saved-seed renderer. Its local
@@ -266,7 +268,9 @@ window.FB = window.FB || {};
     const prof = look.profession;
     const tier = look.tier;
     const loadout = opts && opts.loadout ||
-      (opts && opts.state && FB.loadoutOf ? FB.loadoutOf(opts.state, c.id) : null);
+      (opts && opts.state && FB.loadoutReadOnly
+        ? FB.loadoutReadOnly(opts.state, c.id)
+        : null);
     const headItem = itemFromLoadout(opts && opts.state, loadout, 'head');
 
     // condition: health and named ailments shape the face (NPCs default to hale)
@@ -538,7 +542,9 @@ window.FB = window.FB || {};
     if (!canvas || !value) return;
     const item = typeof value === 'object' && value.defId
       ? (FB.resolveItemSnapshot ? FB.resolveItemSnapshot(value) : null)
-      : (state && FB.resolveItem ? FB.resolveItem(state, value) : null);
+      : (state && FB.resolveItemReadOnly
+        ? FB.resolveItemReadOnly(state, value)
+        : null);
     if (!item) return;
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
@@ -566,7 +572,8 @@ window.FB = window.FB || {};
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     const look = FB.characterLook(c, state.date.year, state, opts);
-    const loadout = opts.loadout || (FB.loadoutOf ? FB.loadoutOf(state, c.id) : {});
+    const loadout = opts.loadout ||
+      (FB.loadoutReadOnly ? FB.loadoutReadOnly(state, c.id) : {});
     const head = itemFromLoadout(state, loadout, 'head');
     const neck = itemFromLoadout(state, loadout, 'neck');
     const body = itemFromLoadout(state, loadout, 'body');

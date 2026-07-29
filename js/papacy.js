@@ -212,6 +212,14 @@ window.FB = window.FB || {};
       (record && (record.office === 'cardinal' || record.office === 'pope')));
   };
 
+  FB.papacyCelibateSnapshot = function (state, value) {
+    var record = FB.papalOfficeOf(state, value);
+    var c = typeof value === 'string' ? state.chars[value] : value;
+    return !!((FB.bishopricSnapshot && FB.bishopricSnapshot(state, c)) ||
+      (c && (c.papalOffice === 'cardinal' || c.papalOffice === 'pope')) ||
+      (record && (record.office === 'cardinal' || record.office === 'pope')));
+  };
+
   FB.isCardinal = function (state, value) {
     var record = FB.papalOfficeOf(state, value);
     return !!(record && record.office === 'cardinal');

@@ -330,7 +330,7 @@ window.FB = window.FB || {};
       return FB.T(
         'Standing with this person affects whether a marriage proposal succeeds.');
     }
-    if (FB.retainerRecord && FB.retainerRecord(s, c.id)) {
+    if (interactionRetainerRecord(s, c.id)) {
       return FB.T(
         'Standing with this retainer affects loyalty and whether household service continues.');
     }
@@ -388,11 +388,18 @@ window.FB = window.FB || {};
     if (source === 'envoy') return FB.T('envoy compact');
     return FB.T('dynastic compact');
   }
-  function allianceText(s, rid) {
-    const a = FB.allianceOf(s, rid);
+  function allianceText(s, rid, readOnly) {
+    const a = FB.allianceSnapshot
+      ? FB.allianceSnapshot(s, rid) : FB.allianceOf(s, rid);
     if (!a) return FB.T('None');
     const partner = a.a === rid ? a.b : a.a;
     const r = s.realms[partner];
+    if (readOnly) {
+      return FB.T('{realm} · {source} · until either ruler changes', {
+        realm:r ? r.name : partner,
+        source:allianceSourceText(a.source)
+      });
+    }
     const support = FB.alliedReinforcement(s, rid);
     return FB.T('{realm} · {source} · until either ruler changes · defensive support ~{men}', {
       realm: r ? r.name : partner,
@@ -552,6 +559,115 @@ window.FB = window.FB || {};
     return h + '</button>';
   }
   UI.personAssignmentCard = personAssignmentCard;
+
+  const INTERACTION_GROUP_ORDER = [
+    'relationship', 'gift', 'travel', 'diplomacy',
+    'feudal', 'war', 'management'
+  ];
+  const INTERACTION_GROUP_LABELS = {
+    relationship:'Relationship & attention',
+    gift:'Gifts & material support',
+    travel:'Travel & personal contact',
+    diplomacy:'Diplomacy & commitments',
+    feudal:'Feudal & governance',
+    war:'Hostility & war',
+    management:'Focused management'
+  };
+
+  function interactionActionRow(action) {
+    const enabled = action.enabled !== false;
+    const detail = action.detail || '';
+    const blocked = !enabled && action.blockedReason
+      ? action.blockedReason : '';
+    const consequence = action.consequence || '';
+    const visibleDetail = blocked === detail ? '' : detail;
+    const accessibleParts = [action.label, detail, blocked, consequence]
+      .filter(function (part, index, parts) {
+        return !!part && parts.indexOf(part) === index;
+      });
+    const accessible = accessibleParts.join('. ');
+    return '<button type="button" class="actionbtn interaction-action" ' +
+      'data-interaction-action="' + esc(action.id) + '"' +
+      (action.domId ? ' id="' + esc(action.domId) + '"' : '') +
+      (enabled ? '' : ' disabled') +
+      ' aria-label="' + esc(accessible) + '">' +
+      '<span class="interaction-action-label">' + esc(action.label) +
+      '</span>' +
+      (visibleDetail ? '<span class="adesc interaction-action-detail">' +
+        esc(visibleDetail) + '</span>' : '') +
+      (blocked ? '<span class="adesc interaction-blocked">' +
+        esc(FB.T('Unavailable: {reason}', { reason:blocked })) +
+        '</span>' : '') +
+      (consequence ? '<span class="adesc interaction-consequence">' +
+        esc(consequence) + '</span>' : '') +
+      '</button>';
+  }
+  UI.interactionActionRow = interactionActionRow;
+
+  function interactionCardHtml(model) {
+    if (!model) return '';
+    let h = '<section class="interaction-card" data-interaction-kind="' +
+      esc(model.target.kind) + '" data-interaction-target="' +
+      esc(model.target.id) + '">';
+    if (model.context && model.context.length) {
+      h += '<div class="interaction-context" role="list" aria-label="' +
+        esc(FB.T('Identity and context')) + '">';
+      for (const row of model.context) {
+        if (!row || row.value === undefined || row.value === null ||
+            row.value === '') continue;
+        h += '<div class="interaction-context-row" role="listitem">' +
+          '<span>' + esc(row.label) + '</span><b>' +
+          esc(row.value) + '</b></div>';
+      }
+      h += '</div>';
+    }
+    if (model.standing) {
+      h += '<div class="interaction-standing">' +
+        '<div><span>' + esc(FB.T('Standing')) + '</span>' +
+        standingSpan(model.standing.value) + '</div>' +
+        '<p>' + esc(model.standing.explanation || '') + '</p></div>';
+    }
+    if (model.commitments && model.commitments.length) {
+      h += '<div class="interaction-commitments" role="list" aria-label="' +
+        esc(FB.T('Current commitments and urgent state')) + '">';
+      for (const commitment of model.commitments) {
+        h += '<div class="interaction-commitment' +
+          (commitment.urgent ? ' urgent' : '') +
+          '" role="listitem" data-interaction-commitment="' +
+          esc(commitment.id) + '"><b>' + esc(commitment.label) +
+          '</b><span>' + esc(commitment.detail) + '</span></div>';
+      }
+      h += '</div>';
+    }
+    const actions = model.actions || [];
+    for (const group of INTERACTION_GROUP_ORDER) {
+      const grouped = actions.filter(function (action) {
+        return action.group === group;
+      });
+      if (!grouped.length) continue;
+      h += '<section class="interaction-action-group" data-interaction-group="' +
+        group + '"><h4>' +
+        esc(FB.T(INTERACTION_GROUP_LABELS[group])) + '</h4>';
+      for (const action of grouped) h += interactionActionRow(action);
+      h += '</section>';
+    }
+    return h + '</section>';
+  }
+  UI.interactionCardHtml = interactionCardHtml;
+
+  function wireInteractionCard(model, handler) {
+    const buttons = document.querySelectorAll(
+      '[data-interaction-kind="' + model.target.kind + '"] ' +
+      '[data-interaction-action]');
+    const byId = {};
+    for (const action of model.actions || []) byId[action.id] = action;
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        const action = byId[buttons[i].dataset.interactionAction];
+        if (action && action.enabled !== false) handler(action);
+      });
+    }
+  }
 
   let eventOpen = false;
   let pendingEvents = [];
@@ -2150,7 +2266,9 @@ window.FB = window.FB || {};
 
   function relationText(s, c) {
     const me = s.chars[s.player.charId];
-    if (c.id === me.spouseId) return FB.T('Your spouse');
+    if (c.id === me.spouseId || c.spouseId === me.id) {
+      return FB.T('Your spouse');
+    }
     if (me.fatherId === c.id) return FB.T('Your father');
     if (me.motherId === c.id) return FB.T('Your mother');
     const descendantKind = FB.playerDescendantKind(s, c.id);
@@ -2171,46 +2289,7 @@ window.FB = window.FB || {};
     return null;
   }
   function maritalText(s, c) {
-    return FB.T(FB.spouseOf(s, c) ? 'Married' : 'Unwed');
-  }
-
-  /* why the marriage path is closed for this character (null = no note needed) */
-  function courtBlockReason(s, c) {
-    const me = s.chars[s.player.charId];
-    const y = s.date.year;
-    if (FB.papacyCelibate &&
-        (FB.papacyCelibate(s, me) || FB.papacyCelibate(s, c))) {
-      return FB.T('the vows of a Bishop, Cardinal, or Pope forbid marriage.');
-    }
-    if (c.id === me.spouseId || c.spouseId === me.id) {
-      return FB.T(c.sex === 'f'
-        ? 'they are already your wedded wife.'
-        : 'they are already your wedded husband.');
-    }
-    if (FB.playerDescendantKind(s, c.id) ||
-      (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
-      (me.fatherId && me.fatherId === c.fatherId) || (me.motherId && me.motherId === c.motherId) ||
-      (c.role === 'sibling' && c.dyn === me.dyn)) return FB.T('they are too close in blood.');
-    const krel = FB.kinOf(s).byId[c.id];
-    if (krel && krel !== 'Cousin') return FB.T('they are too close in blood.');
-    if (c.sex === me.sex) return null;
-    if (FB.ageOf(c, y) < 16) return FB.T('they are not yet of age.');
-    if (FB.ageOf(me, y) < 16) return FB.T('you are not yet of age.');
-    const mySp = FB.spouseOf(s, me);
-    if (mySp && !FB.canWed(s)) {
-      return me.sex === 'm' && FB.marriageDoctrine(me.religion).wives > 1 ?
-        FB.T('your faith permits no more wives.') :
-        FB.T('you are already wed to {name}.', { name: mySp.name });
-    }
-    if (FB.spouseOf(s, c)) return FB.T('they are wed to another.');
-    if (c.betrothedId) return FB.T('they are pledged to another.');
-    if (FB.stationOf(c) - FB.playerStation(s) >= 3) {
-      return FB.T('they stand far above your station.');
-    }
-    if (s.player.profession === 'monk' && FB.religionOf(me.religion).group !== 'muslim') {
-      return FB.T('your vows forbid it.');
-    }
-    return null;
+    return FB.T(FB.spouseSnapshot(s, c) ? 'Married' : 'Unwed');
   }
 
   /* whose banner a character marches under: home county, the realm holding
@@ -2243,11 +2322,14 @@ window.FB = window.FB || {};
   function royalLineHtml(s, c) {
     if (!c.royalLine) return '';
     const r = s.realms[c.royalLine.realmId];
-    const succession = r && FB.ensureRealmSuccession(s, c.royalLine.realmId);
-    if (!r || !succession) return '';
+    const succession = r && r.succession;
+    if (!r) return '';
     let status = FB.T('in the succession');
-    if (succession.rulerMemberId === c.royalLine.memberId) status = FB.T('reigning ruler');
-    else if (succession.heirId === c.royalLine.memberId) status = FB.T('designated heir');
+    if (succession && succession.rulerMemberId === c.royalLine.memberId) {
+      status = FB.T('reigning ruler');
+    } else if (succession && succession.heirId === c.royalLine.memberId) {
+      status = FB.T('designated heir');
+    }
     return '<div class="ccmeta">' + esc(FB.T('👑 Royal line of {realm} · {status}', {
       realm: r.name, status: status
     })) + '</div>';
@@ -2257,8 +2339,9 @@ window.FB = window.FB || {};
     if (!FB.papalOfficeOf) return '';
     const office = FB.papalOfficeOf(s, c);
     if (!office) return '';
-    const papacy = FB.ensurePapacy(s);
-    const obedience = papacy.obediences[office.obedienceId];
+    const papacy = s.papacy;
+    const obedience = papacy && papacy.obediences &&
+      papacy.obediences[office.obedienceId];
     if (office.office === 'pope') {
       return '<div class="ccmeta">' + esc(FB.T(
         '⛪ {pope} · {obedience} obedience', {
@@ -2286,17 +2369,21 @@ window.FB = window.FB || {};
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
-    for (const k of FB.SKILLS) sk += FB.skillName(k) + ' ' + FB.skillOf(c, k) + ' · ';
+    for (const k of FB.SKILLS) {
+      const value = FB.skillSnapshot
+        ? FB.skillSnapshot(s, c, k) : FB.skillOf(c, k);
+      sk += FB.skillName(k) + ' ' + value + ' · ';
+    }
     sk = sk.slice(0, -3);
     const tr = traitChips(s, c, !!groupedTraits);
     // treasures the player has gifted them, worn where callers can see
     let itc = '';
     if (c.items && c.items.length && c.id !== s.player.charId) {
       for (const ref of c.items) {
-        const item = FB.resolveItem(s, ref);
+        const item = FB.resolveItemReadOnly(s, ref);
         if (item) {
           itc += '<span class="traitchip" data-itemview="' + esc(ref) + '">' +
-            item.def.icon + ' ' + esc(FB.itemName(s, ref)) + '</span>';
+            item.def.icon + ' ' + esc(FB.itemNameReadOnly(s, ref)) + '</span>';
         }
       }
     }
@@ -2936,7 +3023,9 @@ window.FB = window.FB || {};
     const householdPlan = $('network-household-plan');
     if (householdPlan) householdPlan.addEventListener('click', UI.showHouseholdPlan);
     const hire = $('network-hire');
-    if (hire) hire.addEventListener('click', UI.showRetainerHire);
+    if (hire) hire.addEventListener('click', function () {
+      UI.showRetainerHire();
+    });
     box.querySelectorAll('[data-retainer-manage]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showRetainerManage(button.dataset.retainerManage);
@@ -5093,8 +5182,11 @@ window.FB = window.FB || {};
     });
     $('social-visit-cancel').addEventListener('click', function () {
       modalHistoryBack(function () {
-        if (options.returnRealmId) UI.showLiegeModal(options.returnRealmId);
-        else UI.showCharModal(c.id);
+        if (options.returnRealmId) {
+          UI.showLiegeModal(options.returnRealmId, options.returnContext);
+        } else {
+          UI.showCharModal(c.id, options.returnContext);
+        }
       });
     });
   };
@@ -6206,9 +6298,11 @@ window.FB = window.FB || {};
   };
 
   /* ================= war target picker ================= */
-  UI.showWarTargets = function () {
+  UI.showWarTargets = function (focusRealmId, returnContext) {
     const s = FB.state;
-    const causes = FB.warCauses(s);
+    const causes = focusRealmId && FB.realmWarCauses
+      ? FB.realmWarCauses(s, focusRealmId, false)
+      : FB.warCauses(s);
     const musterUpkeep = FB.playerMusterUpkeepParts
       ? FB.playerMusterUpkeepParts(s) : { total:0 };
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -6256,13 +6350,22 @@ window.FB = window.FB || {};
               '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
             : '') + '</button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Think better of it</button>';
-    openModal('Choose Your Conquest', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Think better of it')) + '</button>';
+    openModal(FB.T('Choose Your Conquest'), h, {
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
+      }
+    });
     document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
         const cause = causes[Number(b.dataset.warCause)];
         if (cause.sacrilegious) {
-          UI.showSacrilegiousWarConfirmation(cause);
+          UI.showSacrilegiousWarConfirmation(cause, {
+            focusRealmId:focusRealmId,
+            returnContext:returnContext
+          });
         } else {
           FB.startPlayerWar(FB.state, cause);
           UI.closeModal();
@@ -6270,12 +6373,20 @@ window.FB = window.FB || {};
         }
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
   /* Same cause, second confirmation: no state changes until the player
      explicitly accepts the religious penalties here. */
-  UI.showSacrilegiousWarConfirmation = function (cause) {
+  UI.showSacrilegiousWarConfirmation = function (cause, returnContext) {
     const s = FB.state;
     const B = FBDATA.balance;
     const realm = cause && s.realms[cause.enemy];
@@ -6293,13 +6404,28 @@ window.FB = window.FB || {};
       esc(FB.T('Accept condemnation and declare war')) + '</button>' +
       '<button type="button" class="actionbtn" id="sacrilege-cancel">' +
       esc(FB.T('Think better of it')) + '</button></div>';
-    openModal(FB.T('Attack the Papacy?'), h);
+    openModal(FB.T('Attack the Papacy?'), h, {
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        UI.showWarTargets(returnContext.focusRealmId,
+          returnContext.returnContext);
+      }
+    });
     $('sacrilege-confirm').addEventListener('click', function () {
       FB.startPlayerWar(s, cause, { confirmSacrilege:true });
       UI.closeModal();
       UI.refresh();
     });
-    $('sacrilege-cancel').addEventListener('click', UI.closeModal);
+    $('sacrilege-cancel').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          UI.showWarTargets(returnContext.focusRealmId,
+            returnContext.returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
   /* Renounce the liege and fight for it: confirmed here, then handled by
@@ -6774,58 +6900,92 @@ window.FB = window.FB || {};
   };
 
   /* ================= envoy picker ================= */
-  UI.showEnvoys = function () {
+  UI.showEnvoys = function (focusRealmId, returnContext) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
       'A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds.')) +
       '</p><div class="gm-list">';
-    const pactTargets = FB.envoyTargets(s);
-    const allianceTargets = FB.allianceOfferTargets(s);
+    const focusedEnvoy = focusRealmId && FB.envoyStatus
+      ? FB.envoyStatus(s, focusRealmId) : null;
+    const focusedAlliance = focusRealmId && FB.allianceOfferStatus
+      ? FB.allianceOfferStatus(s, focusRealmId) : null;
+    const pactTargets = focusRealmId
+      ? (focusedEnvoy && focusedEnvoy.relevant ? [focusRealmId] : [])
+      : FB.envoyTargets(s);
+    const allianceTargets = focusRealmId
+      ? (focusedAlliance && focusedAlliance.relevant ? [focusRealmId] : [])
+      : FB.allianceOfferTargets(s);
     const targetMap = {}, targets = [];
     for (const rid of pactTargets.concat(allianceTargets)) {
       if (!targetMap[rid]) { targetMap[rid] = 1; targets.push(rid); }
     }
     for (const rid of targets) {
+      if (focusRealmId && rid !== focusRealmId) continue;
       const r = s.realms[rid];
       const men = FB.aiBaseHost(s, rid);
       const standing = FB.standingOf(s, { kind:'realm', id:rid });
       if (pactTargets.indexOf(rid) >= 0) {
+        const pactBlocked = focusedEnvoy && !focusedEnvoy.ready;
         h += '<button class="actionbtn" data-envoy="' + esc(rid) + '"' +
-          (s.player.gold < 10 ? ' disabled' : '') + '>🕊 ' + esc(FB.T('Peace pact with {realm}', { realm: r.name })) +
+          (pactBlocked || s.player.gold < 10 ? ' disabled' : '') + '>🕊 ' +
+          esc(FB.T('Peace pact with {realm}', { realm: r.name })) +
           '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · Standing {standing} · chance ~{chance}%', {
             ruler: r.ruler.name,
             counties: countyCountText(s, FB.realmProvinces(s, rid).length),
             men: menText(s, men),
             standing: standingText(standing),
             chance: Math.round(FB.envoyChance(s, rid) * 100)
-          })) + '</span></button>';
+          }) + (pactBlocked
+            ? ' · ' + FB.T('Unavailable: {reason}', {
+              reason:focusedEnvoy.reason
+            }) : '')) + '</span></button>';
       }
       if (allianceTargets.indexOf(rid) >= 0) {
+        const allianceBlocked = focusedAlliance && !focusedAlliance.ready;
         h += '<button class="actionbtn" data-alliance-offer="' + esc(rid) + '"' +
-          (s.player.gold < 25 ? ' disabled' : '') + '>🤝 ' + esc(FB.T('Defensive alliance with {realm}', { realm: r.name })) +
+          (allianceBlocked || s.player.gold < 25 ? ' disabled' : '') + '>🤝 ' +
+          esc(FB.T('Defensive alliance with {realm}', { realm: r.name })) +
           '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
-          ruler: r.ruler.name,
-          standing: standingText(standing),
-          chance: Math.round(FB.envoyChance(s, rid) * 100),
-          men: menText(s, Math.round(Math.min(men * 0.25, FB.playerLevy(s) * 0.5)))
-        })) + '</span></button>';
+            ruler: r.ruler.name,
+            standing: standingText(standing),
+            chance: Math.round(FB.envoyChance(s, rid) * 100),
+            men: menText(s, Math.round(Math.min(
+              men * 0.25, FB.playerLevy(s) * 0.5)))
+          }) + (allianceBlocked
+            ? ' · ' + FB.T('Unavailable: {reason}', {
+              reason:focusedAlliance.reason
+            }) : '')) + '</span></button>';
       }
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Send an Envoy', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Not now')) + '</button>';
+    openModal(FB.T('Send an Envoy'), h, {
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
+      }
+    });
     document.querySelectorAll('[data-envoy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.sendEnvoy(FB.state, btn.dataset.envoy);
+        if (!FB.sendEnvoy(FB.state, btn.dataset.envoy)) return;
         UI.closeModal(); UI.refresh();
       });
     });
     document.querySelectorAll('[data-alliance-offer]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.offerAlliance(FB.state, btn.dataset.allianceOffer);
+        if (!FB.offerAlliance(FB.state, btn.dataset.allianceOffer)) return;
         UI.closeModal(); UI.refresh();
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
   /* ================= political attention picker ================= */
@@ -6866,11 +7026,12 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
   };
 
-  UI.showForeignPolicyStance = function (rid) {
+  UI.showForeignPolicyStance = function (rid, returnContext) {
     const s = FB.state;
     const r = s.realms[rid];
     if (!r || !FB.isForeignPolicyTarget(s, rid)) {
-      UI.showForeignPolicy();
+      if (returnContext) interactionReturn(returnContext);
+      else UI.showForeignPolicy();
       return;
     }
     const capacity = FB.politicalAttentionCapacity(s);
@@ -6907,16 +7068,30 @@ window.FB = window.FB || {};
         'Any direction chosen here remains assigned but is suspended until the war ends.')) + '</p>';
     }
     h += '</div><button class="btn gm-footer" id="gm-back">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Policy toward {realm}', { realm: r.name }), h);
+    openModal(FB.T('Policy toward {realm}', { realm: r.name }), h, {
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
+      }
+    });
     document.querySelectorAll('[data-policy-stance]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (FB.setForeignPolicy(FB.state, rid, Number(btn.dataset.policyStance))) {
-          UI.showForeignPolicy();
+          if (returnContext) interactionReturn(returnContext);
+          else UI.showForeignPolicy();
           UI.refresh();
         }
       });
     });
-    $('gm-back').addEventListener('click', UI.showForeignPolicy);
+    $('gm-back').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.showForeignPolicy();
+      }
+    });
   };
 
   /* ================= liege-chain pickers ================= */
@@ -7114,9 +7289,19 @@ window.FB = window.FB || {};
     });
   }
 
+  function interactionGiftArmoryRefs(s) {
+    if (!s || !s.player || !Array.isArray(s.player.items)) return [];
+    return s.player.items.slice().sort(function (a, b) {
+      return FB.itemNameReadOnly(s, a).localeCompare(
+        FB.itemNameReadOnly(s, b));
+    });
+  }
+
   function giftDeliveryText(s, kind, id) {
     if (!FB.giftDeliveryPreview) return '';
-    const preview = FB.giftDeliveryPreview(s, kind, id);
+    const preview = FB.giftDeliveryPreview(s, kind, id, {
+      readOnly:true
+    });
     const pending = preview && preview.pending;
     if (!pending) return '';
     const destination = FB.world.byId[preview.destinationId];
@@ -7132,27 +7317,12 @@ window.FB = window.FB || {};
     });
   }
 
-  function giftItemUnavailableText(s, ref, days, deliveryText) {
-    const assigned = FB.itemAssignment(s, ref);
-    if (assigned) {
-      return FB.T('{wearer}. Return it to the armory before gifting it.', {
-        wearer:itemWearerText(s, ref)
-      });
-    }
-    if (FB.financeCollateralPledged &&
-      FB.financeCollateralPledged(s, 'item', ref)) {
-      return FB.T('Pledged to a lender; clear the loan before gifting it.');
-    }
-    if (deliveryText) return deliveryText;
-    if (days) {
-      return FB.T('Cash and item gifts share this recipient’s cooldown. Ready in {days} days.', {
-        days:days
-      });
-    }
-    return '';
+  function giftItemUnavailableText(s, ref, kind, id) {
+    const status = FB.itemGiftStatus(s, ref, kind, id);
+    return status.ready ? '' : status.reason;
   }
 
-  UI.showCharacterGiftModal = function (cid) {
+  UI.showCharacterGiftModal = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!s || !c || c.dead || c.id === s.player.charId) return;
@@ -7163,17 +7333,15 @@ window.FB = window.FB || {};
       return;
     }
     const household = FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, cid);
-    const days = FB.socialGiftDaysRemaining(s, cid);
-    const deliveryPreview = FB.giftDeliveryPreview
-      ? FB.giftDeliveryPreview(s, 'character', cid) : null;
+    const cashStatus = FB.characterGiftStatus(s, cid);
+    const days = cashStatus.daysRemaining;
+    const deliveryPreview = cashStatus.delivery;
     const deliveryText = giftDeliveryText(s, 'character', cid);
     const deliveryUnavailable = deliveryPreview && deliveryPreview.foreign &&
       !deliveryPreview.eligible ? deliveryPreview.reason : '';
-    const cashCost = 5;
-    const cashBoost = FBDATA.balance.socialCashGiftOpinion === undefined
-      ? 4 : FBDATA.balance.socialCashGiftOpinion;
-    const cashBlocked = days || deliveryText || deliveryUnavailable ||
-      s.player.gold < cashCost;
+    const cashCost = cashStatus.cost;
+    const cashBoost = cashStatus.standing;
+    const cashBlocked = !cashStatus.ready;
     let cashDetail;
     if (deliveryText || deliveryUnavailable) {
       cashDetail = deliveryText || deliveryUnavailable;
@@ -7223,8 +7391,8 @@ window.FB = window.FB || {};
       for (const ref of refs) {
         const item = FB.resolveItem(s, ref);
         if (!item) continue;
-        const blocked = giftItemUnavailableText(s, ref, days,
-          deliveryText || deliveryUnavailable);
+        const blocked = giftItemUnavailableText(
+          s, ref, 'character', cid);
         const boost = FB.giftOpinion(item);
         const detail = blocked
           ? FB.T('+{standing} Standing · unavailable: {reason}', {
@@ -7248,7 +7416,9 @@ window.FB = window.FB || {};
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Keep your gifts')) + '</button>';
     openModal(FB.T('Offer a gift to {name}', { name:FB.fullName(c) }), h, {
       historyView:true,
-      historyBackRender:function () { UI.showCharModal(cid); }
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext);
+      }
     });
     const cash = $('gift-character-cash');
     if (cash) cash.addEventListener('click', function () {
@@ -7264,7 +7434,9 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCharModal(cid); });
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext);
+      });
     });
   };
 
@@ -7273,7 +7445,15 @@ window.FB = window.FB || {};
     const r = s && rid && s.realms[rid];
     if (!s || !r || !r.alive || !r.ruler || rid === 'player') return;
     function returnToRulerGiftSource() {
-      if (returnView === 'governance') UI.showGovernance('vassals');
+      if (returnView && typeof returnView === 'object' &&
+          returnView.kind === 'realm-card') {
+        UI.showLiegeModal(rid, returnView.returnContext);
+      }
+      else if (returnView && typeof returnView === 'object' &&
+          returnView.kind === 'council') {
+        UI.showCouncil(returnView.returnView, returnView.returnContext);
+      }
+      else if (returnView === 'governance') UI.showGovernance('vassals');
       else if (returnView === 'council:governance') UI.showCouncil('governance');
       else if (returnView === 'council') UI.showCouncil();
       else if (returnView && returnView.indexOf('realm:governance:') === 0) {
@@ -7287,17 +7467,16 @@ window.FB = window.FB || {};
       }
       else UI.showLiegeModal(rid);
     }
-    const days = FB.rulerGiftDaysRemaining(s, rid);
-    const deliveryPreview = FB.giftDeliveryPreview
-      ? FB.giftDeliveryPreview(s, 'ruler', rid) : null;
+    const cashStatus = FB.rulerGiftStatus(s, rid);
+    const days = cashStatus.daysRemaining;
+    const deliveryPreview = cashStatus.delivery;
     const deliveryText = giftDeliveryText(s, 'ruler', rid);
     const deliveryUnavailable = deliveryPreview && deliveryPreview.foreign &&
       !deliveryPreview.eligible ? deliveryPreview.reason : '';
-    const cashCost = FB.rulerCashGiftCost(s, rid);
-    const cashBoost = FB.rulerCashGiftOpinion();
+    const cashCost = cashStatus.cost;
+    const cashBoost = cashStatus.standing;
     const standing = FB.T('Standing');
-    const cashBlocked = days || deliveryText || deliveryUnavailable ||
-      s.player.gold < cashCost;
+    const cashBlocked = !cashStatus.ready;
     let cashDetail;
     if (deliveryText || deliveryUnavailable) {
       cashDetail = deliveryText || deliveryUnavailable;
@@ -7344,8 +7523,7 @@ window.FB = window.FB || {};
     for (const ref of refs) {
       const item = FB.resolveItem(s, ref);
       if (!item) continue;
-      const blocked = giftItemUnavailableText(s, ref, days,
-        deliveryText || deliveryUnavailable);
+      const blocked = giftItemUnavailableText(s, ref, 'ruler', rid);
       const boost = FB.giftOpinion(item);
       const detail = blocked
         ? FB.T('+{amount} {standing} · unavailable: {reason}', {
@@ -7388,217 +7566,784 @@ window.FB = window.FB || {};
     });
   };
 
-  /* The realm sheet remains the primary view for an AI ruler. Cultivation
-     can materialize that ruler into an ordinary character sheet as needed. */
-  UI.showLiegeModal = function (rid, returnContext) {
-    const s = FB.state;
-    const r = rid && s.realms[rid];
-    if (!r || !r.alive || !r.ruler) return;
-    const cap = FB.world.byId[r.capital];
-    const rel = cap ? FB.religionOf(cap.religion) : null;
-    const men = FB.aiBaseHost(s, rid);
+  function addInteractionAction(model, action) {
+    if (!action || !action.id || !action.group || !action.label) return;
+    model.actions.push(action);
+  }
+
+  function interactionAttentionTarget(s) {
+    const attention = s && s.player && s.player.socialAttention;
+    if (!attention || typeof attention !== 'object' ||
+        Array.isArray(attention)) return null;
+    const courtId = s.player.courtingId;
+    if (courtId && attention[courtId] && s.chars[courtId] &&
+        !s.chars[courtId].dead) return s.chars[courtId];
+    const ids = Object.keys(attention).sort();
+    for (let i = 0; i < ids.length; i++) {
+      const c = s.chars[ids[i]];
+      if (c && !c.dead && c.id !== s.player.charId) return c;
+    }
+    return null;
+  }
+
+  function interactionRetainerRecord(s, cid) {
+    const retainers = s && s.player && s.player.retainers;
+    if (!Array.isArray(retainers)) return null;
+    for (let i = 0; i < retainers.length; i++) {
+      if (retainers[i] && retainers[i].charId === cid) {
+        return retainers[i];
+      }
+    }
+    return null;
+  }
+
+  function interactionCareerTitle(s, c) {
+    let career = c && c.career;
+    if (!career) {
+      let profession = 'farmer';
+      const isPlayer = c && c.id === s.player.charId;
+      if (isPlayer) {
+        profession = s.player.professionBack ||
+          s.player.profession || 'farmer';
+      } else if (FB.stationOf(c) >= 2 ||
+          (s.player.tier >= 2 && FB.isHouseholdCharacter(s, c.id))) {
+        profession = 'noble';
+      }
+      career = {
+        profession:profession,
+        rank:FB.ageOf(c, s.date.year) < 16
+          ? (isPlayer ? 'apprentice' : 'unassigned')
+          : 'journeyman'
+      };
+    }
+    const def = FBDATA.careers[career.profession];
+    if (!def) return FB.T('No occupation');
+    const rank = career.rank || 'journeyman';
+    if (rank === 'unassigned') return FB.T('No apprenticeship chosen');
+    return FB.dataText(s, s.player.charId, 'career', career.profession, def,
+      def.ranks && def.ranks[rank] ? 'ranks.' + rank : 'name', {});
+  }
+
+  function interactionRoyalCompact(s) {
+    const compact = s && s.player && s.player.royalCompact;
+    if (!compact) return null;
+    const me = s.chars[s.player.charId];
+    const spouse = s.chars[compact.charId];
+    return me && spouse && !spouse.dead &&
+      (me.spouseId === spouse.id || spouse.spouseId === me.id)
+      ? compact : null;
+  }
+
+  function interactionRealmRulerCharacter(s, rid) {
+    return FB.realmRulerCharacterSnapshot
+      ? FB.realmRulerCharacterSnapshot(s, rid) : null;
+  }
+
+  function interactionRivalHeat(s) {
+    const rivalId = s.roles && s.roles.rival;
+    const rival = rivalId && s.chars[rivalId];
+    const feud = rival && !rival.dead && s.player.rivalry;
+    if (feud) return feud.heat || 0;
+    if (rival && !rival.dead) {
+      const value = FBDATA.balance.rivalHeatOldSave;
+      return value === undefined ? 35 : value;
+    }
+    return 0;
+  }
+
+  function instantInteractionAction(s, id, group) {
+    const status = FB.instantStatus(s, id);
+    if (!status.shown || !status.action) return null;
+    return {
+      id:'instant:' + id,
+      group:group,
+      label:dt(s, 'action', id, status.action, 'label'),
+      detail:FB.translateKnown(status.action.desc(s)),
+      enabled:status.can,
+      blockedReason:status.reason || null,
+      consequence:status.action.noConsume
+        ? FB.T('Opens the existing review or confirmation; opening it costs no day.')
+        : FB.T('The existing deed revalidates its gates and spends the day.'),
+      route:'instant',
+      actionId:id
+    };
+  }
+
+  function realmFamilySnapshot(s, rid) {
+    const realm = s.realms[rid];
+    const succession = realm && realm.succession;
+    if (!succession || !succession.members) return [];
+    const ids = [];
+    const parentId = succession.rulerMemberId || null;
+    for (const id in succession.members) {
+      const member = succession.members[id];
+      if (member && member.alive !== false &&
+          (member.parentId || null) === parentId) ids.push(id);
+    }
+    ids.sort(function (a, b) {
+      const am = succession.members[a], bm = succession.members[b];
+      return (am.sex === bm.sex ? 0 : (am.sex === 'm' ? -1 : 1)) ||
+        (am.born || 0) - (bm.born || 0) ||
+        String(a).localeCompare(String(b));
+    });
+    for (const id of succession.order || []) {
+      const member = succession.members[id];
+      if (member && member.alive !== false && ids.indexOf(id) < 0) ids.push(id);
+    }
+    return ids.slice(0, 6).map(function (id) {
+      return succession.members[id];
+    });
+  }
+
+  function realmCultivationPreview(s, rid, rulerCharacter) {
+    const realm = s.realms[rid];
+    const destinationId = realm && realm.capital;
+    const travel = s.player.travel;
+    const locationId = travel
+      ? (travel.phase === 'arrived' ? travel.currentId : null)
+      : s.player.provinceId;
+    const out = {
+      eligible:false,
+      active:!!destinationId && locationId === destinationId,
+      destinationId:destinationId,
+      days:0,
+      cost:0,
+      minimumStay:FBDATA.balance.travelMinStayDays || 90,
+      rate:FB.socialAttentionDailyOpinion(),
+      reason:''
+    };
+    if (out.active) {
+      out.eligible = true;
+      return out;
+    }
+    if (rulerCharacter && FB.socialVisitPreview) {
+      const preview = FB.socialVisitPreview(s, rulerCharacter, {
+        readOnly:true
+      });
+      for (const key in preview) out[key] = preview[key];
+      out.active = false;
+      out.rate = preview.dailyRate;
+      return out;
+    }
+    const eligible = FB.travelEligible
+      ? FB.travelEligible(s, 'relationship', { readOnly:true }) : false;
+    if (eligible !== true) {
+      out.reason = eligible || FB.T('A targeted visit is unavailable.');
+      return out;
+    }
+    const route = destinationId && FB.travelRoute(
+      s.player.provinceId, destinationId);
+    if (!route || !route.length) {
+      out.reason = FB.T('No settled overland route reaches the ruler’s capital.');
+      return out;
+    }
+    out.eligible = true;
+    out.route = route;
+    out.days = route.length * FB.travelLegDaysSnapshot(s);
+    out.cost = FB.travelCostSnapshot('relationship', route, s);
+    if (out.cost > s.player.gold) {
+      out.eligible = false;
+      out.reason = FB.T(
+        'The journey costs {money:cost}; you have {money:current}.', {
+          cost:out.cost,
+          current:Math.floor(s.player.gold)
+        });
+    }
+    return out;
+  }
+
+  function realmRelationshipText(s, rid) {
+    const p = s.player;
+    const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
+    if (rid === p.liege) return FB.T('Direct liege');
+    if (upward.indexOf(rid) >= 0) return FB.T('Higher liege');
+    if (FB.playerVassals(s).indexOf(rid) >= 0) return FB.T('Direct vassal');
+    if (p.war && p.war.enemy === rid) return FB.T('War enemy');
+    if (FB.areAlliedSnapshot(s, 'player', rid)) {
+      return FB.T('Defensive ally');
+    }
+    if (s.pacts && s.pacts[rid] > s.turn) return FB.T('Peace-pact partner');
+    if (FB.isPlayerSovereign(s) && s.realms.player &&
+        FB.realmsAdjacent(s, 'player', rid)) {
+      return s.realms[rid].liege
+        ? FB.T('Neighboring vassal realm')
+        : FB.T('Neighboring sovereign');
+    }
+    return s.realms[rid].liege
+      ? FB.T('Ruler within another realm')
+      : FB.T('Foreign sovereign');
+  }
+
+  function warCauseName(s, cause) {
+    if (cause.type === 'fabricated') return FB.T('Fabricated county claim');
+    if (cause.type === 'restoration') {
+      return FB.T('Restore the crown of {title}', {
+        title:cause.titleName || FB.T('the lost realm')
+      });
+    }
+    if (cause.type === 'caliphate') {
+      return FB.T('Succession claim to {title}', {
+        title:FB.religiousHeadTitle(s, 'sunni')
+      });
+    }
+    const def = cause.titleKind === 'duchy'
+      ? FBDATA.duchies[cause.titleId]
+      : (cause.titleKind === 'kingdom'
+        ? FBDATA.kingdoms[cause.titleId]
+        : FBDATA.empires[cause.titleId]);
+    return FB.T('De jure right through {title}', {
+      title:def ? def.name : cause.titleId
+    });
+  }
+
+  function buildRealmInteractionCard(s, rid) {
+    const realm = s && s.realms[rid];
+    if (!realm || !realm.alive || !realm.ruler) return null;
+    const cap = realm.capital && FB.world.byId[realm.capital];
+    const faithId = FB.realmReligionId
+      ? FB.realmReligionId(s, rid)
+      : (cap && cap.religion);
     const standing = FB.standingOf(s, { kind:'realm', id:rid });
-    const liege = r.liege && s.realms[r.liege];
-    const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
-    const rulerCharacter = FB.realmRulerCharacter
-      ? FB.realmRulerCharacter(s, rid) : null;
-    const succession = FB.ensureRealmSuccession(s, rid);
-    const family = FB.realmFamily(s, rid);
-    const techRid = FB.techRealmId(s, rid);
-    const techRecord = FB.realmTechRecord(s, techRid);
-    const techActiveParts = (techRecord.active || []).map(function (techActiveId) {
-      const techDef = FBDATA.tech[techActiveId];
-      return techDef ? FB.T('{technology} — {progress}/{cost}', {
-        technology:dt(s, 'tech', techActiveId, techDef, 'name'),
-        progress:researchNumber(techRecord.progress[techActiveId] || 0),
-        cost:FB.techCost(s, techActiveId, techRid)
-      }) : techActiveId;
-    });
-    const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
-    const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player.rank >= 3 &&
-      !r.liege && r.rank >= 3 && FB.realmsAdjacent(s, 'player', rid);
-    const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
-    let h = '<div class="charcard"' + (rulerCharacter
-      ? ' data-cid="' + esc(rulerCharacter.id) + '" title="' +
-        esc(FB.T('Open their sheet and your dealings with them')) + '"'
-      : '') +
-      '><canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
-      '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
-        title: FB.realmRankTitle(s, r), name: r.ruler.name
-      })) + '</div>' +
-      '<div class="ccmeta">' + esc(FB.T('{sex} of {age}', {
-        sex: FB.T(r.ruler.sex === 'f' ? 'Woman' : 'Man'), age: r.ruler.age
-      })) +
-      ' · ' + esc(cultureName(s, r.ruler.culture)) +
-      (rel ? ' · ' + rel.icon + ' ' + esc(religionName(s, cap.religion)) : '') + '</div>' +
-      '<div class="ccmeta">' + esc(liege
-        ? FB.T('Himself a vassal of {liege}', { liege: liege.name })
-        : FB.T('Sovereign — kneels to no one')) + '</div>' +
-      '<div class="ccmeta ' + standingClass(standing) + '">' +
-      esc(FB.T('⚔ martial {martial} · Standing {standing}', {
-        martial:r.ruler.mar,
-        standing:standingText(standing)
-      })) + '</div>' +
-      (r.ruler.trait && FBDATA.traits[r.ruler.trait]
-        ? '<div class="ccmeta">' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name')) +
-          ' — ' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'desc')) + '</div>'
-        : '') +
-      '</div></div>' +
-      '<div style="margin-top:10px">' +
-      kv('Realm', esc(FB.L(r.name))) +
-      kv('Standing with this ruler', standingSpan(standing)) +
-      kv('Counties', FB.realmProvinces(s, rid).length) +
-      kv('Realm host', '~' + esc(menText(s, men))) +
-      kv('Technology', esc(techLevelsText(s, techRid))) +
-      kv('Current research', esc(techActiveParts.length
-        ? techActiveParts.join(' · ')
-        : FB.T('No active project'))) +
-      kv('Defensive alliance', esc(allianceText(s, rid))) +
-      (liege ? kv('Overlord',
-        '<button class="linklike" data-liege="' + esc(liege.id) + '">' +
-        esc(FB.L(liege.name)) + '</button>') : '') +
-      (cap ? kv('Capital', esc(FB.L(cap.name))) : '') +
-      '</div>';
-    if (rid !== 'player') {
-      h += '<div class="progressnote">' +
-        esc(realmStandingContext(s, rid)) + '</div>';
+    const rulerCharacter = interactionRealmRulerCharacter(s, rid);
+    const succession = realm.succession;
+    const family = realmFamilySnapshot(s, rid);
+    const successionText = family.map(function (member) {
+      return succession && succession.heirId === member.id
+        ? FB.T('{name} (heir)', { name:member.name })
+        : member.name;
+    }).join(', ');
+    const model = {
+      target:{ kind:'realm', id:rid },
+      context:[
+        { label:FB.T('Realm'), value:FB.L(realm.name) },
+        { label:FB.T('Political relationship'),
+          value:realmRelationshipText(s, rid) },
+        { label:FB.T('Rank'), value:FB.realmRankTitle(s, realm) },
+        { label:FB.T('Ruler'), value:realm.ruler.name },
+        { label:FB.T('Faith'), value:faithId
+          ? religionName(s, faithId) : FB.T('Unknown') },
+        { label:FB.T('Capital'), value:cap ? cap.name : FB.T('Unknown') },
+        { label:FB.T('Overlord'), value:realm.liege && s.realms[realm.liege]
+          ? FB.L(s.realms[realm.liege].name) : FB.T('Sovereign') },
+        { label:FB.T('Succession'), value:successionText ||
+          FB.T('No visible royal child') }
+      ],
+      standing:{
+        value:standing,
+        band:standingBand(standing),
+        explanation:realmStandingContext(s, rid)
+      },
+      commitments:[],
+      actions:[]
+    };
+    const p = s.player;
+    const policy = FB.foreignPolicyTargetStatus
+      ? FB.foreignPolicyTargetStatus(s, rid) : null;
+    const gift = FB.rulerGiftStatus
+      ? FB.rulerGiftStatus(s, rid) : null;
+    if (policy && policy.stance) {
+      model.commitments.push({
+        id:'foreign-policy',
+        label:FB.T('Foreign-policy direction'),
+        detail:FB.T('{stance} · {used}/{capacity} political attention assigned', {
+          stance:foreignPolicyStanceText(s, rid),
+          used:policy.used,
+          capacity:policy.capacity
+        })
+      });
     }
-    if (rid !== 'player') {
-      const giftDays = FB.rulerGiftDaysRemaining(s, rid);
-      const deliveryText = giftDeliveryText(s, 'ruler', rid);
-      const giftStanding = FB.T('Standing');
-      h += '<button class="actionbtn" id="rm-gift">🎁 ' +
-        esc(FB.T('Offer a gift…')) +
-        '<span class="adesc">' + esc(deliveryText || (giftDays
-          ? FB.T('Cash and item gifts share this ruler’s cooldown. Ready in {days} days.', {
-            days:giftDays
+    if (s.pacts && s.pacts[rid] > s.turn) {
+      model.commitments.push({
+        id:'peace-pact',
+        label:FB.T('Peace pact'),
+        detail:FB.T('{days} days remain', {
+          days:s.pacts[rid] - s.turn
+        })
+      });
+    }
+    if (FB.areAlliedSnapshot(s, 'player', rid)) {
+      model.commitments.push({
+        id:'alliance',
+        label:FB.T('Defensive alliance'),
+        detail:allianceText(s, rid, true)
+      });
+    }
+    if (p.war && p.war.enemy === rid) {
+      model.commitments.push({
+        id:'war',
+        label:FB.T('Active war'),
+        detail:FB.T('This realm is your current war enemy.'),
+        urgent:true
+      });
+    } else if (FB.isRealmAtWar(s, rid)) {
+      model.commitments.push({
+        id:'foreign-war',
+        label:FB.T('Current war'),
+        detail:FB.T('This ruler is at war with another realm.'),
+        urgent:true
+      });
+    }
+    if (gift && (gift.daysRemaining ||
+        (gift.delivery && gift.delivery.pending))) {
+      model.commitments.push({
+        id:'ruler-gift',
+        label:FB.T('Ruler gift'),
+        detail:gift.delivery && gift.delivery.pending
+          ? giftDeliveryText(s, 'ruler', rid)
+          : FB.T('Recipient cooldown: {days} days remain.', {
+            days:gift.daysRemaining
           })
+      });
+    }
+    const compact = interactionRoyalCompact(s);
+    if (compact && compact.realmId === rid) {
+      model.commitments.push({
+        id:'royal-compact',
+        label:FB.T('Royal marriage compact'),
+        detail:FB.T('This court is joined to your dynasty through marriage.')
+      });
+    }
+
+    const attentionTarget = interactionAttentionTarget(s);
+    const cultivated = rulerCharacter && attentionTarget &&
+      attentionTarget.id === rulerCharacter.id;
+    const cultivation = realmCultivationPreview(s, rid, rulerCharacter);
+    const attentionBlocked = !!(p.courtingId &&
+      (!rulerCharacter || p.courtingId !== rulerCharacter.id));
+    const cultivationEnabled = !attentionBlocked && cultivation.eligible;
+    let cultivationDetail;
+    if (attentionBlocked) {
+      cultivationDetail = FB.T(
+        'End the current courtship before assigning personal attention elsewhere.');
+    } else if (cultivation.active) {
+      cultivationDetail = FB.T(
+        'Assign personal attention for +{rate} Standing each ordinary day. This costs no day.', {
+          rate:cultivation.rate
+        });
+    } else if (cultivation.eligible) {
+      cultivationDetail = FB.T(
+        'Visit the capital: {days} travel days, {money:cost}, at least {stay} days in residence, then +{rate} Standing each ordinary day.', {
+          days:cultivation.days,
+          cost:cultivation.cost,
+          stay:cultivation.minimumStay,
+          rate:cultivation.rate
+        });
+    } else {
+      cultivationDetail = cultivation.reason;
+    }
+    addInteractionAction(model, {
+      id:'relationship.cultivate',
+      group:cultivation.active ? 'relationship' : 'travel',
+      label:cultivated
+        ? FB.T('Continue cultivating this ruler')
+        : (cultivation.active
+          ? FB.T('Cultivate relationship')
+          : FB.T('Travel to cultivate this ruler…')),
+      detail:cultivationDetail,
+      enabled:cultivationEnabled,
+      blockedReason:cultivationEnabled ? null : cultivationDetail,
+      consequence:cultivated
+        ? FB.T('Keeps the current personal-attention assignment.')
+        : (attentionTarget
+          ? FB.T('Replaces personal attention to {name}.', {
+            name:FB.fullName(attentionTarget)
+          })
+          : FB.T('Uses the one personal-attention assignment.')),
+      route:'cultivate-ruler',
+      domId:'rm-cultivate'
+    });
+
+    if (gift) {
+      const itemPossible = interactionGiftArmoryRefs(s).some(function (ref) {
+        return !giftItemUnavailableText(s, ref, 'ruler', rid);
+      });
+      const giftEnabled = gift.ready || itemPossible;
+      addInteractionAction(model, {
+        id:'gift.ruler',
+        group:'gift',
+        label:FB.T('Offer a gift…'),
+        detail:FB.T(
+          'Cash costs {money:cost} for +{standing} Standing; eligible armory items grant their quality value. The recipient cooldown is {days} days and accepting a gift spends the day.', {
+            cost:gift.cost,
+            standing:gift.standing,
+            days:gift.cooldownDays
+          }),
+        enabled:giftEnabled,
+        blockedReason:giftEnabled ? null : gift.reason,
+        consequence:gift.delivery && gift.delivery.foreign
+          ? FB.T('Standing and cooldown begin only when the courier arrives.')
+          : FB.T('Uses this ruler generation’s one recipient cooldown.'),
+        route:'ruler-gift',
+        domId:'rm-gift'
+      });
+    }
+
+    if (policy && policy.relevant) {
+      addInteractionAction(model, {
+        id:'diplomacy.policy',
+        group:'diplomacy',
+        label:FB.T('Set foreign-policy direction…'),
+        detail:FB.T(
+          '{used}/{capacity} assignments used; each active direction changes Standing by about {amount} each season and costs no day.', {
+            used:policy.used,
+            capacity:policy.capacity,
+            amount:Math.round(policy.amount * 10) / 10
+          }),
+        enabled:policy.ready,
+        blockedReason:policy.reason || null,
+        consequence:policy.stance
+          ? FB.T('May keep, reverse, or withdraw the current direction.')
+          : FB.T('Uses one political-attention assignment until set to Neutral.'),
+        route:'foreign-policy',
+        domId:'gm-policy'
+      });
+    }
+
+    const envoy = FB.envoyStatus ? FB.envoyStatus(s, rid) : null;
+    if (envoy && envoy.relevant) {
+      addInteractionAction(model, {
+        id:'diplomacy.envoy',
+        group:'diplomacy',
+        label:FB.T('Offer a peace pact…'),
+        detail:FB.T(
+          'Costs {money:cost}; chance about {chance}%; success creates {days} days of non-aggression.', {
+            cost:envoy.cost,
+            chance:Math.round(envoy.chance * 100),
+            days:envoy.durationDays
+          }),
+        enabled:envoy.ready,
+        blockedReason:envoy.reason || null,
+        consequence:FB.T('Uses the existing envoy resolution and spends no travel time.'),
+        route:'envoy'
+      });
+    }
+    const alliance = FB.allianceOfferStatus
+      ? FB.allianceOfferStatus(s, rid) : null;
+    if (alliance && alliance.relevant) {
+      addInteractionAction(model, {
+        id:'diplomacy.alliance',
+        group:'diplomacy',
+        label:FB.T('Offer a defensive alliance…'),
+        detail:FB.T(
+          'Requires {standing} Standing, costs {money:cost}, and succeeds at about {chance}%.', {
+            standing:alliance.standingRequired,
+            cost:alliance.cost,
+            chance:Math.round(alliance.chance * 100)
+          }),
+        enabled:alliance.ready,
+        blockedReason:alliance.reason || null,
+        consequence:FB.T(
+          'Each realm may have one ally; the compact ends when either ruler changes.'),
+        route:'envoy-alliance'
+      });
+    }
+
+    const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
+    const directVassal = FB.playerVassals(s).indexOf(rid) >= 0;
+    if (upward.indexOf(rid) >= 0) {
+      for (const id of ['pay_homage', 'appeal_lord']) {
+        const action = instantInteractionAction(s, id, 'feudal');
+        if (action) addInteractionAction(model, action);
+      }
+    }
+    if (rid === p.liege) {
+      for (const id of ['petition_liege', 'petition_county',
+        'declare_independence']) {
+        const action = instantInteractionAction(s, id,
+          id === 'declare_independence' ? 'war' : 'feudal');
+        if (action) addInteractionAction(model, action);
+      }
+    }
+    if (directVassal) {
+      for (const id of ['demand_taxes', 'revoke_county']) {
+        const action = instantInteractionAction(s, id, 'feudal');
+        if (action) addInteractionAction(model, action);
+      }
+      const favor = FB.vassalLevyFavorStatus(s, rid);
+      addInteractionAction(model, {
+        id:'feudal.exceptional-levy',
+        group:'feudal',
+        label:FB.T('Ask for an exceptional levy'),
+        detail:FB.T(
+          'Adds {percent}% of this vassal’s levy for one year, lowers Standing by 15, and spends the day.', {
+            percent:Math.round(
+              (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
+          }),
+        enabled:favor.ready,
+        blockedReason:favor.ready ? null : favor.reason,
+        consequence:FB.T('Creates this vassal’s existing one-year levy promise.'),
+        route:'vassal-levy'
+      });
+      const council = FB.councilSummary ? FB.councilSummary(s) : null;
+      if (council) {
+        const seatId = council.seated[rid] || null;
+        addInteractionAction(model, {
+          id:'feudal.council',
+          group:'feudal',
+          label:seatId
+            ? FB.T('Manage this ruler’s Council office…')
+            : FB.T('Review this ruler for the Royal Council…'),
+          detail:seatId
+            ? FB.T('{office} · {benefit}', {
+              office:councilSeatName(seatId),
+              benefit:councilSeatDesc(seatId)
+            })
+            : FB.T(
+              'This direct vassal holds no great office. Open the Council to review vacancies and appointments.'),
+          enabled:true,
+          blockedReason:null,
+          consequence:FB.T(
+            'Appointments, replacements, gifts, and dismissals keep their existing Standing and crown-authority effects.'),
+          route:'council'
+        });
+      }
+    }
+
+    const causes = FB.realmWarCauses
+      ? FB.realmWarCauses(s, rid, true) : [];
+    for (const cause of causes) {
+      const province = FB.world.byId[cause.target];
+      addInteractionAction(model, {
+        id:'war.' + cause.type + '.' + cause.target,
+        group:'war',
+        label:FB.T('Press {cause}…', { cause:warCauseName(s, cause) }),
+        detail:FB.T(
+          'Target: {province}. Opens the existing cause review and muster preview.', {
+            province:province ? province.name : cause.target
+          }),
+        enabled:!cause.blocked,
+        blockedReason:FB.warCauseBlockedReason
+          ? FB.warCauseBlockedReason(cause) : null,
+        consequence:cause.sacrilegious
+          ? FB.T(
+            'A separate condemnation confirmation appears before war can begin.')
+          : FB.T('War begins only after the existing cause selection is confirmed.'),
+        route:'war',
+        causeTarget:cause.target
+      });
+    }
+
+    if ((upward.indexOf(rid) >= 0 || directVassal) &&
+        FB.governanceEligible && FB.governanceEligible(s)) {
+      addInteractionAction(model, {
+        id:'management.governance',
+        group:'management',
+        label:FB.T('Open Governance…'),
+        detail:FB.T(
+          'Review your own domain, obligations, institution, and political position.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Leaves this one-counterpart card for the authoritative overview.'),
+        route:'governance',
+        domId:'rm-governance'
+      });
+    }
+    if (rulerCharacter) {
+      addInteractionAction(model, {
+        id:'management.personal-character',
+        group:'management',
+        label:FB.T('Personal character…'),
+        detail:FB.T(
+          'Open personal traits, family, courtship, rivalry, and household dealings.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Political gifts remain on this ruler path.'),
+        route:'personal-character',
+        domId:'rm-character'
+      });
+    }
+
+    const me = s.chars[p.charId];
+    const chain = p.liege ? FB.liegeChain(s, p.liege) : [];
+    const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player &&
+      s.realms.player.rank >= 3 && !realm.liege && realm.rank >= 3 &&
+      FB.realmsAdjacent(s, 'player', rid);
+    const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
+    for (const child of family) {
+      const age = Math.max(0, s.date.year - child.born);
+      const station = realm.rank <= 2 ? 3 : 4;
+      const canTry = mayApproach && age >= 16 && child.sex !== me.sex &&
+        !compact && FB.canWedSnapshot(s) &&
+        !(FB.royalCloseKinSnapshot &&
+          FB.royalCloseKinSnapshot(s, me, {
+          royalLine:{ realmId:rid, memberId:child.id }
+        })) &&
+        station - FB.playerStation(s) < 3;
+      if (!canTry) continue;
+      addInteractionAction(model, {
+        id:'relationship.royal-courtship.' + child.id,
+        group:'relationship',
+        label:FB.T('Approach {name} for courtship…', {
+          name:child.name
+        }),
+        detail:succession && succession.heirId === child.id
+          ? FB.T('The designated heir can transmit the crown to your shared branch.')
           : FB.T(
-            'Cash costs {money:cost} at this rank for +{amount} {standing}; armory items grant their quality value. (spends the day)', {
-              cost:FB.rulerCashGiftCost(s, rid),
-              amount:FB.rulerCashGiftOpinion(),
-              standing:giftStanding
-            }))) + '</span></button>' +
-        '<button class="actionbtn" id="rm-cultivate">🤝 ' +
-        esc(FB.T('Cultivate relationship…')) +
-        '<span class="adesc">' + esc(FB.T(
-          'Visit {name} at the capital and remain at least {days} days; Standing advances only while you are there.', {
-            name:r.ruler.name,
-            days:FBDATA.balance.travelMinStayDays || 90
-          })) + '</span></button>';
-      if (rulerCharacter) {
-        h += '<button class="actionbtn" id="rm-character">' +
-          esc(FB.T('Open full character sheet')) +
-          '<span class="adesc">' + esc(FB.T(
-            'View personal relationships, courtship, marriage, and other applicable dealings.')) +
-          '</span></button>';
-      }
+            'This creates a dynastic tie, but this child does not currently transmit the crown.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T(
+          'Materializes this royal child only after you choose the action.'),
+        route:'royal-courtship',
+        memberId:child.id
+      });
     }
-    if (family.length) {
-      h += '<div class="panelh">' + esc(FB.T('Ruler’s family and succession')) + '</div>';
-      for (const child of family) {
-        const age = Math.max(0, s.date.year - child.born);
-        const isHeir = succession && succession.heirId === child.id;
-        const directChild = succession &&
-          (child.parentId || null) === (succession.rulerMemberId || null);
-        h += '<div class="progressnote">' + esc(FB.T('{name} · {relation}, age {age}{heir}', {
-          name: child.name,
-          relation: directChild
-            ? (child.sex === 'm' ? FB.T('son') : FB.T('daughter'))
-            : (child.sex === 'm' ? FB.T('kinsman') : FB.T('kinswoman')),
-          age: age,
-          heir: isHeir ? FB.T(' · designated heir') : ''
-        })) + '</div>';
-        const me = s.chars[s.player.charId];
-        const station = r.rank <= 2 ? 3 : 4;
-        const canTry = mayApproach && age >= 16 && child.sex !== me.sex &&
-          !FB.royalCompactOf(s) && FB.canWed(s) &&
-          !(FB.royalCloseKin && FB.royalCloseKin(s, me, {
-            royalLine: { realmId: rid, memberId: child.id }
-          })) &&
-          station - FB.playerStation(s) < 3;
-        if (canTry) {
-          const royalTogether = s.player.travel
-            ? s.player.travel.phase === 'arrived' &&
-              s.player.travel.currentId === r.capital
-            : s.player.provinceId === r.capital;
-          h += '<button class="actionbtn" data-royal-child="' + esc(child.id) + '">' +
-            esc(royalTogether
-              ? FB.T('🌷 Approach {name} for courtship', { name:child.name })
-              : FB.T('🧭 Travel to approach {name} for courtship…', {
-                name:child.name
-              })) +
-            '<span class="adesc">' + esc(isHeir
-              ? FB.T('The designated heir can transmit the crown to your shared branch.')
-              : FB.T('This creates a dynastic tie, but this child does not currently transmit the crown.')) +
-            '</span></button>';
-        }
-      }
+    return model;
+  }
+  UI.realmInteractionCard = buildRealmInteractionCard;
+
+  function interactionReturn(returnContext) {
+    if (!returnContext) {
+      UI.closeModal();
+      return;
     }
-    if (foreignSovereign) {
-      h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
-        ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
-      if (FB.isForeignPolicyTarget(s, rid)) {
-        h += '<button class="btn" id="gm-policy">' + esc(FB.T('Set foreign policy')) + '</button>';
-      }
+    if (returnContext.view === 'governance') {
+      UI.showGovernance(returnContext.section || 'position');
+    } else if (returnContext.view === 'council') {
+      UI.showCouncil(returnContext.returnView,
+        returnContext.returnContext);
+    } else if (returnContext.view === 'estates') {
+      UI.showParliament(returnContext.returnView);
+    } else if (returnContext.view === 'realm') {
+      UI.showLiegeModal(returnContext.realmId, returnContext.returnContext);
+    } else if (returnContext.view === 'character') {
+      UI.showCharModal(returnContext.characterId, returnContext.returnContext);
+    } else if (returnContext.view === 'retainer') {
+      UI.showRetainerManage(returnContext.characterId,
+        returnContext.returnContext);
+    } else {
+      UI.closeModal();
     }
-    const returnsToGovernance = returnContext &&
-      returnContext.view === 'governance';
-    h += '<button class="btn" id="gm-cancel">' +
-      esc(returnsToGovernance ? FB.T('Back') : FB.T('Close')) + '</button>';
+  }
+
+  function realmGiftReturnView(rid, returnContext) {
+    if (returnContext && returnContext.view === 'governance') {
+      return 'realm:governance:' + (returnContext.section || 'position');
+    }
+    return {
+      kind:'realm-card',
+      returnContext:returnContext || null
+    };
+  }
+
+  function showRealmInteractionSheet(rid, returnContext) {
+    const s = FB.state;
+    const realm = s && rid && s.realms[rid];
+    const model = s && buildRealmInteractionCard(s, rid);
+    if (!s || !realm || !model) return;
+    const rulerCharacter = interactionRealmRulerCharacter(s, rid);
+    let h = '<div class="charcard">' +
+      '<canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
+      '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
+        title:FB.realmRankTitle(s, realm),
+        name:realm.ruler.name
+      })) + '</div><div class="ccmeta">' + esc(FB.L(realm.name)) +
+      '</div></div></div>' + interactionCardHtml(model) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Close')) +
+      '</button></div>';
     openModal(rid === s.player.liege
-      ? FB.T('Your Liege') : FB.T('Realm Ruler'), h,
-      returnsToGovernance ? {
-        historyView:true,
+      ? FB.T('Your Liege') : FB.T('Realm Ruler'), h, {
+        modalClass:'fullsheet-modal interaction-modal realm-interaction-modal',
+        historyView:!!returnContext,
         historyBackRender:function () {
-          UI.showGovernance(returnContext.section || 'position');
+          interactionReturn(returnContext);
         }
-      } : undefined);
+      });
     FB.drawCrest($('liegecrest'), rid);
-    if ($('gm-policy')) $('gm-policy').addEventListener('click', function () {
-      UI.showForeignPolicyStance(rid);
-    });
-    if ($('rm-gift')) $('rm-gift').addEventListener('click', function () {
-      UI.showRulerGiftModal(rid, returnsToGovernance
-        ? 'realm:governance:' + (returnContext.section || 'position')
-        : 'ruler');
-    });
-    if ($('rm-cultivate')) $('rm-cultivate').addEventListener('click', function () {
-      const c = FB.materializeRealmRuler(s, rid);
-      if (!c) return;
-      const presence = FB.socialAttentionPresence(s, c);
-      if (presence.status === 'active') UI.showCharModal(c.id);
-      else UI.showSocialVisit(c.id, { returnRealmId:rid });
-    });
-    if ($('rm-character')) $('rm-character').addEventListener('click', function () {
-      const c = FB.realmRulerCharacter(s, rid);
-      if (c) UI.showCharModal(c.id);
-    });
-    document.querySelectorAll('[data-royal-child]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        const c = FB.materializeRoyalChild(s, rid, btn.dataset.royalChild);
+    wireInteractionCard(model, function (action) {
+      if (action.route === 'ruler-gift') {
+        UI.showRulerGiftModal(rid, realmGiftReturnView(rid, returnContext));
+      } else if (action.route === 'cultivate-ruler') {
+        const c = rulerCharacter || FB.materializeRealmRuler(s, rid);
+        if (!c) return;
+        const presence = FB.socialAttentionPresence(s, c);
+        if (presence.status === 'active') {
+          if (!FB.socialAttentionAssign(s, c)) return;
+          UI.showLiegeModal(rid, returnContext);
+          UI.refresh();
+        } else {
+          UI.showSocialVisit(c.id, {
+            returnRealmId:rid,
+            returnContext:returnContext
+          });
+        }
+      } else if (action.route === 'personal-character') {
+        if (!rulerCharacter) return;
+        UI.showCharModal(rulerCharacter.id, {
+          view:'realm',
+          realmId:rid,
+          returnContext:returnContext
+        });
+      } else if (action.route === 'foreign-policy') {
+        UI.showForeignPolicyStance(rid, {
+          view:'realm',
+          realmId:rid,
+          returnContext:returnContext
+        });
+      } else if (action.route === 'envoy' ||
+          action.route === 'envoy-alliance') {
+        UI.showEnvoys(rid, {
+          view:'realm',
+          realmId:rid,
+          returnContext:returnContext
+        });
+      } else if (action.route === 'instant') {
+        FB.runInstant(s, action.actionId);
+      } else if (action.route === 'vassal-levy') {
+        if (!FB.callVassalLevyFavor(s, rid)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      } else if (action.route === 'council') {
+        UI.showCouncil(null, {
+          view:'realm',
+          realmId:rid,
+          returnContext:returnContext
+        });
+      } else if (action.route === 'war') {
+        UI.showWarTargets(rid, {
+          view:'realm',
+          realmId:rid,
+          returnContext:returnContext
+        });
+      } else if (action.route === 'governance') {
+        UI.showGovernance('position');
+      } else if (action.route === 'royal-courtship') {
+        const c = FB.materializeRoyalChild(s, rid, action.memberId);
         if (!c || !FB.canCourt(s, c)) return;
         const presence = FB.socialAttentionPresence(s, c);
         if (presence.status !== 'active') {
-          UI.showSocialVisit(c.id, { courtship:true, returnRealmId:rid });
+          UI.showSocialVisit(c.id, {
+            courtship:true,
+            returnRealmId:rid,
+            returnContext:returnContext
+          });
           return;
         }
         UI.closeModal();
         if (!FB.beginCourtship(s, c)) return;
         FB.news(s, FB.msg('news.social.royal_courting_begins',
-          '🌷 You begin courting {name} of {realm}.', { name: FB.fullName(c), realm: r.name }));
-        FB.game.passDay({ skipFocus: true });
-      });
+          '🌷 You begin courting {name} of {realm}.', {
+            name:FB.fullName(c), realm:realm.name
+          }));
+        FB.game.passDay({ skipFocus:true });
+      }
     });
     $('gm-cancel').addEventListener('click', function () {
-      if (returnsToGovernance) {
+      if (returnContext) {
         modalHistoryBack(function () {
-          UI.showGovernance(returnContext.section || 'position');
+          interactionReturn(returnContext);
         });
       } else {
         UI.closeModal();
       }
     });
+  }
+
+  /* The realm sheet remains the primary view for an AI ruler. Cultivation
+     can materialize that ruler into an ordinary character sheet as needed. */
+  UI.showLiegeModal = function (rid, returnContext) {
+    return showRealmInteractionSheet(rid, returnContext);
   };
 
   /* Grant one abstract local Craft or Trade guild a monopoly. The first
@@ -8314,7 +9059,7 @@ window.FB = window.FB || {};
   /* the Royal Council (tier 6+): the great officers of the crown — seats,
      holders, tempers, and crown authority. Gifts and dismissals act at once;
      appointment cards preview vacant seats and deliberate replacements. */
-  UI.showCouncil = function (returnView) {
+  UI.showCouncil = function (returnView, returnContext) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
     const projection = FB.councilSummary(s);
@@ -8362,6 +9107,8 @@ window.FB = window.FB || {};
             standing:standingText(op)
           })) + '</div>' +
           '<div style="margin-top:6px">' +
+          '<button class="btn" data-council-realm="' + esc(rid) + '">' +
+          esc(FB.T('Ruler card…')) + '</button> ' +
           '<button class="btn" data-council-gift="' + esc(rid) + '">🎁 ' +
           esc(FB.T('Offer a gift…')) + '</button> ' +
           (unseated.length
@@ -8384,44 +9131,67 @@ window.FB = window.FB || {};
       }
     }
     h += '<button class="btn" id="gm-cancel">' +
-      esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
+      esc(returnView === 'governance' || returnContext
+        ? FB.T('Back') : FB.T('Close')) +
       '</button>';
-    openModal(FB.T('The Royal Council'), h, returnView === 'governance' ? {
-      historyView:true,
-      historyBackRender:function () { UI.showGovernance('institution'); }
-    } : undefined);
+    openModal(FB.T('The Royal Council'), h,
+      returnView === 'governance' || returnContext ? {
+        historyView:true,
+        historyBackRender:function () {
+          if (returnView === 'governance') UI.showGovernance('institution');
+          else interactionReturn(returnContext);
+        }
+      } : undefined);
     for (const seat of FB.councilSeats()) {
       const cv = $('crest_' + seat.id);
       if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
     }
     FB.paintCrests($('gm-body'));
+    document.querySelectorAll('[data-council-realm]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showLiegeModal(btn.dataset.councilRealm, {
+          view:'council',
+          returnView:returnView,
+          returnContext:returnContext
+        });
+      });
+    });
     document.querySelectorAll('[data-council-gift]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         UI.showRulerGiftModal(btn.dataset.councilGift,
-          returnView === 'governance' ? 'council:governance' : 'council');
+          {
+            kind:'council',
+            returnView:returnView,
+            returnContext:returnContext
+          });
       });
     });
     document.querySelectorAll('[data-council-assign]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        UI.showCouncilCandidates(btn.dataset.councilAssign, returnView);
+        UI.showCouncilCandidates(btn.dataset.councilAssign, returnView,
+          returnContext);
       });
     });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.councilDismiss(FB.state, btn.dataset.dismiss);
-        UI.showCouncil(returnView);
+        UI.showCouncil(returnView, returnContext);
       });
     });
     document.querySelectorAll('[data-appoint]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const parts = btn.dataset.appoint.split('|');
         FB.councilAppoint(FB.state, parts[0], parts[1]);
-        UI.showCouncil(returnView);
+        UI.showCouncil(returnView, returnContext);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       if (returnView === 'governance') {
         modalHistoryBack(function () { UI.showGovernance('institution'); });
+      } else if (returnContext) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
       } else {
         UI.closeModal();
         UI.refresh();
@@ -8429,7 +9199,7 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showCouncilCandidates = function (seatId, returnView) {
+  UI.showCouncilCandidates = function (seatId, returnView, returnContext) {
     const s = FB.state;
     const projection = FB.councilSummary(s);
     const seat = FB.councilSeat(seatId);
@@ -8467,7 +9237,9 @@ window.FB = window.FB || {};
       office:councilSeatName(seat.id)
     }), h, {
       historyView:true,
-      historyBackRender:function () { UI.showCouncil(returnView); }
+      historyBackRender:function () {
+        UI.showCouncil(returnView, returnContext);
+      }
     });
     FB.paintCrests($('gm-body'));
     document.querySelectorAll('[data-council-candidate]').forEach(function (button) {
@@ -8475,12 +9247,16 @@ window.FB = window.FB || {};
         const rid = button.dataset.councilCandidate;
         FB.councilAppoint(s, seat.id, rid);
         if (!s.council || s.council.seats[seat.id] !== rid) return;
-        modalHistoryBack(function () { UI.showCouncil(returnView); });
+        modalHistoryBack(function () {
+          UI.showCouncil(returnView, returnContext);
+        });
         UI.refresh();
       });
     });
     $('council-candidates-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCouncil(returnView); });
+      modalHistoryBack(function () {
+        UI.showCouncil(returnView, returnContext);
+      });
     });
   };
 
@@ -8516,6 +9292,12 @@ window.FB = window.FB || {};
     const redress = FB.parliamentMotionStatus(s, 'redress');
     const scutage = FB.parliamentMotionStatus(s, 'scutage');
     h += '<div class="gm-list">';
+    h += '<button class="actionbtn" id="estates-liege-card">' +
+      esc(FB.T('Open {liege}’s ruler card…', {
+        liege:liege.ruler.name
+      })) + '<span class="adesc">' + esc(FB.T(
+        'Review Standing, gifts, cultivation, feudal actions, and the realm relationship.')) +
+      '</span></button>';
     h += '<button class="actionbtn" data-motion="redress"' +
       (redress.ready ? '' : ' disabled') + '>⚖ ' +
       esc(FB.T('Move for redress of grievances ({money:cost})', { cost: cost })) +
@@ -8536,6 +9318,12 @@ window.FB = window.FB || {};
       historyView:true,
       historyBackRender:function () { UI.showGovernance('institution'); }
     } : undefined);
+    $('estates-liege-card').addEventListener('click', function () {
+      UI.showLiegeModal(s.player.liege, {
+        view:'estates',
+        returnView:returnView
+      });
+    });
     document.querySelectorAll('[data-motion]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (!FB.parliamentMove(s, btn.dataset.motion)) return;
@@ -9548,6 +10336,22 @@ window.FB = window.FB || {};
     return returnContext === HOUSEHOLD_PLAN_RETURN;
   }
 
+  function returnsToInteractionManagement(returnContext) {
+    return !!(returnContext && typeof returnContext === 'object' &&
+      (returnContext.view === 'character' ||
+        returnContext.view === 'retainer'));
+  }
+
+  function finishManagementReturn(returnContext, fallback) {
+    if (returnsToInteractionManagement(returnContext)) {
+      modalHistoryBack(function () {
+        interactionReturn(returnContext);
+      });
+      return;
+    }
+    finishHouseholdPlanReturn(returnContext, fallback);
+  }
+
   function householdPlanHistoryOptions(returnContext) {
     if (!returnsToHouseholdPlan(returnContext)) return null;
     return {
@@ -10520,7 +11324,7 @@ window.FB = window.FB || {};
     return FB.T('Passes to heirs as family property; does not follow conquest');
   }
 
-  UI.showRetainerHire = function () {
+  UI.showRetainerHire = function (returnContext) {
     const s = FB.state;
     const used = FB.retainerRecords(s).length;
     const capacity = FB.retainerCapacity(s);
@@ -10552,16 +11356,31 @@ window.FB = window.FB || {};
             })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('🗝 Hire a Retainer'), h);
+    openModal(FB.T('🗝 Hire a Retainer'), h,
+      returnsToInteractionManagement(returnContext) ? {
+        historyView:true,
+        historyBackRender:function () {
+          interactionReturn(returnContext);
+        }
+      } : undefined);
     document.querySelectorAll('[data-retainer-office]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showRetainerCandidates(button.dataset.retainerOffice);
+        UI.showRetainerCandidates(button.dataset.retainerOffice,
+          returnContext);
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnsToInteractionManagement(returnContext)) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
-  UI.showRetainerCandidates = function (office) {
+  UI.showRetainerCandidates = function (office, returnContext) {
     const s = FB.state;
     const def = FBDATA.positions[office];
     if (!def || def.kind !== 'retainer') return;
@@ -10646,10 +11465,12 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus:true });
       });
     });
-    $('gm-cancel').addEventListener('click', UI.showRetainerHire);
+    $('gm-cancel').addEventListener('click', function () {
+      UI.showRetainerHire(returnContext);
+    });
   };
 
-  UI.showRetainerManage = function (cid) {
+  UI.showRetainerManage = function (cid, returnContext) {
     const s = FB.state;
     const record = FB.retainerRecord(s, cid);
     const c = record && s.chars[cid];
@@ -10669,16 +11490,36 @@ window.FB = window.FB || {};
       esc(FB.T('The retainer leaves immediately and remembers the slight.')) +
       '</span></button></div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Service of {name}', { name:c.name }), h);
+    openModal(FB.T('Service of {name}', { name:c.name }), h,
+      returnsToInteractionManagement(returnContext) ? {
+        historyView:true,
+        historyBackRender:function () {
+          interactionReturn(returnContext);
+        }
+      } : undefined);
     FB.paintFaces($('gm-body'), s);
-    $('retainer-career').addEventListener('click', function () { UI.showCareerPicker(cid); });
-    $('retainer-dismiss').addEventListener('click', function () {
-      UI.showRetainerDismiss(cid);
+    $('retainer-career').addEventListener('click', function () {
+      UI.showCareerPicker(cid, {
+        view:'retainer',
+        characterId:cid,
+        returnContext:returnContext
+      });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('retainer-dismiss').addEventListener('click', function () {
+      UI.showRetainerDismiss(cid, returnContext);
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnsToInteractionManagement(returnContext)) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
-  UI.showRetainerDismiss = function (cid) {
+  UI.showRetainerDismiss = function (cid, returnContext) {
     const s = FB.state;
     const record = FB.retainerRecord(s, cid);
     const c = record && s.chars[cid];
@@ -10696,7 +11537,9 @@ window.FB = window.FB || {};
       UI.closeModal();
       UI.refresh();
     });
-    $('gm-cancel').addEventListener('click', function () { UI.showRetainerManage(cid); });
+    $('gm-cancel').addEventListener('click', function () {
+      UI.showRetainerManage(cid, returnContext);
+    });
   };
 
   UI.showLivelihoods = function (returnContext) {
@@ -10928,6 +11771,10 @@ window.FB = window.FB || {};
     const historyOptions = { historyView:true };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    } else if (returnsToInteractionManagement(returnContext)) {
+      historyOptions.historyBackRender = function () {
+        interactionReturn(returnContext);
+      };
     }
     openModal(landedSelf
       ? FB.T('Former calling of {name}', { name:c.name })
@@ -10965,7 +11812,7 @@ window.FB = window.FB || {};
       UI.showCardinalPetition(c.id, returnContext);
     });
     $('gm-cancel').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(UI.showLivelihoods);
       });
     });
@@ -11011,7 +11858,7 @@ window.FB = window.FB || {};
     });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, function () {
-        UI.showCareerPicker(cid);
+        UI.showCareerPicker(cid, returnContext);
       });
     });
   };
@@ -11085,7 +11932,7 @@ window.FB = window.FB || {};
     if (endow) endow.addEventListener('click', function () { petition(true); });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, function () {
-        UI.showCareerPicker(cid);
+        UI.showCareerPicker(cid, returnContext);
       });
     });
   };
@@ -11252,7 +12099,7 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () {
       if (returnContext === 'bishopric') UI.showBishopric();
       else finishHouseholdPlanReturn(returnContext, function () {
-        UI.showCareerPicker(cid);
+        UI.showCareerPicker(cid, returnContext);
       });
     });
   };
@@ -12863,7 +13710,7 @@ window.FB = window.FB || {};
   };
 
   /* ================= character sheet & trait dialogs ================= */
-  UI.showFriendConfirm = function (cid) {
+  UI.showFriendConfirm = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!c || !FB.canNameFriend(s, c)) return;
@@ -12878,525 +13725,830 @@ window.FB = window.FB || {};
     const h = '<p>' + esc(prompt) + '</p><button class="btn primary" id="friend-confirm">' +
       esc(FB.T('Call {name} friend', { name:c.name })) +
       '</button> <button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('Name a Friend'), h);
+    openModal(FB.T('Name a Friend'), h, {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext);
+      }
+    });
     $('friend-confirm').addEventListener('click', function () {
       if (!FB.nameFriend(s, c)) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
     });
-    $('gm-cancel').addEventListener('click', function () { UI.showCharModal(cid); });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext);
+      });
+    });
   };
 
-  UI.showCharModal = function (cid) {
-    const s = FB.state;
-    if (!s) return;
-    const c = s.chars[cid];
-    if (!c) return;
+  function characterGiftAction(s, c, household) {
+    const gift = FB.characterGiftStatus(s, c.id);
+    const deliveryReason = gift.delivery && gift.delivery.pending
+      ? giftDeliveryText(s, 'character', c.id)
+      : (gift.delivery && gift.delivery.foreign && !gift.delivery.eligible
+        ? gift.delivery.reason : '');
+    let itemPossible = false;
+    if (!household) {
+      itemPossible = interactionGiftArmoryRefs(s).some(function (ref) {
+        return !giftItemUnavailableText(
+          s, ref, 'character', c.id);
+      });
+    }
+    const enabled = gift.ready || itemPossible;
+    return {
+      id:'gift.character',
+      group:'gift',
+      label:FB.T('Offer a gift…'),
+      detail:household
+        ? FB.T(
+          'Cash costs {money:cost} for +{standing} Standing. Household equipment remains in the shared armory. The recipient cooldown is {days} days.', {
+            cost:gift.cost,
+            standing:gift.standing,
+            days:gift.cooldownDays
+          })
+        : FB.T(
+          'Cash costs {money:cost} for +{standing} Standing; an eligible armory item grants its quality value. The recipient cooldown is {days} days.', {
+            cost:gift.cost,
+            standing:gift.standing,
+            days:gift.cooldownDays
+          }),
+      enabled:enabled,
+      blockedReason:enabled ? null : (gift.reason || deliveryReason),
+      consequence:gift.delivery && gift.delivery.foreign
+        ? FB.T('Standing and the cooldown begin only when the courier arrives.')
+        : FB.T('Accepting one cash or item gift spends the day.'),
+      route:'character-gift'
+    };
+  }
+
+  function buildCharacterInteractionCard(s, cid) {
+    const c = s && s.chars[cid];
+    if (!c) return null;
     const me = s.chars[s.player.charId];
+    const standing = FB.standingOf(s, {
+      kind:'character', id:c.id
+    });
+    const residenceId = FB.characterResidence
+      ? FB.characterResidence(s, c) : FB.homeOf(s, c);
+    const residence = residenceId && FB.world.byId[residenceId];
     const reigningRealmId = FB.realmIdForRulerCharacter &&
       FB.realmIdForRulerCharacter(s, c);
-    if (reigningRealmId && FB.syncRealmRulerStanding) {
-      FB.syncRealmRulerStanding(s, reigningRealmId);
-    }
     const descendantKind = FB.playerDescendantKind(s, c.id);
-    const isHousehold = !c.dead && FB.isHouseholdCharacter &&
+    const household = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
-    const retainer = !c.dead && FB.retainerRecord ? FB.retainerRecord(s, c.id) : null;
-    let h = UI.charCardHtml(s, c, false, true);
-    if (!c.dead && c.id !== me.id) {
-      h += '<div class="progressnote">' +
-        esc(characterStandingContext(s, c)) + '</div>';
+    const retainer = !c.dead
+      ? interactionRetainerRecord(s, c.id) : null;
+    const relation = relationText(s, c) || (household
+      ? FB.T('Your household') : FB.T('Known character'));
+    const model = {
+      target:{ kind:'character', id:c.id },
+      context:[
+        { label:FB.T('Relationship'), value:relation },
+        { label:FB.T('Residence'), value:residence
+          ? residence.name : FB.T('Unknown') },
+        { label:FB.T('Occupation'), value:interactionCareerTitle(s, c) },
+        { label:FB.T('Faith'), value:religionName(s, c.religion) },
+        { label:FB.T('Station'), value:FB.stationName(FB.stationOf(c)) }
+      ],
+      standing:c.id === me.id ? null : {
+        value:standing,
+        band:standingBand(standing),
+        explanation:characterStandingContext(s, c)
+      },
+      commitments:[],
+      actions:[]
+    };
+    if (c.dead || c.id === me.id) return model;
+
+    const attentionTarget = interactionAttentionTarget(s);
+    const attention = FB.socialAttentionStatus(s, c);
+    const assigned = attentionTarget && attentionTarget.id === c.id;
+    const presence = FB.socialAttentionPresence(s, c);
+    const together = presence.status === 'active';
+    const visit = !together && FB.socialVisitPreview
+      ? FB.socialVisitPreview(s, c, { readOnly:true }) : null;
+    if (assigned) {
+      model.commitments.push({
+        id:'personal-attention',
+        label:FB.T('Personal attention'),
+        detail:together
+          ? FB.T('+{rate} Standing each ordinary day together.', {
+            rate:attention.rate
+          })
+          : FB.T('Assigned, but paused until you are together.')
+      });
     }
-    const attentionTarget = FB.socialAttentionTarget(s);
-    if (!c.dead && attentionTarget && attentionTarget.id === c.id) {
-      h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
+    if (s.player.courtingId === c.id) {
+      model.commitments.push({
+        id:'courtship',
+        label:FB.T('Active courtship'),
+        detail:FB.T(
+          'A proposal becomes available at +{threshold} Standing.', {
+            threshold:FB.relationshipOpinionThreshold()
+          })
+      });
     }
-    // the dead get a sheet for remembrance — their dates, skills, traits — but no dealings
-    if (c.dead) {
-      h += '<button class="btn" id="cm-close" style="margin-top:10px">Close</button>';
-      openModal(FB.fullName(c), h);
-      FB.paintFaces($('gm-body'), s);
-      $('cm-close').addEventListener('click', UI.closeModal);
-      return;
+    if (s.roles.friend === c.id) {
+      model.commitments.push({
+        id:'friendship',
+        label:FB.T('Named friend'),
+        detail:FB.T('Events and oaths use this exact person.')
+      });
     }
-    h += '<div class="gm-list" style="margin-top:10px">';
-    const isFamily = FB.spousesOf(s, me).some(function (sp) { return sp.id === c.id; }) ||
-      !!descendantKind ||
-      (c.role === 'sibling' && c.dyn === me.dyn);
-    if (isHousehold) {
-      h += '<button class="actionbtn" id="cm-equipment">' +
-        esc(FB.T('Equip items…')) + '<span class="adesc">' +
-        esc(FB.T('Open the full figure and choose equipment from the family armory.')) +
-        '</span></button>';
+    if (s.roles.rival === c.id) {
+      const heat = interactionRivalHeat(s);
+      model.commitments.push({
+        id:'rivalry',
+        label:FB.T('Active rivalry'),
+        detail:FB.T('{state} ({heat}/100)', {
+          state:rivalryHeatName(heat),
+          heat:heat
+        }),
+        urgent:true
+      });
     }
-    if (isHousehold && FB.ageOf(c, s.date.year) >= 10) {
-      h += livelihoodNote(s, c);
-      h += '<button class="actionbtn" id="cm-career">🧰 Choose work or training…' +
-        '<span class="adesc">Arrange an apprenticeship, change occupation, or seek guild rank.</span></button>';
+    if (c.betrothedId && s.chars[c.betrothedId] &&
+        !s.chars[c.betrothedId].dead) {
+      model.commitments.push({
+        id:'betrothal',
+        label:FB.T('Betrothal'),
+        detail:FB.T('Pledged to {name}.', {
+          name:FB.fullName(s.chars[c.betrothedId])
+        })
+      });
     }
-    if (c.id !== me.id) {
-      const cultivated = !!(attentionTarget && attentionTarget.id === c.id);
-      const attentionPresence = FB.socialAttentionPresence(s, c);
-      const together = attentionPresence.status === 'active';
-      const visitPreview = !together && FB.socialVisitPreview
-        ? FB.socialVisitPreview(s, c) : null;
-      const courtAttentionBlocked = !!(s.player.courtingId &&
-        s.player.courtingId !== c.id);
-      const courtAttentionHeld = s.player.courtingId === c.id && cultivated;
-      const attentionRate = FB.socialAttentionDailyOpinion();
-      if (cultivated) {
-        h += '<button class="actionbtn" id="cm-attention-stop"' +
-          (courtAttentionHeld ? ' disabled' : '') + '>' +
-          esc(FB.T('🤝 Stop cultivating')) +
-          '<span class="adesc">' + esc(courtAttentionHeld
-            ? FB.T('End the courtship to release this personal-attention assignment.')
-            : FB.T('Withdraw personal attention. This costs no day.')) +
-          '</span></button>';
-        if (!together) {
-          const visitReady = visitPreview && visitPreview.eligible &&
-            visitPreview.cost <= s.player.gold;
-          h += '<button class="actionbtn" id="cm-attention-visit"' +
-            (visitReady ? '' : ' disabled') + '>' +
-            esc(FB.T('🧭 Travel to continue cultivating…')) +
-            '<span class="adesc">' + esc(visitReady
-              ? FB.T('Visit {name} in {province}; Standing resumes changing after {days} travel days.', {
-                name:c.name,
-                province:FB.world.byId[visitPreview.destinationId].name,
-                days:visitPreview.days
-              })
-              : (visitPreview && visitPreview.eligible
-                ? FB.T('Requires {money:cost}; you have {money:gold}.', {
-                  cost:visitPreview.cost,
-                  gold:Math.floor(s.player.gold)
-                })
-                : (visitPreview ? visitPreview.reason :
-                  FB.T('A targeted visit is unavailable.')))) +
-            '</span></button>';
-        }
-      } else if (together) {
-        h += '<button class="actionbtn" id="cm-attention"' +
-          (courtAttentionBlocked ? ' disabled' : '') + '>' +
-          esc(FB.T('🤝 Cultivate relationship')) +
-          '<span class="adesc">' + esc(courtAttentionBlocked
-            ? FB.T('End your current courtship before cultivating someone else.')
-            : FB.T('Assign personal attention for +{rate} Standing each ordinary day. This costs no day.', {
-              rate:attentionRate
-            })) + '</span></button>';
-      } else {
-        const visitReady = !courtAttentionBlocked && visitPreview &&
-          visitPreview.eligible && visitPreview.cost <= s.player.gold;
-        h += '<button class="actionbtn" id="cm-attention-visit"' +
-          (visitReady ? '' : ' disabled') + '>' +
-          esc(FB.T('🧭 Travel to cultivate…')) +
-          '<span class="adesc">' + esc(courtAttentionBlocked
-            ? FB.T('End your current courtship before cultivating someone else.')
-            : (visitPreview && visitPreview.eligible
-              ? (visitPreview.cost <= s.player.gold
-                ? FB.T('Visit {name} in {province}; the assignment begins at departure and Standing advances after arrival.', {
-                  name:c.name,
-                  province:FB.world.byId[visitPreview.destinationId].name
-                })
-                : FB.T('Requires {money:cost}; you have {money:gold}.', {
-                  cost:visitPreview.cost,
-                  gold:Math.floor(s.player.gold)
-                }))
-              : (visitPreview ? visitPreview.reason :
-                FB.T('A targeted visit is unavailable.')))) +
-          '</span></button>';
+    if (retainer) {
+      model.commitments.push({
+        id:'retainer',
+        label:FB.T('Household service'),
+        detail:FB.T('{position} · {money:pay} each season', {
+          position:positionName(s, retainer.office),
+          pay:retainer.pay || 0
+        })
+      });
+    }
+    const pupils = [];
+    for (const studentId in s.chars) {
+      const student = s.chars[studentId];
+      if (student && !student.dead && student.edu &&
+          String(student.edu.tutorId) === String(c.id)) {
+        pupils.push(student.name);
       }
-      if (FB.friendContactEligible && FB.friendContactEligible(s, c) &&
-        s.roles.friend !== c.id) {
-        const canNameFriend = FB.canNameFriend && FB.canNameFriend(s, c);
-        const currentFriend = FB.getRole(s, 'friend', false);
-        const threshold = FB.relationshipOpinionThreshold();
-        const knownContact = !!FB.friendContacts(s)[c.id];
-        h += '<button class="actionbtn" id="cm-namefriend"' +
-          (canNameFriend ? '' : ' disabled') + '>🤝 ' +
-          esc(currentFriend
-            ? FB.T('Name {name} as your friend…', { name:c.name })
-            : FB.T('Call {name} your friend', { name:c.name })) +
-          '<span class="adesc">' + esc(canNameFriend
-            ? FB.T('Bind the canonical friendship used by events and oaths to this character. (spends the day)')
-            : (knownContact
-              ? FB.T('Requires +{threshold} Standing; currently {standing}.', {
-                threshold:threshold,
-                standing:standingValue(FB.standingOf(s, {
-                  kind:'character', id:c.id
-                }))
-              })
-              : FB.T('Cultivate this relationship, then reach +{threshold} Standing.', {
-                threshold:threshold
-              }))) +
-          '</span></button>';
+    }
+    if (pupils.length) {
+      model.commitments.push({
+        id:'tutoring',
+        label:FB.T('Tutoring assignment'),
+        detail:FB.T('Teaching {students}.', {
+          students:pupils.join(', ')
+        })
+      });
+    }
+    if (c.edu && (c.edu.tutorId || c.edu.school)) {
+      const school = c.edu.school && FBDATA.schooling[c.edu.school];
+      let instruction = school
+        ? dt(s, 'schooling', c.edu.school, school, 'name')
+        : FB.T('Home instruction');
+      if (c.edu.tutorId === 'self') {
+        instruction = FB.T('taught by you');
+      } else if (c.edu.tutorId && s.chars[c.edu.tutorId]) {
+        instruction = FB.T('taught by {name}', {
+          name:s.chars[c.edu.tutorId].name
+        });
       }
-      const giftDays = reigningRealmId
-        ? FB.rulerGiftDaysRemaining(s, reigningRealmId)
-        : FB.socialGiftDaysRemaining(s, c.id);
-      const deliveryText = giftDeliveryText(s,
-        reigningRealmId ? 'ruler' : 'character',
-        reigningRealmId || c.id);
-      let giftDetail = deliveryText;
-      if (!giftDetail && giftDays) {
-        giftDetail = FB.T(
-          'Cash and item gifts share a recipient cooldown. Ready in {days} days.', {
-            days:giftDays
+      model.commitments.push({
+        id:'education',
+        label:FB.T('Education'),
+        detail:instruction
+      });
+    }
+    if (s.player.travel && s.player.travel.targetCharId === c.id) {
+      model.commitments.push({
+        id:'travel',
+        label:FB.T('Relationship journey'),
+        detail:FB.T('This person is the target of your current journey.'),
+        urgent:true
+      });
+    }
+
+    if (assigned) {
+      addInteractionAction(model, {
+        id:'relationship.attention.stop',
+        group:'relationship',
+        label:FB.T('Stop cultivating'),
+        detail:s.player.courtingId === c.id
+          ? FB.T('End the courtship before releasing this assignment.')
+          : FB.T('Withdraw personal attention. This costs no day.'),
+        enabled:s.player.courtingId !== c.id,
+        blockedReason:s.player.courtingId === c.id
+          ? FB.T('The active courtship holds this assignment.') : null,
+        consequence:FB.T('Frees the one personal-attention assignment.'),
+        route:'attention-stop'
+      });
+    } else if (together) {
+      addInteractionAction(model, {
+        id:'relationship.attention.assign',
+        group:'relationship',
+        label:FB.T('Cultivate relationship'),
+        detail:FB.T(
+          'Assign personal attention for +{rate} Standing each ordinary day together. This costs no day.', {
+            rate:attention.rate
+          }),
+        enabled:attention.ready,
+        blockedReason:attention.reason || null,
+        consequence:attentionTarget
+          ? FB.T('Replaces personal attention to {name}.', {
+            name:FB.fullName(attentionTarget)
+          })
+          : FB.T('Uses the one personal-attention assignment.'),
+        route:'attention-assign'
+      });
+    }
+    if (!together) {
+      const visitReady = attention.ready && visit && visit.eligible &&
+        visit.cost <= s.player.gold;
+      let visitReason = attention.reason;
+      if (!visitReason && visit && !visit.eligible) visitReason = visit.reason;
+      if (!visitReason && visit && visit.cost > s.player.gold) {
+        visitReason = FB.T(
+          'Requires {money:cost}; you have {money:current}.', {
+            cost:visit.cost,
+            current:Math.floor(s.player.gold)
           });
-      } else if (!giftDetail && reigningRealmId) {
-        giftDetail = FB.T(
-          'Uses this ruler’s rank price, realm standing, and ruler-generation cooldown.');
-      } else if (!giftDetail && isHousehold) {
-        giftDetail = FB.T(
-          'Choose a cash gift. Household equipment remains in the shared family armory.');
-      } else if (!giftDetail) {
-        giftDetail = FB.T(
-          'Choose cash or an unequipped, unpledged item from the family armory.');
       }
-      h += '<button class="actionbtn" id="cm-gift">' +
-        esc(FB.T('🎁 Offer a gift…')) +
-        '<span class="adesc">' + esc(giftDetail) +
-        '</span></button>';
-      const isMySpouse = c.spouseId === me.id || c.id === me.spouseId;
-      if (isMySpouse) {
-        const doc = FB.marriageDoctrine(me.religion);
-        if (doc.divorce) {
-          const divCost = doc.divorce === 'sunder' ? 0 : (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0);
-          if (doc.divorce === 'talaq') {
-            h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>' + esc(FB.T('🕊 Pronounce the divorce ({money:gold})', { gold: divCost })) +
-              '<span class="adesc">' + esc(FB.T(
-                'Spoken before witnesses — and the mahr owed to {name} is paid out. (spends the day)',
-                { name: c.name })) + '</span></button>';
-          } else if (doc.divorce === 'get') {
-            h += '<button class="actionbtn" id="cm-divorce"' + (s.player.gold < divCost ? ' disabled' : '') +
-              '>' + esc(FB.T('📜 Grant a get ({money:gold})', { gold: divCost })) +
-              '<span class="adesc">' + esc(FB.T(
-                'A writ written and witnessed; the ketubah owed to {name} is paid out. (spends the day)',
-                { name: c.name })) + '</span></button>';
-          } else {
-            h += '<button class="actionbtn" id="cm-divorce">💔 Declare the marriage sundered' +
-              '<span class="adesc">Witnesses at the door, their goods on the cart. Folk will talk. (−5 prestige, spends the day)</span></button>';
-          }
-        } else {
-          const cdAn = s.player.cooldowns.annul !== undefined && s.turn - s.player.cooldowns.annul < 360;
-          const canAn = s.player.gold >= 15 && s.player.piety >= 20 && !cdAn;
-          h += '<button class="actionbtn" id="cm-annul"' + (canAn ? '' : ' disabled') + '>' +
-            esc(FB.T('⛪ Petition to annul the marriage ({money:15}, 20 piety)')) +
-            '<span class="adesc">' + (cdAn ? 'The church will not hear the plea again so soon.' :
-              'Some flaw in the vows, some closeness of blood — the church may be persuaded the marriage never was.') + '</span></button>';
+      addInteractionAction(model, {
+        id:assigned
+          ? 'travel.attention.continue' : 'travel.attention.begin',
+        group:'travel',
+        label:assigned
+          ? FB.T('Travel to continue cultivating…')
+          : FB.T('Travel to cultivate…'),
+        detail:visit && visit.eligible
+          ? FB.T(
+            '{days} outbound travel days, {money:cost}, and at least {stay} days in residence; Standing advances only while together.', {
+              days:visit.days,
+              cost:visit.cost,
+              stay:visit.minimumStay
+            })
+          : (visitReason || FB.T('A targeted visit is unavailable.')),
+        enabled:visitReady,
+        blockedReason:visitReady ? null : visitReason,
+        consequence:assigned
+          ? FB.T('Keeps the current personal-attention assignment.')
+          : (attentionTarget
+            ? FB.T('Departure replaces personal attention to {name}.', {
+              name:FB.fullName(attentionTarget)
+            })
+            : FB.T('Departure uses the one personal-attention assignment.')),
+        route:'attention-visit'
+      });
+    }
+
+    const friendship = FB.friendshipStatus(s, c);
+    if (friendship.relevant && s.roles.friend !== c.id) {
+      addInteractionAction(model, {
+        id:'relationship.friend.name',
+        group:'relationship',
+        label:friendship.currentId
+          ? FB.T('Name {name} as your friend…', { name:c.name })
+          : FB.T('Call {name} your friend', { name:c.name }),
+        detail:FB.T(
+          'Requires +{threshold} Standing and a remembered personal contact; naming a friend spends the day.', {
+            threshold:friendship.threshold
+          }),
+        enabled:friendship.ready,
+        blockedReason:friendship.reason || null,
+        consequence:friendship.currentId && s.chars[friendship.currentId]
+          ? FB.T('Replaces {name} as your named friend.', {
+            name:FB.fullName(s.chars[friendship.currentId])
+          })
+          : FB.T('Events and oaths will use this exact person.'),
+        route:'friend'
+      });
+    }
+
+    if (!reigningRealmId) {
+      addInteractionAction(model, characterGiftAction(s, c, household));
+    }
+
+    const isSpouse = c.spouseId === me.id || me.spouseId === c.id;
+    if (!isSpouse && s.player.courtingId !== c.id) {
+      const courtship = FB.courtshipStatus(s, c, false);
+      if (courtship.relevant) {
+        const courtVisitReady = together || (visit && visit.eligible &&
+          visit.cost <= s.player.gold);
+        const ready = courtship.ready && courtVisitReady;
+        let reason = courtship.reason;
+        if (!reason && !courtVisitReady) {
+          reason = visit && visit.eligible
+            ? FB.T('Requires {money:cost}; you have {money:current}.', {
+              cost:visit.cost,
+              current:Math.floor(s.player.gold)
+            })
+            : (visit && visit.reason) ||
+              FB.T('A targeted visit is unavailable.');
         }
-        h += '<button class="actionbtn" id="cm-nochildren">' +
-          esc(FB.T(s.player.flags.noChildren ? '🌱 Try for children' : '🛑 No more children')) +
-          '<span class="adesc">' + esc(FB.T(s.player.flags.noChildren
-            ? 'Open your house to new life once more.'
-            : 'Your house is full enough — no new conceptions. A child already on the way will still be born.')) +
-          '</span></button>';
-      }
-      if (FB.canCourt(s, c)) {
-        const switching = s.player.courtingId && s.player.courtingId !== c.id;
-        const courtVisitReady = together || (visitPreview && visitPreview.eligible &&
-          visitPreview.cost <= s.player.gold);
-        h += '<button class="actionbtn" id="' +
-          (together ? 'cm-court' : 'cm-court-visit') + '"' +
-          (courtVisitReady ? '' : ' disabled') + '>' +
-          esc(together
-            ? FB.T(switching
-              ? '🌷 Begin courtship (abandon your current suit)'
-              : '🌷 Begin courtship')
-            : (switching
-              ? FB.T('🧭 Travel to begin courtship (abandon your current suit)…')
-              : FB.T('🧭 Travel to begin courtship…'))) +
-          '<span class="adesc">' + esc(together
+        addInteractionAction(model, {
+          id:together
+            ? 'relationship.courtship.begin'
+            : 'travel.courtship.begin',
+          group:together ? 'relationship' : 'travel',
+          label:together
+            ? FB.T('Begin courtship')
+            : FB.T('Travel to begin courtship…'),
+          detail:together
             ? FB.T(
-              'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} Standing.',
-              { name:c.name, threshold:FB.relationshipOpinionThreshold() })
-            : (visitPreview && visitPreview.eligible
-              ? (visitPreview.cost <= s.player.gold
-                ? FB.T(
-                  'Travel to {province}; courtship and personal attention begin together when you depart.',
-                  { province:FB.world.byId[visitPreview.destinationId].name })
-                : FB.T('Requires {money:cost}; you have {money:gold}.', {
-                  cost:visitPreview.cost,
-                  gold:Math.floor(s.player.gold)
-                }))
-              : (visitPreview ? visitPreview.reason :
-                FB.T('A targeted visit is unavailable.')))) + '</span></button>';
-        if (FB.stationOf(c) - FB.playerStation(s) > 0) {
-          h += '<div class="progressnote">' + esc(FB.T(
-            '⚖ {name} stands above your station — the family will expect high Standing and renown before they bless such a match.',
-            { name: c.name })) + '</div>';
-        }
-      } else if (s.player.courtingId === c.id) {
-        const proposalThreshold = FB.relationshipOpinionThreshold();
-        if (FB.canPropose(s)) {
-          h += '<button class="actionbtn" id="cm-propose">💒 Propose marriage' +
-            '<span class="adesc">Ask for their hand. Standing and wealth decide.</span></button>';
-        } else {
-          h += '<button class="actionbtn" id="cm-propose" disabled>💒 Propose marriage' +
-            '<span class="adesc">' + esc(FB.T(
-              'Locked until +{threshold} Standing; currently {standing}.', {
-                threshold:proposalThreshold,
-                standing:standingValue(FB.standingOf(s, {
-                  kind:'character', id:c.id
-                }))
-              })) + '</span></button>';
-          h += '<div class="progressnote">' + esc(FB.T(
-            '🌷 You are courting {name}. A proposal requires +{threshold} Standing; personal attention works day by day.',
-            { name:c.name, threshold:proposalThreshold })) + '</div>';
-        }
-        h += '<button class="actionbtn" id="cm-breakoff">💔 Break off the courtship' +
-          '<span class="adesc">Part ways without a wedding.</span></button>';
-      } else {
-        const why = courtBlockReason(s, c);
-        if (why) h += '<div class="progressnote">' +
-          esc(FB.T('💒 No marriage possible: {reason}', { reason: why })) + '</div>';
+              'Beginning spends the day and assigns personal attention; a proposal requires +{threshold} Standing.', {
+                threshold:FB.relationshipOpinionThreshold()
+              })
+            : (visit && visit.eligible
+              ? FB.T(
+                '{days} outbound travel days, {money:cost}, and at least {stay} days in residence; departure begins courtship and assigns personal attention.', {
+                  days:visit.days,
+                  cost:visit.cost,
+                  stay:visit.minimumStay
+                })
+              : (reason || FB.T('A targeted courtship visit is unavailable.'))),
+          enabled:ready,
+          blockedReason:ready ? null : reason,
+          consequence:s.player.courtingId
+            ? FB.T('Abandons the current suit and applies its Standing penalty.')
+            : FB.T('Uses the one personal-attention assignment.'),
+          route:together ? 'courtship-begin' : 'courtship-visit'
+        });
       }
-      if (!isFamily && !retainer) {
-        if (s.roles.rival === c.id) {
-          const heat = FB.rivalHeat(s);
-          h += '<div class="progressnote">' + esc(FB.T(
-            '⚡ Rivalry: {state} ({heat}/100). Standing shapes the chance of peace; heat shapes how far the feud may go.',
-            { state: rivalryHeatName(heat), heat: heat })) + '</div>';
-        } else if (s.player.rivalContacts && s.player.rivalContacts[c.id]) {
-          h += '<div class="progressnote">' + esc(FB.T(
-            '⚠ A hostile encounter is remembered. If Standing falls low enough, they may declare a feud of their own.')) +
-            '</div>';
-        }
-        h += '<button class="actionbtn" id="cm-insult">😤 Insult them publicly' +
-          '<span class="adesc">Salt for their pride, sport for the onlookers. (spends the day)</span></button>';
-        h += '<button class="actionbtn" id="cm-undermine">🕸 Undermine them quietly' +
-          '<span class="adesc">Rumors, debts, misplaced letters — intrigue decides. (spends the day)</span></button>';
-        if (s.roles.rival === c.id) {
-          h += '<button class="actionbtn" id="cm-settle">' + esc(FB.T('🕊 Seek a settlement…')) +
-            '<span class="adesc">' + esc(FB.T(
-              'Ask witnesses or a mediator to make a peace that binds you both. (spends the day)')) +
-            '</span></button>';
-        } else if (FB.standingOf(s, { kind:'character', id:c.id }) <= -40) {
-          const rivalNow = FB.getRole(s, 'rival', false);
-          if (!rivalNow || rivalNow.dead) {
-            h += '<button class="actionbtn" id="cm-rival">⚡ Declare rival' +
-              '<span class="adesc">' + esc(FB.T('Name {name} your enemy. (spends the day)',
-                { name: c.name })) + '</span></button>';
-          }
-        }
+    } else if (s.player.courtingId === c.id) {
+      const proposal = FB.proposalStatus(s, c);
+      addInteractionAction(model, {
+        id:'relationship.proposal',
+        group:'relationship',
+        label:FB.T('Propose marriage'),
+        detail:FB.T(
+          'Requires +{threshold} Standing; currently {standing}. Asking spends the day.', {
+            threshold:proposal.threshold,
+            standing:Math.round(proposal.standing * 10) / 10
+          }),
+        enabled:proposal.ready,
+        blockedReason:proposal.reason || null,
+        consequence:FB.T('The existing proposal event decides the answer.'),
+        route:'proposal'
+      });
+      addInteractionAction(model, {
+        id:'relationship.courtship.end',
+        group:'relationship',
+        label:FB.T('Break off the courtship'),
+        detail:FB.T('Part ways without a wedding. This costs no day.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Releases personal attention and lowers Standing by 20.'),
+        route:'courtship-end'
+      });
+    }
+
+    if (isSpouse) {
+      const marriageEnd = FB.marriageEndStatus(s, c);
+      if (marriageEnd.kind !== 'annulment') {
+        addInteractionAction(model, {
+          id:'relationship.marriage.divorce',
+          group:'relationship',
+          label:marriageEnd.kind === 'talaq'
+            ? FB.T('Pronounce the divorce')
+            : (marriageEnd.kind === 'get'
+              ? FB.T('Grant a get')
+              : FB.T('Declare the marriage sundered')),
+          detail:marriageEnd.kind === 'sunder'
+            ? FB.T('Costs 5 prestige and spends the day.')
+            : FB.T('Pays {money:cost} and spends the day.', {
+              cost:marriageEnd.cost
+            }),
+          enabled:marriageEnd.ready,
+          blockedReason:marriageEnd.reason || null,
+          consequence:FB.T(
+            'Ends the marriage, preserves children and claims, and lowers Standing by 50.'),
+          route:'divorce'
+        });
+      } else {
+        addInteractionAction(model, {
+          id:'relationship.marriage.annul',
+          group:'relationship',
+          label:FB.T('Petition to annul the marriage'),
+          detail:FB.T(
+            'Costs {money:gold} and {piety} piety; the church decides after you spend the day.', {
+              gold:15, piety:20
+            }),
+          enabled:marriageEnd.ready,
+          blockedReason:marriageEnd.reason || null,
+          consequence:FB.T('Queues the existing annulment plea.'),
+          route:'annul'
+        });
+      }
+      addInteractionAction(model, {
+        id:'management.children.toggle',
+        group:'management',
+        label:s.player.flags.noChildren
+          ? FB.T('Try for children')
+          : FB.T('No more children'),
+        detail:s.player.flags.noChildren
+          ? FB.T('Open your house to new life once more.')
+          : FB.T(
+            'Stops new conceptions; a child already on the way will still be born.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Changes the household conception preference immediately.'),
+        route:'children-toggle'
+      });
+    }
+
+    const family = isSpouse || !!descendantKind ||
+      (c.role === 'sibling' && c.dyn === me.dyn);
+    if (!family && !retainer) {
+      addInteractionAction(model, {
+        id:'relationship.hostility.insult',
+        group:'war',
+        label:FB.T('Insult them publicly'),
+        detail:FB.T('Lowers Standing by 12 and spends the day.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('May begin or intensify a remembered rivalry.'),
+        route:'insult'
+      });
+      addInteractionAction(model, {
+        id:'relationship.hostility.undermine',
+        group:'war',
+        label:FB.T('Undermine them quietly'),
+        detail:FB.T(
+          'Intrigue decides the outcome; success lowers Standing by 8, discovery by 20. Spends the day.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('May begin or intensify a remembered rivalry.'),
+        route:'undermine'
+      });
+      if (s.roles.rival === c.id) {
+        addInteractionAction(model, {
+          id:'relationship.rival.settle',
+          group:'relationship',
+          label:FB.T('Seek a settlement…'),
+          detail:FB.T('Ask a mediator to bind a peace. Spends the day.'),
+          enabled:true,
+          blockedReason:null,
+          consequence:FB.T('Uses the existing rivalry-mediation event.'),
+          route:'rival-settle'
+        });
+      } else if (standing <= -40 &&
+          (!s.roles.rival || !s.chars[s.roles.rival] ||
+            s.chars[s.roles.rival].dead)) {
+        addInteractionAction(model, {
+          id:'relationship.rival.declare',
+          group:'war',
+          label:FB.T('Declare rival'),
+          detail:FB.T('Name {name} your enemy. Spends the day.', {
+            name:c.name
+          }),
+          enabled:true,
+          blockedReason:null,
+          consequence:FB.T('Creates the one canonical active rivalry.'),
+          route:'rival-declare'
+        });
+      }
+    }
+
+    if (reigningRealmId) {
+      addInteractionAction(model, {
+        id:'management.realm-court',
+        group:'management',
+        label:FB.T('Realm and court…'),
+        detail:FB.T(
+          'Open political office, capital, diplomacy, war, succession, and ruler gifts.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Personal Standing is shared with that ruler card.'),
+        route:'realm'
+      });
+    }
+    if (household) {
+      addInteractionAction(model, {
+        id:'management.equipment',
+        group:'management',
+        label:FB.T('Equip items…'),
+        detail:FB.T('Choose equipment from the shared family armory.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Opens the focused equipment sheet.'),
+        route:'equipment'
+      });
+      if (FB.ageOf(c, s.date.year) >= 10) {
+        addInteractionAction(model, {
+          id:'management.career',
+          group:'management',
+          label:FB.T('Choose work or training…'),
+          detail:FB.T(
+            'Arrange an apprenticeship, change occupation, or seek guild rank.'),
+          enabled:true,
+          blockedReason:null,
+          consequence:FB.T('Opens the focused work and training sheet.'),
+          route:'career'
+        });
       }
     }
     if (retainer) {
-      h += '<button class="actionbtn" id="cm-retainer">🗝 ' +
-        esc(FB.T('Manage household service…')) + '<span class="adesc">' +
-        esc(FB.T('{position} · {money:pay} each season', {
-          position:positionName(s, retainer.office), pay:retainer.pay || 0
-        })) + '</span></button>';
+      addInteractionAction(model, {
+        id:'management.retainer',
+        group:'management',
+        label:FB.T('Manage household service…'),
+        detail:FB.T('{position} · {money:pay} each season', {
+          position:positionName(s, retainer.office),
+          pay:retainer.pay || 0
+        }),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Office changes and dismissal use their existing confirmations.'),
+        route:'retainer'
+      });
+    } else if (!household && FB.ageOf(c, s.date.year) >= 16) {
+      addInteractionAction(model, {
+        id:'management.retainer.consider',
+        group:'management',
+        label:FB.T('Consider for household service…'),
+        detail:FB.T(
+          'Open the office ledger to compare this person with other eligible retainers.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T(
+          'Hiring still uses an office’s authoritative eligibility, entry pay, and confirmation.'),
+        route:'retainer-hire'
+      });
     }
-    const isManagedMinor = (descendantKind || c.id === me.id) && isHousehold &&
-      FB.ageOf(c, s.date.year) < 16;
-    if (isManagedMinor) {
-      const self = c.id === me.id;
-      h += upbringingNote(s, c);
-      h += '<button class="actionbtn" id="cm-edufocus">' +
-        esc(FB.T(self ? '🎓 Choose your education focus…' : '🎓 Choose their education focus…')) +
-        '<span class="adesc">' +
-        esc(FB.T(self
-          ? 'Direct your formative years toward one art.'
-          : 'Direct their formative years toward one art.')) + '</span></button>';
-      h += '<button class="actionbtn" id="cm-tutor">' +
-        esc(FB.T(self ? '🧑‍🏫 Choose schooling or a tutor…' : '🧑‍🏫 Arrange schooling or a tutor…')) +
-        '<span class="adesc">' +
-        esc(FB.T(self
-          ? 'Instruction raises your yearly learning chance; paid lessons charge each season.'
-          : 'Instruction raises their yearly learning chance; paid lessons charge each season.')) +
-        '</span></button>';
+    const managedMinor = (descendantKind || c.id === me.id) &&
+      household && FB.ageOf(c, s.date.year) < 16;
+    if (managedMinor) {
+      addInteractionAction(model, {
+        id:'management.education.focus',
+        group:'management',
+        label:FB.T('Choose education focus…'),
+        detail:FB.T('Direct their formative years toward one art.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Opens the focused education sheet.'),
+        route:'education'
+      });
+      addInteractionAction(model, {
+        id:'management.education.tutor',
+        group:'management',
+        label:FB.T('Arrange schooling or a tutor…'),
+        detail:FB.T(
+          'Instruction raises yearly learning chances; paid lessons charge each season.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Replaces any current schooling or tutor assignment.'),
+        route:'tutor'
+      });
     }
-    // the household head may pledge a resident descendant's hand from age twelve
-    if (descendantKind && isHousehold && !FB.spouseOf(s, c)) {
-      const bt = c.betrothedId ? s.chars[c.betrothedId] : null;
-      if (bt && !bt.dead) {
-        h += '<div class="progressnote">' + esc(FB.T(
-          '🤝 Betrothed to {name} — the wedding follows once both are of age.',
-          { name: bt.name })) + '</div>';
-      } else if (FB.ageOf(c, s.date.year) >= 12) {
-        h += '<button class="actionbtn" id="cm-match">💍 Arrange a match…' +
-          '<span class="adesc">' + esc(FB.T(c.sex === 'f'
-            ? 'Sound out families for her hand. A pledge binds; the wedding follows at sixteen. (sealing one spends the day)'
-            : 'Sound out families for his hand. A pledge binds; the wedding follows at sixteen. (sealing one spends the day)')) +
-          '</span></button>';
+    if (descendantKind && household && !FB.spouseSnapshot(s, c) &&
+        FB.ageOf(c, s.date.year) >= 12 && !c.betrothedId) {
+      addInteractionAction(model, {
+        id:'management.arranged-match',
+        group:'management',
+        label:FB.T('Arrange a match…'),
+        detail:FB.T(
+          'Sound out families for a binding pledge; sealing one spends the day.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('The wedding follows once both partners are of age.'),
+        route:'match'
+      });
+    }
+    return model;
+  }
+  UI.characterInteractionCard = buildCharacterInteractionCard;
+
+  function showCharacterInteractionSheet(cid, returnContext) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const model = s && buildCharacterInteractionCard(s, cid);
+    if (!s || !c || !model) return;
+    let h = UI.charCardHtml(s, c, false, true);
+    if (!c.dead) h += interactionCardHtml(model);
+    h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Close')) +
+      '</button></div>';
+    openModal(FB.fullName(c), h, {
+      modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
       }
-    }
-    h += '</div><button class="btn" id="cm-close">Close</button>';
-    openModal(FB.fullName(c), h);
+    });
     FB.paintFaces($('gm-body'), s);
-    function actThen(fn) {
-      UI.closeModal();
-      fn();
-      FB.game.passDay({ skipFocus: true });
-    }
-    const cultivate = $('cm-attention');
-    if (cultivate) cultivate.addEventListener('click', function () {
-      if (!FB.socialAttentionAssign(s, c)) return;
-      UI.showCharModal(c.id);
-      UI.refresh();
-    });
-    const visitCultivate = $('cm-attention-visit');
-    if (visitCultivate) visitCultivate.addEventListener('click', function () {
-      UI.showSocialVisit(c.id);
-    });
-    const stopCultivating = $('cm-attention-stop');
-    if (stopCultivating) stopCultivating.addEventListener('click', function () {
-      if (!FB.socialAttentionWithdraw(s, c.id)) return;
-      UI.showCharModal(c.id);
-      UI.refresh();
-    });
-    const nameFriend = $('cm-namefriend');
-    if (nameFriend) nameFriend.addEventListener('click', function () {
-      UI.showFriendConfirm(c.id);
-    });
-    const retainerButton = $('cm-retainer');
-    if (retainerButton) retainerButton.addEventListener('click', function () {
-      UI.showRetainerManage(c.id);
-    });
-    const gf = $('cm-gift');
-    if (gf) gf.addEventListener('click', function () {
-      if (reigningRealmId) {
-        UI.showRulerGiftModal(reigningRealmId, 'character:' + c.id);
-      } else UI.showCharacterGiftModal(c.id);
-    });
-    const ct = $('cm-court');
-    if (ct) ct.addEventListener('click', function () {
-      UI.closeModal();
-      if (!FB.beginCourtship(s, c)) return;
-      FB.news(s, FB.msg('news.social.courting_begins',
-        '🌷 You begin courting {name}.', { name:FB.fullName(c) }));
-      FB.game.passDay({ skipFocus:true });
-    });
-    const courtVisit = $('cm-court-visit');
-    if (courtVisit) courtVisit.addEventListener('click', function () {
-      UI.showSocialVisit(c.id, { courtship:true });
-    });
-    const pp = $('cm-propose');
-    if (pp) pp.addEventListener('click', function () {
-      if (!FB.canPropose(s)) return;
-      UI.closeModal();
-      FB.queueEvent(s, 'proposal_made', {});
-      FB.game.passDay({ skipFocus: true });
-    });
-    const dv = $('cm-divorce');
-    if (dv) dv.addEventListener('click', function () {
-      actThen(function () {
-        const doc = FB.marriageDoctrine(me.religion);
-        const cost = doc.divorce === 'sunder' ? 0 : (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0);
-        const gap = FB.stationOf(c) - FB.playerStation(s);
-        if (cost) s.player.gold = Math.max(0, s.player.gold - cost);
-        if (doc.divorce === 'sunder') s.player.prestige = Math.max(0, s.player.prestige - 5);
-        if (gap > 0) s.player.prestige = Math.max(0, s.player.prestige - gap * 5);
-        FB.doDivorce(s, c.id);
-        FB.news(s, FB.msg('news.social.divorce', {
-          forms: {
-            select: 'value', param: 'kind', cases: {
-              talaq: '🕊 You pronounce the divorce from {name}; the mahr of {money:cost} is paid.',
-              get: '📜 A get is written and witnessed; {name} departs with the ketubah of {money:cost}.',
-              other: '💔 Before witnesses, the marriage to {name} is declared sundered.'
-            }
-          }
-        }, { kind: doc.divorce, name: c.name, cost: cost }));
-        if (gap > 0) FB.news(s, FB.msg('news.social.divorce_house_offended',
-          '🗣 The house of {name} does not forgive the slight.', { name: c.name }));
-        FB.validateFocus(s);
-      });
-    });
-    const an = $('cm-annul');
-    if (an) an.addEventListener('click', function () {
-      UI.closeModal();
-      s.player.cooldowns.annul = s.turn; // the church hears one plea a year
-      FB.queueEvent(s, 'annulment_plea', {});
-      FB.game.passDay({ skipFocus: true });
-    });
-    const bo = $('cm-breakoff');
-    if (bo) bo.addEventListener('click', function () {
-      UI.closeModal();
-      FB.clearCourtship(s, { penalty:true, news:true });
-      FB.validateFocus(s);
-      UI.refresh();
-    });
-    const ins = $('cm-insult');
-    if (ins) ins.addEventListener('click', function () {
-      actThen(function () {
-        FB.adjustStanding(s, { kind:'character', id:c.id }, -12,
-          'social:public_insult');
-        FB.noteRivalContact(s, c, 1, 'insult');
-        if (FB.chance(0.5 + FB.skillOf(me, 'dip') * 0.015)) {
-          s.player.prestige += 4;
-          FB.news(s, FB.msg('news.social.insult_success',
-            'Your barb lands perfectly. {name} fumes; the crowd laughs.', { name: c.name }));
-        } else {
-          s.player.prestige = Math.max(0, s.player.prestige - 5);
-          FB.news(s, FB.msg('news.social.insult_failure',
-            'The insult falls flat. {name} answers better, and the laughter is theirs.',
-            { name: c.name }));
-        }
-      });
-    });
-    const und = $('cm-undermine');
-    if (und) und.addEventListener('click', function () {
-      actThen(function () {
-        if (FB.chance(0.35 + FB.skillOf(me, 'int') * 0.03)) {
-          FB.adjustStanding(s, { kind:'character', id:c.id }, -8,
-            'social:undermined');
-          FB.noteRivalContact(s, c, 1, 'undermined');
-          s.player.prestige += 3;
-          if (FB.chance(0.5)) FB.gainSkill(me, 'int', 1);
-          FB.news(s, FB.msg('news.social.undermine_success',
-            'Your quiet work costs {name} dearly, and no one can prove a thing.',
-            { name: c.name }));
-        } else {
-          FB.adjustStanding(s, { kind:'character', id:c.id }, -20,
-            'social:caught_scheme');
-          FB.noteRivalContact(s, c, 2, 'caught_scheme');
-          s.player.prestige = Math.max(0, s.player.prestige - 6);
-          FB.news(s, FB.msg('news.social.undermine_failure',
-            'The scheme unravels — and {name} knows exactly whose hand was in it.',
-            { name: c.name }));
-        }
-      });
-    });
-    const rv = $('cm-rival');
-    if (rv) rv.addEventListener('click', function () {
-      actThen(function () {
-        FB.startRivalry(s, c, 'player', 'declared', null);
-        FB.news(s, FB.msg('news.social.rival',
-          '⚡ {name} now counts you an enemy.', { name: c.name }));
-      });
-    });
-    const settle = $('cm-settle');
-    if (settle) settle.addEventListener('click', function () {
-      actThen(function () {
-        FB.queueEvent(s, 'rival_mediation', {});
-      });
-    });
-    const nc = $('cm-nochildren');
-    if (nc) nc.addEventListener('click', function () {
-      if (s.player.flags.noChildren) {
-        delete s.player.flags.noChildren;
-        UI.toast('🌱 You will try for children again.');
-      } else {
-        s.player.flags.noChildren = 1;
-        UI.toast('🛑 No more children — a pregnancy already begun will still come to term.');
+    if (!c.dead) {
+      const me = s.chars[s.player.charId];
+      function actThen(fn) {
+        UI.closeModal();
+        fn();
+        FB.game.passDay({ skipFocus:true });
       }
-      UI.closeModal();
-      UI.showCharModal(c.id);
-      UI.refresh();
+      wireInteractionCard(model, function (action) {
+        if (action.route === 'attention-assign') {
+          if (!FB.socialAttentionAssign(s, c)) return;
+          UI.showCharModal(c.id, returnContext);
+          UI.refresh();
+        } else if (action.route === 'attention-stop') {
+          if (!FB.socialAttentionWithdraw(s, c.id)) return;
+          UI.showCharModal(c.id, returnContext);
+          UI.refresh();
+        } else if (action.route === 'attention-visit') {
+          UI.showSocialVisit(c.id, { returnContext:returnContext });
+        } else if (action.route === 'friend') {
+          UI.showFriendConfirm(c.id, returnContext);
+        } else if (action.route === 'character-gift') {
+          UI.showCharacterGiftModal(c.id, returnContext);
+        } else if (action.route === 'courtship-begin') {
+          UI.closeModal();
+          if (!FB.beginCourtship(s, c)) return;
+          FB.news(s, FB.msg('news.social.courting_begins',
+            '🌷 You begin courting {name}.', { name:FB.fullName(c) }));
+          FB.game.passDay({ skipFocus:true });
+        } else if (action.route === 'courtship-visit') {
+          UI.showSocialVisit(c.id, {
+            courtship:true,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'proposal') {
+          if (!FB.proposalStatus(s, c).ready) return;
+          UI.closeModal();
+          FB.queueEvent(s, 'proposal_made', {});
+          FB.game.passDay({ skipFocus:true });
+        } else if (action.route === 'courtship-end') {
+          UI.closeModal();
+          FB.clearCourtship(s, { penalty:true, news:true });
+          FB.validateFocus(s);
+          UI.refresh();
+        } else if (action.route === 'divorce') {
+          const status = FB.marriageEndStatus(s, c);
+          if (!status.ready || status.kind === 'annulment') return;
+          actThen(function () {
+            const cost = status.cost;
+            const gap = FB.stationOf(c) - FB.playerStation(s);
+            if (cost) s.player.gold = Math.max(0, s.player.gold - cost);
+            if (status.kind === 'sunder') {
+              s.player.prestige = Math.max(0, s.player.prestige - 5);
+            }
+            if (gap > 0) {
+              s.player.prestige = Math.max(0,
+                s.player.prestige - gap * 5);
+            }
+            FB.doDivorce(s, c.id);
+            FB.news(s, FB.msg('news.social.divorce', {
+              forms:{
+                select:'value',
+                param:'kind',
+                cases:{
+                  talaq:'🕊 You pronounce the divorce from {name}; the mahr of {money:cost} is paid.',
+                  get:'📜 A get is written and witnessed; {name} departs with the ketubah of {money:cost}.',
+                  other:'💔 Before witnesses, the marriage to {name} is declared sundered.'
+                }
+              }
+            }, {
+              kind:status.kind,
+              name:c.name,
+              cost:cost
+            }));
+            if (gap > 0) {
+              FB.news(s, FB.msg('news.social.divorce_house_offended',
+                '🗣 The house of {name} does not forgive the slight.', {
+                  name:c.name
+                }));
+            }
+            FB.validateFocus(s);
+          });
+        } else if (action.route === 'annul') {
+          const status = FB.marriageEndStatus(s, c);
+          if (!status.ready || status.kind !== 'annulment') return;
+          UI.closeModal();
+          s.player.cooldowns = s.player.cooldowns || {};
+          s.player.cooldowns.annul = s.turn;
+          FB.queueEvent(s, 'annulment_plea', {});
+          FB.game.passDay({ skipFocus:true });
+        } else if (action.route === 'children-toggle') {
+          if (s.player.flags.noChildren) {
+            delete s.player.flags.noChildren;
+          } else {
+            s.player.flags.noChildren = 1;
+          }
+          UI.showCharModal(c.id, returnContext);
+          UI.refresh();
+        } else if (action.route === 'insult') {
+          actThen(function () {
+            FB.adjustStanding(s, { kind:'character', id:c.id }, -12,
+              'social:public_insult');
+            FB.noteRivalContact(s, c, 1, 'insult');
+            if (FB.chance(0.5 + FB.skillOf(me, 'dip') * 0.015)) {
+              s.player.prestige += 4;
+              FB.news(s, FB.msg('news.social.insult_success',
+                'Your barb lands perfectly. {name} fumes; the crowd laughs.',
+                { name:c.name }));
+            } else {
+              s.player.prestige = Math.max(0, s.player.prestige - 5);
+              FB.news(s, FB.msg('news.social.insult_failure',
+                'The insult falls flat. {name} answers better, and the laughter is theirs.',
+                { name:c.name }));
+            }
+          });
+        } else if (action.route === 'undermine') {
+          actThen(function () {
+            if (FB.chance(0.35 + FB.skillOf(me, 'int') * 0.03)) {
+              FB.adjustStanding(s, { kind:'character', id:c.id }, -8,
+                'social:undermined');
+              FB.noteRivalContact(s, c, 1, 'undermined');
+              s.player.prestige += 3;
+              if (FB.chance(0.5)) FB.gainSkill(me, 'int', 1);
+              FB.news(s, FB.msg('news.social.undermine_success',
+                'Your quiet work costs {name} dearly, and no one can prove a thing.',
+                { name:c.name }));
+            } else {
+              FB.adjustStanding(s, { kind:'character', id:c.id }, -20,
+                'social:caught_scheme');
+              FB.noteRivalContact(s, c, 2, 'caught_scheme');
+              s.player.prestige = Math.max(0, s.player.prestige - 6);
+              FB.news(s, FB.msg('news.social.undermine_failure',
+                'The scheme unravels — and {name} knows exactly whose hand was in it.',
+                { name:c.name }));
+            }
+          });
+        } else if (action.route === 'rival-declare') {
+          actThen(function () {
+            FB.startRivalry(s, c, 'player', 'declared', null);
+            FB.news(s, FB.msg('news.social.rival',
+              '⚡ {name} now counts you an enemy.', { name:c.name }));
+          });
+        } else if (action.route === 'rival-settle') {
+          actThen(function () {
+            FB.queueEvent(s, 'rival_mediation', {});
+          });
+        } else if (action.route === 'realm') {
+          const rid = FB.realmIdForRulerCharacter(s, c);
+          if (rid) {
+            UI.showLiegeModal(rid, {
+              view:'character',
+              characterId:c.id,
+              returnContext:returnContext
+            });
+          }
+        } else if (action.route === 'equipment') {
+          UI.showEquipmentModal(c.id, 'character', returnContext);
+        } else if (action.route === 'career') {
+          UI.showCareerPicker(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'retainer') {
+          UI.showRetainerManage(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'retainer-hire') {
+          UI.showRetainerHire({
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'education') {
+          UI.showEduFocus(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'tutor') {
+          UI.showTutorPick(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'match') {
+          UI.showMatchPicker(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        }
+      });
+    }
+    $('cm-close').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
     });
-    const ef = $('cm-edufocus');
-    if (ef) ef.addEventListener('click', function () { UI.showEduFocus(c.id); });
-    const tu = $('cm-tutor');
-    if (tu) tu.addEventListener('click', function () { UI.showTutorPick(c.id); });
-    const cr = $('cm-career');
-    if (cr) cr.addEventListener('click', function () { UI.showCareerPicker(c.id); });
-    const ceq = $('cm-equipment');
-    if (ceq) ceq.addEventListener('click', function () {
-      UI.showEquipmentModal(c.id, 'character');
-    });
-    const mt = $('cm-match');
-    if (mt) mt.addEventListener('click', function () { UI.showMatchPicker(c.id); });
-    $('cm-close').addEventListener('click', UI.closeModal);
+  }
+
+  UI.showCharModal = function (cid, returnContext) {
+    return showCharacterInteractionSheet(cid, returnContext);
   };
 
   UI.showEquipmentModal = function (cid, exitMode, returnContext) {
@@ -13405,8 +14557,11 @@ window.FB = window.FB || {};
     if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
     exitMode = exitMode === 'character' ? 'character' : 'close';
     const householdPlan = returnsToHouseholdPlan(returnContext);
-    const returnMode = 'equipment:' +
-      (householdPlan ? HOUSEHOLD_PLAN_RETURN : exitMode);
+    const returnMode = {
+      kind:'equipment',
+      exitMode:householdPlan ? HOUSEHOLD_PLAN_RETURN : exitMode,
+      returnContext:returnContext
+    };
     const closeLabel = householdPlan ? FB.T('Back to Household Plan')
       : (exitMode === 'character' ? FB.T('Back to character') : FB.T('Close'));
     const fullName = FB.fullName(c);
@@ -13420,7 +14575,7 @@ window.FB = window.FB || {};
         historyView:exitMode === 'character' || householdPlan,
         historyBackRender:function () {
           if (householdPlan) UI.showHouseholdPlan();
-          else UI.showCharModal(cid);
+          else UI.showCharModal(cid, returnContext);
         }
       });
     if (mobileLayoutNow()) {
@@ -13435,7 +14590,9 @@ window.FB = window.FB || {};
       if (householdPlan) {
         finishHouseholdPlanReturn(returnContext, function () {});
       } else if (exitMode === 'character') {
-        modalHistoryBack(function () { UI.showCharModal(cid); });
+        modalHistoryBack(function () {
+          UI.showCharModal(cid, returnContext);
+        });
       }
       else UI.closeModal();
     });
@@ -13653,6 +14810,10 @@ window.FB = window.FB || {};
     const historyOptions = { historyView:true };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
+    } else if (returnsToInteractionManagement(returnContext)) {
+      historyOptions.historyBackRender = function () {
+        interactionReturn(returnContext);
+      };
     }
     openModal(FB.T('A Match for {name}', { name: c.name }), h, historyOptions);
     document.querySelectorAll('[data-match]').forEach(function (b) {
@@ -13665,7 +14826,7 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
@@ -13943,9 +15104,17 @@ window.FB = window.FB || {};
   }
 
   function equipmentExitMode(returnMode) {
+    if (returnMode && typeof returnMode === 'object' &&
+        returnMode.kind === 'equipment') return returnMode.exitMode;
     const prefix = 'equipment:';
-    return returnMode && returnMode.indexOf(prefix) === 0
+    return typeof returnMode === 'string' &&
+      returnMode.indexOf(prefix) === 0
       ? returnMode.slice(prefix.length) : null;
+  }
+
+  function equipmentReturnContext(returnMode) {
+    return returnMode && typeof returnMode === 'object' &&
+      returnMode.kind === 'equipment' ? returnMode.returnContext : null;
   }
 
   function finishEquipment(cid, ref, returnMode) {
@@ -13960,7 +15129,10 @@ window.FB = window.FB || {};
     const exitMode = equipmentExitMode(returnMode);
     if (exitMode === HOUSEHOLD_PLAN_RETURN) {
       finishHouseholdPlanReturn(HOUSEHOLD_PLAN_RETURN, function () {});
-    } else if (exitMode !== null) UI.showEquipmentModal(cid, exitMode);
+    } else if (exitMode !== null) {
+      UI.showEquipmentModal(cid, exitMode,
+        equipmentReturnContext(returnMode));
+    }
     else if (returnMode === 'character') {
       modalHistoryBack(function () { UI.showCharModal(cid); });
     } else if (returnMode === 'item') {
@@ -14114,7 +15286,10 @@ window.FB = window.FB || {};
         finishHouseholdPlanReturn(HOUSEHOLD_PLAN_RETURN, function () {});
       }
       else if (nested) UI.closeModal();
-      else if (equipmentExit !== null) UI.showEquipmentModal(cid, equipmentExit);
+      else if (equipmentExit !== null) {
+        UI.showEquipmentModal(cid, equipmentExit,
+          equipmentReturnContext(returnMode));
+      }
       else if (returnMode === 'character') {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       }
@@ -14222,7 +15397,9 @@ window.FB = window.FB || {};
         historyView:true,
         historyBackRender:function () {
           if (returnsToHouseholdPlan(returnContext)) UI.showHouseholdPlan();
-          else UI.showCharModal(cid);
+          else if (returnsToInteractionManagement(returnContext)) {
+            interactionReturn(returnContext);
+          } else UI.showCharModal(cid);
         }
       });
     document.querySelectorAll('[data-edufocus]').forEach(function (b) {
@@ -14264,19 +15441,19 @@ window.FB = window.FB || {};
             ids:ids, dimensions:{ focus:false, instruction:true }
           });
         }
-        finishHouseholdPlanReturn(returnContext, function () {
+        finishManagementReturn(returnContext, function () {
           modalHistoryBack(function () { UI.showCharModal(cid); });
         });
       });
     });
     $('edu-follow-policy').addEventListener('click', function () {
       FB.followEducationPolicy(s, c, 'focus');
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
     $('edu-back').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
@@ -14483,7 +15660,9 @@ window.FB = window.FB || {};
         historyView:true,
         historyBackRender:function () {
           if (returnsToHouseholdPlan(returnContext)) UI.showHouseholdPlan();
-          else UI.showCharModal(cid);
+          else if (returnsToInteractionManagement(returnContext)) {
+            interactionReturn(returnContext);
+          } else UI.showCharModal(cid);
         }
       });
     FB.paintFaces($('gm-body'), s);
@@ -14510,7 +15689,7 @@ window.FB = window.FB || {};
           subject:self ? 'self' : 'other', name:c.name,
           school:FB.dataParam('schooling', id)
         }));
-        finishHouseholdPlanReturn(returnContext, function () {
+        finishManagementReturn(returnContext, function () {
           modalHistoryBack(function () { UI.showCharModal(cid); });
         });
       });
@@ -14580,19 +15759,19 @@ window.FB = window.FB || {};
             name: c.name
           }));
         }
-        finishHouseholdPlanReturn(returnContext, function () {
+        finishManagementReturn(returnContext, function () {
           modalHistoryBack(function () { UI.showCharModal(cid); });
         });
       });
     });
     $('tut-follow-policy').addEventListener('click', function () {
       FB.followEducationPolicy(s, c, 'instruction');
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
     $('tut-back').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, function () {
+      finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });

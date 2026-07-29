@@ -357,6 +357,31 @@ remains the other way down, landing at the same tier 2.
 
 Related: [provinces.md](provinces.md) for the land itself.
 
+## Ruler interaction boundary
+
+The realm/ruler interaction card is the authoritative one-counterpart
+political sheet. It derives rank, realm faith, capital, territorial
+relationship, war state, typed Standing, pact/alliance/foreign-policy
+commitments, gift courier state, cultivation, relevant feudal deeds, and
+realm-specific war causes. Governance remains the overview of the player's own
+domain and institution; the counterpart card links there instead of repeating
+those summaries.
+
+Compact realm identity remains authoritative for the reigning office, ruler
+generation, capital, succession, ruler-gift price/cooldown, alliance stamp, and
+war. A materialized ruler character adds personal traits and relationships but
+does not replace those records. `UI.realmInteractionCard` and
+`UI.characterInteractionCard` both resolve the ruler through typed Standing,
+so the displayed value is identical and a political gift appears only once.
+Reading either card does not call succession creation or ruler
+materialization. `FB.realmRulerCharacterSnapshot` also avoids the compatibility
+sync performed by the older ruler getter, while
+`FB.realmRulerStandingSnapshot` reconciles the two legacy Standing stores
+without writing either one. Explicit adjustments and the ordinary daily
+materialized-ruler synchronization still persist the reconciled value.
+Royal-family materialization occurs only after its explicit courtship route is
+chosen.
+
 ## Realm faith and campaign settlements
 
 `realm.religion` is an optional saved, locale-neutral identity for a ruling realm.

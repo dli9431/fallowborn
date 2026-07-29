@@ -13,6 +13,13 @@ but leave the object in the armory.
 `FB.transferItem`, `FB.equipItem`, `FB.unequipItem`, `FB.pledgeItem`, `FB.sellItem`,
 `FB.giveItem`, `FB.giveRulerItemGift`, or `FB.destroyItem`; callers must never splice
 ownership arrays directly.
+`FB.itemGiftStatus` is the read-only gate shared by interaction cards, gift previews,
+and both item-gift mutations. It reports ownership, assignment, collateral, household,
+recipient cooldown, courier, and route failures without repairing save records.
+`FB.resolveItemReadOnly`, `FB.itemNameReadOnly`, `FB.loadoutReadOnly`, and
+`FB.itemBonusReadOnly` likewise let sheets, skill projections, and procedural
+portrait/item renderers inspect saved armory, recipient, and loadout records without
+invoking item normalization.
 Selling, gifting, and pledging require the object to be unequipped. Pledged objects
 remain in the armory but cannot be equipped. Changes of outfit cost no game day and are
 blocked while traveling or while an event awaits resolution.

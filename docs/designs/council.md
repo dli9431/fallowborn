@@ -42,7 +42,9 @@ repairs rulers, fills vacancies, consumes RNG, or writes Chronicle news. Formati
 self-healing remain simulation work; an appointment may call the existing mutating
 helper because it is an explicit player action. When the focused manager was opened
 from Governance, its visible and browser Back actions return to Governance's Institution
-section.
+section. A direct-vassal interaction card also names that ruler's current great office
+or lack of one and routes into the same manager; its Back actions return to that exact
+ruler card.
 
 Gifting opens the same
 rank-priced cash-or-armory picker as the councillor's ruler sheet and uses the same

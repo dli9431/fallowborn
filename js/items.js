@@ -381,6 +381,10 @@ window.FB = window.FB || {};
     return rawResolved(state, ref);
   };
 
+  FB.resolveItemReadOnly = function (state, ref) {
+    return rawResolved(state, ref);
+  };
+
   FB.itemFitsSlot = function (state, ref, slot) {
     return fitsSlot(FB.resolveItem(state, ref), slot);
   };
@@ -568,6 +572,19 @@ window.FB = window.FB || {};
     return FB.itemNameFromSnapshot(state, viewer, FB.itemSnapshot(state, ref));
   };
 
+  FB.itemNameReadOnly = function (state, ref, viewer) {
+    const item = rawResolved(state, ref);
+    if (!item) return '';
+    const snapshot = {
+      ref:item.ref,
+      defId:item.defId,
+      visualSeed:item.visualSeed
+    };
+    if (item.quality) snapshot.quality = item.quality;
+    if (item.motif) snapshot.motif = item.motif;
+    return FB.itemNameFromSnapshot(state, viewer, snapshot);
+  };
+
   /* Durable semantic parameter: generated quality and visual identity are
      frozen into the descriptor while the localized base definition name is
      still looked up when the Chronicle is rendered. */
@@ -587,8 +604,26 @@ window.FB = window.FB || {};
     return state.player.loadouts[cid] || {};
   };
 
+  FB.loadoutReadOnly = function (state, cid) {
+    const loadouts = state && state.player && state.player.loadouts;
+    return loadouts && loadouts[cid] || {};
+  };
+
   FB.equippedItemRefs = function (state, cid) {
     const loadout = FB.loadoutOf(state, cid);
+    const out = [], seen = {};
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+      const ref = loadout[SLOT_ORDER[i]];
+      if (ref && !seen[ref]) {
+        seen[ref] = 1;
+        out.push(ref);
+      }
+    }
+    return out;
+  };
+
+  FB.equippedItemRefsReadOnly = function (state, cid) {
+    const loadout = FB.loadoutReadOnly(state, cid);
     const out = [], seen = {};
     for (let i = 0; i < SLOT_ORDER.length; i++) {
       const ref = loadout[SLOT_ORDER[i]];
@@ -970,6 +1005,20 @@ window.FB = window.FB || {};
     return total;
   };
 
+  FB.itemBonusReadOnly = function (state, key, cid) {
+    if (!state || !state.player) return 0;
+    cid = cid || state.player.charId;
+    if (['battle', 'gold', 'prestige', 'piety'].indexOf(key) >= 0 &&
+        cid !== state.player.charId) return 0;
+    let total = 0;
+    const refs = FB.equippedItemRefsReadOnly(state, cid);
+    for (let i = 0; i < refs.length; i++) {
+      const item = rawResolved(state, refs[i]);
+      if (item && item.fx[key]) total += item.fx[key];
+    }
+    return total;
+  };
+
   FB.loadoutVisualKey = function (state, cid) {
     const loadout = FB.loadoutOf(state, cid);
     const parts = [];
@@ -1009,19 +1058,72 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.itemGiftStatus = function (state, ref, kind, id) {
+    const item = rawResolved(state, ref);
+    const ruler = kind === 'ruler' && state.realms && state.realms[id];
+    const character = kind === 'character' && state.chars && state.chars[id];
+    const days = kind === 'ruler' && FB.rulerGiftDaysRemainingSnapshot
+      ? FB.rulerGiftDaysRemainingSnapshot(state, id)
+      : (kind === 'character' && FB.socialGiftDaysRemainingSnapshot
+        ? FB.socialGiftDaysRemainingSnapshot(state, id) : 0);
+    const delivery = FB.giftDeliveryPreview
+      ? FB.giftDeliveryPreview(state, kind, id, { readOnly:true }) : null;
+    const status = {
+      ready:false,
+      ref:ref,
+      recipientKind:kind,
+      recipientId:id,
+      standing:item ? FB.giftOpinion(item) : 0,
+      cooldownDays:FB.socialGiftCooldownDays
+        ? FB.socialGiftCooldownDays() : 90,
+      daysRemaining:days,
+      delivery:delivery,
+      reason:''
+    };
+    if (!item || !Array.isArray(state.player.items) ||
+        state.player.items.indexOf(ref) < 0) {
+      status.reason = FB.T('That object is not in the family armory.');
+    } else if (kind === 'ruler' &&
+        (!ruler || !ruler.alive || !ruler.ruler || id === 'player')) {
+      status.reason = FB.T('That ruler cannot receive a gift.');
+    } else if (kind === 'character' &&
+        (!character || character.dead || id === state.player.charId)) {
+      status.reason = FB.T('That person cannot receive a gift.');
+    } else if (loanPledgesRef(state, ref)) {
+      status.reason = FB.T(
+        'Pledged to a lender; clear the loan before gifting it.');
+    } else if (assignmentForRaw(state, ref)) {
+      status.reason = FB.T(
+        'Return this object to the armory before gifting it.');
+    } else if (kind === 'character' &&
+        FB.isHouseholdCharacter(state, id)) {
+      status.reason = FB.T(
+        'Household equipment remains in the shared family armory.');
+    } else if (delivery && delivery.pending) {
+      status.reason = FB.T(
+        'A gift courier is already traveling for this recipient.');
+    } else if (days) {
+      status.reason = FB.T(
+        'Cash and item gifts share this recipient’s cooldown. Ready in {days} days.', {
+          days:days
+        });
+    } else if (delivery && delivery.foreign && !delivery.eligible) {
+      status.reason = delivery.reason;
+    } else {
+      status.ready = true;
+    }
+    return status;
+  };
+
   FB.giveItem = function (state, ref, cid) {
-    const item = FB.resolveItem(state, ref);
+    FB.ensureItems(state);
     const c = state.chars[cid];
     const rulerId = c && FB.realmIdForRulerCharacter &&
       FB.realmIdForRulerCharacter(state, c);
     if (rulerId) return FB.giveRulerItemGift(state, ref, rulerId);
-    if (!item || !c || c.dead || state.player.items.indexOf(ref) < 0 ||
-      loanPledgesRef(state, ref) || assignmentForRaw(state, ref) ||
-      FB.isHouseholdCharacter(state, cid) ||
-      (FB.socialGiftReady && !FB.socialGiftReady(state, cid)) ||
-      (FB.giftDeliveryPending &&
-        FB.giftDeliveryPending(state, 'character', cid))) return false;
-    const boost = FB.giftOpinion(item);
+    const status = FB.itemGiftStatus(state, ref, 'character', cid);
+    if (!status.ready) return false;
+    const boost = status.standing;
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'character', cid);
     if (delivery && delivery.foreign) {
@@ -1047,15 +1149,11 @@ window.FB = window.FB || {};
   };
 
   FB.giveRulerItemGift = function (state, ref, rid) {
-    const item = FB.resolveItem(state, ref);
-    const r = rid && state.realms[rid];
-    if (!item || !r || !r.alive || !r.ruler || rid === 'player' ||
-      state.player.items.indexOf(ref) < 0 || loanPledgesRef(state, ref) ||
-      assignmentForRaw(state, ref) ||
-      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid)) ||
-      (FB.giftDeliveryPending &&
-        FB.giftDeliveryPending(state, 'ruler', rid))) return false;
-    const boost = FB.giftOpinion(item);
+    FB.ensureItems(state);
+    const status = FB.itemGiftStatus(state, ref, 'ruler', rid);
+    if (!status.ready) return false;
+    const r = state.realms[rid];
+    const boost = status.standing;
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'ruler', rid);
     if (delivery && delivery.foreign) {

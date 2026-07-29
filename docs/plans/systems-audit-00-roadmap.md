@@ -18,6 +18,7 @@ not part of this numbered queue.
    overview using the Standing API. **Implemented 2026-07-29.**
 3. [Interaction cards](systems-audit-03-interaction-cards.md) — authoritative
    actions for one character or ruler, using Standing and Governance routes.
+   **Implemented 2026-07-29.**
 4. [Large-list readability](systems-audit-04-large-list-readability.md) —
    scalable Work & Enterprises and Network overviews after their row destinations
    are stable.

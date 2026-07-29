@@ -149,7 +149,11 @@ sovereign owning the recipient’s destination. Same-sovereign gifts retain the 
 path. A foreign ruler’s destination is the current capital; an ordinary character’s is
 `FB.characterResidence`. Foreign dispatch uses `FB.travelRoute` from the permanent home
 and freezes the route, `FB.travelLegDays` result, exact cash/item, effect, recipient
-identity, and outbound ETA.
+identity, and outbound ETA. Passing `{readOnly:true}` makes the preview inspect courier
+records without running legacy repair or synchronizing a materialized ruler. Read-only
+visit and courier previews also inspect the saved travel, Transport standard, and realm
+technology records through snapshot helpers rather than normalizing them. Interaction card
+builders use these forms so opening a target never changes saved state.
 
 `player.giftDeliveries` is an additive array of JSON-only records. Each record saves its
 sender character, ruler-generation or character recipient, gift kind and exact payload,

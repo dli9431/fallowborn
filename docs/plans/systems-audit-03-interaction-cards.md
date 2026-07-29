@@ -2,8 +2,8 @@
 
 Date: 2026-07-29
 
-Status: step 3 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md), planned after
+Status: **implemented 2026-07-29** as step 3 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), after
 [Standing](systems-audit-01-standing.md) and the
 [Governance shell](systems-audit-02-governance-shell.md). The
 [large-list readability](systems-audit-04-large-list-readability.md) pass follows
@@ -279,3 +279,38 @@ Add focused Playwright coverage without running it as an AI coding agent:
 - Network, Governance, Deeds, Council, Estates, and Land act as shortcuts rather than
   parallel management implementations.
 - No relationship state or simulation graph is added for presentation.
+
+## Implementation record
+
+The implemented contract uses `UI.characterInteractionCard` and
+`UI.realmInteractionCard` as deterministic builders, with
+`UI.interactionCardHtml` as their shared render-only presentation. Each action
+has a stable semantic id, group, localized label and detail, enabled state,
+blocked reason, consequence, and route. The two sheets share ordering, native
+button markup, Standing presentation, modal-history behavior, and narrow-screen
+layout without storing a card in save state.
+
+Reusable status adapters now own explanations for courtship, proposals,
+friendship, personal attention, character, item, and ruler gifts,
+foreign-policy capacity, envoys, alliances, and realm-specific war causes.
+Read-only snapshots keep legacy ledger, courier, ruler-identity, alliance, and
+war-cause repair outside card construction. Mutating entry points revalidate
+through the same adapters where applicable. Existing Deeds, gift, travel,
+envoy, alliance, feudal, and war confirmation flows remain the only mutation
+paths.
+
+Materialized rulers expose reciprocal **Personal character** and **Realm and
+court** links. Their character card omits gifts, so ruler-generation pricing,
+courier state, cooldown, and political Standing remain exclusively on the
+realm path. Governance, Council, Estates, Network, Land, and focused Deeds
+flows retain their existing entry points while routing counterpart detail into
+the shared sheets. Direct-vassal cards route to the one Royal Council manager
+and return to the same ruler card. Land grants remain in Governance and Deeds:
+the existing grant mechanic creates a new vassal, so placing it on an existing
+vassal's card would falsely imply that the selected ruler receives the land.
+
+Focused Playwright coverage is in
+`tests/e2e/specs/interaction-cards.spec.js`; the pre-existing Standing sheet
+assertions were updated for the shared card markup. In accordance with the
+repository workflow, these tests were authored but not run by the coding
+agent.

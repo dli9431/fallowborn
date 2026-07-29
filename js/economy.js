@@ -467,6 +467,22 @@ window.FB = window.FB || {};
     return c.bishopric;
   };
 
+  FB.bishopricSnapshot = function (state, c) {
+    if (!state || !c || c.religion !== 'catholic') return null;
+    if (c.papalOffice === 'pope' ||
+        (c.id === state.player.charId && state.player.flags &&
+          state.player.flags.pope)) return null;
+    if (c.bishopric && typeof c.bishopric === 'object' &&
+        !Array.isArray(c.bishopric)) return c.bishopric;
+    if (c.bishopricVacatedTurn !== undefined) return null;
+    const ranks = c.religiousRanks || {};
+    const legacyRank = (ranks.catholic_monastic || 0) >= 4 ||
+      (ranks.catholic_clerical || 0) >= 5;
+    const legacyFlag = c.id === state.player.charId && state.player.flags &&
+      state.player.flags.bishop;
+    return legacyRank || legacyFlag ? { legacy:true } : null;
+  };
+
   FB.hasBishopric = function (state, c) {
     return !!FB.bishopricOf(state, c || playerChar(state));
   };
@@ -474,7 +490,7 @@ window.FB = window.FB || {};
   FB.playerBishopricOnly = function (state) {
     if (state.player.provs && state.player.provs.length) return false;
     const c = playerChar(state);
-    return !!FB.bishopricOf(state, c);
+    return !!FB.bishopricSnapshot(state, c);
   };
 
   FB.bishopricIncome = function (state, c) {

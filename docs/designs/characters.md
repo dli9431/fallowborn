@@ -370,3 +370,19 @@ those lay titles. On death or elevation to Pope, the see returns to the Church; 
 heir resumes as gentry and keeps the family's private property. Legacy
 `player.flags.abbot/bishop/qadi/chief_qadi` remain compatibility mirrors for old events and
 saves.
+
+**The character interaction card owns dealings with one full character.**
+It derives identity context, residence, occupation, faith, station, typed
+Standing, current personal attention, courtship, friendship, rivalry,
+betrothal, travel, and household-service commitments. Its actions route to the
+existing gift, targeted visit, courtship/proposal, friendship, rivalry,
+retainer, equipment, education, work, and arranged-match mechanics. The card
+does not store a relationship model and does not replace biography, the
+Household Plan, or the long Network roster.
+
+`FB.socialAttentionStatus` and `FB.friendshipStatus` expose read-only,
+localized gate results. Assignment and naming still revalidate through the
+same mechanics before mutation. A reigning ruler represented by a full
+character shares the realm target's typed Standing but has no personal gift
+action; **Realm and court** opens the political sheet that owns ruler gifts
+and ruler-generation commitments.
