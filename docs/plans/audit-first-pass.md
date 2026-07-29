@@ -139,7 +139,7 @@ Recommend a match for an eligible child or grandchild using player-set limits:
 The default is a recommendation and notification, not an automatic proposal or
 marriage. Full automatic selection may be an explicit later policy.
 
-### 5. Buy remaining manor plots
+### 5. Buy remaining manor plots — complete
 
 Add **Buy remaining plots here** when several purchases are needed to reach the manor
 threshold.
@@ -154,6 +154,11 @@ Before confirmation, show:
 
 This batches identical purchases without automating the decision to invest or the
 choice of settlement.
+
+Implemented in the existing settlement land market as a separate, native-button
+preview whenever at least two plots remain. The reviewed batch is revalidated and
+applied atomically, records one Chronicle entry, and leaves the one-plot purchase
+available for manual investment.
 
 ## Next consolidation tranche
 
@@ -226,7 +231,7 @@ unchanged except where a shared summary or entry point must call them.
 3. [x] Household education policy.
 4. [x] Enterprise-staffing preview.
 5. Per-character Equip Best.
-6. Manor plot batch purchase.
+6. [x] Manor plot batch purchase.
 7. Descendant match recommendation.
 8. [x] Shared asset/effect rows and Ongoing Commitments summary.
 9. Test with a large household across childhood, adulthood, marriage, death, and

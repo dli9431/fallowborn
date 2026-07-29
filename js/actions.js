@@ -2490,6 +2490,54 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.manorPlotPurchasePlan = function (state, settlement) {
+    const p = state.player;
+    settlement = Number(settlement);
+    if (p.tier !== 1 || settlement < 0 ||
+        settlement !== Math.floor(settlement)) return null;
+    const need = FBDATA.balance.manorPlotRequirement || 5;
+    const max = FBDATA.balance.landPlotMaxSettlement || need;
+    const settlements = FB.settlementsOf(state, p.provinceId);
+    if (max < need || !settlements[settlement]) return null;
+    const count = FB.landCountAt(state, p.provinceId, settlement);
+    const plots = need - count;
+    if (plots <= 1) return null;
+    const totalCost = FB.landPlotCost() * plots;
+    return {
+      provinceId:p.provinceId,
+      settlement:settlement,
+      settlementName:settlements[settlement].name,
+      currentCount:count,
+      plots:plots,
+      resultingCount:count + plots,
+      manorRequirement:need,
+      totalCost:totalCost,
+      currentYield:FB.landGroupYield(count),
+      resultingYield:FB.landGroupYield(count + plots),
+      moneyAfter:p.gold - totalCost,
+      affordable:p.gold >= totalCost
+    };
+  };
+
+  FB.buyRemainingManorPlots = function (state, settlement, expectedCount) {
+    const plan = FB.manorPlotPurchasePlan(state, settlement);
+    if (!plan || !plan.affordable ||
+        (expectedCount !== undefined && plan.currentCount !== expectedCount)) {
+      return false;
+    }
+    state.player.gold -= plan.totalCost;
+    const plots = FB.landPlots(state);
+    for (let i = 0; i < plan.plots; i++) {
+      plots.push({
+        provinceId:plan.provinceId, settlement:plan.settlement
+      });
+    }
+    FB.news(state, FB.msg('news.action.land_batch_bought',
+      '🌾 The household buys {plots} more plots at {settlement}, completing a manor-sized holding.',
+      { plots:plan.plots, settlement:plan.settlementName }));
+    return true;
+  };
+
   FB.buyLandPlot = function (state, settlement) {
     const available = FB.landAvailable(state);
     let site = null;

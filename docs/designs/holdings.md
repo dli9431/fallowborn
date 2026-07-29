@@ -65,6 +65,12 @@ The land market uses the same asset/effect row for each settlement, showing
 dynastic ownership, exact site, next-plot affordability, no upkeep, before/after
 seasonal yield, inheritance, and permanence. Permanent holdings and enterprises
 use that row as well, while retaining their separate pledge and staffing rules.
+When two or more plots remain before the manor threshold, the settlement also offers
+an explicit batch purchase. Its confirmation previews the plot count, total price,
+resulting seasonal yield, completed cluster/manor progress, and remaining purse.
+`FB.manorPlotPurchasePlan` is read-only; `FB.buyRemainingManorPlots` revalidates the
+reviewed starting count and full affordability, then buys the batch atomically and
+writes one Chronicle entry. It never substitutes for the existing one-plot purchase.
 
 Related: [development.md](development.md) for the tier-3+ equivalent (buildings),
 [realms.md](realms.md) for tiers.

@@ -8703,6 +8703,7 @@ window.FB = window.FB || {};
       const count = FB.landCountAt(s, p.provinceId, i);
       const full = count >= max;
       const short = p.gold < cost;
+      const batch = FB.manorPlotPurchasePlan(s, i);
       const before = Math.round(FB.landGroupYield(count) * 10) / 10;
       const after = Math.round(FB.landGroupYield(count + 1) * 10) / 10;
       const place = FB.T('{settlement}, {province}', {
@@ -8733,6 +8734,14 @@ window.FB = window.FB || {};
           transferRule:FB.T('Passes to heirs as family land in this settlement'),
           expiry:FB.T('No fixed end')
         }) + '</button>';
+      if (batch) {
+        h += '<button type="button" class="actionbtn" data-land-batch="' + i + '">' +
+          esc(FB.T('Buy remaining plots here…')) +
+          '<span class="adesc">' + esc(FB.T(
+            '{plots} plots for {money:cost}. Review the complete purchase before paying.', {
+              plots:batch.plots, cost:batch.totalCost
+            })) + '</span></button>';
+      }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('🌾 Buy Freehold Land'), h);
@@ -8743,7 +8752,70 @@ window.FB = window.FB || {};
         UI.showLandMarket();
       });
     });
+    document.querySelectorAll('[data-land-batch]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showManorPlotBatchPreview(parseInt(button.dataset.landBatch, 10));
+      });
+    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showManorPlotBatchPreview = function (settlement) {
+    const s = FB.state;
+    const plan = FB.manorPlotPurchasePlan(s, settlement);
+    if (!plan) {
+      UI.showLandMarket();
+      return;
+    }
+    const resultingYield = Math.round(plan.resultingYield * 10) / 10;
+    const progress = FB.T(
+      '{count}/{needed} plots — ready to declare a manor once the household has enough standing', {
+        count:plan.resultingCount, needed:plan.manorRequirement
+      });
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming.', {
+        settlement:plan.settlementName
+      })) + '</p>' +
+      kv('Plots in this purchase', esc(FB.T('{count} plots', {
+        count:plan.plots
+      }))) +
+      kv('Total price', '<span class="' +
+        (plan.affordable ? '' : 'op-bad') + '">' +
+        esc(FB.T('{money:amount}', { amount:plan.totalCost })) + '</span>') +
+      kv('Resulting seasonal yield', esc(FB.T('{money:amount} each season', {
+        amount:resultingYield
+      }))) +
+      kv('Resulting cluster and manor progress', esc(progress)) +
+      kv('Money remaining after purchase', '<span class="' +
+        (plan.moneyAfter < 0 ? 'op-bad' : '') + '">' +
+        esc(FB.T('{money:amount}', { amount:plan.moneyAfter })) + '</span>') +
+      (!plan.affordable ? '<p class="op-bad">' + esc(FB.T(
+        'The household cannot afford the complete batch. No plots will be purchased unless the full price is available.')) +
+        '</p>' : '') + '</div><div class="gm-footer">' +
+      '<button type="button" class="btn" id="manor-plot-batch-confirm"' +
+      (plan.affordable ? '' : ' disabled') + '>' +
+      esc(FB.T('Buy {plots} plots for {money:cost}', {
+        plots:plan.plots, cost:plan.totalCost
+      })) + '</button>' +
+      '<button type="button" class="btn" id="manor-plot-batch-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('🌾 Complete the holding at {settlement}?', {
+      settlement:plan.settlementName
+    }), h, {
+      historyView:true,
+      historyBackRender:function () { UI.showLandMarket(); }
+    });
+    $('manor-plot-batch-confirm').addEventListener('click', function () {
+      if (!FB.buyRemainingManorPlots(s, settlement, plan.currentCount)) {
+        UI.showManorPlotBatchPreview(settlement);
+        return;
+      }
+      UI.refresh();
+      UI.showLandMarket();
+    });
+    $('manor-plot-batch-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showLandMarket(); });
+    });
   };
 
   /* ================= consolidated household plan ================= */
