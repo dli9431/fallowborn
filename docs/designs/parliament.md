@@ -39,11 +39,25 @@ for `balance.parliamentMotionCost` gold, one motion per calendar year
 +12, duke +20 — a duke's word outweighs a baron's), diplomacy ×2%, prestige,
 Standing with the liege, and grouped `assembly.voteChance` trait effects, clamped
 10–85%. Moot-Speaker contributes +5 percentage points in addition to its +1
-Diplomacy. Every vote moves `liegeOp` as well
+Diplomacy. The player redress motion uses `parliament_redress_vote`, the same formula
+with any exact-contract plot evidence added; unrelated votes never consume or benefit
+from that evidence. Every vote moves `liegeOp` as well
 as the terms: consenting to a demand buys the crown's notice, leading a
 refusal is remembered, and winning redress binds the liege while displeasing
 him. Only the player's own terms are simulated; AI vassals of the realm are
 the unnamed benches, exactly as AI realms stay lightweight elsewhere.
+
+The named **Bend the Feudal Obligation** plot is a deliberate player exception to
+the otherwise systemic vote flow. It targets the protagonist's exact current
+liege obligation contract rather than a general lord. Evidence gathered by the
+plot adds 15 percentage points to the next redress vote and is cleared when that
+vote resolves. The saved evidence flag repeats the exact realm, institution, and
+contract context, so changing liege cannot carry it into another assembly. A paid
+immediate settlement instead moves ordinary aid one step
+downward at a serious Standing cost; failure moves it one step upward. Changing
+liege, institution, or obligation contract invalidates the target and ends the
+plot without redirecting it. The plot is unavailable once aid already rests at the
+customary minimum.
 
 Every successful contested `parliament_vote` adds one Moot-Speaker progress point;
 three wins award the reputation and write its localized Chronicle notice. A failed

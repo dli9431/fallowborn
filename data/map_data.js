@@ -801,7 +801,8 @@ FBDATA.items = {
    daily by the Scheming focus, sprung as a decision event when power
    reaches `need`. trigger: standard event-trigger conditions gating who may
    attempt it · event: resolution event id (its options must carry the
-   {custom:'plot_end'} effect). Scheming risks a plot_discovered event. */
+   {custom:'plot_end'} effect or call an authoritative handler that ends the
+   plot). Scheming risks a plot_discovered event. */
 FBDATA.plots = {
   ruin_rival: { name:'Bring Down {rival}', icon:'🗡', need:12, event:'plot_ruin_rival',
     trigger:{ hasRole:'rival' },
@@ -818,6 +819,28 @@ FBDATA.plots = {
   fabricate_claim: { name:'Fabricate a County Claim', icon:'📜', need:14, event:'plot_fabricate_claim',
     trigger:{ tierMin:4 }, target:'border_county_without_dejure',
     desc:'Buy witnesses, copy charters, and give a neighboring county a lawful-looking past.' },
+  feudal_obligation: { name:'Bend the Feudal Obligation', icon:'⚖', need:12,
+    event:'plot_feudal_obligation',
+    trigger:{ tierMin:3, tierMax:5, isVassal:true },
+    target:'current_liege_obligation',
+    desc:'Turn service rolls and aid tallies into leverage before the estates.' },
+  guild_monopoly: { name:'Unpick a Guild Monopoly', icon:'📜', need:11,
+    event:'plot_guild_monopoly', trigger:{ custom:'plot_has_guild_monopoly' },
+    target:'active_guild_monopoly',
+    desc:'Find whose purse the exclusive charter truly serves, then choose what truth is worth.' },
+  council_counter: { name:'Counter-Scheme at Council', icon:'🗝', need:14,
+    event:'plot_council_counter',
+    trigger:{ tierMin:6, custom:'council_has_schemer' },
+    target:'council_schemer',
+    desc:'Trace a dangerous councillor’s letters before the ordinary crisis breaks.' },
+  diplomatic_correspondence: { name:'Intercept Diplomatic Letters', icon:'✉',
+    need:13, event:'plot_diplomatic_correspondence',
+    trigger:{ tierMin:4 }, target:'diplomatic_correspondence',
+    desc:'Steal, preserve, or forge the letters that bind a neighboring court.' },
+  rival_claimant: { name:'Discredit a Political Rival', icon:'🗡', need:13,
+    event:'plot_rival_claimant',
+    trigger:{ tierMin:2, hasRole:'rival' }, target:'political_rival',
+    desc:'Turn a real feud against your rival’s claim, office, Council seat, or royal connection.' },
   locked_chest: { name:'The Locked Chest', icon:'🗝', need:10, event:'plot_locked_chest',
     trigger:{ tierMax:2 },
     desc:'A wealthy house, a careless steward, and a chest that sings when tapped.' },
@@ -913,6 +936,7 @@ FBDATA.balance = {
      seasonal Standing pressure, and the two places foreign Standing matters */
   politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,
   foreignPolicyBase: 1, foreignPolicyDipCap: 1,
+  diplomacySuccessionChance: 0.35,
   foreignOpinionEnvoyDivisor: 400,
   foreignOpinionAttackMin: 0.25, foreignOpinionAttackMax: 2,
   /* centralized religious offices: condemnation, reconciliation, and

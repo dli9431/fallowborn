@@ -19,6 +19,25 @@ The custom effects `fabricate_claim_success`, `fabricate_claim_failure`,
 `plot_discovery_success`, and `plot_discovery_failure` create the saved claim or charge
 5 prestige, then end the plot. Only one fabricated claim may exist.
 
+Core also supplies compound semantic selectors. They return only the fields shown; the
+engine re-runs the selector during every Scheming tick and before a custom resolution, so
+a dead person or realm, replaced contract, changed institution, or ended relationship
+cannot silently retarget:
+
+| selector | context |
+|---|---|
+| `current_liege_obligation` | `{realmId, institution:"estates", contractId:"obl"}` |
+| `active_guild_monopoly` | `{contractId}`; the id identifies one exact incoming or outgoing charter |
+| `council_schemer` | `{realmId, institution:"council", rulerGeneration}`; succession cannot transfer the target |
+| `diplomatic_correspondence` | `{realmId}` for a neighboring sovereign, active direction, pact, or alliance |
+| `political_rival` | `{characterId}` plus only the relevant `realmId`, `institution`, or instance-stamped `contractId` connection |
+
+`FB.plotTargetOptions` is the authoritative selector interface. `FB.plotTargets` remains
+the compatibility reader that returns the primary id from each option. Beginning a plot
+copies the matched context rather than retaining arbitrary caller fields. Discovery adds
+only `plotId`; buying containment adds `exposure` to the active plot record, reduces its
+power, and raises later discovery risk without adding a second intrigue resource.
+
 `FB.warCauses(state)` is the authoritative declaration API. It returns semantic records
 with this common shape:
 
@@ -470,6 +489,29 @@ Core code queues through `FB.queueEvent`, which snapshots `societalRole`, `profe
 localization selectors and county targeting. Mods should use the effect-level `queue`
 field whenever possible.
 
+Random events may declare `contextSelector` beside `trigger`. The selector must be
+registered by engine code as `FB.eventContextOptions(state, id)` and return an array of
+JSON-safe contexts without consuming RNG. Eligibility requires at least one result; after
+the story is chosen, the engine deterministically picks one result and snapshots it into
+the event context. The exact selector result is checked again at the
+display/autoresolve boundary, so an earlier pending choice may invalidate the story
+without redirecting it. Core selectors are `foreign_policy_improve`,
+`foreign_policy_provoke`, `active_pact`, and `active_alliance`, all producing
+`{realmId}` plus a validity stamp only when needed. This is an engine extension point, not
+a JSON-only way to invent arbitrary selectors.
+
+A code-queued event may declare `contextValidator:"fnName"`. Before display or
+autoresolve, the queue calls that `FB.fns` function with `(state, ctx)` and drops the
+event when it returns false. The succession stories use
+`diplomacy_succession_valid` and a saved `rulerGeneration`, preventing an old embassy from
+affecting a later ruler. Custom trigger and option-require functions likewise receive
+`(state, ctx)`; existing one-argument functions remain compatible.
+Core plot discovery and every plot resolution event use
+`plot_event_context_valid`; their queued context carries `plotId`, and the event expires
+if the active plot or any target component has changed. For save compatibility, a legacy
+queued resolution without `plotId` may infer it only when its event id exactly matches
+the current active plot definition.
+
 `wartime: true` (top-level, next to `weight`) marks an event as fit for a war footing. While
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,
 or riding with the liege's host — random picks draw *only* from wartime events; ordinary
@@ -500,7 +542,8 @@ as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
-vassal_comply county_petition parliament_vote travel_trade`) with `success` / `failure`
+vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade`) with
+`success` / `failure`
 branches (`{text, effects}`), and `effects`.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
@@ -568,6 +611,8 @@ clamped at the trait's `earn.threshold`, then the trait is awarded) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
 (`opinion` and `opinionLiege` retain their compatibility names but adjust personal or
 realm Standing; `popularOpinion` remains the distinct Common Voice population score) ·
+`standingRealm: n` (adjust Standing with the exact living realm in
+`ctx.realmId`, with legacy `ctx.rid` accepted; no pairwise AI opinion is created) ·
 `papalOpinion: n` (adjust the recognized Pope's opinion of `ctx.candidateId`, or of the
 protagonist when the context has no candidate; clamped to −100…100 and a no-op during a
 vacancy) ·
@@ -626,7 +671,10 @@ partnership at the given base stake) and guild-monopoly petition handlers
 `guild_monopoly_paid guild_monopoly_persuade_success
 guild_monopoly_persuade_failure` live in `js/economy.js`; targeted-plot handlers
 `fabricate_claim_success fabricate_claim_failure plot_discovery_success
-plot_discovery_failure` live in `js/actions.js`; mods may register their own before use).
+plot_discovery_failure plot_discovery_abandon plot_discovery_contain` and the
+diplomatic pact/alliance handlers live in `js/actions.js`; obligation handlers live in
+`js/parliament.js`, monopoly handlers in `js/economy.js`, and Council counter-scheme
+handlers in `js/council.js`; mods may register their own before use).
 
 Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
 loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;
@@ -646,8 +694,9 @@ texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "
 enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
 `ctx.settlement` (set by the go-into-town deed's queue); `{item}` and `{itemprice}`
 describe the currently offered item (`player.itemOffer`); `{liege}` is the player's direct
-liege realm; `{rname}` / `{rulername}` are the realm and ruler named by `ctx.rid` (set by
-appeal/revoke pickers and vassal events); `{cname}` is the county named by `ctx.pid`.
+liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
+`ctx.realmId` (legacy `ctx.rid` remains accepted); `{cname}` is the county named by
+`ctx.provinceId` (legacy `ctx.pid` remains accepted).
 `{location}` is the traveler’s current county (or `ctx.locationId`) and
 `{destination}` is the journey destination (or `ctx.destinationId`).
 `{student}` is the exact character named by queued-event `ctx.studentId`; mentioning it
@@ -692,6 +741,8 @@ skills, and traits — used by the matchmaking events. A card also appears autom
 every `{lord}` / `{priest}` / `{friend}` / `{rival}` / `{spouse}` / `{suitor}` token used in
 the event's title, text, option labels, or branch texts, so a named character never arrives
 as a bare name.
+An event using `{rname}` or `{rulername}` with `ctx.realmId` similarly receives a realm
+identity card with arms, ruler, rank, Standing, and the current pact/alliance/direction.
 
 An event with `"nameChild": true` (used by `child_born_flavor`, queued with `ctx.childId`)
 shows a name field above its options, prefilled with the child's generated name and a dice
@@ -1294,9 +1345,12 @@ unmarried children:
 **Plots** (`FBDATA.plots` in `data/map_data.js`) drive the intrigue game. The "Begin a
 plot…" deed offers every plot whose `trigger` (standard trigger syntax) passes; beginning
 one switches the player to the Scheming focus, which accrues `need` power over the days —
-with a daily discovery risk — then queues the plot's resolution `event`. Resolution events
+with a daily discovery risk — then queues the plot's resolution `event`. Discovery offers
+abandonment with a context-specific consequence, paid containment that preserves the plot
+with less power and more future risk, or an immediate lower-odds resolution. Resolution events
 are ordinary event data: use the `plot` named chance for the attempt, and end every option
-with `{ "custom": "plot_end" }` so the plot clears and the old focus returns:
+with `{ "custom": "plot_end" }`, or an owning-system custom handler that calls it, so the
+plot clears and the old focus returns:
 
 ```json
 { "plots": { "poison_well": {

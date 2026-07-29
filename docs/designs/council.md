@@ -33,6 +33,15 @@ feuds, a wartime subsidy, and the charter. Triggers and effects are the `council
 custom fns in `js/council.js`; like the older vassal events, slot-day council events
 stay archetypal (no named tokens) and let the effect fns pick the councillor involved.
 
+The named **Counter-Scheme at Council** plot is a deliberate player action within that
+systemic layer. Its context records the exact council realm and exact scheming officer.
+Success can expose that officer, bargain for temporary restraint, or manufacture a
+politically costly countercase; failure gives that same schemer leverage. If the seat
+changes, the realm changes, or the target stops qualifying as a schemer, the plot
+becomes invalid rather than silently moving to another councillor. The context also
+stamps the realm ruler's generation, so succession in that vassal house cannot transfer
+the evidence to a new officer.
+
 **Interaction** runs through the 🏛 Royal Council deed (tier ≥ 6) and its modal
 (`UI.showCouncil`): the authority meter, every seat with its holder's trait and Standing,
 and the levers — offer a gift, dismiss, appoint to vacant seats. Gifting opens the same

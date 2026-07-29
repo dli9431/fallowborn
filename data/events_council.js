@@ -90,5 +90,29 @@ FBDATA.events.push(
   text:'For once, the council earns its keep: the Seneschal’s tidy ledgers, the Almoner’s quiet wisdom, a long evening of actual governance. It is almost pleasant. You understand why your grandfather drank.',
   options:[
     { label:'Note it, and them, with favor.', desc:'Good servants should know they are seen.', effects:{ prestige:3, research:5 } }
+  ]},
+
+/* ---- the protagonist’s deliberate counter-scheme ---- */
+{ id:'plot_council_counter', title:'The Magnate’s Letters',
+  trigger:{ never:true }, contextValidator:'plot_event_context_valid',
+  text:'The intercepted letters name {rulername} of {rname}: payments to singers, promises to dissatisfied captains, careful guesses at how long your crown would survive a bad harvest. The evidence is real. How honestly you use it is another question.',
+  options:[
+    { label:'Expose the scheme before the full Council.', chance:'plot',
+      desc:'Drive this exact scheming officer from the board if the evidence holds.',
+      success:{ text:'Seal follows witness follows payment. {rulername} cannot explain the chain, and the chair is emptied in disgrace.',
+        effects:{ custom:'plot_council_expose', prestige:4, skills:{int:1} } },
+      failure:{ text:'The chain breaks at the final witness. {rulername} survives, and every magnate sees the crown reaching without proof.',
+        effects:{ custom:'plot_council_failure', gold:-12, prestige:-8 } } },
+    { label:'Show {rulername} the letters in private.',
+      desc:'Trade leniency for warmer Standing and lower crown authority.',
+      effects:{ custom:'plot_council_mercy', prestige:-3 } },
+    { label:'Add one letter that was never written.', chance:'skill_int',
+      desc:'A manufactured charge may finish the case, or turn the whole board against the crown.',
+      success:{ text:'The false link sits neatly among the true ones. Nobody questions the complete chain.',
+        effects:{ custom:'plot_council_manufacture', piety:-5 } },
+      failure:{ text:'The ink is too fresh. The true evidence is buried beneath the exposed forgery.',
+        effects:{ custom:'plot_council_failure', gold:-12, prestige:-10, piety:-5 } } },
+    { label:'Lock the letters away.', desc:'The ordinary Council crisis may still come.',
+      effects:{ custom:'plot_end' } }
   ]}
 );

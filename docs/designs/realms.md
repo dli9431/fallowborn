@@ -256,6 +256,14 @@ the exact person's already-tracked Standing becomes the realm score. Protagonist
 succession instead resets all personal and realm Standing because the current save shape
 does not store a pairwise heir relationship matrix.
 
+When a neighboring or compact-linked sovereign changes ruler, an occasional diplomatic
+story may be queued after that succession adjustment. Its context stores the realm id and
+exact new `rulerGeneration`; another succession invalidates the story before resolution. A former
+alliance is remembered only as event context after the ordinary generation-stamp repair
+ends it. A state-level pact remains only when its existing expiry says so. The story may
+offer a first embassy, a fresh pact, or renewal of a still-live pact, but it cannot copy
+the predecessor’s Standing or revive an invalid alliance.
+
 A materialized reigning ruler uses the compact realm’s yearly mortality roll, never
 ordinary character mortality. If married to the player they remain resident at the current
 capital and are excluded from household enumeration, work, upkeep, standards, retainers,
@@ -331,6 +339,9 @@ popular-opinion loss, and adds the outgoing charter's tax percentage inside
 `FB.playerTax`. The local guild is abstract; a household guildmaster may be named as its
 advocate but does not own the right. An outgoing charter survives promotion and
 succession but ends if the dynasty falls below landed authority.
+Each normalized incoming or outgoing record also carries a deterministic `contractId`
+derived from slot, start turn, and profession. Political plots use that id to distinguish
+the exact charter they began against from a later replacement in the same slot.
 
 **Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
 give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a

@@ -2960,6 +2960,8 @@ window.FB = window.FB || {};
       : 'landed';
     if (!scope) return null;
     return {
+      contractId:String(record.contractId ||
+        ('guild_monopoly:' + slot + ':' + startTurn + ':' + profession)),
       profession:profession,
       grantorKind:slot === 'incoming'
         ? (record.grantorKind === 'realm' ? 'realm' : 'local')
@@ -3038,6 +3040,10 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.guild_monopoly.authority_ended',
         '📜 The local {profession} guild’s monopoly ends with the dynasty’s landed authority.',
         { profession:profession }));
+    } else if (reason === 'exposed') {
+      FB.news(state, FB.msg('news.guild_monopoly.exposed',
+        '📜 Evidence of abuse ends the {profession} monopoly before its term.',
+        { profession:profession }));
     }
   }
 
@@ -3053,6 +3059,50 @@ window.FB = window.FB || {};
     return slots;
   };
   FB.guildMonopolyTick = FB.invalidateGuildMonopolies;
+
+  FB.guildMonopolyByContract = function (state, contractId) {
+    FB.ensureGuildMonopolies(state);
+    for (const slot of ['incoming', 'outgoing']) {
+      const record = FB.guildMonopolyActive(state, slot);
+      if (record && record.contractId === contractId) {
+        return { slot:slot, record:record };
+      }
+    }
+    return null;
+  };
+
+  FB.guildMonopolyPlotTargets = function (state) {
+    const out = [];
+    for (const slot of ['incoming', 'outgoing']) {
+      const record = FB.guildMonopolyActive(state, slot);
+      if (!record) continue;
+      const def = FBDATA.careers && FBDATA.careers[record.profession];
+      const profession = def && FB.dataText
+        ? FB.dataText(state, state.player.charId, 'career',
+          record.profession, def, 'name', {})
+        : record.profession;
+      out.push({
+        contractId:record.contractId,
+        realmId:record.grantorKind === 'realm' ? record.grantorId : null,
+        label:slot === 'incoming'
+          ? FB.T('Household {profession} monopoly', { profession:profession })
+          : FB.T('Local {profession} monopoly', { profession:profession }),
+        desc:FB.T('{kind} charter · {days} days remain', {
+          kind:slot === 'incoming' ? FB.T('incoming') : FB.T('outgoing'),
+          days:FB.guildMonopolyRemainingDays(state, record)
+        })
+      });
+    }
+    return out;
+  };
+
+  FB.endGuildMonopoly = function (state, contractId, reason) {
+    const target = FB.guildMonopolyByContract(state, contractId);
+    if (!target) return false;
+    FB.ensureGuildMonopolies(state)[target.slot] = null;
+    monopolyEndNotice(state, target.slot, target.record, reason || 'exposed');
+    return true;
+  };
 
   FB.guildMonopolyCareer = function (state) {
     const c = playerChar(state);
@@ -3191,7 +3241,9 @@ window.FB = window.FB || {};
   }
 
   function monopolyRecord(state, profession, terms, identity) {
+    const slot = identity.recipientKind === 'household' ? 'incoming' : 'outgoing';
     return {
+      contractId:'guild_monopoly:' + slot + ':' + state.turn + ':' + profession,
       profession:profession,
       grantorKind:identity.grantorKind,
       grantorId:identity.grantorId,
@@ -3346,6 +3398,105 @@ window.FB = window.FB || {};
     state.player.prestige = Math.max(0, state.player.prestige - 5);
     adjustPetitionGrantorStanding(state, ctx, -8);
     return true;
+  };
+
+  FB.fns.plot_has_guild_monopoly = function (state) {
+    return !!(FB.guildMonopolyActive(state, 'incoming') ||
+      FB.guildMonopolyActive(state, 'outgoing'));
+  };
+
+  function guildPlotTarget(state, ctx) {
+    if (!FB.activePlotContext ||
+        !FB.activePlotContext(state, 'guild_monopoly', ctx)) return null;
+    return FB.guildMonopolyByContract(state, ctx && ctx.contractId);
+  }
+
+  function guildPlotGrantorStanding(state, target, amount, source) {
+    const record = target && target.record;
+    if (!record || target.slot !== 'incoming') return false;
+    if (record.grantorKind === 'realm' && record.grantorId) {
+      FB.adjustStanding(state, { kind:'realm', id:record.grantorId }, amount,
+        'plot:guild_' + source);
+      return true;
+    }
+    const grantor = record.grantorId && state.chars[record.grantorId];
+    if (grantor && !grantor.dead) {
+      FB.adjustStanding(state, { kind:'character', id:grantor.id }, amount,
+        'plot:guild_' + source);
+      return true;
+    }
+    return false;
+  }
+
+  FB.fns.plot_guild_expose = function (state, ctx) {
+    const target = guildPlotTarget(state, ctx);
+    if (!target) {
+      if (state.player.plot && state.player.plot.id === 'guild_monopoly') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    FB.endGuildMonopoly(state, target.record.contractId, 'exposed');
+    state.player.prestige += 6;
+    state.player.pop = FB.clamp((state.player.pop || 0) + 10, -100, 100);
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_guild_compensation = function (state, ctx) {
+    const target = guildPlotTarget(state, ctx);
+    if (!target) {
+      if (state.player.plot && state.player.plot.id === 'guild_monopoly') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    state.player.gold += target.slot === 'incoming' ? 16 : 12;
+    state.player.pop = FB.clamp((state.player.pop || 0) - 6, -100, 100);
+    guildPlotGrantorStanding(state, target, -6, 'compensation');
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_guild_defend = function (state, ctx) {
+    const target = guildPlotTarget(state, ctx);
+    if (!target) {
+      if (state.player.plot && state.player.plot.id === 'guild_monopoly') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    const career = FB.careerOf(state, playerChar(state));
+    if (career && career.profession === target.record.profession) {
+      career.guildStanding = FB.clamp((career.guildStanding || 0) + 10, 0, 100);
+    }
+    state.player.prestige += 4;
+    state.player.pop = FB.clamp((state.player.pop || 0) - 8, -100, 100);
+    guildPlotGrantorStanding(state, target, 5, 'defended');
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_guild_failure = function (state, ctx) {
+    const target = guildPlotTarget(state, ctx);
+    if (target) {
+      if (!guildPlotGrantorStanding(state, target, -8, 'failure')) {
+        state.player.pop = FB.clamp((state.player.pop || 0) - 10, -100, 100);
+      }
+    }
+    FB.fns.plot_end(state);
+    return !!target;
+  };
+
+  FB.fns.plot_guild_discovery = function (state, ctx) {
+    const target = guildPlotTarget(state, ctx);
+    if (target) {
+      if (!guildPlotGrantorStanding(state, target, -5, 'discovery')) {
+        state.player.pop = FB.clamp((state.player.pop || 0) - 6, -100, 100);
+      }
+    }
+    FB.fns.plot_end(state);
+    return !!target;
   };
 
   FB.applyMarriageBackground = function (c, station, epithet) {

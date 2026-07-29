@@ -364,6 +364,18 @@ Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobi
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show Standing and the current direction.
 
+Semantic plot targets use the same identity-card convention. Realm targets show arms,
+ruler, Standing, pact/alliance status, and current foreign-policy direction; character
+targets show a portrait and role context. The picker submits the full canonical target
+context rather than a display label or list index, so a saved plot continues to point at
+the same realm, character, institution, or contract after reload.
+The discovery modal repeats that target label and reuses the same character or realm card
+when one exists, making the endangered relationship explicit before the player abandons,
+contains, or rushes the scheme.
+The Estates sheet keeps the ordinary assembly voice visible and, when obligation evidence
+matches the current liege contract, adds the higher redress-only percentage beside it and
+uses that exact chance in the motion preview.
+
 Every living AI ruler sheet exposes **Cultivate relationship…** and **Offer a gift…**.
 Cultivation materializes that ruler only when chosen and opens the ordinary capital-visit
 review; once materialized, the ruler identity card and **Open full character sheet**

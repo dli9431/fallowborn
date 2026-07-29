@@ -304,18 +304,32 @@ window.FB = window.FB || {};
       if (!pl) return;
       const def = FBDATA.plots[pl.id];
       if (!def) { s.player.plot = null; return; }
-      if (def.target && (!pl.context || FB.plotTargets(s, def).indexOf(pl.context.pid) < 0)) {
-        const lost = pl.context && pl.context.pid ? FB.world.byId[pl.context.pid] : null;
-        FB.news(s, FB.msg('news.action.plot_target_lost',
-          '🕸 The plot ends: {province} is no longer a valid target.',
-          { province: lost ? lost.name : FB.T('the county') }));
+      if (def.target && !FB.plotTargetValid(s, def, pl.context)) {
+        const lost = FB.plotContextLabel(s, def, pl.context);
+        if (def.target === 'border_county_without_dejure') {
+          FB.news(s, FB.msg('news.action.plot_target_lost',
+            '🕸 The plot ends: {province} is no longer a valid target.',
+            {
+              province:lost || FB.messageParam(
+                FB.message('fx.param.the_county', {})
+              )
+            }));
+        } else {
+          FB.news(s, FB.msg('news.action.plot_semantic_target_lost',
+            '🕸 The plot ends: {target} is no longer a valid target.',
+            {
+              target:lost || FB.messageParam(FB.msg(
+                'fx.param.the_intended_target', 'the intended target', {}
+              ))
+            }));
+        }
         FB.fns.plot_end(s);
         return;
       }
       pl.power += (2 + FB.skillOf(me(s), 'int') / 3) / D;
       if (skillDch(0.25)) skillUp(s, 'int');
       if (pl.sprung) return;
-      if (dch(0.12)) {
+      if (dch(Math.min(0.30, 0.12 + (pl.exposure || 0) * 0.06))) {
         pl.sprung = 1;
         const discoveredCtx = {};
         for (const key in (pl.context || {})) discoveredCtx[key] = pl.context[key];
@@ -325,7 +339,10 @@ window.FB = window.FB || {};
       }
       if (pl.power >= def.need) {
         pl.sprung = 1;
-        FB.queueEvent(s, def.event, pl.context || {});
+        const resolutionCtx = {};
+        for (const key in (pl.context || {})) resolutionCtx[key] = pl.context[key];
+        resolutionCtx.plotId = pl.id;
+        FB.queueEvent(s, def.event, resolutionCtx);
       }
     } },
 
@@ -1755,10 +1772,231 @@ window.FB = window.FB || {};
     return out;
   };
 
+  function plotOption(context, label, desc, icon, extra) {
+    const out = {
+      context:context, label:label, desc:desc || '', icon:icon || '🕸'
+    };
+    extra = extra || {};
+    for (const key in extra) {
+      if (Object.prototype.hasOwnProperty.call(extra, key)) out[key] = extra[key];
+    }
+    return out;
+  }
+
+  function politicalRivalContext(state) {
+    const rival = FB.getRole(state, 'rival', false);
+    if (!rival || rival.dead) return null;
+    const ctx = { characterId:rival.id };
+    const rulingRealmId = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(state, rival);
+    const realmId = rulingRealmId ||
+      (rival.royalLine && rival.royalLine.realmId) ||
+      (rival.restorationRight && rival.restorationRight.realmId) || null;
+    if (realmId && state.realms[realmId] && state.realms[realmId].alive) {
+      ctx.realmId = realmId;
+    }
+    if (rival.restorationRight) {
+      ctx.contractId = 'restoration_right:' +
+        (rival.restorationRight.createdTurn || 0);
+      return ctx;
+    }
+    const retainer = FB.retainerRecord && FB.retainerRecord(state, rival.id);
+    if (retainer) {
+      ctx.contractId = 'retainer:' + retainer.office + ':' +
+        (retainer.startedTurn || 0);
+      return ctx;
+    }
+    if (rulingRealmId && ctx.realmId && state.council &&
+        state.council.seats) {
+      for (const seatId in state.council.seats) {
+        if (state.council.seats[seatId] === ctx.realmId) {
+          ctx.institution = 'council';
+          return ctx;
+        }
+      }
+    }
+    return ctx.realmId ? ctx : null;
+  }
+
+  FB.plotTargetOptions = function (state, def) {
+    const out = [];
+    if (!def || !def.target) return out;
+    if (def.target === 'border_county_without_dejure') {
+      for (const pid of FB.claimCandidates(state)) {
+        const pr = FB.world.byId[pid], realm = pr && state.realms[state.owner[pid]];
+        out.push(plotOption(
+          { pid:pid }, pr ? pr.name : pid,
+          realm ? FB.T('Held by {realm}', { realm:realm.name }) :
+            FB.T('Held by another realm'),
+          '📜', { provinceId:pid, realmId:realm ? realm.id : null }
+        ));
+      }
+    } else if (def.target === 'current_liege_obligation') {
+      const liege = state.player.liege && state.realms[state.player.liege];
+      if (liege && FB.parliamentActive && FB.parliamentActive(state) &&
+          FB.parliamentEnsure(state) &&
+          FB.parliamentAid(state) >
+            (FBDATA.balance.parliamentAidMin || 0.10) + 0.001) {
+        out.push(plotOption(
+          { realmId:liege.id, institution:'estates', contractId:'obl' },
+          FB.T('The obligations owed to {realm}', { realm:liege.name }),
+          FB.T('Aid {aid}% · {scutage}', {
+            aid:Math.round(FB.parliamentAid(state) * 100),
+            scutage:FB.parliamentScutage(state)
+              ? FB.T('scutage in force') : FB.T('personal service owed')
+          }),
+          '⚖', { realmId:liege.id }
+        ));
+      }
+    } else if (def.target === 'active_guild_monopoly') {
+      if (FB.guildMonopolyPlotTargets) {
+        for (const target of FB.guildMonopolyPlotTargets(state)) {
+          out.push(plotOption(
+            { contractId:target.contractId }, target.label, target.desc,
+            '📜', { contractId:target.contractId, realmId:target.realmId || null }
+          ));
+        }
+      }
+    } else if (def.target === 'council_schemer') {
+      if (FB.councilSchemers) {
+        for (const member of FB.councilSchemers(state)) {
+          const seatNames = {
+            seneschal:'Seneschal', constable:'Constable', treasurer:'Treasurer',
+            almoner:'Almoner', chamberlain:'Chamberlain'
+          };
+          const traitDef = FBDATA.traits &&
+            FBDATA.traits[member.realm.ruler.trait];
+          out.push(plotOption(
+            {
+              realmId:member.rid,
+              institution:'council',
+              rulerGeneration:FB.realmRulerGeneration(state, member.rid)
+            },
+            FB.T('{ruler} of {realm}', {
+              ruler:member.realm.ruler.name, realm:member.realm.name
+            }),
+            FB.T('{office} · {trait} · Standing {standing}', {
+              office:FB.T(seatNames[member.seat.id] || member.seat.id),
+              trait:traitDef && FB.dataText
+                ? FB.dataText(state, state.player.charId, 'trait',
+                  member.realm.ruler.trait, traitDef, 'name', {})
+                : member.realm.ruler.trait,
+              standing:Math.round(FB.standingOf(state, {
+                kind:'realm', id:member.rid
+              }))
+            }),
+            '🗝', { realmId:member.rid }
+          ));
+        }
+      }
+    } else if (def.target === 'diplomatic_correspondence') {
+      if (!FB.isPlayerSovereign(state)) return out;
+      const seen = {};
+      const ids = FB.foreignPolicyTargets(state).slice();
+      for (const rid in (state.pacts || {})) {
+        if (state.pacts[rid] > state.turn && ids.indexOf(rid) < 0) ids.push(rid);
+      }
+      const ally = FB.alliedRealm ? FB.alliedRealm(state, 'player') : null;
+      if (ally && ids.indexOf(ally) < 0) ids.push(ally);
+      ids.sort();
+      for (const rid of ids) {
+        const realm = state.realms[rid];
+        if (!realm || !realm.alive || realm.liege || seen[rid]) continue;
+        seen[rid] = 1;
+        let relation = FB.T('neighboring sovereign');
+        if (FB.areAllied(state, 'player', rid)) relation = FB.T('defensive ally');
+        else if (state.pacts && state.pacts[rid] > state.turn) relation = FB.T('peace-pact partner');
+        else if (FB.foreignPolicyStance(state, rid) > 0) relation = FB.T('Improve direction');
+        else if (FB.foreignPolicyStance(state, rid) < 0) relation = FB.T('Provoke direction');
+        out.push(plotOption(
+          { realmId:rid }, FB.T('{ruler} of {realm}', {
+            ruler:realm.ruler.name, realm:realm.name
+          }),
+          FB.T('{relation} · Standing {standing}', {
+            relation:relation,
+            standing:Math.round(FB.standingOf(state, { kind:'realm', id:rid }))
+          }),
+          '✉', { realmId:rid }
+        ));
+      }
+    } else if (def.target === 'political_rival') {
+      const context = politicalRivalContext(state);
+      const rival = context && state.chars[context.characterId];
+      if (rival) {
+        let connection = FB.T('a political connection');
+        if (context.institution === 'council') connection = FB.T('a seat on your Council');
+        else if (context.contractId &&
+            context.contractId.indexOf('restoration_right:') === 0) {
+          connection = FB.T('a restoration claim');
+        }
+        else if (context.contractId &&
+            context.contractId.indexOf('retainer:') === 0) {
+          connection = FB.T('a household office');
+        } else if (context.realmId) connection = FB.T('a royal or ruling house');
+        out.push(plotOption(
+          context, FB.fullName(rival),
+          FB.T('Your rival · connected to {connection}', { connection:connection }),
+          '🗡', { characterId:rival.id, realmId:context.realmId || null }
+        ));
+      }
+    }
+    return out;
+  };
+
+  function samePlotContext(expected, actual) {
+    if (!expected || !actual) return false;
+    for (const key in expected) {
+      if (expected[key] !== actual[key]) return false;
+    }
+    return true;
+  }
+
+  FB.plotTargetValid = function (state, def, context) {
+    if (!def || !def.target) return true;
+    for (const option of FB.plotTargetOptions(state, def)) {
+      if (samePlotContext(option.context, context)) return true;
+    }
+    return false;
+  };
+
+  FB.plotTargetContext = function (state, def, context) {
+    for (const option of FB.plotTargetOptions(state, def)) {
+      if (samePlotContext(option.context, context)) {
+        const out = {};
+        for (const key in option.context) out[key] = option.context[key];
+        return out;
+      }
+    }
+    return null;
+  };
+
+  FB.plotContextLabel = function (state, def, context) {
+    for (const option of FB.plotTargetOptions(state, def)) {
+      if (samePlotContext(option.context, context)) return option.label;
+    }
+    if (context && (context.provinceId || context.pid)) {
+      const province = FB.world.byId[context.provinceId || context.pid];
+      if (province) return province.name;
+    }
+    if (context && context.realmId && state.realms[context.realmId]) {
+      return state.realms[context.realmId].name;
+    }
+    if (context && context.characterId && state.chars[context.characterId]) {
+      return FB.fullName(state.chars[context.characterId]);
+    }
+    return '';
+  };
+
+  /* Legacy selector readers receive the primary stable id. New code uses
+     plotTargetOptions so compound semantic contexts stay intact. */
   FB.plotTargets = function (state, def) {
-    if (!def || !def.target) return [];
-    if (def.target === 'border_county_without_dejure') return FB.claimCandidates(state);
-    return [];
+    const out = [];
+    for (const option of FB.plotTargetOptions(state, def)) {
+      const ctx = option.context;
+      out.push(ctx.provinceId || ctx.pid || ctx.realmId || ctx.characterId ||
+        ctx.contractId);
+    }
+    return out;
   };
 
   FB.beginPlot = function (state, id, context) {
@@ -1766,8 +2004,8 @@ window.FB = window.FB || {};
     if (!def || state.player.plot) return;
     if (def.trigger && !FB.checkTrigger(state, def.trigger)) return;
     if (def.target) {
-      const pid = context && context.pid;
-      if (!pid || FB.plotTargets(state, def).indexOf(pid) < 0) return;
+      context = FB.plotTargetContext(state, def, context);
+      if (!context) return;
     }
     state.player.plot = { id: id, power: 0, context: context || {} };
     if (state.player.focus !== 'scheming') {
@@ -1782,6 +2020,25 @@ window.FB = window.FB || {};
   FB.fns.plot_end = function (state) {
     state.player.plot = null;
     FB.validateFocus(state);
+  };
+
+  FB.activePlotContext = function (state, id, ctx) {
+    const plot = state.player.plot;
+    const def = FBDATA.plots[id];
+    if (!plot || plot.id !== id || !def) return false;
+    if (!def.target) return true;
+    if (ctx && !samePlotContext(plot.context, ctx)) return false;
+    return FB.plotTargetValid(state, def, plot.context);
+  };
+
+  FB.fns.plot_event_context_valid = function (state, ctx) {
+    const plot = state.player.plot;
+    const id = ctx && ctx.plotId;
+    const def = id && FBDATA.plots[id];
+    if (!plot || plot.id !== id || !def) return false;
+    if (!def.target) return true;
+    return samePlotContext(plot.context, ctx) &&
+      FB.plotTargetValid(state, def, plot.context);
   };
 
   /* ================= liege chain & vassalage ================= */
@@ -2406,6 +2663,177 @@ window.FB = window.FB || {};
       FB.adjustStanding(state, { kind:'realm', id:rid },
         policy[rid] * amount, 'foreign_policy');
     }
+  };
+
+  function diplomaticRealm(state, ctx) {
+    const rid = ctx && (ctx.realmId || ctx.rid);
+    const realm = rid && state.realms[rid];
+    return realm && realm.alive && !realm.liege && rid !== 'player'
+      ? realm : null;
+  }
+
+  function diplomaticContext(state, rid, extra) {
+    const out = { realmId:rid };
+    extra = extra || {};
+    for (const key in extra) {
+      if (Object.prototype.hasOwnProperty.call(extra, key)) out[key] = extra[key];
+    }
+    return out;
+  }
+
+  /* Reusable random-event context selectors. They return only stable,
+     JSON-safe semantic ids; the event picker chooses one after choosing the
+     authored story, so eligibility checks never consume RNG. */
+  FB.eventContextOptions = function (state, selector) {
+    const out = [];
+    if (!FB.isPlayerSovereign(state)) return out;
+    if (selector === 'foreign_policy_improve' ||
+        selector === 'foreign_policy_provoke') {
+      const stance = selector === 'foreign_policy_improve' ? 1 : -1;
+      for (const rid of FB.foreignPolicyAssignments(state)) {
+        if (FB.foreignPolicyStance(state, rid) !== stance) continue;
+        if (state.player.war && state.player.war.enemy === rid) continue;
+        out.push(diplomaticContext(state, rid));
+      }
+    } else if (selector === 'active_pact') {
+      for (const rid in (state.pacts || {})) {
+        if (state.pacts[rid] <= state.turn || !diplomaticRealm(state, {
+          realmId:rid
+        })) continue;
+        out.push(diplomaticContext(state, rid, {
+          pactEndTurn:state.pacts[rid]
+        }));
+      }
+    } else if (selector === 'active_alliance') {
+      const rid = FB.alliedRealm ? FB.alliedRealm(state, 'player') : null;
+      if (rid && diplomaticRealm(state, { realmId:rid })) {
+        out.push(diplomaticContext(state, rid, {
+          rulerGeneration:FB.realmRulerGeneration(state, rid)
+        }));
+      }
+    }
+    out.sort(function (a, b) {
+      return a.realmId < b.realmId ? -1 : (a.realmId > b.realmId ? 1 : 0);
+    });
+    return out;
+  };
+
+  function activePactWith(state, rid) {
+    return !!(rid && state.pacts && state.pacts[rid] > state.turn);
+  }
+
+  FB.fns.diplomacy_pact_active = function (state, ctx) {
+    const realm = diplomaticRealm(state, ctx);
+    return !!(FB.isPlayerSovereign(state) && realm &&
+      activePactWith(state, realm.id));
+  };
+
+  FB.fns.diplomacy_alliance_active = function (state, ctx) {
+    const realm = diplomaticRealm(state, ctx);
+    return !!(FB.isPlayerSovereign(state) && realm &&
+      FB.areAllied(state, 'player', realm.id));
+  };
+
+  FB.fns.diplomacy_can_offer_pact = function (state, ctx) {
+    const realm = diplomaticRealm(state, ctx);
+    if (!FB.isPlayerSovereign(state) || !realm ||
+        activePactWith(state, realm.id) ||
+        FB.areAllied(state, 'player', realm.id)) return false;
+    if (state.player.war && state.player.war.enemy === realm.id) return false;
+    return FB.realmsAdjacent(state, 'player', realm.id);
+  };
+
+  FB.fns.diplomacy_can_offer_alliance = function (state, ctx) {
+    const realm = diplomaticRealm(state, ctx);
+    return !!(realm && FB.allianceOfferTargets(state).indexOf(realm.id) >= 0);
+  };
+
+  FB.fns.diplomacy_make_pact = function (state, ctx) {
+    if (!FB.fns.diplomacy_can_offer_pact(state, ctx)) return false;
+    const realm = diplomaticRealm(state, ctx);
+    state.pacts = state.pacts || {};
+    state.pacts[realm.id] = state.turn + 8 * 90;
+    FB.news(state, FB.msg('news.diplomacy.pact_made',
+      '🕊 {realm} swears a two-year pact of peace.', { realm:realm.name }));
+    return true;
+  };
+
+  FB.fns.diplomacy_extend_pact = function (state, ctx) {
+    if (!FB.fns.diplomacy_pact_active(state, ctx)) return false;
+    const realm = diplomaticRealm(state, ctx);
+    state.pacts[realm.id] += 4 * 90;
+    FB.news(state, FB.msg('news.diplomacy.pact_extended',
+      '🕊 The pact with {realm} is renewed for another year.',
+      { realm:realm.name }));
+    return true;
+  };
+
+  FB.fns.diplomacy_end_pact = function (state, ctx) {
+    if (!FB.fns.diplomacy_pact_active(state, ctx)) return false;
+    const realm = diplomaticRealm(state, ctx);
+    delete state.pacts[realm.id];
+    FB.news(state, FB.msg('news.diplomacy.pact_ended',
+      '🕊 The pact with {realm} is allowed to lapse.', { realm:realm.name }));
+    return true;
+  };
+
+  FB.fns.diplomacy_form_alliance = function (state, ctx) {
+    if (!FB.fns.diplomacy_can_offer_alliance(state, ctx)) return false;
+    const realm = diplomaticRealm(state, ctx);
+    if (!FB.formAlliance(state, 'player', realm.id, 'diplomatic_event')) {
+      return false;
+    }
+    FB.news(state, FB.msg('news.diplomacy.alliance_formed',
+      '🤝 Your crown and {realm} enter a defensive alliance.',
+      { realm:realm.name }));
+    return true;
+  };
+
+  FB.fns.diplomacy_break_alliance = function (state, ctx) {
+    if (!FB.fns.diplomacy_alliance_active(state, ctx)) return false;
+    const realm = diplomaticRealm(state, ctx);
+    FB.breakAlliance(state, 'player', realm.id);
+    FB.news(state, FB.msg('news.diplomacy.alliance_ended',
+      '🤝 The defensive alliance with {realm} is ended.',
+      { realm:realm.name }));
+    return true;
+  };
+
+  FB.fns.diplomacy_succession_valid = function (state, ctx) {
+    const realm = diplomaticRealm(state, ctx);
+    return !!(FB.isPlayerSovereign(state) && realm && ctx &&
+      ctx.rulerGeneration ===
+      FB.realmRulerGeneration(state, realm.id));
+  };
+
+  FB.fns.diplomacy_succession_pact = function (state, ctx) {
+    if (!FB.fns.diplomacy_succession_valid(state, ctx)) return false;
+    if (FB.fns.diplomacy_pact_active(state, ctx)) {
+      return FB.fns.diplomacy_extend_pact(state, ctx);
+    }
+    return FB.fns.diplomacy_make_pact(state, ctx);
+  };
+
+  FB.noteDiplomaticSuccession = function (state, rid, info) {
+    const realm = diplomaticRealm(state, { realmId:rid });
+    if (!realm || !FB.isPlayerSovereign(state)) return false;
+    info = info || {};
+    const related = info.formerAlliance || activePactWith(state, rid) ||
+      FB.realmsAdjacent(state, 'player', rid) ||
+      FB.foreignPolicyStance(state, rid);
+    const successionChance = FBDATA.balance &&
+      FBDATA.balance.diplomacySuccessionChance !== undefined
+      ? FBDATA.balance.diplomacySuccessionChance : 0.35;
+    if (!related || !FB.chance(successionChance)) return false;
+    const compact = !!(info.formerAlliance || activePactWith(state, rid));
+    FB.queueEvent(state, compact
+      ? 'diplomacy_succession_compact' : 'diplomacy_succession_embassy', {
+      realmId:rid,
+      rulerGeneration:FB.realmRulerGeneration(state, rid),
+      formerAlliance:info.formerAlliance ? 'yes' : 'no',
+      pact:activePactWith(state, rid) ? 'yes' : 'no'
+    });
+    return true;
   };
 
   FB.envoyTargets = function (state) {
@@ -3135,8 +3563,259 @@ window.FB = window.FB || {};
     FB.fns.plot_end(state);
   };
 
+  function plotRealmContext(state, id, ctx) {
+    if (!FB.activePlotContext(state, id, ctx)) return null;
+    const rid = ctx && ctx.realmId;
+    const realm = rid && state.realms[rid];
+    return realm && realm.alive ? realm : null;
+  }
+
+  FB.fns.plot_correspondence_steal = function (state, ctx) {
+    const realm = plotRealmContext(state, 'diplomatic_correspondence', ctx);
+    if (!realm) {
+      if (state.player.plot &&
+          state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
+      return false;
+    }
+    FB.adjustStanding(state, { kind:'realm', id:realm.id }, -12,
+      'plot:correspondence_stolen');
+    state.player.prestige += 7;
+    const war = realm.war;
+    FB.news(state, war
+      ? FB.msg('news.plot.correspondence_war',
+        '✉ Stolen letters show {realm} committed to war with {enemy}.', {
+          realm:realm.name,
+          enemy:state.realms[war.enemy] ? state.realms[war.enemy].name :
+            FB.messageParam(FB.message('fx.param.the_enemy', {}))
+        })
+      : FB.msg('news.plot.correspondence_temper', {
+        forms:{
+          select:'value', param:'temper', cases:{
+            bellicose:'✉ Stolen letters expose {realm}’s court as dangerously bellicose; no war order is presently sealed.',
+            cautious:'✉ Stolen letters expose {realm}’s court as cautious; no war order is presently sealed.',
+            other:'✉ Stolen letters expose {realm}’s court as watchful; no war order is presently sealed.'
+          }
+        }
+      }, {
+        realm:realm.name,
+        temper:realm.aggression >= 0.65 ? 'bellicose' :
+          (realm.aggression <= 0.25 ? 'cautious' : 'watchful')
+      }));
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_correspondence_preserve = function (state, ctx) {
+    const realm = plotRealmContext(state, 'diplomatic_correspondence', ctx);
+    if (!realm) {
+      if (state.player.plot &&
+          state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
+      return false;
+    }
+    FB.adjustStanding(state, { kind:'realm', id:realm.id }, 10,
+      'plot:correspondence_preserved');
+    if (state.pacts && state.pacts[realm.id] > state.turn) {
+      state.pacts[realm.id] += 90;
+    }
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_correspondence_provoke = function (state, ctx) {
+    const realm = plotRealmContext(state, 'diplomatic_correspondence', ctx);
+    if (!realm) {
+      if (state.player.plot &&
+          state.player.plot.id === 'diplomatic_correspondence') FB.fns.plot_end(state);
+      return false;
+    }
+    FB.adjustStanding(state, { kind:'realm', id:realm.id }, -18,
+      'plot:correspondence_forged');
+    FB.setForeignPolicy(state, realm.id, -1);
+    state.player.prestige += 5;
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_correspondence_failure = function (state, ctx) {
+    const realm = plotRealmContext(state, 'diplomatic_correspondence', ctx);
+    if (realm) {
+      FB.adjustStanding(state, { kind:'realm', id:realm.id }, -15,
+        'plot:correspondence_exposed');
+      if (state.pacts && state.pacts[realm.id] > state.turn + 90) {
+        state.pacts[realm.id] -= 90;
+      }
+    }
+    FB.fns.plot_end(state);
+    return !!realm;
+  };
+
+  function politicalRival(state, ctx) {
+    if (!FB.activePlotContext(state, 'rival_claimant', ctx)) return null;
+    const rival = ctx && state.chars[ctx.characterId];
+    return rival && !rival.dead && state.roles.rival === rival.id ? rival : null;
+  }
+
+  FB.fns.plot_rival_discredit = function (state, ctx) {
+    const rival = politicalRival(state, ctx);
+    if (!rival) {
+      if (state.player.plot && state.player.plot.id === 'rival_claimant') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    let consequence = 'standing';
+    if (rival.restorationRight) {
+      delete rival.restorationRight;
+      consequence = 'claim';
+    } else if (FB.retainerRecord && FB.retainerRecord(state, rival.id)) {
+      FB.removeRetainer(state, rival.id, 'dismissed');
+      consequence = 'office';
+    } else if (ctx.institution === 'council' && ctx.realmId &&
+        state.council && state.council.seats && FB.councilDismiss) {
+      for (const seatId in state.council.seats) {
+        if (state.council.seats[seatId] === ctx.realmId) {
+          FB.councilDismiss(state, seatId);
+          consequence = 'council';
+          break;
+        }
+      }
+    }
+    FB.adjustStanding(state, { kind:'character', id:rival.id }, -18,
+      'plot:rival_discredited');
+    FB.changeRivalHeat(state, 18);
+    state.player.prestige += 8;
+    FB.news(state, FB.msg('news.plot.rival_discredited', {
+      forms:{
+        select:'value', param:'consequence', cases:{
+          claim:'🗡 Evidence ruins {rival}’s claim before it can be pressed.',
+          office:'🗡 Evidence drives {rival} from household office.',
+          council:'🗡 Evidence drives {rival} from the Council board.',
+          standing:'🗡 Evidence publicly blackens {rival}’s political name.'
+        }
+      }
+    }, { rival:FB.fullName(rival), consequence:consequence }));
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_rival_settlement = function (state, ctx) {
+    const rival = politicalRival(state, ctx);
+    if (!rival) {
+      if (state.player.plot && state.player.plot.id === 'rival_claimant') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    FB.adjustStanding(state, { kind:'character', id:rival.id }, 15,
+      'plot:rival_settlement');
+    FB.endRivalry(state, rival.id);
+    state.player.prestige += 4;
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_rival_dossier = function (state, ctx) {
+    const rival = politicalRival(state, ctx);
+    if (!rival) {
+      if (state.player.plot && state.player.plot.id === 'rival_claimant') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    FB.adjustStanding(state, { kind:'character', id:rival.id }, -8,
+      'plot:rival_dossier');
+    FB.changeRivalHeat(state, 25);
+    state.player.prestige += 5;
+    FB.gainSkill(state.chars[state.player.charId], 'int', 2);
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_rival_failure = function (state, ctx) {
+    const rival = politicalRival(state, ctx);
+    if (rival) {
+      FB.adjustStanding(state, { kind:'character', id:rival.id }, -20,
+        'plot:rival_exposed');
+      FB.changeRivalHeat(state, 25);
+    }
+    FB.fns.plot_end(state);
+    return !!rival;
+  };
+
+  function discoveryPlotHandler(state, ctx, kind) {
+    const id = ctx && ctx.plotId;
+    const names = {
+      feudal_obligation:{
+        success:'plot_obligation_evidence', failure:'plot_obligation_failure'
+      },
+      guild_monopoly:{
+        success:'plot_guild_expose', failure:'plot_guild_failure'
+      },
+      council_counter:{
+        success:'plot_council_expose', failure:'plot_council_failure'
+      },
+      diplomatic_correspondence:{
+        success:'plot_correspondence_steal', failure:'plot_correspondence_failure'
+      },
+      rival_claimant:{
+        success:'plot_rival_discredit', failure:'plot_rival_failure'
+      }
+    };
+    const name = names[id] && names[id][kind];
+    if (!name || !FB.fns[name]) return false;
+    FB.fns[name](state, ctx);
+    return true;
+  }
+
+  FB.fns.plot_discovery_abandon = function (state, ctx) {
+    const id = ctx && ctx.plotId;
+    if (!state.player.plot || state.player.plot.id !== id) return false;
+    const def = FBDATA.plots[id];
+    if (!def || (def.target && !FB.plotTargetValid(state, def, ctx))) {
+      FB.fns.plot_end(state);
+      return false;
+    }
+    if (id === 'feudal_obligation' && ctx.realmId) {
+      FB.adjustStanding(state, { kind:'realm', id:ctx.realmId }, -8,
+        'plot:obligation_abandoned');
+    } else if (id === 'guild_monopoly' && FB.fns.plot_guild_discovery) {
+      FB.fns.plot_guild_discovery(state, ctx, false);
+      return true;
+    } else if (id === 'council_counter' && FB.fns.plot_council_discovery) {
+      FB.fns.plot_council_discovery(state, ctx, false);
+      return true;
+    } else if (id === 'diplomatic_correspondence' && ctx.realmId) {
+      FB.adjustStanding(state, { kind:'realm', id:ctx.realmId }, -8,
+        'plot:correspondence_abandoned');
+    } else if (id === 'rival_claimant') {
+      const rival = state.chars[ctx.characterId];
+      if (rival && !rival.dead && state.roles.rival === rival.id) {
+        FB.adjustStanding(state, { kind:'character', id:rival.id }, -8,
+          'plot:rival_abandoned');
+        FB.changeRivalHeat(state, 12);
+      }
+    }
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_discovery_contain = function (state, ctx) {
+    const plot = state.player.plot;
+    const def = plot && FBDATA.plots[plot.id];
+    if (!plot || !def || plot.id !== (ctx && ctx.plotId) ||
+        (def.target && !FB.plotTargetValid(state, def, ctx))) {
+      if (plot) FB.fns.plot_end(state);
+      return false;
+    }
+    plot.sprung = 0;
+    plot.exposure = (plot.exposure || 0) + 1;
+    plot.power = Math.max(0, plot.power - 4);
+    return true;
+  };
+
   FB.fns.plot_discovery_success = function (state, ctx) {
     if (ctx && ctx.plotId === 'fabricate_claim') FB.fns.fabricate_claim_success(state, ctx);
+    else if (discoveryPlotHandler(state, ctx, 'success')) return;
     else {
       FB.applyEffects(state, { prestige: 6, skills: { int: 2 } }, ctx || {});
       FB.fns.plot_end(state);
@@ -3145,6 +3824,7 @@ window.FB = window.FB || {};
 
   FB.fns.plot_discovery_failure = function (state, ctx) {
     if (ctx && ctx.plotId === 'fabricate_claim') FB.fns.fabricate_claim_failure(state, ctx);
+    else if (discoveryPlotHandler(state, ctx, 'failure')) return;
     else {
       FB.applyEffects(state, {
         prestige: -12,

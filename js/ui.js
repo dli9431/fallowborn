@@ -2281,6 +2281,35 @@ window.FB = window.FB || {};
       })) + '</div>';
   }
 
+  UI.realmCardHtml = function (s, rid) {
+    const realm = rid && s.realms[rid];
+    if (!realm || !realm.alive) return '';
+    const standing = FB.standingOf(s, { kind:'realm', id:rid });
+    const relations = [];
+    if (FB.areAllied(s, 'player', rid)) relations.push(FB.T('Defensive ally'));
+    if (s.pacts && s.pacts[rid] > s.turn) relations.push(FB.T('Peace pact'));
+    if (!relations.length) relations.push(FB.T('No compact'));
+    const stance = FB.foreignPolicyStance(s, rid);
+    if (stance > 0) {
+      relations.push(FB.T('Improve direction'));
+    } else if (stance < 0) {
+      relations.push(FB.T('Provoke direction'));
+    } else if (FB.isForeignPolicyTarget(s, rid)) {
+      relations.push(FB.T('Neutral direction'));
+    }
+    return '<div class="charcard realmcard" data-realm-context="' + esc(rid) + '">' +
+      FB.crestTag(rid, 48, 56) +
+      '<div><div class="ccname">' + esc(realm.ruler.name) + '</div>' +
+      '<div class="ccmeta">' + esc(FB.T('{title} of {realm}', {
+        title:FB.realmRankTitle(s, realm), realm:realm.name
+      })) + '</div>' +
+      '<div class="ccmeta"><span class="' + standingClass(standing) + '">' +
+      esc(FB.T('Standing {standing}', {
+        standing:standingText(standing)
+      })) + '</span> · ' + esc(relations.join(' · ')) +
+      '</div></div></div>';
+  };
+
   UI.charCardHtml = function (s, c, clickable, groupedTraits) {
     const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
@@ -3892,6 +3921,7 @@ window.FB = window.FB || {};
     if (fx.health) v += fx.health * 4;
     if (fx.popularOpinion) v += fx.popularOpinion * 0.15;
     if (fx.opinionLiege) v += fx.opinionLiege * 0.1;
+    if (fx.standingRealm) v += fx.standingRealm * 0.1;
     if (fx.opinion && fx.opinion.amt) v += fx.opinion.amt * 0.1;
     if (fx.skills) for (const k in fx.skills) v += fx.skills[k] * 1.5;
     if (fx.tierSet !== undefined || fx.tierUp) v += 25;
@@ -4087,6 +4117,8 @@ window.FB = window.FB || {};
       const item = pendingEvents.shift();
       const ev = FB.eventById(item.id);
       if (!ev) continue;
+      if (FB.eventContextStillValid &&
+          !FB.eventContextStillValid(s, ev, item.ctx || {})) continue;
       if (autoWants(ev, item)) { autoResolve(ev, item); continue; }
       showEvent(ev, item.ctx || {});
       return true;
@@ -4119,6 +4151,7 @@ window.FB = window.FB || {};
       if (o.failure) add(o.failure.text);
     }
     let h = '';
+    const cardedRealms = {};
     for (const role of ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor']) {
       if (raw.indexOf('{' + role + '}') < 0) continue;
       const c = FB.getRole(s, role, false);
@@ -4129,6 +4162,29 @@ window.FB = window.FB || {};
       if (student && !student.dead && !carded[student.id]) {
         carded[student.id] = 1;
         h += UI.charCardHtml(s, student);
+      }
+    }
+    if ((raw.indexOf('{rname}') >= 0 || raw.indexOf('{rulername}') >= 0) &&
+        ctx && ctx.realmId) {
+      h += UI.realmCardHtml(s, ctx.realmId);
+      cardedRealms[ctx.realmId] = 1;
+    }
+    if (ev.id === 'plot_discovered' && ctx && ctx.plotId) {
+      if (ctx.characterId && s.chars[ctx.characterId] &&
+          !carded[ctx.characterId]) {
+        carded[ctx.characterId] = 1;
+        h += UI.charCardHtml(s, s.chars[ctx.characterId]);
+      } else if (ctx.realmId && !cardedRealms[ctx.realmId]) {
+        h += UI.realmCardHtml(s, ctx.realmId);
+        cardedRealms[ctx.realmId] = 1;
+      }
+      const plotDef = FBDATA.plots[ctx.plotId];
+      const targetLabel = plotDef && FB.plotContextLabel
+        ? FB.plotContextLabel(s, plotDef, ctx) : '';
+      if (targetLabel) {
+        h += '<div class="hint plot-context-summary">' + esc(FB.T(
+          'Endangered target: {target}', { target:targetLabel }
+        )) + '</div>';
       }
     }
     return h;
@@ -6727,22 +6783,28 @@ window.FB = window.FB || {};
   UI.showPlotTargets = function (plotId) {
     const s = FB.state, def = FBDATA.plots[plotId];
     if (!def) return;
-    const targets = FB.plotTargets(s, def);
+    const targets = FB.plotTargetOptions(s, def);
     let h = '<p class="hint">' + esc(FB.T(
-      'Choose the county this plot concerns. Its identity remains attached to the plot through discovery and resolution.')) +
+      'Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.')) +
       '</p><div class="gm-list">';
-    for (const pid of targets) {
-      const pr = FB.world.byId[pid], r = s.realms[s.owner[pid]];
-      h += '<button class="actionbtn" data-plot-target="' + esc(pid) + '">📜 ' + esc(pr.name) +
-        '<span class="adesc">' + esc(FB.T('Held by {realm}', {
-          realm: r ? r.name : FB.T('another realm')
-        })) + '</span></button>';
+    for (let i = 0; i < targets.length; i++) {
+      const target = targets[i];
+      if (target.characterId && s.chars[target.characterId]) {
+        h += UI.charCardHtml(s, s.chars[target.characterId], false);
+      } else if (target.realmId) {
+        h += UI.realmCardHtml(s, target.realmId);
+      }
+      h += '<button class="actionbtn" data-plot-target="' + i + '">' +
+        target.icon + ' ' + esc(target.label) +
+        (target.desc ? '<span class="adesc">' + esc(target.desc) + '</span>' : '') +
+        '</button>';
     }
     h += '</div><button class="btn" id="gm-back">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Choose the Target'), h);
     document.querySelectorAll('[data-plot-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.beginPlot(FB.state, plotId, { pid: btn.dataset.plotTarget });
+        const target = targets[Number(btn.dataset.plotTarget)];
+        if (target) FB.beginPlot(FB.state, plotId, target.context);
         UI.closeModal(); UI.refresh();
       });
     });
@@ -7880,6 +7942,8 @@ window.FB = window.FB || {};
     const cost = B.parliamentMotionCost || 15;
     const moved = obl.lastMotion === s.date.year;
     const aidMin = B.parliamentAidMin || 0.10;
+    const voteChance = FB.parliamentVoteChance(s);
+    const redressChance = FB.parliamentVoteChance(s, true);
     let h = '<p class="hint">' + esc(FB.T(
       'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege.',
       { liege: liege.name })) + '</p>';
@@ -7890,7 +7954,12 @@ window.FB = window.FB || {};
         ? esc(FB.T('Scutage — silver answers the summons'))
         : esc(FB.T('Spears — you must ride, or pay dearly'))) + '</b></div>';
     h += '<div class="kv"><span>' + esc(FB.T('Your voice in the hall')) + '</span><b>' +
-      Math.round(FB.parliamentVoteChance(s) * 100) + '%</b></div>';
+      Math.round(voteChance * 100) + '%</b></div>';
+    if (redressChance > voteChance) {
+      h += '<div class="kv"><span>' +
+        esc(FB.T('Redress with gathered evidence')) + '</span><b>' +
+        Math.round(redressChance * 100) + '%</b></div>';
+    }
     h += '<p class="hint">' + esc(FB.T(
       'Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year.',
       { cost: cost })) + '</p>';
@@ -7901,7 +7970,9 @@ window.FB = window.FB || {};
     h += '<button class="actionbtn" data-motion="redress"' +
       (moved || s.player.gold < cost || obl.aid <= aidMin + 0.001 ? ' disabled' : '') + '>⚖ ' +
       esc(FB.T('Move for redress of grievances ({money:cost})', { cost: cost })) +
-      '<span class="adesc">' + esc(FB.T('Put it to a vote: the liege’s aid down one step, if the hall backs you.')) + '</span></button>';
+      '<span class="adesc">' + esc(FB.T(
+        'Put it to a vote: the liege’s aid down one step, if the hall backs you. Current chance {chance}%.',
+        { chance:Math.round(redressChance * 100) })) + '</span></button>';
     h += '<button class="actionbtn" data-motion="scutage"' +
       (moved || s.player.gold < cost || obl.scutage ? ' disabled' : '') + '>🛡 ' +
       esc(FB.T('Move for scutage ({money:cost})', { cost: cost })) +

@@ -9,6 +9,35 @@ claim formula consistent whether the plot reaches resolution or is discovered ea
 and custom effects settle success/failure and end the plot. See `docs/MODDING.md` for
 the full authoring shape.
 
+The expanded political plots use the same boundary with compound semantic contexts:
+liege obligation `{realmId,institution:"estates",contractId:"obl"}`, exact guild charter
+`{contractId}`, Council schemer `{realmId,institution:"council",rulerGeneration}`, foreign
+correspondence `{realmId}`, and a political rival `{characterId,...relevant connection}`.
+`FB.plotTargetOptions` is authoritative; daily and resolution-time validation never
+silently substitutes another realm, charter, officer, or rival. Discovery containment
+stores only additive `exposure` on the active plot, lowers current power, and leaves the
+single plot/focus lifecycle intact.
+
+Several random stories may share a top-level `contextSelector`. Eligibility calls the
+selector without RNG; only after the story is selected does the picker choose and
+snapshot one returned semantic context. Improve, Provoke, pact, and alliance stories use
+this to speak about the same exact court their effects address. The selector is rerun
+when the pending story actually reaches display or autoresolve, so an earlier choice that
+ends the pact, alliance, or direction expires the later story. Code-queued succession
+stories instead use `contextValidator:"diplomacy_succession_valid"` with a saved
+`rulerGeneration`; stale queued embassies are dropped before either visible or automated
+resolution. Custom triggers and option requirements receive that same context.
+Plot discovery and all plot resolution events use
+`contextValidator:"plot_event_context_valid"` in the same way. Their queued context
+carries `plotId`, so losing the active plot or changing any target component expires the
+story before a choice can spend resources or apply a partial effect. Legacy queued
+resolutions without `plotId` infer it only from an exact active-plot/event match.
+
+`standingRealm:n` is the reusable declarative diplomatic effect. It adjusts the existing
+player-relative Standing facade for `ctx.realmId` and is scored by autoresolve alongside
+the visible resource effects. Pact, alliance, monopoly, obligation, and Council mutations
+remain small custom handlers because their owning APIs are authoritative.
+
 `js/events.js` interprets declarative triggers/effects (documented exhaustively in
 docs/MODDING.md). New effect/trigger keys must be added there *and* documented in
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
@@ -105,6 +134,9 @@ behavior and flag keys for every existing 867 entry.
 The event modal shows a character card for the event's `charCard` role and for every
 `{role}` token the event's strings mention (js/ui.js `showEvent`); cards carry the
 character's house arms, home county, and the arms of the realm holding it.
+Diplomatic events that name `{rname}` or `{rulername}` from `ctx.realmId` add the matching
+realm card with arms, ruler, rank, Standing, and current relationship, so a compact AI
+ruler is not presented as bare prose.
 
 A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename field to the
 modal — prefilled with the generated name, applied when any option is chosen; autoresolve
