@@ -235,6 +235,20 @@ ledger. Wide full sheets use a compact comparison grid, ordinary dialogs use
 two columns, and narrow layouts stack every labeled field. This shared
 presentation does not create a common asset record or mutation path.
 
+The Deeds panel begins with the responsive **Ongoing commitments** ledger
+rendered by `UI.ongoingCommitmentsHtml`. It always shows the current daily
+focus, personal-attention assignment, and national research projects/policy;
+political attention appears only when the independent ruler has that capacity,
+while travel and financial-contract rows appear only while active. Each native
+row routes to the authoritative existing control: the current focus group, the
+assigned character or Network Connections, Foreign Policy, Technology, the
+available travel deeds, or Coin & Credit. A journey marks focus as paused and
+non-editable because travel replaces its daily tick; return travel is likewise
+read-only because no route decision remains. The ledger creates no
+shared capacity, saved record, or mutation path; it only consolidates status
+and navigation. On narrow screens its rows keep full-width touch targets and
+move their action label beneath the status rather than overflowing the panel.
+
 Living character sheets also own personal relationship controls. **Cultivate relationship**
 and **Stop cultivating** assign or withdraw the one social-attention slot without spending
 a day when the character is local; while courting, the suitor holds that slot until the

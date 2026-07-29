@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.82.1';
+  FB.VERSION = '1.83.0';
   FB.CHANGELOG = [
+    { v: '1.83.0', date: '2026-07-28', changes: [
+      'The Deeds panel now gathers ongoing commitments into one responsive ledger with direct links to manage each one.'
+    ] },
     { v: '1.82.1', date: '2026-07-28', changes: [
       'Building works now keep county selection visible on mobile so rulers can raise buildings throughout their lands.'
     ] },
