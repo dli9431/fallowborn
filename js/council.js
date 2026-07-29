@@ -250,18 +250,43 @@ window.FB = window.FB || {};
     }
     return pool.length ? FB.pick(pool) : null;
   }
-  function schemer(state) { return memberByTemper(state, SCHEMER_TRAITS, undefined, -1); }
+  FB.councilSchemers = function (state) {
+    const out = [];
+    const summary = FB.councilSummary(state);
+    if (!summary || !summary.formed) return out;
+    for (const seat of summary.seats) {
+      if (!seat.holderId ||
+          summary.schemerIds.indexOf(seat.holderId) < 0) continue;
+      const realm = state.realms[seat.holderId];
+      if (!realm) continue;
+      out.push({
+        seat:FB.councilSeat(seat.id),
+        rid:seat.holderId,
+        realm:realm
+      });
+    }
+    out.sort(function (a, b) {
+      return a.rid < b.rid ? -1 : (a.rid > b.rid ? 1 : 0);
+    });
+    return out;
+  };
+  function schemer(state) {
+    const pool = FB.councilSchemers(state);
+    return pool.length ? FB.pick(pool) : null;
+  }
   function sycophant(state) { return memberByTemper(state, null, 20); }
 
   FB.fns = FB.fns || {};
   /* triggers */
   FB.fns.council_has_members = function (state) { return FB.councilMembers(state).length > 0; };
   FB.fns.council_two_members = function (state) { return FB.councilMembers(state).length >= 2; };
-  FB.fns.council_has_schemer = function (state) { return !!schemer(state); };
+  FB.fns.council_has_schemer = function (state) {
+    return FB.councilSchemers(state).length > 0;
+  };
   FB.fns.council_has_sycophant = function (state) { return !!sycophant(state); };
   FB.fns.council_scheme_ripe = function (state) {
     // the plot thickens while no Chamberlain watches the shadows
-    if (!schemer(state)) return false;
+    if (!FB.fns.council_has_schemer(state)) return false;
     const c = state.council;
     return !(c && c.seats && c.seats.chamberlain);
   };
@@ -414,6 +439,77 @@ window.FB = window.FB || {};
     for (const m of ms.slice(0, 3)) {
       adjustStanding(state, m.rid, 8, 'feud_peace');
     }
+  };
+
+  function councilPlotMember(state, ctx) {
+    if (!FB.activePlotContext ||
+        !FB.activePlotContext(state, 'council_counter', ctx)) return null;
+    for (const member of FB.councilSchemers(state)) {
+      if (ctx && member.rid === ctx.realmId) return member;
+    }
+    return null;
+  }
+
+  FB.fns.plot_council_expose = function (state, ctx) {
+    const member = councilPlotMember(state, ctx);
+    if (!member) {
+      if (state.player.plot && state.player.plot.id === 'council_counter') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    if (state.council && state.council.seats[member.seat.id] === member.rid) {
+      state.council.seats[member.seat.id] = null;
+    }
+    adjustStanding(state, member.rid, -10, 'plot_exposed');
+    FB.councilAuthority(state, 3);
+    FB.news(state, FB.msg('news.council.plot_exposed',
+      '🕸 {ruler} of {realm} is exposed and driven from the Council board.',
+      { ruler:member.realm.ruler.name, realm:member.realm.name }));
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_council_mercy = function (state, ctx) {
+    const member = councilPlotMember(state, ctx);
+    if (!member) {
+      if (state.player.plot && state.player.plot.id === 'council_counter') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    adjustStanding(state, member.rid, 12, 'plot_mercy');
+    FB.councilAuthority(state, -6);
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_council_manufacture = function (state, ctx) {
+    const member = councilPlotMember(state, ctx);
+    if (!member) {
+      if (state.player.plot && state.player.plot.id === 'council_counter') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    state.player.prestige += 5;
+    return FB.fns.plot_council_expose(state, ctx);
+  };
+
+  FB.fns.plot_council_failure = function (state, ctx) {
+    const member = councilPlotMember(state, ctx);
+    if (member) adjustStanding(state, member.rid, -10, 'plot_failure');
+    FB.councilAuthority(state, 6);
+    FB.fns.plot_end(state);
+    return !!member;
+  };
+
+  FB.fns.plot_council_discovery = function (state, ctx) {
+    const member = councilPlotMember(state, ctx);
+    if (member) adjustStanding(state, member.rid, -6, 'plot_discovery');
+    FB.councilAuthority(state, 4);
+    FB.fns.plot_end(state);
+    return !!member;
   };
   FB.fns.council_feud_fail = function (state) {
     const ms = FB.councilMembers(state);

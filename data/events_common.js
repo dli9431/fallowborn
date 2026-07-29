@@ -480,16 +480,24 @@ FBDATA.events.push(
 
 /* ---------- plots (resolutions; queued by the Scheming focus) ---------- */
 { id:'plot_discovered', title:'The Web Trembles', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'Someone has talked. Conversations die when you approach; eyes follow you out of rooms. The plot is known — or nearly.',
   options:[
-    { label:'Abandon everything. Deny everything.', desc:'Cut every thread and swear there never was a web.', effects:{ custom:'plot_end', prestige:-5 } },
+    { label:'Abandon everything. Deny everything.',
+      desc:'Cut every thread. The endangered relationship or institution will still remember the smoke.',
+      effects:{ custom:'plot_discovery_abandon', prestige:-5 } },
+    { label:'Buy the evidence and keep weaving. ({money:15})',
+      require:{ goldMin:15 },
+      desc:'Contain this breach, lose some progress, and accept greater discovery risk from now on.',
+      effects:{ gold:-15, custom:'plot_discovery_contain' } },
     { label:'Rush the final stroke NOW.', chance:'plot_discovery', desc:'Strike half-ready, and pray speed makes up for it.',
       success:{ text:'Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent.',
-        effects:{ custom:'plot_discovery_success' } },
+        effects:{ custom:'plot_discovery_success', skills:{int:1} } },
       failure:{ text:'Half-ready is not ready. The whole scheme collapses on your head in daylight.',
-        effects:{ custom:'plot_discovery_failure' } } }
+        effects:{ custom:'plot_discovery_failure', prestige:-8 } } }
   ]},
 { id:'plot_ruin_rival', title:'The Trap Closes', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'Every thread is in place and {rival} suspects nothing. One word from you and the web draws tight.',
   options:[
     { label:'Spring the trap.', chance:'plot', desc:'One word, and {rival} falls — if the web holds.',
@@ -499,7 +507,8 @@ FBDATA.events.push(
         effects:{ custom:'plot_end', prestige:-10, opinion:{role:'rival', amt:-20}, rivalHeat:15, popularOpinion:-5 } } },
     { label:'Let it go. Mercy — or nerves.', desc:'A sprung trap can catch the hunter.', effects:{ custom:'plot_end', piety:3, rivalHeat:-10 } }
   ]},
-{ id:'plot_spouse_end', title:'The Cup Is Poured', trigger:{ never:true }, charCard:'spouse',
+{ id:'plot_spouse_end', title:'The Cup Is Poured', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid', charCard:'spouse',
   text:'Everything is in place: the draught measured, the stair loosened, the witnesses elsewhere. {spouse} suspects nothing. One nod from you and it is done.',
   options:[
     { label:'Give the word.', chance:'plot', desc:'One nod, and the house mourns on cue.',
@@ -510,6 +519,7 @@ FBDATA.events.push(
     { label:'Stay your hand.', desc:'Some doors, once opened, never close.', effects:{ custom:'plot_end', piety:5, log:'Abandoned a dark design.' } }
   ]},
 { id:'plot_fabricate_claim', title:'A Charter from the Dust', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'The ink is dry, the seals are warm, and three well-paid witnesses remember that {cname} belonged to your forebears. Only the final recital before the court remains.',
   options:[
     { label:'Present the charter.', chance:'fabricate_claim',
@@ -522,6 +532,7 @@ FBDATA.events.push(
       effects:{ custom:'plot_end' } }
   ]},
 { id:'plot_tithe_barn', title:'The Barn at Midnight', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'The watchman is bought, the dogs are fed, and the cart waits in the alder grove. Tonight the lord’s plenty can become yours.',
   options:[
     { label:'Take the grain.', chance:'plot', desc:'One night’s nerve against a winter’s hunger.',
@@ -532,6 +543,7 @@ FBDATA.events.push(
     { label:'Walk away from it.', desc:'Stolen bread is never quite free.', effects:{ custom:'plot_end', piety:5 } }
   ]},
 { id:'plot_court_whispers', title:'The Word in the Right Ear', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'Months of patience have shaped the hall’s opinion the way water shapes stone. One final whisper will finish it.',
   options:[
     { label:'Speak the word.', chance:'plot', desc:'One whisper, if it lands, reshapes the hall.',
@@ -542,6 +554,7 @@ FBDATA.events.push(
     { label:'Swallow it.', desc:'Unspoken words can never be traced.', effects:{ custom:'plot_end', piety:3 } }
   ]},
 { id:'plot_skim_taxes', title:'Two Sets of Books', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'The false ledger is perfect — every hide and hearth accounted for, and a fifth of it quietly missing.',
   options:[
     { label:'Send the false count.', chance:'plot', desc:'The difference is yours — if no clerk looks twice.',
@@ -550,6 +563,45 @@ FBDATA.events.push(
       failure:{ text:'An honest clerk — the rarest hazard. The liege’s displeasure arrives with an audit.',
         effects:{ custom:'plot_end', gold:-15, opinionLiege:-25, prestige:-8 } } },
     { label:'Burn the false ledger.', desc:'Ashes make poor evidence.', effects:{ custom:'plot_end', piety:3 } }
+  ]},
+{ id:'plot_guild_monopoly', title:'The Charter’s Hidden Ledger',
+  trigger:{ never:true }, contextValidator:'plot_event_context_valid',
+  text:'The duplicate accounts are finally in your hands. Fees vanish, weights change after dusk, and the monopoly’s public promises lead to private purses. The charter can be broken, milked, or defended.',
+  options:[
+    { label:'Publish the accounts and break the charter.', chance:'plot',
+      desc:'End this exact monopoly, gain Common Voice, and make enemies of those it favored.',
+      success:{ text:'The figures survive every challenge. The charter is struck down before a jeering hall.',
+        effects:{ custom:'plot_guild_expose', skills:{int:1}, prestige:3 } },
+      failure:{ text:'A missing leaf turns proof into insinuation. The charter’s defenders name you a liar.',
+        effects:{ custom:'plot_guild_failure', prestige:-8, popularOpinion:-4 } } },
+    { label:'Take compensation and keep the charter.',
+      desc:'The monopoly survives. Coin buys your silence, while the public pays the price.',
+      effects:{ custom:'plot_guild_compensation' } },
+    { label:'Defend the privilege before the guild.',
+      desc:'Preserve the charter and gain guild support at the Common Voice’s expense.',
+      effects:{ custom:'plot_guild_defend' } },
+    { label:'Burn the duplicate accounts.', desc:'Leave the charter and its enemies untouched.',
+      effects:{ custom:'plot_end' } }
+  ]},
+{ id:'plot_rival_claimant', title:'The Rival’s Vulnerable Thread',
+  trigger:{ never:true }, contextValidator:'plot_event_context_valid',
+  text:'The witnesses are ready and the papers arranged. What began as a private feud now reaches {rival}’s claim, office, Council seat, or royal connection. One public move could make the quarrel political forever.',
+  options:[
+    { label:'Discredit {rival} in public.', chance:'plot',
+      desc:'Attack the real political foothold behind the feud.',
+      success:{ text:'Every answer opens another contradiction. {rival}’s political footing gives way before the watching court.',
+        effects:{ custom:'plot_rival_discredit', skills:{int:1}, prestige:3 } },
+      failure:{ text:'The witnesses contradict one another, then name your purse. {rival} leaves with the stronger grievance.',
+        effects:{ custom:'plot_rival_failure', prestige:-10, rivalHeat:5 } } },
+    { label:'Offer a witnessed settlement instead. ({money:10})',
+      require:{ goldMin:10 },
+      desc:'Spend coin and hard-won leverage to end the feud without inventing another enemy.',
+      effects:{ gold:-10, custom:'plot_rival_settlement' } },
+    { label:'Keep the dossier and sharpen the feud.',
+      desc:'Gain intrigue and public leverage, but drive the rivalry toward its dangerous end.',
+      effects:{ custom:'plot_rival_dossier' } },
+    { label:'Let the papers rot.', desc:'The political opening closes; the feud remains.',
+      effects:{ custom:'plot_end', rivalHeat:-5 } }
   ]},
 
 /* ---------- misc life ---------- */
@@ -625,6 +677,7 @@ FBDATA.events.push(
       desc:'Clay-caked wonders still fetch bright coin.', effects:{ gold:30, piety:-2 } }
   ]},
 { id:'plot_locked_chest', title:'The Chest Sings', trigger:{ never:true },
+  contextValidator:'plot_event_context_valid',
   text:'The household sleeps; the dog knows you now. The chest waits where the steward believes nobody knows.',
   options:[
     { label:'Crack it.', chance:'plot', desc:'One careful hour against the dog’s memory.',

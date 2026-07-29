@@ -652,10 +652,14 @@ window.FB = window.FB || {};
       p.rivalPeace = p.rivalPeace || {};
       p.rivalPeace[id] = state.turn + rivalBalance('rivalPeaceDays', 1440);
     }
-    if (p.plot && p.plot.id === 'ruin_rival') p.plot = null;
+    if (p.plot && (p.plot.id === 'ruin_rival' ||
+        p.plot.id === 'rival_claimant')) {
+      if (FB.fns && FB.fns.plot_end) FB.fns.plot_end(state);
+      else p.plot = null;
+    }
     const rivalQueues = {
       make_rival: 1, rival_mediation: 1, rival_legacy: 1,
-      plot_ruin_rival: 1, assassin_caught: 1
+      plot_ruin_rival: 1, plot_rival_claimant: 1, assassin_caught: 1
     };
     state.eventQueue = state.eventQueue.filter(function (ev) { return !rivalQueues[ev.id]; });
     for (const fl of ['df_claim', 'df_claim2', 'df_marked', 'df_doom']) delete p.flags[fl];
@@ -1879,19 +1883,22 @@ window.FB = window.FB || {};
           break;
         }
         case 'rname': {
-          const namedRealm = ctx && ctx.rid ? state.realms[ctx.rid] : null;
+          const namedRealmId = ctx && (ctx.realmId || ctx.rid);
+          const namedRealm = namedRealmId ? state.realms[namedRealmId] : null;
           out[k] = namedRealm ? namedRealm.name :
             (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
           break;
         }
         case 'rulername': {
-          const ruled = ctx && ctx.rid ? state.realms[ctx.rid] : null;
+          const ruledId = ctx && (ctx.realmId || ctx.rid);
+          const ruled = ruledId ? state.realms[ruledId] : null;
           out[k] = ruled && ruled.ruler ? ruled.ruler.name :
             (semantic ? neutralParam('fx.param.the_lord') : FB.T('the lord'));
           break;
         }
         case 'cname': {
-          const county = ctx && ctx.pid ? FB.world.byId[ctx.pid] : null;
+          const countyId = ctx && (ctx.provinceId || ctx.pid);
+          const county = countyId ? FB.world.byId[countyId] : null;
           out[k] = county ? county.name :
             (semantic ? neutralParam('fx.param.the_county') : FB.T('the county'));
           break;
@@ -2305,13 +2312,19 @@ window.FB = window.FB || {};
         // a motion before the estates: rank, diplomacy, name, and the liege's love
         return FB.parliamentVoteChance ? FB.parliamentVoteChance(state) : 0.5;
       }
+      case 'parliament_redress_vote': {
+        return FB.parliamentVoteChance
+          ? FB.parliamentVoteChance(state, true) : 0.5;
+      }
       case 'plot': {
         let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
         c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery
         // a trusting victim is easier to ensnare — when the plot in motion has
         // a personal target's Standing with the player counts too
         const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
-        const tgt = trole ? FB.getRole(state, trole) : null;
+        const targetId = p.plot && p.plot.context && p.plot.context.characterId;
+        const tgt = targetId ? state.chars[targetId] :
+          (trole ? FB.getRole(state, trole) : null);
         if (tgt) c += characterStanding(state, tgt) / 500;
         return FB.clamp(c, 0.15, 0.9);
       }
@@ -2420,7 +2433,8 @@ window.FB = window.FB || {};
     if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
     const popularOpinion = FB.popEffective ? FB.popEffective(state) : p.pop;
     if (tg.popularOpinionBelow !== undefined && popularOpinion > tg.popularOpinionBelow) return false;
-    if (tg.custom && FB.fns[tg.custom] && !FB.fns[tg.custom](state)) return false;
+    if (tg.custom && FB.fns[tg.custom] &&
+        !FB.fns[tg.custom](state, ctx || {})) return false;
     return true;
   };
   FB.fns = FB.fns || {}; // registry for custom trigger/effect functions (world.js war handlers register earlier; mods may add)
@@ -2495,6 +2509,31 @@ window.FB = window.FB || {};
     state.eventQueue = state.eventQueue || [];
     state.eventQueue.push(item);
     return item;
+  };
+
+  function eventContextContains(expected, actual) {
+    if (!expected || !actual) return false;
+    for (const key in expected) {
+      if (expected[key] !== actual[key]) return false;
+    }
+    return true;
+  }
+
+  FB.eventContextStillValid = function (state, ev, ctx) {
+    if (!ev) return false;
+    if (ev.contextValidator) {
+      const validator = FB.fns && FB.fns[ev.contextValidator];
+      if (!validator || !validator(state, ctx || {})) return false;
+    }
+    if (ev.contextSelector) {
+      if (!FB.eventContextOptions) return false;
+      const options = FB.eventContextOptions(state, ev.contextSelector);
+      for (const option of options) {
+        if (eventContextContains(option, ctx || {})) return true;
+      }
+      return false;
+    }
+    return true;
   };
 
   function lowerStationStoryActive(state) {
@@ -2591,6 +2630,16 @@ window.FB = window.FB || {};
     while (state.eventQueue.length && out.length < 3) {
       const qev = state.eventQueue.shift();
       qev.ctx = FB.eventContext(state, qev.ctx);
+      const queuedDef = FB.eventById(qev.id);
+      if (queuedDef &&
+          queuedDef.contextValidator === 'plot_event_context_valid' &&
+          !qev.ctx.plotId && state.player.plot) {
+        const activePlotDef = FBDATA.plots[state.player.plot.id];
+        if (activePlotDef && activePlotDef.event === qev.id) {
+          qev.ctx.plotId = state.player.plot.id;
+        }
+      }
+      if (!FB.eventContextStillValid(state, queuedDef, qev.ctx)) continue;
       // a tribute offer dies with its war: siege taken, terms sought, or the
       // campaign broken before the envoys were received
       if (qev.id === 'war_tribute_offer') {
@@ -2629,6 +2678,8 @@ window.FB = window.FB || {};
       if (ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
         state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90) continue;
       if (!FB.checkTrigger(state, ev.trigger)) continue;
+      if (ev.contextSelector && (!FB.eventContextOptions ||
+          !FB.eventContextOptions(state, ev.contextSelector).length)) continue;
       if (ev.trigger.chance !== undefined && !FB.chance(ev.trigger.chance)) continue;
       eligible.push(ev);
     }
@@ -2641,7 +2692,13 @@ window.FB = window.FB || {};
         roll -= (eligible[i].weight || 5);
         if (roll <= 0) { chosen = eligible[i]; break; }
       }
-      const ctx = FB.eventContext(state, {});
+      let selectedContext = {};
+      if (chosen.contextSelector && FB.eventContextOptions) {
+        const contexts = FB.eventContextOptions(state, chosen.contextSelector);
+        if (!contexts.length) return out;
+        selectedContext = FB.pick(contexts);
+      }
+      const ctx = FB.eventContext(state, selectedContext);
       // events about "a young child" name (and afflict) one actual child, so
       // the text and any killChild effect speak of the same person
       if (chosen.trigger.hasYoungChild) {
@@ -2916,6 +2973,14 @@ window.FB = window.FB || {};
     if (fx.opinionLiege) {
       adjustRealmStanding(state, p.liege, fx.opinionLiege,
         'event:opinionLiege_compatibility_effect');
+    }
+    if (fx.standingRealm) {
+      const realmId = ctx && (ctx.realmId || ctx.rid);
+      const realm = realmId && state.realms && state.realms[realmId];
+      if (realm && realm.alive && realmId !== 'player') {
+        adjustRealmStanding(state, realmId, fx.standingRealm,
+          'event:standingRealm_effect');
+      }
     }
     if (fx.papalOpinion && FB.adjustPapalOpinionOfCandidate) {
       const papalTarget = ctx && ctx.candidateId &&

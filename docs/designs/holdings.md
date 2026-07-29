@@ -126,6 +126,12 @@ outgoing charter may apply at once; their enterprise percentages add and are cap
 the enterprise instance. The institutional rights pass through succession with the
 household.
 
+Each charter also carries a stable `contractId`. The named **Unpick a Guild Monopoly**
+plot records that exact contract, so renewal or replacement cannot silently retarget the
+scheme. Exposing the grant ends the recorded monopoly and applies the ordinary
+exposed-contract consequences; taking compensation or defending the charter preserves
+that same contract.
+
 Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the family
 even if it moves or rises in station; a building belongs to its county and follows
 political conquest.

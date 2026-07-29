@@ -1696,6 +1696,8 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     const s = FB.ensureRealmSuccession(state, rid);
     if (!r || !s) return null;
+    const formerPlayerAlliance = rid !== 'player' &&
+      FB.areAllied(state, 'player', rid);
     FB.refreshRealmSuccession(state, rid);
     makeHeirIfEmpty(state, r, s);
     const heirId = s.order.shift();
@@ -1734,6 +1736,12 @@ window.FB = window.FB || {};
     makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
     FB.repairAlliances(state);
+    if (FB.noteDiplomaticSuccession &&
+        !(c && c.id === state.player.charId)) {
+      FB.noteDiplomaticSuccession(state, rid, {
+        formerAlliance:formerPlayerAlliance
+      });
+    }
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
     if (c && c.id === state.player.charId && FB.absorbRealm) FB.absorbRealm(state, rid, c);
     return heir;

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.91.0';
+  FB.VERSION = '1.92.0';
   FB.CHANGELOG = [
+    { v: '1.92.0', date: '2026-07-29', changes: [
+      'Intrigue gains five political plots, while foreign-policy directions, pacts, alliances, and ruler succession now produce new diplomatic events.'
+    ] },
     { v: '1.91.0', date: '2026-07-29', changes: [
       'Work & Enterprises and Network now use counted, collapsible sections with attention filters and search for large lists.'
     ] },

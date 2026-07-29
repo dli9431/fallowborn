@@ -2,11 +2,11 @@
 
 Date: 2026-07-29
 
-Status: step 5 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md). Data-first authoring may run
-alongside steps 2–4 after Standing lands, but final UI integration follows
+Status: implemented. Step 5 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), after
 [interaction-card consolidation](systems-audit-03-interaction-cards.md) and the
-[large-list readability](systems-audit-04-large-list-readability.md) pass.
+[large-list readability](systems-audit-04-large-list-readability.md) pass. The core
+catalog now includes twelve plots and twelve targeted diplomatic stories.
 
 Related design:
 [piety, intrigue, and diplomacy](../designs/piety-intrigue-diplomacy.md),

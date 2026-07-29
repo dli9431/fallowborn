@@ -75,6 +75,46 @@ season boundary; Diplomacy increases the seasonal amount. War suspends a directi
 peace, while a pact leaves it active because the pact—not Standing—is the hard guarantee
 against attack.
 
+The first political-content tranche raises the core catalog from seven to twelve plots.
+The five targeted additions use existing state rather than a parallel intrigue model:
+
+- `feudal_obligation` targets the current liege’s exact `obl` record. Evidence gives the
+  next redress vote a bounded bonus; immediate relief moves the ordinary aid one step and
+  costs coin, prestige, and Standing.
+- `guild_monopoly` targets one instance-stamped `contractId`. It may end that exact charter
+  through the monopoly invalidation API, preserve it for compensation, or defend it for
+  guild support at a Common Voice cost.
+- `council_counter` targets one seated, cold-Standing schemer. Exposure, leniency, and a
+  manufactured charge all resolve through existing seats, Standing, and authority.
+- `diplomatic_correspondence` targets one living sovereign court already reachable through
+  adjacency, a direction, a pact, or an alliance. Its choices move Standing, may extend a
+  live pact, or reinforce Provoke without declaring war.
+- `rival_claimant` requires the real active rival and a real claim, office, Council, ruling,
+  or royal connection. It never manufactures a replacement rival.
+
+Every targeted plot copies only stable semantic ids and narrowly scoped validity stamps
+into `player.plot.context`. The target is revalidated while weaving and again by
+authoritative outcomes. Death, realm extinction, contract replacement, lost office, or
+institutional change ends the plot rather than retargeting. Discovery now offers a
+tailored abandonment consequence, paid containment that loses power and raises later
+discovery risk, or an early lower-odds attempt. Its modal repeats the exact target label
+and available identity card. The player still has one plot and one Scheming focus; there
+is no intrigue currency or agent roster.
+
+Diplomatic slot-day stories use reusable context selectors for Improve, Provoke, active
+pacts, and active alliances. Twelve stories cover arbitration, safe conduct, concrete
+compact offers, insults, tolls, deniable riders, bounded pact/alliance requests, renewal,
+domestic concessions, and counterpart succession. Their ordinary effects expose gold,
+prestige, piety, Common Voice, and skill tradeoffs; `standingRealm` changes only the
+player-relative score for the selected `realmId`. They never create pairwise AI opinion.
+
+Counterpart succession queues an occasional first-embassy or compact-review story only
+when the player is a related sovereign neighbor. The queued context stamps the exact new
+`rulerGeneration`; a further succession invalidates it. A predecessor’s Standing still
+disappears; a materialized heir may retain only Standing already earned with that exact
+person. Alliances still expire through their generation stamps, and state-level pacts
+still follow their saved expiry. Prose cannot inherit or revive any of them.
+
 Foreign Standing uses the existing player-relative `player.liegeOps` backing store and the
 canonical typed `FB.standingOf` / `FB.adjustStanding` facade. The historical
 `FB.realmOpinionOf` / `FB.adjustRealmOpinion` names remain compatibility adapters; this

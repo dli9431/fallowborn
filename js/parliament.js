@@ -75,9 +75,10 @@ window.FB = window.FB || {};
 
   /* the player's voice in the hall, 0.1–0.85: rank carries weight (a duke
      out-speaks a baron), then diplomacy, a great name, and the liege's love */
-  FB.parliamentVoteBreakdown = function (state) {
+  FB.parliamentVoteBreakdown = function (state, redress) {
     const p = state.player;
     const me = state.chars[p.charId];
+    const evidence = p.flags && p.flags.plot_obligation_evidence;
     const out = {
       base:0.30,
       rank:([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0),
@@ -85,16 +86,19 @@ window.FB = window.FB || {};
       prestige:p.prestige / 1200,
       standing:liegeStanding(state) / 400,
       traits:FB.traitBonus
-        ? FB.traitBonus(me, 'assembly', 'voteChance') : 0
+        ? FB.traitBonus(me, 'assembly', 'voteChance') : 0,
+      evidence:redress && evidence && evidence.realmId === p.liege &&
+        evidence.institution === 'estates' && evidence.contractId === 'obl'
+        ? 0.15 : 0
     };
     out.raw = out.base + out.rank + out.diplomacy + out.prestige +
-      out.standing + out.traits;
+      out.standing + out.traits + out.evidence;
     out.total = FB.clamp(out.raw, 0.1, 0.85);
     return out;
   };
 
-  FB.parliamentVoteChance = function (state) {
-    return FB.parliamentVoteBreakdown(state).total;
+  FB.parliamentVoteChance = function (state, redress) {
+    return FB.parliamentVoteBreakdown(state, redress).total;
   };
 
   /* The locale-neutral Estates projection used by Governance and the
@@ -116,7 +120,8 @@ window.FB = window.FB || {};
       motionCost:FBDATA.balance.parliamentMotionCost || 15,
       sessionChance:FBDATA.balance.parliamentSessionChance || 0.5,
       pendingEventIds:pending,
-      vote:FB.parliamentVoteBreakdown(state)
+      vote:FB.parliamentVoteBreakdown(state),
+      redressVote:FB.parliamentVoteBreakdown(state, true)
     };
   };
 
@@ -229,6 +234,7 @@ window.FB = window.FB || {};
   FB.fns.parliament_redress_won = function (state) {
     const aid = FB.parliamentAidAdjust(state, -1);
     if (aid === null) return;
+    delete state.player.flags.plot_obligation_evidence;
     // the liege is bound by the vote — and displeased with its author
     adjustLiegeStanding(state, -5, 'redress_won');
     FB.news(state, FB.msg('news.parliament.aid_down',
@@ -236,6 +242,7 @@ window.FB = window.FB || {};
       { liege: state.realms[state.player.liege].name, pct: Math.round(aid * 100) }));
   };
   FB.fns.parliament_redress_lost = function (state) {
+    delete state.player.flags.plot_obligation_evidence;
     adjustLiegeStanding(state, -8, 'redress_lost');
   };
   FB.fns.parliament_scutage_pass = function (state) {
@@ -260,5 +267,59 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.parliament.subsidy',
       '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
       { liege: state.realms[state.player.liege].name, gold: gold }));
+  };
+
+  function obligationPlotValid(state, ctx) {
+    return !!(FB.activePlotContext &&
+      FB.activePlotContext(state, 'feudal_obligation', ctx) &&
+      ctx && ctx.realmId === state.player.liege &&
+      ctx.institution === 'estates' && ctx.contractId === 'obl' &&
+      FB.parliamentEnsure(state));
+  }
+
+  FB.fns.plot_obligation_evidence = function (state, ctx) {
+    if (!obligationPlotValid(state, ctx)) {
+      if (state.player.plot && state.player.plot.id === 'feudal_obligation') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    state.player.flags.plot_obligation_evidence = {
+      realmId:ctx.realmId,
+      institution:ctx.institution,
+      contractId:ctx.contractId
+    };
+    state.player.prestige += 5;
+    FB.news(state, FB.msg('news.parliament.plot_evidence',
+      '⚖ Sealed tallies give your next motion for redress greater weight in the estates.',
+      {}));
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_obligation_relief = function (state, ctx) {
+    if (!obligationPlotValid(state, ctx)) {
+      if (state.player.plot && state.player.plot.id === 'feudal_obligation') {
+        FB.fns.plot_end(state);
+      }
+      return false;
+    }
+    const aid = FB.parliamentAidAdjust(state, -1);
+    adjustLiegeStanding(state, -12, 'plot_relief');
+    FB.news(state, FB.msg('news.parliament.plot_relief',
+      '⚖ Altered service rolls reduce the aid to {pct}%, but the liege knows whose seal is missing.',
+      { pct:Math.round(aid * 100) }));
+    FB.fns.plot_end(state);
+    return true;
+  };
+
+  FB.fns.plot_obligation_failure = function (state, ctx) {
+    const valid = obligationPlotValid(state, ctx);
+    if (valid) {
+      FB.parliamentAidAdjust(state, 1);
+      adjustLiegeStanding(state, -12, 'plot_failure');
+    }
+    FB.fns.plot_end(state);
+    return valid;
   };
 })();
