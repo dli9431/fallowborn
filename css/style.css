@@ -664,19 +664,19 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
 .household-plan-modal .modalcard { width: min(98vw, 1280px); }
 .household-plan-intro { margin-bottom: 8px; }
-.education-policy-summary {
+.household-policy-summary {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
   margin-bottom: 10px; padding: 10px 12px;
   border: 1px solid #6b5831; border-radius: 8px; background: #2a2216;
 }
-.education-policy-summary > div { min-width: 0; }
-.education-policy-summary strong {
+.household-policy-summary > div { min-width: 0; }
+.household-policy-summary strong {
   display: block; color: #e3c66e; font-size: 14px;
 }
-.education-policy-summary span {
+.household-policy-summary span {
   display: block; margin-top: 2px; color: #b7a583; font-size: 12px;
 }
-.education-policy-summary .btn { flex: 0 0 auto; }
+.household-policy-summary .btn { flex: 0 0 auto; }
 .education-policy-form {
   width: min(100%, 720px); margin: 0 auto 12px; padding: 12px;
   border: 1px solid #55452a; border-radius: 8px; background: #241d15;
@@ -718,6 +718,10 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   display: block; color: #b8ca8e; font-size: 11px;
 }
 .education-policy-empty { grid-column: 1 / -1; padding: 18px 10px; }
+.match-policy-recommended.actionbtn {
+  border-color: #b7953c; background: #302817;
+  box-shadow: inset 3px 0 0 #d8b24a;
+}
 .household-plan-wrap {
   min-height: 0; overflow-x: auto; padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
@@ -1091,10 +1095,10 @@ textarea.modjson, textarea.savetext {
    portrait layout (map atop a swipeable Deeds ⇄ Self/Kin page carousel) and
    a landscape layout (map left, carousel right). */
 @media (max-width: 820px), (max-height: 520px) {
-  .education-policy-summary {
+  .household-policy-summary {
     align-items: stretch; flex-direction: column;
   }
-  .education-policy-summary .btn { width: 100%; }
+  .household-policy-summary .btn { width: 100%; }
   .education-policy-preview-list { grid-template-columns: 1fr; }
   .education-policy-field select,
   .education-policy-field input[type="number"] { width: 100%; min-height: 48px; }

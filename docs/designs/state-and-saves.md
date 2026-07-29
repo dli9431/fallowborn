@@ -346,6 +346,18 @@ remains an empty choice. Policy application
 changes none of `lessonBoost` or `schoolTerms`, and every field is plain JSON preserved by
 slot saves, autosave, export/import, and succession without migration.
 
+Descendant match recommendations are additive at save version 3.
+`player.matchPolicy:{enabled,minStation,maxDowry,maxGold,maxPrestige}` belongs to the
+household and survives protagonist succession. Missing or invalid state normalizes to a
+disabled policy with no caps; finite limits clamp to their valid non-negative ranges. An
+eligible descendant may carry
+`matchRecommendation:{candidateId,policyKey}`; the signature prevents duplicate
+Chronicle notices and makes a changed policy invalidate the old marker. Candidate ids
+continue to belong to the existing persistent `matchIds` pool. Restore validates only
+the JSON-safe record shape, while ordinary recommendation, death, marriage, and
+succession cleanup revalidate live eligibility without consuming extra migration RNG.
+Neither the derived preview nor rendered candidate terms are serialized.
+
 Finance state is additive too. `FB.ensureEconomy` lazily supplies `state.economy` with the
 price index, persistent pressure and shocks, loans, trade investments, stable contract ids,
 default history, and coinage history. Every record is plain JSON, so slots, autosave,

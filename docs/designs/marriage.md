@@ -124,6 +124,19 @@ above the player's station gate on prestige (20 per step). Marriage removes that
 from the managed household, clears work and equipment assignments, and leaves their outfit
 in the shared armory.
 
+The optional **Descendant Match Assistant** stores household limits for minimum station,
+maximum dowry, maximum immediate gold expense, and maximum prestige requirement. It
+reviews the same three persistent `matchIds`, applies their ordinary current-resource,
+faith, close-kin, celibacy/doctrine, and royal-compact gates, then ranks qualifying
+families by higher station, lower immediate expense, lower prestige requirement, and
+nearer age. Saving the policy triggers an immediate review, and each New Year reviews
+eligible resident descendants from age 12. `matchRecommendation` records only a candidate
+id and the policy signature;
+it creates a Household Plan marker and one Chronicle notice, not a betrothal. Previewing,
+saving, and refreshing a recommendation spend no resources or days. The ordinary picker
+lists the recommendation first but preserves all manual choices, and only
+`FB.sealKinMatch` can make the consequential pledge.
+
 Related: [characters.md](characters.md) for the rest of the character lifecycle,
 [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for the plot system.
 

@@ -395,6 +395,16 @@ coin is reserved. Education and instruction cells label policy choices, manual o
 unrecorded choices, and instruction waiting for a focus. Both detailed pickers retain a
 Follow household policy action which clears and reapplies only that picker’s dimension.
 
+A separate **Descendant Match Assistant** summary and native management button sit above
+the same ledger. Its keyboard/mobile-safe policy form exposes an enable checkbox, station
+select, and optional non-negative caps for dowry, immediate gold, and required prestige,
+then requires a preview before saving. The preview shows every currently eligible
+resident child or grandchild, the recommended family (or the absence of one), station,
+age, dowry, immediate gold, and prestige requirement. It explicitly states that no pledge,
+resource spend, or day advance occurs. Recommended match cells name the candidate and
+terms; their ordinary match picker puts that candidate first with a visible marker while
+retaining every manual family choice.
+
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,
 enterprise strength, tax effect, scope, and exact days remaining; empty slots say None.
