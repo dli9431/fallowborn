@@ -336,6 +336,16 @@ window.FB = window.FB || {};
     return pathId ? religiousPathRecord(state, c, pathId) : null;
   };
 
+  FB.religiousRankTitleReadOnly = function (state, c) {
+    if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) {
+      return FB.T('Pope');
+    }
+    if (FB.isCardinal && FB.isCardinal(state, c)) return FB.T('Cardinal');
+    const pathId = religiousPathId(state, c);
+    const path = pathId ? religiousPathRecord(state, c, pathId) : null;
+    return path ? FB.religiousRankTitle(state, c, path) : '';
+  };
+
   /* Lay devotion is a permanent background standing. Entering a vocation
      changes the active ladder but never erases the lay life that preceded it. */
   FB.religiousStandings = function (state, c) {

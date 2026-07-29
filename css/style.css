@@ -820,6 +820,136 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   background: #211a12; color: #eadbb6; font: inherit;
 }
 
+/* Shared large-list grammar for Work & Enterprises and Network. Counts and
+   attention stay in the section button while routine rows disclose gradually. */
+.work-list-modal .modalcard { width: min(96vw, 760px); }
+.large-list-surface { min-width: 0; }
+.large-list-toolbar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px;
+  margin: 8px 0 10px; padding: 9px;
+  border: 1px solid #493c27; border-radius: 9px; background: #241d15;
+}
+.large-list-search { flex: 1 1 260px; min-width: 0; }
+.large-list-search > label {
+  display: block; margin-bottom: 4px; color: #d8b24a;
+  font-size: 12px; font-weight: bold;
+}
+.large-list-search > div { display: flex; align-items: stretch; gap: 6px; }
+.large-list-search input {
+  flex: 1 1 auto; min-width: 0; min-height: 40px; padding: 7px 9px;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #211a12; color: #eadbb6; font: inherit;
+}
+.large-list-filters {
+  display: flex; flex: 1 1 250px; flex-wrap: wrap; align-items: center; gap: 5px;
+}
+.large-list-filters .btn {
+  flex: 0 1 auto; min-width: 0; min-height: 38px; margin: 0;
+  padding: 6px 9px; white-space: normal;
+}
+.large-list-filters .btn[aria-pressed="true"] {
+  color: #f3d979; border-color: #c9a24a; background: #3a2f1c;
+  box-shadow: inset 0 -2px 0 #c9a24a;
+}
+.large-list-section { min-width: 0; margin: 0 0 10px; }
+.large-list-section > h4 { margin: 0; }
+.large-list-section > h4:focus {
+  outline: 2px solid #e0c060; outline-offset: 2px;
+}
+.large-list-section-toggle {
+  display: flex; width: 100%; min-width: 0; min-height: 44px;
+  align-items: center; gap: 7px; padding: 8px 9px;
+  color: #d8b24a; background: #211a12;
+  border: 1px solid #55452a; border-radius: 8px;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.large-list-section-toggle:hover { border-color: #c9a24a; }
+.large-list-section-title {
+  flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: bold;
+  overflow-wrap: anywhere;
+}
+.large-list-section-count, .large-list-attention-count {
+  flex: 0 1 auto; padding: 2px 6px; border-radius: 999px;
+  color: #b9a989; background: #302719; font-size: 11px;
+  text-align: center; overflow-wrap: anywhere;
+}
+.large-list-attention-count {
+  color: #f0b48e; background: #4b271e; border: 1px solid #78402f;
+}
+.large-list-attention-count.none {
+  color: #93866f; background: #292219; border-color: #403522;
+}
+.large-list-section-caret { flex: 0 0 12px; text-align: center; }
+.large-list-section-body {
+  min-width: 0; padding: 8px 4px 2px;
+  border-left: 1px solid #40331f; border-right: 1px solid #40331f;
+  border-bottom: 1px solid #40331f; border-radius: 0 0 8px 8px;
+}
+.large-list-section-summary { margin-bottom: 8px; }
+.large-list-rows { min-width: 0; }
+.large-list-row, .large-list-entry { min-width: 0; }
+.large-list-row.actionbtn, .large-list-target-button {
+  display: flex; align-items: center; gap: 8px;
+}
+.large-list-row-main {
+  display: flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 8px;
+}
+.large-list-row-copy {
+  display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column;
+  gap: 2px; text-align: left; overflow-wrap: anywhere;
+}
+.large-list-row-title {
+  color: #ecd9a0; font-weight: bold; overflow-wrap: anywhere;
+}
+.large-list-enterprise-icon {
+  display: inline-flex; flex: 0 0 32px; min-height: 32px;
+  align-items: center; justify-content: center; font-size: 22px;
+}
+.large-list-state {
+  flex: 0 1 auto; max-width: 130px; padding: 3px 6px;
+  color: #b9aa8b; background: #211a12; border: 1px solid #4c402b;
+  border-radius: 999px; font-size: 11px; line-height: 1.2;
+  text-align: center; overflow-wrap: anywhere;
+}
+.large-list-state.needs-attention {
+  color: #f0b48e; background: #48261d; border-color: #8a4935;
+}
+.large-list-entry {
+  margin-bottom: 7px; padding: 6px;
+  border: 1px solid #40331f; border-radius: 8px; background: #241d15;
+}
+.large-list-entry .large-list-target-button {
+  width: 100%; min-width: 0; margin: 0; font-family: inherit;
+}
+.large-list-entry .charrow.large-list-target-button {
+  color: #e0d0a8; background: transparent; border: 0;
+}
+.large-list-entry .actionbtn.large-list-target-button {
+  background: transparent; border-color: transparent;
+}
+.large-list-entry .large-list-target-button:hover {
+  border-color: #c9a24a; background: #2f2618;
+}
+.large-list-entry .large-list-inline-action {
+  display: block; width: calc(100% - 12px); min-width: 0;
+  margin: 6px 6px 0; text-align: left; white-space: normal;
+}
+.large-list-inline-action .adesc {
+  display: block; margin-top: 2px; color: #97876a; font-size: 11px;
+}
+.large-list-static-row {
+  display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+}
+.large-list-show-all {
+  display: block; width: min(100%, 240px); min-height: 44px;
+  margin: 8px auto 4px;
+}
+.large-list-section-footer {
+  margin-top: 8px; padding-top: 8px; border-top: 1px dotted #493c27;
+}
+.large-list-empty, .large-list-no-results { margin: 6px 0; }
+.large-list-surface [hidden] { display: none !important; }
+
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
 .household-plan-modal .modalcard { width: min(98vw, 1280px); }
@@ -1572,6 +1702,21 @@ textarea.modjson, textarea.savetext {
 }
 
 @media (max-width: 600px) {
+  .large-list-toolbar { align-items: stretch; flex-direction: column; }
+  .large-list-search, .large-list-filters { width: 100%; flex-basis: auto; }
+  .large-list-search > div { flex-wrap: wrap; }
+  .large-list-search input { flex-basis: 180px; min-height: 44px; }
+  .large-list-search .btn { flex: 0 0 auto; }
+  .large-list-filters .btn { flex: 1 1 105px; min-height: 44px; }
+  .large-list-row.actionbtn, .large-list-target-button,
+  .large-list-static-row { align-items: flex-start; flex-wrap: wrap; }
+  .large-list-row-main { align-items: flex-start; }
+  .large-list-state {
+    max-width: 100%; margin-left: auto; text-align: left;
+  }
+  .large-list-entry .large-list-inline-action {
+    width: 100%; min-height: 44px; margin: 7px 0 0;
+  }
   .paper-sheet, .death-paper { grid-template-columns: 1fr; }
   .paper-sheet .paperdoll, .death-paper .paperdoll { width: 150px; }
   .item-card .itemart { width: 112px; height: 112px; }

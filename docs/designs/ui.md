@@ -417,13 +417,37 @@ liege, vassal, Estates, or Council prose. Other protagonists retain the compact 
 relationship summary. Empty sections explain what is absent rather than inventing
 placeholder people.
 
-**Planned follow-up — not yet implemented:** player feedback shows that both this panel
-and Work & Enterprises lose readability as their character and enterprise lists grow.
-The
-[large-list readability plan](../plans/systems-audit-04-large-list-readability.md)
-owns counted, collapsible sections, stable needs-attention ordering, progressive
-disclosure, and local filter/search behavior. Interaction cards remain authoritative
-for one target; this follow-up changes only how overview rows are found and scanned.
+Work & Enterprises and Network share a render-only large-list grammar. Every semantic
+section is a native, independently collapsible button with a total and a needs-attention
+count. Rows are ordered by attention state, stable role/state priority, their existing
+meaningful order, and stable identity; changing income, Standing, or another daily number
+does not reorder otherwise equivalent rows. Filters, disclosure, search, focus, and scroll
+are in-memory UI state only. They consume no RNG and never enter a save.
+
+The shared large-list threshold is **12 total rows per surface**. Above it, an explicitly
+labeled literal local search appears and each section initially shows every
+needs-attention row plus **5 routine rows**. **Show all {count}** reveals the remaining
+routine rows in that section. Search and non-All filters show every match rather than
+applying the routine budget. All and Needs attention are shared filters; Work adds
+Assigned, Staffed, Idle, and Unavailable, while Network adds People and Realms. Empty
+sections distinguish no records from a filter/search with no matches. Hidden rows use the
+native `hidden` state, receive no number-key position, and leave the accessibility tree.
+
+Work keeps Household work and Family enterprises separate. Household rows label settled
+careers/offices, genuinely available career choices, former callings, and authoritative
+unavailability without treating every unassigned character as a problem. Enterprise rows
+are exact uid-backed instances ordered idle/actionable before staffed; they show worker,
+lock, settlement, and live yield. The summary reports owned, staffed, idle, blocked, and
+approximate seasonal yield totals, while **Staff all idle enterprises…** remains the
+explicit bounded bulk review.
+
+Network keeps Household, Connections, Trade & Guild, and Realm distinct. A person or realm
+appears once within a section with combined role labels, but may still appear in another
+section for a genuinely different context. Character and ruler rows open the consolidated
+authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and
+other focused management routes remain separate. Section attention covers active
+commitments, warnings, opportunities, missed retainer pay, and vacancies even when routine
+context is collapsed.
 
 Network → Household also opens the responsive **Household Plan**. Its desktop modal uses a
 wide seven-column table ordered as household head, resident family, then paid retainers.

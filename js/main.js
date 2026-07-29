@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.90.2';
+  FB.VERSION = '1.91.0';
   FB.CHANGELOG = [
+    { v: '1.91.0', date: '2026-07-29', changes: [
+      'Work & Enterprises and Network now use counted, collapsible sections with attention filters and search for large lists.'
+    ] },
     { v: '1.90.2', date: '2026-07-29', changes: [
       'Household standards, work outfits, and permanent property now use a compact catalogue with full details available from each row.'
     ] },

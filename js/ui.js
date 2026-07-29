@@ -446,6 +446,362 @@ window.FB = window.FB || {};
       esc(FB.T(title)) + '</div>';
   }
 
+  /* Work and Network use one render-only grammar once their rosters become
+     large. Nothing here is written to the save: filters, disclosure, focus and
+     scroll are session UI state over live authoritative records. */
+  const LARGE_LIST_THRESHOLD = 12;
+  const LARGE_LIST_ROUTINE_BUDGET = 5;
+  const largeListViews = {
+    work:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
+  };
+  UI.largeListDefaults = {
+    threshold:LARGE_LIST_THRESHOLD,
+    routineBudget:LARGE_LIST_ROUTINE_BUDGET
+  };
+
+  function largeListSectionState(surface, sectionId) {
+    const view = largeListViews[surface];
+    if (!view.sections[sectionId]) {
+      view.sections[sectionId] = { collapsed:false, showAll:false };
+    }
+    return view.sections[sectionId];
+  }
+
+  function largeListRowAttrs(options) {
+    const opts = options || {};
+    const states = opts.states || [opts.state || 'routine'];
+    return ' data-large-list-row="true"' +
+      ' data-list-state="' + esc(states.join(' ')) + '"' +
+      ' data-list-attention="' + (opts.attention ? 'true' : 'false') + '"' +
+      ' data-list-identity="' + esc(opts.identity || '') + '"' +
+      (opts.focusKey ? ' data-list-focus-key="' + esc(opts.focusKey) + '"' : '');
+  }
+
+  function largeListStateLabel(label, attention) {
+    return '<span class="large-list-state' +
+      (attention ? ' needs-attention' : '') + '">' + esc(label) + '</span>';
+  }
+
+  function largeListSectionHtml(surface, section) {
+    const rows = section.rows || [];
+    let attention = 0;
+    for (const row of rows) if (row.attention) attention++;
+    const state = largeListSectionState(surface, section.id);
+    const headingId = section.headingId ||
+      surface + '-list-heading-' + section.id;
+    const bodyId = surface + '-list-body-' + section.id;
+    const countText = FB.T('{count} total', { count:rows.length });
+    const attentionText = FB.T('{count} need attention', { count:attention });
+    const ariaLabel = FB.T(
+      '{section}: {total}; {attention}. {action} section.', {
+        section:section.title,
+        total:countText,
+        attention:attentionText,
+        action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
+      });
+    let h = '<section class="large-list-section" data-list-section="' +
+      esc(section.id) + '"><h4 id="' + headingId + '" tabindex="-1" ' +
+      'data-list-focus-key="heading-' + esc(section.id) + '">' +
+      '<button type="button" class="large-list-section-toggle" ' +
+      'data-list-toggle="' + esc(section.id) + '" data-list-focus-key="toggle-' +
+      esc(section.id) + '" aria-expanded="' + (!state.collapsed) +
+      '" aria-controls="' + bodyId + '" aria-label="' + esc(ariaLabel) + '">' +
+      '<span class="large-list-section-title">' + esc(section.title) + '</span>' +
+      '<span class="large-list-section-count">' + esc(countText) + '</span>' +
+      '<span class="large-list-attention-count' +
+      (attention ? '' : ' none') + '">' + esc(attentionText) + '</span>' +
+      '<span class="large-list-section-caret" aria-hidden="true">' +
+      (state.collapsed ? '▸' : '▾') + '</span></button></h4>' +
+      '<div class="large-list-section-body" id="' + bodyId + '"' +
+      (state.collapsed ? ' hidden' : '') + ' aria-labelledby="' + headingId + '">';
+    if (section.summary) {
+      h += '<div class="large-list-section-summary">' + section.summary + '</div>';
+    }
+    h += '<div class="large-list-rows">';
+    for (const row of rows) h += row.html;
+    h += '</div>' +
+      (section.footer
+        ? '<div class="large-list-section-footer">' + section.footer + '</div>'
+        : '') +
+      '<div class="hint large-list-empty"' +
+      (rows.length ? ' hidden' : '') + '>' +
+      esc(section.empty || FB.T('Nothing is recorded in this section.')) +
+      '</div><div class="hint large-list-no-results" hidden>' +
+      esc(FB.T('No entries match the current search and filter.')) +
+      '</div><button type="button" class="btn large-list-show-all" hidden ' +
+      'data-list-show-all="' + esc(section.id) +
+      '" data-list-focus-key="show-all-' + esc(section.id) + '">' +
+      esc(FB.T('Show all {count}', { count:rows.length })) +
+      '</button></div></section>';
+    return h;
+  }
+
+  function largeListSurfaceHtml(surface, sections, filters) {
+    let total = 0;
+    for (const section of sections) total += (section.rows || []).length;
+    const view = largeListViews[surface];
+    if (view.stateRef !== FB.state) {
+      view.stateRef = FB.state;
+      view.search = '';
+      view.filter = 'all';
+      view.sections = {};
+      view.scrollTop = 0;
+      view.focusKey = null;
+    }
+    const large = total > LARGE_LIST_THRESHOLD;
+    let h = '<div class="large-list-surface" data-large-list-surface="' +
+      esc(surface) + '" data-large-list="' + (large ? 'true' : 'false') + '">' +
+      '<div class="large-list-toolbar">';
+    if (large) {
+      const searchId = surface + '-list-search';
+      h += '<div class="large-list-search"><label for="' + searchId + '">' +
+        esc(FB.T('Search this list')) + '</label><div>' +
+        '<input type="search" id="' + searchId + '" value="' +
+        esc(view.search) + '" autocomplete="off" spellcheck="false" ' +
+        'data-list-search data-list-focus-key="search" placeholder="' +
+        esc(FB.T('Name, role, work, office, or realm')) + '">' +
+        '<button type="button" class="btn small" data-list-clear ' +
+        'data-list-focus-key="clear-search"' +
+        (view.search ? '' : ' hidden') + ' aria-label="' +
+        esc(FB.T('Clear list search')) + '">' + esc(FB.T('Clear')) +
+        '</button></div></div>';
+    }
+    h += '<div class="large-list-filters" role="group" aria-label="' +
+      esc(FB.T('Filter list')) + '">';
+    for (const filter of filters) {
+      h += '<button type="button" class="btn small" data-list-filter="' +
+        esc(filter.id) + '" data-list-focus-key="filter-' + esc(filter.id) +
+        '" aria-pressed="' + (view.filter === filter.id) + '">' +
+        esc(filter.label) + '</button>';
+    }
+    h += '</div></div>';
+    for (const section of sections) h += largeListSectionHtml(surface, section);
+    return h + '</div>';
+  }
+
+  function visibleLargeListAction(button) {
+    if (!button || button.hidden) return false;
+    let node = button;
+    while (node) {
+      if (node.hidden) return false;
+      node = node.parentElement;
+    }
+    return button.getClientRects().length > 0;
+  }
+
+  function largeListSearchText(row) {
+    if (row._largeListSearchText !== undefined) {
+      return row._largeListSearchText;
+    }
+    const copy = row.cloneNode(true);
+    const hints = copy.querySelectorAll('.keyhint');
+    for (let i = hints.length - 1; i >= 0; i--) {
+      hints[i].parentNode.removeChild(hints[i]);
+    }
+    row._largeListSearchText = copy.textContent.toLocaleLowerCase();
+    return row._largeListSearchText;
+  }
+
+  function refreshLargeListKeyhints(root) {
+    if (FB.isTouch || !root || !$('genmodal').contains(root)) return;
+    const buttons = $('gm-body').querySelectorAll('.actionbtn');
+    for (let i = 0; i < buttons.length; i++) {
+      const children = buttons[i].children;
+      for (let j = children.length - 1; j >= 0; j--) {
+        if (children[j].classList.contains('keyhint')) {
+          buttons[i].removeChild(children[j]);
+        }
+      }
+    }
+    let visibleIndex = 0;
+    for (let i = 0; i < buttons.length; i++) {
+      if (!visibleLargeListAction(buttons[i])) continue;
+      buttons[i].insertAdjacentHTML('afterbegin', hintFor(visibleIndex));
+      visibleIndex++;
+    }
+  }
+
+  function applyLargeListView(root) {
+    if (!root) return;
+    const surface = root.getAttribute('data-large-list-surface');
+    const view = largeListViews[surface];
+    if (!view) return;
+    const query = (view.search || '').trim().toLocaleLowerCase();
+    const large = root.getAttribute('data-large-list') === 'true';
+    const filters = root.querySelectorAll('[data-list-filter]');
+    for (let i = 0; i < filters.length; i++) {
+      filters[i].setAttribute('aria-pressed',
+        filters[i].getAttribute('data-list-filter') === view.filter
+          ? 'true' : 'false');
+    }
+    const clear = root.querySelector('[data-list-clear]');
+    if (clear) clear.hidden = !view.search;
+
+    const sections = root.querySelectorAll('[data-list-section]');
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      const sectionId = section.getAttribute('data-list-section');
+      const state = largeListSectionState(surface, sectionId);
+      const toggle = section.querySelector('[data-list-toggle]');
+      const body = section.querySelector('.large-list-section-body');
+      const caret = section.querySelector('.large-list-section-caret');
+      body.hidden = !!state.collapsed;
+      toggle.setAttribute('aria-expanded', state.collapsed ? 'false' : 'true');
+      const sectionTitle = section.querySelector('.large-list-section-title');
+      const sectionCount = section.querySelector('.large-list-section-count');
+      const attentionCount = section.querySelector(
+        '.large-list-attention-count');
+      toggle.setAttribute('aria-label', FB.T(
+        '{section}: {total}; {attention}. {action} section.', {
+          section:sectionTitle ? sectionTitle.textContent : sectionId,
+          total:sectionCount ? sectionCount.textContent : '',
+          attention:attentionCount ? attentionCount.textContent :
+            FB.T('{count} need attention', { count:0 }),
+          action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
+        }));
+      if (caret) caret.textContent = state.collapsed ? '▸' : '▾';
+
+      const rows = section.querySelectorAll('[data-large-list-row]');
+      let matched = 0, routineShown = 0, truncated = 0;
+      for (let j = 0; j < rows.length; j++) {
+        const row = rows[j];
+        const attention = row.getAttribute('data-list-attention') === 'true';
+        const states = (' ' + row.getAttribute('data-list-state') + ' ');
+        const filterMatch = view.filter === 'all' ||
+          (view.filter === 'attention' && attention) ||
+          states.indexOf(' ' + view.filter + ' ') >= 0;
+        const searchMatch = !query ||
+          largeListSearchText(row).indexOf(query) >= 0;
+        let show = filterMatch && searchMatch;
+        if (show) {
+          matched++;
+          if (large && view.filter === 'all' && !query && !attention &&
+              !state.showAll) {
+            if (routineShown >= LARGE_LIST_ROUTINE_BUDGET) {
+              show = false;
+              truncated++;
+            } else {
+              routineShown++;
+            }
+          }
+        }
+        row.hidden = !show;
+      }
+      const empty = section.querySelector('.large-list-empty');
+      const noResults = section.querySelector('.large-list-no-results');
+      const showAll = section.querySelector('[data-list-show-all]');
+      if (empty) empty.hidden = rows.length !== 0;
+      if (noResults) noResults.hidden = rows.length === 0 || matched !== 0;
+      if (showAll) showAll.hidden = !truncated || state.collapsed;
+    }
+    refreshLargeListKeyhints(root);
+  }
+
+  function largeListScrollContainer(surface) {
+    return surface === 'network' ? $('sidebody') : $('gm-body');
+  }
+
+  function saveLargeListScroll(surface) {
+    const container = largeListScrollContainer(surface);
+    if (container && largeListViews[surface]) {
+      largeListViews[surface].scrollTop = container.scrollTop;
+    }
+  }
+
+  function initLargeListSurface(surface, options) {
+    const opts = options || {};
+    const root = document.querySelector(
+      '[data-large-list-surface="' + surface + '"]');
+    const view = largeListViews[surface];
+    if (!root || !view) return;
+    const search = root.querySelector('[data-list-search]');
+    if (search) {
+      search.addEventListener('input', function () {
+        view.search = search.value;
+        applyLargeListView(root);
+      });
+    } else {
+      view.search = '';
+    }
+    const clear = root.querySelector('[data-list-clear]');
+    if (clear) {
+      clear.addEventListener('click', function () {
+        view.search = '';
+        search.value = '';
+        applyLargeListView(root);
+        search.focus();
+      });
+    }
+    const filters = root.querySelectorAll('[data-list-filter]');
+    for (let i = 0; i < filters.length; i++) {
+      filters[i].addEventListener('click', function () {
+        view.filter = filters[i].getAttribute('data-list-filter');
+        applyLargeListView(root);
+      });
+    }
+    const toggles = root.querySelectorAll('[data-list-toggle]');
+    for (let i = 0; i < toggles.length; i++) {
+      toggles[i].addEventListener('click', function () {
+        const sectionId = toggles[i].getAttribute('data-list-toggle');
+        const state = largeListSectionState(surface, sectionId);
+        state.collapsed = !state.collapsed;
+        applyLargeListView(root);
+      });
+    }
+    const showAll = root.querySelectorAll('[data-list-show-all]');
+    for (let i = 0; i < showAll.length; i++) {
+      showAll[i].addEventListener('click', function () {
+        const sectionId = showAll[i].getAttribute('data-list-show-all');
+        largeListSectionState(surface, sectionId).showAll = true;
+        applyLargeListView(root);
+        const toggle = root.querySelector(
+          '[data-list-toggle="' + sectionId + '"]');
+        if (toggle) toggle.focus({ preventScroll:true });
+      });
+    }
+    root.addEventListener('focusin', function (event) {
+      const target = event.target.closest &&
+        event.target.closest('[data-list-focus-key]');
+      if (target) view.focusKey = target.getAttribute('data-list-focus-key');
+    });
+    const container = largeListScrollContainer(surface);
+    if (container) {
+      container._largeListScrollSurface = surface;
+      if (!container._largeListScrollBound) {
+        container._largeListScrollBound = true;
+        container.addEventListener('scroll', function () {
+          const activeSurface = container._largeListScrollSurface;
+          if (!activeSurface ||
+              (activeSurface === 'network' && activeTab !== 'network')) return;
+          largeListViews[activeSurface].scrollTop = container.scrollTop;
+        });
+      }
+    }
+    applyLargeListView(root);
+    setTimeout(function () {
+      if (container) container.scrollTop = view.scrollTop || 0;
+      if (!opts.restoreFocus || !view.focusKey) return;
+      const focusTargets = root.querySelectorAll('[data-list-focus-key]');
+      let focus = null;
+      for (let i = 0; i < focusTargets.length; i++) {
+        if (focusTargets[i].getAttribute('data-list-focus-key') ===
+            view.focusKey) {
+          focus = focusTargets[i];
+          break;
+        }
+      }
+      if (focus && !focus.hidden && focus.getClientRects().length) {
+        focus.focus({ preventScroll:true });
+        return;
+      }
+      const fallback = search ||
+        root.querySelector('[data-list-filter][aria-pressed="true"]') ||
+        root.querySelector('[data-list-toggle]');
+      if (fallback) fallback.focus({ preventScroll:true });
+    }, 0);
+  }
+
   /* Shared presentation for assets and persistent effects. The owning system
      supplies every value; this renderer only keeps the audit's comparison
      order, localization, affordability cue, and responsive markup common. */
@@ -2588,6 +2944,78 @@ window.FB = window.FB || {};
     return FB.T('levy');
   }
 
+  function networkReadablePersonRow(s, sectionId, record) {
+    const c = record.character;
+    const attrs = largeListRowAttrs({
+      attention:record.attention,
+      states:['people', record.state || 'routine'],
+      identity:c.id
+    });
+    const standing = FB.standingOf(s, { kind:'character', id:c.id });
+    return '<div class="large-list-entry network-list-entry"' + attrs + '>' +
+      '<button type="button" class="charrow large-list-target-button" data-cid="' +
+      esc(c.id) + '" data-list-focus-key="' + esc(sectionId + '-person-' + c.id) +
+      '" title="' + esc(FB.T('Open the authoritative character sheet')) + '">' +
+      FB.faceTag(c, 36, 42) +
+      '<span class="large-list-row-copy"><span class="cname">' +
+      esc(FB.fullName(c)) + '</span><span class="cmeta">' +
+      esc(record.meta.join(' · ')) + '</span></span>' +
+      '<span class="cop ' + standingClass(standing) + '">' +
+      esc(standingValue(standing)) + '</span>' +
+      largeListStateLabel(record.stateLabel ||
+        (record.attention ? FB.T('Needs attention') : FB.T('Routine')),
+      record.attention) + '</button>' +
+      (record.actionHtml || '') + '</div>';
+  }
+
+  function networkReadableRealmRow(s, record) {
+    const r = s.realms[record.rid];
+    const attrs = largeListRowAttrs({
+      attention:record.attention,
+      states:['realms', record.state || 'routine'],
+      identity:record.rid
+    });
+    return '<div class="large-list-entry network-list-entry"' + attrs + '>' +
+      '<button type="button" class="actionbtn large-list-target-button" data-liege="' +
+      esc(record.rid) + '" data-list-focus-key="realm-target-' +
+      esc(record.rid) + '" title="' +
+      esc(FB.T('Open the authoritative ruler and realm sheet')) + '">' +
+      '<span class="large-list-row-copy"><span class="large-list-row-title">' +
+      esc(r ? r.name : record.rid) + '</span><span class="adesc">' +
+      esc(record.meta.join(' · ')) + '</span></span>' +
+      largeListStateLabel(record.stateLabel ||
+        (record.attention ? FB.T('Needs attention') : FB.T('Routine')),
+      record.attention) + '</button>' +
+      (record.actionHtml || '') + '</div>';
+  }
+
+  function networkReadableStaticRow(record) {
+    const attrs = largeListRowAttrs({
+      attention:record.attention,
+      states:[record.kind || 'other', record.state || 'routine'],
+      identity:record.identity
+    });
+    return '<div class="large-list-entry network-list-entry ' +
+      'large-list-static-row"' + attrs + '><div class="large-list-row-copy">' +
+      '<span class="large-list-row-title">' + esc(record.title) + '</span>' +
+      (record.meta && record.meta.length
+        ? '<span class="cmeta">' + esc(record.meta.join(' · ')) + '</span>'
+        : '') + '</div>' +
+      largeListStateLabel(record.stateLabel ||
+        (record.attention ? FB.T('Needs attention') : FB.T('Context')),
+      record.attention) + '</div>';
+  }
+
+  function sortReadableRows(rows) {
+    rows.sort(function (a, b) {
+      return (a.attention ? 0 : 1) - (b.attention ? 0 : 1) ||
+        (a.priority || 0) - (b.priority || 0) ||
+        (a.index || 0) - (b.index || 0) ||
+        String(a.identity || '').localeCompare(String(b.identity || ''));
+    });
+    return rows;
+  }
+
   function renderNetwork() {
     const s = FB.state;
     const box = $('tab-network');
@@ -2596,119 +3024,205 @@ window.FB = window.FB || {};
     const retainers = FB.retainerRecords(s);
     const capacity = FB.retainerCapacity(s);
     const businesses = FB.enterpriseList(s);
-    function workAssignment(c) {
-      const assigned = [];
-      for (const e of businesses) {
-        if (e.workerId !== c.id) continue;
-        const def = FBDATA.enterprises[e.type];
-        if (def) assigned.push(dt(s, 'enterprise', e.type, def, 'name'));
+    const workAssignments = {};
+    for (const enterprise of businesses) {
+      if (!enterprise.workerId) continue;
+      const def = FBDATA.enterprises[enterprise.type];
+      if (!workAssignments[enterprise.workerId]) {
+        workAssignments[enterprise.workerId] = [];
       }
-      if (!assigned.length) return '';
-      return FB.T(' · staffs {work}', { work:assigned.join(', ') });
+      workAssignments[enterprise.workerId].push(def
+        ? dt(s, 'enterprise', enterprise.type, def, 'name')
+        : enterprise.type);
     }
-    let h = '<div class="hint">' + esc(FB.T(
-      'The people and institutions tied to this household, and what each tie currently does.')) +
-      '</div>';
 
-    /* Household: family remains distinct from paid service even though both
-       can work and appear on managed character sheets. */
-    h += panelh('Household');
-    h += kv('Resident family', esc(String(family.length)));
-    h += kv('Paid retainers', esc(FB.T('{used} of {capacity}', {
-      used:retainers.length, capacity:capacity
-    })));
-    const householdCost = FB.householdUpkeepParts(s);
-    h += kv('Family establishment each season', esc(FB.money(householdCost.total)));
-    const standardSummary = householdStandardsSummary(s);
-    h += kv('Maintained standards each season',
-      esc(FB.money(FB.householdStandardsUpkeep(s))));
-    h += kv('Active household standards',
-      esc(standardSummary || FB.T('None')));
-    if (retainers.length) {
-      h += kv('Retainer contracts each season', esc(FB.money(FB.retainerSeasonCost(s))));
+    const householdById = {};
+    let householdOrder = 0;
+    function householdRecord(c) {
+      if (!c || c.dead) return null;
+      if (!householdById[c.id]) {
+        householdById[c.id] = {
+          character:c, family:false, retainer:null, index:householdOrder++
+        };
+      }
+      return householdById[c.id];
     }
-    h += '<button class="actionbtn" id="network-household-plan">📋 ' +
+    for (const c of family) householdRecord(c).family = true;
+    for (const retainer of retainers) {
+      const c = s.chars[retainer.charId];
+      const record = householdRecord(c);
+      if (record) record.retainer = retainer;
+    }
+    const householdRows = [];
+    for (const cid in householdById) {
+      const source = householdById[cid];
+      const c = source.character;
+      const career = FB.careerOf(s, c);
+      const def = career && FBDATA.careers[career.profession];
+      const meta = [];
+      if (source.family) {
+        meta.push(c.id === me.id ? FB.T('Household head') :
+          (relationText(s, c) || FB.T('Resident family')));
+      }
+      if (source.retainer) {
+        meta.push(positionName(s, source.retainer.office));
+        meta.push(FB.T('{money:pay}/season', {
+          pay:source.retainer.pay || 0
+        }));
+        const officeEffect = positionEffectText(source.retainer.office);
+        if (officeEffect) meta.push(officeEffect);
+      }
+      meta.push(FB.careerTitle(s, c) +
+        (def && def.guild && career.guildRank !== 'none'
+          ? ' · ' + FB.guildTitle(career) : ''));
+      if (workAssignments[c.id] && workAssignments[c.id].length) {
+        meta.push(FB.T('Staffs {work}', {
+          work:workAssignments[c.id].join(', ')
+        }));
+      }
+      const unpaid = source.retainer && source.retainer.unpaid;
+      if (unpaid) {
+        meta.push(FB.T('Pay missed this season'));
+      }
+      const model = {
+        character:c,
+        meta:meta,
+        attention:!!unpaid,
+        state:unpaid ? 'warning' : 'routine',
+        stateLabel:unpaid ? FB.T('Pay warning') : FB.T('Established'),
+        priority:source.retainer ? 1 : 0,
+        index:source.index,
+        identity:c.id
+      };
+      model.html = networkReadablePersonRow(s, 'household', model);
+      householdRows.push(model);
+    }
+    if (capacity > retainers.length) {
+      const vacancyCount = capacity - retainers.length;
+      const vacancy = {
+        attention:true,
+        state:'vacancy',
+        priority:-1,
+        index:0,
+        identity:'retainer-vacancy',
+        html:''
+      };
+      vacancy.html = '<div class="large-list-entry network-list-entry"' +
+        largeListRowAttrs({
+          attention:true,
+          states:['people', 'vacancy'],
+          identity:'retainer-vacancy'
+        }) + '><button type="button" class="actionbtn large-list-target-button" ' +
+        'id="network-hire" data-list-focus-key="household-retainer-vacancy">' +
+        '<span class="large-list-row-copy"><span class="large-list-row-title">' +
+        esc(FB.T('Hire a retainer…')) + '</span><span class="adesc">' +
+        esc(FB.T('{count} household service slots are open. Service is paid each season.', {
+          count:vacancyCount
+        })) + '</span></span>' +
+        largeListStateLabel(FB.T('Vacancy'), true) + '</button></div>';
+      householdRows.push(vacancy);
+    }
+    sortReadableRows(householdRows);
+    const householdCost = FB.householdUpkeepParts(s);
+    const standardSummary = householdStandardsSummary(s);
+    let householdSummary =
+      kv('Resident family', esc(String(family.length))) +
+      kv('Paid retainers', esc(FB.T('{used} of {capacity}', {
+        used:retainers.length, capacity:capacity
+      }))) +
+      kv('Family establishment each season',
+        esc(FB.money(householdCost.total))) +
+      kv('Maintained standards each season',
+        esc(FB.money(FB.householdStandardsUpkeep(s)))) +
+      kv('Active household standards',
+        esc(standardSummary || FB.T('None')));
+    if (retainers.length) {
+      householdSummary += kv('Retainer contracts each season',
+        esc(FB.money(FB.retainerSeasonCost(s))));
+    }
+    householdSummary += '<button class="actionbtn" id="network-household-plan">📋 ' +
       esc(FB.T('Household Plan…')) + '<span class="adesc">' +
       esc(FB.T(
         'Review education, work, assignments, matches, and equipment for every managed person.')) +
       '</span></button>';
-    for (const c of family) {
-      const career = FB.careerOf(s, c);
-      const def = career && FBDATA.careers[career.profession];
-      h += charRow(s, c, FB.T('{career}{guild}', {
-        career:FB.careerTitle(s, c),
-        guild:def && def.guild && career.guildRank !== 'none'
-          ? FB.T(' · {rank}', { rank:FB.guildTitle(career) }) : ''
-      }) + workAssignment(c));
-    }
-    for (const record of retainers) {
-      const c = s.chars[record.charId];
-      const warning = record.unpaid
-        ? FB.T(' · pay missed this season') : '';
-      const effect = positionEffectText(record.office);
-      h += charRow(s, c, FB.T('{position} · {money:pay}/season{warning}', {
-        position:positionName(s, record.office),
-        pay:record.pay || 0,
-        warning:warning
-      }) + (effect ? ' · ' + effect : '') + workAssignment(c));
-      h += '<button class="actionbtn" data-retainer-manage="' + esc(c.id) + '">' +
-        esc(FB.T('Manage {name}…', { name:c.name })) +
-        '<span class="adesc">' + esc(positionDesc(s, record.office)) + '</span></button>';
-    }
-    if (capacity > retainers.length) {
-      h += '<button class="actionbtn" id="network-hire">🗝 ' +
-        esc(FB.T('Hire a retainer…')) + '<span class="adesc">' +
-        esc(FB.T('Household service is paid each season and limited by station.')) +
-        '</span></button>';
-    } else if (!capacity) {
-      h += '<div class="hint">' + esc(FB.T(
+    if (!capacity) {
+      householdSummary += '<div class="hint">' + esc(FB.T(
         'A serf household cannot yet maintain paid servants.')) + '</div>';
-    } else {
-      h += '<div class="hint">' + esc(FB.T(
+    } else if (capacity === retainers.length) {
+      householdSummary += '<div class="hint">' + esc(FB.T(
         'The household is at its retainer capacity.')) + '</div>';
     }
 
-    /* Standing is shown separately from the one canonical friend
-       so warmth can no longer masquerade as the event relationship. */
-    h += panelh('Connections', 'network-connections');
-    h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
+    const connectionById = {};
+    let connectionOrder = 0;
+    function addConnection(c, label, priority, attention, attentionLabel) {
+      if (!c || c.dead) return;
+      let record = connectionById[c.id];
+      if (!record) {
+        record = connectionById[c.id] = {
+          character:c, labels:[], priority:priority,
+          attention:false, state:'routine', stateLabel:FB.T('Known tie'),
+          index:connectionOrder++, identity:c.id
+        };
+      }
+      if (record.labels.indexOf(label) < 0) record.labels.push(label);
+      record.priority = Math.min(record.priority, priority);
+      if (attention) {
+        record.attention = true;
+        record.state = 'commitment';
+        record.stateLabel = attentionLabel || FB.T('Active commitment');
+      }
+    }
+    const attentionTarget = FB.socialAttentionTarget(s);
     const friend = FB.getRole(s, 'friend', false);
-    if (friend) {
-      h += charRow(s, friend, FB.T('Your friend · Standing {standing}', {
+    addConnection(friend, FB.T('Your friend'), 0,
+      attentionTarget && friend && attentionTarget.id === friend.id);
+    const cultivated = FB.friendConnections(s).slice().sort(function (a, b) {
+      return String(a.id).localeCompare(String(b.id));
+    });
+    for (const c of cultivated) {
+      addConnection(c, FB.T('Cultivated connection'), 1,
+        attentionTarget && attentionTarget.id === c.id);
+    }
+    const connectionRoles = [
+      { id:'rival', label:roleName('rival'), priority:2,
+        attention:true, attentionLabel:FB.T('Warning') },
+      { id:'suitor', label:roleName('suitor'), priority:3,
+        attention:true, attentionLabel:FB.T('Opportunity') },
+      { id:'priest', label:roleName('priest'), priority:4 },
+      { id:'lord', label:roleName('lord'), priority:5 }
+    ];
+    for (const role of connectionRoles) {
+      const c = FB.getRole(s, role.id, false);
+      addConnection(c, role.label, role.priority, !!role.attention,
+        role.attentionLabel);
+    }
+    if (attentionTarget) {
+      addConnection(attentionTarget, FB.T('Personal attention'), 1, true,
+        s.player.courtingId === attentionTarget.id
+          ? FB.T('Courtship') : FB.T('Active commitment'));
+    }
+    const connectionRows = [];
+    for (const cid in connectionById) {
+      const record = connectionById[cid];
+      record.meta = record.labels.slice();
+      record.meta.push(FB.T('Standing {standing}', {
         standing:standingValue(FB.standingOf(s, {
-          kind:'character', id:friend.id
+          kind:'character', id:record.character.id
         }))
       }));
-    } else {
-      h += '<div class="hint">' + esc(FB.T(
+      record.html = networkReadablePersonRow(s, 'connections', record);
+      connectionRows.push(record);
+    }
+    sortReadableRows(connectionRows);
+    let connectionsSummary = '<div class="progressnote">' +
+      esc(socialAttentionSummary(s)) + '</div>';
+    if (!friend) {
+      connectionsSummary += '<div class="hint">' + esc(FB.T(
         'No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet.')) +
         '</div>';
     }
-    const connectionIds = {};
-    if (friend) connectionIds[friend.id] = 1;
-    for (const c of FB.friendConnections(s)) {
-      if (friend && c.id === friend.id) continue;
-      connectionIds[c.id] = 1;
-      h += charRow(s, c, FB.T('Cultivated connection · Standing {standing}', {
-        standing:standingValue(FB.standingOf(s, {
-          kind:'character', id:c.id
-        }))
-      }));
-    }
-    for (const role of ['rival', 'suitor', 'priest', 'lord']) {
-      const c = FB.getRole(s, role, false);
-      if (!c || c.dead || connectionIds[c.id]) continue;
-      h += charRow(s, c, FB.T('{relationship} · Standing {standing}', {
-        relationship:roleName(role),
-        standing:standingValue(FB.standingOf(s, {
-          kind:'character', id:c.id
-        }))
-      }));
-    }
 
-    /* Trade & Guild: show the already-live multipliers, gates and standings
-       before offering the bounded commission favor. */
-    h += panelh('Trade & Guild');
     function monopolyTierName(tier) {
       if (tier === 4) return FB.T('Count');
       if (tier === 5) return FB.T('Duke');
@@ -2721,201 +3235,372 @@ window.FB = window.FB || {};
       return def ? dt(s, 'career', record.profession, def, 'name') :
         FB.T('Unknown profession');
     }
+    const tradeRows = [];
+    let tradeIndex = 0;
+    function monopolyRow(direction, monopoly) {
+      const active = !!monopoly;
+      const issuer = active
+        ? monopoly.grantorName || monopoly.grantorRulerName : '';
+      const title = direction === 'incoming'
+        ? FB.T('Incoming monopoly') : FB.T('Outgoing monopoly');
+      const meta = active ? [
+        monopolyProfessionName(monopoly),
+        FB.T('Issuer: {issuer}', { issuer:issuer }),
+        direction === 'incoming'
+          ? FB.T('Recipient: your household')
+          : (monopoly.advocateName
+            ? FB.T('Recipient: local {profession} guild, represented by {advocate}', {
+              profession:monopolyProfessionName(monopoly),
+              advocate:monopoly.advocateName
+            })
+            : FB.T('Recipient: local {profession} guild', {
+              profession:monopolyProfessionName(monopoly)
+            })),
+        FB.T('{tier} terms', { tier:monopolyTierName(monopoly.tier) }),
+        FB.T('+{enterprise}% matching enterprise profit', {
+          enterprise:Math.round(monopoly.enterpriseBonus * 100)
+        }),
+        direction === 'incoming'
+          ? FB.T('Issuer tax +{tax}%', {
+            tax:Math.round(monopoly.taxBonus * 100)
+          })
+          : FB.T('Your tax +{tax}%', {
+            tax:Math.round(monopoly.taxBonus * 100)
+          }),
+        FB.T('{days} days remain', {
+          days:FB.guildMonopolyRemainingDays(s, monopoly)
+        })
+      ] : [FB.T('None')];
+      if (active && monopoly.scope === 'province') {
+        const province = FB.world.byId[monopoly.scopeId];
+        meta.push(FB.T('Local to {province}', {
+          province:province ? province.name : monopoly.scopeId
+        }));
+      } else if (active && direction === 'incoming') {
+        meta.push(FB.T('Bound to the direct liege relationship with {grantor}', {
+          grantor:issuer
+        }));
+      } else if (active) {
+        meta.push(FB.T('Valid while the dynasty retains landed authority.'));
+      }
+      const record = {
+        attention:active,
+        state:active ? 'commitment' : 'routine',
+        stateLabel:active ? FB.T('Active commitment') : FB.T('Open slot'),
+        priority:active ? 0 : 4,
+        index:tradeIndex++,
+        identity:'monopoly-' + direction,
+        kind:'other',
+        title:title,
+        meta:meta
+      };
+      record.html = networkReadableStaticRow(record);
+      tradeRows.push(record);
+    }
     const incomingMonopoly = FB.guildMonopolyActive(s, 'incoming');
-    if (incomingMonopoly) {
-      const incomingProvince = incomingMonopoly.scope === 'province' &&
-        FB.world.byId[incomingMonopoly.scopeId];
-      const incomingScope = incomingMonopoly.scope === 'province'
-        ? FB.T('Local to {province}', {
-          province:incomingProvince ? incomingProvince.name : incomingMonopoly.scopeId
-        })
-        : FB.T('Bound to the direct liege relationship with {grantor}', {
-          grantor:incomingMonopoly.grantorName ||
-            incomingMonopoly.grantorRulerName
-        });
-      h += '<div class="progressnote"><b>' +
-        esc(FB.T('Incoming monopoly — {profession}', {
-          profession:monopolyProfessionName(incomingMonopoly)
-        })) + '</b><br>' +
-        esc(FB.T(
-          'Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain',
-          {
-            issuer:incomingMonopoly.grantorName ||
-              incomingMonopoly.grantorRulerName,
-            tier:monopolyTierName(incomingMonopoly.tier),
-            enterprise:Math.round(incomingMonopoly.enterpriseBonus * 100),
-            tax:Math.round(incomingMonopoly.taxBonus * 100),
-            days:FB.guildMonopolyRemainingDays(s, incomingMonopoly)
-          })) + '<br><span class="cmeta">' + esc(incomingScope) +
-        '</span></div>';
-    } else {
-      h += kv('Incoming monopoly', esc(FB.T('None')));
-    }
     const outgoingMonopoly = FB.guildMonopolyActive(s, 'outgoing');
-    if (outgoingMonopoly) {
-      const recipient = outgoingMonopoly.advocateName
-        ? FB.T('Local {profession} guild, represented by {advocate}', {
-          profession:monopolyProfessionName(outgoingMonopoly),
-          advocate:outgoingMonopoly.advocateName
-        })
-        : FB.T('Local {profession} guild', {
-          profession:monopolyProfessionName(outgoingMonopoly)
-        });
-      h += '<div class="progressnote"><b>' +
-        esc(FB.T('Outgoing monopoly — {profession}', {
-          profession:monopolyProfessionName(outgoingMonopoly)
-        })) + '</b><br>' +
-        esc(FB.T(
-          'Issuer: {issuer} · Recipient: {recipient} · {tier} terms · +{enterprise}% matching enterprise profit · your tax +{tax}% · {days} days remain',
-          {
-            issuer:outgoingMonopoly.grantorName ||
-              outgoingMonopoly.grantorRulerName,
-            recipient:recipient,
-            tier:monopolyTierName(outgoingMonopoly.tier),
-            enterprise:Math.round(outgoingMonopoly.enterpriseBonus * 100),
-            tax:Math.round(outgoingMonopoly.taxBonus * 100),
-            days:FB.guildMonopolyRemainingDays(s, outgoingMonopoly)
-          })) + '<br><span class="cmeta">' + esc(FB.T(
-            'Valid while the dynasty retains landed authority.')) +
-          '</span></div>';
-    } else {
-      h += kv('Outgoing monopoly', esc(FB.T('None')));
+    monopolyRow('incoming', incomingMonopoly);
+    monopolyRow('outgoing', outgoingMonopoly);
+    const financeCommitment = financeCommitmentText(s);
+    if (financeCommitment) {
+      const record = {
+        attention:true,
+        state:'commitment',
+        stateLabel:FB.T('Active commitment'),
+        priority:0,
+        index:tradeIndex++,
+        identity:'financial-contracts',
+        kind:'other',
+        title:FB.T('Financial contracts'),
+        meta:[financeCommitment]
+      };
+      record.html = networkReadableStaticRow(record);
+      tradeRows.push(record);
     }
-    if (incomingMonopoly || outgoingMonopoly) {
-      h += '<div class="hint">' + esc(FB.T(
-        'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +
-        '</div>';
-    }
-    let anyGuild = false;
+
+    let guildCount = 0;
     for (const c of FB.householdWorkers(s)) {
       const career = FB.careerOf(s, c);
       const def = career && FBDATA.careers[career.profession];
       if (!def || !def.guild || career.guildRank === 'none') continue;
-      anyGuild = true;
+      guildCount++;
+      const favor = FB.guildFavor(s, c);
       const mult = FB.guildIncomeMultiplier(career);
       const step = FB.guildAdvance(s, c);
-      const rankOrder = { none:0, member:1, master:2, officer:3, guildmaster:4 };
+      const rankOrder = {
+        none:0, member:1, master:2, officer:3, guildmaster:4
+      };
       const unlocked = [];
       for (const eid in FBDATA.enterprises) {
-        const enterprise = FBDATA.enterprises[eid];
-        if (enterprise.profession !== career.profession) continue;
-        if (enterprise.guildRank &&
-          (rankOrder[career.guildRank] || 0) <
-          (rankOrder[enterprise.guildRank] === undefined ? 99 :
-            rankOrder[enterprise.guildRank])) continue;
-        unlocked.push(dt(s, 'enterprise', eid, enterprise, 'name'));
+        const enterpriseDef = FBDATA.enterprises[eid];
+        if (enterpriseDef.profession !== career.profession) continue;
+        if (enterpriseDef.guildRank &&
+            (rankOrder[career.guildRank] || 0) <
+            (rankOrder[enterpriseDef.guildRank] === undefined
+              ? 99 : rankOrder[enterpriseDef.guildRank])) continue;
+        unlocked.push(dt(s, 'enterprise', eid, enterpriseDef, 'name'));
       }
       const requirements = [];
       if (step) {
         requirements.push(FB.T('{money:cost}', { cost:step.cost }));
-        if (step.need) requirements.push(FB.T('Stewardship {value}', { value:step.need }));
-        if (step.prestige) requirements.push(FB.T('{prestige} prestige', {
-          prestige:step.prestige
-        }));
-      }
-      h += charRow(s, c, FB.T('{career} · {rank} · standing {standing}', {
-        career:FB.careerTitle(s, c),
-        rank:FB.guildTitle(career),
-        standing:Math.round(career.guildStanding || 0)
-      }));
-      h += '<div class="hint">' + esc(mult > 1
-        ? FB.T('Current privilege: +{percent}% enterprise profit; guild-gated property and partnerships are available by rank.', {
-          percent:Math.round((mult - 1) * 100)
-        })
-        : FB.T('Current privilege: guild-gated property and commissions are available.')) +
-        (unlocked.length ? ' ' + esc(FB.T('Available enterprises: {enterprises}.', {
-          enterprises:unlocked.join(', ')
-        })) : '') +
-        (step ? ' ' + esc(FB.T('Next rank: {rank} — requires {requirements}.', {
-          rank:FB.guildTitle({ guildRank:step.to }),
-          requirements:requirements.join(', ')
-        })) : ' ' + esc(FB.T('This is the highest guild rank.'))) + '</div>';
-      if (c.id === me.id && career.profession === 'craftsman') {
-        h += '<div class="hint">' + esc(FB.T(
-          'Personal work perk: guild membership adds {money:amount} to each season at the bench.',
-          { amount:1 })) + '</div>';
-      }
-      if (c.id === me.id && FB.tradeInvestmentStakes) {
-        const stakes = FB.tradeInvestmentStakes(s);
-        for (const stake of stakes) {
-          h += kv('Available trade-partnership stake', esc(FB.money(stake)));
+        if (step.need) {
+          requirements.push(FB.T('Stewardship {value}', {
+            value:step.need
+          }));
+        }
+        if (step.prestige) {
+          requirements.push(FB.T('{prestige} prestige', {
+            prestige:step.prestige
+          }));
         }
       }
-      const favor = FB.guildFavor(s, c);
-      h += '<button class="actionbtn" data-guild-favor="' + esc(c.id) + '"' +
-        (!favor || !favor.ready ? ' disabled' : '') + '>🏅 ' +
+      const meta = [
+        FB.careerTitle(s, c),
+        FB.guildTitle(career),
+        FB.T('Guild standing {standing}', {
+          standing:Math.round(career.guildStanding || 0)
+        }),
+        FB.T('+{percent}% enterprise profit', {
+          percent:Math.round((mult - 1) * 100)
+        })
+      ];
+      if (step) {
+        meta.push(FB.T('Next rank: {rank} — requires {requirements}.', {
+          rank:FB.guildTitle({ guildRank:step.to }),
+          requirements:requirements.join(', ')
+        }));
+      } else {
+        meta.push(FB.T('Highest guild rank'));
+      }
+      if (unlocked.length) {
+        meta.push(FB.T('Available enterprises: {enterprises}.', {
+          enterprises:unlocked.join(', ')
+        }));
+      }
+      if (c.id === me.id && career.profession === 'craftsman') {
+        meta.push(FB.T(
+          'Personal work perk: guild membership adds {money:amount} to each season at the bench.',
+          { amount:1 }));
+      }
+      const actionHtml = '<button type="button" class="btn small ' +
+        'large-list-inline-action" data-guild-favor="' + esc(c.id) + '"' +
+        (!favor || !favor.ready ? ' disabled' : '') +
+        ' data-list-focus-key="guild-favor-' + esc(c.id) + '">' +
         esc(FB.T('Call in guild commissions')) + '<span class="adesc">' +
         esc(!favor ? FB.T('No guild favor is available.')
           : !favor.cooldownReady ? FB.T('Only one guild favor may be called each year.')
-          : favor.standing < favor.cost ? FB.T('Requires {standing} standing; currently {current}.', {
-            standing:favor.cost, current:Math.round(favor.standing)
-          }) : FB.T('Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)', {
-            standing:favor.cost, amount:favor.amount
-          })) + '</span></button>';
-    }
-    if (!anyGuild) {
-      h += '<div class="hint">' + esc(FB.T(
-        'No managed household worker currently belongs to a guild.')) + '</div>';
+          : favor.standing < favor.cost ? FB.T(
+            'Requires {standing} standing; currently {current}.', {
+              standing:favor.cost, current:Math.round(favor.standing)
+            }) : FB.T(
+              'Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)', {
+                standing:favor.cost, amount:favor.amount
+              })) + '</span></button>';
+      const record = {
+        character:c,
+        meta:meta,
+        actionHtml:actionHtml,
+        attention:!!(favor && favor.ready),
+        state:favor && favor.ready ? 'opportunity' : 'routine',
+        stateLabel:favor && favor.ready ? FB.T('Opportunity') : FB.T('Guild tie'),
+        priority:1,
+        index:tradeIndex++,
+        identity:c.id
+      };
+      record.html = networkReadablePersonRow(s, 'trade', record);
+      tradeRows.push(record);
     }
     for (const id of FB.playerPositionIds(s)) {
       const def = FBDATA.positions[id];
-      h += '<div class="charrow"><span>' + esc(def.icon + ' ' + positionName(s, id)) +
-        '</span><span class="cmeta">' + esc(positionEffectText(id)) + '</span></div>' +
-        '<div class="hint">' + esc(positionDesc(s, id)) + '</div>';
+      const record = {
+        attention:false,
+        state:'routine',
+        stateLabel:FB.T('Office'),
+        priority:2,
+        index:tradeIndex++,
+        identity:'position-' + id,
+        kind:'other',
+        title:def.icon + ' ' + positionName(s, id),
+        meta:[positionEffectText(id), positionDesc(s, id)]
+      };
+      record.html = networkReadableStaticRow(record);
+      tradeRows.push(record);
     }
     if (businesses.length) {
       let businessGold = 0;
-      for (const e of businesses) businessGold += FB.enterpriseYield(s, e);
-      h += kv('Family enterprises', esc(FB.T('{count} · about {money:gold}/season', {
-        count:businesses.length, gold:Math.round(businessGold * 10) / 10
-      })));
+      for (const enterprise of businesses) {
+        businessGold += FB.enterpriseYield(s, enterprise);
+      }
+      const record = {
+        attention:false,
+        state:'routine',
+        stateLabel:FB.T('Owned'),
+        priority:3,
+        index:tradeIndex++,
+        identity:'family-enterprises',
+        kind:'other',
+        title:FB.T('Family enterprises'),
+        meta:[FB.T('{count} owned', { count:businesses.length }),
+          FB.T('About {money:gold}/season', {
+            gold:Math.round(businessGold * 10) / 10
+          })]
+      };
+      record.html = networkReadableStaticRow(record);
+      tradeRows.push(record);
+    }
+    sortReadableRows(tradeRows);
+    let tradeSummary =
+      '<button class="actionbtn" id="network-work">🧰 ' +
+      esc(FB.T('Work & Enterprises…')) + '<span class="adesc">' +
+      esc(FB.T(
+        'Open the authoritative career, office, enterprise, and staffing controls.')) +
+      '</span></button><button class="actionbtn" id="network-finance">📜 ' +
+      esc(FB.T('Finance…')) + '<span class="adesc">' +
+      esc(FB.T(
+        'Review loans, trade partnerships, dispatched ventures, and coinage.')) +
+      '</span></button>';
+    if (incomingMonopoly || outgoingMonopoly) {
+      tradeSummary += '<div class="hint">' + esc(FB.T(
+        'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +
+        '</div>';
+    }
+    if (!guildCount) {
+      tradeSummary += '<div class="hint">' + esc(FB.T(
+        'No managed household worker currently belongs to a guild.')) + '</div>';
+    }
+    if (FB.tradeInvestmentStakes) {
+      const stakes = FB.tradeInvestmentStakes(s);
+      for (const stake of stakes) {
+        tradeSummary += kv('Available trade-partnership stake',
+          esc(FB.money(stake)));
+      }
     }
 
-    /* Realm relationships and the exact host ledger share a section because
-       vassal goodwill and offices can now be seen beside their contribution. */
-    h += panelh('Realm');
+    const composition = FB.playerCompositionBreakdown(s);
     const governance = FB.governanceSummary
       ? FB.governanceSummary(s) : null;
+    const realmSpecialRows = [];
+    let realmSummary = '';
     if (governance) {
-      h += '<button class="actionbtn" id="network-governance">🏛 ' +
+      realmSummary += '<button class="actionbtn" id="network-governance">🏛 ' +
         esc(FB.T('Governance…')) + '<span class="adesc">' +
         esc(FB.T(
           'Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.')) +
         '</span></button>';
     }
-    const composition = FB.playerCompositionBreakdown(s);
-    if (!governance) {
-      if (s.player.liege && s.realms[s.player.liege]) {
-        const liege = s.realms[s.player.liege];
-        h += '<button class="actionbtn" data-liege="' + esc(s.player.liege) + '">' +
-          esc(FB.T('Liege: {realm}', { realm:liege.name })) +
-          '<span class="adesc">' + esc(FB.T('Standing {standing}', {
-            standing:standingValue(FB.standingOf(s, {
-              kind:'realm', id:s.player.liege
-            }))
-          })) + '</span></button>';
-        h += kv('Land grants received this life',
-          esc(String(s.player.liegeGrants || 0)));
-      }
-      for (const rid of FB.playerVassals(s)) {
-        const r = s.realms[rid];
-        let levy = 0;
-        for (const entry of composition.entries) {
-          if (entry.kind === 'vassal' && entry.rid === rid) {
-            levy += entry.amount;
+    if (FB.councilActive && FB.councilActive(s)) {
+      const council = s.council;
+      let officers = 0, vacancies = 0;
+      if (council && council.seats) {
+        for (const seat of FB.councilSeats()) {
+          const rid = council.seats[seat.id];
+          const realm = rid && s.realms[rid];
+          if (realm && realm.alive && realm.liege === 'player' &&
+              FB.standingOf(s, { kind:'realm', id:rid }) > -50) {
+            officers++;
+          } else {
+            vacancies++;
           }
         }
-        h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
-          esc(r.name) + '<span class="adesc">' + esc(FB.T(
-            'Standing {standing} · levy {men}', {
-              standing:standingValue(FB.standingOf(s, {
-                kind:'realm', id:rid
-              })),
-              men:Math.round(levy)
-            })) + '</span></button>';
+      } else {
+        vacancies = FB.councilSeats().length;
+      }
+      realmSummary += '<button class="actionbtn" id="network-council">🏛 ' +
+        esc(FB.T('Royal Council')) + '<span class="adesc">' +
+        esc(council
+          ? FB.T(
+            '{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
+              count:officers, vacancies:vacancies,
+              authority:Math.round(council.authority)
+            })
+          : FB.T(
+            'The great offices have not formed yet. Open the Council to establish them.')) +
+        '</span></button>';
+      if (vacancies) {
+        const vacancyRecord = {
+          attention:true,
+          state:'vacancy',
+          stateLabel:FB.T('Vacancy'),
+          priority:0,
+          index:0,
+          identity:'council-vacancies',
+          kind:'other',
+          title:FB.T('Royal Council vacancies'),
+          meta:[FB.T('{count} seats are vacant or inactive', {
+            count:vacancies
+          })]
+        };
+        vacancyRecord.html = networkReadableStaticRow(vacancyRecord);
+        realmSpecialRows.push(vacancyRecord);
+      }
+    }
+    if (FB.parliamentActive && FB.parliamentActive(s)) {
+      realmSummary += '<button class="actionbtn" id="network-estates">📜 ' +
+        esc(FB.T('The Estates…')) + '<span class="adesc">' +
+        esc(FB.T(
+          'Open the authoritative assembly view for aid, scutage, and current terms.')) +
+        '</span></button>';
+    }
+    const realmById = {};
+    let realmOrder = 0;
+    function realmRecord(rid, priority) {
+      const r = rid && s.realms[rid];
+      if (!r || !r.alive) return null;
+      if (!realmById[rid]) {
+        realmById[rid] = {
+          rid:rid, meta:[], actionHtml:'', attention:false,
+          state:'routine', stateLabel:FB.T('Realm tie'),
+          priority:priority, index:realmOrder++, identity:rid
+        };
+      }
+      realmById[rid].priority = Math.min(realmById[rid].priority, priority);
+      return realmById[rid];
+    }
+    function addRealmMeta(record, text) {
+      if (record && text && record.meta.indexOf(text) < 0) {
+        record.meta.push(text);
+      }
+    }
+    if (!governance && s.player.liege && s.realms[s.player.liege]) {
+      const liegeRecord = realmRecord(s.player.liege, 0);
+      addRealmMeta(liegeRecord, FB.T('Direct liege'));
+      addRealmMeta(liegeRecord, FB.T('Standing {standing}', {
+        standing:standingValue(FB.standingOf(s, {
+          kind:'realm', id:s.player.liege
+        }))
+      }));
+      realmSummary += kv('Land grants received this life',
+        esc(String(s.player.liegeGrants || 0)));
+    }
+    if (!governance) {
+      for (const rid of FB.playerVassals(s)) {
+        const record = realmRecord(rid, 1);
+        let levy = 0;
+        for (const entry of composition.entries) {
+          if (entry.kind === 'vassal' && entry.rid === rid) levy += entry.amount;
+        }
+        addRealmMeta(record, FB.T('Direct vassal'));
+        addRealmMeta(record, FB.T('Standing {standing}', {
+          standing:standingValue(FB.standingOf(s, {
+            kind:'realm', id:rid
+          }))
+        }));
+        addRealmMeta(record, FB.T('Levy {men}', { men:Math.round(levy) }));
         const activeFavor = FB.vassalLevyFavor(s, rid);
-        h += '<button class="actionbtn" data-vassal-favor="' + esc(rid) + '"' +
-          (!FB.canCallVassalLevyFavor(s, rid) ? ' disabled' : '') + '>🛡 ' +
+        const readyFavor = FB.canCallVassalLevyFavor(s, rid);
+        if (readyFavor) {
+          record.attention = true;
+          record.state = 'opportunity';
+          record.stateLabel = FB.T('Opportunity');
+        } else if (activeFavor) {
+          record.attention = true;
+          record.state = 'commitment';
+          record.stateLabel = FB.T('Active commitment');
+        }
+        record.actionHtml = '<button type="button" class="btn small ' +
+          'large-list-inline-action" data-vassal-favor="' + esc(rid) + '"' +
+          (!readyFavor ? ' disabled' : '') +
+          ' data-list-focus-key="vassal-favor-' + esc(rid) + '">' +
           esc(FB.T('Ask for an exceptional levy')) + '<span class="adesc">' +
           esc(activeFavor
             ? FB.T('The exceptional levy is already promised.')
@@ -2925,112 +3610,140 @@ window.FB = window.FB || {};
                   kind:'realm', id:rid
                 }))
               })
-              : FB.T('For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
-                percent:Math.round(
-                  (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
-              })) + '</span></button>';
-      }
-      if (FB.councilActive && FB.councilActive(s)) {
-        const council = s.council;
-        let officers = 0, vacancies = 0;
-        if (council && council.seats) {
-          for (const seat of FB.councilSeats()) {
-            const rid = council.seats[seat.id];
-            const realm = rid && s.realms[rid];
-            const active = realm && realm.alive && realm.liege === 'player' &&
-              FB.standingOf(s, { kind:'realm', id:rid }) > -50;
-            if (active) {
-              officers++;
-              h += '<div class="progressnote"><b>' + esc(
-                seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
-                esc((realm.ruler ? realm.ruler.name : realm.name) +
-                  ', ' + realm.name) +
-                '<br><span class="cmeta">' +
-                esc(councilSeatDesc(seat.id)) + '</span></div>';
-            } else {
-              vacancies++;
-              h += '<div class="progressnote op-bad"><b>' +
-                esc(seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
-                esc(FB.T(rid
-                  ? 'Inactive — the holder no longer serves effectively.'
-                  : 'Vacant.')) + '</div>';
-            }
-          }
-        } else {
-          vacancies = FB.councilSeats().length;
-        }
-        h += '<button class="actionbtn" id="network-council">🏛 ' +
-          esc(FB.T('Royal Council')) + '<span class="adesc">' +
-          esc(council
-            ? FB.T('{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
-              count:officers, vacancies:vacancies,
-              authority:Math.round(council.authority)
-            })
-            : FB.T(
-              'The great offices have not formed yet. Open the Council to establish them.')) +
-          '</span></button>';
+              : FB.T(
+                'For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
+                  percent:Math.round(
+                    (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
+                })) + '</span></button>';
       }
     }
-    const realmContacts = {}, policies = s.player.foreignPolicy || {}, pacts = s.pacts || {};
+
+    const realmContacts = {};
+    const policies = s.player.foreignPolicy || {};
+    const pacts = s.pacts || {};
     for (const rid in policies) realmContacts[rid] = 1;
     for (const rid in pacts) if (pacts[rid] > s.turn) realmContacts[rid] = 1;
     for (const alliance of (s.alliances || [])) {
       if (alliance.a === 'player') realmContacts[alliance.b] = 1;
       if (alliance.b === 'player') realmContacts[alliance.a] = 1;
     }
-    for (const rid in realmContacts) {
-      const r = s.realms[rid];
-      if (!r || !r.alive) continue;
-      h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
-        esc(r.name) + '<span class="adesc">' +
-        esc(FB.T('{standing} · {policy} · {status}', {
-          standing:FB.T('Standing {standing}', {
-            standing:standingText(FB.standingOf(s, {
-              kind:'realm', id:rid
-            }))
-          }),
-          policy:foreignPolicyStanceText(s, rid),
-          status:foreignPolicyStatusText(s, rid)
-        })) + '</span></button>';
+    if (s.player.war && s.player.war.enemy) {
+      realmContacts[s.player.war.enemy] = 1;
+    }
+    const realmContactIds = Object.keys(realmContacts).sort();
+    for (const rid of realmContactIds) {
+      const record = realmRecord(rid, 2);
+      if (!record) continue;
+      addRealmMeta(record, foreignPolicyStanceText(s, rid));
+      addRealmMeta(record, foreignPolicyStatusText(s, rid));
+      addRealmMeta(record, FB.T('Standing {standing}', {
+        standing:standingText(FB.standingOf(s, {
+          kind:'realm', id:rid
+        }))
+      }));
+      record.attention = true;
+      record.state = s.player.war && s.player.war.enemy === rid
+        ? 'warning' : 'commitment';
+      record.stateLabel = record.state === 'warning'
+        ? FB.T('Warning') : FB.T('Active commitment');
     }
 
-    h += '<div class="panelh">' + esc(FB.T('Levy ledger')) + '</div>';
-    h += '<div class="progressnote">' + esc(FB.T(
+    const realmRows = [];
+    for (const rid in realmById) {
+      const record = realmById[rid];
+      record.html = networkReadableRealmRow(s, record);
+      realmRows.push(record);
+    }
+    for (const record of realmSpecialRows) realmRows.push(record);
+    let levyIndex = 0;
+    for (const entry of composition.entries) {
+      const displayed = Math.round(entry.amount * 10) / 10;
+      if (!displayed) continue;
+      const record = {
+        attention:false,
+        state:'routine',
+        stateLabel:FB.T('Levy source'),
+        priority:5,
+        index:levyIndex++,
+        identity:'levy-' + entry.kind + '-' +
+          (entry.rid || entry.pid || entry.buildingId ||
+            entry.modifierId || entry.positionId || levyIndex),
+        kind:'other',
+        title:networkLevyLabel(s, entry),
+        meta:[
+          networkUnitName(entry.unit),
+          (displayed > 0 ? '+' : '') + displayed
+        ]
+      };
+      record.html = networkReadableStaticRow(record);
+      realmRows.push(record);
+    }
+    sortReadableRows(realmRows);
+    realmSummary += '<div class="progressnote">' + esc(FB.T(
       '{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms', {
         total:composition.total, levy:composition.units.levy,
         archers:composition.units.arch, cavalry:composition.units.cav,
         retinue:composition.units.ret
       })) + '</div>';
-    let shownEntries = 0;
-    for (const entry of composition.entries) {
-      const displayed = Math.round(entry.amount * 10) / 10;
-      if (!displayed) continue;
-      shownEntries++;
-      h += '<div class="bd-row"><span>' + esc(networkLevyLabel(s, entry)) +
-        ' <span class="cmeta">(' + esc(networkUnitName(entry.unit)) + ')</span></span>' +
-        '<span class="bd-amt ' + (entry.amount > 0 ? 'op-good' : 'op-bad') + '">' +
-        (displayed > 0 ? '+' : '') + displayed + '</span></div>';
-    }
-    if (!shownEntries) {
-      h += '<div class="hint">' + esc(FB.T(
+    if (!realmRows.length) {
+      realmSummary += '<div class="hint">' + esc(FB.T(
         'No personal host yet. Land, military positions, and sworn service will appear here.')) +
         '</div>';
     }
 
-    box.innerHTML = h;
+    const intro = '<div class="hint">' + esc(FB.T(
+      'The people and institutions tied to this household, and what each tie currently does.')) +
+      '</div>';
+    box.innerHTML = intro + largeListSurfaceHtml('network', [
+      {
+        id:'household',
+        title:FB.T('Household'),
+        summary:householdSummary,
+        rows:householdRows,
+        empty:FB.T('No living household relationships are recorded.')
+      },
+      {
+        id:'connections',
+        headingId:'network-connections',
+        title:FB.T('Connections'),
+        summary:connectionsSummary,
+        rows:connectionRows,
+        empty:FB.T('No named personal connections are recorded.')
+      },
+      {
+        id:'trade',
+        title:FB.T('Trade & Guild'),
+        summary:tradeSummary,
+        rows:tradeRows,
+        empty:FB.T('No trade, guild, enterprise, or office tie is recorded.')
+      },
+      {
+        id:'realm',
+        title:FB.T('Realm'),
+        summary:realmSummary,
+        rows:realmRows,
+        empty:FB.T('No political or military tie is recorded.')
+      }
+    ], [
+      { id:'all', label:FB.T('All') },
+      { id:'attention', label:FB.T('Needs attention') },
+      { id:'people', label:FB.T('People') },
+      { id:'realms', label:FB.T('Realms') }
+    ]);
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    initLargeListSurface('network', { restoreFocus:true });
+
     const householdPlan = $('network-household-plan');
-    if (householdPlan) householdPlan.addEventListener('click', UI.showHouseholdPlan);
+    if (householdPlan) {
+      householdPlan.addEventListener('click', UI.showHouseholdPlan);
+    }
     const hire = $('network-hire');
-    if (hire) hire.addEventListener('click', function () {
-      UI.showRetainerHire();
-    });
-    box.querySelectorAll('[data-retainer-manage]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        UI.showRetainerManage(button.dataset.retainerManage);
-      });
-    });
+    if (hire) hire.addEventListener('click', UI.showRetainerHire);
+    const workButton = $('network-work');
+    if (workButton) workButton.addEventListener('click', UI.showLivelihoods);
+    const financeButton = $('network-finance');
+    if (financeButton) financeButton.addEventListener('click', UI.showFinance);
     box.querySelectorAll('[data-guild-favor]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.callGuildFavor(s, button.dataset.guildFavor)) return;
@@ -3043,12 +3756,16 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus:true });
       });
     });
-    const councilButton = $('network-council');
-    if (councilButton) councilButton.addEventListener('click', UI.showCouncil);
     const governanceButton = $('network-governance');
     if (governanceButton) {
       governanceButton.addEventListener('click', UI.showGovernance);
     }
+    const councilButton = $('network-council');
+    if (councilButton) councilButton.addEventListener('click', UI.showCouncil);
+    const estatesButton = $('network-estates');
+    if (estatesButton) estatesButton.addEventListener('click', function () {
+      UI.showParliament();
+    });
   }
 
   /* ================= family tree =================
@@ -4575,6 +5292,14 @@ window.FB = window.FB || {};
 
   function openModal(title, bodyHtml, opts) {
     const gm = $('genmodal');
+    const modalBody = $('gm-body');
+    const previousLargeList = modalBody &&
+      modalBody.querySelector('[data-large-list-surface]');
+    if (previousLargeList) {
+      saveLargeListScroll(
+        previousLargeList.getAttribute('data-large-list-surface'));
+    }
+    if (modalBody) modalBody._largeListScrollSurface = null;
     const wasHidden = gm.classList.contains('hidden');
     let previousView = null;
     if (!wasHidden && opts && opts.historyView && !mobileNavApplying &&
@@ -10394,6 +11119,15 @@ window.FB = window.FB || {};
     };
   }
 
+  function livelihoodsHistoryOptions(returnContext) {
+    return householdPlanHistoryOptions(returnContext) || {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showLivelihoods(returnContext);
+      }
+    };
+  }
+
   /* No-day changes made from the plan re-render it from authoritative state.
      Discard any intermediate modal views as their browser-history entries
      unwind, leaving the refreshed plan as the visible generic modal. */
@@ -10404,6 +11138,16 @@ window.FB = window.FB || {};
     }
     UI.showHouseholdPlan();
     mobileNavClosedAll('modal-view', true);
+  }
+
+  function finishLivelihoodsReturn(returnContext) {
+    if (returnsToHouseholdPlan(returnContext)) {
+      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+      return;
+    }
+    modalHistoryBack(function () {
+      UI.showLivelihoods(returnContext);
+    });
   }
 
   function householdPlanLines(primary, secondary, tertiary, warning) {
@@ -11577,80 +12321,253 @@ window.FB = window.FB || {};
   };
 
   UI.showLivelihoods = function (returnContext) {
+    if (returnContext && typeof returnContext.preventDefault === 'function') {
+      returnContext = null;
+    }
     const s = FB.state;
     const me = s.chars[s.player.charId];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       s.player.tier >= 3
         ? 'Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season.'
         : 'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
-      '</p></div><div class="panelh">' + esc(FB.T('Household work')) + '</div><div class="gm-list">';
+      '</p></div>';
+    const enterprises = FB.enterpriseList(s);
+    const assignments = {};
+    for (const enterprise of enterprises) {
+      if (!enterprise.workerId) continue;
+      const def = FBDATA.enterprises[enterprise.type];
+      if (!assignments[enterprise.workerId]) assignments[enterprise.workerId] = [];
+      assignments[enterprise.workerId].push(def
+        ? dt(s, 'enterprise', enterprise.type, def, 'name')
+        : enterprise.type);
+    }
+
+    const workModels = [];
+    let workIndex = 0, workAttention = 0, workAssigned = 0, workUnavailable = 0;
     for (const c of FB.householdWorkers(s)) {
       const age = FB.ageOf(c, s.date.year);
       if (age < 10) continue;
       const career = FB.careerOf(s, c);
-      const def = FBDATA.careers[career.profession];
+      const def = career && FBDATA.careers[career.profession];
       const retainer = FB.retainerRecord(s, c.id);
       const landedSelf = c.id === me.id && s.player.tier >= 3;
-      h += '<button class="actionbtn" data-career="' + c.id + '">' +
-        FB.faceTag(c, 30, 36) + ' ' + esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
-        '<span class="adesc">' + esc(FB.careerTitle(s, c) +
-          (def && def.guild ? ' · ' + FB.guildTitle(career) : '') +
-          (retainer ? ' · ' + positionName(s, retainer.office) : '') +
-          (landedSelf ? ' · ' + FB.T('former calling') : '')) + '</span></button>';
+      const choices = FB.careerChoices(s, c);
+      const missingChoice = !career || !def || career.rank === 'unassigned';
+      const attention = missingChoice && choices.length > 0 && !landedSelf;
+      const unavailable = landedSelf || (missingChoice && !choices.length);
+      let state = 'assigned';
+      let stateLabel = FB.T('Assigned');
+      let detail = '';
+      if (attention) {
+        state = 'available';
+        stateLabel = age < 16
+          ? FB.T('Apprenticeship needed') : FB.T('Work choice needed');
+        detail = FB.T('Choose an available calling.');
+        workAttention++;
+      } else if (unavailable) {
+        state = 'unavailable';
+        stateLabel = landedSelf ? FB.T('Former calling') : FB.T('Unavailable');
+        detail = landedSelf
+          ? FB.T('A landed ruler keeps this calling as life history.')
+          : FB.T('No career choice is currently available under the existing age, station, faith, and household rules.');
+        workUnavailable++;
+      } else {
+        workAssigned++;
+      }
+      const roles = [];
+      if (c.id === me.id) {
+        roles.push(FB.T('Household head'));
+      } else {
+        const relationship = relationText(s, c);
+        if (relationship) roles.push(relationship);
+        else if (!retainer) roles.push(FB.T('Resident family'));
+      }
+      if (retainer) roles.push(positionName(s, retainer.office));
+      if (c.id === me.id) {
+        for (const positionId of FB.playerPositionIds(s)) {
+          roles.push(positionName(s, positionId));
+        }
+      }
+      const religious = FB.religiousRankTitleReadOnly &&
+        FB.religiousRankTitleReadOnly(s, c);
+      if (religious) roles.push(religious);
+      const workNames = assignments[c.id] || [];
+      const metadata = [
+        FB.careerTitle(s, c) +
+          (def && def.guild && career.guildRank !== 'none'
+            ? ' · ' + FB.guildTitle(career) : ''),
+        roles.join(' · ')
+      ];
+      if (workNames.length) {
+        metadata.push(FB.T('Enterprise: {enterprise}', {
+          enterprise:workNames.join(', ')
+        }));
+      }
+      if (detail) metadata.push(detail);
+      const attrs = largeListRowAttrs({
+        attention:attention,
+        states:[state, 'person'],
+        identity:c.id,
+        focusKey:'work-person-' + c.id
+      });
+      const html = '<button type="button" class="actionbtn large-list-row ' +
+        'large-list-person-row" data-career="' + esc(c.id) + '"' + attrs + '>' +
+        '<span class="large-list-row-main">' + FB.faceTag(c, 30, 36) +
+        '<span class="large-list-row-copy"><span class="large-list-row-title">' +
+        esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
+        '</span><span class="adesc">' + esc(metadata.join(' · ')) +
+        '</span></span></span>' + largeListStateLabel(stateLabel, attention) +
+        '</button>';
+      workModels.push({
+        html:html, attention:attention, priority:attention ? 0 :
+          (unavailable ? 2 : 1), index:workIndex++, identity:c.id
+      });
     }
-    h += '</div><div class="panelh">' + esc(FB.T('Family enterprises')) + '</div><div class="gm-list">';
-    const enterprises = FB.enterpriseList(s);
-    if (!enterprises.length) {
-      h += '<div class="hint">' + esc(FB.T('No enterprise yet. Open one in a settlement below.')) + '</div>';
-    }
+    workModels.sort(function (a, b) {
+      return a.priority - b.priority || a.index - b.index ||
+        String(a.identity).localeCompare(String(b.identity));
+    });
+    const workSummary = kv('Can work or train',
+      esc(String(workAssigned + workAttention))) +
+      kv('Need a choice', esc(String(workAttention))) +
+      kv('Settled careers or offices', esc(String(workAssigned))) +
+      kv('Currently unavailable', esc(String(workUnavailable)));
+
+    const enterpriseModels = [];
+    let enterpriseIndex = 0, staffedEnterprises = 0, idleEnterprises = 0;
+    let blockedEnterprises = 0, enterpriseGold = 0;
     for (const e of enterprises) {
       const def = FBDATA.enterprises[e.type];
       if (!def) continue;
       const worker = e.workerId && s.chars[e.workerId] && !s.chars[e.workerId].dead ?
         s.chars[e.workerId] : null;
-      h += '<button class="actionbtn" data-enterprise="' + esc(e.uid) + '">' +
-        esc(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name')) +
-        '<span class="adesc">' + esc(worker
-          ? FB.T('Worked by {name}{lock}', {
-            name:worker.name,
-            lock:e.workerLocked ? FB.T(' · 🔒 locked') : ''
+      const eligible = FB.enterpriseWorkers(s, e.type);
+      let validWorker = false;
+      for (const candidate of eligible) {
+        if (worker && candidate.id === worker.id) validWorker = true;
+      }
+      const unresolved = !worker || !validWorker;
+      const blocked = unresolved && !eligible.length;
+      const attention = unresolved;
+      let state = 'staffed';
+      let stateLabel = FB.T('Staffed');
+      let workerText;
+      if (!unresolved) {
+        staffedEnterprises++;
+        workerText = FB.T('Worked by {name}{lock}', {
+          name:worker.name,
+          lock:e.workerLocked ? FB.T(' · 🔒 locked') : ''
+        });
+      } else if (blocked) {
+        state = 'unavailable';
+        stateLabel = FB.T('Blocked');
+        blockedEnterprises++;
+        idleEnterprises++;
+        workerText = worker
+          ? FB.T('{name} is no longer eligible; no replacement is available.', {
+            name:worker.name
           })
-          : FB.T('Idle — no worker')) + '</span>' +
-        assetEffectSummary({
-          compact:true,
-          owner:FB.T('Household dynasty'),
-          scope:enterprisePlace(s, e),
-          setupCost:FB.T('Paid on purchase'),
-          recurringCost:enterpriseRecurringCost(),
-          effect:enterpriseEffectText(s, e, def, false),
-          transferRule:enterpriseTransferRule(),
-          expiry:FB.T('No fixed end')
-        }) + '</button>';
+          : FB.T('No eligible worker is available.');
+      } else {
+        state = 'idle';
+        stateLabel = FB.T('Idle');
+        idleEnterprises++;
+        workerText = worker
+          ? FB.T('{name} is no longer eligible; choose a replacement.', {
+            name:worker.name
+          })
+          : FB.T('Idle — eligible workers are available.');
+      }
+      const liveYield = FB.enterpriseYield(s, e);
+      enterpriseGold += liveYield;
+      const attrs = largeListRowAttrs({
+        attention:attention,
+        states:[state, 'enterprise'],
+        identity:e.uid,
+        focusKey:'work-enterprise-' + e.uid
+      });
+      const html = '<button type="button" class="actionbtn large-list-row ' +
+        'large-list-enterprise-row" data-enterprise="' + esc(e.uid) + '"' +
+        attrs + '><span class="large-list-row-main">' +
+        '<span class="large-list-enterprise-icon" aria-hidden="true">' +
+        esc(def.icon) + '</span><span class="large-list-row-copy">' +
+        '<span class="large-list-row-title">' +
+        esc(dt(s, 'enterprise', e.type, def, 'name')) +
+        '</span><span class="adesc">' + esc(FB.T(
+          '{worker} · {place} · about {money:amount}/season{lock}', {
+            worker:workerText,
+            place:enterprisePlace(s, e),
+            amount:Math.round(liveYield * 10) / 10,
+            lock:e.workerLocked && unresolved ? FB.T(' · 🔒 lock recorded') : ''
+          })) + '</span></span></span>' +
+        largeListStateLabel(stateLabel, attention) + '</button>';
+      enterpriseModels.push({
+        html:html, attention:attention,
+        priority:state === 'idle' ? 0 : (state === 'unavailable' ? 1 : 2),
+        index:enterpriseIndex++, identity:e.uid
+      });
     }
-    let idleEnterprises = 0;
-    for (const enterprise of enterprises) if (!enterprise.workerId) idleEnterprises++;
+    enterpriseModels.sort(function (a, b) {
+      return a.priority - b.priority || a.index - b.index ||
+        String(a.identity).localeCompare(String(b.identity));
+    });
+
+    const enterpriseSummary =
+      kv('Owned enterprises', esc(String(enterpriseModels.length))) +
+      kv('Staffed', esc(String(staffedEnterprises))) +
+      kv('Idle', esc(String(idleEnterprises))) +
+      kv('Blocked from staffing', esc(String(blockedEnterprises))) +
+      kv('Approximate current seasonal yield',
+        esc(FB.money(Math.round(enterpriseGold * 10) / 10)));
+    let enterpriseFooter = '';
     if (idleEnterprises) {
-      h += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
+      enterpriseFooter += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
         esc(FB.T('Staff all idle enterprises…')) +
         '<span class="adesc">' + esc(FB.T(
           'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
         '</span></button>';
     } else if (enterprises.length) {
-      h += '<div class="hint enterprise-staffing-hint">' +
+      enterpriseFooter += '<div class="hint enterprise-staffing-hint">' +
         esc(FB.T('All family enterprises are staffed.')) + '</div>';
     }
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
       if (!FB.enterpriseAvailable(s, i).length) continue;
-      h += '<button class="actionbtn" data-enterprise-settlement="' + i + '">🏪 ' +
+      enterpriseFooter += '<button class="actionbtn" data-enterprise-settlement="' + i + '">🏪 ' +
         esc(FB.T('Open an enterprise in {settlement}…', { settlement:settlements[i].name })) +
         '<span class="adesc">' + esc(FB.T('Buy productive property; further copies of one kind cost more.')) +
         '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('🧰 Work & Enterprises'), h,
-      householdPlanHistoryOptions(returnContext));
+    h += largeListSurfaceHtml('work', [
+      {
+        id:'household-work',
+        title:FB.T('Household work'),
+        summary:workSummary,
+        rows:workModels,
+        empty:FB.T('No household member is currently old enough to work or train.')
+      },
+      {
+        id:'family-enterprises',
+        title:FB.T('Family enterprises'),
+        summary:enterpriseSummary,
+        rows:enterpriseModels,
+        footer:enterpriseFooter,
+        empty:FB.T('No enterprise yet. Open one in a settlement below.')
+      }
+    ], [
+      { id:'all', label:FB.T('All') },
+      { id:'attention', label:FB.T('Needs attention') },
+      { id:'assigned', label:FB.T('Assigned') },
+      { id:'staffed', label:FB.T('Staffed') },
+      { id:'idle', label:FB.T('Idle') },
+      { id:'unavailable', label:FB.T('Unavailable') }
+    ]);
+    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    const modalOptions = householdPlanHistoryOptions(returnContext) || {};
+    modalOptions.modalClass = 'large-list-modal work-list-modal';
+    openModal(FB.T('🧰 Work & Enterprises'), h, modalOptions);
     FB.paintFaces($('gm-body'), s);
+    initLargeListSurface('work', { restoreFocus:true });
     document.querySelectorAll('[data-career]').forEach(function (b) {
       b.addEventListener('click', function () {
         UI.showCareerPicker(b.dataset.career, returnContext);
@@ -11802,7 +12719,7 @@ window.FB = window.FB || {};
           })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    const historyOptions = { historyView:true };
+    const historyOptions = livelihoodsHistoryOptions(returnContext);
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     } else if (returnsToInteractionManagement(returnContext)) {
@@ -12934,7 +13851,7 @@ window.FB = window.FB || {};
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h,
-      householdPlanHistoryOptions(returnContext));
+      livelihoodsHistoryOptions(returnContext));
     document.querySelectorAll('[data-enterprise-buy]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
@@ -12943,7 +13860,7 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+      finishLivelihoodsReturn(returnContext);
     });
   };
 
@@ -13045,7 +13962,7 @@ window.FB = window.FB || {};
       '<span class="adesc">' + esc(FB.T('An idle enterprise produces no seasonal income.')) +
       '</span></button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
-      householdPlanHistoryOptions(returnContext));
+      livelihoodsHistoryOptions(returnContext));
     FB.paintFaces($('gm-body'), s);
     if ($('enterprise-worker-lock')) {
       $('enterprise-worker-lock').addEventListener('change', function () {
@@ -13059,17 +13976,12 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
       b.addEventListener('click', function () {
         FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
-        if (returnsToHouseholdPlan(returnContext)) {
-          UI.refresh();
-          finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
-        } else {
-          UI.showLivelihoods();
-          UI.refresh();
-        }
+        UI.refresh();
+        finishLivelihoodsReturn(returnContext);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+      finishLivelihoodsReturn(returnContext);
     });
   };
 
@@ -13220,7 +14132,7 @@ window.FB = window.FB || {};
       esc(FB.T('Apply staffing plan')) + '</button>' +
       '<button type="button" class="btn" id="enterprise-staffing-back">' +
       esc(FB.T('Back')) + '</button></div>';
-    const options = householdPlanHistoryOptions(returnContext) || {};
+    const options = livelihoodsHistoryOptions(returnContext);
     options.modalClass = 'enterprise-staffing-modal';
     openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
     $('enterprise-staffing-apply').addEventListener('click', function () {
@@ -13232,10 +14144,10 @@ window.FB = window.FB || {};
         return;
       }
       UI.refresh();
-      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+      finishLivelihoodsReturn(returnContext);
     });
     $('enterprise-staffing-back').addEventListener('click', function () {
-      finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
+      finishLivelihoodsReturn(returnContext);
     });
   };
 

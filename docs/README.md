@@ -165,11 +165,18 @@ Time passes **day by day** (90-day seasons, 360-day years).
    bonuses add together up to +50%, and **Network → Trade & Guild** shows their terms and
    remaining days. A charter cannot be renewed or revoked early.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
+   Its Household, Connections, Trade & Guild, and Realm sections show total and
+   needs-attention counts and collapse independently. Large networks add literal local
+   search, All/Needs attention/People/Realms filters, and a **Show all** route after the
+   first five routine rows; warnings and active commitments stay visible first.
    Its household block also shows active standard icons/levels and their seasonal upkeep.
    Open **Household Plan…** there to scan every living managed family member and retainer
    in one place: education, instruction and fees, work and standing, enterprise or office
    assignments, match eligibility, and equipped-item/slot counts. Select an available cell
    to use the same detailed controls found on character and Work & Enterprises sheets.
+   **Work & Enterprises** uses the same counted sections and large-list search. Its filters
+   separate attention, settled work, staffed or idle enterprises, and unavailable people;
+   every enterprise row still opens the exact owned instance.
    The Education Policy above that ledger can fill empty education focuses and choose the
    strongest currently available school, known tutor, or home instruction under a seasonal
    fee cap for each child. It previews every immediate choice before saving, never hires a

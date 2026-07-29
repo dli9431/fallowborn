@@ -23,7 +23,14 @@ window.FB = window.FB || {};
   }
 
   function clickNth(sel, n) {
-    const btns = document.querySelectorAll(sel);
+    const nodes = document.querySelectorAll(sel);
+    const largeList = sel === '#gm-body .actionbtn' &&
+      document.querySelector('#gm-body [data-large-list-surface]');
+    const btns = largeList
+      ? Array.prototype.filter.call(nodes, function (node) {
+        return !node.hidden && node.getClientRects().length > 0;
+      })
+      : nodes;
     if (n >= 0 && n < btns.length && !btns[n].disabled) btns[n].click();
   }
 
