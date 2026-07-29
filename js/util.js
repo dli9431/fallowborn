@@ -136,10 +136,27 @@ window.FB = window.FB || {};
     const isFile = proto === 'file:' || host === '';
     const isLocal = isFile || host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
     const isItch = /(^|\.)itch\.(zone|io)$/.test(host) || /(^|\.)hwcdn\.net$/.test(host);
-    const isPlay = /(^|\.)fallowborn\.com$/.test(host);
+    const isPlay = proto === 'https:' && host === 'play.fallowborn.com';
     const name = isItch ? 'itch' : (isPlay ? 'play' : (isLocal ? 'local' : 'web'));
     return { name: name, host: host, isItch: isItch, isPlay: isPlay, isLocal: isLocal, isFile: isFile };
   })();
+
+  /* Install metadata belongs only to the first-party hosted origin. Keeping it
+     out of static index markup avoids file:// and itch manifest fetches. */
+  if (FB.platform.isPlay) {
+    try {
+      const theme = document.createElement('meta');
+      const manifest = document.createElement('link');
+      theme.name = 'theme-color';
+      theme.content = '#171310';
+      manifest.rel = 'manifest';
+      manifest.href = '/manifest.webmanifest';
+      document.head.appendChild(theme);
+      document.head.appendChild(manifest);
+    } catch (error) {
+      /* Install metadata is progressive enhancement. */
+    }
+  }
 
   /* Per-platform feature switches. Map a feature name to the platforms it is
      HIDDEN from: an array of platform names ('itch','play','local','web'), or

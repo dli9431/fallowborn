@@ -10,7 +10,8 @@ Europe, the Middle East, and North Africa around you.
 **[Play it free on itch.io](https://dli9431.itch.io/fallowborn)** 
 
 **[Play latest build (also free) on play.fallowborn.com](https://play.fallowborn.com)** — or clone this repo and open
-`index.html`. That's the whole install.
+`index.html`. That's the whole install. The direct hosted build prepares offline refresh after
+one complete visit and can be installed from supporting browsers.
 
 <!-- TODO: screenshot or map-timelapse GIF here -->
 
@@ -25,8 +26,9 @@ Europe, the Middle East, and North Africa around you.
 - **Deterministic by construction.** All randomness flows through a seeded RNG that
   serializes with the game state; a save is one JSON object that captures the whole
   world.
-- **Procedural everything.** Canvas-drawn map, generated heraldry, system emoji. There
-  is not a single asset file in this repository.
+- **Procedural everything in play.** Canvas-drawn map, generated heraldry, system emoji.
+  The only packaged images are the self-contained browser/install icons; there are no
+  external art or network assets.
 - **Runs on a potato.** ES5 on purpose, tested on a 2015 CPU. If it has
   a browser, it runs Fallowborn.
 

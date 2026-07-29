@@ -27,7 +27,7 @@ function collect(directory, files) {
   }
 }
 
-const files = [];
+const files = [path.join(gameRoot, 'sw.js')];
 for (const root of roots) collect(root, files);
 files.sort();
 

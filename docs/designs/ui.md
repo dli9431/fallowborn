@@ -93,6 +93,14 @@ The title screen scales its crest, heading, button height, gaps, and footer spac
 viewport height so the full menu fits common standalone and itch iframe heights; genuinely
 short viewports retain `.screen` scrolling as the fallback.
 
+Surface-specific browser behavior is centralized in `FB.platform`, initialized by
+`js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS
+`play.fallowborn.com` origin; `file://`, local test servers, and itch-owned embeds remain false.
+Only the play surface injects web-app manifest metadata and registers the offline worker. The
+title-screen offline status is an `aria-live` region that stays absent from layout until a worker
+actually controls the page, at which point it shows localized **Available offline** copy. A
+rendered page alone is never treated as proof that its complete bundle was cached.
+
 New Game proceeds through bookmark → social scenario → province → character. Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
 cards. Selecting one activates its world before the province picker is shown, so the
