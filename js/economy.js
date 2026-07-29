@@ -302,9 +302,9 @@ window.FB = window.FB || {};
     return null;
   }
 
-  function religiousRankIndex(state, c, pathId) {
-    c.religiousRanks = c.religiousRanks || {};
-    let index = c.religiousRanks[pathId] || 0;
+  function religiousRankIndex(state, c, pathId, readOnly) {
+    const ranks = c.religiousRanks || {};
+    let index = ranks[pathId] || 0;
     if (state.player && c.id === state.player.charId) {
       const flags = state.player.flags || {};
       if (pathId === 'catholic_monastic') {
@@ -318,14 +318,17 @@ window.FB = window.FB || {};
       }
     }
     index = FB.clamp(index, 0, RELIGIOUS_PATHS[pathId].length - 1);
-    c.religiousRanks[pathId] = index;
+    if (!readOnly) {
+      c.religiousRanks = ranks;
+      ranks[pathId] = index;
+    }
     return index;
   }
 
-  function religiousPathRecord(state, c, pathId) {
+  function religiousPathRecord(state, c, pathId, readOnly) {
     const steps = RELIGIOUS_PATHS[pathId];
     if (!steps) return null;
-    const index = religiousRankIndex(state, c, pathId);
+    const index = religiousRankIndex(state, c, pathId, readOnly);
     return {
       id:pathId, steps:steps, index:index, step:steps[index],
       next:index + 1 < steps.length ? steps[index + 1] : null
@@ -335,6 +338,16 @@ window.FB = window.FB || {};
   FB.religiousPathOf = function (state, c) {
     const pathId = religiousPathId(state, c);
     return pathId ? religiousPathRecord(state, c, pathId) : null;
+  };
+
+  FB.religiousRankTitleReadOnly = function (state, c) {
+    if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) {
+      return FB.T('Pope');
+    }
+    if (FB.isCardinal && FB.isCardinal(state, c)) return FB.T('Cardinal');
+    const pathId = religiousPathId(state, c);
+    const path = pathId ? religiousPathRecord(state, c, pathId, true) : null;
+    return path ? FB.religiousRankTitle(state, c, path) : '';
   };
 
   /* Lay devotion is a permanent background standing. Entering a vocation

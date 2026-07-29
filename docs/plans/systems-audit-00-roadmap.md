@@ -21,7 +21,7 @@ not part of this numbered queue.
    **Implemented 2026-07-29.**
 4. [Large-list readability](systems-audit-04-large-list-readability.md) —
    scalable Work & Enterprises and Network overviews after their row destinations
-   are stable.
+   are stable. **Implemented 2026-07-29.**
 5. [Plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md) —
    authored content using the consolidated Standing and interaction contracts.
 6. [Institution and modifier content](systems-audit-06-institution-modifier-content.md)
