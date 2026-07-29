@@ -33,9 +33,18 @@ feuds, a wartime subsidy, and the charter. Triggers and effects are the `council
 custom fns in `js/council.js`; like the older vassal events, slot-day council events
 stay archetypal (no named tokens) and let the effect fns pick the councillor involved.
 
-**Interaction** runs through the 🏛 Royal Council deed (tier ≥ 6) and its modal
-(`UI.showCouncil`): the authority meter, every seat with its holder's trait and Standing,
-and the levers — offer a gift, dismiss, appoint to vacant seats. Gifting opens the same
+**Interaction** is summarized in the landed ruler's **Governance** sheet and managed in
+the focused `UI.showCouncil` modal: the authority meter, every seat with its holder's
+trait and Standing, and the levers — offer a gift, dismiss, appoint to vacant seats.
+`FB.councilSummary` is the deterministic, locale-neutral read model shared by both
+surfaces. It reads the saved seats as they stand and never calls `FB.councilEnsure`,
+repairs rulers, fills vacancies, consumes RNG, or writes Chronicle news. Formation and
+self-healing remain simulation work; an appointment may call the existing mutating
+helper because it is an explicit player action. When the focused manager was opened
+from Governance, its visible and browser Back actions return to Governance's Institution
+section.
+
+Gifting opens the same
 rank-priced cash-or-armory picker as the councillor's ruler sheet and uses the same
 generation-stamped 90-day recipient cooldown; the Council cannot provide a second gift
 path. `FB.councilGift` remains as a compatibility wrapper around the shared cash helper.
@@ -47,11 +56,13 @@ the same existing appointment mechanic. Council candidates use the shared
 person-assignment card to preview the office benefit, absence of household pay, current
 Standing and position, and the appointment or replacement consequences.
 
-The Network Realm section is a summary and route into this interface, not another Council
-screen. It names occupied seats, active bonuses, vacancies, and the Constable contribution
-in the shared levy ledger, then opens `UI.showCouncil` for appointments, dismissal,
-gifts, and authority. Household steward, factor, captain, and tutor offices never fill a
-great office of the crown; personal service remains below and beside realm government.
+The Network Realm section routes a qualified territorial ruler into Governance rather
+than maintaining another Council summary. Network keeps the exact host ledger; Governance
+names occupied seats, active bonuses, vacancies, and the same Constable contribution
+before routing into `UI.showCouncil`. Household steward, factor, captain, and tutor
+offices never fill a great office of the crown; personal service remains below and
+beside realm government. The former `royal_council` deed id remains a direct-call
+compatibility alias but is not a second top-level Deeds entry.
 
 **Saves**: `state.council` is optional and self-heals (`FB.councilEnsure` runs in the
 season tick) — no save-version bump; kings in old saves find their council formed on the

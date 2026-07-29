@@ -871,6 +871,82 @@ textarea.modjson, textarea.savetext {
 .self-name { border-bottom: 0; padding-bottom: 0; }
 .self-details-divider { display: none; }
 @media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
+
+/* Governance is the territorial ruler's political home: broad enough to
+   compare domain, obligations, vassals, and institutions without hopping
+   among several small dialogs. */
+.governance-modal .modalcard {
+  width: min(96vw, 1120px); max-width: 1120px;
+  height: 94vh; max-height: 94vh;
+}
+.governance-modal #gm-body { min-height: 0; overflow-y: auto; }
+.governance-nav {
+  position: sticky; top: 0; z-index: 3;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 0 0 10px; padding: 7px 0 9px;
+  background: linear-gradient(180deg, #2b2318 78%, rgba(43,35,24,.88));
+}
+.governance-sections {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px; align-items: start;
+}
+.governance-card {
+  min-width: 0; padding: 11px 12px;
+  border: 1px solid #55452a; border-radius: 9px;
+  background: #241d15; scroll-margin-top: 58px;
+}
+.governance-card:focus { outline: 1px solid #a8863a; outline-offset: 2px; }
+.governance-card h4 {
+  margin: 0 0 9px; color: #d8b24a; font-size: 16px;
+}
+.governance-wide { grid-column: 1 / -1; }
+.governance-county-row {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 5px 0; border-bottom: 1px solid #3e3321;
+  color: #9f906f; font-size: 12px;
+}
+.governance-county-row:last-of-type { border-bottom: 0; }
+.governance-markers { color: #9f906f; font-size: 11px; }
+.governance-subhead {
+  margin: 10px 0 5px; color: #bfa45d; font-size: 12px;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.governance-vassal {
+  margin: 8px 0; padding: 9px 10px;
+  border: 1px solid #493c27; border-radius: 8px; background: #211a13;
+}
+.governance-vassal-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 6px;
+}
+.governance-vassal-head > div { min-width: 0; }
+.governance-vassal-head > div > span {
+  display: block; margin-top: 2px; color: #9f906f; font-size: 12px;
+}
+.governance-vassal-stats {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+}
+.governance-inline-actions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px;
+}
+.governance-seat {
+  display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1fr);
+  gap: 2px 9px; margin: 6px 0; padding: 7px 8px;
+  border-left: 3px solid #596b3d; background: #211a13;
+}
+.governance-seat-warning { border-left-color: #9a5639; }
+.governance-seat > b { color: #d9c99d; font-size: 12px; }
+.governance-seat > span { min-width: 0; text-align: right; font-size: 12px; }
+.governance-seat > small {
+  grid-column: 1 / -1; color: #8f8066; line-height: 1.35;
+}
+.governance-vote-factors { margin: 7px 0; }
+.governance-action-group { margin-bottom: 10px; }
+.governance-action-group h5 {
+  margin: 0 0 5px; color: #bfa45d; font-size: 12px; font-weight: normal;
+}
+
 @media (min-width: 821px) and (min-height: 521px) {
   #tb-portrait { display: none; }
   .self-name { display: none; }
@@ -1122,6 +1198,20 @@ textarea.modjson, textarea.savetext {
    portrait layout (map atop a swipeable Deeds ⇄ Self/Kin page carousel) and
    a landscape layout (map left, carousel right). */
 @media (max-width: 820px), (max-height: 520px) {
+  .governance-nav {
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    padding-right: max(2px, env(safe-area-inset-right));
+    padding-left: max(2px, env(safe-area-inset-left));
+  }
+  .governance-nav .btn {
+    flex: 0 0 auto; min-height: 44px; white-space: nowrap;
+  }
+  .governance-sections { grid-template-columns: minmax(0, 1fr); }
+  .governance-wide { grid-column: auto; }
+  .governance-card { padding: 10px; scroll-margin-top: 60px; }
+  .governance-vassal-stats { grid-template-columns: minmax(0, 1fr); }
+  .governance-inline-actions { align-items: stretch; flex-direction: column; }
+  .governance-inline-actions .btn { width: 100%; min-height: 44px; }
   .household-policy-summary {
     align-items: stretch; flex-direction: column;
   }

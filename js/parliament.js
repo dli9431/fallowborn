@@ -48,28 +48,134 @@ window.FB = window.FB || {};
     return liege.obl;
   };
 
+  /* Read the current terms without creating them. Simulation boundaries and
+     successful motions still use parliamentEnsure; overview sheets do not. */
+  FB.parliamentTerms = function (state) {
+    const liege = state.player.liege && state.realms[state.player.liege];
+    const stored = liege && liege.obl;
+    return {
+      aid:stored && stored.aid !== undefined
+        ? stored.aid : (FBDATA.balance.parliamentAidBase || 0.25),
+      scutage:!!(stored && stored.scutage),
+      lastMotion:stored && stored.lastMotion !== undefined
+        ? stored.lastMotion : null,
+      formed:!!stored
+    };
+  };
+
   /* the liege's current cut of the player's noble revenue (FB.playerTax) */
   FB.parliamentAid = function (state) {
-    const obl = FB.parliamentEnsure(state);
-    return obl ? obl.aid : (FBDATA.balance.parliamentAidBase || 0.25);
+    return FB.parliamentTerms(state).aid;
   };
 
   /* scutage in force: the estates voted silver for service (liege_summons) */
   FB.parliamentScutage = function (state) {
-    const obl = FB.parliamentEnsure(state);
-    return !!(obl && obl.scutage);
+    return FB.parliamentTerms(state).scutage;
   };
 
   /* the player's voice in the hall, 0.1–0.85: rank carries weight (a duke
      out-speaks a baron), then diplomacy, a great name, and the liege's love */
-  FB.parliamentVoteChance = function (state) {
+  FB.parliamentVoteBreakdown = function (state) {
     const p = state.player;
     const me = state.chars[p.charId];
-    let c = 0.30 + ([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0);
-    c += FB.skillOf(me, 'dip') * 0.02 + p.prestige / 1200 +
-      liegeStanding(state) / 400;
-    c += FB.traitBonus ? FB.traitBonus(me, 'assembly', 'voteChance') : 0;
-    return FB.clamp(c, 0.1, 0.85);
+    const out = {
+      base:0.30,
+      rank:([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0),
+      diplomacy:FB.skillOf(me, 'dip') * 0.02,
+      prestige:p.prestige / 1200,
+      standing:liegeStanding(state) / 400,
+      traits:FB.traitBonus
+        ? FB.traitBonus(me, 'assembly', 'voteChance') : 0
+    };
+    out.raw = out.base + out.rank + out.diplomacy + out.prestige +
+      out.standing + out.traits;
+    out.total = FB.clamp(out.raw, 0.1, 0.85);
+    return out;
+  };
+
+  FB.parliamentVoteChance = function (state) {
+    return FB.parliamentVoteBreakdown(state).total;
+  };
+
+  /* The locale-neutral Estates projection used by Governance and the
+     focused management sheet. It deliberately does not heal liege.obl. */
+  FB.parliamentSummary = function (state) {
+    if (!FB.parliamentActive(state)) return null;
+    const terms = FB.parliamentTerms(state);
+    const pending = [];
+    for (const item of (state.eventQueue || [])) {
+      if (item && typeof item.id === 'string' &&
+          item.id.indexOf('parliament_') === 0) pending.push(item.id);
+    }
+    return {
+      formed:terms.formed,
+      aid:terms.aid,
+      scutage:terms.scutage,
+      lastMotion:terms.lastMotion,
+      motionUsed:terms.lastMotion === state.date.year,
+      motionCost:FBDATA.balance.parliamentMotionCost || 15,
+      sessionChance:FBDATA.balance.parliamentSessionChance || 0.5,
+      pendingEventIds:pending,
+      vote:FB.parliamentVoteBreakdown(state)
+    };
+  };
+
+  FB.parliamentMotionStatus = function (state, motionId) {
+    if (!FB.parliamentActive(state)) {
+      return {
+        ready:false,
+        reason:FB.T('The Estates do not apply to your current political position.')
+      };
+    }
+    if (motionId !== 'redress' && motionId !== 'scutage') {
+      return {
+        ready:false,
+        reason:FB.T('That motion is not recognized by the Estates.')
+      };
+    }
+    const terms = FB.parliamentTerms(state);
+    const cost = FBDATA.balance.parliamentMotionCost || 15;
+    if (terms.lastMotion === state.date.year) {
+      return {
+        ready:false,
+        reason:FB.T('The Estates have already heard your motion this year.')
+      };
+    }
+    if (state.player.gold < cost) {
+      return {
+        ready:false,
+        reason:FB.T('Requires {money:cost}; you have {money:current}.', {
+          cost:cost, current:Math.floor(state.player.gold)
+        })
+      };
+    }
+    if (motionId === 'redress' &&
+        terms.aid <= (FBDATA.balance.parliamentAidMin || 0.10) + 0.001) {
+      return {
+        ready:false,
+        reason:FB.T('The liege’s aid is already at its customary minimum.')
+      };
+    }
+    if (motionId === 'scutage' && terms.scutage) {
+      return {
+        ready:false,
+        reason:FB.T('Scutage is already part of the terms of service.')
+      };
+    }
+    return { ready:true, reason:'' };
+  };
+
+  FB.parliamentMove = function (state, motionId) {
+    const status = FB.parliamentMotionStatus(state, motionId);
+    if (!status.ready) return false;
+    const terms = FB.parliamentEnsure(state);
+    if (!terms) return false;
+    state.player.gold -= FBDATA.balance.parliamentMotionCost || 15;
+    terms.lastMotion = state.date.year;
+    FB.queueEvent(state, 'parliament_' + motionId, {
+      locationId:state.player.provinceId
+    });
+    return true;
   };
 
   /* move the aid one step (dir +1/-1), clamped to custom; returns the new rate */

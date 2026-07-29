@@ -1108,7 +1108,8 @@ window.FB = window.FB || {};
     grant_monopoly:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
     settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
-    revoke_county:'realm', royal_council:'realm', coin_credit:'work',
+    revoke_county:'realm', governance:'realm', royal_council:'realm',
+    coin_credit:'work',
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
@@ -2786,83 +2787,102 @@ window.FB = window.FB || {};
     /* Realm relationships and the exact host ledger share a section because
        vassal goodwill and offices can now be seen beside their contribution. */
     h += panelh('Realm');
-    if (s.player.liege && s.realms[s.player.liege]) {
-      const liege = s.realms[s.player.liege];
-      h += '<button class="actionbtn" data-liege="' + esc(s.player.liege) + '">' +
-        esc(FB.T('Liege: {realm}', { realm:liege.name })) +
-        '<span class="adesc">' + esc(FB.T('Standing {standing}', {
-          standing:standingValue(FB.standingOf(s, {
-            kind:'realm', id:s.player.liege
-          }))
-        })) + '</span></button>';
-      h += kv('Land grants received this life', esc(String(s.player.liegeGrants || 0)));
+    const governance = FB.governanceSummary
+      ? FB.governanceSummary(s) : null;
+    if (governance) {
+      h += '<button class="actionbtn" id="network-governance">🏛 ' +
+        esc(FB.T('Governance…')) + '<span class="adesc">' +
+        esc(FB.T(
+          'Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.')) +
+        '</span></button>';
     }
     const composition = FB.playerCompositionBreakdown(s);
-    for (const rid of FB.playerVassals(s)) {
-      const r = s.realms[rid];
-      let levy = 0;
-      for (const entry of composition.entries) {
-        if (entry.kind === 'vassal' && entry.rid === rid) levy += entry.amount;
-      }
-      h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
-        esc(r.name) + '<span class="adesc">' + esc(FB.T(
-          'Standing {standing} · levy {men}', {
+    if (!governance) {
+      if (s.player.liege && s.realms[s.player.liege]) {
+        const liege = s.realms[s.player.liege];
+        h += '<button class="actionbtn" data-liege="' + esc(s.player.liege) + '">' +
+          esc(FB.T('Liege: {realm}', { realm:liege.name })) +
+          '<span class="adesc">' + esc(FB.T('Standing {standing}', {
             standing:standingValue(FB.standingOf(s, {
-              kind:'realm', id:rid
-            })),
-            men:Math.round(levy)
+              kind:'realm', id:s.player.liege
+            }))
           })) + '</span></button>';
-      const activeFavor = FB.vassalLevyFavor(s, rid);
-      h += '<button class="actionbtn" data-vassal-favor="' + esc(rid) + '"' +
-        (!FB.canCallVassalLevyFavor(s, rid) ? ' disabled' : '') + '>🛡 ' +
-        esc(FB.T('Ask for an exceptional levy')) + '<span class="adesc">' +
-        esc(activeFavor
-          ? FB.T('The exceptional levy is already promised.')
-          : FB.standingOf(s, { kind:'realm', id:rid }) < 40
-            ? FB.T('Requires 40 Standing; currently {standing}.', {
-              standing:standingValue(FB.standingOf(s, {
-                kind:'realm', id:rid
-              }))
-            })
-            : FB.T('For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
-              percent:Math.round((FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
-            })) + '</span></button>';
-    }
-    if (FB.councilActive && FB.councilActive(s)) {
-      const council = s.council;
-      let officers = 0, vacancies = 0;
-      if (council && council.seats) {
-        for (const seat of FB.councilSeats()) {
-          const rid = council.seats[seat.id];
-          const realm = rid && s.realms[rid];
-          const active = realm && realm.alive && realm.liege === 'player' &&
-            FB.standingOf(s, { kind:'realm', id:rid }) > -50;
-          if (active) {
-            officers++;
-            h += '<div class="progressnote"><b>' + esc(
-              seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
-              esc((realm.ruler ? realm.ruler.name : realm.name) + ', ' + realm.name) +
-              '<br><span class="cmeta">' +
-              esc(councilSeatDesc(seat.id)) + '</span></div>';
-          } else {
-            vacancies++;
-            h += '<div class="progressnote op-bad"><b>' +
-              esc(seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
-              esc(FB.T(rid ? 'Inactive — the holder no longer serves effectively.'
-                : 'Vacant.')) + '</div>';
+        h += kv('Land grants received this life',
+          esc(String(s.player.liegeGrants || 0)));
+      }
+      for (const rid of FB.playerVassals(s)) {
+        const r = s.realms[rid];
+        let levy = 0;
+        for (const entry of composition.entries) {
+          if (entry.kind === 'vassal' && entry.rid === rid) {
+            levy += entry.amount;
           }
         }
-      } else {
-        vacancies = FB.councilSeats().length;
+        h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
+          esc(r.name) + '<span class="adesc">' + esc(FB.T(
+            'Standing {standing} · levy {men}', {
+              standing:standingValue(FB.standingOf(s, {
+                kind:'realm', id:rid
+              })),
+              men:Math.round(levy)
+            })) + '</span></button>';
+        const activeFavor = FB.vassalLevyFavor(s, rid);
+        h += '<button class="actionbtn" data-vassal-favor="' + esc(rid) + '"' +
+          (!FB.canCallVassalLevyFavor(s, rid) ? ' disabled' : '') + '>🛡 ' +
+          esc(FB.T('Ask for an exceptional levy')) + '<span class="adesc">' +
+          esc(activeFavor
+            ? FB.T('The exceptional levy is already promised.')
+            : FB.standingOf(s, { kind:'realm', id:rid }) < 40
+              ? FB.T('Requires 40 Standing; currently {standing}.', {
+                standing:standingValue(FB.standingOf(s, {
+                  kind:'realm', id:rid
+                }))
+              })
+              : FB.T('For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
+                percent:Math.round(
+                  (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
+              })) + '</span></button>';
       }
-      h += '<button class="actionbtn" id="network-council">🏛 ' +
-        esc(FB.T('Royal Council')) + '<span class="adesc">' +
-        esc(council
-          ? FB.T('{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
-            count:officers, vacancies:vacancies, authority:Math.round(council.authority)
-          })
-          : FB.T('The great offices have not formed yet. Open the Council to establish them.')) +
-        '</span></button>';
+      if (FB.councilActive && FB.councilActive(s)) {
+        const council = s.council;
+        let officers = 0, vacancies = 0;
+        if (council && council.seats) {
+          for (const seat of FB.councilSeats()) {
+            const rid = council.seats[seat.id];
+            const realm = rid && s.realms[rid];
+            const active = realm && realm.alive && realm.liege === 'player' &&
+              FB.standingOf(s, { kind:'realm', id:rid }) > -50;
+            if (active) {
+              officers++;
+              h += '<div class="progressnote"><b>' + esc(
+                seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
+                esc((realm.ruler ? realm.ruler.name : realm.name) +
+                  ', ' + realm.name) +
+                '<br><span class="cmeta">' +
+                esc(councilSeatDesc(seat.id)) + '</span></div>';
+            } else {
+              vacancies++;
+              h += '<div class="progressnote op-bad"><b>' +
+                esc(seat.icon + ' ' + councilSeatName(seat.id)) + '</b> · ' +
+                esc(FB.T(rid
+                  ? 'Inactive — the holder no longer serves effectively.'
+                  : 'Vacant.')) + '</div>';
+            }
+          }
+        } else {
+          vacancies = FB.councilSeats().length;
+        }
+        h += '<button class="actionbtn" id="network-council">🏛 ' +
+          esc(FB.T('Royal Council')) + '<span class="adesc">' +
+          esc(council
+            ? FB.T('{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
+              count:officers, vacancies:vacancies,
+              authority:Math.round(council.authority)
+            })
+            : FB.T(
+              'The great offices have not formed yet. Open the Council to establish them.')) +
+          '</span></button>';
+      }
     }
     const realmContacts = {}, policies = s.player.foreignPolicy || {}, pacts = s.pacts || {};
     for (const rid in policies) realmContacts[rid] = 1;
@@ -2936,6 +2956,10 @@ window.FB = window.FB || {};
     });
     const councilButton = $('network-council');
     if (councilButton) councilButton.addEventListener('click', UI.showCouncil);
+    const governanceButton = $('network-governance');
+    if (governanceButton) {
+      governanceButton.addEventListener('click', UI.showGovernance);
+    }
   }
 
   /* ================= family tree =================
@@ -7248,6 +7272,21 @@ window.FB = window.FB || {};
     const s = FB.state;
     const r = s && rid && s.realms[rid];
     if (!s || !r || !r.alive || !r.ruler || rid === 'player') return;
+    function returnToRulerGiftSource() {
+      if (returnView === 'governance') UI.showGovernance('vassals');
+      else if (returnView === 'council:governance') UI.showCouncil('governance');
+      else if (returnView === 'council') UI.showCouncil();
+      else if (returnView && returnView.indexOf('realm:governance:') === 0) {
+        UI.showLiegeModal(rid, {
+          view:'governance',
+          section:returnView.slice('realm:governance:'.length) || 'position'
+        });
+      }
+      else if (returnView && returnView.indexOf('character:') === 0) {
+        UI.showCharModal(returnView.slice('character:'.length));
+      }
+      else UI.showLiegeModal(rid);
+    }
     const days = FB.rulerGiftDaysRemaining(s, rid);
     const deliveryPreview = FB.giftDeliveryPreview
       ? FB.giftDeliveryPreview(s, 'ruler', rid) : null;
@@ -7329,13 +7368,7 @@ window.FB = window.FB || {};
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Keep your gifts')) + '</button>';
     openModal(FB.T('Offer a gift to {ruler}', { ruler:r.ruler.name }), h, {
       historyView:true,
-      historyBackRender:function () {
-        if (returnView === 'council') UI.showCouncil();
-        else if (returnView && returnView.indexOf('character:') === 0) {
-          UI.showCharModal(returnView.slice('character:'.length));
-        }
-        else UI.showLiegeModal(rid);
-      }
+      historyBackRender:returnToRulerGiftSource
     });
     const cash = $('gift-ruler-cash');
     if (cash) cash.addEventListener('click', function () {
@@ -7351,19 +7384,13 @@ window.FB = window.FB || {};
       });
     });
     $('gm-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () {
-        if (returnView === 'council') UI.showCouncil();
-        else if (returnView && returnView.indexOf('character:') === 0) {
-          UI.showCharModal(returnView.slice('character:'.length));
-        }
-        else UI.showLiegeModal(rid);
-      });
+      modalHistoryBack(returnToRulerGiftSource);
     });
   };
 
   /* The realm sheet remains the primary view for an AI ruler. Cultivation
      can materialize that ruler into an ordinary character sheet as needed. */
-  UI.showLiegeModal = function (rid) {
+  UI.showLiegeModal = function (rid, returnContext) {
     const s = FB.state;
     const r = rid && s.realms[rid];
     if (!r || !r.alive || !r.ruler) return;
@@ -7515,14 +7542,26 @@ window.FB = window.FB || {};
         h += '<button class="btn" id="gm-policy">' + esc(FB.T('Set foreign policy')) + '</button>';
       }
     }
-    h += '<button class="btn" id="gm-cancel">Close</button>';
-    openModal(rid === s.player.liege ? 'Your Liege' : 'Realm Ruler', h);
+    const returnsToGovernance = returnContext &&
+      returnContext.view === 'governance';
+    h += '<button class="btn" id="gm-cancel">' +
+      esc(returnsToGovernance ? FB.T('Back') : FB.T('Close')) + '</button>';
+    openModal(rid === s.player.liege
+      ? FB.T('Your Liege') : FB.T('Realm Ruler'), h,
+      returnsToGovernance ? {
+        historyView:true,
+        historyBackRender:function () {
+          UI.showGovernance(returnContext.section || 'position');
+        }
+      } : undefined);
     FB.drawCrest($('liegecrest'), rid);
     if ($('gm-policy')) $('gm-policy').addEventListener('click', function () {
       UI.showForeignPolicyStance(rid);
     });
     if ($('rm-gift')) $('rm-gift').addEventListener('click', function () {
-      UI.showRulerGiftModal(rid, 'ruler');
+      UI.showRulerGiftModal(rid, returnsToGovernance
+        ? 'realm:governance:' + (returnContext.section || 'position')
+        : 'ruler');
     });
     if ($('rm-cultivate')) $('rm-cultivate').addEventListener('click', function () {
       const c = FB.materializeRealmRuler(s, rid);
@@ -7551,7 +7590,15 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus: true });
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnsToGovernance) {
+        modalHistoryBack(function () {
+          UI.showGovernance(returnContext.section || 'position');
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
   };
 
   /* Grant one abstract local Craft or Trade guild a monopoly. The first
@@ -7689,6 +7736,547 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
+  function governanceRealmLink(s, rid, label, section) {
+    const realm = rid && s.realms[rid];
+    if (!realm) return esc(label || rid || FB.T('None'));
+    return '<button type="button" class="linklike" data-governance-realm="' +
+      esc(rid) + '" data-governance-return="' +
+      esc(section || 'position') + '">' +
+      esc(label || realm.name) + '</button>';
+  }
+
+  function governanceCountyLink(pid, label, markers) {
+    return '<button type="button" class="linklike" data-governance-county="' +
+      esc(pid) + '">' + esc(label) + '</button>' +
+      (markers ? ' <span class="governance-markers">' +
+        esc(markers) + '</span>' : '');
+  }
+
+  function governancePromotionName(progress) {
+    if (!progress) return '';
+    if (progress.kind === 'duchy') {
+      return (FBDATA.duchies[progress.id] || {}).name || progress.id;
+    }
+    if (progress.kind === 'kingdom') {
+      return (FBDATA.kingdoms[progress.id] || {}).name || progress.id;
+    }
+    return (FBDATA.empires[progress.id] || {}).name || progress.id;
+  }
+
+  function governanceActionGroups(s, summary) {
+    const groups = [
+      {
+        title:FB.T('Relationship & legitimacy'),
+        ids:['petition_liege', 'petition_county', 'pay_homage',
+          'appeal_lord', 'swear_fealty']
+      },
+      {
+        title:FB.T('Domain & grants'),
+        ids:['buy_county', 'settle_waste', 'grant_land']
+      },
+      {
+        title:FB.T('Taxation & obligations'),
+        ids:['demand_taxes', 'revoke_county', 'debase_coinage']
+      },
+      {
+        title:FB.T('War & independence'),
+        ids:['declare_war', 'declare_independence']
+      }
+    ];
+    let h = '';
+    for (const group of groups) {
+      let rows = '';
+      for (const id of group.ids) {
+        const status = FB.instantStatus(s, id);
+        if (!status.shown || !status.action) continue;
+        const action = status.action;
+        const detail = status.can
+          ? FB.translateKnown(action.desc(s))
+          : FB.translateKnown(status.reason);
+        rows += '<button type="button" class="actionbtn" ' +
+          'data-governance-action="' + esc(id) + '"' +
+          (status.can ? '' : ' disabled') + '>' +
+          esc(dt(s, 'action', id, action, 'label')) +
+          '<span class="adesc">' + esc(detail) + '</span></button>';
+      }
+      if (rows) {
+        h += '<div class="governance-action-group"><h5>' +
+          esc(group.title) + '</h5>' + rows + '</div>';
+      }
+    }
+    if (summary.institution === 'estates' ||
+        summary.institution === 'council') {
+      const institution = summary.institution;
+      const actionId = institution === 'estates'
+        ? 'the_estates' : 'royal_council';
+      const status = FB.instantStatus(s, actionId);
+      if (status.shown && status.action) {
+        h += '<div class="governance-action-group"><h5>' +
+          esc(FB.T('Institution management')) + '</h5>' +
+          '<button type="button" class="actionbtn" ' +
+          'data-governance-institution="' + institution + '">' +
+          esc(dt(s, 'action', actionId, status.action, 'label')) +
+          '<span class="adesc">' +
+          esc(FB.translateKnown(status.action.desc(s))) +
+          '</span></button></div>';
+      }
+    }
+    return h || '<div class="hint">' + esc(FB.T(
+      'No political deed applies to the current position.')) + '</div>';
+  }
+
+  function governancePositionHtml(s, summary) {
+    const home = summary.homeCountyId && FB.world.byId[summary.homeCountyId];
+    const capital = summary.capitalCountyId &&
+      FB.world.byId[summary.capitalCountyId];
+    const playerRealm = summary.playerRealmId &&
+      s.realms[summary.playerRealmId];
+    const role = summary.role === 'vassal'
+      ? FB.T('Sworn subject')
+      : (summary.role === 'crowned'
+        ? FB.T('Crowned ruler')
+        : FB.T('Independent ruler'));
+    let constraint = FB.T('No active war or banner service.');
+    if (s.player.war) {
+      const enemy = s.realms[s.player.war.enemy];
+      constraint = FB.T('Personally at war with {realm}.', {
+        realm:enemy ? enemy.name : s.player.war.enemy
+      });
+    } else if (summary.servingLiegeWar) {
+      constraint = FB.T('Serving in the direct liege’s host.');
+    } else if (FB.playerRealmAtWar(s)) {
+      constraint = FB.T('The realm is at war; you are not personally serving.');
+    }
+    let h = kv('Current title', esc(FB.styledTitle(s))) +
+      kv('Player realm', esc(playerRealm
+        ? playerRealm.name
+        : FB.T('Barony at {county}', {
+          county:home ? home.name : summary.homeCountyId
+        }))) +
+      kv('Political role', esc(role));
+    if (summary.liegeId) {
+      h += kv('Direct liege', governanceRealmLink(
+        s, summary.liegeId, null, 'obligations'));
+    }
+    if (summary.sovereignId === 'player') {
+      h += kv('Top sovereign', esc(playerRealm
+        ? playerRealm.name : FB.T('Your realm')));
+    } else if (summary.sovereignId) {
+      h += kv('Top sovereign', governanceRealmLink(
+        s, summary.sovereignId, null, 'position'));
+    }
+    if (capital) {
+      h += kv('Capital', governanceCountyLink(
+        capital.id, capital.name,
+        capital.id === summary.homeCountyId ? FB.T('home') : ''));
+    }
+    if (home && (!capital || capital.id !== home.id)) {
+      h += kv('Household home', governanceCountyLink(
+        home.id, home.name,
+        summary.directCounties.indexOf(home.id) >= 0
+          ? FB.T('held directly') : FB.T('not held directly')));
+    }
+    h += '<div class="progressnote' +
+      (summary.warnings.length ? ' warnote' : '') + '">' +
+      esc(constraint) + '</div>';
+    return h;
+  }
+
+  function governanceDomainHtml(s, summary) {
+    const percent = Math.round(summary.domainMultiplier * 1000) / 10;
+    const multiplier = Math.round(summary.domainMultiplier * 10000) / 10000;
+    let h = kv('Held directly', esc(FB.T('{held} of {cap} counties', {
+      held:summary.directCounties.length,
+      cap:summary.domainCap
+    }))) +
+      kv('Realm-wide territory', esc(countyCountText(
+        s, summary.realmCounties.length))) +
+      kv('Direct tax & levy multiplier', esc(FB.T(
+        '×{multiplier} ({percent}% of normal)', {
+          multiplier:multiplier,
+          percent:percent
+        })));
+    if (summary.domainExcess) {
+      h += '<div class="progressnote warnote">' + esc(FB.T(
+        'Counties over the limit: {count}. The multiplier applies to your own demesne tax and levy, not vassal contributions.', {
+          count:summary.domainExcess
+        })) + '</div>';
+    }
+    if (!summary.directCounties.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'This barony is a territorial office inside the home county; no county is held directly in your hand.')) + '</div>';
+    }
+    for (const pid of summary.directCounties) {
+      const province = FB.world.byId[pid];
+      if (!province) continue;
+      const markers = [];
+      if (pid === summary.capitalCountyId) markers.push(FB.T('capital'));
+      if (pid === summary.homeCountyId) markers.push(FB.T('home'));
+      h += '<div class="governance-county-row">' +
+        governanceCountyLink(pid, province.name, markers.join(' · ')) +
+        '<span>' + esc(FB.T('development {development}', {
+          development:s.dev[pid] || 1
+        })) + '</span></div>';
+    }
+    const grantStatus = FB.instantStatus(s, 'grant_land');
+    if (grantStatus.shown) {
+      h += '<div class="governance-subhead">' +
+        esc(FB.T('Grantable holdings')) + '</div>';
+      for (const item of summary.grantableDuchies) {
+        const duchy = FBDATA.duchies[item.id];
+        h += '<button type="button" class="actionbtn" ' +
+          'data-governance-action="grant_land"' +
+          (grantStatus.can ? '' : ' disabled') + '>👑 ' +
+          esc(FB.T('Grant the complete Duchy of {duchy}…', {
+            duchy:duchy ? duchy.name : item.id
+          })) + '<span class="adesc">' +
+          esc(countyCountText(s, item.countyIds.length)) +
+          '</span></button>';
+      }
+      if (summary.directCounties.length >= 2) {
+        h += '<button type="button" class="actionbtn" ' +
+          'data-governance-action="grant_land"' +
+          (grantStatus.can ? '' : ' disabled') + '>🏰 ' +
+          esc(FB.T('Grant a directly held county…')) +
+          '<span class="adesc">' + esc(grantStatus.can
+            ? FB.T('Open the existing grant flow and keep at least one county in your own hand.')
+            : grantStatus.reason) + '</span></button>';
+      }
+    }
+    if (summary.promotion) {
+      const progress = summary.promotion;
+      const kind = progress.kind === 'duchy'
+        ? FB.T('ducal title')
+        : (progress.kind === 'kingdom'
+          ? FB.T('royal title') : FB.T('imperial title'));
+      h += '<div class="progressnote">' + esc(FB.T(
+        'Best current progress toward a {kind}: {name}, {have} of {total}; {need} required.', {
+          kind:kind,
+          name:governancePromotionName(progress),
+          have:progress.have,
+          total:progress.total,
+          need:progress.need
+        })) + '</div>';
+    }
+    return h;
+  }
+
+  function governanceObligationsHtml(s, summary) {
+    if (!summary.liegeId) {
+      const targets = FB.foreignPolicyTargets
+        ? FB.foreignPolicyTargets(s).length : 0;
+      return '<div class="progressnote">' + esc(FB.T(
+        'Independent: no liege receives an aid or may summon your banner. Neighboring sovereign courts currently in foreign-policy reach: {count}.', {
+          count:targets
+        })) + '</div>' +
+        kv('Lifetime service under a liege', esc(String(summary.warService)));
+    }
+    const liege = s.realms[summary.liegeId];
+    const sovereign = summary.sovereignId &&
+      s.realms[summary.sovereignId];
+    const terms = summary.obligations || {
+      aid:FBDATA.balance.parliamentAidBase || 0.25,
+      scutage:false
+    };
+    let service = FB.T('Not currently serving');
+    if (summary.servingLiegeWar) service = FB.T('Riding with the liege’s host');
+    else if ((s.eventQueue || []).some(function (item) {
+      return item && item.id === 'liege_summons';
+    })) service = FB.T('A banner summons is pending');
+    let h = kv('Direct liege', governanceRealmLink(
+      s, summary.liegeId, liege && liege.name, 'obligations')) +
+      (summary.sovereignId && summary.sovereignId !== summary.liegeId
+        ? kv('Top sovereign', governanceRealmLink(
+          s, summary.sovereignId, sovereign && sovereign.name, 'obligations'))
+        : '') +
+      kv('Standing with liege', standingSpan(FB.standingOf(s, {
+        kind:'realm', id:summary.liegeId
+      }))) +
+      kv('The liege’s aid', esc(FB.T('{percent}% of noble revenue', {
+        percent:Math.round(terms.aid * 100)
+      }))) +
+      kv('Banner obligation', esc(terms.scutage
+        ? FB.T('Scutage — silver may answer the summons')
+        : FB.T('Personal service or the ordinary buy-out'))) +
+      kv('Lifetime war service', esc(String(summary.warService))) +
+      kv('Current summons', esc(service));
+    return h;
+  }
+
+  function governanceVassalsHtml(s, summary) {
+    if (!summary.directVassals.length) {
+      return '<div class="hint">' + esc(FB.T(
+        'No realm is sworn directly to you. Counties held in your own hand appear under Domain.')) + '</div>';
+    }
+    let h = '';
+    for (const item of summary.directVassals) {
+      const realm = s.realms[item.realmId];
+      if (!realm) continue;
+      const favor = FB.vassalLevyFavorStatus(s, item.realmId);
+      const office = item.councilSeatId
+        ? councilSeatName(item.councilSeatId) : FB.T('No Council office');
+      const promise = item.exceptionalLevyUntil
+        ? FB.T('Days remaining: {days}', {
+          days:item.exceptionalLevyUntil - s.turn
+        }) : FB.T('None');
+      h += '<div class="governance-vassal">' +
+        '<div class="governance-vassal-head"><div>' +
+        governanceRealmLink(s, item.realmId, realm.name, 'vassals') +
+        '<span>' + esc(FB.T('{title} {ruler}', {
+          title:FB.realmRankTitle(s, realm),
+          ruler:realm.ruler ? realm.ruler.name : realm.name
+        })) + '</span></div>' +
+        standingSpan(item.standing) + '</div>' +
+        '<div class="governance-vassal-stats">' +
+        kv('Territory', esc(countyCountText(s, item.countyIds.length))) +
+        kv('Seasonal tax contribution', esc(FB.money(
+          Math.round(item.taxContribution * 10) / 10))) +
+        kv('Host levy contribution', esc(menText(
+          s, Math.round(item.levyContribution * 10) / 10))) +
+        kv('Council office', esc(office)) +
+        kv('Exceptional levy', esc(promise)) +
+        '</div><div class="governance-inline-actions">' +
+        '<button type="button" class="btn small" data-governance-gift="' +
+        esc(item.realmId) + '">' + esc(FB.T('Offer a gift…')) + '</button>' +
+        '<button type="button" class="btn small" data-governance-vassal-levy="' +
+        esc(item.realmId) + '"' + (favor.ready ? '' : ' disabled') + '>' +
+        esc(FB.T('Ask for exceptional levy')) + '</button></div>' +
+        '<div class="cmeta">' + esc(favor.ready
+          ? FB.T('Adds {percent}% levy for one year and lowers Standing by 15. (spends the day)', {
+            percent:Math.round(
+              (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
+          })
+          : favor.reason) + '</div></div>';
+    }
+    return h;
+  }
+
+  function governanceInstitutionHtml(s, summary) {
+    if (summary.institution === 'estates' && summary.estates) {
+      const estates = summary.estates;
+      const redress = FB.parliamentMotionStatus(s, 'redress');
+      const scutage = FB.parliamentMotionStatus(s, 'scutage');
+      let h = kv('The liege’s aid', esc(FB.T('{percent}%', {
+        percent:Math.round(estates.aid * 100)
+      }))) +
+        kv('Scutage', esc(estates.scutage ? FB.T('In force') : FB.T('Not granted'))) +
+        kv('Session status', esc(estates.pendingEventIds.length
+          ? FB.T('A session or motion is pending')
+          : FB.T('{chance}% yearly chance; no sitting is currently pending', {
+            chance:Math.round(estates.sessionChance * 100)
+          }))) +
+        kv('Motion this year', esc(estates.motionUsed
+          ? FB.T('Already used') : FB.T('Available'))) +
+        kv('Vote chance', esc(FB.T('{chance}%', {
+          chance:Math.round(estates.vote.total * 100)
+        }))) +
+        '<div class="governance-vote-factors">' +
+        standingEffectRow(FB.T('Base'), estates.vote.base * 100) +
+        standingEffectRow(FB.T('Rank'), estates.vote.rank * 100) +
+        standingEffectRow(FB.T('Diplomacy'), estates.vote.diplomacy * 100) +
+        standingEffectRow(FB.T('Prestige'), estates.vote.prestige * 100) +
+        standingEffectRow(FB.T('Standing'), estates.vote.standing * 100) +
+        standingEffectRow(FB.T('Traits'), estates.vote.traits * 100) +
+        '</div><div class="hint">' + esc(FB.T(
+          'Available motions: redress — {redress}; scutage — {scutage}.', {
+            redress:redress.ready ? FB.T('ready') : redress.reason,
+            scutage:scutage.ready ? FB.T('ready') : scutage.reason
+          })) + '</div>' +
+        '<button type="button" class="actionbtn" ' +
+        'data-governance-institution="estates">🏛 ' +
+        esc(FB.T('Open Estates management…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Review the terms and put an eligible yearly motion to the hall.')) +
+        '</span></button>';
+      return h;
+    }
+    if (summary.institution === 'council' && summary.council) {
+      const council = summary.council;
+      let h = kv('Crown Authority', esc(FB.T('{authority}/100', {
+        authority:Math.round(council.authority)
+      }))) +
+        kv('Consent threshold', esc(FB.T('Below {threshold}', {
+          threshold:council.consentBelow
+        }))) +
+        kv('Charter threshold', esc(FB.T(
+          '{threshold}+ with a sour Council', {
+            threshold:council.charterAbove
+          }))) +
+        kv('Average direct-vassal Standing', standingSpan(
+          council.averageVassalStanding));
+      if (!council.formed) {
+        h += '<div class="progressnote">' + esc(FB.T(
+          'The great offices have not formed yet; the next simulation boundary will establish them.')) + '</div>';
+      }
+      if (council.needsConsent) {
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          'Weak authority blocks extraordinary taxes and revocation.')) + '</div>';
+      }
+      if (council.schemerIds.length) {
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          'Schemer warning — affected Council seats: {count}.', {
+            count:council.schemerIds.length
+          })) + '</div>';
+      }
+      if (council.sycophantIds.length) {
+        h += '<div class="progressnote">' + esc(FB.T(
+          'Sycophant tendency — affected Council seats: {count}.', {
+            count:council.sycophantIds.length
+          })) + '</div>';
+      }
+      for (const seat of council.seats) {
+        const def = FB.councilSeat(seat.id);
+        const realm = seat.holderId && s.realms[seat.holderId];
+        h += '<div class="governance-seat' +
+          (!realm || !seat.effective ? ' governance-seat-warning' : '') +
+          '"><b>' + (def ? def.icon + ' ' : '') +
+          esc(councilSeatName(seat.id)) + '</b><span>' +
+          (realm
+            ? governanceRealmLink(s, seat.holderId,
+              realm.ruler ? realm.ruler.name : realm.name, 'institution') +
+              ' · ' + standingSpan(seat.standing)
+            : esc(FB.T('Vacant'))) +
+          '</span><small>' + esc(councilSeatDesc(seat.id)) +
+          (realm && !seat.effective
+            ? ' · ' + esc(FB.T('inactive at hostile Standing')) : '') +
+          '</small></div>';
+      }
+      h += '<button type="button" class="actionbtn" ' +
+        'data-governance-institution="council">🏛 ' +
+        esc(FB.T('Open Royal Council management…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Appoint officers, replace holders, dismiss councillors, and offer gifts.')) +
+        '</span></button>';
+      return h;
+    }
+    return '<div class="progressnote">' + esc(FB.T(
+      'No simulated institution applies. Independent counts and dukes govern their own domain without the liege’s Estates or a Royal Council.')) +
+      '</div>';
+  }
+
+  /* One authoritative political sheet. Its summary is derived and opening
+     or navigating it never heals or writes simulation state. */
+  UI.showGovernance = function (sectionId) {
+    if (typeof sectionId !== 'string') sectionId = null;
+    const s = FB.state;
+    const summary = FB.governanceSummary && FB.governanceSummary(s);
+    if (!summary) {
+      UI.toast(FB.T('Governance is available only to a territorial landed ruler.'));
+      return;
+    }
+    let h = '<nav class="governance-nav" aria-label="' +
+      esc(FB.T('Governance sections')) + '">';
+    const sections = [
+      ['position', FB.T('Position')],
+      ['domain', FB.T('Domain')],
+      ['obligations', summary.liegeId
+        ? FB.T('Liege & obligations') : FB.T('Independence')],
+      ['vassals', FB.T('Vassals')],
+      ['institution', FB.T('Institution')],
+      ['actions', FB.T('Political actions')]
+    ];
+    for (const item of sections) {
+      h += '<button type="button" class="btn small" data-governance-section="' +
+        item[0] + '">' + esc(item[1]) + '</button>';
+    }
+    h += '</nav><div class="governance-sections">' +
+      '<section class="governance-card" id="governance-position" tabindex="-1">' +
+      '<h4>' + esc(FB.T('Political position')) + '</h4>' +
+      governancePositionHtml(s, summary) + '</section>' +
+      '<section class="governance-card" id="governance-domain" tabindex="-1">' +
+      '<h4>' + esc(FB.T('Domain')) + '</h4>' +
+      governanceDomainHtml(s, summary) + '</section>' +
+      '<section class="governance-card" id="governance-obligations" tabindex="-1">' +
+      '<h4>' + esc(summary.liegeId
+        ? FB.T('Liege & obligations')
+        : FB.T('Independence & foreign contact')) + '</h4>' +
+      governanceObligationsHtml(s, summary) + '</section>' +
+      '<section class="governance-card governance-wide" ' +
+      'id="governance-vassals" tabindex="-1"><h4>' +
+      esc(FB.T('Direct vassals')) + '</h4>' +
+      governanceVassalsHtml(s, summary) + '</section>' +
+      '<section class="governance-card" id="governance-institution" tabindex="-1">' +
+      '<h4>' + esc(summary.institution === 'estates'
+        ? FB.T('The Estates') : (summary.institution === 'council'
+          ? FB.T('The Royal Council') : FB.T('Institution'))) + '</h4>' +
+      governanceInstitutionHtml(s, summary) + '</section>' +
+      '<section class="governance-card" id="governance-actions" tabindex="-1">' +
+      '<h4>' + esc(FB.T('Political actions')) + '</h4>' +
+      governanceActionGroups(s, summary) + '</section></div>' +
+      '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="governance-close">' + esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('🏛 Governance'), h, {
+      modalClass:'fullsheet-modal governance-modal'
+    });
+    document.querySelectorAll('[data-governance-section]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const section = $('governance-' + button.dataset.governanceSection);
+          if (!section) return;
+          section.scrollIntoView({ block:'start' });
+          section.focus({ preventScroll:true });
+        });
+      });
+    document.querySelectorAll('[data-governance-realm]').forEach(
+      function (button) {
+        button.addEventListener('click', function (event) {
+          event.stopPropagation();
+          UI.showLiegeModal(button.dataset.governanceRealm, {
+            view:'governance',
+            section:button.dataset.governanceReturn || 'position'
+          });
+        });
+      });
+    document.querySelectorAll('[data-governance-county]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.dataset.governanceCounty;
+          UI.closeModal();
+          UI.selectProvince(pid);
+        });
+      });
+    document.querySelectorAll('[data-governance-action]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          FB.runInstant(FB.state, button.dataset.governanceAction);
+        });
+      });
+    document.querySelectorAll('[data-governance-gift]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showRulerGiftModal(button.dataset.governanceGift, 'governance');
+        });
+      });
+    document.querySelectorAll('[data-governance-vassal-levy]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          if (!FB.callVassalLevyFavor(
+              s, button.dataset.governanceVassalLevy)) return;
+          UI.closeModal();
+          FB.game.passDay({ skipFocus:true });
+        });
+      });
+    document.querySelectorAll('[data-governance-institution]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          if (button.dataset.governanceInstitution === 'estates') {
+            UI.showParliament('governance');
+          } else {
+            UI.showCouncil('governance');
+          }
+        });
+      });
+    $('governance-close').addEventListener('click', UI.closeModal);
+    if (sectionId) {
+      setTimeout(function () {
+        const section = $('governance-' + sectionId);
+        if (!section) return;
+        section.scrollIntoView({ block:'start' });
+        section.focus({ preventScroll:true });
+      }, 0);
+    }
+  };
+
   function councilAssignmentCard(s, seat, rid, oldRid, selected, data) {
     const realm = rid && s.realms[rid];
     if (!realm) return '';
@@ -7726,16 +8314,25 @@ window.FB = window.FB || {};
   /* the Royal Council (tier 6+): the great officers of the crown — seats,
      holders, tempers, and crown authority. Gifts and dismissals act at once;
      appointment cards preview vacant seats and deliberate replacements. */
-  UI.showCouncil = function () {
+  UI.showCouncil = function (returnView) {
+    if (returnView !== 'governance') returnView = null;
     const s = FB.state;
-    const c = FB.councilEnsure(s);
-    if (!c) return;
+    const projection = FB.councilSummary(s);
+    if (!projection) return;
+    const seats = {};
+    for (const projectedSeat of projection.seats) {
+      seats[projectedSeat.id] = projectedSeat.holderId;
+    }
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
       'The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.')) + '</p>';
     h += '<div class="kv"><span>' + esc(FB.T('Crown authority')) + '</span><b>' +
-      Math.round(c.authority) + '/100</b></div>';
-    if (FB.councilNeedsConsent(s)) {
+      Math.round(projection.authority) + '/100</b></div>';
+    if (!projection.formed) {
+      h += '<p class="hint">' + esc(FB.T(
+        'The council has not yet assembled. Appointing an officer will convene it.')) + '</p>';
+    }
+    if (projection.needsConsent) {
       h += '<p class="hint">⚠ ' + esc(FB.T(
         'The council now outweighs the crown: extraordinary taxes and revocations are beyond you until authority mends (below {limit}).',
         { limit: B.councilConsentBelow || 35 })) + '</p>';
@@ -7744,10 +8341,12 @@ window.FB = window.FB || {};
         'High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.')) + '</p>';
     }
     const seated = {};
-    for (const seat of FB.councilSeats()) if (c.seats[seat.id]) seated[c.seats[seat.id]] = 1;
+    for (const seat of FB.councilSeats()) {
+      if (seats[seat.id]) seated[seats[seat.id]] = 1;
+    }
     const unseated = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
     for (const seat of FB.councilSeats()) {
-      const rid = c.seats[seat.id];
+      const rid = seats[seat.id];
       const r = rid ? s.realms[rid] : null;
       h += '<div class="panelh">' + seat.icon + ' ' + esc(councilSeatName(seat.id)) + '</div>';
       h += '<div class="cmeta">' + esc(councilSeatDesc(seat.id)) + '</div>';
@@ -7784,48 +8383,65 @@ window.FB = window.FB || {};
         }
       }
     }
-    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('The Royal Council'), h);
+    h += '<button class="btn" id="gm-cancel">' +
+      esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
+      '</button>';
+    openModal(FB.T('The Royal Council'), h, returnView === 'governance' ? {
+      historyView:true,
+      historyBackRender:function () { UI.showGovernance('institution'); }
+    } : undefined);
     for (const seat of FB.councilSeats()) {
       const cv = $('crest_' + seat.id);
-      if (cv && c.seats[seat.id]) FB.drawCrest(cv, c.seats[seat.id]);
+      if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
     }
     FB.paintCrests($('gm-body'));
     document.querySelectorAll('[data-council-gift]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        UI.showRulerGiftModal(btn.dataset.councilGift, 'council');
+        UI.showRulerGiftModal(btn.dataset.councilGift,
+          returnView === 'governance' ? 'council:governance' : 'council');
       });
     });
     document.querySelectorAll('[data-council-assign]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        UI.showCouncilCandidates(btn.dataset.councilAssign);
+        UI.showCouncilCandidates(btn.dataset.councilAssign, returnView);
       });
     });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.councilDismiss(FB.state, btn.dataset.dismiss);
-        UI.showCouncil();
+        UI.showCouncil(returnView);
       });
     });
     document.querySelectorAll('[data-appoint]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const parts = btn.dataset.appoint.split('|');
         FB.councilAppoint(FB.state, parts[0], parts[1]);
-        UI.showCouncil();
+        UI.showCouncil(returnView);
       });
     });
-    $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnView === 'governance') {
+        modalHistoryBack(function () { UI.showGovernance('institution'); });
+      } else {
+        UI.closeModal();
+        UI.refresh();
+      }
+    });
   };
 
-  UI.showCouncilCandidates = function (seatId) {
+  UI.showCouncilCandidates = function (seatId, returnView) {
     const s = FB.state;
-    const council = FB.councilEnsure(s);
+    const projection = FB.councilSummary(s);
     const seat = FB.councilSeat(seatId);
-    if (!council || !seat) return;
-    const oldRid = council.seats[seatId] || null;
+    if (!projection || !seat) return;
+    const seats = {};
+    for (const projectedSeat of projection.seats) {
+      seats[projectedSeat.id] = projectedSeat.holderId;
+    }
+    const oldRid = seats[seatId] || null;
     const seated = {};
     for (const item of FB.councilSeats()) {
-      if (council.seats[item.id]) seated[council.seats[item.id]] = 1;
+      if (seats[item.id]) seated[seats[item.id]] = 1;
     }
     const candidates = FB.playerVassals(s).filter(function (rid) {
       return !seated[rid];
@@ -7851,7 +8467,7 @@ window.FB = window.FB || {};
       office:councilSeatName(seat.id)
     }), h, {
       historyView:true,
-      historyBackRender:function () { UI.showCouncil(); }
+      historyBackRender:function () { UI.showCouncil(returnView); }
     });
     FB.paintCrests($('gm-body'));
     document.querySelectorAll('[data-council-candidate]').forEach(function (button) {
@@ -7859,68 +8475,81 @@ window.FB = window.FB || {};
         const rid = button.dataset.councilCandidate;
         FB.councilAppoint(s, seat.id, rid);
         if (!s.council || s.council.seats[seat.id] !== rid) return;
-        modalHistoryBack(function () { UI.showCouncil(); });
+        modalHistoryBack(function () { UI.showCouncil(returnView); });
         UI.refresh();
       });
     });
     $('council-candidates-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showCouncil(); });
+      modalHistoryBack(function () { UI.showCouncil(returnView); });
     });
   };
 
   /* the estates of the realm (vassal tiers 3-5): the terms of the player's
      service, and the motions they can buy between sittings — see
      js/parliament.js for the machinery and FB.parliamentYearly for sessions */
-  UI.showParliament = function () {
+  UI.showParliament = function (returnView) {
+    if (returnView !== 'governance') returnView = null;
     const s = FB.state;
-    const obl = FB.parliamentEnsure(s);
-    if (!obl) return;
-    const B = FBDATA.balance;
+    const projection = FB.parliamentSummary(s);
+    if (!projection) return;
     const liege = s.realms[s.player.liege];
-    const cost = B.parliamentMotionCost || 15;
-    const moved = obl.lastMotion === s.date.year;
-    const aidMin = B.parliamentAidMin || 0.10;
+    const cost = projection.motionCost;
     let h = '<p class="hint">' + esc(FB.T(
       'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege.',
       { liege: liege.name })) + '</p>';
     h += '<div class="kv"><span>' + esc(FB.T('The liege’s aid')) + '</span><b>' +
-      esc(FB.T('{pct}% of your noble revenue', { pct: Math.round(obl.aid * 100) })) + '</b></div>';
+      esc(FB.T('{pct}% of your noble revenue', {
+        pct:Math.round(projection.aid * 100)
+      })) + '</b></div>';
     h += '<div class="kv"><span>' + esc(FB.T('Banner service')) + '</span><b>' +
-      (obl.scutage
+      (projection.scutage
         ? esc(FB.T('Scutage — silver answers the summons'))
         : esc(FB.T('Spears — you must ride, or pay dearly'))) + '</b></div>';
     h += '<div class="kv"><span>' + esc(FB.T('Your voice in the hall')) + '</span><b>' +
-      Math.round(FB.parliamentVoteChance(s) * 100) + '%</b></div>';
+      Math.round(projection.vote.total * 100) + '%</b></div>';
     h += '<p class="hint">' + esc(FB.T(
       'Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year.',
       { cost: cost })) + '</p>';
-    if (moved) {
+    if (projection.motionUsed) {
       h += '<p class="hint">' + esc(FB.T('The estates have heard your motion this year; they will take another come the new year.')) + '</p>';
     }
+    const redress = FB.parliamentMotionStatus(s, 'redress');
+    const scutage = FB.parliamentMotionStatus(s, 'scutage');
     h += '<div class="gm-list">';
     h += '<button class="actionbtn" data-motion="redress"' +
-      (moved || s.player.gold < cost || obl.aid <= aidMin + 0.001 ? ' disabled' : '') + '>⚖ ' +
+      (redress.ready ? '' : ' disabled') + '>⚖ ' +
       esc(FB.T('Move for redress of grievances ({money:cost})', { cost: cost })) +
-      '<span class="adesc">' + esc(FB.T('Put it to a vote: the liege’s aid down one step, if the hall backs you.')) + '</span></button>';
+      '<span class="adesc">' + esc(redress.reason || FB.T(
+        'Put it to a vote: the liege’s aid down one step, if the hall backs you.')) +
+      '</span></button>';
     h += '<button class="actionbtn" data-motion="scutage"' +
-      (moved || s.player.gold < cost || obl.scutage ? ' disabled' : '') + '>🛡 ' +
+      (scutage.ready ? '' : ' disabled') + '>🛡 ' +
       esc(FB.T('Move for scutage ({money:cost})', { cost: cost })) +
-      '<span class="adesc">' + esc(FB.T('Put it to a vote: silver for banner service — the aid creeps up in exchange.')) + '</span></button>';
+      '<span class="adesc">' + esc(scutage.reason || FB.T(
+        'Put it to a vote: silver for banner service — the aid creeps up in exchange.')) +
+      '</span></button>';
     h += '</div>';
-    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('The Estates'), h);
+    h += '<button class="btn" id="gm-cancel">' +
+      esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
+      '</button>';
+    openModal(FB.T('The Estates'), h, returnView === 'governance' ? {
+      historyView:true,
+      historyBackRender:function () { UI.showGovernance('institution'); }
+    } : undefined);
     document.querySelectorAll('[data-motion]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (s.player.gold < cost || obl.lastMotion === s.date.year) return;
-        s.player.gold -= cost;
-        obl.lastMotion = s.date.year;
-        FB.queueEvent(s, 'parliament_' + btn.dataset.motion, {
-          locationId:s.player.provinceId
-        });
+        if (!FB.parliamentMove(s, btn.dataset.motion)) return;
         UI.closeModal(); UI.refresh();
       });
     });
-    $('gm-cancel').addEventListener('click', function () { UI.closeModal(); UI.refresh(); });
+    $('gm-cancel').addEventListener('click', function () {
+      if (returnView === 'governance') {
+        modalHistoryBack(function () { UI.showGovernance('institution'); });
+      } else {
+        UI.closeModal();
+        UI.refresh();
+      }
+    });
   };
 
   /* demand a fief back from a vassal */

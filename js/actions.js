@@ -1376,7 +1376,18 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { if (FB.ui && FB.ui.showRevoke) FB.ui.showRevoke(); } },
+  { id: 'governance', label: '🏛 Governance…', noConsume: true,
+    desc: function () {
+      return FB.T('Your political position, domain, obligations, vassals, institution, and currently available realm actions.');
+    },
+    show: function (s) {
+      return FB.governanceEligible && FB.governanceEligible(s);
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showGovernance) FB.ui.showGovernance();
+    } },
   { id: 'the_estates', label: '🏛 The Estates…', noConsume: true,
+    compatibilityAlias:true,
     desc: function () {
       return FB.T('The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.');
     },
@@ -1399,6 +1410,7 @@ window.FB = window.FB || {};
     },
     run: function () { if (FB.ui && FB.ui.showDebasement) FB.ui.showDebasement(); } },
   { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
+    compatibilityAlias:true,
     desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
     show: function (s) { return s.player.tier >= 6; },
     run: function (s) { if (FB.ui && FB.ui.showCouncil) FB.ui.showCouncil(); } }
@@ -1410,6 +1422,18 @@ window.FB = window.FB || {};
     const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
     return (state.dev[pid] || 1) * rate * Math.max(0, 1 + local);
   }
+
+  /* One direct vassal's exact seasonal tax source. The settlement tax ledger
+     and Governance use this same adapter. */
+  FB.vassalTaxContribution = function (state, rid) {
+    const realm = state.realms[rid];
+    if (!realm || !realm.alive || realm.liege !== 'player') return 0;
+    let total = 0;
+    for (const pid of FB.realmHeldCounties(state, rid)) {
+      total += countyTaxBase(state, pid, FBDATA.balance.vassalTaxRate);
+    }
+    return total;
+  };
 
   /* One calculation feeds settlement, reliable income, and the displayed
      ledger. County rates are applied before domain and national modifiers. */
@@ -1436,9 +1460,7 @@ window.FB = window.FB || {};
     }
     let dues = 0;
     for (const vid of FB.playerVassals(state)) {
-      for (const pid of FB.realmHeldCounties(state, vid)) {
-        dues += countyTaxBase(state, pid, B.vassalTaxRate);
-      }
+      dues += FB.vassalTaxContribution(state, vid);
     }
     const tolls = FB.buildingBonus(state, 'tax');
     const taxable = rents + dues + tolls;
@@ -1487,6 +1509,184 @@ window.FB = window.FB || {};
     const over = FB.domainOver(state);
     if (!over) return 1;
     return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15), over);
+  };
+
+  function governancePromotion(state) {
+    const tier = state.player.tier;
+    const offered = [];
+    function offer(kind, id, progress) {
+      if (!progress || !progress.total) return;
+      offered.push({
+        kind:kind,
+        id:id,
+        have:progress.have,
+        total:progress.total,
+        need:progress.need,
+        titled:progress.titled !== false
+      });
+    }
+    if (tier <= 4) {
+      for (const did in FBDATA.duchies) {
+        const progress = FB.duchyProgress(state, did);
+        if (progress.have) offer('duchy', did, progress);
+      }
+    } else if (tier === 5) {
+      for (const kid in FBDATA.kingdoms) {
+        const progress = FB.kingdomProgress(state, kid);
+        if (progress.have) offer('kingdom', kid, progress);
+      }
+    } else if (tier === 6) {
+      for (const eid in FBDATA.empires) {
+        const progress = FB.empireProgress(state, eid);
+        if (progress.have) offer('empire', eid, progress);
+      }
+    }
+    offered.sort(function (a, b) {
+      if (a.have !== b.have) return b.have - a.have;
+      if (a.total !== b.total) return a.total - b.total;
+      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+    });
+    return offered.length ? offered[0] : null;
+  }
+
+  /* Territorial politics is not a tier synonym: a barony qualifies, a
+     see-only Bishop or Chief Qadi does not, and observe mode has no player
+     management surface. */
+  FB.governanceEligible = function (state) {
+    if (!state || !state.player || !state.realms ||
+        (FB.game && FB.game.observe)) return false;
+    const p = state.player;
+    if (p.dead || p.tier < 3) return false;
+    if (p.provs && p.provs.length) return true;
+    const me = state.chars && state.chars[p.charId];
+    const ranks = me && me.religiousRanks || {};
+    const seeOnly = !!(me && me.religion === 'catholic' &&
+      me.papalOffice !== 'pope' && !(p.flags && p.flags.pope) &&
+      ((me.bishopric && typeof me.bishopric === 'object' &&
+        !Array.isArray(me.bishopric)) ||
+       (me.bishopricVacatedTurn === undefined &&
+        ((ranks.catholic_monastic || 0) >= 4 ||
+         (ranks.catholic_clerical || 0) >= 5 ||
+         (p.flags && p.flags.bishop)))));
+    if (seeOnly) return false;
+    if (p.flags && p.flags.chief_qadi) return false;
+    if (p.tier !== 3 || !p.liege) return false;
+    const holder = (state.holder && state.holder[p.provinceId]) ||
+      (state.owner && state.owner[p.provinceId]);
+    return holder === p.liege && !!(state.realms[p.liege] &&
+      state.realms[p.liege].alive);
+  };
+
+  /* One deterministic, locale-neutral political projection. It stores
+     nothing and delegates domain, hierarchy, institution, tax, levy, and
+     Standing values to their owning helpers. */
+  FB.governanceSummary = function (state) {
+    if (!FB.governanceEligible(state)) return null;
+    const p = state.player;
+    const playerRealm = state.realms.player && state.realms.player.alive
+      ? state.realms.player : null;
+    const directCounties = (p.provs || []).slice();
+    const realmCounties = playerRealm
+      ? FB.realmTerritory(state, 'player').slice() : [];
+    directCounties.sort();
+    realmCounties.sort();
+    const council = FB.councilSummary ? FB.councilSummary(state) : null;
+    const estates = FB.parliamentSummary ? FB.parliamentSummary(state) : null;
+    const obligations = p.liege && FB.parliamentTerms
+      ? FB.parliamentTerms(state) : null;
+    const levyFavors = p.vassalLevyFavors || {};
+    const directVassals = [];
+    const vassalIds = FB.playerVassals(state).slice().sort();
+    for (const rid of vassalIds) {
+      let seatId = null;
+      if (council) {
+        for (const seat of council.seats) {
+          if (seat.holderId === rid) {
+            seatId = seat.id;
+            break;
+          }
+        }
+      }
+      const until = Number(levyFavors[rid]);
+      directVassals.push({
+        realmId:rid,
+        countyIds:FB.realmHeldCounties(state, rid).slice().sort(),
+        standing:FB.standingOf(state, { kind:'realm', id:rid }),
+        taxContribution:FB.vassalTaxContribution(state, rid),
+        levyContribution:FB.vassalLevyContribution
+          ? FB.vassalLevyContribution(state, rid) : 0,
+        councilSeatId:seatId,
+        exceptionalLevyUntil:isFinite(until) && until > state.turn
+          ? until : null
+      });
+    }
+    let institution = 'none';
+    if (estates) institution = 'estates';
+    else if (council) institution = 'council';
+    const pending = [];
+    if (estates) {
+      for (const id of estates.pendingEventIds) {
+        pending.push({ kind:'event', id:id });
+      }
+    }
+    if (council) {
+      for (const id of council.vacancyIds) {
+        pending.push({ kind:'vacancy', id:id });
+      }
+    }
+    const domainCap = FB.domainCap(state);
+    const domainExcess = Math.max(0, directCounties.length - domainCap);
+    const warnings = [];
+    if (domainExcess) {
+      warnings.push({ id:'domain_excess', amount:domainExcess });
+    }
+    if (p.war) warnings.push({ id:'personal_war' });
+    else if (p.flags && p.flags.with_liege_host) {
+      warnings.push({ id:'liege_service' });
+    } else if (FB.playerRealmAtWar && FB.playerRealmAtWar(state)) {
+      warnings.push({ id:'realm_war' });
+    }
+    if (council && council.needsConsent) {
+      warnings.push({ id:'council_consent' });
+    }
+    for (const rid of council ? council.schemerIds : []) {
+      warnings.push({ id:'council_schemer', realmId:rid });
+    }
+    const sovereignId = p.liege ? FB.topRealm(state, p.liege)
+      : (playerRealm ? 'player' : null);
+    const grantableDuchies = FB.grantableDuchies(state).map(function (item) {
+      return {
+        id:item.did,
+        countyIds:item.counties.slice().sort()
+      };
+    }).sort(function (a, b) {
+      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+    });
+    return {
+      role:p.liege ? 'vassal' : (p.tier >= 6 ? 'crowned' : 'sovereign'),
+      playerRealmId:playerRealm ? 'player' : null,
+      liegeId:p.liege || null,
+      sovereignId:sovereignId,
+      homeCountyId:p.provinceId || null,
+      capitalCountyId:playerRealm && playerRealm.capital
+        ? playerRealm.capital : (p.provinceId || null),
+      directCounties:directCounties,
+      realmCounties:realmCounties,
+      domainCap:domainCap,
+      domainExcess:domainExcess,
+      domainMultiplier:FB.domainPenalty(state),
+      directVassals:directVassals,
+      grantableDuchies:grantableDuchies,
+      promotion:governancePromotion(state),
+      institution:institution,
+      estates:estates,
+      council:council,
+      obligations:obligations,
+      warService:p.warService || 0,
+      servingLiegeWar:!!(p.flags && p.flags.with_liege_host),
+      pending:pending,
+      warnings:warnings
+    };
   };
 
   /* the current focus's expected per-season yield (the `gain` mirror of its
@@ -2084,12 +2284,12 @@ window.FB = window.FB || {};
 
   FB.vassalLevyFavor = function (state, rid) {
     const p = state.player;
-    if (!p.vassalLevyFavors || typeof p.vassalLevyFavors !== 'object' ||
-      Array.isArray(p.vassalLevyFavors)) p.vassalLevyFavors = {};
-    const until = p.vassalLevyFavors[rid];
+    const favors = p.vassalLevyFavors;
+    if (!favors || typeof favors !== 'object' ||
+        Array.isArray(favors)) return null;
+    const until = favors[rid];
     const r = state.realms[rid];
     if (!until || until <= state.turn || !r || !r.alive || r.liege !== 'player') {
-      if (until) delete p.vassalLevyFavors[rid];
       return null;
     }
     return { rid:rid, until:until };
@@ -2100,17 +2300,63 @@ window.FB = window.FB || {};
       (FB.vassalLevyFavor(state, rid) ? (FBDATA.balance.vassalLevyFavorRate || 0.05) : 0);
   };
 
+  /* One named vassal's exact contribution to the authoritative host ledger.
+     playerCompositionBreakdown and Governance both consume this adapter. */
+  FB.vassalLevyContribution = function (state, rid) {
+    const realm = state.realms[rid];
+    if (!realm || !realm.alive || realm.liege !== 'player') return 0;
+    const B = FBDATA.balance;
+    const rate = FB.vassalLevyRate(state, rid);
+    let amount = 0;
+    for (const pid of FB.realmHeldCounties(state, rid)) {
+      const modifier = FB.modBonus
+        ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
+      amount += (state.dev[pid] || 1) * B.levyPerDev * modifier * rate;
+    }
+    return amount;
+  };
+
+  FB.vassalLevyFavorStatus = function (state, rid) {
+    const realm = state.realms[rid];
+    if (!realm || !realm.alive || realm.liege !== 'player') {
+      return {
+        ready:false,
+        reason:FB.T('This ruler is not your direct vassal.')
+      };
+    }
+    const active = FB.vassalLevyFavor(state, rid);
+    if (active) {
+      return {
+        ready:false,
+        reason:FB.T('The exceptional levy is already promised.'),
+        until:active.until
+      };
+    }
+    const value = FB.standingOf(state, { kind:'realm', id:rid });
+    if (value < 40) {
+      return {
+        ready:false,
+        reason:FB.T('Requires 40 Standing; currently {standing}.', {
+          standing:Math.round(value)
+        })
+      };
+    }
+    return { ready:true, reason:'', until:null };
+  };
+
   FB.canCallVassalLevyFavor = function (state, rid) {
-    const r = state.realms[rid];
-    return !!(r && r.alive && r.liege === 'player' &&
-      FB.standingOf(state, { kind:'realm', id:rid }) >= 40 &&
-      !FB.vassalLevyFavor(state, rid));
+    return FB.vassalLevyFavorStatus(state, rid).ready;
   };
 
   FB.callVassalLevyFavor = function (state, rid) {
     if (!FB.canCallVassalLevyFavor(state, rid)) return false;
     const r = state.realms[rid];
     const days = FBDATA.balance.vassalLevyFavorDays || 360;
+    if (!state.player.vassalLevyFavors ||
+        typeof state.player.vassalLevyFavors !== 'object' ||
+        Array.isArray(state.player.vassalLevyFavors)) {
+      state.player.vassalLevyFavors = {};
+    }
     state.player.vassalLevyFavors[rid] = state.turn + days;
     FB.adjustStanding(state, { kind:'realm', id:rid }, -15,
       'deed:exceptional_levy');
@@ -3218,26 +3464,53 @@ window.FB = window.FB || {};
     return all;
   };
 
+  FB.instantStatus = function (state, id) {
+    let action = null;
+    for (const candidate of FB.instants) {
+      if (candidate.id === id) {
+        action = candidate;
+        break;
+      }
+    }
+    if (!action) return {
+      action:null, shown:false, can:false, reason:''
+    };
+    const shown = !!action.show(state);
+    let can = shown, reason = '';
+    if (shown && action.cd !== undefined) {
+      const last = state.player.cooldowns[action.id];
+      if (last !== undefined && state.turn - last < action.cd) {
+        can = false;
+        reason = FB.T('Ready in {days} days.', {
+          days:action.cd - (state.turn - last)
+        });
+      }
+    }
+    if (can && action.can) {
+      const result = action.can(state);
+      if (result !== true) {
+        can = false;
+        reason = result;
+      }
+    }
+    return {
+      action:action,
+      shown:shown,
+      can:can,
+      reason:reason
+    };
+  };
+
   FB.listInstants = function (state) {
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_marriage_residence',
           'travel_settle_here'].indexOf(a.id) < 0) continue;
-      if (!a.show(state)) continue;
-      let can = true, reason = '';
-      if (a.cd !== undefined) {
-        const last = state.player.cooldowns[a.id];
-        if (last !== undefined && state.turn - last < a.cd) {
-          can = false;
-          reason = FB.T('Ready in {days} days.', { days: a.cd - (state.turn - last) });
-        }
-      }
-      if (can && a.can) {
-        const r = a.can(state);
-        if (r !== true) { can = false; reason = r; }
-      }
-      out.push({ a: a, can: can, reason: reason });
+      if (a.compatibilityAlias) continue;
+      const status = FB.instantStatus(state, a.id);
+      if (!status.shown) continue;
+      out.push({ a:a, can:status.can, reason:status.reason });
     }
     return out;
   };
@@ -3328,18 +3601,14 @@ window.FB = window.FB || {};
   };
 
   FB.runInstant = function (state, id) {
-    for (const a of FB.instants) {
-      if (a.id !== id || !a.show(state)) continue;
-      if (a.cd !== undefined) {
-        const last = state.player.cooldowns[id];
-        if (last !== undefined && state.turn - last < a.cd) return;
-      }
-      if (a.can && a.can(state) !== true) return;
+    const status = FB.instantStatus(state, id);
+    if (!status.shown || !status.can) return;
+    const a = status.action;
+    if (a) {
       if (a.cd !== undefined) state.player.cooldowns[id] = state.turn;
       a.run(state);
       if (a.noConsume) { if (FB.ui && FB.ui.refresh) FB.ui.refresh(); }
       else if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus: true });
-      return;
     }
   };
 })();
