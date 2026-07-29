@@ -208,6 +208,12 @@ sheet; no drag-and-drop path is required.
 Choosing an object applies the equipment change immediately; displaced objects return to
 the armory without a second confirmation. Equipment controls disable during travel or an
 unresolved event.
+The same sheet’s **Equip Best…** button opens a keyboard- and mobile-safe review instead of
+mutating immediately. The review lists the proposed outfit, names the armory or current
+wearer for each selected object, and spells out every move and displaced object before an
+explicit apply. If an assignment changes while the review is open, it shows a fresh plan
+and requires another confirmation. Applying returns to the selected character’s equipment
+sheet; manual slot buttons remain the primary fine-grained control.
 The mechanically active totals from worn items appear beneath the figure, including an
 explicit empty state. On narrow phones the figure and bonus summary stack above the same
 two-column grid.

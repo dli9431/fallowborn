@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.84.2';
+  FB.VERSION = '1.85.0';
   FB.CHANGELOG = [
+    { v: '1.85.0', date: '2026-07-29', changes: [
+      'Each managed character’s Equipment sheet can now preview and apply the strongest available outfit.'
+    ] },
     { v: '1.84.2', date: '2026-07-29', changes: [
       'Freeholders can now buy every remaining plot needed for a manor in one reviewed purchase from the land market.'
     ] },

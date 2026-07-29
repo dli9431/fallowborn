@@ -35805,6 +35805,16 @@
         "text": "not already of noble or royal station"
       }
     },
+    "src.00f6d319": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Already worn by {name}"
+      }
+    },
     "src.00fb0aa9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -35923,6 +35933,16 @@
       ],
       "source": {
         "text": "Deny there was ever another quern."
+      }
+    },
+    "src.017530a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal equip-best-modal"
       }
     },
     "src.019900ed": {
@@ -38851,6 +38871,16 @@
       ],
       "source": {
         "text": "Reed Pen and Paper"
+      }
+    },
+    "src.0aef1c72": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} returns from {source} to the family armory."
       }
     },
     "src.0afe2aeb": {
@@ -42975,6 +43005,16 @@
         "text": "Makes {content} available."
       }
     },
+    "src.17f312ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day."
+      }
+    },
     "src.17f38fb5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46819,6 +46859,16 @@
       ],
       "source": {
         "text": "🎓 Preview Education Policy"
+      }
+    },
+    "src.24fb5553": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No age-valid, unpledged equipment is available for this character."
       }
     },
     "src.24fec001": {
@@ -50787,6 +50837,16 @@
         "text": "You — held in your own hand"
       }
     },
+    "src.33118474": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "its current wearer"
+      }
+    },
     "src.33129af7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50865,6 +50925,16 @@
       ],
       "source": {
         "text": "The world still rings and tilts."
+      }
+    },
+    "src.33790e35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "another household member"
       }
     },
     "src.33825900": {
@@ -52811,6 +52881,16 @@
       ],
       "source": {
         "text": "A king who feeds sycophants breeds them."
+      }
+    },
+    "src.3a4c5657": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equip Best…"
       }
     },
     "src.3a4f8c89": {
@@ -57351,6 +57431,16 @@
         "text": "Visit {name} at the capital and remain at least {days} days; Regard advances only while you are there."
       }
     },
+    "src.48c1b54c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "From the family armory"
+      }
+    },
     "src.48ce0e66": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60576,6 +60666,16 @@
       ],
       "source": {
         "text": "Back to item"
+      }
+    },
+    "src.534b977d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment assignments changed after this review. A fresh plan is shown; review it before applying."
       }
     },
     "src.534dc5f2": {
@@ -64139,6 +64239,16 @@
         "text": "Accept what the road has brought."
       }
     },
+    "src.5f54c0b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} moves from {source} to {name} ({slots})."
+      }
+    },
     "src.5f5652d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65914,6 +66024,16 @@
         "text": "Remain nearby and give the relationship your daily attention."
       }
     },
+    "src.6585aed6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equipment cannot be optimized right now."
+      }
+    },
     "src.658885cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66842,6 +66962,16 @@
       ],
       "source": {
         "text": "Raška"
+      }
+    },
+    "src.688ad72f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The equipment plan can no longer be applied."
       }
     },
     "src.68a3b29f": {
@@ -83005,6 +83135,16 @@
         "text": "Decline the inherited vow"
       }
     },
+    "src.9cc54188": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} moves from {from} to {to}."
+      }
+    },
     "src.9ccb055e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85289,6 +85429,16 @@
         "text": "Declare Independence"
       }
     },
+    "src.a475fcb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Family armory"
+      }
+    },
     "src.a48941fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85297,6 +85447,16 @@
       ],
       "source": {
         "text": "This is you"
+      }
+    },
+    "src.a48d07a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Equip Best for {name}"
       }
     },
     "src.a48ebf5d": {
@@ -88007,6 +88167,16 @@
       ],
       "source": {
         "text": "Phase"
+      }
+    },
+    "src.adff10ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Nothing will move. This character already wears the best available outfit."
       }
     },
     "src.adff4511": {
@@ -90773,6 +90943,16 @@
       ],
       "source": {
         "text": "{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender."
+      }
+    },
+    "src.b6c39932": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Proposed outfit"
       }
     },
     "src.b6c66da6": {
@@ -98858,6 +99038,16 @@
         "text": "The household already has an active self-founded venture."
       }
     },
+    "src.d32a5907": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Best available equipment applied to {name}."
+      }
+    },
     "src.d32d08b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101752,6 +101942,16 @@
         "text": "No lasting effects — only a story people tell about you."
       }
     },
+    "src.dd228edb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Currently worn by {name}"
+      }
+    },
     "src.dd2b1461": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102140,6 +102340,16 @@
       ],
       "source": {
         "text": "Revenue assigned to lenders"
+      }
+    },
+    "src.de488649": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{item} moves from the family armory to {name} ({slots})."
       }
     },
     "src.de52de8a": {
@@ -105841,6 +106051,16 @@
         "text": "Councillors propose a progress through the realm: justice beneath open skies, feasts in loyal towns, and a royal household consuming supplies everywhere it passes."
       }
     },
+    "src.ea7de527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Apply Equip Best"
+      }
+    },
     "src.ea841021": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109045,6 +109265,16 @@
       ],
       "source": {
         "text": "Grace settles over hearth and home."
+      }
+    },
+    "src.f575236d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Items that will move"
       }
     },
     "src.f57e26cc": {
@@ -117795,6 +118025,16 @@
         "text": "Already spent"
       }
     },
+    "ui:Already worn by {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Already worn by {name}"
+      }
+    },
     "ui:An active mod has an invalid currency definition. The default currency is being used.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -117897,6 +118137,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Any direction chosen here remains assigned but is suspended until the war ends."
+      }
+    },
+    "ui:Apply Equip Best": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Apply Equip Best"
       }
     },
     "ui:Apply staffing plan": {
@@ -118449,6 +118697,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Belongs to the county and follows it through conquest"
+      }
+    },
+    "ui:Best available equipment applied to {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Best available equipment applied to {name}."
       }
     },
     "ui:Best instruction up to {money:amount} per child each season": {
@@ -119670,6 +119928,16 @@
         "text": "Currently assigned"
       }
     },
+    "ui:Currently worn by {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Currently worn by {name}"
+      }
+    },
     "ui:Custody of the sacred places": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120455,6 +120723,24 @@
         "text": "Episcopal temporalities"
       }
     },
+    "ui:Equip Best for {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equip Best for {name}"
+      }
+    },
+    "ui:Equip Best…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equip Best…"
+      }
+    },
     "ui:Equip items…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120481,6 +120767,14 @@
         "text": "Equipment"
       }
     },
+    "ui:Equipment assignments changed after this review. A fresh plan is shown; review it before applying.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment assignments changed after this review. A fresh plan is shown; review it before applying."
+      }
+    },
     "ui:Equipment bonuses": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120495,6 +120789,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Equipment cannot be changed while the household is traveling."
+      }
+    },
+    "ui:Equipment cannot be optimized right now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Equipment cannot be optimized right now."
       }
     },
     "ui:Equipment for {name}": {
@@ -120649,6 +120951,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Families willing to hear an offer for {name}’s hand:"
+      }
+    },
+    "ui:Family armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Family armory"
       }
     },
     "ui:Family enterprises": {
@@ -120945,6 +121255,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors."
+      }
+    },
+    "ui:From the family armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "From the family armory"
       }
     },
     "ui:Full figure of {name}": {
@@ -121726,6 +122044,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Items from the family armory"
+      }
+    },
+    "ui:Items that will move": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Items that will move"
       }
     },
     "ui:Justified · {piety} piety": {
@@ -122686,6 +123012,14 @@
         "text": "No active sentence from the recognized obedience."
       }
     },
+    "ui:No age-valid, unpledged equipment is available for this character.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No age-valid, unpledged equipment is available for this character."
+      }
+    },
     "ui:No apprenticeship chosen": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -123506,6 +123840,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Nothing was worn."
+      }
+    },
+    "ui:Nothing will move. This character already wears the best available outfit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Nothing will move. This character already wears the best available outfit."
       }
     },
     "ui:Novice": {
@@ -124642,6 +124984,14 @@
         "text": "Proposed"
       }
     },
+    "ui:Proposed outfit": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Proposed outfit"
+      }
+    },
     "ui:Proposed total": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -125587,6 +125937,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements."
+      }
+    },
+    "ui:Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day."
       }
     },
     "ui:Review venture": {
@@ -126857,6 +127217,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "The enclosed conclave opens in {days} days."
+      }
+    },
+    "ui:The equipment plan can no longer be applied.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The equipment plan can no longer be applied."
       }
     },
     "ui:The estates have heard your motion this year; they will take another come the new year.": {
@@ -129171,6 +129539,14 @@
         "text": "another enterprise"
       }
     },
+    "ui:another household member": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "another household member"
+      }
+    },
     "ui:another realm": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129574,6 +129950,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "independent"
+      }
+    },
+    "ui:its current wearer": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "its current wearer"
       }
     },
     "ui:justified": {
@@ -131548,6 +131932,54 @@
       "location": "js/ui.js",
       "source": {
         "text": "{incoming} replaces {outgoing}."
+      }
+    },
+    "ui:{item} moves from the family armory to {name} ({slots}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "name",
+        "slots"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} moves from the family armory to {name} ({slots})."
+      }
+    },
+    "ui:{item} moves from {from} to {to}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "from",
+        "item",
+        "to"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} moves from {from} to {to}."
+      }
+    },
+    "ui:{item} moves from {source} to {name} ({slots}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "name",
+        "slots",
+        "source"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} moves from {source} to {name} ({slots})."
+      }
+    },
+    "ui:{item} returns from {source} to the family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "item",
+        "source"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{item} returns from {source} to the family armory."
       }
     },
     "ui:{item} returns to the armory.": {

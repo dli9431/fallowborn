@@ -912,6 +912,33 @@ textarea.modjson, textarea.savetext {
   font-weight: normal; line-height: 1.25; text-overflow: ellipsis;
 }
 .equip-note { color: #918163; font-size: 11px; line-height: 1.35; margin-top: 7px; }
+.equip-best-action { width: 100%; min-height: 44px; margin-top: 10px; }
+.equip-best-section { width: min(100%, 900px); margin: 0 auto 14px; }
+.equip-best-section h4 { margin: 0 0 7px; color: #d8b24a; }
+.equip-best-list {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px;
+}
+.equip-best-row {
+  min-width: 0; padding: 9px 10px; border: 1px solid #55452a;
+  border-radius: 7px; background: #241d15;
+}
+.equip-best-row strong {
+  display: block; color: #ead8a8; font-size: 13px; overflow-wrap: anywhere;
+}
+.equip-best-row span, .equip-best-row small {
+  display: block; margin-top: 2px; color: #b9a682; font-size: 12px;
+}
+.equip-best-row small { color: #8fa874; }
+.equip-best-movements {
+  padding: 4px 10px; border: 1px solid #4a3d29;
+  border-radius: 7px; background: #211a13;
+}
+.equip-best-movement {
+  padding: 6px 0; border-bottom: 1px dotted #4a3b27;
+  color: #d6c59f; font-size: 12px; line-height: 1.4;
+}
+.equip-best-movement:last-child { border-bottom: 0; }
+.equip-best-notice { width: min(100%, 900px); margin: 0 auto 12px; }
 .equip-picker-overlay {
   position: fixed; inset: 0; z-index: 4; display: flex; align-items: center;
   justify-content: center; padding: 24px; background: rgba(8,6,4,.68);
@@ -1096,6 +1123,7 @@ textarea.modjson, textarea.savetext {
   }
   .education-policy-summary .btn { width: 100%; }
   .education-policy-preview-list { grid-template-columns: 1fr; }
+  .equip-best-list { grid-template-columns: 1fr; }
   .education-policy-field select,
   .education-policy-field input[type="number"] { width: 100%; min-height: 48px; }
   .papacy-summary, .papacy-college { grid-template-columns: 1fr; }

@@ -748,14 +748,55 @@ window.FB = window.FB || {};
     return a.key < b.key ? -1 : (a.key > b.key ? 1 : 0);
   }
 
-  /* Succession gives the new protagonist first choice of the shared armory.
-     Mechanical power wins before value; the two hand slots are optimized as
-     one choice so a strong two-handed object is compared with the best valid
-     pair. No RNG is consumed, and pledged or age-gated gear is ignored. */
-  FB.autoEquipBest = function (state, cid) {
+  function slotsHolding(loadout, ref) {
+    const out = [];
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+      if (loadout && loadout[SLOT_ORDER[i]] === ref) out.push(SLOT_ORDER[i]);
+    }
+    return out;
+  }
+
+  function sameSlots(a, b) {
+    if (a.length !== b.length) return false;
+    const left = a.slice().sort();
+    const right = b.slice().sort();
+    for (let i = 0; i < left.length; i++) {
+      if (left[i] !== right[i]) return false;
+    }
+    return true;
+  }
+
+  function equipmentPlanKey(state, cid, next, proposed) {
+    const parts = [cid];
+    const current = state.player.loadouts[cid] || {};
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+      const slot = SLOT_ORDER[i];
+      parts.push('old:' + slot + '=' + (current[slot] || ''));
+      parts.push('new:' + slot + '=' + (next[slot] || ''));
+    }
+    const refs = proposed.map(function (entry) { return entry.ref; }).sort();
+    for (let i = 0; i < refs.length; i++) {
+      const at = assignmentForRaw(state, refs[i]);
+      parts.push('at:' + refs[i] + '=' + (at
+        ? at.cid + ':' + at.slots.slice().sort().join(',')
+        : 'armory'));
+    }
+    return parts.join('|');
+  }
+
+  /* The shared optimizer returns a complete, non-mutating proposal. Mechanical
+     power wins before value; the two hand slots are optimized as one choice
+     so a strong two-handed object is compared with the best valid pair. */
+  function equipBestPlan(state, cid, ignoreBlock) {
     FB.ensureItems(state);
     const c = state.chars[cid];
-    if (!c || c.dead || directHouseholdIds(state).indexOf(cid) < 0) return [];
+    if (!c || c.dead || directHouseholdIds(state).indexOf(cid) < 0) {
+      return { ok:false, code:'household', cid:cid };
+    }
+    if (!ignoreBlock) {
+      const blocked = FB.equipmentBlockedReason(state);
+      if (blocked) return { ok:false, code:blocked, cid:cid };
+    }
     const fixedSlots = ['head', 'neck', 'body', 'waist', 'feet', 'ring'];
     const candidates = {};
     const hands = [];
@@ -776,7 +817,6 @@ window.FB = window.FB || {};
       else if (candidates[item.slot]) candidates[item.slot].push(candidate);
     }
 
-    const chosen = [];
     const next = {};
     for (let i = 0; i < fixedSlots.length; i++) {
       const slot = fixedSlots[i];
@@ -785,7 +825,6 @@ window.FB = window.FB || {};
         (candidates[slot][0].score > 0 ||
           (candidates[slot][0].score === 0 && candidates[slot][0].value > 0))) {
         next[slot] = candidates[slot][0].ref;
-        chosen.push(candidates[slot][0]);
       }
     }
 
@@ -804,22 +843,110 @@ window.FB = window.FB || {};
     if (handChoice.length === 1 && handChoice[0].item.grip === 2) {
       next.leftHand = handChoice[0].ref;
       next.rightHand = handChoice[0].ref;
-      chosen.push(handChoice[0]);
     } else {
       if (handChoice[0]) {
         next.rightHand = handChoice[0].ref;
-        chosen.push(handChoice[0]);
       }
       if (handChoice[1]) {
         next.leftHand = handChoice[1].ref;
-        chosen.push(handChoice[1]);
       }
     }
 
-    delete state.player.loadouts[cid];
-    for (let i = 0; i < chosen.length; i++) clearAssignmentRaw(state, chosen[i].ref);
-    if (chosen.length) state.player.loadouts[cid] = next;
-    return chosen.map(function (item) { return item.ref; });
+    const proposed = [];
+    const proposedRefs = {};
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+      const ref = next[SLOT_ORDER[i]];
+      if (!ref || proposedRefs[ref]) continue;
+      proposedRefs[ref] = 1;
+      const at = assignmentForRaw(state, ref);
+      proposed.push({
+        ref:ref,
+        slots:slotsHolding(next, ref),
+        fromCid:at ? at.cid : null,
+        fromSlots:at ? at.slots.slice() : []
+      });
+    }
+
+    const movements = [];
+    for (let i = 0; i < proposed.length; i++) {
+      const entry = proposed[i];
+      if (entry.fromCid === cid && sameSlots(entry.fromSlots, entry.slots)) continue;
+      movements.push({
+        ref:entry.ref,
+        fromCid:entry.fromCid,
+        fromSlots:entry.fromSlots.slice(),
+        toCid:cid,
+        toSlots:entry.slots.slice()
+      });
+    }
+    const currentRefs = FB.equippedItemRefs(state, cid);
+    for (let i = 0; i < currentRefs.length; i++) {
+      const ref = currentRefs[i];
+      if (proposedRefs[ref]) continue;
+      movements.push({
+        ref:ref,
+        fromCid:cid,
+        fromSlots:slotsHolding(state.player.loadouts[cid], ref),
+        toCid:null,
+        toSlots:[]
+      });
+    }
+
+    return {
+      ok:true,
+      cid:cid,
+      refs:proposed.map(function (entry) { return entry.ref; }),
+      loadout:next,
+      proposed:proposed,
+      movements:movements,
+      changed:movements.length > 0,
+      key:equipmentPlanKey(state, cid, next, proposed)
+    };
+  }
+
+  function applyEquipBestPlan(state, plan) {
+    delete state.player.loadouts[plan.cid];
+    for (let i = 0; i < plan.refs.length; i++) clearAssignmentRaw(state, plan.refs[i]);
+    if (plan.refs.length) {
+      const next = {};
+      for (let i = 0; i < SLOT_ORDER.length; i++) {
+        const slot = SLOT_ORDER[i];
+        if (plan.loadout[slot]) next[slot] = plan.loadout[slot];
+      }
+      state.player.loadouts[plan.cid] = next;
+    }
+    return plan.refs.slice();
+  }
+
+  FB.equipBestPreview = function (state, cid) {
+    return equipBestPlan(state, cid, false);
+  };
+
+  FB.applyEquipBest = function (state, reviewedPlan) {
+    if (!reviewedPlan || !reviewedPlan.cid) {
+      return { ok:false, code:'missing' };
+    }
+    const current = equipBestPlan(state, reviewedPlan.cid, false);
+    if (!current.ok) return current;
+    if (current.key !== reviewedPlan.key) {
+      return { ok:false, code:'stale', preview:current };
+    }
+    const refs = applyEquipBestPlan(state, current);
+    return {
+      ok:true,
+      changed:current.changed,
+      refs:refs,
+      preview:current
+    };
+  };
+
+  /* Succession gives the new protagonist first choice of the shared armory.
+     It applies the same deterministic plan without a player confirmation and
+     ignores the temporary UI equipment block at that transition boundary. */
+  FB.autoEquipBest = function (state, cid) {
+    const plan = equipBestPlan(state, cid, true);
+    if (!plan.ok) return [];
+    return applyEquipBestPlan(state, plan);
   };
 
   FB.pledgeItem = function (state, ref) {
