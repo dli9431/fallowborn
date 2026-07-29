@@ -14,7 +14,7 @@ npx playwright install chromium
 ```
 
 `npm ci` installs the exact package graph recorded in `package-lock.json`. The second command
-downloads the Chromium revision pinned by that Playwright version. On Linux CI, Playwright uses
+downloads the Chromium revision pinned by that Playwright version. On Linux, the owner may use
 `npx playwright install --with-deps chromium` so the operating-system browser libraries are
 installed too.
 
@@ -42,7 +42,13 @@ npm run check
 # Static-server start and clean-close regression
 npm run test:server
 
-# Complete configured suite
+# Run only test files affected since the last successful tracked run
+npm run test:changed
+
+# Run the server regression and every configured browser project
+npm run test:all
+
+# Alias for the complete test:all command
 npm test
 
 # Explicitly run both Chromium targets
@@ -61,6 +67,16 @@ npm run test:file
 # Run only the local HTTP target
 npm run test:served
 ```
+
+`test:all` and `test:changed` record the current Git commit in the ignored
+`tests/e2e/.last-tested-commit` file only after a successful Playwright run. If the marker does
+not exist, `test:changed` stops without running Playwright and asks the owner to establish a
+baseline with `npm run test:all`.
+
+Playwright's changed mode selects affected test files between the recorded commit and the current
+tree. It does not isolate only newly added `test(...)` blocks inside an existing specification;
+the affected specification runs as a whole. Running against uncommitted changes is supported,
+but the marker records a commit, so those changes remain affected until committed.
 
 Playwright starts and stops the test server automatically. Tests run headlessly unless a
 Playwright command-line option requests another mode.

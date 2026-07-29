@@ -19,6 +19,7 @@ yarn-error.log*
 test-results/
 playwright-report/
 blob-report/
+.last-tested-commit
 
 # Python bytecode (from the i18n tooling: tools/i18n_catalog.py)
 __pycache__/

@@ -5,7 +5,9 @@
   "description": "Development-only browser regression tests for Fallowborn",
   "scripts": {
     "check": "node support/check-js.js",
-    "test": "npm run test:server && playwright test",
+    "test": "npm run test:all",
+    "test:all": "npm run test:server && node support/run-selected-tests.js all",
+    "test:changed": "npm run test:server && node support/run-selected-tests.js changed",
     "test:chromium": "npm run test:server && playwright test --project=chromium-file --project=chromium-served",
     "test:cross-browser": "playwright test --project=firefox-served --project=webkit-served",
     "test:firefox": "playwright test --project=firefox-served",

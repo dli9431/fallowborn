@@ -32,8 +32,10 @@ From `tests/e2e/`:
 - `npx playwright install chromium` installs the pinned local browser revision.
 - `npm run check` runs the fast `node --check` syntax gate.
 - `npm run test:server` runs the in-process static-server lifecycle regression.
+- `npm run test:changed` runs test files affected since the last successful tracked run.
+- `npm run test:all` runs the server regression and every configured browser project.
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
-- `npm test` runs the configured browser suite.
+- `npm test` is an alias for `npm run test:all`.
 
 These commands are for owner-initiated manual runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute
