@@ -213,19 +213,7 @@ self.addEventListener('activate', function (event) {
 
 function navigationResponse(request) {
   return fetch(request).then(function (response) {
-    var url = new URL(request.url);
-    var isGameEntry = url.pathname === '/' || url.pathname === '/index.html';
-    if (!response || !response.ok || !isGameEntry) return response;
-
-    return caches.open(CACHE_NAME).then(function (cache) {
-      return cache.put('/index.html', response.clone()).then(function () {
-        return response;
-      }, function () {
-        return response;
-      });
-    }, function () {
-      return response;
-    });
+    return response;
   }, function () {
     return caches.open(CACHE_NAME).then(function (cache) {
       return cache.match('/index.html');
@@ -277,6 +265,12 @@ self.addEventListener('fetch', function (event) {
   event.respondWith(assetResponse(request));
 });
 ```
+
+Online navigation deliberately does not write into the active worker's cache. The active
+cache belongs to the last completely installed release; replacing its HTML before the next
+worker finishes precaching could mix a new document with an old or partial asset bundle.
+Only the install handler seeds cached `index.html`, so a failed update leaves the previous
+offline release internally consistent.
 
 There is deliberately no asset list to maintain here. The build derives it, so adding,
 renaming, or removing a shipped file needs no edit to `sw.js` and cannot silently break
@@ -533,6 +527,10 @@ Expected release flow:
 6. Only a complete cache is activated.
 7. Activation claims pages and deletes older Fallowborn caches.
 8. Later offline navigations receive the cached current `index.html` and assets.
+
+Until step 6 completes, the previous worker keeps its own cached `index.html` unchanged.
+If the new precache fails, the next offline navigation therefore returns the previous
+complete release rather than a mixture of release generations.
 
 The normal `FB.VERSION` and `FB.CHANGELOG` integration rules still apply. The service
 worker is not a replacement for the existing asset cache-bust discipline. See

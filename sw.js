@@ -58,19 +58,7 @@ self.addEventListener('activate', function (event) {
 
 function navigationResponse(request) {
   return fetch(request).then(function (response) {
-    var url = new URL(request.url);
-    var isGameEntry = url.pathname === '/' || url.pathname === '/index.html';
-    if (!response || !response.ok || !isGameEntry) return response;
-
-    return caches.open(CACHE_NAME).then(function (cache) {
-      return cache.put('/index.html', response.clone()).then(function () {
-        return response;
-      }, function () {
-        return response;
-      });
-    }, function () {
-      return response;
-    });
+    return response;
   }, function () {
     return caches.open(CACHE_NAME).then(function (cache) {
       return cache.match('/index.html');

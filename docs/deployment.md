@@ -38,12 +38,14 @@ shipped `data/lang_*.js` catalog. Installation activates only after that whole b
 unversioned HTML, manifest, favicons, and install icons have cached successfully.
 
 Hosted navigation is network-first so an online visit still receives the newest deployment.
-Versioned assets are exact cache-first; only after a network failure may a query-insensitive
-fallback serve a precached asset. That last fallback is required for dynamically loaded language
-catalogs, whose runtime query uses `FB.VERSION` while the Docker precache uses the deployment
-fingerprint. Activation claims existing pages, deletes only older `fallowborn-offline-*` caches,
-and makes the title-screen **Available offline** status visible once the page has a controlling
-worker.
+The response is not written into the active worker's cache: only a completed worker installation
+seeds cached HTML, so a failed update cannot replace the previous complete document with one that
+expects partial or missing assets. Versioned assets are exact cache-first; only after a network
+failure may a query-insensitive fallback serve a precached asset. That last fallback is required
+for dynamically loaded language catalogs, whose runtime query uses `FB.VERSION` while the Docker
+precache uses the deployment fingerprint. Activation claims existing pages, deletes only older
+`fallowborn-offline-*` caches, and makes the title-screen **Available offline** status visible once
+the page has a controlling worker.
 
 The manifest makes the hosted game eligible for browser installation, but the service worker is
 what provides offline refresh. Browser storage remains evictable: clearing site data removes the

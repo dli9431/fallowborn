@@ -13,7 +13,7 @@
     "test:firefox": "playwright test --project=firefox-served",
     "test:webkit": "playwright test --project=webkit-served",
     "test:file": "playwright test --project=chromium-file",
-    "test:server": "node --test support/static-server.test.js",
+    "test:server": "node --test support/static-server.test.js support/service-worker.test.js",
     "test:served": "playwright test --project=chromium-served",
     "verify:runtime": "node support/verify-runtime-manifest.js"
   },

@@ -39,7 +39,7 @@ For an owner-initiated manual run from `tests/e2e/`:
 # Fast syntax check for shipped and test JavaScript
 npm run check
 
-# Static-server start and clean-close regression
+# Static-server lifecycle and offline-cache atomicity regressions
 npm run test:server
 
 # Run only test files affected since the last successful tracked run
@@ -147,6 +147,8 @@ The initial suite covers:
 - clean boot from both targets;
 - hosted-surface isolation: `file://` and the local served origin expose
   `FB.platform.isPlay === false`, add no install manifest metadata, and acquire no worker;
+- service-worker online navigation leaves the last completely installed cached HTML untouched,
+  so a failed update still falls back to one internally consistent release;
 - uncaught page exceptions and unexpected console errors;
 - failed local requests and HTTP 4xx or 5xx responses;
 - unexpected external network requests;
