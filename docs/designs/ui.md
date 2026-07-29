@@ -332,6 +332,20 @@ A separate personal-attention summary names the assigned character, current Stan
 daily rate, estimated active days to the relationship threshold, and whether progress is
 active, paused while on the road, or paused because the target is in another county; attention
 never replaces the work focus.
+
+Rank & Realm exposes one no-day-cost **Governance…** entry for every territorial
+baron-or-greater player. Its desktop-wide and mobile full-sheet layout is the
+authoritative political presentation: Position, Domain, Liege & Obligations (or
+Independence), Vassals, the rank-appropriate Institution, and grouped Political
+Actions. `FB.governanceSummary` supplies locale-neutral ids and exact numeric values;
+the UI localizes complete phrases and delegates every enabled or disabled action to
+`FB.instantStatus` and `FB.runInstant`. County buttons return to Land, realm buttons
+open the existing ruler sheet, and focused Estates/Council views preserve a Governance
+Back path. The section strip and exit footer remain sticky, controls are native
+buttons, ordinary number hints apply to political actions, and narrow layouts collapse
+to one column without hiding blocked reasons. The legacy Estates and Royal Council
+deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
+list.
 Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
 guildmaster; its locked description exposes the exact missing technology, guild standing,
 Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
@@ -382,9 +396,11 @@ capacity-limited retainers, office, pay, work assignment, and maintained-standar
 summary/upkeep), Connections (canonical
 friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
 rank, standing, exact income modifier, enterprises, partnerships, positions, and bounded
-guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Royal
-Council summary/link, and the computed levy ledger). Empty sections explain what is
-absent rather than inventing placeholder people.
+guild commissions), and Realm. For a qualified territorial ruler, Realm contains one
+Governance route, foreign ties, and the computed levy ledger rather than duplicating
+liege, vassal, Estates, or Council prose. Other protagonists retain the compact legacy
+relationship summary. Empty sections explain what is absent rather than inventing
+placeholder people.
 
 **Planned follow-up — not yet implemented:** player feedback shows that both this panel
 and Work & Enterprises lose readability as their character and enterprise lists grow.

@@ -472,9 +472,9 @@ window.FB = window.FB || {};
   };
 
   FB.playerBishopricOnly = function (state) {
+    if (state.player.provs && state.player.provs.length) return false;
     const c = playerChar(state);
-    return !!(FB.bishopricOf(state, c) &&
-      !(state.player.provs && state.player.provs.length));
+    return !!FB.bishopricOf(state, c);
   };
 
   FB.bishopricIncome = function (state, c) {

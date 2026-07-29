@@ -2850,12 +2850,8 @@ window.FB = window.FB || {};
       for (const vid of FB.playerVassals(state)) {
         const rate = FB.vassalLevyRate
           ? FB.vassalLevyRate(state, vid) : (B.vassalLevyRate || 0);
-        let amount = 0;
-        for (const pid of FB.realmHeldCounties(state, vid)) {
-          const modifier = FB.modBonus
-            ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-          amount += (state.dev[pid] || 1) * B.levyPerDev * modifier * rate;
-        }
+        const amount = FB.vassalLevyContribution
+          ? FB.vassalLevyContribution(state, vid) : 0;
         add('levy', 'vassal', amount, {
           rid:vid, rate:rate,
           favored:!!(FB.vassalLevyFavor && FB.vassalLevyFavor(state, vid))

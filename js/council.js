@@ -93,28 +93,85 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Locale-neutral, RNG-free projection for Governance and other overview
+     surfaces. Unlike councilEnsure, reading this never forms the council,
+     fills a vacancy, repairs a ruler trait, or writes a Chronicle notice. */
+  FB.councilSummary = function (state) {
+    if (!FB.councilActive(state)) return null;
+    const council = state.council;
+    const seats = [];
+    const seated = {};
+    const schemers = [];
+    const sycophants = [];
+    let memberStanding = 0;
+    let memberCount = 0;
+    for (const seat of SEATS) {
+      const holderId = council && council.seats &&
+        council.seats[seat.id] || null;
+      const realm = holderId && state.realms[holderId];
+      const valid = !!(realm && realm.alive && realm.liege === 'player');
+      const value = valid ? standing(state, holderId) : 0;
+      const effective = valid && value > -50;
+      if (valid) {
+        seated[holderId] = seat.id;
+        memberStanding += value;
+        memberCount++;
+        if (SCHEMER_TRAITS.indexOf((realm.ruler || {}).trait) >= 0 &&
+            value <= -1) schemers.push(holderId);
+        if (value >= 20) sycophants.push(holderId);
+      }
+      seats.push({
+        id:seat.id,
+        holderId:valid ? holderId : null,
+        staleHolderId:holderId && !valid ? holderId : null,
+        standing:value,
+        effective:effective,
+        bonusKey:seat.bonusKey,
+        bonusAmount:effective ? seat.bonusAmt : 0
+      });
+    }
+    const vassalIds = FB.playerVassals(state).slice().sort();
+    let vassalStanding = 0;
+    for (const rid of vassalIds) vassalStanding += standing(state, rid);
+    const authority = council && isFinite(Number(council.authority))
+      ? FB.clamp(Number(council.authority), 0, 100) : 60;
+    return {
+      formed:!!council,
+      authority:authority,
+      consentBelow:FBDATA.balance.councilConsentBelow || 35,
+      charterAbove:FBDATA.balance.councilCharterAbove || 70,
+      needsConsent:!!council &&
+        authority < (FBDATA.balance.councilConsentBelow || 35),
+      seats:seats,
+      seated:seated,
+      vacancyIds:seats.filter(function (seat) {
+        return !seat.holderId;
+      }).map(function (seat) {
+        return seat.id;
+      }),
+      averageMemberStanding:memberCount
+        ? memberStanding / memberCount : 0,
+      averageVassalStanding:vassalIds.length
+        ? vassalStanding / vassalIds.length : 0,
+      schemerIds:schemers,
+      sycophantIds:sycophants
+    };
+  };
+
   /* sum of office bonuses of one key (tax/levy/build/piety/plot) */
   FB.councilBonus = function (state, key) {
-    if (!FB.councilActive(state) || !state.council || !state.council.seats) return 0;
+    const summary = FB.councilSummary(state);
+    if (!summary || !summary.formed) return 0;
     let sum = 0;
-    for (const s of SEATS) {
-      if (s.bonusKey !== key) continue;
-      const rid = state.council.seats[s.id];
-      if (!rid) continue;
-      const r = state.realms[rid];
-      if (!r || !r.alive || r.liege !== 'player') continue;
-      if (standing(state, rid) <= -50) continue; // a vassal in disgrace serves no longer
-      sum += s.bonusAmt;
+    for (const seat of summary.seats) {
+      if (seat.bonusKey === key) sum += seat.bonusAmount;
     }
     return sum;
   };
 
   FB.councilAvgStanding = function (state) {
-    const ms = FB.councilMembers(state);
-    if (!ms.length) return 0;
-    let sum = 0;
-    for (const m of ms) sum += standing(state, m.rid);
-    return sum / ms.length;
+    const summary = FB.councilSummary(state);
+    return summary ? summary.averageMemberStanding : 0;
   };
   FB.councilAvgOpinion = FB.councilAvgStanding;
 

@@ -15,7 +15,7 @@ not part of this numbered queue.
 1. [Standing](systems-audit-01-standing.md) — one canonical relationship score,
    API, renderer, and succession rule. **Implemented 2026-07-29.**
 2. [Governance shell](systems-audit-02-governance-shell.md) — one political
-   overview using the Standing API.
+   overview using the Standing API. **Implemented 2026-07-29.**
 3. [Interaction cards](systems-audit-03-interaction-cards.md) — authoritative
    actions for one character or ruler, using Standing and Governance routes.
 4. [Large-list readability](systems-audit-04-large-list-readability.md) —

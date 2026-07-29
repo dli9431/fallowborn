@@ -34,6 +34,17 @@ player's voice, and sells a motion of the player's own — redress
 for `balance.parliamentMotionCost` gold, one motion per calendar year
 (`obl.lastMotion`).
 
+For territorial players, **Governance** is now the authoritative overview and entry
+point. `FB.parliamentTerms` and `FB.parliamentSummary` expose the current saved terms,
+pending session or motion, yearly-use status, and exact vote factors without creating
+`liege.obl`; the customary defaults are projected until the season tick or a successful
+motion calls `FB.parliamentEnsure`. `FB.parliamentMotionStatus` is the shared gate used
+by both Governance and `UI.showParliament`, and `FB.parliamentMove` performs the existing
+gold spend and event queueing only after that gate succeeds. The focused Estates view
+therefore remains mechanically authoritative without mutating state when opened. Its
+visible and browser Back actions return to Governance's Institution section when it was
+opened there. The former `the_estates` deed id remains a direct-call compatibility alias.
+
 **Votes are decided by the `parliament_vote` named chance**
 (`FB.parliamentVoteChance`): a 30% base plus a rank bonus (baron +5, count
 +12, duke +20 — a duke's word outweighs a baron's), diplomacy ×2%, prestige,

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.87.0';
+  FB.VERSION = '1.88.0';
   FB.CHANGELOG = [
+    { v: '1.88.0', date: '2026-07-29', changes: [
+      'Territorial rulers now have a Governance sheet for realm structure, demesne, vassals, military service, and their Council or Estates.'
+    ] },
     { v: '1.87.0', date: '2026-07-29', changes: [
       'Personal, feudal, and diplomatic relationships now use one Standing score and consistent terminology across character, ruler, Council, Estates, and event surfaces.'
     ] },
