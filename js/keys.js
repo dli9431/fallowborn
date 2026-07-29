@@ -27,6 +27,36 @@ window.FB = window.FB || {};
     if (n >= 0 && n < btns.length && !btns[n].disabled) btns[n].click();
   }
 
+  function modalFocusable() {
+    const modal = $('genmodal');
+    if (!modal) return [];
+    const nodes = modal.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), ' +
+      'select:not([disabled]), textarea:not([disabled]), ' +
+      '[tabindex]:not([tabindex="-1"])');
+    return Array.prototype.filter.call(nodes, function (node) {
+      return !node.hidden && node.getClientRects().length > 0;
+    });
+  }
+
+  function containModalTab(e) {
+    const modal = $('genmodal');
+    const controls = modalFocusable();
+    if (!controls.length) {
+      e.preventDefault();
+      return;
+    }
+    const first = controls[0], last = controls[controls.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !modal.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !modal.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   function centerProvince() {
     const M = FB.map;
     if (!M || !M.canvas || !FB.world) return null;
@@ -94,6 +124,8 @@ window.FB = window.FB || {};
     if (genOpen()) {
       if (k === 'Escape') {
         if (FB.ui._gmDismiss) { e.preventDefault(); FB.ui.closeModal(); }
+      } else if (k === 'Tab') {
+        containModalTab(e);
       } else if (digit) {
         e.preventDefault(); clickNth('#gm-body .actionbtn', slot);
       }

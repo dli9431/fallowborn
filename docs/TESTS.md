@@ -6,7 +6,7 @@ remains plain static JavaScript with no runtime dependencies or build step. Open
 
 ## First-time setup
 
-Run these commands from `tests/e2e/`:
+The owner may run these commands manually from `tests/e2e/`:
 
 ```sh
 npm ci
@@ -29,7 +29,11 @@ not included in either deployment artifact.
 
 ## Running the tests
 
-From `tests/e2e/`:
+All test execution is owner-controlled. AI coding agents add or update relevant tests but never
+execute the harness, install its dependencies or browsers, or start its server. Agents must
+report which tests changed and state that they were not run.
+
+For an owner-initiated manual run from `tests/e2e/`:
 
 ```sh
 # Fast syntax check for shipped and test JavaScript
@@ -79,37 +83,18 @@ orchestration, assertions, fixtures, and reporting.
 
 ## Main integration workflow
 
-Every direct commit on `main` and every merge into `main` has a test gate. Complete it against
-the exact tree that will be committed or merged:
+Every direct commit on `main` and every merge into `main` has a test-authoring requirement:
 
 1. Identify each observable behavior added, changed, or fixed.
 2. Add or update automated tests that exercise the expected behavior and would catch its
    regression. Keep those tests in the same commit or branch as the implementation.
-3. Run the focused specification while developing. For example:
+3. Do not run any focused test, syntax gate, browser matrix, runtime verifier, or manual browser
+   check. Do not install Playwright dependencies or browsers.
+4. In the handoff, list the test files added or updated and state that the tests were not run.
 
-   ```sh
-   npx playwright test specs/boot.spec.js
-   ```
-
-4. Before committing directly on `main`, run the ordinary integration gate from `tests/e2e/`:
-
-   ```sh
-   npm run check
-   npm run test:chromium
-   ```
-
-5. If merging a branch, rerun that gate after the merged tree is assembled and before finalizing
-   the merge. A passing branch run does not verify later conflict resolutions or integration
-   edits.
-6. Run `npm run test:cross-browser` whenever the change affects browser APIs, input, storage,
-   rendering, or responsive layout, and before a release.
-7. For behavior outside the harness, perform a specific manual check from
-   [What remains manual](#what-remains-manual) and record what was checked.
-
-Do not finalize the commit or merge with an unexplained relevant test failure. A documentation-only
-change does not require an artificial gameplay test, but it still requires any check relevant to
-the documentation or tooling changed. Continuous integration repeats these gates as a backstop;
-it does not replace local verification before integration.
+The owner decides when to use the commands in [Running the tests](#running-the-tests), including
+before commits, merges, releases, or deployments. A documentation-only change does not need an
+artificial gameplay test.
 
 ## The two browser targets
 
@@ -159,8 +144,11 @@ The initial suite covers:
   award application, beneficiaries, personal grants, and sacred custody;
 - preparation, active service, succession, withdrawal, open and partial councils, pending
   personal choices, completed history, legacy saves, and real slot reloads;
-- representative council copy, move buttons, consequence previews, keyboard operation, and
-  desktop/mobile-width structure.
+- representative council copy, move buttons, consequence previews, personal award choices,
+  and the named-beneficiary installation journey;
+- a relevant serialization and restore contract after every representative council outcome;
+- council focus entry and return, modal Tab containment, Enter and numbered activation,
+  principal panel shortcuts, and desktop/mobile-width structure.
 
 Target-specific cases use explicit skips. For example, the full storage contract runs only on the
 served project, while the initial determinism and simulation canaries run only on the file
@@ -220,7 +208,9 @@ npx playwright show-trace test-results/<case>/trace.zip
 
 ## Continuous integration
 
-`.github/workflows/test.yml` runs on pushes to `main`. Its Chromium job:
+`.github/workflows/test.yml` runs only when the owner starts it manually with GitHub's
+`workflow_dispatch` control. It does not run automatically on pushes or pull requests. Its
+Chromium job:
 
 1. installs Node and runs `npm ci` from `tests/e2e/`;
 2. runs the JavaScript syntax gate;
@@ -257,8 +247,8 @@ Automated browser tests do not replace release testing by a person. Continue man
 - real iOS and Android browsers;
 - pacing, legibility, and game feel.
 
-Run the fast Chromium suite for ordinary integration. Run the Firefox and WebKit matrix before
-releases and whenever browser-facing code changes.
+The owner chooses when to run the fast Chromium suite and when to run the Firefox and WebKit
+matrix.
 
 ## Common problems
 

@@ -35,9 +35,13 @@ From `tests/e2e/`:
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` runs the configured browser suite.
 
-Do not launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic,
-bounded, and isolated in fresh browser contexts. Manual testing remains required for appearance,
-touch behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
+These commands are for owner-initiated manual runs. AI coding agents must author or update
+relevant tests, but must not install test browsers or dependencies and must not execute
+`npm run check`, Playwright, the static-server regression, runtime verification, or any other
+command from the test harness. Report the tests added and state that they were not run. Do not
+launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic, bounded,
+and isolated in fresh browser contexts. Manual testing remains required for appearance, touch
+behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
 
 Deployment: zip the folder (`index.html` at the zip root) to itch.io as an HTML5 project, or in
 practice the owner runs `notes/deploy.cmd` (butler push). It ships to **two independent targets** —
@@ -63,22 +67,20 @@ same number and collide.
 **Default: commit directly onto `main`.** In the primary working directory, just commit your
 work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
 
-**Test gate for `main`.** Before making any commit directly on `main` or finalizing any merge
-into `main`, follow the [main integration workflow](docs/TESTS.md#main-integration-workflow)
-against the exact tree that will be committed:
+**Test authoring for `main`.** Before making any commit directly on `main` or finalizing any
+merge into `main`, follow the [main integration workflow](docs/TESTS.md#main-integration-workflow):
 
 1. Add or update automated tests for every observable behavior change or bug fix. The tests must
    exercise the expected behavior and land in the same commit or merge as the implementation.
-2. Run the relevant focused tests while developing, then run `npm run check` and
-   `npm run test:chromium` from `tests/e2e/` as the ordinary full integration gate.
-3. Run `npm run test:cross-browser` when browser-facing behavior changes and before a release.
-   Perform and record a specific manual check for behavior that the harness cannot cover.
+2. Do not run the tests. Test execution, including focused cases, syntax checks, browser
+   matrices, runtime verification, and manual browser checks, is always owner-controlled.
+3. In the handoff, list the test files added or updated and explicitly record that no tests
+   were run.
 
-For a branch merge, add the tests on the branch with the behavior change, then rerun the
-integration gate after the merged tree is assembled and before the merge is finalized. A
-documentation-only change does not need an artificial gameplay test, but it still requires any
-checks relevant to the files or tooling it changes. CI is a backstop, not a replacement for this
-pre-commit or pre-merge verification.
+For a branch merge, add the tests on the branch with the behavior change, but leave all
+execution to the owner. A documentation-only change does not need an artificial gameplay test.
+The manually dispatched GitHub workflow is also owner-controlled and is not an agent
+pre-commit or pre-merge step.
 
 **Every integration commit that assigns `FB.VERSION` must include that exact version in its
 commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,

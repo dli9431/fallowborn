@@ -4066,6 +4066,30 @@ window.FB = window.FB || {};
   /* ================= generic modal ================= */
   let genericNavSnapshot = null;
   let genericViewSerial = 0;
+  let modalOpenTrigger = null;
+
+  function eventControl(target) {
+    let node = target;
+    while (node && node !== document) {
+      if (node.tagName === 'BUTTON' || node.tagName === 'A' ||
+          node.tagName === 'INPUT' || node.tagName === 'SELECT' ||
+          node.tagName === 'TEXTAREA' || node.hasAttribute('tabindex')) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  document.addEventListener('click', function (event) {
+    if (!$('genmodal').classList.contains('hidden')) return;
+    const control = eventControl(event.target);
+    if (!control) return;
+    modalOpenTrigger = control;
+    setTimeout(function () {
+      if (modalOpenTrigger === control) modalOpenTrigger = null;
+    }, 0);
+  }, true);
 
   function setModalClasses(gm, value) {
     const previous = String(UI._gmModalClass || '').match(/\S+/g) || [];
@@ -4118,6 +4142,8 @@ window.FB = window.FB || {};
         view.focus.focus({ preventScroll:true });
       } else if (!view.noFocus) {
         focusFirstModalControl();
+      } else {
+        focusModalContainer();
       }
     }, 0);
   }
@@ -4189,6 +4215,15 @@ window.FB = window.FB || {};
     }, 0);
   }
 
+  function focusModalContainer() {
+    setTimeout(function () {
+      const gm = $('genmodal');
+      if (gm.classList.contains('hidden')) return;
+      gm.setAttribute('tabindex', '-1');
+      gm.focus({ preventScroll:true });
+    }, 0);
+  }
+
   function reopenGenericModalRaw() {
     if (!genericNavSnapshot) return;
     UI._gmDismiss = genericNavSnapshot.dismiss;
@@ -4198,6 +4233,7 @@ window.FB = window.FB || {};
     setModalClasses(gm, genericNavSnapshot.modalClass);
     gm.classList.remove('hidden');
     if (!genericNavSnapshot.noFocus) focusFirstModalControl();
+    else focusModalContainer();
   }
 
   function closeEquipmentPickerRaw(equipmentPicker, restoreFocus) {
@@ -4244,9 +4280,12 @@ window.FB = window.FB || {};
     }
     UI._gmDismiss = !(opts && opts.dismissable === false);
     if (wasHidden) {
-      UI._gmReturnFocus = document.activeElement;
+      UI._gmReturnFocus = modalOpenTrigger &&
+        document.documentElement.contains(modalOpenTrigger)
+        ? modalOpenTrigger : document.activeElement;
       UI._gmReturnAction = UI._gmReturnFocus && UI._gmReturnFocus.dataset
         ? UI._gmReturnFocus.dataset.actionId : null;
+      modalOpenTrigger = null;
     }
     gm.classList.remove('hidden');
     /* per-dialog modifier class (e.g. the changelog's even-margin sheet) —
@@ -4264,13 +4303,14 @@ window.FB = window.FB || {};
         btns[i].insertAdjacentHTML('afterbegin', hintFor(i));
       }
     }
-    /* opts.noFocus: leave nothing focused, so a stray Space/Enter cannot
-       activate the first button (used where the choice must be deliberate) */
+    /* opts.noFocus: focus the dialog rather than a choice, so a stray
+       Space/Enter cannot activate the first button (used where the choice
+       must be deliberate) */
     if (!(opts && opts.noFocus)) {
       // preventScroll: focusing a long dialog's lone Close button must not
       // drag the view to the bottom (Changelog, How to Play)
       focusFirstModalControl();
-    }
+    } else focusModalContainer();
     const currentViewToken = ++genericViewSerial;
     genericNavSnapshot = {
       dismiss:UI._gmDismiss,

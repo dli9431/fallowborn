@@ -22,6 +22,12 @@ must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
 code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
+Tab and Shift+Tab wrap between the first and last focusable controls of an open generic
+dialog, so keyboard focus cannot move into the obscured game until the dialog closes.
+Dialogs whose first choice must be deliberate focus the dialog container on entry rather
+than preselecting a choice; the first Tab still enters the dialog's controls.
+Closing a generic dialog restores its activating control after keyboard or pointer
+activation, including browsers that do not focus a button when it is clicked.
 Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
 `[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
 text; narrow or short non-desktop layouts and coarse-pointer touch layouts keep the ordinary

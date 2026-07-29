@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.83.0';
+  FB.VERSION = '1.83.1';
   FB.CHANGELOG = [
+    { v: '1.83.1', date: '2026-07-29', changes: [
+      'Dialogs now keep keyboard focus contained and return it reliably after closing.'
+    ] },
     { v: '1.83.0', date: '2026-07-28', changes: [
       'The Deeds panel now gathers ongoing commitments into one responsive ledger with direct links to manage each one.'
     ] },

@@ -4,7 +4,8 @@ const { test, expect } = require('../support/fixture');
 const {
   injectHolyWarHarness,
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 test('the council is keyboard-operable at desktop and mobile widths',
@@ -14,6 +15,9 @@ test('the council is keyboard-operable at desktop and mobile widths',
     await openGame(page, testInfo);
     await startDeterministicGame(page);
     await injectHolyWarHarness(page);
+    const baseline = await page.evaluate(function () {
+      return FB.save.serialize();
+    });
     await page.evaluate(function () {
       FBTEST.resolveGreatHolyWar({
         includePlayer:true,
@@ -57,18 +61,85 @@ test('the council is keyboard-operable at desktop and mobile widths',
       return tag === 'BUTTON';
     })).toBe(true);
 
+    const modalControls = dialog.locator(
+      'button:not([disabled]), a[href], input:not([disabled]), ' +
+      'select:not([disabled]), textarea:not([disabled]), ' +
+      '[tabindex]:not([tabindex="-1"])'
+    );
     const firstMove = dialog.locator('[data-ghw-council-move]').first();
+    await expect(dialog).toBeFocused();
+    const firstControl = modalControls.first();
+    const lastControl = modalControls.last();
+    await page.keyboard.press('Tab');
+    await expect(firstControl).toBeFocused();
+    await lastControl.focus();
+    await page.keyboard.press('Tab');
+    await expect(firstControl).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(lastControl).toBeFocused();
+
     await firstMove.focus();
-    await expect(firstMove).toBeFocused();
     await page.keyboard.press('Enter');
-    expect(await page.evaluate(function () {
-      return FB.state.greatHolyWar.settlement.case.step;
-    })).toBe(1);
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.state.greatHolyWar.settlement.case.step;
+      });
+    }).toBe(1);
+    await page.keyboard.press('Digit1');
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.state.greatHolyWar.settlement.case.step > 1;
+      });
+    }).toBe(true);
+
+    await page.evaluate(function (serialized) {
+      FB.save.restore(JSON.parse(serialized));
+      document.getElementById('genmodal').classList.add('hidden');
+      FBTEST.makeGreatHolyWar({
+        phase:'preparation',
+        includePlayer:false,
+        capturedCounties:[]
+      });
+      FB.ui.showTab('actions');
+      FB.ui.refresh();
+    }, baseline);
+    await waitForUiRefresh(page);
+    await page.locator('[data-action-group="war"]').click();
+    const statusAction = page.locator(
+      '[data-action-id="great_holy_war_status"]');
+    await expect(statusAction).toBeVisible();
+    await statusAction.focus();
+    await page.keyboard.press('Enter');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(statusAction).toBeFocused();
+
+    const navigation = [
+      ['d', '#tab-actions'],
+      ['s', '#tab-char'],
+      ['k', '#tab-family'],
+      ['l', '#tab-prov'],
+      ['n', '#tab-network'],
+      ['c', '#tab-log']
+    ];
+    for (const row of navigation) {
+      await page.keyboard.press(row[0]);
+      await expect(page.locator(row[1])).toHaveClass(/active/);
+    }
+
+    await page.evaluate(function (serialized) {
+      FB.save.restore(JSON.parse(serialized));
+      FBTEST.resolveGreatHolyWar({
+        includePlayer:true,
+        capturedCounties:['jerusalem', 'acre']
+      });
+      FB.ui.showGreatHolyWarSettlement();
+    }, baseline);
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeFocused();
 
     await page.setViewportSize({ width:390, height:844 });
-    await page.evaluate(function () {
-      FB.ui.showGreatHolyWarSettlement();
-    });
     await expect(dialog).toBeVisible();
     const mobile = await page.evaluate(function () {
       var modal = document.getElementById('genmodal');

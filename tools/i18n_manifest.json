@@ -51176,6 +51176,16 @@
         "text": "Prerequisites"
       }
     },
+    "src.34778151": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/keys.js"
+      ],
+      "source": {
+        "text": "select:not([disabled]), textarea:not([disabled]),"
+      }
+    },
     "src.347bcff9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77656,6 +77666,16 @@
         "text": "Bruised flesh"
       }
     },
+    "src.8b77e15e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/keys.js"
+      ],
+      "source": {
+        "text": "button:not([disabled]), [href], input:not([disabled]),"
+      }
+    },
     "src.8b7f4ccf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89678,6 +89698,16 @@
       ],
       "source": {
         "text": "Castellan’s son"
+      }
+    },
+    "src.b4293aad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "SELECT"
       }
     },
     "src.b44a6d7f": {
