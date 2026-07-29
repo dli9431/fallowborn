@@ -175,8 +175,8 @@ snapshots.
 
 ## Vassal advocacy
 
-A tier-3+ vassal with at least 40 liege favor may advocate one currently
-prerequisite-valid technology per year. Advocacy costs 20 gold and 15 favor. The
+A tier-3+ vassal with at least 40 Standing with the liege may advocate one currently
+prerequisite-valid technology per year. Advocacy costs 20 gold and lowers Standing by 15. The
 priority lasts four years or until the liege selects or completes the entry, multiplies
 the AI selection weight by six, and never interrupts an active project.
 

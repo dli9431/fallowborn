@@ -1034,13 +1034,14 @@ window.FB = window.FB || {};
       });
     }
     if (!FB.transferItem(state, ref, cid)) return false;
-    c.opinion = FB.clamp(c.opinion + boost, -100, 100);
+    const standing = FB.adjustStanding(state,
+      { kind:'character', id:c.id }, boost, 'gift:item');
     if (FB.noteSocialGift) FB.noteSocialGift(state, cid);
     FB.news(state, FB.msg('news.item.given',
-      '🎁 You give {item} to {name}. (regard {regard})', {
+      '🎁 You give {item} to {name}. (Standing {regard})', {
         item:FB.itemParam(state, ref, true),
         name:c.name,
-        regard:Math.round(c.opinion)
+        regard:Math.round(standing)
       }));
     return true;
   };
@@ -1068,23 +1069,24 @@ window.FB = window.FB || {};
     }
     const itemParam = FB.itemParam(state, ref, true);
     if (!FB.destroyItem(state, ref, { force:true })) return false;
-    FB.adjustRealmOpinion(state, rid, boost);
+    const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
+      boost, 'gift:item');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
     if (FB.rulerGiftUsesFavor(state, rid)) {
       FB.news(state, FB.msg('news.realm.item_gift_favor',
-        '🎁 You give {item} to {ruler} of {realm}. (favor {favor})', {
+        '🎁 You give {item} to {ruler} of {realm}. (Standing {favor})', {
           item:itemParam,
           ruler:r.ruler.name,
           realm:r.name,
-          favor:Math.round(FB.realmOpinionOf(state, rid))
+          favor:Math.round(standing)
         }));
     } else {
       FB.news(state, FB.msg('news.realm.item_gift_opinion',
-        '🎁 You give {item} to {ruler} of {realm}. (opinion {opinion})', {
+        '🎁 You give {item} to {ruler} of {realm}. (Standing {opinion})', {
           item:itemParam,
           ruler:r.ruler.name,
           realm:r.name,
-          opinion:Math.round(FB.realmOpinionOf(state, rid))
+          opinion:Math.round(standing)
         }));
     }
     return true;

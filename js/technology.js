@@ -1222,14 +1222,16 @@ window.FB = window.FB || {};
     if (FB.realmTechRecord(state, rid).active.indexOf(id) >= 0) return false;
     if ((p.techAdvocacyYear || 0) >= state.date.year) return false;
     if (p.gold < 20) return false;
-    return FB.liegeOpOf && FB.liegeOpOf(state, p.liege) >= 40;
+    return FB.standingOf(state, { kind:'realm', id:p.liege }) >= 40;
   };
 
   FB.advocateTech = function (state, id) {
     if (!FB.canAdvocateTech(state, id)) return false;
     var rid = FB.techRealmId(state), record = FB.realmTechRecord(state, rid);
     state.player.gold -= 20;
-    FB.adjustLiegeOp(state, state.player.liege, -15);
+    FB.adjustStanding(state, {
+      kind:'realm', id:state.player.liege
+    }, -15, 'technology:advocacy');
     state.player.techAdvocacyYear = state.date.year;
     record.priorities[id] = state.date.year + 4;
     FB.news(state, FB.msg('news.tech.advocated',

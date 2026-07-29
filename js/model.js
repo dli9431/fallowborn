@@ -878,6 +878,10 @@ window.FB = window.FB || {};
     return FB.T('church');
   };
 
-  /* opinion label */
-  FB.opClass = function (v) { return v > 15 ? 'op-good' : v < -15 ? 'op-bad' : 'op-mid'; };
+  /* Historical name retained for mods; Standing presentation owns the
+     shared positive, neutral, and negative color thresholds. */
+  FB.opClass = function (v) {
+    v = FB.clamp(Number(v) || 0, -100, 100);
+    return v >= 20 ? 'op-good' : v <= -20 ? 'op-bad' : 'op-mid';
+  };
 })();

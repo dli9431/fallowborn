@@ -841,12 +841,13 @@ window.FB = window.FB || {};
   };
 
   FB.adjustReligionRealmOpinions = function (state, religionId, amount) {
-    if (!state || !FB.adjustRealmOpinion) return;
+    if (!state || !FB.adjustStanding) return;
     for (const rid in state.realms) {
       const realm = state.realms[rid];
       if (rid === 'player' || !realm || !realm.alive) continue;
       if (FB.realmReligionId(state, rid) === religionId) {
-        FB.adjustRealmOpinion(state, rid, amount);
+        FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+          'religion:realm_wide');
       }
     }
   };
@@ -1511,8 +1512,8 @@ window.FB = window.FB || {};
     return realm;
   };
 
-  /* Personal Regard and the existing player-relative political standing are
-     two views of one score while this exact character reigns. The marker
+  /* Personal and political Standing are two views of one score while this
+     exact character reigns. The marker
      lets direct legacy writes on either side reconcile without losing the
      other side's change. */
   FB.syncRealmRulerStanding = function (state, rid) {
@@ -1661,10 +1662,16 @@ window.FB = window.FB || {};
     const heirId = s.order.shift();
     const heir = s.members[heirId];
     if (!heir) return null;
+    const c = heir.charId && state.chars[heir.charId];
+    /* Read the heir as a person before installing them as ruler. Once the
+       crown pointer changes, the typed facade correctly resolves that same
+       character through the realm store instead. */
+    const heirStanding = c ? FB.standingOf(state, {
+      kind:'character', id:c.id
+    }) : 0;
     s.rulerMemberId = heirId;
     const children = orderedMemberIds(s, heirId);
     s.order = children.concat(s.order.filter(function (id) { return children.indexOf(id) < 0; }));
-    const c = heir.charId && state.chars[heir.charId];
     r.ruler = {
       name: c ? c.name : heir.name,
       sex: c ? c.sex : heir.sex,
@@ -1677,8 +1684,13 @@ window.FB = window.FB || {};
     };
     s.rulerGeneration = r.ruler.generation;
     if (c) {
-      c.realmStanding = writeStoredRealmStanding(state, rid, c.opinion);
+      c.realmStanding = writeStoredRealmStanding(state, rid, heirStanding);
       c.opinion = c.realmStanding;
+    } else {
+      /* A realm id survives its ruler. The old ruler's Standing does not:
+         only a materialized heir can carry a score already tracked between
+         this protagonist and that exact person. */
+      writeStoredRealmStanding(state, rid, 0);
     }
     makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
@@ -2045,8 +2057,9 @@ window.FB = window.FB || {};
       -100, 100);
     for (var i = 0; i < status.vassalIds.length; i++) {
       var rid = status.vassalIds[i];
-      if (FB.adjustRealmOpinion) {
-        FB.adjustRealmOpinion(state, rid, status.vassalFavor);
+      if (FB.adjustStanding) {
+        FB.adjustStanding(state, { kind:'realm', id:rid },
+          status.vassalFavor, 'realm:capital_relocation');
       } else {
         p.liegeOps = p.liegeOps || {};
         p.liegeOps[rid] = FB.clamp(
@@ -2162,7 +2175,7 @@ window.FB = window.FB || {};
             const h = (state.holder && state.holder[state.player.provinceId]) || state.owner[state.player.provinceId];
             if (h && h !== 'player' && state.realms[h] && state.realms[h].alive) nl = h;
           }
-          state.player.liege = nl;
+          FB.changePlayerLiege(state, nl, 'realm:liege_destroyed');
         }
       } else if (fr.capital === pid) {
         const held = rid === 'player' ? FB.realmHeldCounties(state, 'player') : [];
@@ -2176,7 +2189,7 @@ window.FB = window.FB || {};
     if (state.player && state.player.tier === 3 && state.player.provinceId === pid &&
         state.player.liege !== toRealm && toRealm !== 'player' &&
         state.realms[toRealm] && state.realms[toRealm].alive) {
-      state.player.liege = toRealm;
+      FB.changePlayerLiege(state, toRealm, 'realm:home_transfer');
     }
     // player consequences
     if (state.player && state.player.provs && state.player.provs.indexOf(pid) >= 0 && toRealm !== 'player') {
@@ -2225,7 +2238,9 @@ window.FB = window.FB || {};
         for (const my of p.provs) { if (FB.world.adj[my] && FB.world.adj[my][pid]) { borders = true; break; } }
         if (borders) {
           const c = FB.liegeGrantChance(state,
-            FB.clamp(0.10 + FB.liegeOpOf(state, liege) / 250 + p.prestige / 2000 +
+            FB.clamp(0.10 +
+              FB.standingOf(state, { kind:'realm', id:liege }) / 250 +
+              p.prestige / 2000 +
               (p.warService || 0) / 100, 0.05, 0.6));
           if (FB.chance(c)) {
             toPlayer = true;
@@ -2627,7 +2642,7 @@ window.FB = window.FB || {};
       }
       // AI may attack an independent player realm
       const relationMult = FB.clamp(
-        1 - FB.realmOpinionOf(state, id) / 100,
+        1 - FB.standingOf(state, { kind:'realm', id:id }) / 100,
         B.foreignOpinionAttackMin,
         B.foreignOpinionAttackMax
       );
@@ -3117,7 +3132,8 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
       if (!p.provs.length) {
-        FB.setPlayerTier(state, 2); p.liege = null;
+        FB.setPlayerTier(state, 2);
+        FB.changePlayerLiege(state, null, 'war:landless');
         if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
         if (state.realms.player) FB.markRealmDead(state, 'player');
         FB.news(state, FB.msg('news.war.landless',
@@ -3211,7 +3227,7 @@ window.FB = window.FB || {};
       }
     }
     FB.setPlayerTier(state, 2);
-    p.liege = null; p.liegeOp = 0; p.liegeOps = {};
+    FB.changePlayerLiege(state, null, 'realm:cast_down');
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (!opts.papalTransition) {
       p.pop = 0;
@@ -3654,11 +3670,9 @@ window.FB = window.FB || {};
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
     const mine = state.realms.player;
     if (sovereignTitle) {
-      p.liege = null;
-      mine.liege = null;
+      FB.changePlayerLiege(state, null, 'realm:inherit_sovereign');
     } else if (mine.rank < inherited.rank || !mine.liege) {
-      p.liege = inheritedLiege;
-      mine.liege = inheritedLiege;
+      FB.changePlayerLiege(state, inheritedLiege, 'realm:inherit_vassal');
     }
     const demesne = FB.realmHeldCounties(state, rid).slice();
     p.provs = p.provs || [];
@@ -3844,7 +3858,9 @@ window.FB = window.FB || {};
     const p = state.player;
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
-    if (p.liege === 'player') p.liege = null;
+    if (p.liege === 'player') {
+      FB.changePlayerLiege(state, null, 'realm:repair_self_liege');
+    }
     // a baron or personal Bishop is a status inside a county and answers to
     // whoever holds the home county. Reattach if the bond was lost (the
     // lord's house died, or
@@ -3853,7 +3869,10 @@ window.FB = window.FB || {};
     // A tier-3 office is never "independent", nor a foreign lord's man.
     if (p.tier === 3) {
       const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
-      if (bh && bh !== 'player' && state.realms[bh] && state.realms[bh].alive && p.liege !== bh) p.liege = bh;
+      if (bh && bh !== 'player' && state.realms[bh] &&
+          state.realms[bh].alive && p.liege !== bh) {
+        FB.changePlayerLiege(state, bh, 'realm:repair_home_liege');
+      }
     }
     const n = p.provs ? p.provs.length : 0;
     if (n && p.tier >= 4 && (!state.realms.player || !state.realms.player.alive)) FB.foundPlayerRealm(state);
@@ -3867,10 +3886,18 @@ window.FB = window.FB || {};
     if (p.tier >= 4) {
       const pRank = Math.max(1, p.tier - 3);
       let guard = 0;
-      while (p.liege && state.realms[p.liege] && state.realms[p.liege].rank <= pRank &&
-             state.realms[p.liege].liege && guard++ < 10) {
-        p.liege = state.realms[p.liege].liege;
+      let liege = p.liege;
+      while (liege && state.realms[liege] &&
+             state.realms[liege].rank <= pRank &&
+             state.realms[liege].liege && guard++ < 10) {
+        liege = state.realms[liege].liege;
       }
+      if (liege !== p.liege) {
+        FB.changePlayerLiege(state, liege, 'realm:repair_liege_rank');
+      }
+    }
+    if (state.realms.player && state.realms.player.alive) {
+      state.realms.player.liege = p.liege || null;
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (!n) return; // landless: playerShare is 0 everywhere, nothing can promote

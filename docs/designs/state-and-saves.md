@@ -49,7 +49,7 @@ Dynastic diplomacy is additive and does not change save version 3.
 materialized children and rulers point back through `char.royalLine`. Materializing a
 founding ruler may add the current `rulerMemberId` and reparent existing root children
 without changing their member ids or order. A materialized current ruler also carries
-`realmStanding`, the last synchronized Regard/political-standing marker.
+`realmStanding`, the last synchronized Standing marker.
 `state.alliances` holds canonical, generation-stamped defensive realm pairs.
 `player.royalCompact` identifies the current protagonist's one royal marriage compact,
 and `player.fabricatedClaim` holds the single `{pid, madeTurn}` county claim.
@@ -182,10 +182,25 @@ patronage requires that value to be lower than `state.generation`. Tier-2+ scena
 start established (`0`); older saves without the field are also treated as established,
 so the balance gate never retroactively strands an existing gentle house.
 
+Standing deliberately keeps the version-3 compatibility stores:
+`character.opinion`, `player.liegeOp`, and `player.liegeOps`. The typed
+`FB.standingOf` / `FB.adjustStanding` facade chooses the backing field and synchronizes
+a materialized ruler; the historical realm helpers and event/mod opinion keys remain
+valid. Direct-liege changes use `FB.changePlayerLiege`, which moves the dedicated
+`liegeOp` score back under the old realm id and restores the new liege's realm-keyed
+score. No canonical `standings` object or save migration is introduced merely to rename
+the player-facing system.
+
+On protagonist succession, every character and realm score resets to neutral because
+the save stores only relationships with the outgoing protagonist, not an heir/counterpart
+matrix. Explicit inherited commitments may then apply a bounded new modifier (retainers
+renew at −15). On AI ruler succession, an unmaterialized heir starts neutral; a
+materialized heir preserves the score already tracked with that exact person.
+
 `player.foreignPolicy` stores the current ruler’s political-attention assignments as
 realm-id keys with `1` (Improve) or `-1` (Provoke). It is lazily initialized, so older
 version-3 saves need no migration, and invalid/dead/non-adjacent targets are discarded at
-the seasonal tick. The object and the player-relative `liegeOps` opinion network clear on
+the seasonal tick. The object and the player-relative `liegeOps` Standing backing clear on
 succession; `state.pacts` remains state-level and survives.
 
 Personal rivalry state is additive too: `player.rivalContacts` records explicitly hostile

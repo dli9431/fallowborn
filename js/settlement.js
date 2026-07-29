@@ -242,8 +242,9 @@ window.FB = window.FB || {};
       }
       if (!winner) return false;
       var endorsedRealm = opinionRealm(winner);
-      if (endorsedRealm && FB.adjustRealmOpinion) {
-        FB.adjustRealmOpinion(state, endorsedRealm, 15);
+      if (endorsedRealm && FB.adjustStanding) {
+        FB.adjustStanding(state, { kind:'realm', id:endorsedRealm }, 15,
+          'holy_war_settlement:endorsement');
       }
       settlementCase.contested = true;
     } else if (kind === 'terms') {
@@ -262,8 +263,9 @@ window.FB = window.FB || {};
       settlementCase.objections++;
       settlementCase.contested = true;
       var challengedRealm = opinionRealm(view.leader);
-      if (challengedRealm && FB.adjustRealmOpinion) {
-        FB.adjustRealmOpinion(state, challengedRealm, -10);
+      if (challengedRealm && FB.adjustStanding) {
+        FB.adjustStanding(state, { kind:'realm', id:challengedRealm }, -10,
+          'holy_war_settlement:challenge');
       }
       success = FB.chance(view.objectChance);
       winner = success ? view.runnerUp : view.leader;

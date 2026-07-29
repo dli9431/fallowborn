@@ -41,7 +41,7 @@ FBDATA.events.push(
   trigger:{ never:true }, /* queued from the Estates deed */
   text:'Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything.',
   options:[
-    { label:'Press the motion to a vote.', desc:'The estates decide — rank, name, and the liege’s favor all count now.', require:{ custom:'parliament_redress_possible' }, chance:'parliament_vote',
+    { label:'Press the motion to a vote.', desc:'The estates decide — rank, name, and Standing with the liege all count now.', require:{ custom:'parliament_redress_possible' }, chance:'parliament_vote',
       success:{ text:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good.', effects:{ custom:'parliament_redress_won', addModifier:{id:'custom_confirmed'}, prestige:5, traitProgress:{id:'moot_speaker'}, log:'Won redress of grievances in the estates.' } },
       failure:{ text:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', effects:{ custom:'parliament_redress_lost', prestige:-4, removeTrait:'moot_speaker' } } },
     { label:'Let it be talked out, and withdraw.', desc:'Some motions serve better as threats than as votes.', effects:{ prestige:-2 } }
@@ -72,7 +72,7 @@ FBDATA.events.push(
   options:[
     { label:'Stand with him when he rises.', desc:'The estates remember who shows courage — and so does the crown.', chance:'parliament_vote',
       success:{ text:'Your seconding carries the hall; the old lord wins his judgment and grips your hand till it hurts. The liege’s clerks write something down.', effects:{ prestige:5, opinionLiege:-4, traitProgress:{id:'moot_speaker'} } },
-      failure:{ text:'The hall is not with you today. The old lord’s suit fails, and you have spent favor on a losing cause.', effects:{ opinionLiege:-8, prestige:-2, removeTrait:'moot_speaker' } } },
+      failure:{ text:'The hall is not with you today. The old lord’s suit fails, and you have damaged your Standing on a losing cause.', effects:{ opinionLiege:-8, prestige:-2, removeTrait:'moot_speaker' } } },
     { label:'Murmur sympathy, and drift away.', desc:'Another man’s quarrel, another man’s risk.', effects:{} }
   ]}
 );

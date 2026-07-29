@@ -78,7 +78,7 @@ bonus multiplies computed credit capacity before outstanding debt is subtracted;
 trade bonus multiplies staffed merchant and craft enterprise yield.
 
 Every default also costs prestige. A crowned ruler loses council authority and
-councillor favor; a sworn landed ruler loses standing with the liege, giving
+Standing with each councillor; a sworn landed ruler loses Standing with the liege, giving
 the existing political institutions a visible hold over failed finance.
 
 **Trade partnerships are real investments, not deposits.** A merchant or

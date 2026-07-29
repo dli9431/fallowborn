@@ -13,7 +13,7 @@ Religious progression keeps Lay standing and the active Vocation visible togethe
 and Bishop rows open appointment previews instead of deducting a rank price; the previews
 name every unmet gate, appointing authority, current chance, cooldown, and optional
 cathedral endowment. An appointed player gains a Bishopric full-sheet from the Self panel.
-It shows the see, tenure, authority and investiture policy, Papal recognition and opinion,
+It shows the see, tenure, authority and investiture policy, Papal recognition and Standing,
 episcopal focus, temporalities, office piety, household retinue, non-hereditary succession,
 and the four church powers with their costs and cooldowns.
 
@@ -129,13 +129,13 @@ that holder's direct vassal realms, then every liege through the sovereign, with
 row cap or duplicates. AI entries are native focusable rows with procedural crests and
 open the realm-ruler sheet; a protagonist entry uses the character portrait and
 character sheet. Each row states realm, political relationship, age, Martial, and the
-player-relative opinion or favor. Generated local characters appear only as a defensive
+player-relative Standing. Generated local characters appear only as a defensive
 fallback when no political ruler can be resolved.
 For a count or higher, the selected current seat is marked **capital and home**.
 Every other directly held demesne county shows **Move capital here…**; the native
 button remains visible but disabled with the exact prestige, journey, campaign, or
 lifetime-limit reason. Its focus-managed confirmation names both seats, the prestige,
-popular-opinion and direct-vassal Favor changes, every affected vassal, the
+popular-opinion and direct-vassal Standing changes, every affected vassal, the
 once-per-ruler rule, unchanged county-bound property, and any province-scoped incoming
 monopoly that will end. Confirming applies without advancing the day; cancel returns
 focus to the unchanged Land button. The ordinary generic-modal bottom sheet supplies
@@ -280,17 +280,24 @@ courtship ends. A distant character instead offers **Travel to cultivate…**, o
 **Travel to continue cultivating…** beside Stop for an existing paused assignment.
 The review names the person and county, route, days, cost, 90-day minimum stay,
 fixed daily rate, and estimated time to +40. Confirming assigns attention and
-departs as one operation. The assigned person's sheet repeats their Regard,
+departs as one operation. The assigned person's sheet repeats their Standing,
 fixed daily rate, and estimated active days to +40. **Call
 friend** and **Propose marriage** remain visibly disabled below the shared threshold.
 **Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
-object show their +Regard value and either readiness or recipient-specific days remaining
+object show their +Standing value and either readiness or recipient-specific days remaining
 on the shared cash/item gift cooldown. Equipped and pledged objects remain visible but
 disabled with the blocking reason. Managed household recipients see cash only and an
 explanation that their objects remain under shared-armory management. A cross-sovereign
-recipient instead shows the frozen courier days and explains that Regard/cooldown begin
+recipient instead shows the frozen courier days and explains that Standing/cooldown begin
 on arrival. While a delivery is outbound or returning, both the character button and
 picker show its destination, phase, and remaining ETA and disable another gift.
+
+All counterpart sheets use the shared Standing presentation: a clamped signed value,
+the Hostile/Guarded/Neutral/Favorable/Warm band, and the same positive/neutral/negative
+colors. Character and ruler sheets add a context note explaining whether the score
+affects personal, feudal, or diplomatic consequences. A materialized ruler resolves
+through the realm target, so the character sheet, realm sheet, Council, Estates, and
+gift interfaces cannot display different values.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
@@ -321,16 +328,16 @@ confirmation sheets. The occupied Caliphate deed remains visible but disabled wh
 the player realm is already at war or committed to a great holy war, and its final
 confirmation revalidates the live succession cause. A Catholic Papal conquest is marked as sacrilege in the war list
 and uses its own second confirmation; no penalty is applied until that final button.
-A separate personal-attention summary names the assigned character, current Regard, fixed
+A separate personal-attention summary names the assigned character, current Standing, fixed
 daily rate, estimated active days to the relationship threshold, and whether progress is
 active, paused while on the road, or paused because the target is in another county; attention
 never replaces the work focus.
 Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
-guildmaster; its locked description exposes the exact missing technology, standing,
-favor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
+guildmaster; its locked description exposes the exact missing technology, guild standing,
+Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
 **Grant a guild monopoly…** for every baron and greater ruler. Its numbered,
 keyboard-focusable profession picker previews Craft and Trade with the current
-tier-scaled fee, tax, enterprise, duration, and opinion terms, then repeats all effects
+tier-scaled fee, tax, enterprise, duration, and Common Voice terms, then repeats all effects
 in a confirmation sheet before spending the day.
 Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
@@ -355,15 +362,15 @@ Independent counts and higher also get a compact political-attention summary abo
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
-both views show opinion and the current direction.
+both views show Standing and the current direction.
 
 Every living AI ruler sheet exposes **Cultivate relationship…** and **Offer a gift…**.
 Cultivation materializes that ruler only when chosen and opens the ordinary capital-visit
 review; once materialized, the ruler identity card and **Open full character sheet**
 action expose applicable friendship, rivalry, courtship, marriage, and spouse actions.
 Both sheets route gifts back through the
-ruler picker, so its numbered cash choice uses the rank price, exact armory influence, and
-Favor/Opinion plus ruler-generation cooldown rather than the ordinary five-gold path.
+ruler picker, so its numbered cash choice uses the rank price, exact armory influence,
+Standing, and the ruler-generation cooldown rather than the ordinary five-gold path.
 Foreign-sovereign choices preview courier time and later show outbound/return ETA. The
 Royal Council opens this same picker for seated vassals. Its Back/Close behavior uses
 generic-modal history, and all choices are native buttons, retaining number-key selection,
@@ -426,7 +433,7 @@ The panel also states the +50% overlap cap and that active charters have no rene
 early-revocation control.
 
 Connections begins with the same personal-attention summary as Deeds. The item card's
-compatibility recipient picker still shows exact +Regard and disables a person for the
+compatibility recipient picker still shows exact +Standing and disables a person for the
 remaining shared cooldown; character and ruler sheets are the primary unified gifting
 surface. All assignment, friendship, courtship, and gift buttons are native focusable
 controls, so the same labels and disabled state remain available to keyboard and mobile

@@ -16,7 +16,7 @@ FBDATA.events.push(
       desc:'Spend {money:25}; the charter is guaranteed.',
       effects:{ gold:-25, custom:'guild_monopoly_paid' } },
     { label:'Persuade the grantor.',
-      desc:'A {persuasionPercent}% Diplomacy chance: success grants the charter and 5 prestige; failure costs 5 prestige and 8 grantor favor.',
+      desc:'A {persuasionPercent}% Diplomacy chance: success grants the charter and 5 prestige; failure costs 5 prestige and lowers Standing with the grantor by 8.',
       chance:'skill_dip',
       success:{
         text:'Your case carries the hall. {grantor} orders the charter sealed.',
@@ -193,7 +193,7 @@ FBDATA.events.push(
   text:'After the lawful appointment fails, an intermediary returns by a quieter door. For {money:200}, he says, objections can vanish and the mitre can still be yours.',
   options:[
     { label:'Buy the office. ({money:200})', require:{ goldMin:200 },
-      desc:'Gain the see, but lose 40 piety, 20 Papal opinion, 10 Common Voice, and bear a permanent Simoniac reputation.',
+      desc:'Gain the see, but lose 40 piety, 20 Standing with the Pope, 10 Common Voice, and bear a permanent Simoniac reputation.',
       effects:{ gold:-200, piety:-40, papalOpinion:-20, popularOpinion:-10,
         custom:'bishop_simony_accept', log:'Bought the bishop’s mitre.' } },
     { label:'Expose the intermediary.', desc:'Keep the appointment lost, but put the offer before Rome.',

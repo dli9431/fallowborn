@@ -57,8 +57,8 @@ office.
 Trait definitions remain replaced or added by id under the top-level `traits` key.
 `class` selects Disposition, Formation, Reputation, or Condition grouping; omission
 preserves compatibility by placing the trait under Other. Omission of `noRandom` also
-preserves ordinary random-generation eligibility. Root skill/health/fertility/Regard
-fields retain their old meaning, while numeric objects such as `assembly`, `travel`,
+preserves ordinary random-generation eligibility. Root skill, health, fertility, and
+Standing (`opinion`) fields retain their old meaning, while numeric objects such as `assembly`, `travel`,
 `war`, `estate`, and `household` are read only by their owning systems through
 `FB.traitBonus`. Acquisition guidance in `earned` is display text; `earn.threshold`
 is mechanical progress state.

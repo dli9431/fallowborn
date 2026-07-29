@@ -3,8 +3,8 @@
 Date: 2026-07-28
 
 Status: step 1 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md); implementation is currently
-in progress. This design finding follows the
+[systems-audit roadmap](systems-audit-00-roadmap.md); implemented 2026-07-29. This
+design finding follows the
 [systems audit](../2026-07-27-systems-audit.md) and supersedes its conservative
 recommendation to preserve Regard, Favor, and Opinion as three player-facing meters.
 
@@ -103,15 +103,15 @@ Context remains visible as a descriptor or group of actions, not as a renamed me
 For example, a liege sheet may say that Standing affects petitions and assembly votes,
 while a courtship sheet says that Standing affects a proposal.
 
-## Succession rule that must be resolved
+## Succession rule
 
 Unification exposes an existing inconsistency. On player succession,
 `player.liegeOp`, `player.liegeOps`, and foreign-policy assignments reset, while
 ordinary `character.opinion` values are not comprehensively reset. The game therefore
 does not currently apply one clear rule to personal and political relationships.
 
-Before changing storage, define Standing as a relationship between the current
-protagonist and the current counterpart:
+Standing is a relationship between the current protagonist and the current
+counterpart:
 
 - standing with a predecessor must not silently become the heir's identical personal
   relationship;
@@ -123,9 +123,32 @@ protagonist and the current counterpart:
   realm id is unchanged.
 
 The current character model stores only one player-relative opinion on each character,
-not a pairwise relationship matrix. The first pass may preserve existing succession
-behavior for compatibility, but the UI and code should not imply that this ambiguity is
-settled.
+not a pairwise relationship matrix. Protagonist succession therefore resets every
+personal and realm Standing score to neutral. It does not invent the heir's relationship
+by copying the predecessor's. Systems with an explicit inherited commitment may then
+apply a bounded fresh modifier: inherited retainers renew at −15 Standing, for example.
+Friendship, courtship, political attention, rival contacts, and other life-local
+commitments keep their own existing succession cleanup.
+
+AI ruler succession follows the same identity rule. A compact, unmaterialized heir starts
+at neutral even though the realm id survives. A materialized heir keeps the Standing
+already tracked with that exact person, replacing rather than inheriting the predecessor's
+realm score.
+
+## Implemented shape
+
+`FB.standingOf` and `FB.adjustStanding` are the canonical typed facade. The historical
+`character.opinion`, `player.liegeOp`, and `player.liegeOps` fields remain the saved
+backing stores, and the old realm helpers and event/mod opinion keys remain compatibility
+adapters. Direct-liege transitions preserve each realm's score while moving the dedicated
+`liegeOp` slot. Historical durable-message keys and parameter names remain intact for
+saved Chronicle entries. No save migration was added.
+
+The shared UI renderer clamps and rounds the value, uses signed numbers, consistent
+positive/neutral/negative colors, and the bands Hostile, Guarded, Neutral, Favorable,
+and Warm. Character and realm sheets also explain the relevant consequences. A
+materialized ruler resolves through the realm store, so their character, realm, Council,
+Estates, gift, and diplomatic views show the same score.
 
 ## Boundaries
 

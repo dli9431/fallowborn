@@ -103,12 +103,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    until the visit ends; this wedding move skips the one-year wait but still uses
    that character’s single lifetime relocation.
    Named characters remember personal encounters. Assign your one **personal-attention**
-   slot to cultivate a local character’s Regard each day alongside your ordinary
+   slot to cultivate a local character’s Standing each day alongside your ordinary
    focus. A distant character offers a targeted visit: review the route, cost,
    three-month stay, daily rate, and time to +40, then travel to them. Road days
-   pause the relationship; Regard starts after arrival, pauses again on the
+   pause the relationship; Standing starts changing after arrival, pauses again on the
    return, and a later visit can resume the same assignment. At
-   sufficient Regard you may explicitly name an eligible contact as your friend; events that
+   sufficient Standing you may explicitly name an eligible contact as your friend; events that
    call for a friend use that canonical relationship. Friendship belongs to the current life
    rather than the dynasty.
    Anger someone deeply enough and they may
@@ -153,7 +153,7 @@ Time passes **day by day** (90-day seasons, 360-day years).
    quarters to seasonal household upkeep. Craft and merchant careers can climb the guild from
    ordinary membership to guildmaster, and landing does not erase a person's learned
    occupation. Once the sovereign nation completes **Guild Charters**, a guildmaster with
-   60 standing and 40 grantor favor can petition the local lord or a landed vassal's direct
+   60 guild standing and 40 Standing with the grantor can petition the local lord or a landed vassal's direct
    liege for a profession-wide monopoly. Baron and greater rulers can grant one local Craft
    or Trade monopoly instead. Incoming and outgoing charters can coexist, matching enterprise
    bonuses add together up to +50%, and **Network → Trade & Guild** shows their terms and
@@ -188,7 +188,7 @@ Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor
 The *Deeds* tab always shows a hint for the next rung. Wealth buys freedom; Freeholders
 then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has
-the standing to join the gentry. A lord's favor then earns an established gentle house a
+the standing to join the gentry. Standing with a lord then earns an established gentle house a
 banner, normally after the manor has passed to an heir; battlefield glory and the church
 can still raise an exceptional life more quickly, and marriage and scheming offer other
 shortcuts. Meanwhile ~65 sovereign realms fight their own wars — and their dukes and counts
@@ -212,7 +212,7 @@ the Bishop keeps homage, the Estates, construction, feasts, and liege service, b
 gain ordinary baron taxes, court, monopolies, title petitions, private wars, or independence.
 
 Catholic Bishops may petition the Pope for appointment as a **Cardinal** once their age,
-Learning, standing, and Papal favor qualify. Cardinals belong to a named College and vote
+Learning, religious standing, and Standing with the Pope qualify. Cardinals belong to a named College and vote
 in Papal elections whose rules change with the century; an elected player hands secular
 land to the lawful heir while governing the Church through the **Papacy** deed. That screen
 also shows Papal authority, investiture policy, sanctions, and—if rival claimants divide
@@ -224,7 +224,7 @@ Every county on the map belongs to someone: a count, who answers to a duke, who 
 a king, who may answer to an emperor (the Land tab shows the whole chain, and the de jure —
 "by ancient right" — duchy/kingdom/empire each county belongs to). Once you hold land of your own you play that
 game in both directions. As a **vassal** you can petition your liege for land (you will need
-his favor — 65 or more — and real standing of your own, 400+ prestige, and each grant costs
+Standing with him — 65 or more — and real standing of your own, 400+ prestige, and each grant costs
 both), pay homage at
 any court along your chain, appeal over a harsh liege's head to a higher lord, swear fealty
 to a different sovereign — or raise your own banner and fight for independence (the
@@ -232,7 +232,7 @@ to a different sovereign — or raise your own banner and fight for independence
 also sits in the realm's **estates** (the 🏛 Estates deed): summoned about once a year, the
 assembled lords vote on the terms of service — the liege's aid (his cut of your revenue,
 10–40%) and scutage (silver in place of banner service) — with your voice growing with rank,
-diplomacy, prestige, and the liege's favor. As a **liege**
+diplomacy, prestige, and Standing with the liege. As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
 of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land —
 and the promotion is automatic the day you hold it: the majority of a duchy's counties makes
@@ -247,8 +247,8 @@ the title still demands.
 
 Once you are a **count or higher**, your directly held counties can also become the
 family's seat. Select one in the **Land** tab and choose **🏰 Move capital here…**.
-Moving the capital and permanent household home costs 200 prestige, lowers popular
-opinion by 15, and costs 15 Favor with every direct vassal. Each ruler may choose only
+Moving the capital and permanent household home costs 200 prestige, lowers Common Voice
+by 15, and lowers Standing with every direct vassal by 15. Each ruler may choose only
 once, never while travelling or personally serving in a war; the next protagonist
 receives a new choice. Land, titles, buildings, and property stay in their counties.
 If war tears away the current seat, a surviving directly held county becomes capital
@@ -256,15 +256,15 @@ and home automatically without cost or using the ruler's voluntary move.
 
 As an **independent count or higher**, the **🕊 Foreign policy** deed assigns your limited
 political attention to neighboring sovereigns. Counts and dukes can direct two courts,
-kings three, and emperors four. **Improve** builds the court’s opinion of you each season;
+kings three, and emperors four. **Improve** builds Standing with the court each season;
 **Provoke** erodes it and can deliberately invite a more likely defensive war. Diplomacy
 strengthens either direction. Friendly courts receive envoys more readily and are less
 likely to attack. A two-year pact makes peace certain. Independent kings and emperors can
-instead offer one adjacent sovereign an alliance at opinion 60+ for 25 gold, or gain one
+instead offer one adjacent sovereign an alliance at Standing 60+ for 25 gold, or gain one
 through a royal marriage. Allies cannot attack each other; when one is attacked, the other
 contributes an abstract defensive levy without joining the war. Alliances end when either
-ruler changes. A war suspends that court’s direction until peace, and succession clears the
-late ruler’s personal diplomatic network.
+ruler changes. A war suspends that court’s direction until peace, and succession clears
+the late ruler’s personal Standing and diplomatic network.
 
 ### War
 

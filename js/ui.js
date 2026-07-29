@@ -269,21 +269,91 @@ window.FB = window.FB || {};
       }
     }, { count: count }), { state: s, viewer: s.player.charId });
   }
-  function signedOpinion(value) {
-    const rounded = Math.round(value);
+  function signedNumber(value) {
+    const rounded = Math.round((Number(value) || 0) * 10) / 10;
     return (rounded > 0 ? '+' : '') + rounded;
   }
-  function signedRelationshipOpinion(value) {
-    const rounded = Math.round(value * 10) / 10;
-    return (rounded > 0 ? '+' : '') + rounded;
+  function standingValue(value) {
+    return signedNumber(FB.clamp(Number(value) || 0, -100, 100));
   }
+  function standingBand(value) {
+    value = FB.clamp(Number(value) || 0, -100, 100);
+    if (value >= 60) return FB.T('Warm');
+    if (value >= 20) return FB.T('Favorable');
+    if (value <= -60) return FB.T('Hostile');
+    if (value <= -20) return FB.T('Guarded');
+    return FB.T('Neutral');
+  }
+  function standingClass(value) {
+    return FB.opClass(value);
+  }
+  function standingText(value) {
+    return FB.T('{value} ({band})', {
+      value:standingValue(value),
+      band:standingBand(value)
+    });
+  }
+  function standingSpan(value) {
+    return '<span class="' + standingClass(value) + '">' +
+      esc(standingText(value)) + '</span>';
+  }
+  function standingEffectRow(label, amount) {
+    const effectClass = amount > 0 ? 'op-good' :
+      amount < 0 ? 'op-bad' : 'op-mid';
+    return '<div class="bd-row"><span>' + esc(label) +
+      '</span><span class="bd-amt ' + effectClass + '">' +
+      esc(standingValue(amount)) + '</span></div>';
+  }
+  function realmStandingContext(s, rid) {
+    const upward = s.player.liege
+      ? FB.liegeChain(s, s.player.liege) : [];
+    if (upward.indexOf(rid) >= 0) {
+      return FB.T(
+        'Standing with your liege affects petitions, grants, service, and your voice in the Estates.');
+    }
+    if (FB.playerVassals && FB.playerVassals(s).indexOf(rid) >= 0) {
+      return FB.T(
+        'Standing with this vassal affects council service, taxation, exceptional levies, and resistance to revocation.');
+    }
+    const realm = s.realms[rid];
+    return realm && !realm.liege
+      ? FB.T(
+        'Standing with this ruler affects envoys, pacts, aid, hostility, and the chance of war.')
+      : FB.T(
+        'Standing with this ruler affects gifts, personal dealings, and political hostility.');
+  }
+  function characterStandingContext(s, c) {
+    const rid = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(s, c);
+    if (rid) return realmStandingContext(s, rid);
+    if (s.player.courtingId === c.id) {
+      return FB.T(
+        'Standing with this person affects whether a marriage proposal succeeds.');
+    }
+    if (FB.retainerRecord && FB.retainerRecord(s, c.id)) {
+      return FB.T(
+        'Standing with this retainer affects loyalty and whether household service continues.');
+    }
+    if (s.roles.rival === c.id ||
+        (s.player.rivalContacts && s.player.rivalContacts[c.id])) {
+      return FB.T(
+        'Standing with this person affects rivalry, reconciliation, and the chance of peace.');
+    }
+    return FB.T(
+      'Standing with this person affects friendship, courtship, marriage, and household service.');
+  }
+  FB.standingValueText = standingValue;
+  FB.standingBandText = standingBand;
+  FB.standingClassName = standingClass;
+  FB.standingPresentationText = standingText;
+  FB.standingEffectRow = standingEffectRow;
   function socialAttentionSummary(s) {
     const target = FB.socialAttentionTarget(s);
     const capacity = FB.socialAttentionCapacity();
     const rate = FB.socialAttentionDailyOpinion();
     const threshold = FB.relationshipOpinionThreshold();
     if (!target) {
-      return FB.T('🤝 Personal attention 0/{capacity} · no assignment · +{rate} regard/day when assigned', {
+      return FB.T('🤝 Personal attention 0/{capacity} · no assignment · +{rate} Standing/day when assigned', {
         capacity:capacity, rate:rate
       });
     }
@@ -296,27 +366,22 @@ window.FB = window.FB || {};
     const params = {
       capacity:capacity,
       name:FB.fullName(target),
-      regard:signedRelationshipOpinion(target.opinion),
+      standing:standingValue(FB.standingOf(s, {
+        kind:'character', id:target.id
+      })),
       rate:rate,
       progress:progress
     };
     const presence = FB.socialAttentionPresence(s, target);
     if (presence.status === 'on-road') {
-      return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused while on the road', params);
+      return FB.T('🤝 Personal attention 1/{capacity} · {name} · Standing {standing} · +{rate}/day · {progress} · paused while on the road', params);
     }
     if (presence.status === 'remote') {
       const residence = presence.residenceId && FB.world.byId[presence.residenceId];
       params.province = residence ? residence.name : FB.T('another county');
-      return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress} · paused—target is in {province}', params);
+      return FB.T('🤝 Personal attention 1/{capacity} · {name} · Standing {standing} · +{rate}/day · {progress} · paused—target is in {province}', params);
     }
-    return FB.T('🤝 Personal attention 1/{capacity} · {name} · regard {regard} · +{rate}/day · {progress}', params);
-  }
-  function opinionBand(value) {
-    if (value >= 60) return FB.T('Warm');
-    if (value >= 20) return FB.T('Favorable');
-    if (value <= -60) return FB.T('Hostile');
-    if (value <= -20) return FB.T('Guarded');
-    return FB.T('Neutral');
+    return FB.T('🤝 Personal attention 1/{capacity} · {name} · Standing {standing} · +{rate}/day · {progress}', params);
   }
   function allianceSourceText(source) {
     if (source === 'royal_marriage') return FB.T('royal marriage');
@@ -1073,7 +1138,7 @@ window.FB = window.FB || {};
     const capacity = FB.socialAttentionCapacity();
     const rate = FB.socialAttentionDailyOpinion();
     if (!target) {
-      return FB.T('0/{capacity} assigned · +{rate} Regard/day when assigned', {
+      return FB.T('0/{capacity} assigned · +{rate} Standing/day when assigned', {
         capacity:capacity, rate:rate
       });
     }
@@ -1088,22 +1153,24 @@ window.FB = window.FB || {};
         : FB.T('ready at +{threshold}', { threshold:threshold }));
     const params = {
       name:FB.fullName(target),
-      regard:signedRelationshipOpinion(target.opinion),
+      standing:standingValue(FB.standingOf(s, {
+        kind:'character', id:target.id
+      })),
       progress:progress
     };
     const presence = FB.socialAttentionPresence(s, target);
     if (presence.status === 'on-road') {
-      return FB.T('{name} · Regard {regard} · {progress} · paused while on the road',
+      return FB.T('{name} · Standing {standing} · {progress} · paused while on the road',
         params);
     }
     if (presence.status === 'remote') {
       const residence = presence.residenceId && FB.world.byId[presence.residenceId];
       params.province = residence ? residence.name : FB.T('another county');
       return FB.T(
-        '{name} · Regard {regard} · {progress} · paused—target is in {province}',
+        '{name} · Standing {standing} · {progress} · paused—target is in {province}',
         params);
     }
-    return FB.T('{name} · Regard {regard} · {progress}', params);
+    return FB.T('{name} · Standing {standing} · {progress}', params);
   }
 
   function politicalAttentionCommitmentText(s, capacity) {
@@ -1549,7 +1616,7 @@ window.FB = window.FB || {};
   function nextStepHint(s) {
     if (s.player.tier === 0) {
       return '<div class="progressnote">🧭 ' + esc(FB.T(
-        'Path: save {money:gold} (or win your lord’s favor) to buy freedom.',
+        'Path: save {money:gold} (or build Standing with your lord) to buy freedom.',
         { gold: FBDATA.balance.freedomCost })) + '</div>';
     }
     if (s.player.tier === 1) {
@@ -1564,8 +1631,11 @@ window.FB = window.FB || {};
     }
     if (s.player.tier === 2) {
       const text = FB.gentryEstablished(s)
-        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, lord’s favor {favor}+), and petition for a barony.',
-          { prestige:FBDATA.balance.baronyPrestige, favor:FBDATA.balance.baronyOpinion })
+        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for a barony.',
+          {
+            prestige:FBDATA.balance.baronyPrestige,
+            standing:FBDATA.balance.baronyOpinion
+          })
         : FB.T('Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.');
       return '<div class="progressnote">🧭 ' + esc(text) + '</div>';
     }
@@ -1989,7 +2059,10 @@ window.FB = window.FB || {};
       kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
       kv('Common Voice', Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
-      (s.player.liege ? kv('Liege’s favor', Math.round(s.player.liegeOp || 0)) : '') +
+      (s.player.liege ? kv('Standing with your liege',
+        standingSpan(FB.standingOf(s, {
+          kind:'realm', id:s.player.liege
+        }))) : '') +
       (titleCount ? selfSectionHtml('titles', 'Titles', titleCount, titleRows(s, titles)) : '') +
       dynasticStatusRows(s, me) +
       selfSectionHtml('possessions', 'Possessions', items.length, itemChips(s, items)) +
@@ -2056,7 +2129,7 @@ window.FB = window.FB || {};
   }
 
   function charRow(s, c, meta, stats) {
-    const op = Math.round(c.opinion);
+    const standing = FB.standingOf(s, { kind:'character', id:c.id });
     let mid = '<span class="cname">' + esc(FB.fullName(c)) + '</span><br><span class="cmeta">' + esc(meta) + '</span>';
     if (stats) {
       let sk = '';
@@ -2070,7 +2143,8 @@ window.FB = window.FB || {};
       esc(FB.T('See their sheet and your dealings with them')) + '">' +
       FB.faceTag(c, 36, 42) +
       '<span>' + mid + '</span>' +
-      '<span class="cop ' + FB.opClass(op) + '">' + (op > 0 ? '+' : '') + op + '</span></div>';
+      '<span class="cop ' + standingClass(standing) + '">' +
+      esc(standingValue(standing)) + '</span></div>';
   }
 
   function relationText(s, c) {
@@ -2246,7 +2320,7 @@ window.FB = window.FB || {};
         '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
         (itc ? '<div>' + itc + '</div>' : '') + '</div></div>';
     }
-    const op = Math.round(c.opinion);
+    const standing = FB.standingOf(s, { kind:'character', id:c.id });
     // fertility as the conception roll sees it: the character's own hidden
     // roll times trait leanings (lustful, comely, strong up; chaste, sickly
     // down) times the slow slide of age (FB.ageFert) — 100% is the human
@@ -2261,15 +2335,15 @@ window.FB = window.FB || {};
         }));
     }
     const relationship = relationText(s, c);
-    const regardText = relationship
-      ? FB.T('{relation} · {marital} · regard {regard}', {
+    const standingSummary = relationship
+      ? FB.T('{relation} · {marital} · Standing {standing}', {
         relation: relationship,
         marital: maritalText(s, c),
-        regard: (op > 0 ? '+' : '') + op
+        standing: standingText(standing)
       })
-      : FB.T('{marital} · regard {regard}', {
+      : FB.T('{marital} · Standing {standing}', {
         marital: maritalText(s, c),
-        regard: (op > 0 ? '+' : '') + op
+        standing: standingText(standing)
       });
     return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="' +
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
@@ -2287,7 +2361,8 @@ window.FB = window.FB || {};
       royalLineHtml(s, c) +
       papalOfficeHtml(s, c) +
       '<div class="ccmeta">' + (c.id === s.player.charId ? esc(FB.T('This is you')) :
-        '<span class="' + FB.opClass(op) + '">' + esc(regardText) + '</span>') +
+        '<span class="' + standingClass(standing) + '">' +
+        esc(standingSummary) + '</span>') +
         esc(fert) + '</div>' +
       '<div class="ccskills">' + esc(sk) + '</div>' +
       '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
@@ -2505,18 +2580,20 @@ window.FB = window.FB || {};
         'The household is at its retainer capacity.')) + '</div>';
     }
 
-    /* Connections: regard is shown separately from the one canonical friend
+    /* Standing is shown separately from the one canonical friend
        so warmth can no longer masquerade as the event relationship. */
     h += panelh('Connections', 'network-connections');
     h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
     const friend = FB.getRole(s, 'friend', false);
     if (friend) {
-      h += charRow(s, friend, FB.T('Your friend · regard {regard}', {
-        regard:signedOpinion(friend.opinion)
+      h += charRow(s, friend, FB.T('Your friend · Standing {standing}', {
+        standing:standingValue(FB.standingOf(s, {
+          kind:'character', id:friend.id
+        }))
       }));
     } else {
       h += '<div class="hint">' + esc(FB.T(
-        'No one is yet named as your friend. Cultivate a contact’s regard, then call them friend from their sheet.')) +
+        'No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet.')) +
         '</div>';
     }
     const connectionIds = {};
@@ -2524,16 +2601,20 @@ window.FB = window.FB || {};
     for (const c of FB.friendConnections(s)) {
       if (friend && c.id === friend.id) continue;
       connectionIds[c.id] = 1;
-      h += charRow(s, c, FB.T('Cultivated connection · regard {regard}', {
-        regard:signedOpinion(c.opinion)
+      h += charRow(s, c, FB.T('Cultivated connection · Standing {standing}', {
+        standing:standingValue(FB.standingOf(s, {
+          kind:'character', id:c.id
+        }))
       }));
     }
     for (const role of ['rival', 'suitor', 'priest', 'lord']) {
       const c = FB.getRole(s, role, false);
       if (!c || c.dead || connectionIds[c.id]) continue;
-      h += charRow(s, c, FB.T('{relationship} · regard {regard}', {
+      h += charRow(s, c, FB.T('{relationship} · Standing {standing}', {
         relationship:roleName(role),
-        regard:signedOpinion(c.opinion)
+        standing:standingValue(FB.standingOf(s, {
+          kind:'character', id:c.id
+        }))
       }));
     }
 
@@ -2709,8 +2790,10 @@ window.FB = window.FB || {};
       const liege = s.realms[s.player.liege];
       h += '<button class="actionbtn" data-liege="' + esc(s.player.liege) + '">' +
         esc(FB.T('Liege: {realm}', { realm:liege.name })) +
-        '<span class="adesc">' + esc(FB.T('Favor {favor}', {
-          favor:signedOpinion(FB.liegeOpOf(s, s.player.liege))
+        '<span class="adesc">' + esc(FB.T('Standing {standing}', {
+          standing:standingValue(FB.standingOf(s, {
+            kind:'realm', id:s.player.liege
+          }))
         })) + '</span></button>';
       h += kv('Land grants received this life', esc(String(s.player.liegeGrants || 0)));
     }
@@ -2723,8 +2806,11 @@ window.FB = window.FB || {};
       }
       h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
         esc(r.name) + '<span class="adesc">' + esc(FB.T(
-          'Favor {favor} · levy {men}', {
-            favor:signedOpinion(FB.liegeOpOf(s, rid)), men:Math.round(levy)
+          'Standing {standing} · levy {men}', {
+            standing:standingValue(FB.standingOf(s, {
+              kind:'realm', id:rid
+            })),
+            men:Math.round(levy)
           })) + '</span></button>';
       const activeFavor = FB.vassalLevyFavor(s, rid);
       h += '<button class="actionbtn" data-vassal-favor="' + esc(rid) + '"' +
@@ -2732,11 +2818,13 @@ window.FB = window.FB || {};
         esc(FB.T('Ask for an exceptional levy')) + '<span class="adesc">' +
         esc(activeFavor
           ? FB.T('The exceptional levy is already promised.')
-          : FB.liegeOpOf(s, rid) < 40
-            ? FB.T('Requires 40 favor; currently {favor}.', {
-              favor:Math.round(FB.liegeOpOf(s, rid))
+          : FB.standingOf(s, { kind:'realm', id:rid }) < 40
+            ? FB.T('Requires 40 Standing; currently {standing}.', {
+              standing:standingValue(FB.standingOf(s, {
+                kind:'realm', id:rid
+              }))
             })
-            : FB.T('For one year this vassal sends an extra {percent}% of its levy; costs 15 favor. (spends the day)', {
+            : FB.T('For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
               percent:Math.round((FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
             })) + '</span></button>';
     }
@@ -2748,7 +2836,7 @@ window.FB = window.FB || {};
           const rid = council.seats[seat.id];
           const realm = rid && s.realms[rid];
           const active = realm && realm.alive && realm.liege === 'player' &&
-            FB.liegeOpOf(s, rid) > -50;
+            FB.standingOf(s, { kind:'realm', id:rid }) > -50;
           if (active) {
             officers++;
             h += '<div class="progressnote"><b>' + esc(
@@ -2788,10 +2876,11 @@ window.FB = window.FB || {};
       if (!r || !r.alive) continue;
       h += '<button class="actionbtn" data-liege="' + esc(rid) + '">' +
         esc(r.name) + '<span class="adesc">' +
-        esc(FB.T('{opinion} · {policy} · {status}', {
-          opinion:FB.T('{band} ({value})', {
-            band:opinionBand(FB.liegeOpOf(s, rid)),
-            value:signedOpinion(FB.liegeOpOf(s, rid))
+        esc(FB.T('{standing} · {policy} · {status}', {
+          standing:FB.T('Standing {standing}', {
+            standing:standingText(FB.standingOf(s, {
+              kind:'realm', id:rid
+            }))
           }),
           policy:foreignPolicyStanceText(s, rid),
           status:foreignPolicyStatusText(s, rid)
@@ -3225,13 +3314,6 @@ window.FB = window.FB || {};
       ? FB.T('Liege of {realm}', { realm:subject })
       : FB.T('Sovereign over {realm}', { realm:subject });
   }
-  function landRulerUsesFavor(s, rid) {
-    if (FB.rulerGiftUsesFavor) return FB.rulerGiftUsesFavor(s, rid);
-    if (rid === s.player.liege) return true;
-    const chain = s.player.liege ? FB.liegeChain(s, s.player.liege) : [];
-    const r = landRulerRealm(s, rid);
-    return chain.indexOf(rid) >= 0 || !!(r && r.liege === 'player');
-  }
   function landRulerRow(s, entry) {
     const rid = entry.id;
     const relationship = landRulerRelationship(s, entry);
@@ -3250,8 +3332,7 @@ window.FB = window.FB || {};
       standing = '<span class="cop op-mid">' + esc(FB.T('You')) + '</span>';
     } else {
       const r = landRulerRealm(s, rid);
-      const op = Math.round(FB.realmOpinionOf(s, rid));
-      const favor = landRulerUsesFavor(s, rid);
+      const value = FB.standingOf(s, { kind:'realm', id:rid });
       art = FB.crestTag(rid, 36, 42);
       heading = FB.T('{title} {name}', {
         title:FB.realmRankTitle(s, r), name:r.ruler.name
@@ -3260,10 +3341,10 @@ window.FB = window.FB || {};
       martial = r.ruler.mar;
       action = ' data-liege="' + esc(rid) + '" title="' +
         esc(FB.T('Open this realm ruler’s sheet')) + '"';
-      standing = '<span class="cop ' + FB.opClass(op) + '">' +
-        esc(favor
-          ? FB.T('Favor {favor}', { favor:signedOpinion(op) })
-          : FB.T('Opinion {opinion}', { opinion:signedOpinion(op) })) + '</span>';
+      standing = '<span class="cop ' + standingClass(value) + '">' +
+        esc(FB.T('Standing {standing}', {
+          standing:standingText(value)
+        })) + '</span>';
     }
     return '<button type="button" class="charrow actionbtn"' + action + '>' +
       art + '<span><span class="cname">' + esc(heading) + '</span><br>' +
@@ -3277,11 +3358,11 @@ window.FB = window.FB || {};
 
   function capitalRelocationTerms(status) {
     return FB.T(
-      '{prestige} prestige · {opinion} popular opinion · {favor} Favor for every direct vassal',
+      '{prestige} prestige · {opinion} popular opinion · {standing} Standing for every direct vassal',
       {
         prestige:status.prestigeCost,
-        opinion:signedOpinion(status.popularOpinion),
-        favor:signedOpinion(status.vassalFavor)
+        opinion:signedNumber(status.popularOpinion),
+        standing:standingValue(status.vassalFavor)
       });
   }
 
@@ -3310,13 +3391,15 @@ window.FB = window.FB || {};
         from:from.name,
         destination:destination.name
       })) + '</p><p>' + esc(FB.T(
-      'This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Favor changes by {favor}.',
+      'This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Standing changes by {standing}.',
       {
         prestige:status.prestigeCost,
-        opinion:signedOpinion(status.popularOpinion),
-        favor:signedOpinion(status.vassalFavor)
+        opinion:signedNumber(status.popularOpinion),
+        standing:standingValue(status.vassalFavor)
       })) + '</p>';
     if (vassalNames.length) {
+      h += standingEffectRow(FB.T('Standing with every direct vassal'),
+        status.vassalFavor);
       h += '<p>' + esc(FB.T(
         'Affected direct vassals ({count}): {vassals}.', {
           count:vassalNames.length,
@@ -3324,7 +3407,7 @@ window.FB = window.FB || {};
         })) + '</p>';
     } else {
       h += '<p>' + esc(FB.T(
-        'You have no direct vassals, so no vassal Favor will change.')) + '</p>';
+        'You have no direct vassals, so no vassal Standing will change.')) + '</p>';
     }
     if (status.incomingMonopoly) {
       h += '<p class="op-bad">' + esc(FB.T(
@@ -3521,11 +3604,8 @@ window.FB = window.FB || {};
           })) + '</div>';
       }
       if (realm && !myRealm && FB.isPlayerSovereign(s)) {
-        const realmOpinion = FB.realmOpinionOf(s, rid);
-        h += kv('Their opinion of you', '<span class="' + FB.opClass(realmOpinion) + '">' +
-          esc(FB.T('{opinion} ({band})', {
-            opinion: signedOpinion(realmOpinion), band: opinionBand(realmOpinion)
-          })) + '</span>');
+        const realmStanding = FB.standingOf(s, { kind:'realm', id:rid });
+        h += kv('Standing with this ruler', standingSpan(realmStanding));
         h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
           ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
       }
@@ -4914,16 +4994,16 @@ window.FB = window.FB || {};
     const continuing = !!(cultivated && cultivated.id === c.id);
     let estimate;
     if (preview.daysToThreshold === null) {
-      estimate = FB.T('At the current daily rate, Regard is not advancing toward +{threshold}.', {
+      estimate = FB.T('At the current daily rate, Standing is not advancing toward +{threshold}.', {
         threshold:FB.relationshipOpinionThreshold()
       });
     } else if (!preview.daysToThreshold) {
-      estimate = FB.T('{name} is already at the +{threshold} Regard threshold.', {
+      estimate = FB.T('{name} is already at the +{threshold} Standing threshold.', {
         name:c.name, threshold:FB.relationshipOpinionThreshold()
       });
     } else {
       estimate = FB.T(
-        'At +{rate} Regard per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure.', {
+        'At +{rate} Standing per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure.', {
           rate:preview.dailyRate,
           threshold:FB.relationshipOpinionThreshold(),
           activeDays:preview.daysToThreshold,
@@ -4937,7 +5017,7 @@ window.FB = window.FB || {};
         legs:preview.legs,
         days:preview.days
       })) + '</p><p>' + esc(FB.T(
-      'After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Regard.', {
+      'After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Standing.', {
         days:preview.minimumStay
       })) + '</p><p>' + esc(estimate) + '</p>' +
       (options.courtship
@@ -5177,10 +5257,10 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !FB.canSeekAbsolution(s)) return;
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {opinion} opinion with every Catholic realm.', {
+      'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with every Catholic realm.', {
         gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
         piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
-        opinion:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
+        standing:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
       })) + '</p></div><div class="gm-list">' +
       '<button type="button" class="actionbtn" id="absolution-confirm">🕊 ' +
       esc(FB.T('Accept the Pope’s absolution')) + '</button>' +
@@ -5205,10 +5285,10 @@ window.FB = window.FB || {};
       'Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there.', {
         seat:seat.name, rank:meta.restoredRank || 3, title:title
       })) + '</p><p>' + esc(FB.T(
-      'You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared.', {
+      'You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared.', {
         piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
         prestige:FB.religiousHeadBalance('religiousHeadRestorePrestige', 150),
-        opinion:FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15)
+        standing:FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15)
       })) + '</p></div><div class="gm-list">' +
       '<button type="button" class="actionbtn" id="head-restore-confirm">✝ ' +
       esc(FB.T('Grant {seat} and restore the Papacy', { seat:seat.name })) +
@@ -5991,7 +6071,7 @@ window.FB = window.FB || {};
       if (rival.claimant === 'player') continue;
       h += '<button class="actionbtn" data-ghw-council-move="endorse" ' +
         'data-ghw-council-claimant="' + esc(rival.claimant) + '">' +
-        esc(FB.T('Endorse {claimant} · +15 opinion, +0.10 next claim', {
+        esc(FB.T('Endorse {claimant} · +15 Standing, +0.10 next claim', {
           claimant:greatHolyWarCouncilClaimantName(
             s, settlementCase, rival.claimant)
         })) + '</button>';
@@ -6011,7 +6091,7 @@ window.FB = window.FB || {};
     }
     if (view.objectChance !== null && settlementCase.standing > 0) {
       h += '<button class="actionbtn" data-ghw-council-move="object">' +
-        esc(FB.T('Object · spend 1 standing · {odds}% chance for the runner-up · {leader} loses 10 opinion', {
+        esc(FB.T('Object · spend 1 settlement standing · {odds}% chance for the runner-up · {leader} loses 10 Standing', {
           odds:Math.round(view.objectChance * 100),
           leader:greatHolyWarCouncilClaimantName(
             s, settlementCase, view.leader.claimant)
@@ -6180,8 +6260,8 @@ window.FB = window.FB || {};
       ? B.religiousHeadWarOpinion : -40);
     const h = '<div class="gm-body-text"><p class="warnote"><b>' + esc(FB.T(
       'This conquest is sacrilege.')) + '</b></p><p>' + esc(FB.T(
-      'Declaring war on {realm} reduces your piety to zero, gives every living Catholic realm −{opinion} opinion of you, and excommunicates the current ruler.', {
-        realm:realm.name, opinion:opinion
+      'Declaring war on {realm} reduces your piety to zero, gives you −{standing} Standing with every living Catholic ruler, and excommunicates the current ruler.', {
+        realm:realm.name, standing:opinion
       })) + '</p><p>' + esc(FB.T(
       'Canceling here changes nothing. After peace, an active Pope may grant costly absolution.')) +
       '</p></div><div class="gm-list">' +
@@ -6673,7 +6753,7 @@ window.FB = window.FB || {};
   UI.showEnvoys = function () {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
-      'A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at opinion 60+, carrying {money:25}; either offer uses the same envoy odds.')) +
+      'A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds.')) +
       '</p><div class="gm-list">';
     const pactTargets = FB.envoyTargets(s);
     const allianceTargets = FB.allianceOfferTargets(s);
@@ -6684,24 +6764,24 @@ window.FB = window.FB || {};
     for (const rid of targets) {
       const r = s.realms[rid];
       const men = FB.aiBaseHost(s, rid);
-      const opinion = FB.realmOpinionOf(s, rid);
+      const standing = FB.standingOf(s, { kind:'realm', id:rid });
       if (pactTargets.indexOf(rid) >= 0) {
         h += '<button class="actionbtn" data-envoy="' + esc(rid) + '"' +
           (s.player.gold < 10 ? ' disabled' : '') + '>🕊 ' + esc(FB.T('Peace pact with {realm}', { realm: r.name })) +
-          '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · opinion {opinion} · chance ~{chance}%', {
+          '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · Standing {standing} · chance ~{chance}%', {
             ruler: r.ruler.name,
             counties: countyCountText(s, FB.realmProvinces(s, rid).length),
             men: menText(s, men),
-            opinion: signedOpinion(opinion),
+            standing: standingText(standing),
             chance: Math.round(FB.envoyChance(s, rid) * 100)
           })) + '</span></button>';
       }
       if (allianceTargets.indexOf(rid) >= 0) {
         h += '<button class="actionbtn" data-alliance-offer="' + esc(rid) + '"' +
           (s.player.gold < 25 ? ' disabled' : '') + '>🤝 ' + esc(FB.T('Defensive alliance with {realm}', { realm: r.name })) +
-          '<span class="adesc">' + esc(FB.T('{ruler} · opinion {opinion} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
+          '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
           ruler: r.ruler.name,
-          opinion: signedOpinion(opinion),
+          standing: standingText(standing),
           chance: Math.round(FB.envoyChance(s, rid) * 100),
           men: menText(s, Math.round(Math.min(men * 0.25, FB.playerLevy(s) * 0.5)))
         })) + '</span></button>';
@@ -6732,22 +6812,21 @@ window.FB = window.FB || {};
     const targets = FB.foreignPolicyTargets(s);
     const used = FB.foreignPolicyUsed(s);
     let h = '<p class="hint">' + esc(FB.T(
-      'Political attention is assigned, not spent. Each active direction changes that court’s opinion every season and remains in force until you change it.')) +
+      'Political attention is assigned, not spent. Each active direction changes Standing with that court every season and remains in force until you change it.')) +
       '</p><div class="progressnote">' + esc(FB.T(
         'Political attention: {used} of {capacity} assigned.', {
           used: used, capacity: capacity
         })) + '</div><div class="gm-list">';
     for (const rid of targets) {
       const r = s.realms[rid];
-      const opinion = FB.realmOpinionOf(s, rid);
+      const standing = FB.standingOf(s, { kind:'realm', id:rid });
       const men = FB.aiBaseHost(s, rid);
       h += '<button class="actionbtn" data-policy-target="' + esc(rid) + '">🕊 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.T(
-          '{title} {ruler} · opinion {opinion} ({band}) · fields ~{men} · {stance} · {status}', {
+          '{title} {ruler} · Standing {standing} · fields ~{men} · {stance} · {status}', {
             title: FB.realmRankTitle(s, r),
             ruler: r.ruler.name,
-            opinion: signedOpinion(opinion),
-            band: opinionBand(opinion),
+            standing: standingText(standing),
             men: menText(s, men),
             stance: foreignPolicyStanceText(s, rid),
             status: foreignPolicyStatusText(s, rid)
@@ -6775,12 +6854,11 @@ window.FB = window.FB || {};
     const current = FB.foreignPolicyStance(s, rid);
     const full = !current && used >= capacity;
     const amount = Math.round(FB.foreignPolicyAmount(s) * 10) / 10;
-    const opinion = FB.realmOpinionOf(s, rid);
+    const standing = FB.standingOf(s, { kind:'realm', id:rid });
     let h = '<p class="hint">' + esc(FB.T(
-      '{realm} currently holds an opinion of {opinion} ({band}). Your diplomacy gives an assigned policy about {amount} opinion each season.', {
+      'Standing with {realm} is {standing}. Your diplomacy changes it by about {amount} each season.', {
         realm: r.name,
-        opinion: signedOpinion(opinion),
-        band: opinionBand(opinion),
+        standing: standingText(standing),
         amount: amount
       })) + '</p>';
     h += '<div class="progressnote">' + esc(FB.T(
@@ -6823,15 +6901,20 @@ window.FB = window.FB || {};
   UI.showHomage = function () {
     const s = FB.state;
     const chain = FB.liegeChain(s, s.player.liege);
-    let h = '<p class="hint">A journey, a gift of words, a knee on the floor. Opinion grows — more for silver tongues.</p><div class="gm-list">';
+    let h = '<p class="hint">A journey, a gift of words, a knee on the floor. Standing grows — more for silver tongues.</p><div class="gm-list">';
     for (const rid of chain) {
       const r = s.realms[rid];
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🙇 ' +
         esc(FB.T('{title} {name}', {
           title: FB.realmRankTitle(s, r), name: r.ruler.name
         })) +
-        '<span class="adesc">' + esc(FB.T('{realm} · opinion {opinion}',
-          { realm: r.name, opinion: FB.liegeOpOf(s, rid) })) + '</span></button>';
+        '<span class="adesc">' + esc(FB.T('{realm} · Standing {standing}',
+          {
+            realm:r.name,
+            standing:standingText(FB.standingOf(s, {
+              kind:'realm', id:rid
+            }))
+          })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Pay Homage', h);
@@ -6858,8 +6941,13 @@ window.FB = window.FB || {};
         esc(FB.T('{title} {name}', {
           title: FB.realmRankTitle(s, r), name: r.ruler.name
         })) +
-        '<span class="adesc">' + esc(FB.T('{realm} · opinion {opinion}',
-          { realm: r.name, opinion: FB.liegeOpOf(s, rid) })) + '</span></button>';
+        '<span class="adesc">' + esc(FB.T('{realm} · Standing {standing}',
+          {
+            realm:r.name,
+            standing:standingText(FB.standingOf(s, {
+              kind:'realm', id:rid
+            }))
+          })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Appeal to a Higher Lord', h);
@@ -6892,7 +6980,7 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-pid="' + esc(c.pid) + '">🏰 ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T(
           '{realm} · {ruler} · the liege’s favor {favor} · dev {development} · your suit ~{odds}%', {
-            realm: hr.name, ruler: hr.ruler.name, favor: Math.round(c.favor),
+            realm:hr.name, ruler:hr.ruler.name, favor:Math.round(c.favor),
             development: s.dev[c.pid] || 1, odds: odds
           })) + '</span></button>';
     }
@@ -6900,7 +6988,7 @@ window.FB = window.FB || {};
     if (!cands.length) {
       h += '<p class="hint">' + esc(FB.T(
         'No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.',
-        { favor: FBDATA.balance.petitionFavorMax })) + '</p>';
+        { favor:FBDATA.balance.petitionFavorMax })) + '</p>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal('Petition for a Fief', h);
@@ -7067,24 +7155,24 @@ window.FB = window.FB || {};
       cashDetail = deliveryText || deliveryUnavailable;
     } else if (days) {
       cashDetail = FB.T(
-        '+{regard} Regard. Cash and item gifts share this recipient’s cooldown; ready in {days} days.', {
-          regard:cashBoost, days:days
+        '+{standing} Standing. Cash and item gifts share this recipient’s cooldown; ready in {days} days.', {
+          standing:cashBoost, days:days
         });
     } else if (s.player.gold < cashCost) {
-      cashDetail = FB.T('Requires {money:cost}; you have {money:current}. It grants +{regard} Regard.', {
-        cost:cashCost, current:s.player.gold, regard:cashBoost
+      cashDetail = FB.T('Requires {money:cost}; you have {money:current}. It grants +{standing} Standing.', {
+        cost:cashCost, current:s.player.gold, standing:cashBoost
       });
     } else {
       cashDetail = deliveryPreview && deliveryPreview.foreign
         ? FB.T(
-          '+{regard} Regard on arrival after {travelDays} courier days; the {cooldown}-day cooldown begins then. (spends the day)', {
-            regard:cashBoost,
+          '+{standing} Standing on arrival after {travelDays} courier days; the {cooldown}-day cooldown begins then. (spends the day)', {
+            standing:cashBoost,
             travelDays:deliveryPreview.days,
             cooldown:FB.socialGiftCooldownDays()
           })
         : FB.T(
-          '+{regard} Regard. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
-            regard:cashBoost, days:FB.socialGiftCooldownDays()
+          '+{standing} Standing. Cash and item gifts share a {days}-day cooldown. (spends the day)', {
+            standing:cashBoost, days:FB.socialGiftCooldownDays()
           });
     }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -7115,17 +7203,17 @@ window.FB = window.FB || {};
           deliveryText || deliveryUnavailable);
         const boost = FB.giftOpinion(item);
         const detail = blocked
-          ? FB.T('+{regard} Regard · unavailable: {reason}', {
-            regard:boost, reason:blocked
+          ? FB.T('+{standing} Standing · unavailable: {reason}', {
+            standing:boost, reason:blocked
           })
           : (deliveryPreview && deliveryPreview.foreign
             ? FB.T(
-              '+{regard} Regard on arrival after {days} courier days. This exact object remains in transit until delivery. (spends the day)', {
-                regard:boost, days:deliveryPreview.days
+              '+{standing} Standing on arrival after {days} courier days. This exact object remains in transit until delivery. (spends the day)', {
+                standing:boost, days:deliveryPreview.days
               })
             : FB.T(
-              '+{regard} Regard. This exact object leaves family ownership. (spends the day)', {
-                regard:boost
+              '+{standing} Standing. This exact object leaves family ownership. (spends the day)', {
+                standing:boost
               }));
         h += '<button class="actionbtn" data-character-gift-item="' + esc(ref) + '"' +
           (blocked ? ' disabled' : '') + '>' + item.def.icon + ' ' +
@@ -7168,8 +7256,7 @@ window.FB = window.FB || {};
       !deliveryPreview.eligible ? deliveryPreview.reason : '';
     const cashCost = FB.rulerCashGiftCost(s, rid);
     const cashBoost = FB.rulerCashGiftOpinion();
-    const usesFavor = FB.rulerGiftUsesFavor(s, rid);
-    const standing = usesFavor ? FB.T('Favor') : FB.T('Opinion');
+    const standing = FB.T('Standing');
     const cashBlocked = days || deliveryText || deliveryUnavailable ||
       s.player.gold < cashCost;
     let cashDetail;
@@ -7283,10 +7370,9 @@ window.FB = window.FB || {};
     const cap = FB.world.byId[r.capital];
     const rel = cap ? FB.religionOf(cap.religion) : null;
     const men = FB.aiBaseHost(s, rid);
-    const op = Math.round(FB.liegeOpOf(s, rid));
+    const standing = FB.standingOf(s, { kind:'realm', id:rid });
     const liege = r.liege && s.realms[r.liege];
     const foreignSovereign = rid !== 'player' && !r.liege && FB.isPlayerSovereign(s);
-    const rulerUsesFavor = FB.rulerGiftUsesFavor(s, rid);
     const rulerCharacter = FB.realmRulerCharacter
       ? FB.realmRulerCharacter(s, rid) : null;
     const succession = FB.ensureRealmSuccession(s, rid);
@@ -7321,14 +7407,11 @@ window.FB = window.FB || {};
       '<div class="ccmeta">' + esc(liege
         ? FB.T('Himself a vassal of {liege}', { liege: liege.name })
         : FB.T('Sovereign — kneels to no one')) + '</div>' +
-      '<div class="ccmeta ' + FB.opClass(op) + '">' +
-      esc(!rulerUsesFavor
-        ? FB.T('⚔ martial {martial} · opinion {opinion} ({band})', {
-          martial: r.ruler.mar, opinion: signedOpinion(op), band: opinionBand(op)
-        })
-        : FB.T('⚔ martial {martial} · favor {favor}', {
-          martial: r.ruler.mar, favor: signedOpinion(op)
-        })) + '</div>' +
+      '<div class="ccmeta ' + standingClass(standing) + '">' +
+      esc(FB.T('⚔ martial {martial} · Standing {standing}', {
+        martial:r.ruler.mar,
+        standing:standingText(standing)
+      })) + '</div>' +
       (r.ruler.trait && FBDATA.traits[r.ruler.trait]
         ? '<div class="ccmeta">' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name')) +
           ' — ' + esc(dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'desc')) + '</div>'
@@ -7336,6 +7419,7 @@ window.FB = window.FB || {};
       '</div></div>' +
       '<div style="margin-top:10px">' +
       kv('Realm', esc(FB.L(r.name))) +
+      kv('Standing with this ruler', standingSpan(standing)) +
       kv('Counties', FB.realmProvinces(s, rid).length) +
       kv('Realm host', '~' + esc(menText(s, men))) +
       kv('Technology', esc(techLevelsText(s, techRid))) +
@@ -7349,9 +7433,13 @@ window.FB = window.FB || {};
       (cap ? kv('Capital', esc(FB.L(cap.name))) : '') +
       '</div>';
     if (rid !== 'player') {
+      h += '<div class="progressnote">' +
+        esc(realmStandingContext(s, rid)) + '</div>';
+    }
+    if (rid !== 'player') {
       const giftDays = FB.rulerGiftDaysRemaining(s, rid);
       const deliveryText = giftDeliveryText(s, 'ruler', rid);
-      const giftStanding = rulerUsesFavor ? FB.T('Favor') : FB.T('Opinion');
+      const giftStanding = FB.T('Standing');
       h += '<button class="actionbtn" id="rm-gift">🎁 ' +
         esc(FB.T('Offer a gift…')) +
         '<span class="adesc">' + esc(deliveryText || (giftDays
@@ -7367,7 +7455,7 @@ window.FB = window.FB || {};
         '<button class="actionbtn" id="rm-cultivate">🤝 ' +
         esc(FB.T('Cultivate relationship…')) +
         '<span class="adesc">' + esc(FB.T(
-          'Visit {name} at the capital and remain at least {days} days; Regard advances only while you are there.', {
+          'Visit {name} at the capital and remain at least {days} days; Standing advances only while you are there.', {
             name:r.ruler.name,
             days:FBDATA.balance.travelMinStayDays || 90
           })) + '</span></button>';
@@ -7563,7 +7651,7 @@ window.FB = window.FB || {};
   /* give a demesne county — or a whole duchy — to a sworn man */
   UI.showGrantLand = function () {
     const s = FB.state;
-    let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the favor. Your dignity still counts land held through vassals.')) + '</p>';
+    let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
     const cap = FB.domainCap(s), held = (s.player.provs || []).length;
     h += '<p class="hint">' + esc(FB.T('Held directly: {held} of {cap}.', { held: held, cap: cap })) +
       (held > cap ? ' ⚠ ' + esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) : '') + '</p>';
@@ -7605,11 +7693,11 @@ window.FB = window.FB || {};
     const realm = rid && s.realms[rid];
     if (!realm) return '';
     const oldRealm = oldRid && s.realms[oldRid];
-    let consequence = FB.T('Gains +10 favor; no one is displaced from this vacant seat.');
+    let consequence = FB.T('Gains +10 Standing; no one is displaced from this vacant seat.');
     if (selected) consequence = FB.T('Keeps the current office.');
     else if (oldRealm) {
       consequence = FB.T(
-        'Replaces {name}; the former officer loses 8 favor and the appointee gains 10 favor.',
+        'Replaces {name}; the former officer loses 8 Standing and the appointee gains 10 Standing.',
         { name:oldRealm.ruler.name });
     }
     return personAssignmentCard({
@@ -7625,9 +7713,9 @@ window.FB = window.FB || {};
           ? FB.T('No household wage')
           : FB.T('No household wage; appointment lowers crown authority by 2.') },
         { label:'Current position', value:FB.T('Ruler of {realm}', { realm:realm.name }) },
-        { label:'Standing', value:FB.T('Favor {favor}', {
-          favor:signedOpinion(FB.liegeOpOf(s, rid))
-        }) },
+        { label:'Standing', value:standingText(FB.standingOf(s, {
+          kind:'realm', id:rid
+        })) },
         { label:'Current assignment', value:selected
           ? councilSeatName(seat.id) : FB.T('No council office') },
         { label:'Consequence', kind:'consequence', value:consequence }
@@ -7664,14 +7752,16 @@ window.FB = window.FB || {};
       h += '<div class="panelh">' + seat.icon + ' ' + esc(councilSeatName(seat.id)) + '</div>';
       h += '<div class="cmeta">' + esc(councilSeatDesc(seat.id)) + '</div>';
       if (r) {
-        const op = FB.liegeOpOf(s, rid);
+        const op = FB.standingOf(s, { kind:'realm', id:rid });
         const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
           ? dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name') : '';
         h += '<div class="charcard"><canvas class="pface" width="56" height="64" id="crest_' + esc(seat.id) + '"></canvas>' +
           '<div><div class="ccname">' + esc(r.ruler.name) + '</div>' +
           '<div class="ccmeta">' + esc(r.name) + (trait ? ' · ' + esc(trait) : '') + '</div>' +
-          '<div class="ccmeta ' + FB.opClass(op) + '">' +
-          esc(FB.T('favor {favor}', { favor: (op > 0 ? '+' : '') + Math.round(op) })) + '</div>' +
+          '<div class="ccmeta ' + standingClass(op) + '">' +
+          esc(FB.T('Standing {standing}', {
+            standing:standingText(op)
+          })) + '</div>' +
           '<div style="margin-top:6px">' +
           '<button class="btn" data-council-gift="' + esc(rid) + '">🎁 ' +
           esc(FB.T('Offer a gift…')) + '</button> ' +
@@ -7741,7 +7831,7 @@ window.FB = window.FB || {};
       return !seated[rid];
     });
     let h = '<p class="hint">' + esc(FB.T(
-      'Choose an unseated vassal for this office. Appointment changes favor and crown authority immediately; it does not create a household pay contract.')) +
+      'Choose an unseated vassal for this office. Appointment changes Standing and crown authority immediately; it does not create a household pay contract.')) +
       '</p><div class="gm-list">';
     if (oldRid && s.realms[oldRid]) {
       h += councilAssignmentCard(s, seat, oldRid, oldRid, true, {});
@@ -7791,7 +7881,7 @@ window.FB = window.FB || {};
     const moved = obl.lastMotion === s.date.year;
     const aidMin = B.parliamentAidMin || 0.10;
     let h = '<p class="hint">' + esc(FB.T(
-      'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and the liege’s own favor.',
+      'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege.',
       { liege: liege.name })) + '</p>';
     h += '<div class="kv"><span>' + esc(FB.T('The liege’s aid')) + '</span><b>' +
       esc(FB.T('{pct}% of your noble revenue', { pct: Math.round(obl.aid * 100) })) + '</b></div>';
@@ -7840,8 +7930,9 @@ window.FB = window.FB || {};
     for (const vid of FB.playerVassals(s)) {
       const r = s.realms[vid];
       h += '<button class="actionbtn" data-rid="' + esc(vid) + '">📜 ' + esc(r.name) +
-        '<span class="adesc">' + esc(FB.T('{ruler} · opinion {opinion}', {
-          ruler: r.ruler.name, opinion: FB.liegeOpOf(s, vid)
+        '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing}', {
+          ruler:r.ruler.name,
+          standing:standingText(FB.standingOf(s, { kind:'realm', id:vid }))
         })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
@@ -9805,7 +9896,7 @@ window.FB = window.FB || {};
     const used = FB.retainerRecords(s).length;
     const capacity = FB.retainerCapacity(s);
     let h = '<p class="hint">' + esc(FB.T(
-      'Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile regard ends service.')) +
+      'Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service.')) +
       '</p>' + kv('Household capacity', esc(FB.T('{used} of {capacity}', {
         used:used, capacity:capacity
       }))) + '<div class="gm-list">';
@@ -9887,9 +9978,9 @@ window.FB = window.FB || {};
           { label:'Expected benefit', value:benefit },
           { label:'Cost / pay', value:pay },
           { label:'Occupation', value:FB.careerTitle(s, c) },
-          { label:'Standing', value:FB.T('Regard {regard}', {
-            regard:signedOpinion(c.opinion)
-          }) },
+          { label:'Standing', value:standingText(FB.standingOf(s, {
+            kind:'character', id:c.id
+          })) },
           { label:'Current assignment', value:FB.T('No household office') },
           { label:'Consequence', kind:'consequence',
             value:FB.T('Adds this office; the current occupation remains unchanged.') }
@@ -10417,8 +10508,8 @@ window.FB = window.FB || {};
       '</section><section class="papacy-card">' + panelh('Church standing') +
       kv('Recognized Pope', esc(pope
         ? FB.papalDisplayName(s, pope) : FB.T('The Apostolic See is vacant'))) +
-      kv('Papal opinion', esc(String(pope && FB.papalOpinionOfCandidate
-        ? Math.round(FB.papalOpinionOfCandidate(s, me, obedienceId)) : 0))) +
+      kv('Standing with the Pope', standingSpan(pope && FB.papalOpinionOfCandidate
+        ? FB.papalOpinionOfCandidate(s, me, obedienceId) : 0)) +
       kv('Current focus', esc(currentFocus
         ? dt(s, 'focus', currentFocus.id, currentFocus, 'label')
         : FB.T('None'))) +
@@ -11057,8 +11148,10 @@ window.FB = window.FB || {};
       h += '<button class="actionbtn" data-papal-tactic-target="' +
         esc(c.id) + '">' + esc(FB.fullName(c)) +
         '<span class="adesc">' + esc(FB.T(
-          'Regard {opinion} · Learning {learning} · Diplomacy {diplomacy}', {
-            opinion:(c.opinion > 0 ? '+' : '') + Math.round(c.opinion || 0),
+          'Standing {standing} · Learning {learning} · Diplomacy {diplomacy}', {
+            standing:standingText(FB.standingOf(s, {
+              kind:'character', id:c.id
+            })),
             learning:FB.skillOf(c, 'lea'),
             diplomacy:FB.skillOf(c, 'dip')
           })) + '</span></button>';
@@ -11087,13 +11180,13 @@ window.FB = window.FB || {};
     const s = FB.state;
     const candidates = FB.papalAppointmentCandidates(s, obedienceId, true);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Choose up to two qualified bishops. One family appointment per pontificate is tolerated; later relatives cost authority and Cardinal opinion.')) +
+      'Choose up to two qualified bishops. One family appointment per pontificate is tolerated; later relatives cost authority and Curial opinion.')) +
       '</p></div><div class="gm-list">';
     for (const c of candidates) {
       h += '<label class="papacy-choice"><input type="checkbox" ' +
         'data-consistory-choice="' + esc(c.id) + '"> <span><b>' +
         esc(FB.fullName(c)) + '</b><small>' + esc(FB.T(
-          'Age {age} · Learning {learning} · Papal opinion {opinion}', {
+          'Age {age} · Learning {learning} · Curial opinion {opinion}', {
             age:FB.ageOf(c, s.date.year),
             learning:FB.skillOf(c, 'lea'),
             opinion:(c.curialOpinion > 0 ? '+' : '') +
@@ -11175,10 +11268,11 @@ window.FB = window.FB || {};
         (used || s.player.gold < cost ? ' disabled' : '') + '>' +
         esc(papalRealmLabel(s, target.realmId)) +
         '<span class="adesc">' + esc(FB.T(
-          '{ruler} · realm opinion {opinion}', {
+          '{ruler} · Standing {standing}', {
             ruler:FB.fullName(target.c),
-            opinion:(FB.realmOpinionOf(s, target.realmId) > 0 ? '+' : '') +
-              Math.round(FB.realmOpinionOf(s, target.realmId))
+            standing:standingText(FB.standingOf(s, {
+              kind:'realm', id:target.realmId
+            }))
           })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' +
@@ -11230,7 +11324,7 @@ window.FB = window.FB || {};
   UI.showPapalSanctionTargets = function (obedienceId) {
     const s = FB.state;
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'A justified sentence needs a recorded ground. An arbitrary sentence needs 50 authority, costs 300 piety, and damages authority and Catholic opinion.')) +
+      'A justified sentence needs a recorded ground. An arbitrary sentence needs 50 authority, costs 300 piety, and damages authority and Standing with Catholic rulers.')) +
       '</p></div><div class="gm-list">';
     for (const target of FB.papalRulerTargets(s)) {
       if (FB.excommunicationOf(s, target.c.id, obedienceId)) continue;
@@ -11425,9 +11519,9 @@ window.FB = window.FB || {};
           }) },
           { label:'Cost / pay', value:FB.T('No assignment fee') },
           { label:'Occupation', value:FB.careerTitle(s, c) },
-          { label:'Standing', value:FB.T('Regard {regard}', {
-            regard:signedOpinion(c.opinion)
-          }) },
+          { label:'Standing', value:standingText(FB.standingOf(s, {
+            kind:'character', id:c.id
+          })) },
           { label:'Current assignment', value:current
             ? (current.uid === e.uid ? FB.T('This enterprise') : enterpriseLabel(current))
             : FB.T('No enterprise assignment') },
@@ -12108,7 +12202,7 @@ window.FB = window.FB || {};
     }
     if (FB.canAdvocateTech(s, id)) {
       h += '<button class="btn primary" id="tech-advocate">' +
-        esc(FB.T('Advocate · {money:20} · 15 favor')) + '</button>';
+        esc(FB.T('Advocate · {money:20} · Standing −15')) + '</button>';
     }
     h += '<button class="btn" id="tech-back">' + esc(FB.T('Back')) +
       '</button></div>';
@@ -12180,6 +12274,10 @@ window.FB = window.FB || {};
       FB.isHouseholdCharacter(s, c.id);
     const retainer = !c.dead && FB.retainerRecord ? FB.retainerRecord(s, c.id) : null;
     let h = UI.charCardHtml(s, c, false, true);
+    if (!c.dead && c.id !== me.id) {
+      h += '<div class="progressnote">' +
+        esc(characterStandingContext(s, c)) + '</div>';
+    }
     const attentionTarget = FB.socialAttentionTarget(s);
     if (!c.dead && attentionTarget && attentionTarget.id === c.id) {
       h += '<div class="progressnote">' + esc(socialAttentionSummary(s)) + '</div>';
@@ -12232,7 +12330,7 @@ window.FB = window.FB || {};
             (visitReady ? '' : ' disabled') + '>' +
             esc(FB.T('🧭 Travel to continue cultivating…')) +
             '<span class="adesc">' + esc(visitReady
-              ? FB.T('Visit {name} in {province}; Regard resumes after {days} travel days.', {
+              ? FB.T('Visit {name} in {province}; Standing resumes changing after {days} travel days.', {
                 name:c.name,
                 province:FB.world.byId[visitPreview.destinationId].name,
                 days:visitPreview.days
@@ -12252,7 +12350,7 @@ window.FB = window.FB || {};
           esc(FB.T('🤝 Cultivate relationship')) +
           '<span class="adesc">' + esc(courtAttentionBlocked
             ? FB.T('End your current courtship before cultivating someone else.')
-            : FB.T('Assign personal attention for +{rate} regard each ordinary day. This costs no day.', {
+            : FB.T('Assign personal attention for +{rate} Standing each ordinary day. This costs no day.', {
               rate:attentionRate
             })) + '</span></button>';
       } else {
@@ -12265,7 +12363,7 @@ window.FB = window.FB || {};
             ? FB.T('End your current courtship before cultivating someone else.')
             : (visitPreview && visitPreview.eligible
               ? (visitPreview.cost <= s.player.gold
-                ? FB.T('Visit {name} in {province}; the assignment begins at departure and Regard advances after arrival.', {
+                ? FB.T('Visit {name} in {province}; the assignment begins at departure and Standing advances after arrival.', {
                   name:c.name,
                   province:FB.world.byId[visitPreview.destinationId].name
                 })
@@ -12291,10 +12389,13 @@ window.FB = window.FB || {};
           '<span class="adesc">' + esc(canNameFriend
             ? FB.T('Bind the canonical friendship used by events and oaths to this character. (spends the day)')
             : (knownContact
-              ? FB.T('Requires +{threshold} regard; currently {regard}.', {
-                threshold:threshold, regard:signedRelationshipOpinion(c.opinion)
+              ? FB.T('Requires +{threshold} Standing; currently {standing}.', {
+                threshold:threshold,
+                standing:standingValue(FB.standingOf(s, {
+                  kind:'character', id:c.id
+                }))
               })
-              : FB.T('Cultivate this relationship, then reach +{threshold} regard.', {
+              : FB.T('Cultivate this relationship, then reach +{threshold} Standing.', {
                 threshold:threshold
               }))) +
           '</span></button>';
@@ -12377,7 +12478,7 @@ window.FB = window.FB || {};
               : FB.T('🧭 Travel to begin courtship…'))) +
           '<span class="adesc">' + esc(together
             ? FB.T(
-              'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} regard.',
+              'Pursue marriage with {name}: assign your personal attention, then propose at +{threshold} Standing.',
               { name:c.name, threshold:FB.relationshipOpinionThreshold() })
             : (visitPreview && visitPreview.eligible
               ? (visitPreview.cost <= s.player.gold
@@ -12392,22 +12493,25 @@ window.FB = window.FB || {};
                 FB.T('A targeted visit is unavailable.')))) + '</span></button>';
         if (FB.stationOf(c) - FB.playerStation(s) > 0) {
           h += '<div class="progressnote">' + esc(FB.T(
-            '⚖ {name} stands above your station — the family will expect great regard and renown before they bless such a match.',
+            '⚖ {name} stands above your station — the family will expect high Standing and renown before they bless such a match.',
             { name: c.name })) + '</div>';
         }
       } else if (s.player.courtingId === c.id) {
         const proposalThreshold = FB.relationshipOpinionThreshold();
         if (FB.canPropose(s)) {
           h += '<button class="actionbtn" id="cm-propose">💒 Propose marriage' +
-            '<span class="adesc">Ask for their hand. Standing, wealth, and their regard decide.</span></button>';
+            '<span class="adesc">Ask for their hand. Standing and wealth decide.</span></button>';
         } else {
           h += '<button class="actionbtn" id="cm-propose" disabled>💒 Propose marriage' +
             '<span class="adesc">' + esc(FB.T(
-              'Locked until +{threshold} regard; currently {regard}.', {
-                threshold:proposalThreshold, regard:signedRelationshipOpinion(c.opinion)
+              'Locked until +{threshold} Standing; currently {standing}.', {
+                threshold:proposalThreshold,
+                standing:standingValue(FB.standingOf(s, {
+                  kind:'character', id:c.id
+                }))
               })) + '</span></button>';
           h += '<div class="progressnote">' + esc(FB.T(
-            '🌷 You are courting {name}. A proposal requires +{threshold} regard; personal attention works day by day.',
+            '🌷 You are courting {name}. A proposal requires +{threshold} Standing; personal attention works day by day.',
             { name:c.name, threshold:proposalThreshold })) + '</div>';
         }
         h += '<button class="actionbtn" id="cm-breakoff">💔 Break off the courtship' +
@@ -12421,11 +12525,11 @@ window.FB = window.FB || {};
         if (s.roles.rival === c.id) {
           const heat = FB.rivalHeat(s);
           h += '<div class="progressnote">' + esc(FB.T(
-            '⚡ Rivalry: {state} ({heat}/100). Their regard shapes the chance of peace; heat shapes how far the feud may go.',
+            '⚡ Rivalry: {state} ({heat}/100). Standing shapes the chance of peace; heat shapes how far the feud may go.',
             { state: rivalryHeatName(heat), heat: heat })) + '</div>';
         } else if (s.player.rivalContacts && s.player.rivalContacts[c.id]) {
           h += '<div class="progressnote">' + esc(FB.T(
-            '⚠ A hostile encounter is remembered. If their regard falls low enough, they may declare a feud of their own.')) +
+            '⚠ A hostile encounter is remembered. If Standing falls low enough, they may declare a feud of their own.')) +
             '</div>';
         }
         h += '<button class="actionbtn" id="cm-insult">😤 Insult them publicly' +
@@ -12437,7 +12541,7 @@ window.FB = window.FB || {};
             '<span class="adesc">' + esc(FB.T(
               'Ask witnesses or a mediator to make a peace that binds you both. (spends the day)')) +
             '</span></button>';
-        } else if (c.opinion <= -40) {
+        } else if (FB.standingOf(s, { kind:'character', id:c.id }) <= -40) {
           const rivalNow = FB.getRole(s, 'rival', false);
           if (!rivalNow || rivalNow.dead) {
             h += '<button class="actionbtn" id="cm-rival">⚡ Declare rival' +
@@ -12586,7 +12690,8 @@ window.FB = window.FB || {};
     const ins = $('cm-insult');
     if (ins) ins.addEventListener('click', function () {
       actThen(function () {
-        c.opinion = FB.clamp(c.opinion - 12, -100, 100);
+        FB.adjustStanding(s, { kind:'character', id:c.id }, -12,
+          'social:public_insult');
         FB.noteRivalContact(s, c, 1, 'insult');
         if (FB.chance(0.5 + FB.skillOf(me, 'dip') * 0.015)) {
           s.player.prestige += 4;
@@ -12604,7 +12709,8 @@ window.FB = window.FB || {};
     if (und) und.addEventListener('click', function () {
       actThen(function () {
         if (FB.chance(0.35 + FB.skillOf(me, 'int') * 0.03)) {
-          c.opinion = FB.clamp(c.opinion - 8, -100, 100);
+          FB.adjustStanding(s, { kind:'character', id:c.id }, -8,
+            'social:undermined');
           FB.noteRivalContact(s, c, 1, 'undermined');
           s.player.prestige += 3;
           if (FB.chance(0.5)) FB.gainSkill(me, 'int', 1);
@@ -12612,7 +12718,8 @@ window.FB = window.FB || {};
             'Your quiet work costs {name} dearly, and no one can prove a thing.',
             { name: c.name }));
         } else {
-          c.opinion = FB.clamp(c.opinion - 20, -100, 100);
+          FB.adjustStanding(s, { kind:'character', id:c.id }, -20,
+            'social:caught_scheme');
           FB.noteRivalContact(s, c, 2, 'caught_scheme');
           s.player.prestige = Math.max(0, s.player.prestige - 6);
           FB.news(s, FB.msg('news.social.undermine_failure',
@@ -13087,8 +13194,8 @@ window.FB = window.FB || {};
         (assigned ? '' :
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">' + esc(FB.T(
-          '+{regard} regard. Each recipient can receive one cash or item gift every {days} days. (spends the day)', {
-            regard:FB.giftOpinion(item), days:FB.socialGiftCooldownDays()
+          '+{standing} Standing. Each recipient can receive one cash or item gift every {days} days. (spends the day)', {
+            standing:FB.giftOpinion(item), days:FB.socialGiftCooldownDays()
           })) + '</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
         esc(FB.T('💰 Sell it ({money:gold})', { gold: sell })) +
@@ -13163,21 +13270,21 @@ window.FB = window.FB || {};
     }
     const boost = FB.giftOpinion(item);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Whom to honor with {icon} {item}? Such largesse is worth +{regard} regard.', {
-        icon: def.icon, item: FB.itemName(s, id), regard: boost
+      'Whom to honor with {icon} {item}? Such largesse is worth +{standing} Standing.', {
+        icon:def.icon, item:FB.itemName(s, id), standing:boost
       })) + '</p></div><div class="gm-list">';
     for (const e of folk) {
-      const op = Math.round(e.c.opinion);
+      const op = FB.standingOf(s, { kind:'character', id:e.c.id });
       const giftDays = FB.socialGiftDaysRemaining(s, e.c.id);
       const detailParams = {
-        relation:e.rel, regard:(op > 0 ? '+' : '') + op, days:giftDays
+        relation:e.rel, standing:standingText(op), days:giftDays
       };
       const details = giftDays
-        ? FB.T('{relation} · regard {regard} · gift ready in {days} days', detailParams)
-        : FB.T('{relation} · regard {regard} · gift ready now', detailParams);
+        ? FB.T('{relation} · Standing {standing} · gift ready in {days} days', detailParams)
+        : FB.T('{relation} · Standing {standing} · gift ready now', detailParams);
       h += '<button class="actionbtn" data-give="' + e.c.id + '"' +
         (giftDays ? ' disabled' : '') + '>🎁 ' + esc(FB.fullName(e.c)) +
-        '<span class="adesc ' + FB.opClass(op) + '">' + esc(details) + '</span></button>';
+        '<span class="adesc ' + standingClass(op) + '">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Keep it</button>';
     openModal('A Gift Worth Giving', h, { historyView:true });
@@ -13700,9 +13807,9 @@ window.FB = window.FB || {};
             ? FB.T('{money:amount} each season', { amount:option.fee })
             : FB.T('Free') },
           { label:'Occupation', value:FB.careerTitle(s, option.tutor) },
-          { label:'Standing', value:FB.T('Regard {regard}', {
-            regard:signedOpinion(option.tutor.opinion)
-          }) },
+          { label:'Standing', value:standingText(FB.standingOf(s, {
+            kind:'character', id:option.tutor.id
+          })) },
           { label:'Current assignment', value:teachingAssignment(option.tutorId) },
           { label:'Consequence', kind:'consequence', value:cur
             ? FB.T('Keeps the current instruction.')
@@ -13922,7 +14029,7 @@ window.FB = window.FB || {};
     if (t.fert && t.fert !== 1) {
       fx += kv('Fertility', esc(FB.T(t.fert > 1 ? 'higher' : 'lower')));
     }
-    if (t.opinion) fx += kv('Others’ regard', (t.opinion > 0 ? '+' : '') + t.opinion);
+    if (t.opinion) fx += kv('Others’ Standing', standingValue(t.opinion));
     if (t.opposite && FBDATA.traits[t.opposite]) {
       fx += kv('Opposite of', esc(dt(s, 'trait', t.opposite, FBDATA.traits[t.opposite], 'name')));
     }
@@ -14483,15 +14590,15 @@ window.FB = window.FB || {};
       '<li><b>Deeds</b> are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated.</li>' +
       '<li>Press <b>Space</b> (or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause. <b>F</b> (or ▶▶) skips straight to the next happening. Events halt the days while they await your choice.</li></ul>' +
       '<h4>Climbing the ladder</h4>' +
-      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, your lord’s favor, marriage, war-glory, or the church can all raise you.</p>' +
+      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +
       '<p>Resident spouses and unmarried children add provisions and quarters to seasonal household upkeep. Working family members can offset that cost with wages or enterprise income.</p>' +
       '<h4>Guild monopoly charters</h4>' +
-      '<p>Once the sovereign nation completes <b>Guild Charters</b>, a Craft or Trade guildmaster with 60 standing and 40 favor may petition the local lord—or a landed vassal’s direct liege—for a profession-wide monopoly. Baron and greater rulers may instead grant one local Craft or Trade monopoly from <b>Rank &amp; Realm</b>. Incoming and outgoing charters can coexist; matching enterprise bonuses add together up to +50%. See their exact terms and remaining days in <b>Network → Trade &amp; Guild</b>. Charters cannot be renewed or revoked early.</p>' +
+      '<p>Once the sovereign nation completes <b>Guild Charters</b>, a Craft or Trade guildmaster with 60 guild standing and 40 Standing with the grantor may petition the local lord—or a landed vassal’s direct liege—for a profession-wide monopoly. Baron and greater rulers may instead grant one local Craft or Trade monopoly from <b>Rank &amp; Realm</b>. Incoming and outgoing charters can coexist; matching enterprise bonuses add together up to +50%. See their exact terms and remaining days in <b>Network → Trade &amp; Guild</b>. Charters cannot be renewed or revoked early.</p>' +
       '<h4>Rivalries</h4>' +
-      '<p>Named characters remember hostile encounters. If their regard falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
+      '<p>Named characters remember hostile encounters. If their Standing falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
       '<h4>De jure</h4>' +
       '<p>Every county belongs by ancient right to a duchy, a kingdom, and an empire — its <b>de jure</b> titles. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>' +
       '<h4>The map</h4>' +
@@ -14837,7 +14944,7 @@ window.FB = window.FB || {};
           label = 'Direct demesne rent';
           shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
         } else if (id === 'household.regard') {
-          label = 'Positive spouse and blood-kin Regard';
+          label = 'Positive spouse and blood-kin Standing';
           shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
         }
         out.push({ label:label, value:shown });
@@ -14851,7 +14958,7 @@ window.FB = window.FB || {};
     for (const k of FB.SKILLS) if (t[k]) parts.push(FB.T('{amount} {skill}', {
       amount: (t[k] > 0 ? '+' : '') + t[k], skill: FB.skillName(k)
     }));
-    if (t.opinion) parts.push(FB.T('regard {amount}',
+    if (t.opinion) parts.push(FB.T('Standing {amount}',
       { amount: (t.opinion > 0 ? '+' : '') + t.opinion }));
     if (t.health) parts.push(FB.T(t.health > 0 ? 'hardier' : 'frailer'));
     if (t.fert && t.fert !== 1) {

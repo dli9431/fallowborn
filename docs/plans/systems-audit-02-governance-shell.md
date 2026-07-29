@@ -3,8 +3,8 @@
 Date: 2026-07-29
 
 Status: step 2 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md), planned after the active
-[Standing integration](systems-audit-01-standing.md).
+[systems-audit roadmap](systems-audit-00-roadmap.md). This is the next serial UI
+step after the implemented [Standing integration](systems-audit-01-standing.md).
 
 Related design:
 [realms](../designs/realms.md),

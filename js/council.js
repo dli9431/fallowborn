@@ -2,8 +2,8 @@
    A king does not rule alone: his vassal magnates fill five household offices
    (Seneschal, Constable, Treasurer, Almoner, Chamberlain), each granting a
    bonus while its holder serves. But magnates have tempers — flatterers curry
-   favor, the ambitious scheme, and high-handed rule (extraordinary taxes,
-   revocations) raises crown authority while souring opinion, until the
+   Standing, the ambitious scheme, and high-handed rule (extraordinary taxes,
+   revocations) raises crown authority while souring Standing, until the
    council forces a charter of liberties on an over-mighty king. Authority
    below balance.councilConsentBelow means the great deeds (extraordinary
    taxes, revoking fiefs) are beyond the crown's reach. See docs/designs/council.md. */
@@ -26,6 +26,15 @@ window.FB = window.FB || {};
     for (const s of SEATS) if (s.id === id) return s;
     return null;
   };
+
+  function standing(state, rid) {
+    return FB.standingOf(state, { kind:'realm', id:rid });
+  }
+
+  function adjustStanding(state, rid, amount, source) {
+    return FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+      'council:' + source);
+  }
 
   /* traits that make a councillor dangerous when his love runs cold */
   var SCHEMER_TRAITS = ['ambitious', 'deceitful', 'proud', 'envious', 'cruel', 'wrathful'];
@@ -53,14 +62,14 @@ window.FB = window.FB || {};
         c.seats[s.id] = null;
       }
     }
-    // fill vacancies: the greatest vassals first (rank, then favor)
+    // fill vacancies: the greatest vassals first (rank, then Standing)
     const seated = {};
     for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     const cand = FB.playerVassals(state).filter(function (vid) { return !seated[vid]; });
     cand.sort(function (a, b) {
       const ra = state.realms[a], rb = state.realms[b];
       if ((rb.rank || 1) !== (ra.rank || 1)) return (rb.rank || 1) - (ra.rank || 1);
-      return FB.liegeOpOf(state, b) - FB.liegeOpOf(state, a);
+      return standing(state, b) - standing(state, a);
     });
     for (const s of SEATS) {
       if (!c.seats[s.id] && cand.length) c.seats[s.id] = cand.shift();
@@ -94,19 +103,20 @@ window.FB = window.FB || {};
       if (!rid) continue;
       const r = state.realms[rid];
       if (!r || !r.alive || r.liege !== 'player') continue;
-      if (FB.liegeOpOf(state, rid) <= -50) continue; // a vassal in disgrace serves no longer
+      if (standing(state, rid) <= -50) continue; // a vassal in disgrace serves no longer
       sum += s.bonusAmt;
     }
     return sum;
   };
 
-  FB.councilAvgOpinion = function (state) {
+  FB.councilAvgStanding = function (state) {
     const ms = FB.councilMembers(state);
     if (!ms.length) return 0;
     let sum = 0;
-    for (const m of ms) sum += FB.liegeOpOf(state, m.rid);
+    for (const m of ms) sum += standing(state, m.rid);
     return sum / ms.length;
   };
+  FB.councilAvgOpinion = FB.councilAvgStanding;
 
   FB.councilAuthority = function (state, amt) {
     const c = FB.councilEnsure(state);
@@ -139,8 +149,8 @@ window.FB = window.FB || {};
     for (const s of SEATS) if (c.seats[s.id] === rid) c.seats[s.id] = null;
     const old = c.seats[seatId];
     c.seats[seatId] = rid;
-    FB.adjustLiegeOp(state, rid, 10);
-    if (old && old !== rid) FB.adjustLiegeOp(state, old, -8);
+    adjustStanding(state, rid, 10, 'appointment');
+    if (old && old !== rid) adjustStanding(state, old, -8, 'replacement');
     FB.councilAuthority(state, -2); // every appointment embeds a magnate
     FB.news(state, FB.msg('news.council.appointed',
       '🏛 {ruler} of {realm} is raised to your council.', { ruler: r.ruler.name, realm: r.name }));
@@ -154,7 +164,7 @@ window.FB = window.FB || {};
     if (!rid) return;
     c.seats[seatId] = null;
     const r = state.realms[rid];
-    FB.adjustLiegeOp(state, rid, -15);
+    adjustStanding(state, rid, -15, 'dismissal');
     FB.councilAuthority(state, 4); // the crown asserts its prerogative
     FB.news(state, FB.msg('news.council.dismissed',
       '🏛 {ruler} of {realm} is dismissed from your council — and will not forget it.',
@@ -175,7 +185,7 @@ window.FB = window.FB || {};
     const ms = FB.councilMembers(state);
     const pool = [];
     for (const m of ms) {
-      const op = FB.liegeOpOf(state, m.rid);
+      const op = standing(state, m.rid);
       if (traits && traits.indexOf(m.realm.ruler.trait) < 0) continue;
       if (minOp !== undefined && op < minOp) continue;
       if (maxOp !== undefined && op > maxOp) continue;
@@ -206,7 +216,8 @@ window.FB = window.FB || {};
   FB.fns.council_charter_due = function (state) {
     const c = FB.councilEnsure(state);
     if (!c || !FB.councilMembers(state).length) return false;
-    return c.authority >= (FBDATA.balance.councilCharterAbove || 70) && FB.councilAvgOpinion(state) < -5;
+    return c.authority >= (FBDATA.balance.councilCharterAbove || 70) &&
+      FB.councilAvgStanding(state) < -5;
   };
   FB.fns.council_has_unseated = function (state) {
     const c = FB.councilEnsure(state);
@@ -222,20 +233,20 @@ window.FB = window.FB || {};
   /* effects */
   FB.fns.council_flatter_kind = function (state) {
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));
-    if (m) FB.adjustLiegeOp(state, m.rid, 8);
+    if (m) adjustStanding(state, m.rid, 8, 'flatter_kind');
   };
   FB.fns.council_flatter_cold = function (state) {
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));
-    if (m) FB.adjustLiegeOp(state, m.rid, -8);
+    if (m) adjustStanding(state, m.rid, -8, 'flatter_cold');
     FB.councilAuthority(state, 2);
   };
   FB.fns.council_pet_grant = function (state) {
     const ms = FB.councilMembers(state);
-    if (ms.length) FB.adjustLiegeOp(state, FB.pick(ms).rid, 12);
+    if (ms.length) adjustStanding(state, FB.pick(ms).rid, 12, 'pet_grant');
   };
   FB.fns.council_pet_deny = function (state) {
     const ms = FB.councilMembers(state);
-    if (ms.length) FB.adjustLiegeOp(state, FB.pick(ms).rid, -8);
+    if (ms.length) adjustStanding(state, FB.pick(ms).rid, -8, 'pet_deny');
   };
   FB.fns.council_seat_demand_yes = function (state) {
     const c = FB.councilEnsure(state);
@@ -253,12 +264,12 @@ window.FB = window.FB || {};
     if (!seatId) {
       let worstOp = Infinity;
       for (const s of SEATS) {
-        const op = FB.liegeOpOf(state, c.seats[s.id]);
+        const op = standing(state, c.seats[s.id]);
         if (op < worstOp) { worstOp = op; seatId = s.id; }
       }
     }
     FB.councilAppoint(state, seatId, who);
-    FB.adjustLiegeOp(state, who, 5);
+    adjustStanding(state, who, 5, 'seat_demand_yes');
     FB.councilAuthority(state, -1);
   };
   FB.fns.council_seat_demand_no = function (state) {
@@ -268,7 +279,7 @@ window.FB = window.FB || {};
     for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     for (const vid of FB.playerVassals(state)) {
       if (!seated[vid] && SCHEMER_TRAITS.indexOf((state.realms[vid].ruler || {}).trait) >= 0) {
-        FB.adjustLiegeOp(state, vid, -12);
+        adjustStanding(state, vid, -12, 'seat_demand_no');
         break;
       }
     }
@@ -279,7 +290,7 @@ window.FB = window.FB || {};
     if (!m) return;
     const c = state.council;
     if (c && c.seats[m.seat.id] === m.rid) c.seats[m.seat.id] = null;
-    FB.adjustLiegeOp(state, m.rid, -10);
+    adjustStanding(state, m.rid, -10, 'scheme_punish');
     FB.councilAuthority(state, 3);
     FB.news(state, FB.msg('news.council.scheme_punished',
       '🕸 {ruler} of {realm} is dragged from the council board in disgrace.',
@@ -287,7 +298,7 @@ window.FB = window.FB || {};
   };
   FB.fns.council_scheme_mercy = function (state) {
     const m = schemer(state);
-    if (m) FB.adjustLiegeOp(state, m.rid, 12);
+    if (m) adjustStanding(state, m.rid, 12, 'scheme_mercy');
   };
   FB.fns.council_scheme_rooted = function (state) {
     // the king's own hunt finds the spider (skill-chance success path)
@@ -296,34 +307,40 @@ window.FB = window.FB || {};
   FB.fns.council_scheme_fest = function (state) {
     // whispers turn the board: one random officer thinks less of you
     const ms = FB.councilMembers(state);
-    if (ms.length) FB.adjustLiegeOp(state, FB.pick(ms).rid, -10);
+    if (ms.length) adjustStanding(state, FB.pick(ms).rid, -10, 'scheme_fest');
   };
   FB.fns.council_charter_seal = function (state) {
     FB.councilAuthority(state, -25);
-    for (const vid of FB.playerVassals(state)) FB.adjustLiegeOp(state, vid, 15);
+    for (const vid of FB.playerVassals(state)) {
+      adjustStanding(state, vid, 15, 'charter_seal');
+    }
     FB.news(state, FB.msg('news.council.charter_sealed',
       '📜 You set your seal to the charter of liberties. The barons disperse, satisfied — for now.', {}));
   };
   FB.fns.council_defy_hold = function (state) {
     FB.councilAuthority(state, 5);
-    for (const vid of FB.playerVassals(state)) FB.adjustLiegeOp(state, vid, -5);
+    for (const vid of FB.playerVassals(state)) {
+      adjustStanding(state, vid, -5, 'defy_hold');
+    }
   };
   FB.fns.council_defy_fail = function (state) {
     // the angriest magnate answers defiance with steel
     const vs = FB.playerVassals(state);
     if (!vs.length) return;
     let worst = vs[0];
-    for (const v of vs) if (FB.liegeOpOf(state, v) < FB.liegeOpOf(state, worst)) worst = v;
-    FB.adjustLiegeOp(state, worst, -25);
+    for (const v of vs) {
+      if (standing(state, v) < standing(state, worst)) worst = v;
+    }
+    adjustStanding(state, worst, -25, 'defy_fail');
     FB.queueEvent(state, 'vassal_revolt', { rid:worst });
   };
   FB.fns.council_gift_take = function (state) {
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));
-    if (m) FB.adjustLiegeOp(state, m.rid, 5);
+    if (m) adjustStanding(state, m.rid, 5, 'gift_take');
   };
   FB.fns.council_gift_wave = function (state) {
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));
-    if (m) FB.adjustLiegeOp(state, m.rid, -3);
+    if (m) adjustStanding(state, m.rid, -3, 'gift_wave');
   };
   FB.fns.council_feud_side = function (state) {
     const ms = FB.councilMembers(state);
@@ -332,16 +349,20 @@ window.FB = window.FB || {};
     let b = FB.pick(ms);
     let guard = 0;
     while (b.rid === a.rid && guard++ < 10) b = FB.pick(ms);
-    FB.adjustLiegeOp(state, a.rid, 10);
-    FB.adjustLiegeOp(state, b.rid, -10);
+    adjustStanding(state, a.rid, 10, 'feud_side');
+    adjustStanding(state, b.rid, -10, 'feud_side');
   };
   FB.fns.council_feud_peace = function (state) {
     const ms = FB.councilMembers(state);
-    for (const m of ms.slice(0, 3)) FB.adjustLiegeOp(state, m.rid, 8);
+    for (const m of ms.slice(0, 3)) {
+      adjustStanding(state, m.rid, 8, 'feud_peace');
+    }
   };
   FB.fns.council_feud_fail = function (state) {
     const ms = FB.councilMembers(state);
-    for (const m of ms.slice(0, 3)) FB.adjustLiegeOp(state, m.rid, -6);
+    for (const m of ms.slice(0, 3)) {
+      adjustStanding(state, m.rid, -6, 'feud_fail');
+    }
   };
   FB.fns.council_war_chest = function (state) {
     const p = state.player;
@@ -349,7 +370,7 @@ window.FB = window.FB || {};
     const gold = 10 * Math.max(1, ms.length);
     p.gold += gold;
     FB.councilAuthority(state, -6);
-    for (const m of ms) FB.adjustLiegeOp(state, m.rid, -5);
+    for (const m of ms) adjustStanding(state, m.rid, -5, 'war_chest');
     FB.news(state, FB.msg('news.council.war_chest',
       '💰 The council grants a war subsidy of {money:gold} — and notes the precedent.', { gold: gold }));
   };

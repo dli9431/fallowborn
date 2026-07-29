@@ -50,7 +50,9 @@ character ownership, equip-slot scope, no recurring cost, worn-only power,
 current transfer restrictions, and indefinite lifetime. Ordinary
 Plain/Well-made/Masterwork gifts and authored
 common/fine/famed heirlooms both use `balance.socialItemGiftOpinion` (+4/+8/+12 by
-default). An explicit item gift shares the recipient's
+default) and apply that amount through the typed Standing facade. A materialized ruler
+therefore receives the same realm-backed score whether gifted from the character sheet,
+realm sheet, or Council. An explicit item gift shares the recipient's
 `balance.socialGiftCooldownDays` clock with an explicit cash gift. Character recipients
 use `player.socialGiftTurns`; lightweight rulers use the generation-stamped
 `player.realmGiftTurns`, shared by their sheet and the Royal Council. A character recipient

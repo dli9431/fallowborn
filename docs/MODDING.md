@@ -459,7 +459,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 
 The same trigger keys may be used in an option's `require` object. Societal role does
 not imply political position: combine it with `isVassal` or `isLiege` where that
-distinction matters.
+distinction matters. `roleOpinionAbove/Below` is a compatibility key name; it tests the
+named character's player-facing Standing.
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
 seasons (a season lasts 90 in-game days — the engine converts). Random events land on 1–2
@@ -565,6 +566,8 @@ clamped at the trait's `earn.threshold`, then the trait is awarded) ·
 `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
+(`opinion` and `opinionLiege` retain their compatibility names but adjust personal or
+realm Standing; `popularOpinion` remains the distinct Common Voice population score) ·
 `papalOpinion: n` (adjust the recognized Pope's opinion of `ctx.candidateId`, or of the
 protagonist when the context has no candidate; clamped to −100…100 and a no-op during a
 vacancy) ·
@@ -1203,7 +1206,7 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   `FBDATA.balance`.
 - Household and education costs/chances use the `household*` and `education*`
   balance keys. Personal relationships use `socialAttentionCapacity` (core 1),
-  `socialAttentionDailyOpinion` (fixed Regard per ordinary day; core 0.2),
+  `socialAttentionDailyOpinion` (fixed Standing per ordinary day; core 0.2),
   `relationshipOpinionThreshold` (shared Call friend / proposal gate; core 40),
   `socialGiftCooldownDays` (one explicit cash or item gift per recipient; core 90),
   `socialCashGiftOpinion` (core 4), and the three-entry `socialItemGiftOpinion`
@@ -1273,7 +1276,7 @@ unmarried children:
   `FB.sellItem`, `FB.giveItem`, `FB.giveRulerItemGift`, and `FB.destroyItem`.
 - Item cards list actual quality-adjusted powers, value, wearer, and valid actions.
   Ordinary Plain/Well-made/Masterwork gifts and unique common/fine/famed items map their
-  three tiers through `balance.socialItemGiftOpinion` (core: +4/+8/+12 Regard). Explicit
+  three tiers through `balance.socialItemGiftOpinion` (core: +4/+8/+12 Standing). Explicit
   personal and ruler item gifts share their recipient's cash-gift cooldown described
   above. A ruler has no inventory: `FB.giveRulerItemGift` removes the object from family
   ownership while retaining the semantic item record used by Chronicle messages. An
@@ -1426,7 +1429,8 @@ acquisition guidance. `class` is `disposition`, `formation`, `reputation`, or
 Unclassified traits also retain normal random-generation behavior. Set `noRandom:true`
 to exclude a trait from random character generation. `inherit`, `opposite`, the five
 root skill keys (`dip`, `mar`, `ste`, `int`, `lea`), and root aggregation fields such as
-`health`, `fert`, and `opinion` retain their existing meanings.
+`health`, `fert`, and `opinion` retain their existing meanings; `opinion` scales
+positive event-driven Standing gains toward the protagonist.
 
 `earn:{threshold:n}` defines progress-based acquisition. Event effects can call
 `traitProgress:{id,amount?}`; the engine keeps the current protagonist's progress in
@@ -1449,7 +1453,7 @@ The first grouped effect consumers are:
 - `estate.rent`: a rate applied to direct demesne rent after the domain penalty and
   before later technology, council, position, monopoly, and liege-cut arithmetic. It
   receives its own income-ledger line.
-- `household.regard`: an additive rate on positive event Regard toward the protagonist's
+- `household.regard`: an additive rate on positive event Standing toward the protagonist's
   spouse or blood relatives. Losses and unrelated characters are unchanged.
 
 All grouped values are numeric; absent groups and keys contribute zero. The catalog has

@@ -49,11 +49,11 @@ realm names. Catholic player causes against the active Papacy remain legal when 
 ordinary de jure, fabricated, or restoration cause exists, but the picker marks them
 as sacrilege and opens a second confirmation. Canceling that confirmation changes no
 state. Confirming starts the selected war, reduces current piety to zero, applies -40
-opinion from every living Catholic realm, and adds the ruler's `excommunicated` trait.
+Standing with every living Catholic ruler, and adds the ruler's `excommunicated` trait.
 
 Excommunication is visible on the ruler sheet and blocks the Seek a blessing deed.
 Once the player is at peace and a living Pope holds the office, Seek absolution spends
-100 gold and 100 piety, removes the trait, and restores 20 Catholic-realm opinion.
+100 gold and 100 piety, removes the trait, and restores 20 Standing with Catholic rulers.
 The sentence is personal and does not pass to the next protagonist. If the Papacy was
 destroyed, restoring it also clears the restorer's sentence.
 
@@ -81,7 +81,7 @@ canonical realm pairs with their source and both ruler-generation stamps, and ea
 may have only one ally. Partners cannot attack each other; a ruler change expires the
 compact. Peaceful neighboring same-faith-group sovereign kingdoms and empires receive a
 rare yearly opportunity to ally. Independent player kings and emperors can instead
-succeed with a 25-gold envoy at opinion 60+, or gain an alliance from a royal marriage
+succeed with a 25-gold envoy at Standing 60+, or gain an alliance from a royal marriage
 to the adjacent sovereign court.
 
 When an allied realm defends, an available ally contributes 25% of its ordinary host,
@@ -262,10 +262,11 @@ levy base after flat county/building/technology troops. Muster-Bred contributes 
 That line is added before ruler Martial and the domain penalty, and vassal contributions
 remain outside all direct-domain percentages.
 
-A loyal vassal at opinion 40+ may supply one bounded exceptional levy favor. Spending
-15 favor records a one-year `player.vassalLevyFavors[realmId]` modifier and raises that
+A loyal vassal at Standing 40+ may supply one bounded exceptional-levy promise. Calling it
+lowers Standing by 15, records a one-year `player.vassalLevyFavors[realmId]` modifier, and raises that
 specific vassal's normal levy share by `balance.vassalLevyFavorRate`. It is itemized in
-the same ledger and is separate from Royal Council authority or officer management.
+the same ledger. The saved promise is a discrete benefit, not a second relationship
+meter, and is separate from Royal Council authority or officer management.
 
 Related: [events.md](events.md) for the interpreter, [time.md](time.md) for the seasonal
 tick, [realms.md](realms.md) for who can target whom, [provinces.md](provinces.md) for
@@ -376,12 +377,12 @@ Each claimant may win at most one land asset, with the crown consuming that allo
 custody remains available afterward. The leading weight may be accepted with
 `acquiesce`. `press` rolls
 `clamp(.35 + Diplomacy*.02 + margin*.75, .10, .85)`. `endorse` awards a named rival,
-adds 15 player-relative opinion, and saves +.10 for the player's next eligible claim.
+adds 15 player-relative Standing, and saves +.10 for the player's next eligible claim.
 `terms` is available within a .15 deficit and guarantees the player either as a vassal
 of a strictly higher-ranked proposed liege or for a one-time 50-gold payment. `object`
 spends one of two standing points and rolls
 `clamp(.30 + Diplomacy*.015 - leaderMargin*.75, .10, .75)` for the runner-up; the
-challenged realm loses 10 opinion. A current AI religious head pre-blesses its preferred
+challenged realm loses 10 Standing. A current AI religious head pre-blesses its preferred
 sacred (or crown) claim; a player head may use `bless` once on a non-player claim.
 
 Awards are collected before any ownership mutation and then applied crown-to-county in

@@ -7,7 +7,7 @@ player-king lean on his magnates, the estates let the player-vassal haggle over
 the terms of his own service. The machinery deliberately reuses the council's
 patterns — a self-healing state blob, `FB.fns.parliament_*` custom
 trigger/effect fns, a dedicated event pack (`data/events_parliament.js`), and
-opinion through the shared `liegeOps` store.
+Standing through the canonical facade over the shared `liegeOps` backing store.
 
 **The terms of service live on the liege realm** (`liege.obl = { aid, scutage }`,
 created and healed by `FB.parliamentEnsure` in the season tick — old saves and
@@ -18,7 +18,7 @@ new lieges get the customary terms on first sight, no save-version bump):
   between `balance.parliamentAidMin` (10%) and `parliamentAidMax` (40%) in
   `parliamentAidStep` (5%) steps, starting at `parliamentAidBase` (25%).
 - **Scutage** — once voted through, the `liege_summons` banner call gains a
-  cheap shield-tax option (8 gold, −2 opinion) alongside the old buy-out; the
+  cheap shield-tax option (8 gold, −2 Standing) alongside the old buy-out; the
   aid creeps up 2 points in exchange. Gated by the `parliament_has_scutage`
   option `require`.
 
@@ -37,7 +37,7 @@ for `balance.parliamentMotionCost` gold, one motion per calendar year
 **Votes are decided by the `parliament_vote` named chance**
 (`FB.parliamentVoteChance`): a 30% base plus a rank bonus (baron +5, count
 +12, duke +20 — a duke's word outweighs a baron's), diplomacy ×2%, prestige,
-the liege's own favor, and grouped `assembly.voteChance` trait effects, clamped
+Standing with the liege, and grouped `assembly.voteChance` trait effects, clamped
 10–85%. Moot-Speaker contributes +5 percentage points in addition to its +1
 Diplomacy. Every vote moves `liegeOp` as well
 as the terms: consenting to a demand buys the crown's notice, leading a
@@ -54,7 +54,7 @@ first award do not erase accumulated wins. Moot-Speaker also multiplies only pos
 unchanged.
 
 Related: [council.md](council.md) for the king-side mirror,
-[realms.md](realms.md) for the liege chain and favor, [events.md](events.md)
+[realms.md](realms.md) for the liege chain and Standing, [events.md](events.md)
 for the interpreter.
 
 A successful player motion for redress also grants `Custom Confirmed` to the event's

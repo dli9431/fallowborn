@@ -91,7 +91,7 @@ person into family or grant a second wage. Legacy Orchard, Press, Shop, Stall, a
 Trading House holdings migrate lazily to equivalent enterprise instances; household
 rights, equipment, and cultural capital remain unique holdings.
 The staffing picker uses the shared person-assignment card to preview each eligible
-worker's live yield, occupation, Regard, present enterprise, and every worker or enterprise
+worker's live yield, occupation, Standing, present enterprise, and every worker or enterprise
 that reassignment would displace. Manual replacement or unassignment may override a lock
 and clears every affected lock. Lazy enterprise normalization also clears an assignment
 and its lock when the worker dies, leaves the managed household, becomes career/guild

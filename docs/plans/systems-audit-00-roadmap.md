@@ -13,7 +13,7 @@ not part of this numbered queue.
 ## Ordered plans
 
 1. [Standing](systems-audit-01-standing.md) — one canonical relationship score,
-   API, renderer, and succession rule. **Implementation in progress.**
+   API, renderer, and succession rule. **Implemented 2026-07-29.**
 2. [Governance shell](systems-audit-02-governance-shell.md) — one political
    overview using the Standing API.
 3. [Interaction cards](systems-audit-03-interaction-cards.md) — authoritative

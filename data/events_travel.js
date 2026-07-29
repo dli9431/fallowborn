@@ -193,7 +193,7 @@ FBDATA.events.push(
   ]},
 { id:'travel_arrival_choice_relationship', title:'A Season as a Guest', trigger:{never:true},
   travel:{kind:'decision', purpose:'relationship'},
-  text:'A meaningful visit cannot be hurried. You will remain near {visitname} for at least three months, sharing the ordinary days in which regard is won.',
+  text:'A meaningful visit cannot be hurried. You will remain near {visitname} for at least three months, sharing the ordinary days in which Standing is won.',
   options:[
     { label:'Stay as their guest.', desc:'Time passes normally, and personal attention advances while you remain together.',
       effects:{log:'Began an extended visit with {visitname} in {destination}.'} }

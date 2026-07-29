@@ -83,7 +83,8 @@ window.FB = window.FB || {};
       const z = me(s).traits.indexOf('zealous') >= 0 ? 2 : 0;
       s.player.piety += (3 + z) / D;
       const pr = FB.getRole(s, 'priest', false);
-      if (pr) pr.opinion = FB.clamp(pr.opinion + 2 / D, -100, 100);
+      if (pr) FB.adjustStanding(s, { kind:'character', id:pr.id }, 2 / D,
+        'focus:pray');
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
   { id: 'toil', label: '🌾 Toil in the lord’s fields',
@@ -187,7 +188,8 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.gold += 2 / D;
       const lord = FB.getRole(s, 'lord', false);
-      if (lord) lord.opinion = FB.clamp(lord.opinion + 2 / D, -100, 100);
+      if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 2 / D,
+        'focus:stand_guard');
     },
     gain: function () { return { gold: 2 }; } },
 
@@ -236,22 +238,27 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier === 2; },
     tick: function (s) {
       const lord = FB.getRole(s, 'lord', true);
-      if (lord) lord.opinion = FB.clamp(lord.opinion + 6 / D, -100, 100);
+      if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 6 / D,
+        'focus:serve_lord');
       s.player.prestige += 2 / D;
       if (skillDch(0.3)) skillUp(s, 'dip');
     },
     gain: function () { return { prestige: 2 }; } },
   /* the chatelaine's road: noblewomen command through the household and the
-     court, not the drill yard — favor and polish instead of swordplay */
+     court, not the drill yard — Standing and polish instead of swordplay */
   { id: 'courtly_graces', label: '🕊 Cultivate the court',
     vocational: 'noble',
-    desc: function () { return 'Hawking, letters, and patronage — favor is won in hall and garden. (+liege’s favor, +prestige)'; },
+    desc: function () { return 'Hawking, letters, and patronage — Standing is won in hall and garden. (+liege Standing, +prestige)'; },
     show: function (s) { return female(s) && adult(s) && s.player.tier >= 2; },
     tick: function (s) {
-      if (s.player.liege) FB.adjustLiegeOp(s, s.player.liege, 4 / D);
+      if (s.player.liege) {
+        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 4 / D,
+          'focus:courtly_graces');
+      }
       else {
         const lord = FB.getRole(s, 'lord', true);
-        if (lord) lord.opinion = FB.clamp(lord.opinion + 4 / D, -100, 100);
+        if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 4 / D,
+          'focus:courtly_graces');
       }
       s.player.prestige += 2 / D;
       if (skillDch(0.5)) skillUp(s, 'dip');
@@ -266,7 +273,7 @@ window.FB = window.FB || {};
       return s.player.war ? 'Command your men in the field. (better odds at the war council)'
         : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
           ? 'Command your host in the great holy war. (+martial over time)'
-        : 'Serve in your liege’s host. (+liege’s favor)';
+        : 'Serve in your liege’s host. (+liege Standing)';
     },
     show: function (s) {
       return !!s.player.war ||
@@ -277,7 +284,8 @@ window.FB = window.FB || {};
       if (s.player.war) s.player.war.led = (s.player.war.led || 0) + 1;
       else if (!(FB.playerGreatHolyWarHostActive &&
           FB.playerGreatHolyWarHostActive(s))) {
-        s.player.liegeOp = FB.clamp((s.player.liegeOp || 0) + 4 / D, -100, 100);
+        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 4 / D,
+          'focus:lead_host');
       }
       if (skillDch(0.5)) skillUp(s, 'mar');
     } },
@@ -336,14 +344,17 @@ window.FB = window.FB || {};
     gain: function () { return { piety:4 }; } },
   { id: 'administer_temporalities', label: '🔑 Administer the temporalities',
     desc: function () {
-      return 'Oversee episcopal rents, officers, and obligations. (+income, +liege favor, +Stewardship over time)';
+      return 'Oversee episcopal rents, officers, and obligations. (+income, +liege Standing, +Stewardship over time)';
     },
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     tick: function (s) {
       s.player.gold += FB.bishopricIncome(s) * 0.15 / D;
-      if (s.player.liege) FB.adjustLiegeOp(s, s.player.liege, 2 / D);
+      if (s.player.liege) {
+        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 2 / D,
+          'focus:administer_temporalities');
+      }
       if (skillDch(0.30)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold:FB.bishopricIncome(s) * 0.15 }; } },
@@ -401,9 +412,11 @@ window.FB = window.FB || {};
       const r = FB.getRole(s, 'rival');
       const inn = FB.skillOf(me(s), 'int');
       // a rival who trusts you never sees the knife coming
-      if (FB.chance(0.35 + inn * 0.03 + (r ? r.opinion : 0) / 500)) {
+      if (FB.chance(0.35 + inn * 0.03 +
+          (r ? FB.standingOf(s, { kind:'character', id:r.id }) : 0) / 500)) {
         FB.applyEffects(s, { prestige: 4, skills: { int: FB.chance(0.5) ? 1 : 0 } });
-        r.opinion = FB.clamp(r.opinion - 10, -100, 100);
+        FB.adjustStanding(s, { kind:'character', id:r.id }, -10,
+          'deed:scheme_rival');
         FB.changeRivalHeat(s, 10);
         FB.news(s, FB.msg('news.action.scheme_rival_success',
           'Your quiet work costs {name} dearly.', { name: r.name }));
@@ -538,10 +551,10 @@ window.FB = window.FB || {};
           gold:status.offering, piety:status.piety
         });
       }
-      return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Catholic rulers recover {opinion} opinion.', {
+      return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Standing with Catholic rulers recovers by {standing}.', {
         gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
         piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
-        opinion:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
+        standing:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
       });
     },
     show: function (s) {
@@ -828,7 +841,9 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const f = FB.getRole(s, 'friend', false);
-      return adult(s) && !!f && f.opinion >= 40 && !s.player.flags.sworn_friend;
+      return adult(s) && !!f &&
+        FB.standingOf(s, { kind:'character', id:f.id }) >= 40 &&
+        !s.player.flags.sworn_friend;
     },
     run: function (s) {
       FB.applyEffects(s, {
@@ -916,7 +931,9 @@ window.FB = window.FB || {};
     can: function (s) {
       if (s.player.gold < FBDATA.balance.freedomCost) return FB.T('Not enough money.');
       const lord = FB.getRole(s, 'lord', true);
-      if (lord && lord.opinion < -20) return 'The lord despises you and refuses.';
+      if (lord && FB.standingOf(s, { kind:'character', id:lord.id }) < -20) {
+        return 'The lord despises you and refuses.';
+      }
       return true;
     },
     run: function (s) {
@@ -972,21 +989,25 @@ window.FB = window.FB || {};
       if (s.player.prestige < B.baronyPrestige) return FB.T(
         'You need at least {needed} prestige (now {current}).',
         { needed: B.baronyPrestige, current: Math.round(s.player.prestige) });
-      if (!lord || lord.opinion < B.baronyOpinion) return FB.T(
-        'You need at least {needed} favor with your lord (now {current}).',
-        { needed: B.baronyOpinion, current: lord ? Math.round(lord.opinion) : 0 });
+      const standing = lord
+        ? FB.standingOf(s, { kind:'character', id:lord.id }) : 0;
+      if (!lord || standing < B.baronyOpinion) return FB.T(
+        'You need at least {needed} Standing with your lord (now {current}).',
+        { needed: B.baronyOpinion, current: Math.round(standing) });
       return true;
     },
     run: function (s) {
       const lord = FB.getRole(s, 'lord', true);
       const chance = FB.liegeGrantChance(s,
-        0.15 + lord.opinion / 400 + s.player.prestige / 1200);
+        0.15 + FB.standingOf(s, { kind:'character', id:lord.id }) / 400 +
+          s.player.prestige / 1200);
       if (FB.chance(chance)) {
         FB.queueEvent(s, 'grant_of_barony', {});
       } else {
         FB.news(s, FB.msg('news.action.barony_refused',
           'The lord smiles, promises nothing, and speaks of the weather.', {}));
-        lord.opinion = FB.clamp(lord.opinion - 5, -100, 100);
+        FB.adjustStanding(s, { kind:'character', id:lord.id }, -5,
+          'deed:petition_barony');
       }
     } },
 
@@ -1120,9 +1141,12 @@ window.FB = window.FB || {};
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
     },
     can: function (s) {
-      if ((s.player.liegeOp || 0) < 65) return FB.T(
-        'Your liege’s favor must be 65 or more (now {current}).',
-        { current: Math.round(s.player.liegeOp || 0) });
+      const standing = FB.standingOf(s, {
+        kind:'realm', id:s.player.liege
+      });
+      if (standing < 65) return FB.T(
+        'Your Standing with your liege must be 65 or more (now {current}).',
+        { current: Math.round(standing) });
       if (s.player.prestige < 400) return FB.T(
         'You need at least 400 prestige (now {current}).',
         { current: Math.round(s.player.prestige) });
@@ -1137,10 +1161,13 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
       const B = FBDATA.balance;
-      if (FB.liegeOpOf(s, s.player.liege) < B.petitionLiegeOp) {
-        return FB.T('Your liege’s favor must be {needed} or more (now {current}).', {
+      const standing = FB.standingOf(s, {
+        kind:'realm', id:s.player.liege
+      });
+      if (standing < B.petitionLiegeOp) {
+        return FB.T('Your Standing with your liege must be {needed} or more (now {current}).', {
           needed: B.petitionLiegeOp,
-          current: Math.round(FB.liegeOpOf(s, s.player.liege))
+          current: Math.round(standing)
         });
       }
       if (s.player.prestige < B.petitionPrestige) {
@@ -1160,9 +1187,12 @@ window.FB = window.FB || {};
     desc: function () { return 'Money talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
-      if (FB.liegeOpOf(s, s.player.liege) < 20) {
-        return FB.T('Your liege must at least tolerate you (favor 20+, now {current}).',
-          { current: Math.round(FB.liegeOpOf(s, s.player.liege)) });
+      const standing = FB.standingOf(s, {
+        kind:'realm', id:s.player.liege
+      });
+      if (standing < 20) {
+        return FB.T('Your liege must at least tolerate you (Standing 20+, now {current}).',
+          { current: Math.round(standing) });
       }
       const c = FB.buyCountyCandidates(s);
       if (!c.length) return 'No weak neighbor holds land beside yours.';
@@ -1305,7 +1335,7 @@ window.FB = window.FB || {};
     },
     run: function (s) { if (FB.ui && FB.ui.showIndependence) FB.ui.showIndependence(); } },
   { id: 'pay_homage', label: '🙇 Pay homage…', noConsume: true, cd: 180,
-    desc: function () { return 'Bend the knee at your liege’s court — or a court above his. (+opinion)'; },
+    desc: function () { return 'Bend the knee at your liege’s court — or a court above his. (+Standing)'; },
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
     run: function (s) { if (FB.ui && FB.ui.showHomage) FB.ui.showHomage(); } },
   { id: 'appeal_lord', label: '⚖ Appeal over your liege’s head…', noConsume: true, cd: 360,
@@ -1329,7 +1359,7 @@ window.FB = window.FB || {};
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
-        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time.',
+        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
           { authority: Math.round(s.council.authority) });
       }
       return true;
@@ -1340,7 +1370,7 @@ window.FB = window.FB || {};
     show: function (s) { return FB.playerVassals(s).length >= 1 && !s.player.war; },
     can: function (s) {
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
-        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their favor, or let the crown’s rights mend with time.',
+        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
           { authority: Math.round(s.council.authority) });
       }
       return true;
@@ -1756,43 +1786,148 @@ window.FB = window.FB || {};
 
   /* ================= liege chain & vassalage ================= */
 
-  /* opinion of any realm toward the player: the direct liege lives on
-     p.liegeOp, the rest of the chain and the player's own vassals on liegeOps */
-  FB.liegeOpOf = function (state, rid) {
-    if (FB.syncRealmRulerStanding) {
-      return FB.syncRealmRulerStanding(state, rid);
+  /* One player-relative relationship score, backed by the legacy save
+     fields. Typed targets keep callers from having to know whether a
+     counterpart currently lives in character.opinion, player.liegeOp, or
+     player.liegeOps. A materialized reigning ruler always resolves through
+     the realm store, so the character and realm sheets cannot diverge. */
+  FB.standingOf = function (state, target) {
+    if (!state || !state.player || !target || !target.kind || !target.id) {
+      return 0;
     }
-    const p = state.player;
-    if (rid === p.liege) return p.liegeOp || 0;
-    return (p.liegeOps && p.liegeOps[rid]) || 0;
-  };
-  FB.adjustLiegeOp = function (state, rid, amt) {
-    const p = state.player;
-    if (!rid) return;
-    const current = FB.liegeOpOf(state, rid);
-    const value = FB.clamp(current + amt, -100, 100);
-    if (FB.setRealmRulerStanding) {
-      FB.setRealmRulerStanding(state, rid, value);
-      return;
+    if (target.kind === 'character') {
+      const c = state.chars && state.chars[target.id];
+      if (!c || c.dead || c.id === state.player.charId) return 0;
+      const rid = FB.realmIdForRulerCharacter &&
+        FB.realmIdForRulerCharacter(state, c);
+      if (rid) return FB.standingOf(state, { kind:'realm', id:rid });
+      return FB.clamp(Number(c.opinion) || 0, -100, 100);
     }
-    if (rid === p.liege) p.liegeOp = value;
-    else {
-      p.liegeOps = p.liegeOps || {};
-      p.liegeOps[rid] = value;
+    if (target.kind === 'realm') {
+      if (target.id === 'player') return 0;
+      if (FB.syncRealmRulerStanding) {
+        return FB.syncRealmRulerStanding(state, target.id);
+      }
+      const p = state.player;
+      if (target.id === p.liege) return p.liegeOp || 0;
+      return (p.liegeOps && p.liegeOps[target.id]) || 0;
     }
-  };
-  /* Clearer names for the player-relative opinion store. Keep the historical
-     liege helpers above because events, councils, and mods already call them. */
-  FB.realmOpinionOf = function (state, rid) {
-    return FB.liegeOpOf(state, rid);
-  };
-  FB.adjustRealmOpinion = function (state, rid, amt) {
-    FB.adjustLiegeOp(state, rid, amt);
+    return 0;
   };
 
-  /* A ruler inside the player's upward or downward feudal chain tracks
-     Favor. Everyone else is a foreign court and tracks Opinion. Both use the
-     historical player-relative realm opinion store above. */
+  FB.adjustStanding = function (state, target, amount, source) {
+    if (!state || !state.player || !target || !target.kind || !target.id) {
+      return 0;
+    }
+    amount = Number(amount) || 0;
+    /* `source` deliberately remains transient metadata for now. It must not
+       put rendered prose or an itemized explanation into saved state. */
+    void source;
+    if (target.kind === 'character') {
+      const c = state.chars && state.chars[target.id];
+      if (!c || c.dead || c.id === state.player.charId) return 0;
+      const rid = FB.realmIdForRulerCharacter &&
+        FB.realmIdForRulerCharacter(state, c);
+      if (rid) {
+        return FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+          source);
+      }
+      c.opinion = FB.clamp(FB.standingOf(state, target) + amount, -100, 100);
+      return c.opinion;
+    }
+    if (target.kind === 'realm') {
+      if (target.id === 'player') return 0;
+      const value = FB.clamp(FB.standingOf(state, target) + amount,
+        -100, 100);
+      if (FB.setRealmRulerStanding) {
+        return FB.setRealmRulerStanding(state, target.id, value);
+      }
+      const p = state.player;
+      if (target.id === p.liege) p.liegeOp = value;
+      else {
+        p.liegeOps = p.liegeOps || {};
+        p.liegeOps[target.id] = value;
+      }
+      return value;
+    }
+    return 0;
+  };
+
+  /* The direct liege uses a dedicated legacy field, so changing that pointer
+     must move scores by realm identity before any later adjustment. */
+  FB.changePlayerLiege = function (state, rid, source) {
+    if (!state || !state.player) return null;
+    const p = state.player;
+    rid = rid || null;
+    if (rid === 'player') rid = null;
+    const oldRid = p.liege || null;
+    if (oldRid === rid) {
+      if (state.realms && state.realms.player &&
+          state.realms.player.alive) {
+        state.realms.player.liege = rid;
+        if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+      }
+      return rid;
+    }
+    const oldStanding = oldRid && oldRid !== 'player'
+      ? FB.standingOf(state, { kind:'realm', id:oldRid }) : 0;
+    const nextStanding = rid
+      ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+    void source;
+    p.liege = rid;
+    p.liegeOp = 0;
+    p.liegeOps = p.liegeOps || {};
+    if (oldRid && oldRid !== 'player') {
+      FB.setRealmRulerStanding(state, oldRid, oldStanding);
+    }
+    if (rid) {
+      FB.setRealmRulerStanding(state, rid, nextStanding);
+      delete p.liegeOps[rid];
+    }
+    if (state.realms && state.realms.player &&
+        state.realms.player.alive) {
+      state.realms.player.liege = rid;
+    }
+    if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+    return rid;
+  };
+
+  /* The current save shape records only counterpart-to-current-protagonist
+     scores, not pairwise relationships. On succession every personal and
+     political score therefore starts neutral; copying a predecessor's score
+     would invent a relationship the game never tracked. */
+  FB.resetStandingsForSuccession = function (state) {
+    if (!state || !state.player) return;
+    const chars = state.chars || {};
+    for (const id in chars) {
+      const c = chars[id];
+      if (!c) continue;
+      c.opinion = 0;
+      if (c.realmStanding !== undefined) c.realmStanding = 0;
+    }
+    state.player.liegeOp = 0;
+    state.player.liegeOps = {};
+  };
+
+  /* Historical names remain compatibility adapters for saves, events, and
+     mods. New code should use the typed Standing interface above. */
+  FB.liegeOpOf = function (state, rid) {
+    return FB.standingOf(state, { kind:'realm', id:rid });
+  };
+  FB.adjustLiegeOp = function (state, rid, amt) {
+    return FB.adjustStanding(state, { kind:'realm', id:rid }, amt,
+      'legacy:adjustLiegeOp');
+  };
+  FB.realmOpinionOf = function (state, rid) {
+    return FB.standingOf(state, { kind:'realm', id:rid });
+  };
+  FB.adjustRealmOpinion = function (state, rid, amt) {
+    return FB.adjustStanding(state, { kind:'realm', id:rid }, amt,
+      'legacy:adjustRealmOpinion');
+  };
+
+  /* Retained for older UI mods and historical durable gift-message keys.
+     Standing no longer changes its player-facing name by feudal context. */
   FB.rulerGiftUsesFavor = function (state, rid) {
     if (!rid || rid === 'player') return false;
     const p = state.player;
@@ -1843,23 +1978,24 @@ window.FB = window.FB || {};
       });
     }
     p.gold -= cost;
-    FB.adjustRealmOpinion(state, rid, boost);
+    const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
+      boost, 'gift:cash');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
     if (FB.rulerGiftUsesFavor(state, rid)) {
       FB.news(state, FB.msg('news.realm.cash_gift_favor',
-        '🎁 You offer {money:gold} to {ruler} of {realm}. (favor {favor})', {
+        '🎁 You offer {money:gold} to {ruler} of {realm}. (Standing {favor})', {
           gold:cost,
           ruler:r.ruler.name,
           realm:r.name,
-          favor:Math.round(FB.realmOpinionOf(state, rid))
+          favor:Math.round(standing)
         }));
     } else {
       FB.news(state, FB.msg('news.realm.cash_gift_opinion',
-        '🎁 You offer {money:gold} to {ruler} of {realm}. (opinion {opinion})', {
+        '🎁 You offer {money:gold} to {ruler} of {realm}. (Standing {opinion})', {
           gold:cost,
           ruler:r.ruler.name,
           realm:r.name,
-          opinion:Math.round(FB.realmOpinionOf(state, rid))
+          opinion:Math.round(standing)
         }));
     }
     return true;
@@ -1870,7 +2006,9 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return;
     const m = state.chars[p.charId];
-    FB.adjustLiegeOp(state, rid, FBDATA.balance.homageOpinion + Math.floor(FB.skillOf(m, 'dip') / 2));
+    FB.adjustStanding(state, { kind:'realm', id:rid },
+      FBDATA.balance.homageOpinion + Math.floor(FB.skillOf(m, 'dip') / 2),
+      'deed:homage');
     p.prestige += 2;
     FB.news(state, FB.msg('news.action.homage',
       '🙇 You bend the knee at the court of {realm}.', { realm: r.name }));
@@ -1909,13 +2047,14 @@ window.FB = window.FB || {};
       state.owner[pid] = newTop;
       state.holder[pid] = 'player';
     }
-    p.liege = rid;
+    FB.changePlayerLiege(state, rid, 'deed:swear_fealty');
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
     state.realms.player.liege = rid;
     state.realms.player.war = null;
     FB.invalidateRealmCache();
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = newTop;
-    FB.adjustLiegeOp(state, rid, 20);
+    FB.adjustStanding(state, { kind:'realm', id:rid }, 20,
+      'deed:swear_fealty');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.fealty',
       '🤝 You swear fealty to {liege}. Your banners now fly under {realm}.',
@@ -1964,7 +2103,8 @@ window.FB = window.FB || {};
   FB.canCallVassalLevyFavor = function (state, rid) {
     const r = state.realms[rid];
     return !!(r && r.alive && r.liege === 'player' &&
-      FB.liegeOpOf(state, rid) >= 40 && !FB.vassalLevyFavor(state, rid));
+      FB.standingOf(state, { kind:'realm', id:rid }) >= 40 &&
+      !FB.vassalLevyFavor(state, rid));
   };
 
   FB.callVassalLevyFavor = function (state, rid) {
@@ -1972,9 +2112,10 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     const days = FBDATA.balance.vassalLevyFavorDays || 360;
     state.player.vassalLevyFavors[rid] = state.turn + days;
-    FB.adjustLiegeOp(state, rid, -15);
+    FB.adjustStanding(state, { kind:'realm', id:rid }, -15,
+      'deed:exceptional_levy');
     FB.news(state, FB.msg('news.realm.vassal_levy_favor',
-      '🛡 {realm} promises an exceptional levy for one year; the favor costs goodwill.',
+      '🛡 {realm} promises an exceptional levy for one year; Standing falls by 15.',
       { realm:r.name }));
     return true;
   };
@@ -1994,7 +2135,8 @@ window.FB = window.FB || {};
     }
     state.holder[pid] = vid;
     state.owner[pid] = FB.playerRealmId(state) || 'player';
-    FB.adjustLiegeOp(state, vid, 40);
+    FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
+      'deed:grant_county');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.county_granted',
       '🎁 {province} is granted to a loyal man — {name} holds it in your name.',
@@ -2046,7 +2188,8 @@ window.FB = window.FB || {};
       state.holder[pid] = vid;
       state.owner[pid] = FB.playerRealmId(state) || 'player';
     }
-    FB.adjustLiegeOp(state, vid, 40);
+    FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
+      'deed:grant_duchy');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.duchy_granted',
       '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
@@ -2153,8 +2296,9 @@ window.FB = window.FB || {};
     let gold = 0;
     for (const vid of FB.playerVassals(state)) {
       for (const pid of FB.realmHeldCounties(state, vid)) gold += (state.dev[pid] || 1) * B.vassalTaxRate * seasons;
-      FB.adjustLiegeOp(state, vid, -15);
-      if (FB.liegeOpOf(state, vid) <= -50) {
+      FB.adjustStanding(state, { kind:'realm', id:vid }, -15,
+        'deed:demand_taxes');
+      if (FB.standingOf(state, { kind:'realm', id:vid }) <= -50) {
         FB.queueEvent(state, 'vassal_revolt', { rid:vid });
       }
     }
@@ -2259,7 +2403,8 @@ window.FB = window.FB || {};
     const amount = FB.foreignPolicyAmount(state);
     for (const rid of active) {
       if (rid === warEnemy) continue;
-      FB.adjustRealmOpinion(state, rid, policy[rid] * amount);
+      FB.adjustStanding(state, { kind:'realm', id:rid },
+        policy[rid] * amount, 'foreign_policy');
     }
   };
 
@@ -2281,7 +2426,8 @@ window.FB = window.FB || {};
   FB.envoyChance = function (state, rid) {
     const p = state.player, m = state.chars[p.charId], B = FBDATA.balance;
     let chance = 0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600 +
-      FB.realmOpinionOf(state, rid) / B.foreignOpinionEnvoyDivisor;
+      FB.standingOf(state, { kind:'realm', id:rid }) /
+        B.foreignOpinionEnvoyDivisor;
     if (FB.playerExcommunicated && FB.playerExcommunicated(state) &&
         FB.realmReligionId(state, rid) === 'catholic') chance -= 0.2;
     return FB.clamp(chance, 0.1, 0.9);
@@ -2311,7 +2457,8 @@ window.FB = window.FB || {};
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (rid === 'player' || !r.alive || r.liege || r.rank < 3 || r.war) continue;
-      if (FB.allianceOf(state, rid) || FB.realmOpinionOf(state, rid) < 60) continue;
+      if (FB.allianceOf(state, rid) ||
+          FB.standingOf(state, { kind:'realm', id:rid }) < 60) continue;
       if (!FB.realmsAdjacent(state, 'player', rid)) continue;
       out.push(rid);
     }

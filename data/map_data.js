@@ -811,7 +811,7 @@ FBDATA.plots = {
     desc:'The lord’s stores are full, the nights are long, and hunger keeps no law.' },
   court_whispers: { name:'Whispers at Court', icon:'🎭', need:12, event:'plot_court_whispers',
     trigger:{ tierMin:2, tierMax:4 },
-    desc:'Turn the hall against a man in your way and take his place in the lord’s regard.' },
+    desc:'Turn the hall against a man in your way and raise your Standing with the lord.' },
   skim_taxes: { name:'Cook the Ledgers', icon:'📜', need:14, event:'plot_skim_taxes',
     trigger:{ tierMin:3, isVassal:true },
     desc:'What the liege’s tax men never see, the liege never misses.' },
@@ -910,7 +910,7 @@ FBDATA.balance = {
   hostLogisticsRetinuePer100: 2,
   hostLogisticsMercenaryCompany: 4,
   /* independent-ruler foreign policy (js/actions.js): capacity by rank,
-     seasonal opinion pressure, and the two places foreign opinion matters */
+     seasonal Standing pressure, and the two places foreign Standing matters */
   politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,
   foreignPolicyBase: 1, foreignPolicyDipCap: 1,
   foreignOpinionEnvoyDivisor: 400,
