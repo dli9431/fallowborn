@@ -38,12 +38,14 @@ Chronicle descriptor.
 The household sheet is a compact catalogue rather than a stack of complete
 asset ledgers. Each row keeps the icon, name, current level, current or next
 effect, next setup price, and live upkeep visible in the same scan pattern as
-the technology catalogue. Opening a standard supplies the complete shared
-asset/effect row: household owner and work/general scope, exact setup and
-upkeep, effect, succession/no-resale rule, and lapse condition. Permanent
-property uses the same compact row in the catalogue, with owned property
-visually distinguished from purchases. This is presentation only; the level
-map and seasonal lapse order remain authoritative.
+the technology catalogue. Opening a standard shows its current state once,
+keeps the invariant work/general scope, succession/no-resale rule, and lapse
+condition in one shared note, and limits the next-level choice to the changing
+name, effect, setup cost, and upkeep. Purchase and reduction confirmations may
+repeat the complete terms beside their projected finances. Permanent property
+uses the same compact row in the catalogue, with owned property visually
+distinguished from purchases. This is presentation only; the level map and
+seasonal lapse order remain authoritative.
 
 Profession outfits multiply positive vocational focus resources, resident-family wages
 or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid
