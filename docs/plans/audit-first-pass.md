@@ -117,15 +117,22 @@ Add a **Staff all idle enterprises** preview.
 - [x] Show every proposed worker-to-enterprise assignment before applying.
 - [x] Leave unresolved enterprises visible with the reason they could not be staffed.
 
-### 3. Equip Best
+### 3. Equip Best — complete
 
 Add a deterministic **Equip Best** action for one character, using the existing
 successor-equipment optimizer where possible.
 
-- Preserve manual slot selection.
-- Show which items will move and from whom.
-- Offer a household-wide preview only after the per-character action is trusted.
-- Do not silently rearrange the household after every loot event.
+- [x] Preserve manual slot selection.
+- [x] Show which items will move and from whom.
+- [x] Keep the household-wide preview deferred until the per-character action is trusted.
+- [x] Do not silently rearrange the household after every loot event.
+
+Implemented on each managed character’s Equipment sheet. **Equip Best** uses the
+succession optimizer without consuming RNG, previews the complete proposed outfit
+and every armory or wearer-to-wearer movement, then requires an explicit no-day
+apply. The reviewed plan is rejected if assignments change before confirmation;
+manual slot controls remain beside it and no household-wide or loot-triggered
+automation was added.
 
 ### 4. Descendant match assistant
 
@@ -225,7 +232,7 @@ unchanged except where a shared summary or entry point must call them.
 2. [x] Shared person-assignment component.
 3. [x] Household education policy.
 4. [x] Enterprise-staffing preview.
-5. Per-character Equip Best.
+5. [x] Per-character Equip Best.
 6. Manor plot batch purchase.
 7. Descendant match recommendation.
 8. [x] Shared asset/effect rows and Ongoing Commitments summary.

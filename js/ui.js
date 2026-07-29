@@ -1821,7 +1821,10 @@ window.FB = window.FB || {};
       esc(equipmentBlockedText(blocked)) + '</div>' :
       '<div class="equip-note">' + esc(FB.T(
         'Choose a slot, then choose an exact object from the family armory. Changes cost no day.')) +
-      '</div>') + '</div></div>';
+      '</div>') +
+      '<button type="button" class="btn equip-best-action" id="equipment-best"' +
+      (blocked ? ' disabled' : '') + '>' +
+      esc(FB.T('Equip Best…')) + '</button></div></div>';
     return h;
   }
   function wireEquipmentButtons(root, returnMode) {
@@ -12293,6 +12296,9 @@ window.FB = window.FB || {};
     }
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
+    $('equipment-best').addEventListener('click', function () {
+      UI.showEquipBestPreview(cid, exitMode, returnContext);
+    });
     $('equipment-close').addEventListener('click', function () {
       if (householdPlan) {
         finishHouseholdPlanReturn(returnContext, function () {});
@@ -12300,6 +12306,138 @@ window.FB = window.FB || {};
         modalHistoryBack(function () { UI.showCharModal(cid); });
       }
       else UI.closeModal();
+    });
+  };
+
+  function equipmentSlotsText(slots) {
+    if (!slots || !slots.length) return FB.T('Family armory');
+    if (slots.indexOf('leftHand') >= 0 && slots.indexOf('rightHand') >= 0) {
+      return FB.T('Both hands');
+    }
+    return itemSlotLabel(slots[0]);
+  }
+
+  function equipBestMovementText(s, target, movement) {
+    const item = FB.resolveItem(s, movement.ref);
+    const itemName = item ? FB.itemName(s, movement.ref) : movement.ref;
+    const source = movement.fromCid && s.chars[movement.fromCid];
+    if (!movement.toCid) {
+      return FB.T('{item} returns from {source} to the family armory.', {
+        item:itemName,
+        source:source ? FB.fullName(source) : FB.T('its current wearer')
+      });
+    }
+    const slots = equipmentSlotsText(movement.toSlots);
+    if (!movement.fromCid) {
+      return FB.T('{item} moves from the family armory to {name} ({slots}).', {
+        item:itemName,
+        name:FB.fullName(target),
+        slots:slots
+      });
+    }
+    if (movement.fromCid === target.id) {
+      return FB.T('{item} moves from {from} to {to}.', {
+        item:itemName,
+        from:equipmentSlotsText(movement.fromSlots),
+        to:slots
+      });
+    }
+    return FB.T('{item} moves from {source} to {name} ({slots}).', {
+      item:itemName,
+      source:source ? FB.fullName(source) : FB.T('its current wearer'),
+      name:FB.fullName(target),
+      slots:slots
+    });
+  }
+
+  function equipBestProposedSource(s, target, entry) {
+    if (!entry.fromCid) return FB.T('From the family armory');
+    const source = s.chars[entry.fromCid];
+    if (entry.fromCid === target.id) {
+      return FB.T('Already worn by {name}', { name:FB.fullName(target) });
+    }
+    return FB.T('Currently worn by {name}', {
+      name:source ? FB.fullName(source) : FB.T('another household member')
+    });
+  }
+
+  UI.showEquipBestPreview = function (cid, exitMode, returnContext, notice) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
+    const plan = FB.equipBestPreview(s, cid);
+    if (!plan.ok) {
+      UI.toast(equipmentBlockedText(plan.code) || FB.T(
+        'Equipment cannot be optimized right now.'));
+      return;
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day.', {
+        name:FB.fullName(c)
+      })) + '</p></div>' +
+      (notice ? '<div class="hint equip-best-notice">' + esc(notice) + '</div>' : '') +
+      '<div class="equip-best-section"><h4>' + esc(FB.T('Proposed outfit')) +
+      '</h4><div class="equip-best-list">';
+    if (plan.proposed.length) {
+      for (let i = 0; i < plan.proposed.length; i++) {
+        const entry = plan.proposed[i];
+        const item = FB.resolveItem(s, entry.ref);
+        h += '<article class="equip-best-row"><strong>' +
+          esc((item ? item.def.icon + ' ' : '') + FB.itemName(s, entry.ref)) +
+          '</strong><span>' + esc(equipmentSlotsText(entry.slots)) +
+          '</span><small>' + esc(equipBestProposedSource(s, c, entry)) +
+          '</small></article>';
+      }
+    } else {
+      h += '<p class="hint">' + esc(FB.T(
+        'No age-valid, unpledged equipment is available for this character.')) +
+        '</p>';
+    }
+    h += '</div></div><div class="equip-best-section"><h4>' +
+      esc(FB.T('Items that will move')) + '</h4><div class="equip-best-movements">';
+    if (plan.movements.length) {
+      for (let i = 0; i < plan.movements.length; i++) {
+        h += '<div class="equip-best-movement">' +
+          esc(equipBestMovementText(s, c, plan.movements[i])) + '</div>';
+      }
+    } else {
+      h += '<p class="hint">' + esc(FB.T(
+        'Nothing will move. This character already wears the best available outfit.')) +
+        '</p>';
+    }
+    h += '</div></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="equip-best-apply"' +
+      (!plan.changed ? ' disabled' : '') + '>' +
+      esc(FB.T('Apply Equip Best')) + '</button>' +
+      '<button type="button" class="btn" id="equip-best-back">' +
+      esc(FB.T('Back to equipment')) + '</button></div>';
+    openModal(FB.T('Equip Best for {name}', { name:FB.fullName(c) }), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal equip-best-modal',
+      historyBackRender:function () {
+        UI.showEquipmentModal(cid, exitMode, returnContext);
+      }
+    });
+    $('equip-best-apply').addEventListener('click', function () {
+      const result = FB.applyEquipBest(s, plan);
+      if (!result.ok) {
+        UI.showEquipBestPreview(cid, exitMode, returnContext,
+          result.code === 'stale'
+            ? FB.T('Equipment assignments changed after this review. A fresh plan is shown; review it before applying.')
+            : FB.T('The equipment plan can no longer be applied.'));
+        return;
+      }
+      UI.refresh();
+      UI.showEquipmentModal(cid, exitMode, returnContext);
+      mobileNavClosedAll('modal-view', true);
+      UI.toast(FB.T('Best available equipment applied to {name}.', {
+        name:FB.fullName(c)
+      }));
+    });
+    $('equip-best-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showEquipmentModal(cid, exitMode, returnContext);
+      });
     });
   };
 

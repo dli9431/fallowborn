@@ -62,6 +62,16 @@ powers that mechanically apply to its wearer and shows them beneath the full-bod
 head-only battle and seasonal-resource powers are omitted when another household member is
 shown.
 
+Each managed character’s equipment sheet also offers **Equip Best**. It uses the same
+deterministic optimizer as succession: mechanical effects outrank value, hand equipment is
+considered as either the best one-handed pair or one two-handed object, and age-gated or
+pledged gear is excluded. The action first previews the full proposed outfit and every
+object that would leave the armory, move from another named wearer, change slots, or return
+to the armory. Only an explicit confirmation applies that reviewed plan; a changed
+assignment makes the preview stale and requires another review. Applying costs no day,
+does not consume RNG, and affects only the selected character. Manual slot choices remain
+available, and acquiring loot never invokes the optimizer.
+
 Cross-sovereign gifts are not transferred at dispatch. The exact reference is removed from
 usable armory ownership and held by a `player.giftDeliveries` record; `FB.itemOwner`
 reports `{kind:'delivery'}` so the object cannot be sold, equipped, duplicated, or
