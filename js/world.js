@@ -1842,6 +1842,235 @@ window.FB = window.FB || {};
     return rc.held[rid] || [];
   };
 
+  function capitalRelocationBalance(key, fallback) {
+    var raw = FBDATA.balance && FBDATA.balance[key];
+    var value = Number(raw);
+    return isFinite(value) ? value : fallback;
+  }
+
+  function capitalRelocationVassals(state) {
+    var out = [];
+    for (var rid in (state.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.realms, rid) ||
+          rid === 'player') continue;
+      var realm = state.realms[rid];
+      if (realm && realm.alive && realm.liege === 'player') {
+        out.push({
+          id:rid,
+          name:realm.name || rid
+        });
+      }
+    }
+    out.sort(function (a, b) {
+      var an = String(a.name).toLowerCase();
+      var bn = String(b.name).toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+    });
+    return out;
+  }
+
+  function capitalRelocationIncomingMonopoly(state, fromId) {
+    var slots = state.player && state.player.guildMonopolies;
+    var record = slots && slots.incoming;
+    if (!record || record.scope !== 'province' ||
+        record.scopeId !== fromId) return null;
+    var endTurn = Number(record.endTurn);
+    if (!isFinite(endTurn) || state.turn >= endTurn) return null;
+    return record;
+  }
+
+  /* Read-only eligibility and consequence preview for moving the player
+     realm's seat. Callers may safely use a rejected status to explain a
+     disabled control without normalizing or otherwise mutating old saves. */
+  FB.capitalRelocationStatus = function (state, destinationId) {
+    var p = state && state.player;
+    var realm = state && state.realms && state.realms.player;
+    var me = p && state.chars && state.chars[p.charId];
+    var cost = Math.max(0,
+      capitalRelocationBalance('capitalRelocationPrestigeCost', 200));
+    var popularOpinion = FB.clamp(
+      capitalRelocationBalance('capitalRelocationPopularOpinion', -15),
+      -100, 100);
+    var vassalFavor = FB.clamp(
+      capitalRelocationBalance('capitalRelocationVassalFavor', -15),
+      -100, 100);
+    var fromId = p && p.provinceId;
+    var out = {
+      ok:false,
+      reason:'',
+      fromId:fromId || null,
+      destinationId:typeof destinationId === 'string' ? destinationId : null,
+      prestigeCost:cost,
+      popularOpinion:popularOpinion,
+      vassalFavor:vassalFavor,
+      vassals:state && state.realms ? capitalRelocationVassals(state) : [],
+      incomingMonopoly:p && fromId
+        ? capitalRelocationIncomingMonopoly(state, fromId) : null
+    };
+    out.vassalIds = out.vassals.map(function (vassal) { return vassal.id; });
+
+    if (!p || !realm || !realm.alive || !me || me.dead ||
+        p.dead || p.tier < 4 || (realm.rank || 0) < 1) {
+      out.reason = FB.T('Only a living count or higher ruler may move a capital.');
+      return out;
+    }
+    if (typeof destinationId !== 'string' ||
+        !FB.world || !FB.world.byId[destinationId] ||
+        FB.world.byId[destinationId].wasteland) {
+      out.reason = FB.T('That county cannot become a capital.');
+      return out;
+    }
+    if (destinationId === p.provinceId || destinationId === realm.capital) {
+      out.reason = FB.T('This county is already your capital and home.');
+      return out;
+    }
+    var holder = (state.holder && state.holder[destinationId]) ||
+      (state.owner && state.owner[destinationId]);
+    if (!p.provs || p.provs.indexOf(destinationId) < 0 ||
+        holder !== 'player') {
+      out.reason = FB.T(
+        'You may move the capital only to a county held directly in your own hand.');
+      return out;
+    }
+    var marker = p.capitalRelocation;
+    if (marker && typeof marker === 'object' &&
+        marker.charId === p.charId) {
+      out.reason = FB.T('This ruler has already moved the capital once.');
+      return out;
+    }
+    if ((Number(p.prestige) || 0) < cost) {
+      out.reason = FB.T('Requires {prestige} prestige; currently {current}.', {
+        prestige:cost,
+        current:Math.floor(Number(p.prestige) || 0)
+      });
+      return out;
+    }
+    if (p.travel) {
+      out.reason = FB.T('Finish the current journey before moving the capital.');
+      return out;
+    }
+    if (FB.atWarPersonally && FB.atWarPersonally(state)) {
+      out.reason = FB.T(
+        'The capital cannot move while you are personally at war or serving in a campaign.');
+      return out;
+    }
+    out.ok = true;
+    return out;
+  };
+
+  function pinCapitalContact(state, cid, fallbackId) {
+    var c = cid && state.chars && state.chars[cid];
+    if (!c || c.dead || c.id === state.player.charId ||
+        (FB.isHouseholdCharacter &&
+          FB.isHouseholdCharacter(state, c.id))) return;
+    var residence = FB.characterResidence
+      ? FB.characterResidence(state, c) : fallbackId;
+    if (residence && FB.world && FB.world.byId[residence]) {
+      c.homeProvinceId = residence;
+    }
+  }
+
+  function pinCapitalContacts(state, oldHomeId) {
+    var p = state.player;
+    var ids = {};
+    function add(cid) {
+      if (cid) ids[cid] = 1;
+    }
+    for (var role in (state.roles || {})) {
+      if (role !== 'spouse') add(state.roles[role]);
+    }
+    for (var cid in (p.friendContacts || {})) add(cid);
+    for (cid in (p.socialAttention || {})) add(cid);
+    for (cid in (p.socialGiftTurns || {})) add(cid);
+    for (cid in (p.rivalContacts || {})) add(cid);
+    for (cid in (p.rivalPeace || {})) add(cid);
+    add(p.courtingId);
+    for (var i = 0; i < ((p.suitorIds || []).length); i++) {
+      add(p.suitorIds[i]);
+    }
+    for (i = 0; i < ((p.giftDeliveries || []).length); i++) {
+      var delivery = p.giftDeliveries[i];
+      if (delivery && delivery.recipientKind === 'character') {
+        add(delivery.recipientId);
+      }
+    }
+    for (cid in ids) pinCapitalContact(state, cid, oldHomeId);
+  }
+
+  function syncPlayerCapitalHome(state, destinationId) {
+    var p = state.player;
+    var realm = state.realms && state.realms.player;
+    var oldHomeId = p.provinceId;
+    pinCapitalContacts(state, oldHomeId);
+    p.provinceId = destinationId;
+    if (realm && realm.alive) realm.capital = destinationId;
+
+    /* Lord/priest are local story roles, not personal relationships. Their
+       former holders remain resident at the old seat; the new county receives
+       a fresh local cast. */
+    delete state.roles.lord;
+    delete state.roles.priest;
+    delete state.roles.notable;
+    if (FB.getRole) {
+      FB.getRole(state, 'lord', true);
+      FB.getRole(state, 'priest', true);
+    }
+
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+    if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
+    if (FB.enterpriseList) FB.enterpriseList(state);
+    if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+    if (FB.validateFocus) FB.validateFocus(state);
+    if (FB.map) {
+      FB.map.playerProv = destinationId;
+      FB.map.request();
+    }
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+  }
+
+  /* Revalidate immediately before applying every consequence. This action
+     spends no day and changes no political, title, county, or property state. */
+  FB.relocatePlayerCapital = function (state, destinationId) {
+    var status = FB.capitalRelocationStatus(state, destinationId);
+    if (!status.ok) return false;
+    var p = state.player;
+    var from = FB.world.byId[status.fromId];
+    var destination = FB.world.byId[destinationId];
+
+    p.prestige -= status.prestigeCost;
+    p.pop = FB.clamp((Number(p.pop) || 0) + status.popularOpinion,
+      -100, 100);
+    for (var i = 0; i < status.vassalIds.length; i++) {
+      var rid = status.vassalIds[i];
+      if (FB.adjustRealmOpinion) {
+        FB.adjustRealmOpinion(state, rid, status.vassalFavor);
+      } else {
+        p.liegeOps = p.liegeOps || {};
+        p.liegeOps[rid] = FB.clamp(
+          (Number(p.liegeOps[rid]) || 0) + status.vassalFavor,
+          -100, 100);
+      }
+    }
+    p.capitalRelocation = {
+      charId:p.charId,
+      turn:state.turn,
+      fromId:status.fromId,
+      destinationId:destinationId
+    };
+    syncPlayerCapitalHome(state, destinationId);
+    FB.news(state, FB.msg('news.world.capital_relocated',
+      '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.',
+      {
+        realm:state.realms.player.name,
+        from:from ? from.name : status.fromId,
+        destination:destination.name
+      }));
+    return true;
+  };
+
   /* counties of a realm's whole vassal subtree: for sovereign realms this
      is exactly the owner bloc; for vassals, their own counties plus their
      vassals' (used for realm death and breakaways) */
@@ -1907,6 +2136,7 @@ window.FB = window.FB || {};
   FB.transferProvince = function (state, pid, toRealm) {
     const from = state.owner[pid];
     const oldHolder = (state.holder && state.holder[pid]) || from;
+    let forcedPlayerCapital = null;
     state.owner[pid] = toRealm;
     if (state.holder) state.holder[pid] = toRealm; // conquerors hold their prizes directly
     FB.invalidateRealmCache();
@@ -1935,7 +2165,9 @@ window.FB = window.FB || {};
           state.player.liege = nl;
         }
       } else if (fr.capital === pid) {
-        fr.capital = terr[0];
+        const held = rid === 'player' ? FB.realmHeldCounties(state, 'player') : [];
+        fr.capital = held.length ? held[0] : terr[0];
+        if (rid === 'player' && held.length) forcedPlayerCapital = fr.capital;
       }
     }
     // a tier-3 baron or Bishop is bound to the home county: if it changes
@@ -1949,6 +2181,12 @@ window.FB = window.FB || {};
     // player consequences
     if (state.player && state.player.provs && state.player.provs.indexOf(pid) >= 0 && toRealm !== 'player') {
       state.player.provs.splice(state.player.provs.indexOf(pid), 1);
+    }
+    /* Losing the seat forces the same capital/home invariant onto a surviving
+       directly held county. It is free and deliberately leaves the current
+       ruler's voluntary lifetime marker unchanged. */
+    if (forcedPlayerCapital && state.player.provinceId !== forcedPlayerCapital) {
+      syncPlayerCapitalHome(state, forcedPlayerCapital);
     }
     if (state.player && FB.invalidateGuildMonopolies) {
       FB.invalidateGuildMonopolies(state);

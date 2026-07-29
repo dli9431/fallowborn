@@ -945,6 +945,10 @@ FBDATA.balance = {
   settlementSupportWeight: 0.10, settlementOfficeWeight: 0.10,
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
+  /* a count-or-higher ruler's one voluntary capital move per lifetime */
+  capitalRelocationPrestigeCost: 200,
+  capitalRelocationPopularOpinion: -15,
+  capitalRelocationVassalFavor: -15,
   /* domain limit: counties the player may hold DIRECTLY before overload.
      cap = domainBase + floor(stewardship / domainStewPer); every county past
      the cap multiplies the player's OWN income and levy by (1 - overDomainPenalty).

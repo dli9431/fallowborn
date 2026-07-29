@@ -3271,13 +3271,104 @@ window.FB = window.FB || {};
       })) + '</span></span>' + standing + '</button>';
   }
 
+  function capitalRelocationTerms(status) {
+    return FB.T(
+      '{prestige} prestige · {opinion} popular opinion · {favor} Favor for every direct vassal',
+      {
+        prestige:status.prestigeCost,
+        opinion:signedOpinion(status.popularOpinion),
+        favor:signedOpinion(status.vassalFavor)
+      });
+  }
+
+  function capitalRelocationMonopolyName(s, record) {
+    const def = record && FBDATA.careers[record.profession];
+    return def ? dt(s, 'career', record.profession, def, 'name') :
+      FB.T('Unknown profession');
+  }
+
+  UI.showCapitalRelocation = function (destinationId) {
+    const s = FB.state;
+    const status = FB.capitalRelocationStatus(s, destinationId);
+    if (!status.ok) {
+      UI.toast(status.reason);
+      UI.refresh();
+      return;
+    }
+    const from = FB.world.byId[status.fromId];
+    const destination = FB.world.byId[destinationId];
+    const vassalNames = status.vassals.map(function (vassal) {
+      return vassal.name;
+    });
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Move the capital and permanent household home from {from} to {destination}?',
+      {
+        from:from.name,
+        destination:destination.name
+      })) + '</p><p>' + esc(FB.T(
+      'This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Favor changes by {favor}.',
+      {
+        prestige:status.prestigeCost,
+        opinion:signedOpinion(status.popularOpinion),
+        favor:signedOpinion(status.vassalFavor)
+      })) + '</p>';
+    if (vassalNames.length) {
+      h += '<p>' + esc(FB.T(
+        'Affected direct vassals ({count}): {vassals}.', {
+          count:vassalNames.length,
+          vassals:vassalNames.join(', ')
+        })) + '</p>';
+    } else {
+      h += '<p>' + esc(FB.T(
+        'You have no direct vassals, so no vassal Favor will change.')) + '</p>';
+    }
+    if (status.incomingMonopoly) {
+      h += '<p class="op-bad">' + esc(FB.T(
+        'Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.',
+        {
+          profession:capitalRelocationMonopolyName(
+            s, status.incomingMonopoly),
+          province:from.name
+        })) + '</p>';
+    }
+    h += '<p class="hint">' + esc(FB.T(
+      'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) +
+      '</p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="capital-relocation-confirm">' +
+      esc(FB.T('Move the capital to {destination}', {
+        destination:destination.name
+      })) + '</button>' +
+      '<button type="button" class="actionbtn" id="capital-relocation-cancel">' +
+      esc(FB.T('Keep the capital in {from}', { from:from.name })) +
+      '</button></div>';
+    openModal(FB.T('Move capital to {destination}?', {
+      destination:destination.name
+    }), h);
+    $('capital-relocation-confirm').addEventListener('click', function () {
+      const live = FB.capitalRelocationStatus(FB.state, destinationId);
+      if (!live.ok || !FB.relocatePlayerCapital(FB.state, destinationId)) {
+        UI.closeModal();
+        UI.toast(live.reason || FB.T('The capital can no longer be moved.'));
+        UI.refresh();
+        return;
+      }
+      UI.closeModal();
+    });
+    $('capital-relocation-cancel').addEventListener('click', UI.closeModal);
+  };
+
   function renderProv() {
     const s = FB.state;
     const pid = selectedProv || s.player.provinceId;
     const pr = FB.world.byId[pid];
     if (!pr) { $('tab-prov').innerHTML = ''; return; }
+    const playerRealm = s.realms && s.realms.player;
+    const homeLabel = pid === s.player.provinceId
+      ? (playerRealm && playerRealm.alive && playerRealm.capital === pid
+        ? FB.T('⚑ (capital and home)') : FB.T('⚑ (home)'))
+      : '';
     let h = '<div class="panelh">' + esc(pr.name) +
-      (pid === s.player.provinceId ? ' ' + esc(FB.T('⚑ (home)')) : '') + '</div>';
+      (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
@@ -3454,6 +3545,18 @@ window.FB = window.FB || {};
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
         h += '<div class="progressnote">' + esc(FB.T('🏰 You hold this province.')) + '</div>';
       }
+      const capitalCandidate = playerRealm && playerRealm.alive &&
+        pid !== s.player.provinceId && holdId === 'player' &&
+        s.player.provs && s.player.provs.indexOf(pid) >= 0;
+      if (capitalCandidate) {
+        const capitalStatus = FB.capitalRelocationStatus(s, pid);
+        h += '<button type="button" class="actionbtn" id="btn-relocate-capital"' +
+          (capitalStatus.ok ? '' : ' disabled') + '>' +
+          esc(FB.T('🏰 Move capital here…')) +
+          '<span class="adesc">' + esc(capitalStatus.ok
+            ? capitalRelocationTerms(capitalStatus) : capitalStatus.reason) +
+          '</span></button>';
+      }
       if (realm && !myRealm && s.player.tier >= 3) {
         h += '<div class="progressnote">' + esc(FB.T(
           '🛡 They can field ~{theirs} — you can field ~{yours}.',
@@ -3512,6 +3615,10 @@ window.FB = window.FB || {};
     FB.paintFaces($('tab-prov'), s);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
+    const relocate = $('btn-relocate-capital');
+    if (relocate) relocate.addEventListener('click', function () {
+      UI.showCapitalRelocation(pid);
+    });
     document.querySelectorAll('#tab-prov .settlink').forEach(function (btn) {
       btn.addEventListener('click', function () { UI.showSettlement(pid, +btn.dataset.sett); });
     });

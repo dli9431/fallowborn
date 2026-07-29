@@ -156,6 +156,22 @@ lightweight ruler snapshot. Generated province characters from `FB.provNotables`
 defensive fallback only when a settled county has no resolvable political ruler, so
 ordinary Land browsing neither creates `provChars` nor consumes RNG.
 
+**A count-or-higher protagonist may move the realm seat once per lifetime.**
+`FB.capitalRelocationStatus` accepts only a different county held directly in the
+player's demesne, and blocks a ruler without the required prestige, during personal
+travel, personal war, or active campaign service, or after that character has already
+used the choice. `FB.relocatePlayerCapital` revalidates atomically, spends
+`balance.capitalRelocationPrestigeCost`, applies
+`balance.capitalRelocationPopularOpinion`, and applies
+`balance.capitalRelocationVassalFavor` to every living realm sworn directly to
+`'player'`. It then synchronizes `player.provinceId` and
+`realms.player.capital`. Ownership, holders, lieges, titles, realm faith, vassal
+relationships, county population, buildings, and county-bound property do not move.
+Personal contacts remain intact at their prior residences; only location-scoped lord
+and priest roles regenerate at the new household home. Losing the current capital
+instead uses the first surviving directly held county as a free forced fallback, moves
+the household with it, and neither consumes nor resets the lifetime choice.
+
 Realm, ownership, and de jure source data belong to the active start bookmark. The
 867 and 1066 definitions may therefore use different realm ids, liege chains,
 capitals, county owners, and hierarchy names without altering saved political state.

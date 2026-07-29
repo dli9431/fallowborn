@@ -131,6 +131,16 @@ open the realm-ruler sheet; a protagonist entry uses the character portrait and
 character sheet. Each row states realm, political relationship, age, Martial, and the
 player-relative opinion or favor. Generated local characters appear only as a defensive
 fallback when no political ruler can be resolved.
+For a count or higher, the selected current seat is marked **capital and home**.
+Every other directly held demesne county shows **Move capital here…**; the native
+button remains visible but disabled with the exact prestige, journey, campaign, or
+lifetime-limit reason. Its focus-managed confirmation names both seats, the prestige,
+popular-opinion and direct-vassal Favor changes, every affected vassal, the
+once-per-ruler rule, unchanged county-bound property, and any province-scoped incoming
+monopoly that will end. Confirming applies without advancing the day; cancel returns
+focus to the unchanged Land button. The ordinary generic-modal bottom sheet supplies
+keyboard numbering, scrolling, safe-area spacing, and minimum touch targets on narrow
+layouts.
 The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,

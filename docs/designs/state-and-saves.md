@@ -158,6 +158,16 @@ current character's liege wars and `liegeGrants` records successful feudal patro
 in the current lifetime. Both reset on succession. Older saves need no migration;
 the grant multiplier treats a missing `liegeGrants` as zero.
 
+Voluntary ruler-capital relocation is additive save-format-3 state.
+`player.capitalRelocation` is absent/null before use or records
+`{charId,turn,fromId,destinationId}` after the current protagonist moves the realm
+seat and permanent household home. Ordinary JSON slots and exports preserve the
+marker unchanged, while succession clears it for the next protagonist. A version-3
+save without the field is eligible exactly like a fresh ruler. A forced fallback
+after the old capital is lost synchronizes `player.provinceId` and
+`realms.player.capital` to a surviving directly held county without writing, clearing,
+or charging against this marker.
+
 Earned-trait acquisition is additive version-3 state:
 `player.traitProgress = {traitId:number}`. Restore repairs a missing or malformed map
 and clamps known progress to the definition's current `earn.threshold`.
@@ -283,8 +293,11 @@ stores compact
 remains on the referenced character. `player.guildFavorTurns` bounds guild calls by
 character and `player.vassalLevyFavors` maps realm ids to expiry turns. Succession clears
 friendship, cultivated contacts, social attention, both gift-clock maps, and exceptional vassal
-favors, but retains paid service contracts with a loyalty penalty. Permanent relocation
-also clears friendship, contacts, courtship, and attention. Restore converts an old active
+favors, but retains paid service contracts with a loyalty penalty. A freeholder/gentry
+journey settlement also clears friendship, contacts, courtship, and attention. A ruler's
+capital relocation instead keeps personal relationships intact and pins non-household
+contacts to their prior residences while regenerating only location-scoped local roles.
+Restore converts an old active
 `court_suitor` focus into attention on its living suitor and selects an ordinary valid
 focus. All missing or invalid fields self-heal without a save-version migration.
 

@@ -1702,6 +1702,12 @@ normal composition quality, siege strength, reinforcement, and logistics immedia
 but are not saved anywhere outside that exact host.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+Player-capital relocation uses three signed/core numeric keys:
+`capitalRelocationPrestigeCost` (200),
+`capitalRelocationPopularOpinion` (-15), and
+`capitalRelocationVassalFavor` (-15, applied to each direct vassal). The first is
+clamped to a non-negative price; the two signed standing changes are clamped to the
+ordinary -100…100 range before application.
 Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
 
 | Grantor tier | `years` | `enterpriseBonus` | `rulerFee` | `taxBonus` | `popularOpinion` |

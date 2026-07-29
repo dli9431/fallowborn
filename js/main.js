@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.83.1';
+  FB.VERSION = '1.84.0';
   FB.CHANGELOG = [
+    { v: '1.84.0', date: '2026-07-29', changes: [
+      'Counts and higher rulers can now move their capital and household home once per lifetime from the Land panel.'
+    ] },
     { v: '1.83.1', date: '2026-07-29', changes: [
       'Dialogs now keep keyboard focus contained and return it reliably after closing.'
     ] },
@@ -941,6 +944,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
+        capitalRelocation: null,
         holdings: [], enterprises: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
@@ -1091,6 +1095,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
+        capitalRelocation: null,
         householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         guildMonopolies: { incoming:null, outgoing:null },
@@ -2128,6 +2133,7 @@ window.FB = window.FB || {};
     p.warService = 0; p.liegeGrants = 0;
     p.travelHistory = [];
     p.travelSettlement = null;
+    p.capitalRelocation = null;
     p.pop = Math.round(p.pop * 0.5);
     // transition costs and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };

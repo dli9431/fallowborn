@@ -245,6 +245,15 @@ nothing, and a duchy of a single county carries no duke's title. The de jure map
 claim; a tapped county's panel lists exactly how many of its counties you hold and how many
 the title still demands.
 
+Once you are a **count or higher**, your directly held counties can also become the
+family's seat. Select one in the **Land** tab and choose **🏰 Move capital here…**.
+Moving the capital and permanent household home costs 200 prestige, lowers popular
+opinion by 15, and costs 15 Favor with every direct vassal. Each ruler may choose only
+once, never while travelling or personally serving in a war; the next protagonist
+receives a new choice. Land, titles, buildings, and property stay in their counties.
+If war tears away the current seat, a surviving directly held county becomes capital
+and home automatically without cost or using the ruler's voluntary move.
+
 As an **independent count or higher**, the **🕊 Foreign policy** deed assigns your limited
 political attention to neighboring sovereigns. Counts and dukes can direct two courts,
 kings three, and emperors four. **Improve** builds the court’s opinion of you each season;

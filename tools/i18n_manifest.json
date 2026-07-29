@@ -29091,6 +29091,18 @@
         }
       }
     },
+    "news.world.capital_relocated": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "from",
+        "realm"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏰 The seat of {realm} moves from {from} to {destination}; the household follows."
+      }
+    },
     "news.world.cast_down": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -36495,6 +36507,16 @@
         "text": "Issuer: {issuer} · Recipient: your household · {tier} terms · +{enterprise}% matching enterprise profit · issuer tax +{tax}% · {days} days remain"
       }
     },
+    "src.03e33f8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The capital can no longer be moved."
+      }
+    },
     "src.03f5c01a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38097,6 +38119,16 @@
       ],
       "source": {
         "text": "A Feud on Your Doorstep"
+      }
+    },
+    "src.08ec733a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Move the capital to {destination}"
       }
     },
     "src.08f28b85": {
@@ -40083,6 +40115,16 @@
         "text": "Hajja"
       }
     },
+    "src.0f9ed124": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Move capital to {destination}?"
+      }
+    },
     "src.0fa4514e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40211,6 +40253,16 @@
       ],
       "source": {
         "text": "{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions."
+      }
+    },
+    "src.100ea21e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You have no direct vassals, so no vassal Favor will change."
       }
     },
     "src.100f123a": {
@@ -52790,6 +52842,16 @@
         "text": "Call in guild commissions"
       }
     },
+    "src.3a8b6340": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Move the capital and permanent household home from {from} to {destination}?"
+      }
+    },
     "src.3a9c95a6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55547,6 +55609,16 @@
       ],
       "source": {
         "text": "Pay the fine before it grows. ({money:6})"
+      }
+    },
+    "src.4368f42f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Only a living count or higher ruler may move a capital."
       }
     },
     "src.436af755": {
@@ -59754,6 +59826,16 @@
         "text": "Abundant paper makes correspondence, drafts, and working libraries cheaper."
       }
     },
+    "src.5158e781": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Requires {prestige} prestige; currently {current}."
+      }
+    },
     "src.515afcbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61535,6 +61617,16 @@
       ],
       "source": {
         "text": "Incoming monopoly — {profession}"
+      }
+    },
+    "src.571fc625": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏰 The seat of {realm} moves from {from} to {destination}; the household follows."
       }
     },
     "src.5731445d": {
@@ -66431,6 +66523,16 @@
         "text": "Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure."
       }
     },
+    "src.67f3efe4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "This ruler has already moved the capital once."
+      }
+    },
     "src.67f4fe57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70224,6 +70326,16 @@
       ],
       "source": {
         "text": "Rochester"
+      }
+    },
+    "src.74279759": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "The capital cannot move while you are personally at war or serving in a campaign."
       }
     },
     "src.742cf178": {
@@ -74520,6 +74632,16 @@
       ],
       "source": {
         "text": "Plunder in the Baggage"
+      }
+    },
+    "src.81591fd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Affected direct vassals ({count}): {vassals}."
       }
     },
     "src.8184e92b": {
@@ -81028,6 +81150,16 @@
         "text": "East Anglia"
       }
     },
+    "src.9737f006": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🏰 Move capital here…"
+      }
+    },
     "src.973a7ce9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84353,6 +84485,16 @@
       ],
       "source": {
         "text": "You are already traveling home."
+      }
+    },
+    "src.a2043483": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{prestige} prestige · {opinion} popular opinion · {favor} Favor for every direct vassal"
       }
     },
     "src.a208d106": {
@@ -88619,6 +88761,16 @@
         "text": "No post-marriage residence decision is pending."
       }
     },
+    "src.b0b59500": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household."
+      }
+    },
     "src.b0c67ed6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90951,6 +91103,16 @@
       ],
       "source": {
         "text": "cooling"
+      }
+    },
+    "src.b818c9e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Finish the current journey before moving the capital."
       }
     },
     "src.b824312a": {
@@ -98365,6 +98527,16 @@
         "text": "🏹 Poach the lord’s game"
       }
     },
+    "src.d29c272c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "This county is already your capital and home."
+      }
+    },
     "src.d2c0ee77": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99865,6 +100037,16 @@
         "text": "Professed Brother"
       }
     },
+    "src.d79704e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "You may move the capital only to a county held directly in your own hand."
+      }
+    },
     "src.d7a1bce1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100738,6 +100920,16 @@
         "text": "Warmth, straw, and a barred door."
       }
     },
+    "src.da5bff19": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Favor changes by {favor}."
+      }
+    },
     "src.da6322c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101517,6 +101709,16 @@
       ],
       "source": {
         "text": "⛪ {name} is created Cardinal of {title}."
+      }
+    },
+    "src.dd824807": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "⚑ (capital and home)"
       }
     },
     "src.dd853dd8": {
@@ -105318,6 +105520,16 @@
         "text": "The patron arrives with guildsmen and sharp eyes. The work, the tools, and the widow’s livelihood will be decided before they leave."
       }
     },
+    "src.e9cb1746": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Keep the capital in {from}"
+      }
+    },
     "src.e9ce20e1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106528,6 +106740,16 @@
       ],
       "source": {
         "text": "Aghmat"
+      }
+    },
+    "src.eeb3c921": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "That county cannot become a capital."
       }
     },
     "src.eebcf623": {
@@ -109854,6 +110076,16 @@
       ],
       "source": {
         "text": "The appointment is refused; another petition may be made in two years."
+      }
+    },
+    "src.f9de68d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves."
       }
     },
     "src.f9e7df9d": {
@@ -117183,6 +117415,17 @@
         "text": "Advocate · {money:20} · 15 favor"
       }
     },
+    "ui:Affected direct vassals ({count}): {vassals}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "vassals"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Affected direct vassals ({count}): {vassals}."
+      }
+    },
     "ui:After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -120368,6 +120611,14 @@
         "text": "Financial contracts"
       }
     },
+    "ui:Finish the current journey before moving the capital.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "Finish the current journey before moving the capital."
+      }
+    },
     "ui:First copy in this county: {money:cost}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -121329,6 +121580,16 @@
         "text": "Keep staying for now"
       }
     },
+    "ui:Keep the capital in {from}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "from"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Keep the capital in {from}"
+      }
+    },
     "ui:Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -121962,6 +122223,16 @@
         "text": "Mosque Servant"
       }
     },
+    "ui:Move capital to {destination}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Move capital to {destination}?"
+      }
+    },
     "ui:Move for redress of grievances ({money:cost})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -121980,6 +122251,27 @@
       "location": "js/ui.js",
       "source": {
         "text": "Move for scutage ({money:cost})"
+      }
+    },
+    "ui:Move the capital and permanent household home from {from} to {destination}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "from"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Move the capital and permanent household home from {from} to {destination}?"
+      }
+    },
+    "ui:Move the capital to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Move the capital to {destination}"
       }
     },
     "ui:Move the household here. Each character may make this permanent move only once in their lifetime.": {
@@ -123210,6 +123502,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Only a guildmaster of the Craft or Trade profession may petition."
+      }
+    },
+    "ui:Only a living count or higher ruler may move a capital.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "Only a living count or higher ruler may move a capital."
       }
     },
     "ui:Only a sovereign may restore the Papacy.": {
@@ -124810,6 +125110,17 @@
         "text": "Requires {money:cost}; you have {money:gold}."
       }
     },
+    "ui:Requires {prestige} prestige; currently {current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "prestige"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "Requires {prestige} prestige; currently {current}."
+      }
+    },
     "ui:Requires {rank} rank or higher.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -126034,6 +126345,14 @@
         "text": "That character cannot receive a visit."
       }
     },
+    "ui:That county cannot become a capital.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "That county cannot become a capital."
+      }
+    },
     "ui:That county does not qualify for this journey.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -126228,6 +126547,22 @@
       "location": "js/ui.js",
       "source": {
         "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
+      }
+    },
+    "ui:The capital can no longer be moved.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The capital can no longer be moved."
+      }
+    },
+    "ui:The capital cannot move while you are personally at war or serving in a campaign.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "The capital cannot move while you are personally at war or serving in a campaign."
       }
     },
     "ui:The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.": {
@@ -126819,6 +127154,14 @@
         "text": "This contract is reckoned by weight: price changes do not change the amount due."
       }
     },
+    "ui:This county is already your capital and home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "This county is already your capital and home."
+      }
+    },
     "ui:This creates a dynastic tie, but this child does not currently transmit the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -126849,6 +127192,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "This household office is already filled."
+      }
+    },
+    "ui:This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Favor changes by {favor}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "favor",
+        "opinion",
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Favor changes by {favor}."
       }
     },
     "ui:This instruction is not available to this child.": {
@@ -126883,6 +127238,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This is the highest religious office open to {name} on this path."
+      }
+    },
+    "ui:This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household."
       }
     },
     "ui:This is you": {
@@ -126941,6 +127304,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This person is no longer eligible."
+      }
+    },
+    "ui:This ruler has already moved the capital once.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "This ruler has already moved the capital once."
       }
     },
     "ui:This school does not teach the chosen focus.": {
@@ -127825,6 +128196,14 @@
         "text": "You gain {piety} piety and {prestige} prestige, recover {opinion} Catholic-realm opinion, and any excommunication is cleared."
       }
     },
+    "ui:You have no direct vassals, so no vassal Favor will change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You have no direct vassals, so no vassal Favor will change."
+      }
+    },
     "ui:You have only {money:gold}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -127841,6 +128220,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "You hold no landed realm from which to wage war."
+      }
+    },
+    "ui:You may move the capital only to a county held directly in your own hand.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "You may move the capital only to a county held directly in your own hand."
       }
     },
     "ui:You may name one living adult close relative to rule a won duchy or county. If they die or take another throne before settlement, the grant returns to you.": {
@@ -128176,6 +128563,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner."
+      }
+    },
+    "ui:Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves."
       }
     },
     "ui:Your inherited vow must be renewed before service and land eligibility resume.": {
@@ -131780,6 +132178,18 @@
         "text": "{prestige} prestige"
       }
     },
+    "ui:{prestige} prestige · {opinion} popular opinion · {favor} Favor for every direct vassal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "favor",
+        "opinion",
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{prestige} prestige · {opinion} popular opinion · {favor} Favor for every direct vassal"
+      }
+    },
     "ui:{profession} Monopoly": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -132680,6 +133090,14 @@
         "text": "☠ {name} is Dead"
       }
     },
+    "ui:⚑ (capital and home)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "⚑ (capital and home)"
+      }
+    },
     "ui:⚑ (home)": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133063,6 +133481,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "🏰 Domain {held}/{cap} held directly"
+      }
+    },
+    "ui:🏰 Move capital here…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🏰 Move capital here…"
       }
     },
     "ui:🏰 You hold this province.": {
