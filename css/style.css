@@ -325,6 +325,69 @@ a.actionbtn { text-decoration: none; }
 .actionbtn:disabled { opacity: .45; cursor: default; }
 .actionbtn .adesc { display: block; color: #97876a; font-size: 12px; }
 .actionbtn.done { border-style: dashed; opacity: .55; }
+.interaction-card {
+  display: flex; flex-direction: column; gap: 10px; margin-top: 12px;
+}
+.interaction-context {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px; overflow: hidden;
+  border: 1px solid #493c27; border-radius: 8px; background: #493c27;
+}
+.interaction-context-row {
+  display: flex; min-width: 0; padding: 7px 9px;
+  flex-direction: column; gap: 2px; background: #211a13;
+}
+.interaction-context-row span {
+  color: #8f8066; font-size: 10px; font-weight: bold;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.interaction-context-row b {
+  min-width: 0; color: #d8c7a4; font-size: 13px; font-weight: normal;
+  overflow-wrap: anywhere;
+}
+.interaction-standing {
+  padding: 9px 10px; border: 1px solid #65512d;
+  border-radius: 8px; background: #241d15;
+}
+.interaction-standing > div {
+  display: flex; justify-content: space-between; gap: 12px;
+}
+.interaction-standing > div > span:first-child { color: #d8b24a; }
+.interaction-standing p {
+  margin: 4px 0 0; color: #a49372; font-size: 12px; line-height: 1.4;
+}
+.interaction-commitments {
+  display: grid; gap: 1px; overflow: hidden;
+  border: 1px solid #65512d; border-radius: 8px; background: #493b25;
+}
+.interaction-commitment {
+  display: flex; padding: 8px 10px; flex-direction: column; gap: 2px;
+  background: #241d15;
+}
+.interaction-commitment.urgent {
+  border-left: 3px solid #b86c52; padding-left: 7px;
+}
+.interaction-commitment b {
+  color: #e0c060; font-size: 12px; font-weight: normal;
+}
+.interaction-commitment span {
+  color: #ad9c7b; font-size: 12px; line-height: 1.35;
+}
+.interaction-action-group h4 {
+  margin: 2px 0 6px; padding-bottom: 3px;
+  border-bottom: 1px solid #40331f;
+  color: #d8b24a; font-size: 14px; font-weight: normal;
+}
+.interaction-action-label { display: block; color: #e0d0a8; }
+.interaction-action .interaction-action-detail { margin-top: 2px; }
+.interaction-action .interaction-blocked {
+  margin-top: 4px; color: #d09a78; font-weight: bold;
+}
+.interaction-action .interaction-consequence {
+  margin-top: 4px; color: #c9aa72;
+}
+.interaction-action:disabled { opacity: .78; }
+.interaction-action:disabled .interaction-action-label { color: #aa9c7d; }
 .ongoing-commitments {
   margin-bottom: 10px; overflow: hidden;
   border: 1px solid #65512d; border-radius: 9px; background: #211a12;
@@ -1427,6 +1490,10 @@ textarea.modjson, textarea.savetext {
   }
   .person-assignment-rows { margin-left: 0; }
   .person-assignment-row { grid-template-columns: 1fr; gap: 0; padding: 3px 0; }
+  .interaction-context { grid-template-columns: 1fr; }
+  .interaction-action {
+    min-height: 52px; padding: 11px 12px;
+  }
   .asset-effect-summary,
   .fullsheet-modal .asset-effect-summary { grid-template-columns: 1fr; }
   .asset-effect-effect, .asset-effect-transfer-rule,

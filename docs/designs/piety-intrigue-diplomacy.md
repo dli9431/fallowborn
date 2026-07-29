@@ -83,6 +83,25 @@ envoy success and multiplies the annual chance that an adjacent AI realm attacks
 player, but never forbids war. All predecessor Standing and political directions clear on
 protagonist succession; state-level pacts do not.
 
+**The realm interaction card is the diplomatic counterpart surface.**
+`FB.foreignPolicyTargetStatus`, `FB.envoyStatus`, and
+`FB.allianceOfferStatus` expose the owning mechanics' capacity, adjacency,
+rank, resource, Standing, pact, alliance, and war gates together with exact
+costs and odds. `FB.realmWarCauses` narrows the existing lawful-cause list to
+one realm without creating a second war system. Its read-only path projects
+the saved religious-head assignment, including an old save's bookmark default,
+without repairing that office while a card renders. The UI shows these
+projections in stable order and
+routes to the existing policy, envoy/alliance, and war pickers; those paths
+remain the only mutation and confirmation authorities.
+
+Personal attention and foreign-policy capacity remain separate commitments.
+Cultivating a ruler uses the ordinary character visit and personal-attention
+mechanics, while Improve/Provoke consumes political attention and advances only
+at season boundaries. Pacts, alliances, rivalry, courtship, and feudal
+obligations remain distinct state even though every relevant sheet displays
+the same typed Standing value.
+
 Finance uses the same economic core across faiths. The UI selects complete culturally
 appropriate partnership phrases (including qirad and commenda) without a blanket
 allowed/forbidden interest rule. Relationship loans remain event territory; the always

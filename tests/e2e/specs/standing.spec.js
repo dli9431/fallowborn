@@ -306,9 +306,8 @@ test('realm and character sheets show the same Standing value, band, and context
     expect(ids.rounded).toBe('+45.3 (Favorable)');
     expect(ids.clamped).toBe('+100 (Warm)');
     expect(ids.negativeEffect).toBe(true);
-    await expect(page.locator('#gm-body')).toContainText(
-      'Standing with this ruler');
-    await expect(page.locator('#gm-body .kv .op-good').first()).toContainText(
+    await expect(page.locator(
+      '#gm-body .interaction-standing .op-good').first()).toContainText(
       '+45 (Favorable)');
     await expect(page.locator('#gm-body')).toContainText(
       'affects envoys, pacts, aid, hostility, and the chance of war');
@@ -328,6 +327,7 @@ test('realm and character sheets show the same Standing value, band, and context
       FB.ui.closeModal();
       FB.ui.showLiegeModal(data.rid);
     }, ids);
-    await expect(page.locator('#gm-body .kv .op-bad').first()).toContainText(
+    await expect(page.locator(
+      '#gm-body .interaction-standing .op-bad').first()).toContainText(
       '-35 (Guarded)');
   });

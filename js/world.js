@@ -855,11 +855,14 @@ window.FB = window.FB || {};
   /* Return the active office's same-faith war policy when a target belongs
      to that office's temporal realm. An independent head protects its whole
      sovereign realm; a vassal head protects only its own subtree. */
-  FB.sameFaithHeadWarPolicy = function (state, attackerReligionId, defenderRealmId, pid) {
+  FB.sameFaithHeadWarPolicy = function (
+      state, attackerReligionId, defenderRealmId, pid, readOnly) {
     const rel = FBDATA.religions[attackerReligionId];
     const policy = rel && rel.head && rel.head.sameFaithWar;
     if (!policy || policy === 'ordinary') return null;
-    const head = FB.religiousHeadOf(state, attackerReligionId);
+    const head = readOnly && FB.religiousHeadSnapshot
+      ? FB.religiousHeadSnapshot(state, attackerReligionId)
+      : FB.religiousHeadOf(state, attackerReligionId);
     if (!head || !defenderRealmId) return null;
     if (defenderRealmId === head.id) return policy;
     const defenderTop = FB.topRealm(state, defenderRealmId);
@@ -1367,13 +1370,20 @@ window.FB = window.FB || {};
     return m;
   }
 
-  FB.realmRulerCharacter = function (state, rid) {
+  FB.realmRulerCharacterSnapshot = function (state, rid) {
     const r = state && state.realms && state.realms[rid];
     const s = r && r.succession;
     const m = s && s.rulerMemberId && s.members &&
       s.members[s.rulerMemberId];
     const c = m && m.charId && state.chars && state.chars[m.charId];
     if (!r || !r.alive || rid === 'player' || !c || c.dead) return null;
+    return c;
+  };
+
+  FB.realmRulerCharacter = function (state, rid) {
+    const r = state && state.realms && state.realms[rid];
+    const c = FB.realmRulerCharacterSnapshot(state, rid);
+    if (!c) return null;
     r.ruler.name = c.name;
     r.ruler.sex = c.sex;
     r.ruler.culture = c.culture;
@@ -1516,8 +1526,7 @@ window.FB = window.FB || {};
      exact character reigns. The marker
      lets direct legacy writes on either side reconcile without losing the
      other side's change. */
-  FB.syncRealmRulerStanding = function (state, rid) {
-    const c = FB.realmRulerCharacter(state, rid);
+  function reconciledRealmRulerStanding(state, rid, c) {
     const stored = storedRealmStanding(state, rid);
     if (!c) return stored;
     let marker = Number(c.realmStanding);
@@ -1528,7 +1537,19 @@ window.FB = window.FB || {};
     else if (personal !== marker && stored === marker) value = personal;
     else if (personal !== marker && stored !== marker) value = stored;
     else value = marker;
+    return FB.clamp(Number(value) || 0, -100, 100);
+  }
+
+  FB.realmRulerStandingSnapshot = function (state, rid) {
+    return reconciledRealmRulerStanding(state, rid,
+      FB.realmRulerCharacterSnapshot(state, rid));
+  };
+
+  FB.syncRealmRulerStanding = function (state, rid) {
+    const c = FB.realmRulerCharacter(state, rid);
+    let value = reconciledRealmRulerStanding(state, rid, c);
     value = writeStoredRealmStanding(state, rid, value);
+    if (!c) return value;
     c.opinion = value;
     c.realmStanding = value;
     return value;
@@ -1556,25 +1577,42 @@ window.FB = window.FB || {};
   /* The compact tree still enforces the ordinary close-blood marriage bar.
      Sibling members share one parent (including a materialized ruler root);
      cousins remain eligible, matching the full-character kin rules. */
-  FB.royalCloseKin = function (state, a, b) {
-    if (!a || !b || !a.royalLine || !b.royalLine ||
-        a.royalLine.realmId !== b.royalLine.realmId) return false;
-    const r = state.realms[a.royalLine.realmId];
-    const s = r && FB.ensureRealmSuccession(state, r.id);
-    const ma = s && s.members[a.royalLine.memberId];
-    const mb = s && s.members[b.royalLine.memberId];
+  function royalCloseKinFromSuccession(a, b, succession) {
+    const members = succession && succession.members;
+    const ma = members && members[a.royalLine.memberId];
+    const mb = members && members[b.royalLine.memberId];
     if (!ma || !mb) return false;
-    if (ma.id === mb.id || ma.parentId === mb.id || mb.parentId === ma.id) return true;
+    if (ma.id === mb.id || ma.parentId === mb.id || mb.parentId === ma.id) {
+      return true;
+    }
     function siblings(x, y) {
       return !!x && !!y && x.id !== y.id &&
         (x.parentId || null) === (y.parentId || null);
     }
     if (siblings(ma, mb)) return true;
-    const pa = ma.parentId && s.members[ma.parentId];
-    const pb = mb.parentId && s.members[mb.parentId];
+    const pa = ma.parentId && members[ma.parentId];
+    const pb = mb.parentId && members[mb.parentId];
     if ((pa && siblings(pa, mb)) || (pb && siblings(pb, ma))) return true;
-    if ((pa && pa.parentId === mb.id) || (pb && pb.parentId === ma.id)) return true;
+    if ((pa && pa.parentId === mb.id) || (pb && pb.parentId === ma.id)) {
+      return true;
+    }
     return false;
+  }
+
+  FB.royalCloseKinSnapshot = function (state, a, b) {
+    if (!a || !b || !a.royalLine || !b.royalLine ||
+        a.royalLine.realmId !== b.royalLine.realmId) return false;
+    const r = state.realms[a.royalLine.realmId];
+    return !!(r && royalCloseKinFromSuccession(a, b, r.succession));
+  };
+
+  FB.royalCloseKin = function (state, a, b) {
+    if (!a || !b || !a.royalLine || !b.royalLine ||
+        a.royalLine.realmId !== b.royalLine.realmId) return false;
+    const r = state.realms[a.royalLine.realmId];
+    const succession = r && FB.ensureRealmSuccession(state, r.id);
+    return !!(succession &&
+      royalCloseKinFromSuccession(a, b, succession));
   };
 
   FB.registerRoyalBirth = function (state, child, father, mother) {
@@ -1729,6 +1767,26 @@ window.FB = window.FB || {};
     return null;
   };
 
+  FB.allianceSnapshot = function (state, rid) {
+    const alliances = state && state.alliances;
+    if (!Array.isArray(alliances)) return null;
+    for (const a of alliances) {
+      if (!a || (a.a !== rid && a.b !== rid)) continue;
+      const ra = state.realms[a.a], rb = state.realms[a.b];
+      if (!ra || !rb || !ra.alive || !rb.alive) continue;
+      if (a.aGen !== FB.realmRulerGeneration(state, a.a) ||
+          a.bGen !== FB.realmRulerGeneration(state, a.b)) continue;
+      return a;
+    }
+    return null;
+  };
+
+  FB.areAlliedSnapshot = function (state, a, b) {
+    const p = pairIds(a, b);
+    const alliance = FB.allianceSnapshot(state, p[0]);
+    return !!alliance && alliance.a === p[0] && alliance.b === p[1];
+  };
+
   FB.alliedRealm = function (state, rid) {
     const a = FB.allianceOf(state, rid);
     return a ? (a.a === rid ? a.b : a.a) : null;
@@ -1768,12 +1826,24 @@ window.FB = window.FB || {};
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
   };
 
-  FB.alliedReinforcement = function (state, defenderId) {
-    const allyId = FB.alliedRealm(state, defenderId);
+  function alliedReinforcement(state, defenderId, readOnly) {
+    const alliance = readOnly ? FB.allianceSnapshot(state, defenderId) : null;
+    const allyId = readOnly
+      ? (alliance
+        ? (alliance.a === defenderId ? alliance.b : alliance.a) : null)
+      : FB.alliedRealm(state, defenderId);
     if (!allyId || FB.isRealmAtWar(state, allyId)) return { ally: null, men: 0 };
     const defenderBase = defenderId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, defenderId);
     const allyBase = allyId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, allyId);
     return { ally: allyId, men: Math.max(0, Math.round(Math.min(allyBase * 0.25, defenderBase * 0.5))) };
+  }
+
+  FB.alliedReinforcement = function (state, defenderId) {
+    return alliedReinforcement(state, defenderId, false);
+  };
+
+  FB.alliedReinforcementSnapshot = function (state, defenderId) {
+    return alliedReinforcement(state, defenderId, true);
   };
 
   FB.realmDefensiveStrength = function (state, rid) {

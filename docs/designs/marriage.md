@@ -141,6 +141,26 @@ lists the recommendation first but preserves all manual choices, and only
 Related: [characters.md](characters.md) for the rest of the character lifecycle,
 [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for the plot system.
 
+**Marriage actions are presented by the character interaction card but remain
+marriage mechanics.** `FB.courtshipStatus` is the explanatory form of the
+authoritative `FB.canCourt` gate, and `FB.proposalStatus` adds the active-suit
+and Standing-threshold requirements used by `FB.canPropose`. The card shows
+travel cost and days before a remote courtship, the one personal-attention
+assignment and any abandoned-suit consequence, then routes to the existing
+visit, proposal event, breakoff, divorce, annulment, or arranged-match flow.
+Rendering never begins a courtship, materializes a royal child, or alters a
+marriage. `FB.spouseSnapshot`, `FB.canWedSnapshot`, and
+`FB.royalCloseKinSnapshot` let the explanatory gate inspect an old or partial
+save without performing spouse cleanup or succession repair; the explicit
+courtship action performs those compatibility repairs before revalidating.
+
+Royal children remain compact succession members until the player chooses the
+realm card's courtship route. That route materializes the selected child and
+then uses the ordinary courtship and travel gates. A materialized reigning
+spouse links between personal and political sheets; the political side retains
+succession and ruler gifts while the personal side retains marriage and
+residence choices.
+
 **Occupational marriage backgrounds are real state.** The station-flavored match
 epithets seed a compatible career on the candidate. In particular, a
 Guildmaster's son or daughter carries `background.guildmasterFamily`; marriage sponsors

@@ -160,6 +160,32 @@ window.FB = window.FB || {};
     return realm && realm.alive ? realm : null;
   };
 
+  FB.religiousHeadSnapshot = function (state, religionId) {
+    const rel = FBDATA.religions[religionId];
+    const heads = state && state.religiousHeads;
+    if (!state || !rel || !rel.head) return null;
+    const saved = !!(heads && typeof heads === 'object' &&
+      !Array.isArray(heads) &&
+      Object.prototype.hasOwnProperty.call(heads, religionId));
+    let rid = saved ? heads[religionId] :
+      bookmarkReligiousHead(state, religionId);
+    if (rid === null) return null;
+    let realm = state.realms && state.realms[rid];
+    if ((!realm || !realm.alive) && saved) {
+      const bookmarkDefault = bookmarkReligiousHead(state, religionId);
+      const vacancies = state.religiousHeadVacancies;
+      if (!realm && rid === rel.head.realm && bookmarkDefault &&
+          bookmarkDefault !== rid && state.realms &&
+          state.realms[bookmarkDefault] &&
+          state.realms[bookmarkDefault].alive &&
+          !(vacancies && vacancies[religionId])) {
+        rid = bookmarkDefault;
+        realm = state.realms[rid];
+      }
+    }
+    return realm && realm.alive ? realm : null;
+  };
+
   FB.religionsHeadedBy = function (state, realmId) {
     const out = [];
     if (!state || !realmId) return out;
@@ -412,11 +438,26 @@ window.FB = window.FB || {};
     return agg;
   };
 
+  function baseSkill(c, key) {
+    if (!c) return 0;
+    const skills = c.skills || {};
+    return (skills[key] || 0) + (FB.traitAgg(c)[key] || 0);
+  }
+
   FB.skillOf = function (c, key) {
-    let v = (c.skills[key] || 0) + (FB.traitAgg(c)[key] || 0);
+    let v = baseSkill(c, key);
     // Equipped household gear sharpens its wearer (FB.itemBonus loads later).
-    if (FB.state && FB.itemBonus && FB.state.chars &&
+    if (c && FB.state && FB.itemBonus && FB.state.chars &&
       FB.state.chars[c.id] === c) v += FB.itemBonus(FB.state, key, c.id);
+    return Math.max(0, v);
+  };
+
+  FB.skillSnapshot = function (state, c, key) {
+    let v = baseSkill(c, key);
+    if (state && c && FB.itemBonusReadOnly && state.chars &&
+        state.chars[c.id] === c) {
+      v += FB.itemBonusReadOnly(state, key, c.id);
+    }
     return Math.max(0, v);
   };
 

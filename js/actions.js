@@ -2005,8 +2005,8 @@ window.FB = window.FB || {};
     }
     if (target.kind === 'realm') {
       if (target.id === 'player') return 0;
-      if (FB.syncRealmRulerStanding) {
-        return FB.syncRealmRulerStanding(state, target.id);
+      if (FB.realmRulerStandingSnapshot) {
+        return FB.realmRulerStandingSnapshot(state, target.id);
       }
       const p = state.player;
       if (target.id === p.liege) return p.liegeOp || 0;
@@ -2157,14 +2157,53 @@ window.FB = window.FB || {};
     return value === undefined ? 15 : value;
   };
 
+  FB.rulerGiftStatus = function (state, rid) {
+    const realm = state.realms && state.realms[rid];
+    const cost = realm ? FB.rulerCashGiftCost(state, rid) : 0;
+    const days = realm && FB.rulerGiftDaysRemainingSnapshot
+      ? FB.rulerGiftDaysRemainingSnapshot(state, rid) : 0;
+    const delivery = realm && FB.giftDeliveryPreview
+      ? FB.giftDeliveryPreview(state, 'ruler', rid, {
+        readOnly:true
+      }) : null;
+    const status = {
+      ready:false,
+      realmId:rid,
+      cost:cost,
+      standing:FB.rulerCashGiftOpinion(),
+      cooldownDays:FB.socialGiftCooldownDays
+        ? FB.socialGiftCooldownDays() : 90,
+      daysRemaining:days,
+      delivery:delivery,
+      reason:''
+    };
+    if (!realm || !realm.alive || !realm.ruler || rid === 'player') {
+      status.reason = FB.T('That ruler cannot receive a gift.');
+    } else if (delivery && delivery.pending) {
+      status.reason = FB.T(
+        'A gift courier is already traveling for this ruler.');
+    } else if (days) {
+      status.reason = FB.T('Ready in {days} days.', { days:days });
+    } else if (delivery && delivery.foreign && !delivery.eligible) {
+      status.reason = delivery.reason;
+    } else if (state.player.gold < cost) {
+      status.reason = FB.T(
+        'Rank price: {money:cost}; you have {money:current}.', {
+          cost:cost,
+          current:Math.floor(state.player.gold)
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
+  };
+
   FB.giveRulerCashGift = function (state, rid) {
     const p = state.player;
     const r = rid && state.realms[rid];
-    const cost = r ? FB.rulerCashGiftCost(state, rid) : 0;
-    if (!r || !r.alive || !r.ruler || rid === 'player' || p.gold < cost ||
-      (FB.rulerGiftReady && !FB.rulerGiftReady(state, rid)) ||
-      (FB.giftDeliveryPending &&
-        FB.giftDeliveryPending(state, 'ruler', rid))) return false;
+    const status = FB.rulerGiftStatus(state, rid);
+    const cost = status.cost;
+    if (!r || !status.ready) return false;
     const boost = FB.rulerCashGiftOpinion();
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'ruler', rid);
@@ -2572,6 +2611,12 @@ window.FB = window.FB || {};
     return state.player.foreignPolicy = state.player.foreignPolicy || {};
   };
 
+  function foreignPolicyRead(state) {
+    const policy = state && state.player && state.player.foreignPolicy;
+    return policy && typeof policy === 'object' && !Array.isArray(policy)
+      ? policy : {};
+  }
+
   /* Alive sovereign neighbors of the independent player's realm. War and
      pacts deliberately do not remove a court from this list: war suspends an
      assignment, while a pact is only the hard guarantee of peace. */
@@ -2594,7 +2639,7 @@ window.FB = window.FB || {};
   /* Stable id order makes malformed/modded over-capacity saves deterministic.
      The UI prevents over-assignment, but only the first capacity entries tick. */
   FB.foreignPolicyAssignments = function (state) {
-    const policy = FB.foreignPolicyStore(state);
+    const policy = foreignPolicyRead(state);
     const valid = {};
     for (const rid of FB.foreignPolicyTargets(state)) valid[rid] = 1;
     const assigned = [];
@@ -2611,7 +2656,43 @@ window.FB = window.FB || {};
 
   FB.foreignPolicyStance = function (state, rid) {
     if (FB.foreignPolicyAssignments(state).indexOf(rid) < 0) return 0;
-    return FB.foreignPolicyStore(state)[rid];
+    return foreignPolicyRead(state)[rid];
+  };
+
+  FB.foreignPolicyTargetStatus = function (state, rid) {
+    const capacity = FB.politicalAttentionCapacity(state);
+    const assignments = FB.foreignPolicyAssignments(state);
+    const stance = FB.foreignPolicyStance(state, rid);
+    const status = {
+      relevant:false,
+      ready:false,
+      realmId:rid,
+      capacity:capacity,
+      used:assignments.length,
+      stance:stance,
+      amount:FB.foreignPolicyAmount(state),
+      reason:''
+    };
+    if (!capacity) {
+      status.reason = FB.T(
+        'Political attention requires an independent county or greater realm.');
+      return status;
+    }
+    if (!FB.isForeignPolicyTarget(state, rid)) {
+      status.reason = FB.T(
+        'This is not a neighboring sovereign court within political reach.');
+      return status;
+    }
+    status.relevant = true;
+    if (!stance && assignments.length >= capacity) {
+      status.reason = FB.T(
+        'All {capacity} political-attention assignments are in use. Set another court to Neutral first.', {
+          capacity:capacity
+        });
+      return status;
+    }
+    status.ready = true;
+    return status;
   };
 
   FB.setForeignPolicy = function (state, rid, stance) {
@@ -2631,8 +2712,11 @@ window.FB = window.FB || {};
 
   FB.foreignPolicyAmount = function (state) {
     const B = FBDATA.balance;
+    const c = state.chars[state.player.charId];
+    const diplomacy = FB.skillSnapshot
+      ? FB.skillSnapshot(state, c, 'dip') : FB.skillOf(c, 'dip');
     return B.foreignPolicyBase + Math.min(B.foreignPolicyDipCap,
-      FB.skillOf(state.chars[state.player.charId], 'dip') / 20);
+      diplomacy / 20);
   };
 
   FB.tickForeignPolicy = function (state) {
@@ -2669,9 +2753,54 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.envoyStatus = function (state, rid) {
+    const realm = state.realms && state.realms[rid];
+    const status = {
+      relevant:false,
+      ready:false,
+      realmId:rid,
+      cost:10,
+      durationDays:8 * 90,
+      chance:0,
+      reason:''
+    };
+    if (!FB.isPlayerSovereign(state)) {
+      status.reason = FB.T('Only a sovereign may offer a foreign peace pact.');
+      return status;
+    }
+    if (!realm || !realm.alive || rid === 'player' || realm.liege) {
+      status.reason = FB.T('A peace envoy must address a living sovereign court.');
+      return status;
+    }
+    if (!FB.realmsAdjacent(state, 'player', rid)) {
+      status.reason = FB.T('Only a neighboring sovereign court lies within envoy reach.');
+      return status;
+    }
+    status.relevant = true;
+    status.chance = FB.envoyChance(state, rid);
+    if (state.player.war && state.player.war.enemy === rid) {
+      status.reason = FB.T('You are already at war with this realm.');
+    } else if (state.pacts && state.pacts[rid] > state.turn) {
+      status.reason = FB.T('A peace pact with this realm is already active.');
+    } else if (FB.areAlliedSnapshot(state, 'player', rid)) {
+      status.reason = FB.T('Your defensive alliance already forbids mutual attack.');
+    } else if (state.player.gold < status.cost) {
+      status.reason = FB.T(
+        'An envoy requires {money:cost} in gifts; you have {money:current}.', {
+          cost:status.cost,
+          current:Math.floor(state.player.gold)
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
+  };
+
   FB.envoyChance = function (state, rid) {
     const p = state.player, m = state.chars[p.charId], B = FBDATA.balance;
-    let chance = 0.35 + FB.skillOf(m, 'dip') * 0.035 + p.prestige / 600 +
+    const diplomacy = FB.skillSnapshot
+      ? FB.skillSnapshot(state, m, 'dip') : FB.skillOf(m, 'dip');
+    let chance = 0.35 + diplomacy * 0.035 + p.prestige / 600 +
       FB.standingOf(state, { kind:'realm', id:rid }) /
         B.foreignOpinionEnvoyDivisor;
     if (FB.playerExcommunicated && FB.playerExcommunicated(state) &&
@@ -2682,8 +2811,9 @@ window.FB = window.FB || {};
   FB.sendEnvoy = function (state, rid) {
     const p = state.player;
     const r = state.realms[rid];
-    if (!r || !r.alive || p.gold < 10) return;
-    p.gold -= 10;
+    const status = FB.envoyStatus(state, rid);
+    if (!r || !status.ready) return false;
+    p.gold -= status.cost;
     if (FB.chance(FB.envoyChance(state, rid))) {
       state.pacts = state.pacts || {};
       state.pacts[rid] = state.turn + 8 * 90; // two years of peace
@@ -2694,6 +2824,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.action.envoy_failure',
         '🕊 The envoy returns, gifts refused. {realm} is unmoved.', { realm: r.name }));
     }
+    return true;
   };
 
   FB.allianceOfferTargets = function (state) {
@@ -2711,9 +2842,67 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.allianceOfferStatus = function (state, rid) {
+    const mine = state.realms && state.realms.player;
+    const realm = state.realms && state.realms[rid];
+    const standing = realm
+      ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+    const status = {
+      relevant:false,
+      ready:false,
+      realmId:rid,
+      cost:25,
+      standing:standing,
+      standingRequired:60,
+      chance:0,
+      reason:''
+    };
+    if (!FB.isPlayerSovereign(state) || !mine || mine.rank < 3) {
+      status.reason = FB.T(
+        'Only an independent king or emperor may offer a defensive alliance.');
+      return status;
+    }
+    if (!realm || !realm.alive || rid === 'player' || realm.liege ||
+        realm.rank < 3) {
+      status.reason = FB.T(
+        'A defensive alliance requires another sovereign king or emperor.');
+      return status;
+    }
+    if (!FB.realmsAdjacent(state, 'player', rid)) {
+      status.reason = FB.T(
+        'A defensive alliance may be offered only to an adjacent sovereign.');
+      return status;
+    }
+    status.relevant = true;
+    status.chance = FB.envoyChance(state, rid);
+    if (FB.allianceSnapshot(state, 'player')) {
+      status.reason = FB.T('Your realm already has one defensive ally.');
+    } else if (FB.allianceSnapshot(state, rid)) {
+      status.reason = FB.T('This realm already has one defensive ally.');
+    } else if (realm.war || FB.isRealmAtWar(state, rid)) {
+      status.reason = FB.T('This realm is already at war.');
+    } else if (standing < status.standingRequired) {
+      status.reason = FB.T(
+        'Requires {needed} Standing; currently {current}.', {
+          needed:status.standingRequired,
+          current:Math.round(standing)
+        });
+    } else if (state.player.gold < status.cost) {
+      status.reason = FB.T(
+        'An alliance envoy requires {money:cost}; you have {money:current}.', {
+          cost:status.cost,
+          current:Math.floor(state.player.gold)
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
+  };
+
   FB.offerAlliance = function (state, rid) {
-    if (FB.allianceOfferTargets(state).indexOf(rid) < 0 || state.player.gold < 25) return false;
-    state.player.gold -= 25;
+    const status = FB.allianceOfferStatus(state, rid);
+    if (!status.ready) return false;
+    state.player.gold -= status.cost;
     const r = state.realms[rid];
     if (FB.chance(FB.envoyChance(state, rid)) && FB.formAlliance(state, 'player', rid, 'envoy')) {
       FB.news(state, FB.msg('news.action.alliance_success',
@@ -2723,7 +2912,10 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.action.alliance_failure',
       '🕊 {realm} receives the gifts but refuses the defensive compact.', { realm: r.name }));
-    return false;
+    /* The action was valid and its envoy/gifts were spent even though the
+       diplomatic proposal failed. Callers use this result to distinguish an
+       executed attempt from a stale or blocked click. */
+    return true;
   };
 
   FB.maybeRoyalMarriageAlliance = function (state, royalRealmId) {
@@ -3184,10 +3376,13 @@ window.FB = window.FB || {};
     return null;
   }
 
-  FB.fabricatedClaimOf = function (state) {
+  function fabricatedClaimRecord(state, repair) {
     const p = state.player;
     let claim = p.fabricatedClaim;
-    if (typeof claim === 'string') claim = p.fabricatedClaim = { pid: claim };
+    if (typeof claim === 'string') {
+      claim = { pid:claim };
+      if (repair) p.fabricatedClaim = claim;
+    }
     if (!claim) return null;
     const pr = FB.world.byId[claim.pid];
     const owner = state.owner[claim.pid];
@@ -3199,10 +3394,14 @@ window.FB = window.FB || {};
         (state.holder && state.holder[claim.pid] === 'player') ||
         !owner || owner === 'player' || (landedRealm && owner === mySovereign) ||
         !state.realms[owner] || !state.realms[owner].alive) {
-      p.fabricatedClaim = null;
+      if (repair) p.fabricatedClaim = null;
       return null;
     }
     return claim;
+  }
+
+  FB.fabricatedClaimOf = function (state) {
+    return fabricatedClaimRecord(state, true);
   };
 
   /* The one religious succession war: a sovereign Sunni king or emperor may
@@ -3216,9 +3415,11 @@ window.FB = window.FB || {};
       FB.isPlayerSovereign(state));
   };
 
-  FB.caliphateWarCause = function (state) {
+  FB.caliphateWarCause = function (state, readOnly) {
     if (!adult(state) || !FB.caliphateWarClaimantEligible(state)) return null;
-    const head = FB.religiousHeadOf(state, 'sunni');
+    const head = readOnly && FB.religiousHeadSnapshot
+      ? FB.religiousHeadSnapshot(state, 'sunni')
+      : FB.religiousHeadOf(state, 'sunni');
     if (!head) return null;
     const enemy = FB.topRealm(state, head.id);
     if (!enemy || enemy === 'player' || enemy === FB.playerRealmId(state)) return null;
@@ -3227,25 +3428,27 @@ window.FB = window.FB || {};
     return { type: 'caliphate', enemy: enemy, target: enemyRealm.capital };
   };
 
-  function diplomacyBlocksWar(state, enemy) {
+  function diplomacyBlocksWar(state, enemy, readOnly) {
     if (FB.isRealmAtWar(state, enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
-    if (FB.areAllied(state, 'player', enemy)) return 'alliance';
+    if ((readOnly && FB.areAlliedSnapshot
+      ? FB.areAlliedSnapshot(state, 'player', enemy)
+      : FB.areAllied(state, 'player', enemy))) return 'alliance';
     return null;
   }
 
-  function annotateReligiousWarCause(state, cause) {
+  function annotateReligiousWarCause(state, cause, readOnly) {
     const c = state.chars[state.player.charId];
     if (!c || !cause || !FB.sameFaithHeadWarPolicy) return cause;
     cause.sameFaithHeadWar = FB.sameFaithHeadWarPolicy(
-      state, c.religion, cause.enemy, cause.target);
+      state, c.religion, cause.enemy, cause.target, readOnly);
     cause.sacrilegious = cause.sameFaithHeadWar === 'sacrilege';
     return cause;
   }
 
   /* Semantic causes are the authoritative declaration surface. Passing true
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
-  FB.warCauses = function (state, includeBlocked) {
+  FB.warCauses = function (state, includeBlocked, readOnly) {
     const p = state.player, out = [], seen = {};
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return out;
     const playerRealm = FB.playerRealmId(state);
@@ -3255,9 +3458,9 @@ window.FB = window.FB || {};
     if (restoration) {
       const rr = state.realms[restoration.realmId];
       if (!rr || !rr.alive || !rr.capital) {
-        delete me.restorationRight;
+        if (!readOnly) delete me.restorationRight;
       } else {
-        const blocked = diplomacyBlocksWar(state, rr.id);
+        const blocked = diplomacyBlocksWar(state, rr.id, readOnly);
         if (!blocked || includeBlocked) {
           out.push(annotateReligiousWarCause(state, {
             type: 'restoration',
@@ -3265,23 +3468,23 @@ window.FB = window.FB || {};
             enemy: rr.id,
             titleName: restoration.titleName || rr.name,
             blocked: blocked
-          }));
+          }, readOnly));
         }
       }
     }
-    const caliphate = FB.caliphateWarCause(state);
+    const caliphate = FB.caliphateWarCause(state, readOnly);
     if (caliphate) {
-      const blocked = diplomacyBlocksWar(state, caliphate.enemy);
+      const blocked = diplomacyBlocksWar(state, caliphate.enemy, readOnly);
       if (!blocked || includeBlocked) {
         caliphate.blocked = blocked;
-        out.push(annotateReligiousWarCause(state, caliphate));
+        out.push(annotateReligiousWarCause(state, caliphate, readOnly));
       }
     }
     const mine = playerBorderLands(state);
     if (!mine.length || p.tier < 4) return out;
     const mySovereign = FB.playerRealmId(state);
     const titles = heldTitleSets(state);
-    const claim = FB.fabricatedClaimOf(state);
+    const claim = fabricatedClaimRecord(state, !readOnly);
     for (const pid of mine) {
       for (const nb in (FB.world.adj[pid] || {})) {
         if (seen[nb]) continue;
@@ -3291,13 +3494,32 @@ window.FB = window.FB || {};
         if (!cause && claim && claim.pid === nb) cause = { type: 'fabricated', target: nb };
         if (!cause) continue;
         cause.enemy = enemy;
-        cause.blocked = diplomacyBlocksWar(state, enemy);
-        annotateReligiousWarCause(state, cause);
+        cause.blocked = diplomacyBlocksWar(state, enemy, readOnly);
+        annotateReligiousWarCause(state, cause, readOnly);
         seen[nb] = 1;
         if (!cause.blocked || includeBlocked) out.push(cause);
       }
     }
     return out;
+  };
+
+  FB.realmWarCauses = function (state, rid, includeBlocked) {
+    return FB.warCauses(state, includeBlocked, true).filter(function (cause) {
+      return cause.enemy === rid ||
+        (!cause.enemy && state.owner[cause.target] === rid);
+    });
+  };
+
+  FB.warCauseBlockedReason = function (cause) {
+    if (!cause || !cause.blocked) return '';
+    if (cause.blocked === 'war') return FB.T('At war with another realm.');
+    if (cause.blocked === 'alliance') {
+      return FB.T('Your defensive alliance forbids an attack on this realm.');
+    }
+    if (cause.blocked === 'pact') {
+      return FB.T('A sworn peace pact protects this realm.');
+    }
+    return FB.T('This cause cannot be pressed now.');
   };
 
   FB.warTargets = function (state) {
@@ -3478,7 +3700,8 @@ window.FB = window.FB || {};
     const shown = !!action.show(state);
     let can = shown, reason = '';
     if (shown && action.cd !== undefined) {
-      const last = state.player.cooldowns[action.id];
+      const cooldowns = state.player.cooldowns || {};
+      const last = cooldowns[action.id];
       if (last !== undefined && state.turn - last < action.cd) {
         can = false;
         reason = FB.T('Ready in {days} days.', {
@@ -3605,7 +3828,10 @@ window.FB = window.FB || {};
     if (!status.shown || !status.can) return;
     const a = status.action;
     if (a) {
-      if (a.cd !== undefined) state.player.cooldowns[id] = state.turn;
+      if (a.cd !== undefined) {
+        state.player.cooldowns = state.player.cooldowns || {};
+        state.player.cooldowns[id] = state.turn;
+      }
       a.run(state);
       if (a.noConsume) { if (FB.ui && FB.ui.refresh) FB.ui.refresh(); }
       else if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus: true });

@@ -153,6 +153,67 @@ window.FB = window.FB || {};
     return routeFromSearch(routeSearch(fromPid, toPid), toPid);
   };
 
+  function travelTechRequirementSnapshot(state, requirement) {
+    const required = requirement === undefined || requirement === null ||
+      requirement === '' ? [] :
+      (Array.isArray(requirement) ? requirement : [requirement]);
+    if (!required.length) return true;
+    const rid = FB.techRealmId ? FB.techRealmId(state) : 'player';
+    const record = state.realmTech && state.realmTech[rid];
+    const completed = record && Array.isArray(record.completed)
+      ? record.completed : [];
+    const legacy = Array.isArray(state.tech) ? state.tech : [];
+    for (let i = 0; i < required.length; i++) {
+      if (completed.indexOf(required[i]) < 0 &&
+          legacy.indexOf(required[i]) < 0) return false;
+    }
+    return true;
+  }
+
+  /* Interaction cards need exact travel estimates without normalizing old
+     saves. Only Transport can affect travel, so inspect its already-saved
+     level and technology record directly instead of invoking the mutating
+     household-standard and technology accessors. */
+  function travelStandardEffectsSnapshot(state) {
+    const out = { travelCost:1, travelLegDays:null };
+    const p = state && state.player;
+    const def = FBDATA.householdStandards &&
+      FBDATA.householdStandards.transport;
+    const standards = p && p.householdStandards;
+    if (!p || p.tier > 2 || !def || !standards ||
+        typeof standards !== 'object' || Array.isArray(standards) ||
+        !Array.isArray(def.levels)) return out;
+    let level = Number(standards.transport);
+    if (!isFinite(level)) return out;
+    level = Math.max(0, Math.min(def.levels.length, Math.floor(level)));
+    const current = level ? def.levels[level - 1] : null;
+    if (!current ||
+        !travelTechRequirementSnapshot(state, current.requiresTech)) return out;
+    const fx = current.fx || {};
+    if (fx.travelCost !== undefined && isFinite(Number(fx.travelCost))) {
+      out.travelCost = Number(fx.travelCost);
+    }
+    if (fx.travelLegDays !== undefined &&
+        isFinite(Number(fx.travelLegDays))) {
+      out.travelLegDays = Number(fx.travelLegDays);
+    }
+    return out;
+  }
+
+  FB.travelLegDaysSnapshot = function (state) {
+    let days = Math.max(1, balance('travelLegDays', 3));
+    if (state) {
+      const modified = travelStandardEffectsSnapshot(state).travelLegDays;
+      if (modified !== null && modified !== undefined) {
+        days = Math.max(1, modified);
+      }
+    }
+    const traveler = state && state.chars && state.player
+      ? state.chars[state.player.charId] : null;
+    if (FB.traitBonus) days += FB.traitBonus(traveler, 'travel', 'legDays');
+    return Math.max(1, days);
+  };
+
   FB.travelLegDays = function (state) {
     let days = Math.max(1, balance('travelLegDays', 3));
     if (state && FB.householdStandardEffects) {
@@ -171,6 +232,15 @@ window.FB = window.FB || {};
     const base = Math.ceil(2 + legs * 2 * 0.25);
     const mult = state && FB.householdStandardEffects
       ? FB.householdStandardEffects(state).travelCost : 1;
+    return Math.ceil(base * mult);
+  };
+
+  FB.travelCostSnapshot = function (purposeId, routeOrLegs, state) {
+    const def = purpose(purposeId);
+    const legs = typeof routeOrLegs === 'number'
+      ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
+    const base = Math.ceil(2 + legs * 2 * 0.25) + ((def && def.cost) || 0);
+    const mult = state ? travelStandardEffectsSnapshot(state).travelCost : 1;
     return Math.ceil(base * mult);
   };
 
@@ -269,12 +339,29 @@ window.FB = window.FB || {};
     return kept;
   };
 
-  FB.giftDeliveryPending = function (state, kind, id) {
+  function giftDeliverySnapshot(state) {
+    const source = state && state.player && state.player.giftDeliveries;
+    if (!Array.isArray(source)) return [];
+    return source.filter(function (d) {
+      return !!(d && (d.recipientKind === 'ruler' ||
+        d.recipientKind === 'character') &&
+        (d.giftKind === 'cash' || d.giftKind === 'item') &&
+        (d.phase === 'outbound' || d.phase === 'return') &&
+        typeof d.recipientId === 'string' &&
+        typeof d.currentId === 'string' &&
+        Array.isArray(d.remainingRoute));
+    });
+  }
+
+  FB.giftDeliveryPending = function (state, kind, id, options) {
+    options = options || {};
     const normalized = deliveryRecipientKind(state, kind, id);
-    const deliveries = FB.giftDeliveryEnsure(state);
-    const currentRuler = normalized.kind === 'ruler' &&
-      FB.realmRulerCharacter
-      ? FB.realmRulerCharacter(state, normalized.id) : null;
+    const deliveries = options.readOnly
+      ? giftDeliverySnapshot(state) : FB.giftDeliveryEnsure(state);
+    const rulerLookup = options.readOnly
+      ? FB.realmRulerCharacterSnapshot : FB.realmRulerCharacter;
+    const currentRuler = normalized.kind === 'ruler' && rulerLookup
+      ? rulerLookup(state, normalized.id) : null;
     const realm = normalized.kind === 'ruler' &&
       state.realms && state.realms[normalized.id];
     const generation = realm && realm.ruler &&
@@ -293,9 +380,9 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.giftDeliveryPreview = function (state, kind, id) {
+  FB.giftDeliveryPreview = function (state, kind, id, options) {
     const recipient = giftRecipientData(state, kind, id);
-    const pending = FB.giftDeliveryPending(state, kind, id);
+    const pending = FB.giftDeliveryPending(state, kind, id, options);
     const out = {
       eligible:false,
       pending:pending,
@@ -336,7 +423,8 @@ window.FB = window.FB || {};
       out.reason = FB.T('No settled overland courier route reaches the recipient.');
       return out;
     }
-    const legDays = FB.travelLegDays(state);
+    const legDays = options && options.readOnly
+      ? FB.travelLegDaysSnapshot(state) : FB.travelLegDays(state);
     out.eligible = true;
     out.route = route || [];
     out.legs = out.route.length;
@@ -650,12 +738,12 @@ window.FB = window.FB || {};
     return state.player.tier >= range.min && state.player.tier <= range.max;
   }
 
-  FB.travelEligible = function (state, purposeId) {
+  FB.travelEligible = function (state, purposeId, options) {
     const p = state.player;
     const c = me(state);
     const def = purposeId === undefined ? null :
       (typeof purposeId === 'string' ? purpose(purposeId) : purposeId);
-    FB.travelEnsure(state);
+    if (!(options && options.readOnly)) FB.travelEnsure(state);
     if (p.travel) return FB.T('Already on the road.');
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can take to the road.');
@@ -911,7 +999,7 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.socialVisitPreview = function (state, c) {
+  FB.socialVisitPreview = function (state, c, options) {
     const out = {
       eligible:false,
       characterId:c && c.id || null,
@@ -921,7 +1009,7 @@ window.FB = window.FB || {};
       out.reason = FB.T('That character cannot receive a visit.');
       return out;
     }
-    const eligible = FB.travelEligible(state, 'relationship');
+    const eligible = FB.travelEligible(state, 'relationship', options);
     if (eligible !== true) {
       out.reason = eligible;
       return out;
@@ -943,7 +1031,9 @@ window.FB = window.FB || {};
       out.reason = FB.T('No settled overland route reaches their county.');
       return out;
     }
-    const legDays = FB.travelLegDays(state);
+    const readOnly = options && options.readOnly;
+    const legDays = readOnly
+      ? FB.travelLegDaysSnapshot(state) : FB.travelLegDays(state);
     const activeDays = FB.socialAttentionDaysToThreshold ?
       FB.socialAttentionDaysToThreshold(state, c) : null;
     out.eligible = true;
@@ -952,7 +1042,9 @@ window.FB = window.FB || {};
     out.legs = route.length;
     out.legDays = legDays;
     out.days = route.length * legDays;
-    out.cost = FB.travelCost('relationship', route, state);
+    out.cost = readOnly
+      ? FB.travelCostSnapshot('relationship', route, state)
+      : FB.travelCost('relationship', route, state);
     out.minimumStay = balance('travelMinStayDays', 90);
     out.dailyRate = FB.socialAttentionDailyOpinion ?
       FB.socialAttentionDailyOpinion() : 0;

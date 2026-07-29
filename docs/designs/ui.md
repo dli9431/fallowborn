@@ -517,6 +517,41 @@ shows remain protected.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 
+## Character and realm interaction cards
+
+One target now has one detail-and-action surface. Character rows open the
+personal sheet; realm and political-ruler rows open the realm sheet. Both use
+the shared interaction-card renderer and the fixed group order: current
+commitments, relationship/attention, gifts, travel, diplomacy, feudal actions,
+hostility/war, then focused management. Empty groups disappear, while a
+progression-relevant blocked action remains visible with its authoritative
+reason.
+
+Card builders are read-only derived projections. They may call status and
+preview adapters but never assign attention, spend resources or days,
+materialize a character, start travel, send an envoy, or declare war.
+`interactionActionRow` renders every action as a native button with a stable
+semantic id and accessible name. Detail text states exact cost, duration,
+Standing effect, cooldown, and replacement consequence supplied by the owning
+system. Clicking routes to the existing action or confirmation, which
+revalidates its own gate.
+
+A materialized reigning ruler keeps two deliberately separate sheets. The realm
+sheet owns office, realm faith, capital, succession, courier gifts, diplomacy,
+feudal dealings, and war. The character sheet owns personal traits,
+courtship, rivalry, and household dealings. Typed Standing resolves to the
+same value on both. Reciprocal **Personal character** and **Realm and court**
+links preserve the distinction, and the personal sheet omits a duplicate gift
+action.
+
+Modal return context records only the originating view, not simulation state.
+Governance, Council, Estates, and card-to-card routes reconstruct the exact
+source on Back; Network, Land, and Deeds remain beneath an ordinary overlay
+and are revealed by Close. Focused gift, visit, foreign-policy, envoy,
+alliance, and war sheets participate in that same history contract. Both card
+types use the full-sheet mobile layout, sticky footer, focus containment,
+number-key action behavior, and expansion-safe text wrapping.
+
 ## Great holy-war presentation
 
 An active call adds a compact Deeds summary and a focusable campaign action. The

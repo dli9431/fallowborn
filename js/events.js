@@ -162,10 +162,37 @@ window.FB = window.FB || {};
     };
   };
 
+  FB.socialAttentionStatus = function (state, c, opts) {
+    opts = opts || {};
+    const attention = state.player.socialAttention;
+    const assigned = !!(attention && typeof attention === 'object' &&
+      !Array.isArray(attention) && c && attention[c.id]);
+    const status = {
+      ready:false,
+      assigned:assigned,
+      characterId:c && c.id || null,
+      capacity:FB.socialAttentionCapacity(),
+      rate:FB.socialAttentionDailyOpinion(),
+      reason:''
+    };
+    if (!c || c.dead || c.id === state.player.charId) {
+      status.reason = FB.T('That person cannot receive personal attention.');
+    } else if (!status.capacity) {
+      status.reason = FB.T('No personal-attention assignment is available.');
+    } else if (state.player.courtingId &&
+        state.player.courtingId !== c.id && !opts.courtship) {
+      status.reason = FB.T(
+        'End your current courtship before cultivating someone else.');
+    } else {
+      status.ready = true;
+    }
+    return status;
+  };
+
   FB.socialAttentionAssign = function (state, c, opts) {
     opts = opts || {};
     const p = state.player;
-    if (!c || c.dead || c.id === p.charId || !FB.socialAttentionCapacity()) return false;
+    if (!FB.socialAttentionStatus(state, c, opts).ready) return false;
     const attention = FB.socialAttentionEnsure(state);
     if (p.courtingId && p.courtingId !== c.id && !opts.courtship) return false;
     if (attention[c.id]) {
@@ -244,6 +271,14 @@ window.FB = window.FB || {};
     return Math.max(0, FB.socialGiftCooldownDays() - (state.turn - turns[cid]));
   };
 
+  FB.socialGiftDaysRemainingSnapshot = function (state, cid) {
+    const turns = state && state.player && state.player.socialGiftTurns;
+    const turn = turns && typeof turns === 'object' &&
+      !Array.isArray(turns) ? turns[cid] : undefined;
+    if (!isFinite(turn)) return 0;
+    return Math.max(0, FB.socialGiftCooldownDays() - (state.turn - turn));
+  };
+
   FB.socialGiftReady = function (state, cid) {
     return FB.socialGiftDaysRemaining(state, cid) <= 0;
   };
@@ -277,8 +312,64 @@ window.FB = window.FB || {};
     return Math.max(0, FB.socialGiftCooldownDays() - (state.turn - entry.turn));
   };
 
+  FB.rulerGiftDaysRemainingSnapshot = function (state, rid) {
+    const turns = state && state.player && state.player.realmGiftTurns;
+    const entry = turns && typeof turns === 'object' &&
+      !Array.isArray(turns) ? turns[rid] : null;
+    const realm = state && state.realms && state.realms[rid];
+    const generation = realm && realm.ruler &&
+      (realm.ruler.generation === undefined ? 1 : realm.ruler.generation);
+    if (!realm || !realm.alive || !realm.ruler || rid === 'player' ||
+        !entry || typeof entry !== 'object' || !isFinite(entry.turn) ||
+        entry.generation !== generation) return 0;
+    return Math.max(0,
+      FB.socialGiftCooldownDays() - (state.turn - entry.turn));
+  };
+
   FB.rulerGiftReady = function (state, rid) {
     return FB.rulerGiftDaysRemaining(state, rid) <= 0;
+  };
+
+  FB.characterGiftStatus = function (state, cid) {
+    const c = state.chars && state.chars[cid];
+    const cost = 5;
+    const boost = FBDATA.balance.socialCashGiftOpinion === undefined
+      ? 4 : FBDATA.balance.socialCashGiftOpinion;
+    const days = c ? FB.socialGiftDaysRemainingSnapshot(state, cid) : 0;
+    const delivery = c && FB.giftDeliveryPreview
+      ? FB.giftDeliveryPreview(state, 'character', cid, {
+        readOnly:true
+      }) : null;
+    const pending = delivery && delivery.pending;
+    const status = {
+      ready:false,
+      characterId:cid,
+      cost:cost,
+      standing:boost,
+      cooldownDays:FB.socialGiftCooldownDays(),
+      daysRemaining:days,
+      delivery:delivery,
+      reason:''
+    };
+    if (!c || c.dead || c.id === state.player.charId) {
+      status.reason = FB.T('That person cannot receive a gift.');
+    } else if (pending) {
+      status.reason = FB.T(
+        'A gift courier is already traveling for this recipient.');
+    } else if (days) {
+      status.reason = FB.T('Ready in {days} days.', { days:days });
+    } else if (delivery && delivery.foreign && !delivery.eligible) {
+      status.reason = delivery.reason;
+    } else if ((Number(state.player.gold) || 0) < cost) {
+      status.reason = FB.T(
+        'Requires {money:cost}; you have {money:current}.', {
+          cost:cost,
+          current:Math.floor(state.player.gold)
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
   };
 
   FB.noteRulerGift = function (state, rid) {
@@ -299,11 +390,9 @@ window.FB = window.FB || {};
     if (rulerId && FB.giveRulerCashGift) {
       return FB.giveRulerCashGift(state, rulerId);
     }
-    const cost = 5;
-    if (!c || c.dead || c.id === p.charId || p.gold < cost ||
-      !FB.socialGiftReady(state, cid) ||
-      (FB.giftDeliveryPending &&
-        FB.giftDeliveryPending(state, 'character', cid))) return false;
+    const status = FB.characterGiftStatus(state, cid);
+    const cost = status.cost;
+    if (!c || !status.ready) return false;
     const value = FBDATA.balance.socialCashGiftOpinion;
     const boost = value === undefined ? 4 : value;
     const delivery = FB.giftDeliveryPreview &&
@@ -346,11 +435,45 @@ window.FB = window.FB || {};
   };
 
   FB.canNameFriend = function (state, c) {
-    const contacts = FB.friendContacts(state);
+    return FB.friendshipStatus(state, c).ready;
+  };
+
+  FB.friendshipStatus = function (state, c) {
     const threshold = FB.relationshipOpinionThreshold();
-    return !!(friendEligible(state, c) && contacts[c.id] &&
-      characterStanding(state, c) >= threshold &&
-      state.roles.friend !== c.id);
+    const contacts = state.player.friendContacts;
+    const known = !!(contacts && typeof contacts === 'object' &&
+      !Array.isArray(contacts) && c && contacts[c.id]);
+    const standing = c ? characterStanding(state, c) : 0;
+    const currentId = state.roles.friend || null;
+    const status = {
+      relevant:friendEligible(state, c),
+      ready:false,
+      characterId:c && c.id || null,
+      currentId:currentId,
+      known:known,
+      standing:standing,
+      threshold:threshold,
+      reason:''
+    };
+    if (!status.relevant) {
+      status.reason = FB.T('This relationship cannot become a formal friendship.');
+    } else if (currentId === c.id) {
+      status.reason = FB.T('This person is already your named friend.');
+    } else if (!known) {
+      status.reason = FB.T(
+        'Cultivate this relationship, then reach +{threshold} Standing.', {
+          threshold:threshold
+        });
+    } else if (standing < threshold) {
+      status.reason = FB.T(
+        'Requires +{threshold} Standing; currently {standing}.', {
+          threshold:threshold,
+          standing:Math.round(standing * 10) / 10
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
   };
 
   FB.nameFriend = function (state, c) {
@@ -612,6 +735,36 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.spouseSnapshot = function (state, c) {
+    if (!c || !c.spouseId) return null;
+    const spouse = state.chars[c.spouseId];
+    return spouse && !spouse.dead ? spouse : null;
+  };
+
+  FB.spousesSnapshot = function (state, c) {
+    const out = [];
+    if (!c) return out;
+    const first = FB.spouseSnapshot(state, c);
+    if (first) out.push(first);
+    for (const id in state.chars) {
+      const other = state.chars[id];
+      if (!other.dead && other.spouseId === c.id &&
+          (!first || other.id !== first.id)) out.push(other);
+    }
+    return out;
+  };
+
+  FB.canWedSnapshot = function (state) {
+    const player = state.chars[state.player.charId];
+    if (!player) return false;
+    if (FB.papacyCelibateSnapshot &&
+        FB.papacyCelibateSnapshot(state, player)) return false;
+    const spouses = FB.spousesSnapshot(state, player).length;
+    if (spouses === 0) return true;
+    if (player.sex !== 'm') return false;
+    return spouses < FB.marriageDoctrine(player.religion).wives;
+  };
+
   /* May the player take a(nother) spouse? Polygyny only — a man of a faith
      that permits it may hold several wives; everyone else weds one at a time. */
   FB.canWed = function (state) {
@@ -699,6 +852,20 @@ window.FB = window.FB || {};
   FB.beginCourtship = function (state, c, opts) {
     opts = opts || {};
     const p = state.player;
+    const player = state.chars[p.charId];
+    /* Rendering uses the non-mutating compact snapshot in courtshipStatus.
+       An explicit courtship action may perform the legacy stale-compact
+       repair before the authoritative gate is checked. */
+    FB.spousesOf(state, player);
+    if (c) FB.spouseOf(state, c);
+    if (FB.bishopricOf) {
+      FB.bishopricOf(state, player);
+      if (c) FB.bishopricOf(state, c);
+    }
+    if (FB.royalCompactOf) FB.royalCompactOf(state);
+    if (FB.royalCloseKin && player && c) {
+      FB.royalCloseKin(state, player, c);
+    }
     if (!FB.canCourt(state, c, true) || !FB.socialAttentionCapacity()) return false;
     if (!opts.visitDeparture && FB.socialAttentionPresence &&
         FB.socialAttentionPresence(state, c).status !== 'active') return false;
@@ -711,11 +878,90 @@ window.FB = window.FB || {};
     return FB.socialAttentionAssign(state, c, { courtship:true });
   };
 
+  FB.proposalStatus = function (state, c) {
+    const p = state.player;
+    const threshold = FB.relationshipOpinionThreshold();
+    const standing = c ? characterStanding(state, c) : 0;
+    const status = {
+      ready:false,
+      characterId:c && c.id || null,
+      threshold:threshold,
+      standing:standing,
+      reason:''
+    };
+    if (!c || !p.flags.courting || p.courtingId !== c.id) {
+      status.reason = FB.T('Begin a courtship before making a proposal.');
+      return status;
+    }
+    const courtship = FB.courtshipStatus(state, c, true);
+    if (!courtship.ready) {
+      status.reason = courtship.reason;
+      return status;
+    }
+    if (standing < threshold) {
+      status.reason = FB.T(
+        'Requires +{threshold} Standing; currently {standing}.', {
+          threshold:threshold,
+          standing:Math.round(standing * 10) / 10
+        });
+      return status;
+    }
+    status.ready = true;
+    return status;
+  };
+
   FB.canPropose = function (state) {
     const p = state.player;
     const c = p.flags.courting && p.courtingId && state.chars[p.courtingId];
-    return !!(c && FB.canCourt(state, c, true) &&
-      characterStanding(state, c) >= FB.relationshipOpinionThreshold());
+    return !!(c && FB.proposalStatus(state, c).ready);
+  };
+
+  FB.marriageEndStatus = function (state, c) {
+    const me = state.chars[state.player.charId];
+    const spouse = c && me &&
+      (c.spouseId === me.id || me.spouseId === c.id);
+    const doctrine = me ? FB.marriageDoctrine(me.religion) : null;
+    const kind = doctrine && doctrine.divorce
+      ? doctrine.divorce : 'annulment';
+    const cost = spouse && kind !== 'annulment' && kind !== 'sunder'
+      ? (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0)
+      : (kind === 'annulment' ? 15 : 0);
+    const piety = kind === 'annulment' ? 20 : 0;
+    const cooldowns = state.player.cooldowns || {};
+    const last = cooldowns.annul;
+    const cooldownDays = kind === 'annulment' && last !== undefined
+      ? Math.max(0, 360 - (state.turn - last)) : 0;
+    const status = {
+      ready:false,
+      characterId:c && c.id || null,
+      kind:kind,
+      cost:cost,
+      piety:piety,
+      cooldownDays:cooldownDays,
+      reason:''
+    };
+    if (!spouse) {
+      status.reason = FB.T('This person is not your spouse.');
+    } else if (cooldownDays) {
+      status.reason = FB.T('Ready in {days} days.', {
+        days:cooldownDays
+      });
+    } else if ((Number(state.player.gold) || 0) < cost) {
+      status.reason = FB.T(
+        'Requires {money:cost}; you have {money:current}.', {
+          cost:cost,
+          current:Math.floor(state.player.gold)
+        });
+    } else if ((Number(state.player.piety) || 0) < piety) {
+      status.reason = FB.T(
+        'Requires {piety} piety; you have {current}.', {
+          piety:piety,
+          current:Math.floor(state.player.piety)
+        });
+    } else {
+      status.ready = true;
+    }
+    return status;
   };
 
   /* The one true way to kill a character: severs marriage links and roles.
@@ -761,31 +1007,7 @@ window.FB = window.FB || {};
 
   /* Can the player begin courting this character? */
   FB.canCourt = function (state, c, allowCurrent) {
-    const me = state.chars[state.player.charId];
-    if (!c || c.dead || c.id === me.id) return false;
-    if (FB.papacyCelibate &&
-        (FB.papacyCelibate(state, me) || FB.papacyCelibate(state, c))) return false;
-    if (c.royalLine && FB.royalCompactOf(state)) return false;
-    if (FB.royalCloseKin && FB.royalCloseKin(state, me, c)) return false;
-    const y = state.date.year;
-    if (FB.ageOf(me, y) < 16 || FB.ageOf(c, y) < 16) return false;
-    if (c.sex === me.sex) return false;
-    if (!FB.canWed(state) || FB.spouseOf(state, c)) return false;
-    if (c.betrothedId) return false; // pledged to another
-    // actual kin only (dynasty names like "of Ribe" are shared by strangers)
-    if (FB.playerDescendantKind(state, c.id)) return false;
-    if (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) return false;
-    if (me.fatherId && me.fatherId === c.fatherId) return false;
-    if (me.motherId && me.motherId === c.motherId) return false;
-    if (c.role === 'sibling' && c.dyn === me.dyn) return false;
-    // close blood — grandparents, aunts/uncles, nieces/nephews — is out; cousins are fair game
-    const krel = FB.kinOf(state).byId[c.id];
-    if (krel && krel !== 'Cousin') return false;
-    if (state.player.profession === 'monk' && FB.religionOf(me.religion).group !== 'muslim') return false;
-    if (!allowCurrent && state.player.courtingId === c.id) return false;
-    // the great families do not entertain suits from far beneath them
-    if (FB.stationOf(c) - FB.playerStation(state) >= 3) return false;
-    return true;
+    return FB.courtshipStatus(state, c, allowCurrent).ready;
   };
 
   /* Notable folk of a province — the local cast for the player's home,
@@ -794,6 +1016,98 @@ window.FB = window.FB || {};
     const g = FB.religionOf(pr.religion).group;
     return g === 'muslim' ? 'Emir' : g === 'pagan' ? 'Chief' : 'Lord';
   }
+
+  /* Reusable explanation adapter over the authoritative FB.canCourt gate.
+     Sheets and travel reviews consume this instead of reconstructing gates. */
+  FB.courtshipStatus = function (state, c, allowCurrent) {
+    const me = state.chars[state.player.charId];
+    const status = {
+      relevant:true,
+      ready:false,
+      characterId:c && c.id || null,
+      reason:'',
+      code:'unavailable'
+    };
+    function blocked(code, reason, relevant) {
+      status.code = code;
+      status.reason = reason;
+      if (relevant === false) status.relevant = false;
+      return status;
+    }
+    if (!c || c.dead || !me || c.id === me.id) {
+      return blocked('invalid',
+        FB.T('That person is not available for courtship.'), false);
+    }
+    if (FB.papacyCelibateSnapshot &&
+        (FB.papacyCelibateSnapshot(state, me) ||
+          FB.papacyCelibateSnapshot(state, c))) {
+      return blocked('celibate',
+        FB.T('The vows of a Bishop, Cardinal, or Pope forbid marriage.'),
+        false);
+    }
+    const compact = state.player.royalCompact;
+    const compactSpouse = compact && state.chars[compact.charId];
+    const compactValid = compact && compactSpouse && !compactSpouse.dead &&
+      (me.spouseId === compactSpouse.id || compactSpouse.spouseId === me.id);
+    if (c.royalLine && compactValid) {
+      return blocked('royal_compact',
+        FB.T('Your house already has an active royal marriage compact.'));
+    }
+    if (FB.royalCloseKinSnapshot &&
+        FB.royalCloseKinSnapshot(state, me, c)) {
+      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    }
+    const y = state.date.year;
+    if (FB.ageOf(me, y) < 16) {
+      return blocked('player_minor', FB.T('You are not yet of age.'));
+    }
+    if (FB.ageOf(c, y) < 16) {
+      return blocked('target_minor', FB.T('They are not yet of age.'));
+    }
+    if (c.sex === me.sex) {
+      return blocked('same_sex',
+        FB.T('The marriage doctrine of this era does not recognize this match.'),
+        false);
+    }
+    if (!FB.canWedSnapshot(state)) {
+      return blocked('player_married',
+        FB.T('Your current marriages leave no spouse place available.'));
+    }
+    if (FB.spouseSnapshot(state, c)) {
+      return blocked('target_married', FB.T('They are wed to another.'));
+    }
+    if (c.betrothedId) {
+      return blocked('target_betrothed',
+        FB.T('They are pledged to another.'));
+    }
+    if (FB.playerDescendantKind(state, c.id) ||
+        (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
+        (me.fatherId && me.fatherId === c.fatherId) ||
+        (me.motherId && me.motherId === c.motherId) ||
+        (c.role === 'sibling' && c.dyn === me.dyn)) {
+      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    }
+    const krel = FB.kinOf(state).byId[c.id];
+    if (krel && krel !== 'Cousin') {
+      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    }
+    if (state.player.profession === 'monk' &&
+        FB.religionOf(me.religion).group !== 'muslim') {
+      return blocked('vocation_vow', FB.T('Your vows forbid marriage.'));
+    }
+    if (!allowCurrent && state.player.courtingId === c.id) {
+      return blocked('current',
+        FB.T('This courtship is already active.'));
+    }
+    if (FB.stationOf(c) - FB.playerStation(state) >= 3) {
+      return blocked('station',
+        FB.T('They stand too far above your station.'));
+    }
+    status.ready = true;
+    status.code = 'ready';
+    return status;
+  };
+
   FB.provNotables = function (state, pid) {
     const pr = FB.world.byId[pid];
     if (!pr || pr.wasteland) return [];
