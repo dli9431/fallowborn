@@ -2,8 +2,10 @@
 
 Date: 2026-07-28
 
-Status: first implementation tranche derived from the
-[systems audit](../2026-07-27-systems-audit.md). The pass consolidates existing
+Status: implemented
+
+This first implementation tranche was derived from the
+[systems audit](../../2026-07-27-systems-audit.md). The pass consolidates existing
 administration and removes repeated clicks; it does not add another simulation layer.
 
 ## Goal
@@ -186,7 +188,7 @@ These follow the household pass rather than expanding its scope:
    obligations and crown authority mechanically separate.
 2. Consistent character and realm interaction cards for Standing, gifts, attention,
    envoys, pacts, alliances, courtship, and war causes. Implement the unified
-   [Standing plan](standing.md) as part of this work.
+   [Standing plan](../standing.md) as part of this work.
 3. A single **Trade Venture** setup and review flow, owned by Finance, with `dispatch`
    or `accompany` chosen last. Travel remains a shortcut into the same flow.
 4. One military status surface for host, stance, route, logistics, enemy or camp,
@@ -251,7 +253,7 @@ unchanged except where a shared summary or entry point must call them.
 6. [x] Manor plot batch purchase.
 7. [x] Descendant match recommendation.
 8. [x] Shared asset/effect rows and Ongoing Commitments summary.
-9. Test with a large household across childhood, adulthood, marriage, death, and
+9. [x] Test with a large household across childhood, adulthood, marriage, death, and
    succession before starting the governance tranche.
 
 ## Completion criteria
@@ -264,3 +266,11 @@ unchanged except where a shared summary or entry point must call them.
 - The player can still make every underlying choice manually.
 - The pass reduces repeated administration without changing simulation balance or
   silently making consequential decisions.
+
+## Post-implementation follow-up
+
+Later player feedback confirmed that reducing repeated actions did not fully solve
+scan density: Work & Enterprises becomes less readable as household work and enterprise
+rows accumulate, and Network has the same problem with many characters. The separate
+[large-list readability plan](../large-list-readability.md) addresses that presentation
+gap after interaction-card consolidation without reopening this pass's mechanics.

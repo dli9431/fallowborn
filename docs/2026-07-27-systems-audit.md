@@ -61,6 +61,14 @@ The best next work is therefore not another large simulation layer. It is:
 5. one trade-venture entry and review flow;
 6. then more content for plots, diplomacy, and temporary modifiers.
 
+Post-audit player feedback identified a related presentation gap: **Work & Enterprises**
+becomes harder to read as Household work and Family enterprises grow, and **Network**
+becomes harder to scan as it accumulates named characters. Household automation reduces
+click burden, and interaction cards consolidate actions for one target, but neither makes
+the long overview lists legible. Treat this as a separate
+[large-list readability plan](plans/large-list-readability.md) after interaction-card
+consolidation and before the later content passes.
+
 The systems that can safely be left alone for a while are technology, ordinary war, great holy
 war and settlement, overland travel mechanics, world/realm simulation, the event interpreter,
 save migration, mods, and localization. They are already among the largest and most
@@ -113,6 +121,12 @@ policies can fill only empty or newly eligible choices:
 Marriage and religious advancement are consequential enough that the default should remain a
 recommendation/notification. Full automatic selection can exist as an explicit player policy,
 but should not be the default.
+
+The Household Plan solves cross-screen administration, not list density by itself. Large
+Work & Enterprises and Network surfaces additionally need counted sections, stable
+needs-attention ordering, progressive disclosure, and local filtering/search while preserving
+their distinct ownership and action routes. That follow-up is specified in
+[large-list readability](plans/large-list-readability.md).
 
 ## Scorecard: household, land, and economy
 
@@ -394,12 +408,15 @@ These are not direct gameplay loops, but they materially constrain all feature w
 3. **Governance shell**: Estates, Council, liege/vassal terms, domain, and direct action links.
 4. **Realm/character interaction card consistency**: gifts, attention, envoys, pacts, alliances,
    courtship, and war causes in predictable places.
-5. **Single Trade Venture flow**: Finance as the main home, Travel as a shortcut, mode chosen
+5. **Large-list readability**: make Work & Enterprises and Network scale through counted
+   sections, stable needs-attention ordering, progressive disclosure, and local
+   filtering/search.
+6. **Single Trade Venture flow**: Finance as the main home, Travel as a shortcut, mode chosen
    last.
-6. **Plot and diplomacy content** using existing state and event hooks.
-7. **Modifier and institution content** as durable consequences of those stories.
-8. Reassess click burden in a large multi-generation household before adding another major
-   simulation system.
+7. **Plot and diplomacy content** using existing state and event hooks.
+8. **Modifier and institution content** as durable consequences of those stories.
+9. Reassess click and scan burden in a large multi-generation household before adding
+   another major simulation system.
 
 ## Source map used for this audit
 

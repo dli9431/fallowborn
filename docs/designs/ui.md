@@ -379,6 +379,13 @@ guild commissions), and Realm (liege, vassals and levy favors, foreign ties, Roy
 Council summary/link, and the computed levy ledger). Empty sections explain what is
 absent rather than inventing placeholder people.
 
+**Planned follow-up — not yet implemented:** player feedback shows that both this panel
+and Work & Enterprises lose readability as their character and enterprise lists grow.
+The [large-list readability plan](../plans/large-list-readability.md) owns counted,
+collapsible sections, stable needs-attention ordering, progressive disclosure, and local
+filter/search behavior. Interaction cards remain authoritative for one target; this
+follow-up changes only how overview rows are found and scanned.
+
 Network → Household also opens the responsive **Household Plan**. Its desktop modal uses a
 wide seven-column table ordered as household head, resident family, then paid retainers.
 On narrow or short layouts, each person becomes a stacked card and every cell repeats its
