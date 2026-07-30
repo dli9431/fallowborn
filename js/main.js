@@ -1015,6 +1015,7 @@ window.FB = window.FB || {};
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
+      politics: null,
       player: {
         charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
@@ -1110,6 +1111,7 @@ window.FB = window.FB || {};
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
+    if (FB.ensurePolitics) FB.ensurePolitics(state);
     state.player.focus = sc.focus || FB.defaultFocus(state);
     state.peakTitleData = FB.titleSnapshot(state);
     G.paused = true;
@@ -1172,6 +1174,7 @@ window.FB = window.FB || {};
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
+      politics: null,
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
@@ -1284,6 +1287,7 @@ window.FB = window.FB || {};
     if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (FB.modifierTick) FB.modifierTick(s);
+    if (FB.politicsDay) FB.politicsDay(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
@@ -1714,6 +1718,7 @@ window.FB = window.FB || {};
         settled - standing, 'time:annual_drift');
     }
     if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
+    if (FB.politicsYearly) FB.politicsYearly(s);
     if (FB.parliamentYearly) FB.parliamentYearly(s); // the liege may summon the estates to sit
   }
 

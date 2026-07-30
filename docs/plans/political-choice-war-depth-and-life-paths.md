@@ -2,10 +2,10 @@
 
 Date: 2026-07-30
 
-Status: **proposed**. This plan organizes player feedback about political blocs,
-elections, laws, military depth, careers, religious policy, migration, and wars
-without claims. It prioritizes player-facing quality of life before the larger
-simulation and content expansions.
+Status: **in progress; step 1 implemented**. This plan organizes player feedback
+about political blocs, elections, laws, military depth, careers, religious policy,
+migration, and wars without claims. It prioritizes player-facing quality of life
+before the larger simulation and content expansions. Steps 2–9 remain proposed.
 
 Related design:
 [realms](../designs/realms.md),
@@ -116,6 +116,8 @@ cultural units come only after the catalog, saves, UI, and mod contracts are sta
 
 Classification: **QoL first, with the minimum Balance foundation**.
 
+Status: **complete (2026-07-30)**.
+
 Add a shared political-bloc summary for the player's relevant polity and expose it in
 Governance and Network.
 
@@ -155,6 +157,8 @@ waiting for a large law catalog.
 
 Classification: **QoL first, then Balance**.
 
+Status: **proposed**.
+
 Add `War of Aggression` as an explicit player choice when no recognized claim or de
 jure cause applies.
 
@@ -191,6 +195,8 @@ intentionally resets personal and realm Standing.
 
 Classification: **QoL and Writing, with a small Balance correction**.
 
+Status: **proposed**.
+
 Improve the current war view before rebuilding combat:
 
 - show battle record and recent win/loss streak;
@@ -225,6 +231,8 @@ autoresolved.
 ### 4. Data-driven laws, reforms, and bloc voting
 
 Classification: **Balance**.
+
+Status: **proposed**.
 
 Once bloc voting is visible and reliable, add a moddable policy catalog instead of
 hard-coding one handler per reform.
@@ -261,6 +269,8 @@ Do not retain a separate global success roll after the bloc votes are counted.
 ### 5. Elections, privileges, and collective demands
 
 Classification: **Balance with Writing support**.
+
+Status: **proposed**.
 
 Implement elections in increasing order of political risk.
 
@@ -313,6 +323,8 @@ fully autonomous new realm.
 
 Classification: **Balance with Writing support**.
 
+Status: **proposed**.
+
 Add two royal policy families to the law framework.
 
 Religious tolerance:
@@ -340,6 +352,8 @@ refugees, or frontier settlers without claiming a demographic simulation.
 ### 7. Expanded life paths and authored works
 
 Classification: **Writing**.
+
+Status: **proposed**.
 
 Build on the current career, focus, travel, research, event, and item hooks.
 
@@ -370,6 +384,8 @@ command, or court appointment.
 
 Classification: **Balance and modding foundation**.
 
+Status: **proposed**.
+
 Replace hard-coded knowledge of `levy`, `arch`, `cav`, `ret`, and `mercs` with a unit
 catalog, while reproducing current behavior in the first integration.
 
@@ -399,6 +415,8 @@ Do not tune combat in the same integration that changes the data representation.
 ### 9. Combat roles, reinforcement, and cultural units
 
 Classification: **Balance**.
+
+Status: **proposed**.
 
 After the catalog is stable:
 

@@ -47,6 +47,15 @@ career rank names and household-standard level names/descriptions, use the same
 structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
 
+Political-bloc archetype definitions replace atomically by id under the
+top-level `politicalBlocs` key. Core behavior currently consumes the `crown`,
+`mercantile`, `magnate`, and `independent` ids; a replacement supplies the
+complete localized name/description, icon, order, affiliation threshold, and
+redress/scutage posture. Runtime state keeps generated magnate/independent
+bloc ids and allegiances, not a frozen copy of the definition. The active mod
+fingerprint therefore remains the compatibility boundary for saves whose
+forecast is affected by a replacement.
+
 The Catholic Papacy is a top-level atomic definition. A mod with `papacy` replaces
 `FBDATA.papacy` as one complete value before a campaign begins; nested arrays and tables
 are not deep-merged. This keeps election eras, thresholds, ids, and saved Papal state

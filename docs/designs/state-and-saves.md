@@ -85,6 +85,24 @@ as base64 text (`FBS1.` prefix, same v3 payload) that wakes through the same
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
 and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
+Political-bloc state is additive and keeps save format 3.
+`state.politics = {polityId,allegiances,pendingMotion}` is created
+and repaired by `FB.ensurePolitics` / `FB.repairPolitics`. Allegiance entries
+store only a stable bloc id and annual review year. A pending motion stores
+its stable motion/polity/proposer/location ids, start and expiry turns,
+support pledges, the one lobbying attempt and result, and—after the vote—the
+stable bloc outcomes and pass/fail tally result. It never stores influence,
+probabilities, interest scores, localized prose, or rendered reasons.
+
+Restore repairs missing or malformed politics after realm, war, modifier, and
+relationship state is available. It discards houses and magnate leaders no
+longer in the direct court, initializes old saves from current interests,
+clears an expired campaign, and cancels a campaign whose liege/polity or
+eligible court no longer matches. A tallied motion retains its exact queued
+context so save/load cannot reroll it; the event validator prevents that
+result from crossing a later liege change. Annual reviews and all repair paths
+are deterministic and RNG-neutral.
+
 National technology is additive version-3 state. `state.realmTech[realmId]` stores
 `{completed,exposed,active,progress,reserve,priorities}` for that sovereign identity;
 `active` is an array of up to three project ids and `priorities` maps advocated ids to

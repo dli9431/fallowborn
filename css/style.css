@@ -1364,6 +1364,64 @@ textarea.modjson, textarea.savetext {
   grid-column: 1 / -1; color: #8f8066; line-height: 1.35;
 }
 .governance-vote-factors { margin: 7px 0; }
+.political-bloc-card {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #493c27;
+  border-left: 3px solid #a8863a;
+  border-radius: 4px;
+  background: rgba(20, 17, 12, .45);
+}
+.political-bloc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.political-bloc-head h5 {
+  margin: 0;
+  color: #e4d4aa;
+  font-size: 13px;
+}
+.political-posture {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border: 1px solid #665637;
+  border-radius: 999px;
+  color: #c9b98f;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.political-posture-support { border-color: #50764f; color: #a9c997; }
+.political-posture-oppose { border-color: #874d42; color: #d39b8e; }
+.political-members,
+.political-reasons {
+  margin-top: 8px;
+  font-size: 12px;
+}
+.political-members > b,
+.political-reasons > b { color: #cbb98a; }
+.political-members .linklike { margin: 3px 3px 0 0; }
+.political-reasons ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: #a99c7d;
+}
+.political-motion-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 8px;
+  border-bottom: 1px solid #493c27;
+}
+.political-motion-row > div { min-width: 0; }
+.political-motion-row .cmeta {
+  display: block;
+  margin-top: 3px;
+}
 .governance-action-group { margin-bottom: 10px; }
 .governance-action-group h5 {
   margin: 0 0 5px; color: #bfa45d; font-size: 12px; font-weight: normal;
@@ -1664,6 +1722,12 @@ textarea.modjson, textarea.savetext {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .governance-inline-actions .btn { width: 100%; min-height: 44px; }
+  .political-bloc-head,
+  .political-motion-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .political-motion-row .btn { min-height: 44px; }
   .household-policy-summary {
     align-items: stretch; flex-direction: column;
   }
