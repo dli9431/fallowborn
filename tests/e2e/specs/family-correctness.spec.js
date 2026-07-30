@@ -236,6 +236,7 @@ test('records ordinary and royal stepchildren without changing inheritance',
     expect(ordinary.heir).toBe(false);
     expect(ordinary.household).toBe(false);
     expect(ordinary.affinity).toBe('affinity');
+    await page.getByRole('button', { name:'Kin', exact:true }).click();
     await expect(page.locator('#tab-family')).toContainText('Stepchildren');
     await expect(page.locator('#tab-family')).toContainText(ordinary.childName);
     await page.evaluate(function () { FB.ui.showFamilyTree(); });
