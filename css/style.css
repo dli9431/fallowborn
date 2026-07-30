@@ -420,6 +420,7 @@ a.actionbtn { text-decoration: none; }
   margin: 0; padding: 7px 9px; border: 0; border-radius: 0;
   background: #241d15; color: #ddcfae; font: inherit; text-align: left;
 }
+.ongoing-commitment-row[data-commitment="focus"] { display: none; }
 button.ongoing-commitment-row { cursor: pointer; }
 button.ongoing-commitment-row:hover,
 button.ongoing-commitment-row:focus-visible { background: #302619; }
@@ -1685,6 +1686,7 @@ textarea.modjson, textarea.savetext {
   .actionbtn { min-height: 48px; font-size: 15px; padding: 10px 12px; }
   .actionbtn .adesc { font-size: 13px; }
   .ongoing-commitment-row { min-height: 58px; padding: 9px 10px; }
+  .ongoing-commitment-row[data-commitment="focus"] { display: grid; }
   .ongoing-commitment-copy b { font-size: 14px; }
   .ongoing-commitment-copy small,
   .ongoing-commitment-edit { font-size: 12px; }

@@ -12,7 +12,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('ongoing commitments route to their existing controls',
+test('ongoing commitments adapt by layout and route to existing controls',
   async function ({ page }) {
     const summary = page.locator('#ongoing-commitments');
     await expect(summary).toBeVisible();
@@ -20,27 +20,27 @@ test('ongoing commitments route to their existing controls',
       name:'Ongoing commitments',
       exact:true
     })).toBeVisible();
-    await expect(summary.locator('[data-commitment="focus"]')).toContainText(
-      'Daily focus');
+    const focusCommitment = summary.locator('[data-commitment="focus"]');
+    await expect(focusCommitment).toBeHidden();
     await expect(summary.locator(
       '[data-commitment="personal-attention"]')).toContainText(
       'Personal attention');
     await expect(summary.locator('[data-commitment="research"]')).toContainText(
       'National research');
 
-    const focusId = await page.evaluate(function () {
-      return FB.state.player.focus;
-    });
-    await page.setViewportSize({ width:1280, height:480 });
-    await summary.locator('[data-commitment="focus"]').click();
-    const focusControl = page.locator('[data-focus-id="' + focusId + '"]');
-    await expect(focusControl).toBeFocused();
-    const focusAlignment = await focusControl.evaluate(function (control) {
-      return Math.abs(control.getBoundingClientRect().top -
+    await page.setViewportSize({ width:360, height:740 });
+    await expect(focusCommitment).toBeVisible();
+    await focusCommitment.click();
+    const focusList = page.locator('#daily-focus-list');
+    await expect(focusList).toBeFocused();
+    const focusAlignment = await focusList.evaluate(function (heading) {
+      return Math.abs(heading.getBoundingClientRect().top -
         document.getElementById('sidebody').getBoundingClientRect().top);
     });
     expect(focusAlignment).toBeLessThanOrEqual(12);
 
+    await page.setViewportSize({ width:1280, height:720 });
+    await expect(focusCommitment).toBeHidden();
     await summary.locator('[data-commitment="research"]').click();
     await expect(page.getByRole('heading', {
       name:'Technology',

@@ -1658,15 +1658,6 @@ window.FB = window.FB || {};
     { id:'realm', label:'👑 Rank & Realm' },
     { id:'war', label:'⚔ War & Diplomacy' }
   ];
-  const FOCUS_GROUP = {
-    study:'life', play:'life', rest:'life', pray:'faith',
-    toil:'work', work_land:'work', market:'work', keep_house:'work',
-    craft_work:'work', trade_run:'work', copy_books:'faith', serve_church:'faith',
-    militia:'war', drill:'war', stand_guard:'war', train_arms:'war', lead_host:'war',
-    manage_manor:'realm', serve_lord:'realm', courtly_graces:'realm',
-    scheming:'realm', govern:'realm', patronize:'realm',
-    shepherd_diocese:'faith', administer_temporalities:'faith'
-  };
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
     petition_monopoly:'work',
@@ -2090,6 +2081,10 @@ window.FB = window.FB || {};
     if (focuses.length) {
       const fh = document.createElement('div');
       fh.className = 'actionsubhead';
+      fh.id = 'daily-focus-list';
+      fh.tabIndex = -1;
+      fh.setAttribute('role', 'heading');
+      fh.setAttribute('aria-level', '3');
       fh.textContent = FB.T('Daily focus — continues until changed');
       box.appendChild(fh);
       for (const f of focuses) appendFocus(f);
@@ -2162,11 +2157,7 @@ window.FB = window.FB || {};
         button.addEventListener('click', function () {
           const commitment = button.dataset.commitment;
           if (commitment === 'focus') {
-            const focus = currentFocusDef(s);
-            const group = focus ? (FOCUS_GROUP[focus.id] || 'realm') : 'work';
-            revealActionControl(group, focus
-              ? '[data-focus-id="' + focus.id + '"]'
-              : '[data-action-group="' + group + '"]', 'start');
+            focusActionControl('#daily-focus-list', null, 'start');
           } else if (commitment === 'personal-attention') {
             const target = FB.socialAttentionTarget(s);
             if (target) {

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.4';
+  FB.VERSION = '1.93.5';
   FB.CHANGELOG = [
+    { v: '1.93.5', date: '2026-07-30', changes: [
+      'Ongoing commitments no longer repeats the daily focus on desktop, while its mobile focus shortcut now opens the top of the focus list.'
+    ] },
     { v: '1.93.4', date: '2026-07-30', changes: [
       'The Deeds panel now keeps daily focuses together, collapses ongoing commitments from their heading, and lets players hide beginner path hints.'
     ] },

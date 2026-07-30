@@ -70,10 +70,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
 
 1. Set a **focus** in the *Deeds* tab — it is pursued every day until you change it: work your
    land, drill with the levy, haggle at market, copy manuscripts, or manage your household.
-   The **Ongoing commitments** ledger above the deeds keeps that focus beside personal and
-   political attention, national research policy, active travel, and financial contracts;
-   select a row to reach the existing control for that commitment, or select its title to
-   collapse the ledger.
+   The **Ongoing commitments** ledger above the deeds keeps personal and political attention,
+   national research policy, active travel, and financial contracts together; compact layouts
+   also show the daily focus and link it to the top of the focus list. Select a row to reach
+   its existing control, or select the ledger title to collapse it.
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
    Commoners can open **🏠 Better the household…** without spending a day. Five living

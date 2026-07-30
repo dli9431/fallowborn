@@ -279,19 +279,22 @@ does not create a common asset record or mutation path.
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. Its title is an accessible
 collapse/expand button, and the browser-local collapsed state (`fb_ui`) changes
-only its presentation. When expanded it always shows the current daily focus,
-personal-attention assignment, and national research projects/policy;
+only its presentation. On full desktop layouts the ledger omits the redundant
+daily-focus row; on compact layouts that row appears first and routes to the
+top of the combined focus list. When expanded it shows the personal-attention
+assignment and national research projects/policy;
 political attention appears only when the independent ruler has that capacity,
 while travel and financial-contract rows appear only while active. Each native
-row routes to the authoritative existing control: the current focus group, the
-assigned character or Network Connections, Foreign Policy, Technology, the
-available travel deeds, or Coin & Credit. A journey marks focus as paused and
+row routes to the authoritative existing control: the compact focus-list
+heading, the assigned character or Network Connections, Foreign Policy,
+Technology, the available travel deeds, or Coin & Credit. A journey marks focus as paused and
 non-editable because travel replaces its daily tick; return travel is likewise
 read-only because no route decision remains. The ledger creates no
 shared capacity, saved record, or mutation path; it only consolidates status
-and navigation. The daily-focus route aligns the current focus control with the
-top of the scrolling panel so the surrounding choices do not remain below the
-fold. On narrow screens its rows keep full-width touch targets and
+and navigation. The compact-layout daily-focus route focuses and aligns the
+focus-list heading with the top of the scrolling panel, rather than dropping
+the player into the middle at the currently selected focus. On narrow screens
+its rows keep full-width touch targets and
 move their action label beneath the status rather than overflowing the panel.
 
 Living character sheets also own personal relationship controls. **Cultivate relationship**
