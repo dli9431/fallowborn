@@ -127,8 +127,8 @@ the campaign; the **retinue** is the professional core of men-at-arms from war b
 split — `FB.playerLevy` remains the total for callers that want a number — and AI hosts
 start from `balance.aiRetinueFrac`/`aiArcherFrac`, then add the effective sovereign's
 `fx.aiUnits` fractions; national `levy` bonuses also increase their muster, and there is
-no global era step. `FB.techArmyMarchDays` applies the capped movement bonus to every
-path leg, while ordinary and great-holy-war sieges use the capped sovereign siege bonus.
+no global era step. `FB.techArmyMarchDays` applies the capped overland movement bonus to
+land legs, while ordinary and great-holy-war sieges use the capped sovereign siege bonus.
 Technologies therefore change access, quality, composition, movement, and siege practice
 without introducing additional unit classes. Each class fights at its own quality
 (`balance.qualityLevy`/`qualityArcher`/`qualityCavalry`/`qualityRetinue`/`qualityMerc`,
@@ -153,19 +153,34 @@ great holy-war hosts and clamps an underfunded purse to zero without disbanding 
 `campaignModifier` is zero for ordinary-war-only hosts and records the signed supply
 adjustment for a player host serving in a great holy war.
 
-**Movement is daily and adjacency-based.** Orders set a BFS path (`FB.findPath` over
-`FB.world.adj`); every leg, the first included, uses `FB.armyMarchDays` (the
-technology-adjusted base, then any valid player campaign-speed adjustment), and the
-host steps into the next province only when the leg completes (its marker stays
-on the province it stands in) — so battle contact and sieges begin on arrival,
-not on departure. Ordering a host's own province halts it, mid-road included; an unreachable
-order fails and clears the old route. AI hosts hunt the nearest enemy host, else march on
-the enemy's seat (a broken host routs home for 40 days). The player taps their host to
+**Movement is daily, weighted, and adjacency-based.** `FB.findPath` remains the plain BFS
+compatibility surface over `FB.world.adj`; field hosts use deterministic
+`FB.findArmyPath`, which minimizes quoted travel days, then leg count, then the full
+province-id path. Land legs use `FB.armyMarchDays`. An authored strait is also present in
+`FB.world.waterAdj`, and `FB.armyLegQuote` gives it a `narrow`, `coastal`, or `open`
+crossing class. The effective sovereign's best completed `fx.seaTransport` value supplies
+national transport capacity (250 men without such knowledge), modified by the crossing
+class. A host above effective capacity waits through `ceil(men / capacity)` complete
+crossing cycles; `fx.seaMovement` and a valid great-holy-war campaign-speed adjustment
+shorten each cycle.
+
+Each leg is quoted only when it begins. The whole indivisible host and its marker remain
+on the departure county while the clock represents gathering boats, loading successive
+contingents, and completing the passage; `army.at` changes only on arrival. Battle,
+reinforcement, siege, and map-marker rules therefore remain province-based. An active
+`moveLeft` is never recalculated after loading, gaining technology, changing allegiance,
+or rerouting. A mid-leg reroute preserves the current next county and countdown and
+replaces only the remainder; a failed reroute stops after that active leg. Ordering the
+departure county remains an explicit halt. Broken hosts, AI hunting, and player automation
+all use the same weighted route and leg quotes. The player taps their host to
 select it, taps a province to march — which lets go of the host again so further taps
 browse the map — and taps the selected host again to halt; Enter/Shift+arrows do the
 same by keyboard. `FB.armyTap` (called from `FB.map.onTap` in ui.js) owns that
-interaction; the Land tab shows the selected host and any hosts standing in the viewed
-province. Since the host never moves on its own, a one-time toast at muster
+interaction. Its order feedback gives total ETA, water-leg count, and the limiting
+crossing's effective capacity and cycles. The selected-host Land status names the
+immediate land march or crossing preparation without implying an at-sea marker. The Land
+tab also shows any hosts standing in the viewed province. Since the host never moves on
+its own, a one-time toast at muster
 (`flags.hostHintShown`) and a Deeds-tab hint while the raised host stands idle both tell
 the player to tap it, then tap a province. A host resting on its sovereign's own land refills toward its mustered `size`
 at `balance.armyReinforceRate` per day — the refill is all fresh levy; lost men-at-arms

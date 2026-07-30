@@ -2,10 +2,10 @@
 
 Date: 2026-07-30
 
-Status: **proposed**. This plan turns the request for navies and sailing
-technology into a bounded first release: field hosts still remain single army
-objects, but water crossings gain technology-dependent transport throughput and
-crossing time.
+Status: **implemented**. Field hosts remain single army objects, while water crossings
+use technology-dependent transport throughput and crossing time. The implementation and
+deterministic browser coverage were authored together; execution remains owner-controlled
+under repository policy.
 
 Related design:
 [war](../designs/war.md),

@@ -456,37 +456,246 @@ window.FB = window.FB || {};
     return null;
   };
 
-  /* order a host toward a province; ordering its own province halts it
-     (mid-road included). A failed order leaves no stale route behind, and a
-     standing host starts its first leg at once — every leg, first included,
-     costs balance.armyMarchDays. */
+  function campaignMarchSpeed(state, realmId) {
+    return realmId === 'player' && FB.campaignHostModBonus
+      ? FB.campaignHostModBonus(state, 'marchSpeed') : 0;
+  }
+
   FB.armyMarchDays = function (state, realmId) {
     const base = FB.techArmyMarchDays
       ? FB.techArmyMarchDays(state, realmId) : B().armyMarchDays;
-    const speed = realmId === 'player' && FB.campaignHostModBonus
-      ? FB.campaignHostModBonus(state, 'marchSpeed') : 0;
+    const speed = campaignMarchSpeed(state, realmId);
     return Math.max(1, Math.round(base / Math.max(0.05, 1 + speed)));
   };
 
-  FB.orderArmy = function (state, army, destPid) {
-    if (!destPid) return false;
+  /* Future fleets can replace this seam without changing route or leg
+     consumers. For now, national technology supplies transport capacity. */
+  FB.armySeaTransportCapacity = function (state, realmId, fromPid, toPid) {
+    return FB.techSeaTransportCapacity
+      ? FB.techSeaTransportCapacity(state, realmId)
+      : Math.max(1, Math.round(Number(B().armySeaTransportBase) || 250));
+  };
+
+  FB.armyLegQuote = function (state, army, fromPid, toPid) {
+    const crossingClass = FB.waterCrossing
+      ? FB.waterCrossing(fromPid, toPid) : null;
+    const hostMen = Math.max(0, Math.round(Number(army && army.men) || 0));
+    if (!crossingClass) {
+      const landDays = FB.armyMarchDays(state, army.realm);
+      return {
+        water:false,
+        crossingClass:null,
+        hostMen:hostMen,
+        nationalCapacity:null,
+        effectiveCapacity:null,
+        cycles:1,
+        cycleDays:landDays,
+        totalDays:landDays
+      };
+    }
+
+    const crossings = B().armySeaCrossings || {};
+    const crossing = crossings[crossingClass] || crossings.narrow ||
+      { cycleDays:2, capacityMult:2 };
+    const nationalCapacity = Math.max(1, Math.round(Number(
+      FB.armySeaTransportCapacity(
+        state, army.realm, fromPid, toPid)) || 1));
+    const effectiveCapacity = Math.max(1, Math.round(nationalCapacity *
+      Math.max(0.01, Number(crossing.capacityMult) || 1)));
+    const cycles = Math.max(1, Math.ceil(hostMen / effectiveCapacity));
+    const seaSpeed = FB.techBonus
+      ? FB.techBonus(state, 'seaMovement', army.realm) : 0;
+    const campaignSpeed = campaignMarchSpeed(state, army.realm);
+    const cycleDays = Math.max(1, Math.round(
+      Math.max(1, Number(crossing.cycleDays) || 1) *
+      Math.max(0.05, 1 - seaSpeed) /
+      Math.max(0.05, 1 + campaignSpeed)));
+    return {
+      water:true,
+      crossingClass:crossingClass,
+      hostMen:hostMen,
+      nationalCapacity:nationalCapacity,
+      effectiveCapacity:effectiveCapacity,
+      cycles:cycles,
+      cycleDays:cycleDays,
+      totalDays:cycles * cycleDays
+    };
+  };
+
+  function pathCompare(a, b) {
+    const length = Math.min(a.length, b.length);
+    for (let i = 0; i < length; i++) {
+      if (a[i] < b[i]) return -1;
+      if (a[i] > b[i]) return 1;
+    }
+    return a.length - b.length;
+  }
+
+  function routeCompare(a, b) {
+    return a.totalDays - b.totalDays ||
+      a.legs - b.legs ||
+      pathCompare(a.path, b.path);
+  }
+
+  function frontierPush(frontier, item) {
+    let index = frontier.length;
+    frontier.push(item);
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2);
+      if (routeCompare(frontier[parent], item) <= 0) break;
+      frontier[index] = frontier[parent];
+      index = parent;
+    }
+    frontier[index] = item;
+  }
+
+  function frontierPop(frontier) {
+    if (!frontier.length) return null;
+    const first = frontier[0];
+    const last = frontier.pop();
+    if (!frontier.length) return first;
+    let index = 0;
+    while (true) {
+      const left = index * 2 + 1, right = left + 1;
+      if (left >= frontier.length) break;
+      let child = left;
+      if (right < frontier.length &&
+          routeCompare(frontier[right], frontier[left]) < 0) child = right;
+      if (routeCompare(last, frontier[child]) <= 0) break;
+      frontier[index] = frontier[child];
+      index = child;
+    }
+    frontier[index] = last;
+    return first;
+  }
+
+  function findArmyPathFrom(state, army, fromPid, toPid) {
+    if (!FB.world || !FB.world.adj || !FB.world.adj[fromPid] ||
+        !FB.world.adj[toPid]) return null;
+    if (fromPid === toPid) return { path:[], totalDays:0, waterLegs:0 };
+    const start = {
+      pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0
+    };
+    const frontier = [], best = {};
+    best[fromPid] = start;
+    frontierPush(frontier, start);
+    while (frontier.length) {
+      const current = frontierPop(frontier);
+      if (best[current.pid] !== current) continue;
+      if (current.pid === toPid) {
+        return {
+          path:current.path,
+          totalDays:current.totalDays,
+          waterLegs:current.waterLegs
+        };
+      }
+      const neighbors = Object.keys(FB.world.adj[current.pid] || {}).sort();
+      for (let i = 0; i < neighbors.length; i++) {
+        const neighbor = neighbors[i];
+        const quote = FB.armyLegQuote(state, army, current.pid, neighbor);
+        const candidate = {
+          pid:neighbor,
+          path:current.path.concat([neighbor]),
+          totalDays:current.totalDays + quote.totalDays,
+          legs:current.legs + 1,
+          waterLegs:current.waterLegs + (quote.water ? 1 : 0)
+        };
+        if (!best[neighbor] || routeCompare(candidate, best[neighbor]) < 0) {
+          best[neighbor] = candidate;
+          frontierPush(frontier, candidate);
+        }
+      }
+    }
+    return null;
+  }
+
+  FB.findArmyPath = function (state, army, toPid) {
+    if (!army || !army.at || !toPid) return null;
+    return findArmyPathFrom(state, army, army.at, toPid);
+  };
+
+  function routeCrossings(state, army, fromPid, path) {
+    const out = [];
+    let from = fromPid;
+    for (let i = 0; i < path.length; i++) {
+      const quote = FB.armyLegQuote(state, army, from, path[i]);
+      if (quote.water) {
+        out.push({ from:from, to:path[i], routeIndex:i, quote:quote });
+      }
+      from = path[i];
+    }
+    return out;
+  }
+
+  function armyOrderPlan(state, army, destPid) {
+    if (!destPid) return { ok:false, active:false, path:[] };
     if (destPid === army.at) {
+      return {
+        ok:true, halt:true, active:false, path:[], totalDays:0,
+        waterLegs:0, crossings:[]
+      };
+    }
+    const active = army.moveLeft > 0 && army.path && army.path.length;
+    let route;
+    if (active) {
+      const next = army.path[0];
+      const remainder = findArmyPathFrom(state, army, next, destPid);
+      if (!remainder) {
+        return {
+          ok:false, active:true, path:[next], goal:next,
+          totalDays:army.moveLeft,
+          waterLegs:FB.waterCrossing(army.at, next) ? 1 : 0,
+          crossings:routeCrossings(state, army, army.at, [next])
+        };
+      }
+      route = {
+        path:[next].concat(remainder.path),
+        totalDays:army.moveLeft + remainder.totalDays,
+        waterLegs:(FB.waterCrossing(army.at, next) ? 1 : 0) +
+          remainder.waterLegs
+      };
+    } else {
+      route = findArmyPathFrom(state, army, army.at, destPid);
+      if (!route) return { ok:false, active:false, path:[] };
+    }
+    return {
+      ok:true,
+      halt:false,
+      active:!!active,
+      path:route.path,
+      goal:destPid,
+      totalDays:route.totalDays,
+      waterLegs:route.waterLegs,
+      crossings:routeCrossings(state, army, army.at, route.path)
+    };
+  }
+
+  function beginArmyLeg(state, army) {
+    if (!army.path || !army.path.length) return;
+    army.from = army.at;
+    army.moveLeft = FB.armyLegQuote(
+      state, army, army.at, army.path[0]).totalDays;
+  }
+
+  /* A mid-leg reroute preserves the active destination and saved countdown,
+     replacing only the remainder. If rerouting fails, that active leg still
+     completes and the host then stops. */
+  FB.orderArmy = function (state, army, destPid, preparedPlan) {
+    const plan = preparedPlan || armyOrderPlan(state, army, destPid);
+    if (plan.halt) {
       army.path = []; army.goal = null; army.moveLeft = 0;
       requestMap();
       return true;
     }
-    const path = FB.findPath(army.at, destPid);
-    if (!path) {
-      army.path = []; army.goal = null;
+    if (!plan.ok) {
+      army.path = plan.active ? plan.path : [];
+      army.goal = plan.active ? plan.goal : null;
       requestMap();
       return false;
     }
-    army.path = path;
-    army.goal = destPid;
-    if (army.moveLeft <= 0) {
-      army.from = army.at;
-      army.moveLeft = FB.armyMarchDays(state, army.realm);
-    }
+    army.path = plan.path;
+    army.goal = plan.goal;
+    if (!plan.active && army.moveLeft <= 0) beginArmyLeg(state, army);
     requestMap();
     return true;
   };
@@ -501,7 +710,7 @@ window.FB = window.FB || {};
         army.from = army.at;
         army.at = army.path.shift();
         if (army.path.length) {
-          army.moveLeft = FB.armyMarchDays(state, army.realm);
+          beginArmyLeg(state, army);
         }
         requestMap();
       }
@@ -509,8 +718,7 @@ window.FB = window.FB || {};
     }
     // standing with a route but no clock (old save): begin the next leg
     if (army.path && army.path.length) {
-      army.from = army.at;
-      army.moveLeft = FB.armyMarchDays(state, army.realm);
+      beginArmyLeg(state, army);
     }
   }
 
@@ -638,7 +846,6 @@ window.FB = window.FB || {};
     } else {
       loser.broken = state.turn;
       FB.orderArmy(state, loser, loser.realm === 'player' ? playerHome(state) : state.realms[loser.realm].capital);
-      loser.moveLeft = Math.min(loser.moveLeft, 1); // it limps away at once
     }
     const greatBattle = FB.greatHolyWarBattle &&
       FB.greatHolyWarBattle(state, pid, winner, loser, winnerLoss, loserLoss);
@@ -874,12 +1081,44 @@ window.FB = window.FB || {};
     }
     if (sel) {
       if (pr && !pr.wasteland) {
-        if (FB.orderArmy(state, sel, pr.id)) {
+        const orderPlan = armyOrderPlan(state, sel, pr.id);
+        if (FB.orderArmy(state, sel, pr.id, orderPlan)) {
           sel.huntPrey = null; // a hand-given order ends any hunt
           sel.manual = 1; sel.holdManual = 0; // and plays out before automation resumes
           FB.selectArmy(null); // and lets go, so further taps browse the map
-          if (FB.ui) FB.ui.toast('🚩 The host marches on {province}.',
-            { province: pr.name });
+          if (FB.ui && orderPlan.waterLegs) {
+            let limiting = null;
+            for (let i = 0; i < orderPlan.crossings.length; i++) {
+              const crossing = orderPlan.crossings[i];
+              if (!limiting ||
+                  crossing.quote.totalDays > limiting.quote.totalDays ||
+                  (crossing.quote.totalDays === limiting.quote.totalDays &&
+                   crossing.quote.effectiveCapacity <
+                     limiting.quote.effectiveCapacity)) {
+                limiting = crossing;
+              }
+            }
+            const params = {
+              province:pr.name,
+              days:orderPlan.totalDays,
+              crossings:orderPlan.waterLegs,
+              from:limiting ? provName(limiting.from) : '?',
+              to:limiting ? provName(limiting.to) : '?',
+              capacity:limiting ? limiting.quote.effectiveCapacity : 0,
+              cycles:limiting ? limiting.quote.cycles : 0
+            };
+            FB.ui.toast(orderPlan.waterLegs === 1
+              ? (params.cycles === 1
+                ? '🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle.'
+                : '🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles.')
+              : (params.cycles === 1
+                ? '🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle.'
+                : '🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles.'),
+              params);
+          } else if (FB.ui) {
+            FB.ui.toast('🚩 The host marches on {province} — about {days} days.',
+              { province:pr.name, days:orderPlan.totalDays });
+          }
           if (FB.map) FB.map.request();
         } else if (FB.ui) {
           FB.ui.toast('🚫 No road nor crossing leads the host to {province}.',

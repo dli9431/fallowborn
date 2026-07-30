@@ -9,7 +9,10 @@ window.FB = window.FB || {};
   FB.activeBookmarkId = null;
 
   var worldCache = {};
-  var WORLD_FIELDS = ['provinces','realms','duchies','kingdoms','empires','straits','scripted'];
+  var WORLD_FIELDS = [
+    'provinces','realms','duchies','kingdoms','empires','straits',
+    'crossingClasses','scripted'
+  ];
 
   function bookmarkDefinition(id) {
     var bookmarks = FBDATA.bookmarks || {};
@@ -70,6 +73,7 @@ window.FB = window.FB || {};
         date.day < 1 || date.day > 90) fault('invalid start date.');
     for (var wf = 0; wf < WORLD_FIELDS.length; wf++) {
       var worldField = WORLD_FIELDS[wf];
+      if (worldField === 'crossingClasses') continue;
       if (definition[worldField] === undefined || definition[worldField] === null) {
         fault('missing ' + worldField + '.');
       }
@@ -272,6 +276,29 @@ window.FB = window.FB || {};
       var skey = strait[0] < strait[1] ? strait[0] + '|' + strait[1] : strait[1] + '|' + strait[0];
       if (straitKeys[skey]) fault('duplicate strait ' + skey + '.');
       straitKeys[skey] = 1;
+    }
+    var crossingClasses = definition.crossingClasses || {};
+    if (!crossingClasses || typeof crossingClasses !== 'object' ||
+        Array.isArray(crossingClasses)) {
+      fault('crossingClasses must be an object keyed by canonical strait pairs.');
+    } else {
+      var supportedCrossings = { narrow:1, coastal:1, open:1 };
+      for (var crossingKey in crossingClasses) {
+        if (!Object.prototype.hasOwnProperty.call(crossingClasses, crossingKey)) continue;
+        var crossingParts = crossingKey.split('|');
+        if (crossingParts.length !== 2 || !crossingParts[0] || !crossingParts[1] ||
+            crossingParts[0] >= crossingParts[1]) {
+          fault('crossing class key ' + crossingKey + ' is not canonical.');
+        } else if (!provinceIds[crossingParts[0]] || !provinceIds[crossingParts[1]]) {
+          fault('crossing class ' + crossingKey + ' references a missing province.');
+        } else if (!straitKeys[crossingKey]) {
+          fault('crossing class ' + crossingKey + ' does not reference a strait.');
+        }
+        if (!supportedCrossings[crossingClasses[crossingKey]]) {
+          fault('crossing class ' + crossingKey + ' has invalid class ' +
+            crossingClasses[crossingKey] + '.');
+        }
+      }
     }
 
     var scripts = Array.isArray(definition.scripted) ? definition.scripted : [];
@@ -493,8 +520,11 @@ window.FB = window.FB || {};
         if (at !== pr.idx + 1) { pr.cx = pr.sx; pr.cy = pr.sy; }
       }
       // adjacency + coastal
-      const adj = {};
-      for (const pr of provs) adj[pr.id] = {};
+      const adj = {}, waterAdj = {};
+      for (const pr of provs) {
+        adj[pr.id] = {};
+        waterAdj[pr.id] = {};
+      }
       for (let y = 0; y < H - 1; y++) {
         for (let x = 0; x < W - 1; x++) {
           const a = grid[y * W + x];
@@ -507,11 +537,20 @@ window.FB = window.FB || {};
         }
       }
       for (const s of (FBDATA.straits || [])) {
-        if (adj[s[0]] && adj[s[1]]) { adj[s[0]][s[1]] = 1; adj[s[1]][s[0]] = 1; }
+        if (adj[s[0]] && adj[s[1]]) {
+          const key = s[0] < s[1] ? s[0] + '|' + s[1] : s[1] + '|' + s[0];
+          const crossingClass = (FBDATA.crossingClasses || {})[key] || 'narrow';
+          adj[s[0]][s[1]] = 1; adj[s[1]][s[0]] = 1;
+          waterAdj[s[0]][s[1]] = crossingClass;
+          waterAdj[s[1]][s[0]] = crossingClass;
+        }
       }
       const byId = {};
       for (const pr of provs) byId[pr.id] = pr;
-      FB.world = { W: W, H: H, grid: grid, land: land, provs: provs, byId: byId, adj: adj };
+      FB.world = {
+        W: W, H: H, grid: grid, land: land, provs: provs, byId: byId,
+        adj: adj, waterAdj: waterAdj
+      };
     });
 
     let si = 0;
@@ -574,6 +613,11 @@ window.FB = window.FB || {};
     if (!w || gx < 0 || gy < 0 || gx >= w.W || gy >= w.H) return null;
     const v = w.grid[Math.floor(gy) * w.W + Math.floor(gx)];
     return v ? w.provs[v - 1] : null;
+  };
+
+  FB.waterCrossing = function (fromPid, toPid) {
+    var water = FB.world && FB.world.waterAdj;
+    return water && water[fromPid] && water[fromPid][toPid] || null;
   };
 
   /* ================= POLITICAL STATE ================= */
