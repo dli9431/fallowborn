@@ -64806,7 +64806,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "ArrowRight"
@@ -65317,7 +65318,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "Home"
@@ -100943,7 +100945,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui.js"
       ],
       "source": {
         "text": "ArrowLeft"
@@ -107100,6 +107103,16 @@
       ],
       "source": {
         "text": "Final wealth"
+      }
+    },
+    "src.d2250665": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "\" tabindex=\""
       }
     },
     "src.d2276427": {

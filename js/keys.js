@@ -24,9 +24,8 @@ window.FB = window.FB || {};
 
   function clickNth(sel, n) {
     const nodes = document.querySelectorAll(sel);
-    const largeList = sel === '#gm-body .actionbtn' &&
-      document.querySelector('#gm-body [data-large-list-surface]');
-    const btns = largeList
+    const visibleModalActions = sel === '#gm-body .actionbtn';
+    const btns = visibleModalActions
       ? Array.prototype.filter.call(nodes, function (node) {
         return !node.hidden && node.getClientRects().length > 0;
       })

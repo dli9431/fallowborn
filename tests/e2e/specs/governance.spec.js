@@ -385,6 +385,7 @@ test('vassal Governance consolidates Deeds and returns through Estates without m
       '25% of noble revenue');
     await expect(page.locator('#governance-institution')).toContainText(
       'The Estates');
+    await page.locator('[data-governance-section="actions"]').click();
     await expect(page.locator(
       '[data-governance-action="declare_independence"]')).toBeVisible();
     await expect(page.locator(
@@ -393,6 +394,7 @@ test('vassal Governance consolidates Deeds and returns through Estates without m
       '[data-governance-action="declare_independence"]')).toContainText(
       'at least 200 prestige');
 
+    await page.locator('[data-governance-section="institution"]').click();
     await page.locator(
       '#governance-institution [data-governance-institution="estates"]').click();
     await expect(page.getByRole('heading', {
@@ -537,6 +539,61 @@ test('Council, realm, and character views agree with Governance Standing',
       '+48 (Favorable)');
   });
 
+test('Governance tabs show one compact desktop surface at a time',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:1200, height:800 });
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    await page.evaluate(function () {
+      FB.ui.showGovernance('vassals');
+    });
+
+    const tabs = page.locator('.governance-nav [role="tab"]');
+    await expect(tabs).toHaveCount(6);
+    await expect(page.locator(
+      '[data-governance-section="vassals"]')).toHaveAttribute(
+        'aria-selected', 'true');
+    await expect(page.locator('#governance-vassals')).toBeVisible();
+    await expect(page.locator(
+      '.governance-card:not([hidden])')).toHaveCount(1);
+
+    const layout = await page.locator('.governance-vassal').first().evaluate(
+      function (row) {
+        var stats = row.querySelector('.governance-vassal-stats');
+        var actions = row.querySelector('.governance-vassal-actions');
+        return {
+          rowDisplay:getComputedStyle(row).display,
+          rowColumns:getComputedStyle(row).gridTemplateColumns.split(' ').length,
+          statColumns:getComputedStyle(stats).gridTemplateColumns.split(' ').length,
+          actionsVisible:actions.getClientRects().length > 0,
+          rowHeight:row.getBoundingClientRect().height
+        };
+      });
+    expect(layout.rowDisplay).toBe('grid');
+    expect(layout.rowColumns).toBe(3);
+    expect(layout.statColumns).toBe(5);
+    expect(layout.actionsVisible).toBe(true);
+    expect(layout.rowHeight).toBeLessThan(150);
+
+    await page.locator('[data-governance-section="domain"]').click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+    await expect(page.locator('#governance-domain')).toBeFocused();
+    await expect(page.locator('#governance-vassals')).toBeHidden();
+    await expect(page.locator(
+      '[data-governance-section="domain"]')).toHaveAttribute(
+        'aria-selected', 'true');
+
+    await page.locator(
+      '[data-governance-section="domain"]').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator(
+      '[data-governance-section="obligations"]')).toBeFocused();
+    await expect(page.locator(
+      '[data-governance-section="obligations"]')).toHaveAttribute(
+        'aria-selected', 'true');
+    await expect(page.locator('#governance-obligations')).toBeVisible();
+  });
+
 test('narrow Governance keeps focus, numbered actions, geometry, and browser Back',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
@@ -557,13 +614,19 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     }).toBe('position');
     await page.keyboard.press('Enter');
     await expect(page.locator('#governance-position')).toBeFocused();
+    await page.keyboard.press('1');
+    await expect(page.getByRole('heading', {
+      name:'🏛 Governance', exact:true
+    })).toBeVisible();
+    await page.locator('[data-governance-section="actions"]').click();
     await expect(page.locator(
       '#governance-actions .actionbtn .keyhint').first()).toBeVisible();
+    await expect(page.locator(
+      '.governance-card:not([hidden])')).toHaveCount(1);
 
     const geometry = await page.locator(
       '#genmodal .modalcard').evaluate(function (card) {
       var rect = card.getBoundingClientRect();
-      var sections = document.querySelector('.governance-sections');
       return {
         left:rect.left,
         right:rect.right,
@@ -571,7 +634,6 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
         bottom:rect.bottom,
         viewportWidth:window.innerWidth,
         viewportHeight:window.innerHeight,
-        columns:getComputedStyle(sections).gridTemplateColumns,
         scrollWidth:document.getElementById('gm-body').scrollWidth,
         clientWidth:document.getElementById('gm-body').clientWidth
       };
@@ -580,9 +642,24 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
     expect(geometry.top).toBeGreaterThanOrEqual(0);
     expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
-    expect(geometry.columns.split(' ').length).toBe(1);
     expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
 
+    await page.locator('[data-governance-section="vassals"]').click();
+    const vassalLayout = await page.locator(
+      '.governance-vassal').first().evaluate(function (row) {
+        var stats = row.querySelector('.governance-vassal-stats');
+        var actions = row.querySelector('.governance-inline-actions');
+        return {
+          rowDisplay:getComputedStyle(row).display,
+          statColumns:getComputedStyle(stats).gridTemplateColumns.split(' ').length,
+          actionColumns:getComputedStyle(actions).gridTemplateColumns.split(' ').length
+        };
+      });
+    expect(vassalLayout.rowDisplay).toBe('block');
+    expect(vassalLayout.statColumns).toBe(2);
+    expect(vassalLayout.actionColumns).toBe(2);
+
+    await page.locator('[data-governance-section="institution"]').click();
     await page.locator(
       '#governance-institution [data-governance-institution="council"]').click();
     await expect(page.getByRole('heading', {

@@ -360,9 +360,12 @@ Actions. `FB.governanceSummary` supplies locale-neutral ids and exact numeric va
 the UI localizes complete phrases and delegates every enabled or disabled action to
 `FB.instantStatus` and `FB.runInstant`. County buttons return to Land, realm buttons
 open the existing ruler sheet, and focused Estates/Council views preserve a Governance
-Back path. The section strip and exit footer remain sticky, controls are native
-buttons, ordinary number hints apply to political actions, and narrow layouts collapse
-to one column without hiding blocked reasons. The legacy Estates and Royal Council
+Back path. The section strip is a keyboard-navigable tab list that exposes one consistent
+content surface at a time; its content viewport and exit footer remain fixed while only
+the active section scrolls. Direct vassals use a compact aligned ledger on desktop and
+two-column stat cards on narrow screens. Controls are native buttons, ordinary number
+hints and shortcuts apply only to actions in the active section, and no layout hides
+blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
 

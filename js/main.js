@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.2';
+  FB.VERSION = '1.93.3';
   FB.CHANGELOG = [
+    { v: '1.93.3', date: '2026-07-30', changes: [
+      'Governance now uses compact section tabs and a denser vassal ledger on desktop and mobile.'
+    ] },
     { v: '1.93.2', date: '2026-07-29', changes: [
       'Work & Enterprises now returns to the exact managed enterprise, while list browsing and fresh-game intrigue state remain stable.'
     ] },

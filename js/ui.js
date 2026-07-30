@@ -9688,7 +9688,8 @@ window.FB = window.FB || {};
           s, Math.round(item.levyContribution * 10) / 10))) +
         kv('Council office', esc(office)) +
         kv('Exceptional levy', esc(promise)) +
-        '</div><div class="governance-inline-actions">' +
+        '</div><div class="governance-vassal-actions">' +
+        '<div class="governance-inline-actions">' +
         '<button type="button" class="btn small" data-governance-gift="' +
         esc(item.realmId) + '">' + esc(FB.T('Offer a gift…')) + '</button>' +
         '<button type="button" class="btn small" data-governance-vassal-levy="' +
@@ -9699,7 +9700,7 @@ window.FB = window.FB || {};
             percent:Math.round(
               (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
           })
-          : favor.reason) + '</div></div>';
+          : favor.reason) + '</div></div></div>';
     }
     return h;
   }
@@ -9839,7 +9840,7 @@ window.FB = window.FB || {};
       UI.toast(FB.T('Governance is available only to a territorial landed ruler.'));
       return;
     }
-    let h = '<nav class="governance-nav" aria-label="' +
+    let h = '<nav class="governance-nav" role="tablist" aria-label="' +
       esc(FB.T('Governance sections')) + '">';
     const sections = [
       ['position', FB.T('Position')],
@@ -9850,32 +9851,52 @@ window.FB = window.FB || {};
       ['institution', FB.T('Institution')],
       ['actions', FB.T('Political actions')]
     ];
+    const sectionIds = sections.map(function (item) { return item[0]; });
+    const selectedSection = sectionIds.indexOf(sectionId) >= 0
+      ? sectionId : 'position';
     for (const item of sections) {
-      h += '<button type="button" class="btn small" data-governance-section="' +
-        item[0] + '">' + esc(item[1]) + '</button>';
+      const selected = item[0] === selectedSection;
+      h += '<button type="button" class="btn small" role="tab" ' +
+        'id="governance-tab-' + item[0] + '" data-governance-section="' +
+        item[0] + '" aria-controls="governance-' + item[0] +
+        '" aria-selected="' + selected + '" tabindex="' +
+        (selected ? '0' : '-1') + '">' + esc(item[1]) + '</button>';
     }
     h += '</nav><div class="governance-sections">' +
-      '<section class="governance-card" id="governance-position" tabindex="-1">' +
+      '<section class="governance-card" id="governance-position" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-position" tabindex="-1"' +
+      (selectedSection === 'position' ? '' : ' hidden') + '>' +
       '<h4>' + esc(FB.T('Political position')) + '</h4>' +
       governancePositionHtml(s, summary) + '</section>' +
-      '<section class="governance-card" id="governance-domain" tabindex="-1">' +
+      '<section class="governance-card" id="governance-domain" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-domain" tabindex="-1"' +
+      (selectedSection === 'domain' ? '' : ' hidden') + '>' +
       '<h4>' + esc(FB.T('Domain')) + '</h4>' +
       governanceDomainHtml(s, summary) + '</section>' +
-      '<section class="governance-card" id="governance-obligations" tabindex="-1">' +
+      '<section class="governance-card" id="governance-obligations" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-obligations" ' +
+      'tabindex="-1"' +
+      (selectedSection === 'obligations' ? '' : ' hidden') + '>' +
       '<h4>' + esc(summary.liegeId
         ? FB.T('Liege & obligations')
         : FB.T('Independence & foreign contact')) + '</h4>' +
       governanceObligationsHtml(s, summary) + '</section>' +
-      '<section class="governance-card governance-wide" ' +
-      'id="governance-vassals" tabindex="-1"><h4>' +
+      '<section class="governance-card" id="governance-vassals" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-vassals" tabindex="-1"' +
+      (selectedSection === 'vassals' ? '' : ' hidden') + '><h4>' +
       esc(FB.T('Direct vassals')) + '</h4>' +
       governanceVassalsHtml(s, summary) + '</section>' +
-      '<section class="governance-card" id="governance-institution" tabindex="-1">' +
+      '<section class="governance-card" id="governance-institution" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-institution" ' +
+      'tabindex="-1"' +
+      (selectedSection === 'institution' ? '' : ' hidden') + '>' +
       '<h4>' + esc(summary.institution === 'estates'
         ? FB.T('The Estates') : (summary.institution === 'council'
           ? FB.T('The Royal Council') : FB.T('Institution'))) + '</h4>' +
       governanceInstitutionHtml(s, summary) + '</section>' +
-      '<section class="governance-card" id="governance-actions" tabindex="-1">' +
+      '<section class="governance-card" id="governance-actions" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-actions" tabindex="-1"' +
+      (selectedSection === 'actions' ? '' : ' hidden') + '>' +
       '<h4>' + esc(FB.T('Political actions')) + '</h4>' +
       governanceActionGroups(s, summary) + '</section></div>' +
       '<div class="gm-footer"><button type="button" class="btn" ' +
@@ -9883,15 +9904,63 @@ window.FB = window.FB || {};
     openModal(FB.T('🏛 Governance'), h, {
       modalClass:'fullsheet-modal governance-modal'
     });
-    document.querySelectorAll('[data-governance-section]').forEach(
-      function (button) {
-        button.addEventListener('click', function () {
-          const section = $('governance-' + button.dataset.governanceSection);
-          if (!section) return;
-          section.scrollIntoView({ block:'start' });
-          section.focus({ preventScroll:true });
-        });
+    const sectionButtons = document.querySelectorAll(
+      '[data-governance-section]');
+    function refreshGovernanceActionHints(activeId) {
+      const actionButtons = document.querySelectorAll(
+        '.governance-card .actionbtn');
+      for (let i = 0; i < actionButtons.length; i++) {
+        const children = actionButtons[i].children;
+        for (let j = children.length - 1; j >= 0; j--) {
+          if (children[j].classList.contains('keyhint')) {
+            actionButtons[i].removeChild(children[j]);
+          }
+        }
+      }
+      if (FB.isTouch) return;
+      const active = $('governance-' + activeId);
+      if (!active) return;
+      const visibleButtons = active.querySelectorAll('.actionbtn');
+      for (let i = 0; i < visibleButtons.length && i < 18; i++) {
+        visibleButtons[i].insertAdjacentHTML('afterbegin', hintFor(i));
+      }
+    }
+    function selectGovernanceSection(nextId, focusPanel) {
+      if (sectionIds.indexOf(nextId) < 0) return;
+      for (let i = 0; i < sectionButtons.length; i++) {
+        const tab = sectionButtons[i];
+        const selected = tab.dataset.governanceSection === nextId;
+        tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        tab.tabIndex = selected ? 0 : -1;
+        const panel = $('governance-' + tab.dataset.governanceSection);
+        if (panel) panel.hidden = !selected;
+      }
+      const scroller = document.querySelector('.governance-sections');
+      if (scroller) scroller.scrollTop = 0;
+      refreshGovernanceActionHints(nextId);
+      if (focusPanel) {
+        const panel = $('governance-' + nextId);
+        if (panel) panel.focus({ preventScroll:true });
+      }
+    }
+    sectionButtons.forEach(function (button, index) {
+      button.addEventListener('click', function () {
+        selectGovernanceSection(button.dataset.governanceSection, true);
       });
+      button.addEventListener('keydown', function (event) {
+        let next = index;
+        if (event.key === 'ArrowRight') next = (index + 1) % sections.length;
+        else if (event.key === 'ArrowLeft') {
+          next = (index + sections.length - 1) % sections.length;
+        } else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = sections.length - 1;
+        else return;
+        event.preventDefault();
+        selectGovernanceSection(sectionIds[next], false);
+        sectionButtons[next].focus();
+      });
+    });
+    refreshGovernanceActionHints(selectedSection);
     document.querySelectorAll('[data-governance-realm]').forEach(
       function (button) {
         button.addEventListener('click', function (event) {
@@ -9944,10 +10013,7 @@ window.FB = window.FB || {};
     $('governance-close').addEventListener('click', UI.closeModal);
     if (sectionId) {
       setTimeout(function () {
-        const section = $('governance-' + sectionId);
-        if (!section) return;
-        section.scrollIntoView({ block:'start' });
-        section.focus({ preventScroll:true });
+        selectGovernanceSection(selectedSection, true);
       }, 0);
     }
   };
