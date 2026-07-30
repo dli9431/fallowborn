@@ -10741,6 +10741,62 @@ window.FB = window.FB || {};
     return FB.T('Passes to the next household head; cannot be sold or pledged');
   }
 
+  function householdStandardRules(s, def) {
+    return '<div class="household-standard-rules" role="note">' +
+      '<b>' + esc(householdStandardScope(s, def)) + '</b><span>' +
+      esc(FB.T(
+        'Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid.')) +
+      '</span></div>';
+  }
+
+  function householdStandardCurrent(s, id, level, current, active) {
+    const levelText = level
+      ? FB.T('Level {level}: {name}', {
+        level:level, name:householdStandardLevelName(s, id, level)
+      })
+      : FB.T('Baseline');
+    const upkeep = level && active && current
+      ? FB.T('{money:amount}/season', { amount:Number(current.upkeep) || 0 })
+      : level ? FB.T('None while dormant') : FB.T('No upkeep');
+    const effect = level && active
+      ? householdStandardLevelDesc(s, id, level)
+      : level ? FB.T('Dormant — no current benefit') :
+        FB.T('No maintained improvement');
+    return '<section class="household-standard-current" ' +
+      'aria-labelledby="household-standard-current-title">' +
+      '<span class="household-standard-eyebrow" ' +
+      'id="household-standard-current-title">' + esc(FB.T('Current level')) +
+      '</span><div class="household-standard-current-line"><b>' +
+      esc(levelText) + '</b><span>' + esc(upkeep) + '</span></div>' +
+      '<p>' + esc(effect) + '</p></section>';
+  }
+
+  function householdStandardUpgradeChoice(s, id, level, next, availability) {
+    const setup = assetSummaryValue(assetMoneyCost(next.cost,
+      s.player.gold >= (Number(next.cost) || 0)), '');
+    return '<button class="actionbtn household-standard-choice" ' +
+      'id="household-standard-upgrade"' +
+      (availability === true ? '' : ' disabled') + '>' +
+      '<span class="household-standard-choice-head"><b>' +
+      esc(FB.T('Improve to level {level}: {name}', {
+        level:level + 1,
+        name:householdStandardLevelName(s, id, level + 1)
+      })) + '</b><span aria-hidden="true">›</span></span>' +
+      '<span class="household-standard-choice-effect">' +
+      esc(householdStandardLevelDesc(s, id, level + 1)) + '</span>' +
+      '<span class="household-standard-choice-terms">' +
+      '<span><small>' + esc(FB.T('Setup cost')) + '</small><b' +
+      (setup.tone ? ' class="' + esc(setup.tone) + '"' : '') + '>' +
+      esc(setup.text) + '</b></span><span><small>' +
+      esc(FB.T('Recurring cost')) + '</small><b>' +
+      esc(FB.T('{money:amount}/season', {
+        amount:Number(next.upkeep) || 0
+      })) + '</b></span></span>' +
+      (availability === true ? '' :
+        '<span class="adesc household-standard-choice-blocked">' +
+        esc(availability) + '</span>') + '</button>';
+  }
+
   function holdingEffectText(def) {
     const fx = (def && def.fx) || {};
     const parts = [];
@@ -10987,41 +11043,14 @@ window.FB = window.FB || {};
     const active = FB.householdStandardActive(s, id);
     const availability = FB.householdStandardUpgradeAvailable(s, id);
     const next = level < def.levels.length ? def.levels[level] : null;
-    let h = '<div class="gm-body-text"><p>' +
+    let h = '<div class="gm-body-text household-standard-detail">' +
+      '<p class="household-standard-description">' +
       esc(dt(s, 'householdStandard', id, def, 'desc')) + '</p>' +
-      kv('Current level', esc(level
-        ? FB.T('{level} — {name}', {
-          level:level, name:householdStandardLevelName(s, id, level)
-        }) : FB.T('Baseline'))) + assetEffectSummary({
-        owner:FB.T('Household dynasty'),
-        scope:householdStandardScope(s, def),
-        setupCost:level ? FB.T('Paid when each level was established') : FB.T('None'),
-        recurringCost:active && current
-          ? assetSeasonalMoneyCost(current.upkeep) : FB.T('None while dormant'),
-        effect:level && active
-          ? householdStandardLevelDesc(s, id, level)
-          : level ? FB.T('Dormant — no current benefit') : FB.T('No maintained improvement'),
-        transferRule:householdStandardTransferRule(),
-        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
-      }) + '</div><div class="gm-list">';
+      householdStandardCurrent(s, id, level, current, active) +
+      householdStandardRules(s, def) + '</div>' +
+      '<div class="gm-list household-standard-options">';
     if (next) {
-      h += '<button class="actionbtn" id="household-standard-upgrade"' +
-        (availability === true ? '' : ' disabled') + '>' +
-        esc(FB.T('Improve to level {level}: {name}', {
-          level:level + 1,
-          name:householdStandardLevelName(s, id, level + 1)
-        })) + (availability === true ? '' : '<span class="adesc">' +
-          esc(availability) + '</span>') + assetEffectSummary({
-          compact:true,
-          owner:FB.T('Household dynasty'),
-          scope:householdStandardScope(s, def),
-          setupCost:assetMoneyCost(next.cost,
-            s.player.gold >= (Number(next.cost) || 0)),
-          recurringCost:assetSeasonalMoneyCost(next.upkeep),
-          effect:householdStandardLevelDesc(s, id, level + 1),
-          transferRule:householdStandardTransferRule(),
-          expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
-        }) + '</button>';
+      h += householdStandardUpgradeChoice(s, id, level, next, availability);
     }
     if (level) {
       h += '<button class="actionbtn danger" id="household-standard-reduce">' +
@@ -11030,11 +11059,12 @@ window.FB = window.FB || {};
           'No refund. The lost level and its setup investment must be purchased again.')) +
         '</span></button>';
     }
-    h += '<button class="actionbtn" id="household-standard-back">' +
+    h += '</div><div class="gm-footer"><button class="btn" ' +
+      'id="household-standard-back">' +
       esc(FB.T('Back to household')) + '</button></div>';
     openModal((def.icon || '🏠') + ' ' + householdStandardName(s, id), h, {
       historyView:true,
-      modalClass:'fullsheet-modal',
+      modalClass:'fullsheet-modal household-standard-modal',
       historyBackRender:function () { UI.showHousehold(); }
     });
     const upgrade = $('household-standard-upgrade');

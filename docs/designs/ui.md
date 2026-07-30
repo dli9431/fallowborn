@@ -259,18 +259,22 @@ not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
 
 Asset and persistent-effect surfaces use the render-only
-`UI.assetEffectSummary`. Detailed asset views keep the same owner, scope,
-setup cost, recurring cost, effect, transfer rule, and expiry order across
-household-standard details, freehold plots, enterprises, buildings, items,
-temporary modifiers, and technology. Dense catalogue overviews may summarize
+`UI.assetEffectSummary`. Detailed asset views ordinarily keep the same owner,
+scope, setup cost, recurring cost, effect, transfer rule, and expiry order
+across freehold plots, enterprises, buildings, items, temporary modifiers,
+technology, and purchase confirmations. Household-standard details are the
+deliberate compact exception: they show the current state once, keep invariant
+scope, succession, no-resale, and lapse rules in one note, and limit the
+next-level choice to its changing name, effect, setup cost, and upkeep. The
+upgrade and reduction confirmations still repeat the complete terms beside
+their projected finances. Dense catalogue overviews may likewise summarize
 self-evident fields and keep rule differences inline; Better Household does so
-to keep standards and permanent property scannable, while each standard row
-opens its complete detail view. Callers supply live values from their own
-APIs; the renderer escapes and labels them, applies the shared not-affordable
-cue, and points seasonal money to the existing resource ledger. Wide full
-sheets use a compact comparison grid, ordinary dialogs use two columns, and
-narrow layouts stack every labeled field. This shared presentation does not
-create a common asset record or mutation path.
+to keep standards and permanent property scannable. Callers supply live values
+from their own APIs; renderers escape and label them, apply the shared
+not-affordable cue, and point seasonal money to the existing resource ledger.
+Wide full sheets use a compact comparison grid, ordinary dialogs use two
+columns, and narrow layouts stack every labeled field. Shared presentation
+does not create a common asset record or mutation path.
 
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. It always shows the current daily

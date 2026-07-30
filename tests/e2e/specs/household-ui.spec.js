@@ -8,7 +8,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('keeps the household overview compact and the full ledger in details',
+test('keeps the household overview and standard choice compact',
   async function ({ page }) {
     const setup = await page.evaluate(function () {
       const s = FB.state;
@@ -57,11 +57,37 @@ test('keeps the household overview compact and the full ledger in details',
     });
     expect(Math.max.apply(Math, rowHeights)).toBeLessThan(90);
 
-    await board.click();
-    await expect(page.locator('#gm-body .asset-effect-summary').first())
-      .toBeVisible();
-    await expect(page.locator('.asset-effect-label').filter({ hasText:'Owner' }).first())
-      .toBeVisible();
-    await expect(page.locator('.asset-effect-label')
-      .filter({ hasText:'Transfer rule' }).first()).toBeVisible();
+    const wares = page.locator('[data-household-standard="wares"]');
+    await wares.click();
+    await expect(page.locator('#genmodal'))
+      .toHaveClass(/household-standard-modal/);
+    await expect(page.locator('#gm-body .asset-effect-summary')).toHaveCount(0);
+
+    const current = page.locator('.household-standard-current');
+    await expect(current).toContainText('Baseline');
+    await expect(current).toContainText('No maintained improvement');
+
+    const rules = page.locator('.household-standard-rules');
+    await expect(rules).toContainText('Commoner household');
+    await expect(rules).toContainText(
+      'Passes to the next household head; cannot be sold or pledged.');
+    await expect(rules).toContainText(
+      'It may lapse when upkeep cannot be paid.');
+
+    const choice = page.locator('#household-standard-upgrade');
+    await expect(choice).toContainText(
+      'Improve to level 1: Good Bedding and Vessels');
+    await expect(choice.locator('.household-standard-choice-effect')).toContainText(
+      'Adds 1 percentage point to yearly education chances.');
+    await expect(choice.locator('.household-standard-choice-terms'))
+      .toContainText('Setup cost');
+    await expect(choice.locator('.household-standard-choice-terms'))
+      .toContainText('Recurring cost');
+
+    const detailHeight = await page.locator('.household-standard-detail')
+      .evaluate(function (node) { return node.getBoundingClientRect().height; });
+    const choiceHeight = await choice
+      .evaluate(function (node) { return node.getBoundingClientRect().height; });
+    expect(detailHeight).toBeLessThan(190);
+    expect(choiceHeight).toBeLessThan(130);
   });

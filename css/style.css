@@ -506,8 +506,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 .asset-owned-row > b { display: block; color: #ecd9a0; }
 
-/* Better Household uses the same dense scan rhythm as Technology. The full
-   seven-field asset ledger stays one click down in each standard's detail. */
+/* Better Household uses the same dense scan rhythm as Technology. */
 .household-modal .modalcard { width: min(94vw, 780px); }
 .household-summary {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -597,6 +596,83 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 @media (pointer: coarse) {
   .household-entry-layout { padding-left: 9px; }
+}
+.household-standard-modal .modalcard { width: min(92vw, 660px); }
+.household-standard-detail {
+  display: grid; gap: 8px; margin-bottom: 8px;
+}
+.household-standard-description {
+  margin: 0; color: #d4c6a4; line-height: 1.4;
+}
+.household-standard-current {
+  padding: 8px 10px; border: 1px solid #55452a; border-radius: 8px;
+  background: #241d15;
+}
+.household-standard-eyebrow,
+.household-standard-choice-terms small {
+  display: block; color: #8f8066; font-size: 10px; font-weight: bold;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.household-standard-current-line {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-top: 2px;
+}
+.household-standard-current-line b {
+  min-width: 0; color: #ecd9a0; font-size: 14px;
+}
+.household-standard-current-line span {
+  flex: 0 0 auto; color: #bda878; font-size: 12px;
+}
+.household-standard-current p {
+  margin: 3px 0 0; color: #aa9a79; font-size: 12px; line-height: 1.35;
+}
+.household-standard-rules {
+  display: grid; grid-template-columns: minmax(135px, .55fr) minmax(0, 1.45fr);
+  gap: 10px; align-items: start; padding: 7px 9px;
+  border-left: 2px solid #806733; color: #9f8e6d;
+  font-size: 11px; line-height: 1.35;
+}
+.household-standard-rules b { color: #c5ae7d; font-weight: normal; }
+.household-standard-choice.actionbtn {
+  position: relative; display: grid;
+  grid-template-columns: minmax(0, 1fr) auto; gap: 7px 16px;
+  margin: 0 0 8px; padding: 10px 12px; text-align: left;
+}
+.household-standard-choice > .keyhint {
+  position: absolute; top: 10px; left: 12px; margin: 0;
+}
+.household-standard-choice > .keyhint + .household-standard-choice-head {
+  padding-left: 27px;
+}
+.household-standard-choice-head {
+  display: flex; grid-column: 1 / -1; align-items: baseline;
+  justify-content: space-between; gap: 12px; min-width: 0;
+}
+.household-standard-choice-head b {
+  min-width: 0; color: #ecd9a0; font-size: 14px; font-weight: normal;
+}
+.household-standard-choice-head > span {
+  flex: 0 0 auto; color: #d8b24a; font-size: 20px; line-height: 1;
+}
+.household-standard-choice-effect {
+  min-width: 0; align-self: center; color: #c8b892;
+  font-size: 12px; line-height: 1.35; overflow-wrap: anywhere;
+}
+.household-standard-choice-terms {
+  display: grid; grid-template-columns: repeat(2, minmax(90px, 1fr));
+  gap: 8px; min-width: 210px;
+}
+.household-standard-choice-terms > span {
+  padding-left: 8px; border-left: 1px solid #4d4029;
+}
+.household-standard-choice-terms b {
+  display: block; margin-top: 1px; color: #d8bd7b;
+  font-size: 12px; font-weight: normal; line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.household-standard-choice-terms b.unaffordable { color: #d79579; }
+.household-standard-choice-blocked {
+  grid-column: 1 / -1; margin: 0; color: #c29173;
 }
 .enterprise-worker-lock {
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px;
@@ -1755,6 +1831,11 @@ textarea.modjson, textarea.savetext {
   .household-entry-cost { min-width: 86px; }
   .household-entry-cost small { font-size: 10px; }
   .household-entry-cost small:last-child { font-size: 11px; }
+  .household-standard-rules { grid-template-columns: 1fr; gap: 2px; }
+  .household-standard-choice.actionbtn { grid-template-columns: 1fr; }
+  .household-standard-choice-effect,
+  .household-standard-choice-terms { grid-column: 1; }
+  .household-standard-choice-terms { min-width: 0; }
   .asset-effect-summary,
   .fullsheet-modal .asset-effect-summary { grid-template-columns: 1fr; }
   .asset-effect-effect, .asset-effect-transfer-rule,
@@ -1771,6 +1852,10 @@ textarea.modjson, textarea.savetext {
 }
 
 @media (max-width: 380px) {
+  .household-standard-current-line {
+    align-items: flex-start; flex-direction: column; gap: 2px;
+  }
+  .household-standard-choice-terms { grid-template-columns: 1fr; }
   .ongoing-commitment-row {
     grid-template-columns: 25px minmax(0, 1fr);
   }

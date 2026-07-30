@@ -75091,16 +75091,6 @@
         "text": "No enterprise yet. Open one in a settlement below."
       }
     },
-    "src.70ce16bb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Paid when each level was established"
-      }
-    },
     "src.70d8ebd0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83271,16 +83261,6 @@
       ],
       "source": {
         "text": "Manage policy…"
-      }
-    },
-    "src.886232d0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "{level} — {name}"
       }
     },
     "src.8865d350": {
@@ -99033,6 +99013,16 @@
         "text": "The target crown"
       }
     },
+    "src.b88309f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal household-standard-modal"
+      }
+    },
     "src.b88384ca": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106618,6 +106608,16 @@
       ],
       "source": {
         "text": "Only the map and the flow of days remain."
+      }
+    },
+    "src.d059389e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid."
       }
     },
     "src.d0696f03": {
@@ -130322,6 +130322,14 @@
         "text": "Current commitments and urgent state"
       }
     },
+    "ui:Current level": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Current level"
+      }
+    },
     "ui:Current officer": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -135976,14 +135984,6 @@
         "text": "Paid retainer · {office}"
       }
     },
-    "ui:Paid when each level was established": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Paid when each level was established"
-      }
-    },
     "ui:Paid when raised": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136062,6 +136062,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Passes to the next household head; cannot be sold or pledged"
+      }
+    },
+    "ui:Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid."
       }
     },
     "ui:Paste a start code or world seed": {
@@ -145479,17 +145487,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead"
-      }
-    },
-    "ui:{level} — {name}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "level",
-        "name"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "{level} — {name}"
       }
     },
     "ui:{marital} · Standing {standing}": {

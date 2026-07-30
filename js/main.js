@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.0';
+  FB.VERSION = '1.93.1';
   FB.CHANGELOG = [
+    { v: '1.93.1', date: '2026-07-29', changes: [
+      'Household standard details now present the current state and next upgrade in a shorter, clearer layout.'
+    ] },
     { v: '1.93.0', date: '2026-07-29', changes: [
       'Council and Estates stories now leave visible county consequences through trade, service, roads, custom, and local grievances.'
     ] },
