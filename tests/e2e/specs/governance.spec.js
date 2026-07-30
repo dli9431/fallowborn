@@ -459,7 +459,10 @@ test('institution summaries stay read-only until their existing actions run',
         year:s.date.year,
         queued:(s.eventQueue || []).some(function (item) {
           return item && item.id === 'parliament_redress';
-        })
+        }),
+        pending:!!(s.politics && s.politics.pendingMotion),
+        expiresIn:s.politics && s.politics.pendingMotion
+          ? s.politics.pendingMotion.expiresTurn - s.turn : null
       };
     });
 
@@ -470,7 +473,9 @@ test('institution summaries stay read-only until their existing actions run',
       spent:15,
       lastMotion:estates.year,
       year:estates.year,
-      queued:true
+      queued:false,
+      pending:true,
+      expiresIn:90
     });
 
     const setup = await configureGovernance(page, 'king');
@@ -549,7 +554,7 @@ test('Governance tabs show one compact desktop surface at a time',
     });
 
     const tabs = page.locator('.governance-nav [role="tab"]');
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(7);
     await expect(page.locator(
       '[data-governance-section="vassals"]')).toHaveAttribute(
         'aria-selected', 'true');

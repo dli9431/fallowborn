@@ -38,6 +38,45 @@ Council, and Estates readers, is never saved, and performs no political mutation
 Kings and emperors are reported as crowned rulers; independent counts and dukes as
 sovereign rulers; sworn territorial rulers as vassals.
 
+## The relevant political court
+
+Political blocs are simulated only where they can affect the protagonist.
+`FB.politicalCourt` derives the ruler's house, living landed houses sworn
+directly to that ruler, and the player's house when sworn there. It excludes
+unrelated sovereign trees, indirect vassal houses, empty generated
+placeholders, and houses without a ruler or territory. For a player crown,
+the same rule covers the player house and its direct vassals.
+
+House influence is a current-state projection:
+
+`1 + rank×2 + directly held counties + floor(other territory/2) + 1 for a Council office`.
+
+Rank is realm rank (or player tier minus three), "other territory" is the
+house's vassal subtree beyond its own demesne, and the Council bonus applies
+only to a real great office in the player's crown. Bloc influence is the sum
+of member-house influence; a vote requires `floor(total/2) + 1`.
+
+`FBDATA.politicalBlocs` defines the localized Crown, Mercantile, Magnate, and
+Independent archetype presentation and their initial redress/scutage
+postures. `js/politics.js` assigns real court houses from current interests:
+Crown uses Standing/favor, Council office, shared faith, and ruler
+temperament; Mercantile uses guild rank, monopolies, enterprises, active
+trade contracts, and commercial county modifiers. Up to two highest-influence
+otherwise unaligned houses lead Magnate affinities, whose followers respond
+to culture, faith, adjacent land, and leader rank. A house without a strong
+alignment forms its own singleton Independent bloc.
+
+Only the allegiance is durable. An annual review retains an ordinary
+affiliation unless its basis disappears or another valid interest exceeds it
+by at least 25 points. Voluntary realignment waits while any motion is
+pending, then the overdue review occurs after the motion clears.
+For an Estates-eligible vassal, `FB.politicalSummary` includes ordinary
+redress and scutage forecasts plus the active pending-motion forecast.
+Crown-side blocs remain visible without implying those vassal motions apply
+to crown policy. The summary and `FB.politicalMotionForecast` derive all
+membership details, reasons, influence, postures, and probabilities without
+consuming RNG or mutating game state.
+
 When a materialized rightful ruler becomes the protagonist, `FB.absorbRealm` joins that
 realm to the player's: its ruler's demesne enters the player's hand, its vassals reattach
 intact, hierarchy cycles are prevented, outgoing wars end in white peace, and title,

@@ -360,7 +360,7 @@ never replaces the work focus.
 Rank & Realm exposes one no-day-cost **Governance…** entry for every territorial
 baron-or-greater player. Its desktop-wide and mobile full-sheet layout is the
 authoritative political presentation: Position, Domain, Liege & Obligations (or
-Independence), Vassals, the rank-appropriate Institution, and grouped Political
+Independence), Vassals, Political Blocs, the rank-appropriate Institution, and grouped Political
 Actions. `FB.governanceSummary` supplies locale-neutral ids and exact numeric values;
 the UI localizes complete phrases and delegates every enabled or disabled action to
 `FB.instantStatus` and `FB.runInstant`. County buttons return to Land, realm buttons
@@ -373,6 +373,22 @@ hints and shortcuts apply only to actions in the active section, and no layout h
 blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
+
+Political Blocs consumes `FB.politicalSummary` directly. Its full cards show
+each archetype, leader and member-ruler links, influence, interests, current
+motion reasons, locked or pledged posture, natural uncertainty, pledged
+totals, and the strict-majority threshold. Network consumes that same summary
+in compact rows and routes the row or section action back to Governance's
+Political Blocs tab; it does not keep a second faction projection.
+The Estates sheet replaces "Vote chance" with bloc totals and "Lobbying
+strength." During a 90-day campaign it exposes one eligible lobbying button
+per undecided bloc, then Call Vote and Withdraw controls. Campaign re-renders
+replace the current modal view while preserving its existing history token,
+so visible Back and browser Back return directly to Governance rather than to
+a stale pre-campaign sheet. Political cards and motion rows stack on narrow
+layouts, and lobbying controls retain the 44-pixel minimum touch target.
+Opening or navigating Network, Governance, Estates, or any forecast consumes
+no RNG and writes no simulation state.
 
 Governance's Institution section also repeats every active modifier record from the
 player's directly held counties. These are the same native-button chips as Land—not a
@@ -447,12 +463,13 @@ generic-modal history, and all choices are native buttons, retaining number-key 
 Tab/Enter/Space, and mobile bottom-sheet navigation.
 
 The contextual **Network** panel (`N`) answers who is tied to the current household and
-what that relationship does. Its four sections are Household (resident family,
+what that relationship does. Its five sections are Household (resident family,
 capacity-limited retainers, office, pay, work assignment, and maintained-standard
 summary/upkeep), Connections (canonical
 friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
 rank, standing, exact income modifier, enterprises, partnerships, positions, and bounded
-guild commissions), and Realm. For a qualified territorial ruler, Realm contains one
+guild commissions), Political Blocs, and Realm. For a qualified territorial ruler,
+Political Blocs is the compact shared-court summary and Realm contains one
 Governance route, foreign ties, and the computed levy ledger rather than duplicating
 liege, vassal, Estates, or Council prose. Other protagonists retain the compact legacy
 relationship summary. Empty sections explain what is absent rather than inventing
@@ -482,7 +499,8 @@ lock, settlement, and live yield. The summary reports owned, staffed, idle, bloc
 approximate seasonal yield totals, while **Staff all idle enterprises…** remains the
 explicit bounded bulk review.
 
-Network keeps Household, Connections, Trade & Guild, and Realm distinct. A person or realm
+Network keeps Household, Connections, Trade & Guild, Political Blocs, and Realm
+distinct. A person or realm
 appears once within a section with combined role labels, but may still appear in another
 section for a genuinely different context. Character and ruler rows open the consolidated
 authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and

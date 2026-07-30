@@ -246,8 +246,11 @@ to a different sovereign — or raise your own banner and fight for independence
 ⚑ Declare independence deed, once you have 200+ prestige). A sworn baron, count, or duke
 also sits in the realm's **estates** (the 🏛 Estates deed): summoned about once a year, the
 assembled lords vote on the terms of service — the liege's aid (his cut of your revenue,
-10–40%) and scutage (silver in place of banner service) — with your voice growing with rank,
-diplomacy, prestige, and Standing with the liege. As a **liege**
+10–40%) and scutage (silver in place of banner service). Their houses form visible Crown,
+Mercantile, Magnate, and Independent blocs with influence based on rank, land, and office.
+Your own redress or scutage motion costs 15 gold, opens a 90-day campaign, and includes one
+attempt to lobby an undecided bloc before you call the influence-weighted vote; Governance
+and Network show the same leaders, members, interests, and forecast. As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
 of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land —
 and the promotion is automatic the day you hold it: the majority of a duchy's counties makes

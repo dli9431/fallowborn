@@ -32,34 +32,59 @@ service-beyond-custom bargain. Active Contested Tolls or Settlement Grudge adds 
 focused redress hearing. The yearly cadence is unchanged; the broader pool prevents the
 new stories from occupying every event slot. Between sittings the
 🏛 **Estates** deed (`UI.showParliament`) shows the current terms and the
-player's voice, and sells a motion of the player's own — redress
+player's political court, and begins a motion of the player's own — redress
 (`parliament_redress`, aid down a step) or scutage (`parliament_scutage`) —
 for `balance.parliamentMotionCost` gold, one motion per calendar year
-(`obl.lastMotion`).
+(`obl.lastMotion`). The payment opens a 90-day campaign rather than queueing
+the result immediately. The payment and yearly use remain spent if the motion
+is withdrawn or expires.
 
 For territorial players, **Governance** is now the authoritative overview and entry
 point. `FB.parliamentTerms` and `FB.parliamentSummary` expose the current saved terms,
 pending session or motion, yearly-use status, and exact vote factors without creating
 `liege.obl`; the customary defaults are projected until the season tick or a successful
 motion calls `FB.parliamentEnsure`. `FB.parliamentMotionStatus` is the shared gate used
-by both Governance and `UI.showParliament`, and `FB.parliamentMove` performs the existing
-gold spend and event queueing only after that gate succeeds. The focused Estates view
+by both Governance and `UI.showParliament`. `FB.parliamentBeginMotion` performs the
+gold spend and creates the pending campaign only after that gate succeeds;
+`FB.parliamentMove` remains its compatibility alias. The focused Estates view
 therefore remains mechanically authoritative without mutating state when opened. Its
 visible and browser Back actions return to Governance's Institution section when it was
 opened there. The former `the_estates` deed id remains a direct-call compatibility alias.
 
-**Votes are decided by the `parliament_vote` named chance**
-(`FB.parliamentVoteChance`): a 30% base plus a rank bonus (baron +5, count
-+12, duke +20 — a duke's word outweighs a baron's), diplomacy ×2%, prestige,
-Standing with the liege, and grouped `assembly.voteChance` trait effects, clamped
-10–85%. Moot-Speaker contributes +5 percentage points in addition to its +1
-Diplomacy. The player redress motion uses `parliament_redress_vote`, the same formula
-with any exact-contract plot evidence added; unrelated votes never consume or benefit
-from that evidence. Every vote moves `liegeOp` as well
-as the terms: consenting to a demand buys the crown's notice, leading a
-refusal is remembered, and winning redress binds the liege while displeasing
-him. Only the player's own terms are simulated; AI vassals of the realm are
-the unnamed benches, exactly as AI realms stay lightweight elsewhere.
+**Player redress and scutage motions are decided by political blocs.** The
+shared court, allegiances, influence, and forecast are described in
+[realms.md](realms.md). A bloc begins from its archetype's motion posture,
+then current aid, member-ruler traits, and (for scutage) martial inclination
+add visible reason-coded adjustments. Scores at +25 or above lock support;
+scores at −25 or below lock opposition. An undecided bloc's support chance is
+`clamp(50% + score, 15%, 85%)`.
+
+One targeted lobbying attempt is included in the motion cost. It may target
+only an undecided bloc, and its visible chance is the average of that bloc's
+natural support chance and `FB.parliamentVoteChance`. Exact-contract redress
+evidence remains part of the player side of that average. Success saves a
+support pledge; failure saves only that the attempt was used and leaves the
+bloc undecided.
+
+`FB.parliamentCallVote` resolves undecided blocs in stable bloc-id order with
+one saved-RNG roll each. Locked and pledged blocs consume no roll. The summed
+support influence must reach a strict majority; there is no final global
+success roll. The existing `parliament_redress` or `parliament_scutage` event
+is then queued with a semantic predetermined result. Its two gated, no-chance
+options make visible and automated event handling apply the same existing
+effects. A liege change or invalid court clears the campaign, and the queued
+event's exact polity/motion id validator prevents it from applying in another
+realm. Expiry and withdrawal preserve unused redress evidence; a resolved
+redress vote consumes it as before.
+
+The `parliament_vote` and `parliament_redress_vote` named chances remain
+available for mods and for all other authored Estates stories. Their formula
+is still a 30% base plus rank, Diplomacy, prestige, Standing, grouped
+`assembly.voteChance` trait effects, and (only for the redress variant)
+exact-contract evidence, clamped 10–85%. Moot-Speaker continues to contribute
+through that compatibility formula. Every resolved motion retains the
+existing aid, scutage, Standing, prestige, trait-progress, modifier, and
+Chronicle effects.
 
 The named **Bend the Feudal Obligation** plot is a deliberate player exception to
 the otherwise systemic vote flow. It targets the protagonist's exact current

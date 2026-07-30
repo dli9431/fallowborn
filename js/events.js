@@ -2704,6 +2704,7 @@ window.FB = window.FB || {};
     if (FB.travelValidate) FB.travelValidate(state);
     if (FB.validateFocus) FB.validateFocus(state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+    if (FB.repairPolitics) FB.repairPolitics(state);
     return true;
   };
   FB.fns.barony_offer_eligible = function (state) {

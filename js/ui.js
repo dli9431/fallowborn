@@ -3626,6 +3626,84 @@ window.FB = window.FB || {};
     const composition = FB.playerCompositionBreakdown(s);
     const governance = FB.governanceSummary
       ? FB.governanceSummary(s) : null;
+    const politics = governance && governance.politics;
+    const politicalRows = [];
+    let politicalSummary = '';
+    if (politics) {
+      politicalSummary =
+        kv('Court influence', esc(String(politics.totalInfluence))) +
+        kv('Strict majority', esc(String(politics.majority))) +
+        (politics.motion
+          ? '<div class="progressnote">' +
+            esc(politicalMotionName(politics.motion.motionId) + ' · ' +
+              politicalTotalsText(politics.motion)) + '</div>'
+          : '<div class="hint">' + esc(politics.forecasts
+            ? FB.T('No motion is pending; current allegiances and ordinary Estates forecasts are shown below.')
+            : FB.T('No motion is pending; current allegiances and influence are shown below.')) +
+            '</div>') +
+        '<button class="actionbtn" id="network-politics">🏛 ' +
+        esc(FB.T('Open political blocs in Governance…')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Review leaders, member houses, interests, influence, and any pending vote forecast.')) +
+        '</span></button>';
+      const displayedBlocs = politics.motion
+        ? politics.motion.blocs : politics.blocs;
+      for (let i = 0; i < displayedBlocs.length; i++) {
+        const bloc = displayedBlocs[i];
+        const def = FBDATA.politicalBlocs[bloc.archetypeId] || {};
+        const meta = [
+          FB.T('{influence} influence', {
+            influence:bloc.influence
+          }),
+          FB.T('{count} member houses', {
+            count:bloc.members.length
+          })
+        ];
+        if (politics.motion) {
+          meta.push(politicalPostureText(bloc.posture));
+          if (bloc.posture === 'undecided') {
+            meta.push(FB.T('{chance}% natural support', {
+              chance:Math.round(bloc.naturalSupportChance * 100)
+            }));
+          }
+        } else if (politics.forecasts) {
+          meta.push(politicalCompactForecast(
+            politicalForecastBloc(
+              politics.forecasts.redress, bloc.id), 'redress'));
+          meta.push(politicalCompactForecast(
+            politicalForecastBloc(
+              politics.forecasts.scutage, bloc.id), 'scutage'));
+        }
+        const attention = !!(politics.motion &&
+          bloc.posture === 'undecided');
+        const attrs = largeListRowAttrs({
+          attention:attention,
+          states:['realms', attention ? 'opportunity' : 'routine'],
+          identity:'political-' + bloc.id
+        });
+        const row = {
+          attention:attention,
+          state:attention ? 'opportunity' : 'routine',
+          stateLabel:politics.motion
+            ? politicalPostureText(bloc.posture) : FB.T('Established'),
+          priority:i,
+          index:i,
+          identity:'political-' + bloc.id,
+          kind:'realms'
+        };
+        row.html = '<div class="large-list-entry network-list-entry"' +
+          attrs + '><button type="button" class="actionbtn ' +
+          'large-list-target-button" data-network-political-bloc="' +
+          esc(bloc.id) + '" data-list-focus-key="political-' +
+          esc(bloc.id) + '"><span class="large-list-row-copy">' +
+          '<span class="large-list-row-title">' + (def.icon || '') + ' ' +
+          esc(politicalBlocName(s, politics, bloc)) + '</span>' +
+          '<span class="adesc">' + esc(meta.join(' · ')) +
+          '</span></span>' + largeListStateLabel(
+            row.stateLabel, row.attention) + '</button></div>';
+        politicalRows.push(row);
+      }
+    }
     const realmSpecialRows = [];
     let realmSummary = '';
     if (governance) {
@@ -3865,6 +3943,13 @@ window.FB = window.FB || {};
         empty:FB.T('No trade, guild, enterprise, or office tie is recorded.')
       },
       {
+        id:'politics',
+        title:FB.T('Political blocs'),
+        summary:politicalSummary,
+        rows:politicalRows,
+        empty:FB.T('No political court applies to the current household.')
+      },
+      {
         id:'realm',
         title:FB.T('Realm'),
         summary:realmSummary,
@@ -3907,6 +3992,18 @@ window.FB = window.FB || {};
     if (governanceButton) {
       governanceButton.addEventListener('click', UI.showGovernance);
     }
+    const politicsButton = $('network-politics');
+    if (politicsButton) {
+      politicsButton.addEventListener('click', function () {
+        UI.showGovernance('blocs');
+      });
+    }
+    box.querySelectorAll('[data-network-political-bloc]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showGovernance('blocs');
+        });
+      });
     const councilButton = $('network-council');
     if (councilButton) councilButton.addEventListener('click', UI.showCouncil);
     const estatesButton = $('network-estates');
@@ -5573,8 +5670,12 @@ window.FB = window.FB || {};
     }
     if (modalBody) modalBody._largeListScrollSurface = null;
     const wasHidden = gm.classList.contains('hidden');
+    const replacingView = !wasHidden && opts && opts.replaceView;
+    const retainedNavigation = replacingView && genericNavSnapshot
+      ? genericNavSnapshot : null;
     let previousView = null;
-    if (!wasHidden && opts && opts.historyView && !mobileNavApplying &&
+    if (!wasHidden && !replacingView && opts && opts.historyView &&
+      !mobileNavApplying &&
       mobileNavEnsure()) {
       previousView = {};
       captureModalView(previousView);
@@ -5612,12 +5713,17 @@ window.FB = window.FB || {};
       // drag the view to the bottom (Changelog, How to Play)
       focusFirstModalControl();
     } else focusModalContainer();
-    const currentViewToken = ++genericViewSerial;
+    const currentViewToken = retainedNavigation
+      ? retainedNavigation.token : ++genericViewSerial;
     genericNavSnapshot = {
-      dismiss:UI._gmDismiss,
-      historyBack:!!(opts && opts.historyBack),
-      returnFocus:UI._gmReturnFocus,
-      returnAction:UI._gmReturnAction,
+      dismiss:retainedNavigation
+        ? retainedNavigation.dismiss : UI._gmDismiss,
+      historyBack:retainedNavigation
+        ? retainedNavigation.historyBack : !!(opts && opts.historyBack),
+      returnFocus:retainedNavigation
+        ? retainedNavigation.returnFocus : UI._gmReturnFocus,
+      returnAction:retainedNavigation
+        ? retainedNavigation.returnAction : UI._gmReturnAction,
       modalClass:UI._gmModalClass,
       noFocus:!!(opts && opts.noFocus),
       token:currentViewToken
@@ -9528,6 +9634,303 @@ window.FB = window.FB || {};
         esc(markers) + '</span>' : '');
   }
 
+  function politicalBlocDefinitionText(s, archetypeId, field) {
+    const def = FBDATA.politicalBlocs &&
+      FBDATA.politicalBlocs[archetypeId];
+    if (!def) return archetypeId;
+    return FB.dataText(s, s.player.charId, 'politicalBloc',
+      archetypeId, def, field, {});
+  }
+
+  function politicalHouseById(politics, houseId) {
+    for (const house of politics ? politics.houses : []) {
+      if (house.id === houseId) return house;
+    }
+    return null;
+  }
+
+  function politicalForecastBloc(forecast, blocId) {
+    for (const bloc of forecast ? forecast.blocs : []) {
+      if (bloc.id === blocId) return bloc;
+    }
+    return null;
+  }
+
+  function politicalBlocName(s, politics, bloc) {
+    const base = politicalBlocDefinitionText(
+      s, bloc.archetypeId, 'name');
+    const leader = politicalHouseById(politics, bloc.leaderHouseId);
+    if (bloc.archetypeId === 'magnate' && leader) {
+      return FB.T('{house} — {bloc}', {
+        house:leader.name,
+        bloc:base
+      });
+    }
+    if (bloc.archetypeId === 'independent' && leader) {
+      return FB.T('{house} — {bloc}', {
+        house:leader.name,
+        bloc:base
+      });
+    }
+    return base;
+  }
+
+  function politicalPostureText(posture) {
+    if (posture === 'support') return FB.T('Support');
+    if (posture === 'oppose') return FB.T('Opposition');
+    return FB.T('Undecided');
+  }
+
+  function politicalMotionName(motionId) {
+    return motionId === 'scutage'
+      ? FB.T('Scutage') : FB.T('Redress');
+  }
+
+  function politicalSigned(value) {
+    value = Math.round(Number(value) || 0);
+    return (value > 0 ? '+' : '') + value;
+  }
+
+  function politicalInterestReason(s, politics, item) {
+    const house = politicalHouseById(politics, item.houseId);
+    const leader = politicalHouseById(
+      politics, item.leaderHouseId);
+    const houseName = house ? house.name : item.houseId;
+    let text;
+    if (item.id === 'ruler_house') {
+      text = FB.T('{house} is the ruler’s house.', {
+        house:houseName
+      });
+    } else if (item.id === 'standing') {
+      text = FB.T('{house}: court Standing {standing}.', {
+        house:houseName,
+        standing:Math.round(item.standing || 0)
+      });
+    } else if (item.id === 'council_office') {
+      text = FB.T('{house}: Council office — {office}.', {
+        house:houseName,
+        office:councilSeatName(item.councilSeatId)
+      });
+    } else if (item.id === 'shared_faith') {
+      text = leader
+        ? FB.T('{house} shares the faith of {leader}.', {
+          house:houseName, leader:leader.name
+        })
+        : FB.T('{house} shares the ruler’s faith.', {
+          house:houseName
+        });
+    } else if (item.id === 'temperament') {
+      const trait = FBDATA.traits[item.traitId];
+      text = FB.T('{house}: {trait} temperament.', {
+        house:houseName,
+        trait:trait
+          ? dt(s, 'trait', item.traitId, trait, 'name')
+          : item.traitId
+      });
+    } else if (item.id === 'guild_membership') {
+      text = FB.T('{house}: active guild allegiance.', {
+        house:houseName
+      });
+    } else if (item.id === 'monopolies') {
+      text = FB.T('{house}: {count} monopoly charters.', {
+        house:houseName, count:item.count
+      });
+    } else if (item.id === 'enterprises') {
+      text = FB.T('{house}: {count} family enterprises.', {
+        house:houseName, count:item.count
+      });
+    } else if (item.id === 'trade_contracts') {
+      text = FB.T('{house}: {count} active trade contracts.', {
+        house:houseName, count:item.count
+      });
+    } else if (item.id === 'commercial_counties') {
+      text = FB.T('{house}: commercial interests in {count} counties.', {
+        house:houseName, count:item.count
+      });
+    } else if (item.id === 'magnate_leader') {
+      text = FB.T('{house} leads this landed affinity.', {
+        house:houseName
+      });
+    } else if (item.id === 'shared_culture') {
+      text = FB.T('{house} shares {leader}’s culture.', {
+        house:houseName, leader:leader ? leader.name : ''
+      });
+    } else if (item.id === 'adjacent_lands') {
+      text = FB.T('{house} holds land beside {leader}.', {
+        house:houseName, leader:leader ? leader.name : ''
+      });
+    } else if (item.id === 'leader_rank') {
+      text = FB.T('{leader}’s rank attracts {house}.', {
+        leader:leader ? leader.name : '',
+        house:houseName
+      });
+    } else {
+      text = FB.T('{house} keeps its own counsel.', {
+        house:houseName
+      });
+    }
+    return text + ' (' + politicalSigned(item.value) + ')';
+  }
+
+  function politicalMotionReason(s, item) {
+    if (item.id === 'bloc_posture') {
+      return FB.T('{bloc} starting posture', {
+        bloc:politicalBlocDefinitionText(
+          s, item.archetypeId, 'name')
+      }) + ' (' + politicalSigned(item.value) + ')';
+    }
+    if (item.id === 'current_aid') {
+      return FB.T('Current aid: {percent}%', {
+        percent:Math.round(item.aid * 100)
+      }) + ' (' + politicalSigned(item.value) + ')';
+    }
+    if (item.id === 'ruler_traits') {
+      return FB.T('Member ruler traits') +
+        ' (' + politicalSigned(item.value) + ')';
+    }
+    return FB.T('Martial inclination: {martial}', {
+      martial:item.martial
+    }) + ' (' + politicalSigned(item.value) + ')';
+  }
+
+  function politicalHouseLink(s, house, section) {
+    if (!house) return '';
+    if (house.isPlayer && house.rulerCharacterId) {
+      return '<button type="button" class="linklike" ' +
+        'data-political-character="' + esc(house.rulerCharacterId) +
+        '">' + esc(house.rulerName || house.name) + '</button>';
+    }
+    if (house.isPlayer) return esc(house.rulerName || house.name);
+    return governanceRealmLink(
+      s, house.id, house.rulerName || house.name, section || 'blocs');
+  }
+
+  function politicalTotalsText(forecast) {
+    if (!forecast) {
+      return FB.T('No valid political court is available.');
+    }
+    return FB.T(
+      '{support} support · {opposition} opposition · {uncertain} uncertain · {majority} needed', {
+        support:forecast.supportInfluence,
+        opposition:forecast.oppositionInfluence,
+        uncertain:forecast.uncertainInfluence,
+        majority:forecast.majority
+      });
+  }
+
+  function politicalCompactForecast(bloc, motionId) {
+    if (!bloc) return '';
+    const params = {
+      motion:politicalMotionName(motionId),
+      posture:politicalPostureText(bloc.posture),
+      chance:Math.round(bloc.naturalSupportChance * 100)
+    };
+    return bloc.posture === 'undecided'
+      ? FB.T('{motion}: {posture} ({chance}%)', params)
+      : FB.T('{motion}: {posture}', params);
+  }
+
+  function governanceBlocMotionHtml(s, bloc, motionId, pending) {
+    if (!bloc) return '';
+    let h = '<div class="political-reasons"><b>' +
+      esc(pending
+        ? FB.T('Motion posture')
+        : FB.T('{motion} posture', {
+          motion:politicalMotionName(motionId)
+        })) + '</b><ul>';
+    for (const motionReason of bloc.motionReasons) {
+      h += '<li>' + esc(politicalMotionReason(
+        s, motionReason)) + '</li>';
+    }
+    const postureDetail = bloc.posture === 'undecided'
+      ? FB.T('{chance}% natural support chance.', {
+        chance:Math.round(bloc.naturalSupportChance * 100)
+      })
+      : (bloc.pledged
+        ? FB.T('Support or opposition is pledged for this vote.')
+        : FB.T('The interest score locks this bloc’s vote.'));
+    h += '</ul><div class="cmeta">' +
+      esc(politicalPostureText(bloc.posture)) + ' · ' +
+      esc(postureDetail) +
+      '</div></div>';
+    return h;
+  }
+
+  function governancePoliticalBlocsHtml(s, politics) {
+    if (!politics || !politics.blocs.length) {
+      return '<div class="hint">' + esc(FB.T(
+        'No political court applies to the current position.')) + '</div>';
+    }
+    const forecast = politics.motion;
+    let h = kv('Court influence', esc(String(
+      politics.totalInfluence))) +
+      kv('Strict majority', esc(String(politics.majority)));
+    if (forecast) {
+      h += kv('Pending motion', esc(politicalMotionName(
+        forecast.motionId))) +
+        '<div class="progressnote">' +
+        esc(politicalTotalsText(forecast)) + '</div>';
+    } else if (politics.forecasts) {
+      h += kv('Redress forecast', esc(politicalTotalsText(
+        politics.forecasts.redress))) +
+        kv('Scutage forecast', esc(politicalTotalsText(
+          politics.forecasts.scutage))) +
+        '<div class="hint">' + esc(FB.T(
+          'No motion is pending. Allegiances persist, while influence and interests follow the current court.')) +
+          '</div>';
+    } else {
+      h += '<div class="hint">' + esc(FB.T(
+        'These crown-side blocs are authoritative, but no Estates motion applies to this court.')) +
+        '</div>';
+    }
+    const displayed = forecast ? forecast.blocs : politics.blocs;
+    for (const bloc of displayed) {
+      const def = FBDATA.politicalBlocs[bloc.archetypeId] || {};
+      const leader = politicalHouseById(
+        politics, bloc.leaderHouseId);
+      h += '<article class="political-bloc-card" data-political-bloc="' +
+        esc(bloc.id) + '"><div class="political-bloc-head"><h5>' +
+        (def.icon || '') + ' ' +
+        esc(politicalBlocName(s, politics, bloc)) + '</h5>' +
+        (forecast
+          ? '<span class="political-posture political-posture-' +
+            esc(bloc.posture) + '">' +
+            esc(politicalPostureText(bloc.posture)) + '</span>'
+          : '') + '</div>' +
+        kv('Leader', politicalHouseLink(s, leader, 'blocs')) +
+        kv('Influence', esc(FB.T('{influence} of {total}', {
+          influence:bloc.influence,
+          total:politics.totalInfluence
+        }))) +
+        '<div class="political-members"><b>' +
+        esc(FB.T('Member houses')) + '</b><div>';
+      for (const member of bloc.members) {
+        h += politicalHouseLink(s, member, 'blocs') +
+          ' <span class="cmeta">(' + member.influence + ')</span> ';
+      }
+      h += '</div></div><div class="political-reasons"><b>' +
+        esc(FB.T('Interests')) + '</b><ul>';
+      for (const item of bloc.interests) {
+        h += '<li>' + esc(politicalInterestReason(
+          s, politics, item)) + '</li>';
+      }
+      h += '</ul></div>';
+      if (forecast) {
+        h += governanceBlocMotionHtml(
+          s, bloc, forecast.motionId, true);
+      } else if (politics.forecasts) {
+        h += governanceBlocMotionHtml(s, politicalForecastBloc(
+          politics.forecasts.redress,
+          bloc.id), 'redress', false);
+        h += governanceBlocMotionHtml(s, politicalForecastBloc(
+          politics.forecasts.scutage,
+          bloc.id), 'scutage', false);
+      }
+      h += '</article>';
+    }
+    return h;
+  }
+
   function governancePromotionName(progress) {
     if (!progress) return '';
     if (progress.kind === 'duchy') {
@@ -9855,6 +10258,11 @@ window.FB = window.FB || {};
       const estates = summary.estates;
       const redress = FB.parliamentMotionStatus(s, 'redress');
       const scutage = FB.parliamentMotionStatus(s, 'scutage');
+      const activeForecast = estates.motionForecast;
+      const redressForecast = activeForecast ||
+        FB.politicalMotionForecast(s, 'redress');
+      const scutageForecast = activeForecast ||
+        FB.politicalMotionForecast(s, 'scutage');
       let h = kv('The liege’s aid', esc(FB.T('{percent}%', {
         percent:Math.round(estates.aid * 100)
       }))) +
@@ -9866,17 +10274,21 @@ window.FB = window.FB || {};
           }))) +
         kv('Motion this year', esc(estates.motionUsed
           ? FB.T('Already used') : FB.T('Available'))) +
-        kv('Vote chance', esc(FB.T('{chance}%', {
+        kv('Lobbying strength', esc(FB.T('{chance}%', {
           chance:Math.round(estates.vote.total * 100)
-        }))) +
-        '<div class="governance-vote-factors">' +
-        standingEffectRow(FB.T('Base'), estates.vote.base * 100) +
-        standingEffectRow(FB.T('Rank'), estates.vote.rank * 100) +
-        standingEffectRow(FB.T('Diplomacy'), estates.vote.diplomacy * 100) +
-        standingEffectRow(FB.T('Prestige'), estates.vote.prestige * 100) +
-        standingEffectRow(FB.T('Standing'), estates.vote.standing * 100) +
-        standingEffectRow(FB.T('Traits'), estates.vote.traits * 100) +
-        '</div><div class="hint">' + esc(FB.T(
+        })));
+      if (activeForecast) {
+        h += kv('Pending motion', esc(politicalMotionName(
+          activeForecast.motionId))) +
+          '<div class="progressnote">' +
+          esc(politicalTotalsText(activeForecast)) + '</div>';
+      } else {
+        h += kv('Redress blocs', esc(politicalTotalsText(
+          redressForecast))) +
+          kv('Scutage blocs', esc(politicalTotalsText(
+            scutageForecast)));
+      }
+      h += '<div class="hint">' + esc(FB.T(
           'Available motions: redress — {redress}; scutage — {scutage}.', {
             redress:redress.ready ? FB.T('ready') : redress.reason,
             scutage:scutage.ready ? FB.T('ready') : scutage.reason
@@ -9971,6 +10383,7 @@ window.FB = window.FB || {};
       ['obligations', summary.liegeId
         ? FB.T('Liege & obligations') : FB.T('Independence')],
       ['vassals', FB.T('Vassals')],
+      ['blocs', FB.T('Political blocs')],
       ['institution', FB.T('Institution')],
       ['actions', FB.T('Political actions')]
     ];
@@ -10009,6 +10422,11 @@ window.FB = window.FB || {};
       (selectedSection === 'vassals' ? '' : ' hidden') + '><h4>' +
       esc(FB.T('Direct vassals')) + '</h4>' +
       governanceVassalsHtml(s, summary) + '</section>' +
+      '<section class="governance-card" id="governance-blocs" ' +
+      'role="tabpanel" aria-labelledby="governance-tab-blocs" tabindex="-1"' +
+      (selectedSection === 'blocs' ? '' : ' hidden') + '><h4>' +
+      esc(FB.T('Political blocs')) + '</h4>' +
+      governancePoliticalBlocsHtml(s, summary.politics) + '</section>' +
       '<section class="governance-card" id="governance-institution" ' +
       'role="tabpanel" aria-labelledby="governance-tab-institution" ' +
       'tabindex="-1"' +
@@ -10100,6 +10518,15 @@ window.FB = window.FB || {};
           const pid = button.dataset.governanceCounty;
           UI.closeModal();
           UI.selectProvince(pid);
+        });
+      });
+    document.querySelectorAll('[data-political-character]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showCharModal(button.dataset.politicalCharacter, {
+            view:'governance',
+            section:'blocs'
+          });
         });
       });
     document.querySelectorAll('[data-governance-action]').forEach(
@@ -10382,38 +10809,48 @@ window.FB = window.FB || {};
   /* the estates of the realm (vassal tiers 3-5): the terms of the player's
      service, and the motions they can buy between sittings — see
      js/parliament.js for the machinery and FB.parliamentYearly for sessions */
-  UI.showParliament = function (returnView) {
+  UI.showParliament = function (returnView, replaceView) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
     const projection = FB.parliamentSummary(s);
     if (!projection) return;
     const liege = s.realms[s.player.liege];
     const cost = projection.motionCost;
-    const voteChance = projection.vote.total;
-    const redressChance = projection.redressVote
-      ? projection.redressVote.total : FB.parliamentVoteChance(s, true);
+    const pending = projection.pendingMotion;
+    const activeForecast = projection.motionForecast;
+    const politics = FB.politicalSummary(s);
+    const redressForecast = pending
+      ? (pending.motionId === 'redress' ? activeForecast : null)
+      : FB.politicalMotionForecast(s, 'redress');
+    const scutageForecast = pending
+      ? (pending.motionId === 'scutage' ? activeForecast : null)
+      : FB.politicalMotionForecast(s, 'scutage');
     let h = '<p class="hint">' + esc(FB.T(
-      'When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege.',
+      'When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.',
       { liege: liege.name })) + '</p>';
-    h += '<div class="kv"><span>' + esc(FB.T('The liege’s aid')) + '</span><b>' +
-      esc(FB.T('{pct}% of your noble revenue', {
+    h += kv('The liege’s aid', esc(FB.T(
+      '{pct}% of your noble revenue', {
         pct:Math.round(projection.aid * 100)
-      })) + '</b></div>';
-    h += '<div class="kv"><span>' + esc(FB.T('Banner service')) + '</span><b>' +
-      (projection.scutage
-        ? esc(FB.T('Scutage — silver answers the summons'))
-        : esc(FB.T('Spears — you must ride, or pay dearly'))) + '</b></div>';
-    h += '<div class="kv"><span>' + esc(FB.T('Your voice in the hall')) + '</span><b>' +
-      Math.round(voteChance * 100) + '%</b></div>';
-    if (redressChance > voteChance) {
-      h += '<div class="kv"><span>' +
-        esc(FB.T('Redress with gathered evidence')) + '</span><b>' +
-        Math.round(redressChance * 100) + '%</b></div>';
+      }))) +
+      kv('Banner service', esc(projection.scutage
+        ? FB.T('Scutage — silver answers the summons')
+        : FB.T('Spears — you must ride, or pay dearly'))) +
+      kv('Lobbying strength', esc(FB.T('{chance}%', {
+        chance:Math.round((activeForecast
+          ? activeForecast.playerVoteChance
+          : projection.vote.total) * 100)
+      })));
+    if (!pending && redressForecast &&
+        redressForecast.playerVoteChance !== projection.vote.total) {
+      h += kv('Lobbying strength with redress evidence',
+        esc(FB.T('{chance}%', {
+          chance:Math.round(redressForecast.playerVoteChance * 100)
+        })));
     }
     h += '<p class="hint">' + esc(FB.T(
-      'Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year.',
+      'Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included.',
       { cost: cost })) + '</p>';
-    if (projection.motionUsed) {
+    if (projection.motionUsed && !pending) {
       h += '<p class="hint">' + esc(FB.T('The estates have heard your motion this year; they will take another come the new year.')) + '</p>';
     }
     const redress = FB.parliamentMotionStatus(s, 'redress');
@@ -10425,26 +10862,86 @@ window.FB = window.FB || {};
       })) + '<span class="adesc">' + esc(FB.T(
         'Review Standing, gifts, cultivation, feudal actions, and the realm relationship.')) +
       '</span></button>';
-    h += '<button class="actionbtn" data-motion="redress"' +
-      (redress.ready ? '' : ' disabled') + '>⚖ ' +
-      esc(FB.T('Move for redress of grievances ({money:cost})', { cost: cost })) +
-      '<span class="adesc">' + esc(redress.reason || FB.T(
-        'Put it to a vote: the liege’s aid down one step, if the hall backs you. Current chance {chance}%.',
-        { chance:Math.round(redressChance * 100) })) + '</span></button>';
-    h += '<button class="actionbtn" data-motion="scutage"' +
-      (scutage.ready ? '' : ' disabled') + '>🛡 ' +
-      esc(FB.T('Move for scutage ({money:cost})', { cost: cost })) +
-      '<span class="adesc">' + esc(scutage.reason || FB.T(
-        'Put it to a vote: silver for banner service — the aid creeps up in exchange.')) +
-      '</span></button>';
+    if (!pending) {
+      h += '<button class="actionbtn" data-motion="redress"' +
+        (redress.ready ? '' : ' disabled') + '>⚖ ' +
+        esc(FB.T('Begin a redress campaign ({money:cost})', {
+          cost:cost
+        })) + '<span class="adesc">' +
+        esc(redress.reason || (politicalTotalsText(redressForecast) +
+          '. ' + FB.T(
+            'If carried, the liege’s aid falls one step.'))) +
+        '</span></button>';
+      h += '<button class="actionbtn" data-motion="scutage"' +
+        (scutage.ready ? '' : ' disabled') + '>🛡 ' +
+        esc(FB.T('Begin a scutage campaign ({money:cost})', {
+          cost:cost
+        })) + '<span class="adesc">' +
+        esc(scutage.reason || (politicalTotalsText(scutageForecast) +
+          '. ' + FB.T(
+            'If carried, silver may answer banner service and the aid rises slightly.'))) +
+        '</span></button>';
+    } else if (activeForecast) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        '{motion} campaign · {days} days remain.', {
+          motion:politicalMotionName(pending.motionId),
+          days:Math.max(0, pending.expiresTurn - s.turn)
+        })) + '<br>' + esc(politicalTotalsText(activeForecast)) +
+        '</div>';
+      if (pending.lobby && pending.lobby.used) {
+        h += '<div class="progressnote">' + esc(
+          pending.lobby.success
+            ? FB.T('Lobbying succeeded; the targeted bloc pledged support.')
+            : FB.T('Lobbying failed; the targeted bloc remains undecided.')) +
+          '</div>';
+      }
+      for (const bloc of activeForecast.blocs) {
+        const status = FB.parliamentLobbyStatus(s, bloc.id);
+        h += '<div class="political-motion-row" data-estates-bloc="' +
+          esc(bloc.id) + '"><div><b>' +
+          esc(politicalBlocName(
+            s, politics, bloc)) + '</b>' +
+          '<span class="cmeta">' + esc(FB.T(
+            '{influence} influence · {posture}', {
+              influence:bloc.influence,
+              posture:politicalPostureText(bloc.posture)
+            })) +
+          (bloc.posture === 'undecided'
+            ? ' · ' + esc(FB.T('{chance}% natural support', {
+              chance:Math.round(bloc.naturalSupportChance * 100)
+            }))
+            : '') + '</span></div>';
+        if (status.ready) {
+          h += '<button type="button" class="btn small" data-lobby-bloc="' +
+            esc(bloc.id) + '">' + esc(FB.T('Lobby ({chance}%)', {
+              chance:Math.round(status.chance * 100)
+            })) + '</button>';
+        }
+        h += '</div>';
+      }
+      if (!pending.result) {
+        h += '<button class="actionbtn" id="estates-call-vote">🗳 ' +
+          esc(FB.T('Call the vote')) + '<span class="adesc">' +
+          esc(FB.T(
+            'Every undecided bloc resolves once, in stable order. There is no final global roll.')) +
+          '</span></button>' +
+          '<button class="actionbtn" id="estates-withdraw">↩ ' +
+          esc(FB.T('Withdraw the motion')) + '<span class="adesc">' +
+          esc(FB.T(
+            'The gold and yearly motion remain spent; unused redress evidence is preserved.')) +
+          '</span></button>';
+      }
+    }
     h += '</div>';
     h += '<button class="btn" id="gm-cancel">' +
       esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
       '</button>';
-    openModal(FB.T('The Estates'), h, returnView === 'governance' ? {
+    const modalOptions = returnView === 'governance' ? {
       historyView:true,
       historyBackRender:function () { UI.showGovernance('institution'); }
-    } : undefined);
+    } : {};
+    if (replaceView) modalOptions.replaceView = true;
+    openModal(FB.T('The Estates'), h, modalOptions);
     $('estates-liege-card').addEventListener('click', function () {
       UI.showLiegeModal(s.player.liege, {
         view:'estates',
@@ -10453,10 +10950,36 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-motion]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (!FB.parliamentMove(s, btn.dataset.motion)) return;
-        UI.closeModal(); UI.refresh();
+        if (!FB.parliamentBeginMotion(s, btn.dataset.motion)) return;
+        UI.showParliament(returnView, true);
       });
     });
+    document.querySelectorAll('[data-lobby-bloc]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const result = FB.parliamentLobbyMotion(
+          s, btn.dataset.lobbyBloc);
+        if (!result) return;
+        UI.toast(result.success
+          ? FB.T('The bloc pledges its support.')
+          : FB.T('The bloc remains undecided.'));
+        UI.showParliament(returnView, true);
+      });
+    });
+    const callVote = $('estates-call-vote');
+    if (callVote) {
+      callVote.addEventListener('click', function () {
+        if (!FB.parliamentCallVote(s)) return;
+        UI.closeModal();
+        UI.refresh();
+      });
+    }
+    const withdraw = $('estates-withdraw');
+    if (withdraw) {
+      withdraw.addEventListener('click', function () {
+        if (!FB.parliamentWithdrawMotion(s)) return;
+        UI.showParliament(returnView, true);
+      });
+    }
     $('gm-cancel').addEventListener('click', function () {
       if (returnView === 'governance') {
         modalHistoryBack(function () { UI.showGovernance('institution'); });

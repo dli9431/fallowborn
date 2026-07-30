@@ -160,6 +160,9 @@ A JSON mod is one object with any of these keys:
   },
   "plots":     { "id": { ... } },
   "items":     { "id": { ... } },
+  "politicalBlocs": {
+    "crown": { "name": "Crown", "motions": { "redress": -20, "scutage": -10 }, ... }
+  },
   "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."] },
@@ -536,6 +539,10 @@ Core plot discovery and every plot resolution event use
 if the active plot or any target component has changed. For save compatibility, a legacy
 queued resolution without `plotId` may infer it only when its event id exactly matches
 the current active plot definition.
+Predetermined player-motion results use
+`parliament_motion_context_valid`; the exact polity, pending-motion id, motion id, and
+pass/fail result must still match. The paired option gates are
+`parliament_motion_passed` and `parliament_motion_failed`.
 
 `wartime: true` (top-level, next to `weight`) marks an event as fit for a war footing. While
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,
@@ -778,6 +785,76 @@ An event with `"nameChild": true` (used by `child_born_flavor`, queued with `ctx
 shows a name field above its options, prefilled with the child's generated name and a dice
 button that rerolls from the child's culture. Whichever option is chosen applies the edited
 name (an empty field keeps the old one); an autoresolved event keeps the generated name.
+
+## Political blocs and Estates motions
+
+`FBDATA.politicalBlocs` lives in `data/political_blocs.js`. A runtime mod may
+replace a complete archetype definition by the same top-level
+`politicalBlocs` id:
+
+```json
+{
+  "politicalBlocs": {
+    "mercantile": {
+      "name": "Commercial Interest",
+      "icon": "⚖",
+      "desc": "Guild, charter, enterprise, and trade interests acting together.",
+      "order": 1,
+      "affiliationThreshold": 30,
+      "motions": { "redress": 25, "scutage": 30 }
+    }
+  }
+}
+```
+
+`name` and `desc` are structured display fields; `icon` and `order` control
+presentation. `affiliationThreshold` is the minimum interest score for a new
+ordinary affiliation. `motions.redress` and `motions.scutage` are the
+archetype's reason-coded starting scores. Core assignment recognizes the
+`crown`, `mercantile`, `magnate`, and `independent` archetypes. Later mods may
+replace those definitions, but an additional id is not assigned automatically
+without engine code that uses it. Definitions are replaced atomically rather
+than deep-merged.
+
+The direct political court is deliberately player-bounded. It contains the
+relevant ruler house, its living landed direct-vassal houses, and the player
+house when sworn there. House influence is:
+
+`1 + rank×2 + directly held counties + floor(other territory/2) + Council office`.
+
+Use the public projections rather than rebuilding this rule:
+
+- `FB.politicalCourt(state)` returns the locale-neutral court and house facts.
+- `FB.politicalSummary(state)` returns aggregated blocs, leaders, members,
+  interests, influence, strict-majority threshold, both ordinary Estates
+  motion forecasts when they apply, and an optional pending-motion forecast.
+- `FB.politicalMotionForecast(state,"redress"|"scutage")` returns bloc
+  scores, reason ids, locked/pledged/undecided postures, natural support
+  chances, and influence totals.
+
+Those three functions are read-only and RNG-neutral. Do not call the mutating
+repair functions from rendering code. `FB.ensurePolitics` and
+`FB.repairPolitics` create or validate the additive saved allegiance/campaign
+state at simulation, load, title, and liege boundaries.
+
+Player motions use these mutating interfaces:
+
+- `FB.parliamentBeginMotion(state,motionId)` (also exposed through the legacy
+  `FB.parliamentMove` alias) spends the configured cost and opens the 90-day
+  campaign.
+- `FB.parliamentLobbyMotion(state,blocId)` consumes the one lobbying attempt;
+  `FB.parliamentLobbyStatus` supplies its exact visible gate and chance.
+- `FB.parliamentCallVote(state)` resolves each undecided bloc once in stable
+  id order and queues the predetermined core event.
+- `FB.parliamentWithdrawMotion(state)` clears an untallied campaign without
+  refunding its cost or yearly use.
+
+Do not write `state.politics` directly. It stores stable allegiances, semantic
+pledges/lobby/result state, ids, and turn stamps; influence, probability,
+localized prose, and rendered reasons are always derived. The existing
+`parliament_vote` and `parliament_redress_vote` named chances remain supported
+for non-motion Estates stories and older mods. Only the core player redress
+and scutage motions use the bloc tally.
 
 ## Temporary modifiers
 

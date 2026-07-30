@@ -15340,15 +15340,15 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "The estates decide — rank, name, Standing with the liege, and any evidence gathered for redress all count now."
+        "text": "It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls, and the liege’s courtesy promises nothing good."
       }
     },
-    "event.parliament_redress.options.0.failure.text.default": {
-      "context": "Event parliament_redress, authored option 0, failure text, branch default.",
+    "event.parliament_redress.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_redress, authored option 0, effects.",
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall."
+        "text": "Won redress of grievances in the estates."
       }
     },
     "event.parliament_redress.options.0.label.default": {
@@ -15356,23 +15356,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "Press the motion to a vote."
-      }
-    },
-    "event.parliament_redress.options.0.success.effects.log.default": {
-      "context": "Durable event log for parliament_redress, authored option 0, success.effects.",
-      "glossary": [],
-      "location": "data/events_parliament.js",
-      "source": {
-        "text": "Won redress of grievances in the estates."
-      }
-    },
-    "event.parliament_redress.options.0.success.text.default": {
-      "context": "Event parliament_redress, authored option 0, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_parliament.js",
-      "source": {
-        "text": "It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good."
+        "text": "Receive the carried vote."
       }
     },
     "event.parliament_redress.options.1.desc.default": {
@@ -15380,7 +15364,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "Some motions serve better as threats than as votes."
+        "text": "The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall."
       }
     },
     "event.parliament_redress.options.1.label.default": {
@@ -15388,7 +15372,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "Let it be talked out, and withdraw."
+        "text": "Accept the failed vote."
       }
     },
     "event.parliament_redress.text.default": {
@@ -15482,15 +15466,15 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "The crown will want its pound in coin — a small standing rise in the aid."
+        "text": "The motion carries. Henceforth the liege’s summons can be answered with a purse, and the aid creeps up to pay for the privilege."
       }
     },
-    "event.parliament_scutage.options.0.failure.text.default": {
-      "context": "Event parliament_scutage, authored option 0, failure text, branch default.",
+    "event.parliament_scutage.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_scutage, authored option 0, effects.",
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "The war-hungry lords shout it down: what is a vassal without his spear? The liege looks pleased, and looks at you."
+        "text": "Carried a scutage motion in the estates."
       }
     },
     "event.parliament_scutage.options.0.label.default": {
@@ -15498,23 +15482,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "Press the motion to a vote."
-      }
-    },
-    "event.parliament_scutage.options.0.success.effects.log.default": {
-      "context": "Durable event log for parliament_scutage, authored option 0, success.effects.",
-      "glossary": [],
-      "location": "data/events_parliament.js",
-      "source": {
-        "text": "Carried a scutage motion in the estates."
-      }
-    },
-    "event.parliament_scutage.options.0.success.text.default": {
-      "context": "Event parliament_scutage, authored option 0, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_parliament.js",
-      "source": {
-        "text": "The motion carries, to the relief of every manor with a leaking hall. Henceforth the liege’s summons can be answered with a purse — and the aid creeps up to pay for the privilege."
+        "text": "Receive the carried vote."
       }
     },
     "event.parliament_scutage.options.1.desc.default": {
@@ -15522,7 +15490,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "A poor season for it. Another year, perhaps."
+        "text": "The war-hungry lords shout it down. The liege looks pleased, and looks at you."
       }
     },
     "event.parliament_scutage.options.1.label.default": {
@@ -15530,7 +15498,7 @@
       "glossary": [],
       "location": "data/events_parliament.js",
       "source": {
-        "text": "Let it be talked out, and withdraw."
+        "text": "Accept the failed vote."
       }
     },
     "event.parliament_scutage.text.default": {
@@ -32161,6 +32129,70 @@
         "text": "A Quiet Grave"
       }
     },
+    "politicalBloc.crown.desc.default": {
+      "context": "politicalBloc crown, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Houses bound to the ruler by office, faith, favor, or temperament."
+      }
+    },
+    "politicalBloc.crown.name.default": {
+      "context": "politicalBloc crown, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Crown"
+      }
+    },
+    "politicalBloc.independent.desc.default": {
+      "context": "politicalBloc independent, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "A house with no durable allegiance strong enough to bind it."
+      }
+    },
+    "politicalBloc.independent.name.default": {
+      "context": "politicalBloc independent, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Independent"
+      }
+    },
+    "politicalBloc.magnate.desc.default": {
+      "context": "politicalBloc magnate, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "A landed affinity gathered around an influential house."
+      }
+    },
+    "politicalBloc.magnate.name.default": {
+      "context": "politicalBloc magnate, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Magnates"
+      }
+    },
+    "politicalBloc.mercantile.desc.default": {
+      "context": "politicalBloc mercantile, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Guild, charter, enterprise, and trade interests acting together."
+      }
+    },
+    "politicalBloc.mercantile.name.default": {
+      "context": "politicalBloc mercantile, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_blocs.js",
+      "source": {
+        "text": "Mercantile"
+      }
+    },
     "position.captain.desc.default": {
       "context": "position captain, desc, faith branch default.",
       "glossary": [],
@@ -39393,6 +39425,16 @@
         "text": "Repay now ({money:amount})"
       }
     },
+    "src.0469cb9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Scutage forecast"
+      }
+    },
     "src.046aa485": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40403,6 +40445,16 @@
         "text": "Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home."
       }
     },
+    "src.075e184d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} holds land beside {leader}."
+      }
+    },
     "src.075f92de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40489,8 +40541,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js",
-        "index.html"
+        "index.html",
+        "js/ui.js"
       ],
       "source": {
         "text": "Prestige"
@@ -40875,6 +40927,16 @@
       ],
       "source": {
         "text": "Arab"
+      }
+    },
+    "src.08ad49a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "No valid political court is available for this motion."
       }
     },
     "src.08b088c0": {
@@ -41837,16 +41899,6 @@
       ],
       "source": {
         "text": "has invalid capital"
-      }
-    },
-    "src.0b13cb6f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Move for scutage ({money:cost})"
       }
     },
     "src.0b1526d5": {
@@ -42821,6 +42873,16 @@
         "text": "Live better and become a familiar face."
       }
     },
+    "src.0e111b2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Your one lobbying attempt has already been used."
+      }
+    },
     "src.0e1e8eea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42949,6 +43011,16 @@
       ],
       "source": {
         "text": "Territorial commands link military obligation to provincial government."
+      }
+    },
+    "src.0e9589f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Mercantile"
       }
     },
     "src.0ea2d34d": {
@@ -43674,6 +43746,16 @@
         "text": "Attend to the petitions."
       }
     },
+    "src.10f7733f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{influence} influence"
+      }
+    },
     "src.10fa1139": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43932,6 +44014,16 @@
       ],
       "source": {
         "text": "Clerical Service"
+      }
+    },
+    "src.11b1420e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} shares the ruler’s faith."
       }
     },
     "src.11be99be": {
@@ -45015,6 +45107,16 @@
         "text": ": non-numeric unit effect"
       }
     },
+    "src.1433b5b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Member houses"
+      }
+    },
     "src.1434886c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45363,6 +45465,16 @@
       ],
       "source": {
         "text": "The Great Disputation"
+      }
+    },
+    "src.151b7af5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "If carried, the liege’s aid falls one step."
       }
     },
     "src.151ec801": {
@@ -46351,6 +46463,16 @@
       ],
       "source": {
         "text": "Grant the privilege."
+      }
+    },
+    "src.18147499": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "A motion is already being campaigned before the Estates."
       }
     },
     "src.181d2f59": {
@@ -47465,6 +47587,16 @@
         "text": "The Wheel Will Not Turn"
       }
     },
+    "src.1b3748ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Open political blocs in Governance…"
+      }
+    },
     "src.1b375815": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47653,16 +47785,6 @@
       ],
       "source": {
         "text": "Beyond the Campfires"
-      }
-    },
-    "src.1c3b394c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "Some motions serve better as threats than as votes."
       }
     },
     "src.1c3b5a26": {
@@ -49868,6 +49990,16 @@
         "text": "A cheap trick — if no tongue catches it."
       }
     },
+    "src.2343fc1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Call the vote"
+      }
+    },
     "src.2348696e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50600,6 +50732,16 @@
         "text": "Passes to heirs as family property; does not follow conquest"
       }
     },
+    "src.254748a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "The motion has already been called to a vote."
+      }
+    },
     "src.254b2976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50760,6 +50902,16 @@
         "text": "Offer a defensive alliance…"
       }
     },
+    "src.25d18c4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "These crown-side blocs are authoritative, but no Estates motion applies to this court."
+      }
+    },
     "src.25d37f6e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50868,6 +51020,16 @@
       ],
       "source": {
         "text": "Knives in the Dark"
+      }
+    },
+    "src.260eb10e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The interest score locks this bloc’s vote."
       }
     },
     "src.260f28f3": {
@@ -51621,16 +51783,6 @@
       ],
       "source": {
         "text": "Roads waste time better spent governing."
-      }
-    },
-    "src.2828738e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year."
       }
     },
     "src.283a9233": {
@@ -52844,6 +52996,16 @@
         "text": "Reject the charter and keep every old claim alive."
       }
     },
+    "src.2c37099d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests."
+      }
+    },
     "src.2c3a2874": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53894,16 +54056,6 @@
         "text": "Fortify the border farms."
       }
     },
-    "src.2f7bb650": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Put it to a vote: the liege’s aid down one step, if the hall backs you. Current chance {chance}%."
-      }
-    },
     "src.2f7e42be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54667,6 +54819,16 @@
         "text": "Sealed a charter of liberties for the great council."
       }
     },
+    "src.31f41515": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Opposition"
+      }
+    },
     "src.32035a59": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55405,6 +55567,16 @@
       ],
       "source": {
         "text": "{name} is appointed to the College of Cardinals."
+      }
+    },
+    "src.3457f724": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: court Standing {standing}."
       }
     },
     "src.34633414": {
@@ -56281,6 +56453,16 @@
         "text": "Warhorse"
       }
     },
+    "src.375817b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{motion}: {posture} ({chance}%)"
+      }
+    },
     "src.3775d28b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56540,6 +56722,16 @@
       ],
       "source": {
         "text": "🗝 {name} no longer bears the household enough goodwill to remain in service."
+      }
+    },
+    "src.383fb6a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Political blocs"
       }
     },
     "src.384b4800": {
@@ -58093,16 +58285,6 @@
         "text": "Pay the famine price."
       }
     },
-    "src.3d1af477": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Move for redress of grievances ({money:cost})"
-      }
-    },
     "src.3d1ed861": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58869,6 +59051,16 @@
         "text": "Bought {province} from its struggling lord."
       }
     },
+    "src.3f7a5b9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
+      }
+    },
     "src.3f7ee9ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59057,6 +59249,16 @@
       ],
       "source": {
         "text": "Ruler’s Martial"
+      }
+    },
+    "src.40015696": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} shares {leader}’s culture."
       }
     },
     "src.400646e3": {
@@ -60445,6 +60647,16 @@
         "text": "Ghaznavid Sultanate"
       }
     },
+    "src.442f503b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{bloc} starting posture"
+      }
+    },
     "src.44378b56": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61359,6 +61571,16 @@
         "text": "Asyut"
       }
     },
+    "src.46a2a510": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{support} support · {opposition} opposition · {uncertain} uncertain · {majority} needed"
+      }
+    },
     "src.46a43e7c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61398,6 +61620,16 @@
       ],
       "source": {
         "text": "px Georgia"
+      }
+    },
+    "src.46a69f27": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Begin a redress campaign ({money:cost})"
       }
     },
     "src.46b697df": {
@@ -62894,6 +63126,16 @@
         "text": "The fields kept, and so did you."
       }
     },
+    "src.4ba60dea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Houses bound to the ruler by office, faith, favor, or temperament."
+      }
+    },
     "src.4baab956": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64257,6 +64499,16 @@
         "text": "Cherson"
       }
     },
+    "src.4f93e99e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{chance}% natural support"
+      }
+    },
     "src.4fa06893": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64305,6 +64557,16 @@
       ],
       "source": {
         "text": "Read more books than the parish owned."
+      }
+    },
+    "src.4fc6a764": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{chance}% natural support chance."
       }
     },
     "src.4fcdbbb5": {
@@ -65348,6 +65610,16 @@
         "text": "Refuse the command"
       }
     },
+    "src.5271cbaf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: {trait} temperament."
+      }
+    },
     "src.52865eaa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65437,6 +65709,16 @@
       ],
       "source": {
         "text": "A hasty repair fails inspection. They take food in place of payment."
+      }
+    },
+    "src.52b5ae87": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Court influence"
       }
     },
     "src.52bb8b89": {
@@ -66712,6 +66994,16 @@
         "text": "Complete the pilgrimage."
       }
     },
+    "src.56f54a76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lobbying failed; the targeted bloc remains undecided."
+      }
+    },
     "src.56f921be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67854,6 +68146,16 @@
         "text": "{needed} prestige (now {current})"
       }
     },
+    "src.5a7755df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: active guild allegiance."
+      }
+    },
     "src.5a79c75a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68043,6 +68345,16 @@
       ],
       "source": {
         "text": "The Conspiracy Ripens"
+      }
+    },
+    "src.5b1997d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "If carried, silver may answer banner service and the aid rises slightly."
       }
     },
     "src.5b1fe0bc": {
@@ -72075,6 +72387,16 @@
         "text": "💍 {name} enters your household as your second wife."
       }
     },
+    "src.674adfcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
     "src.67567298": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73617,6 +73939,16 @@
         "text": "Decline it with honor."
       }
     },
+    "src.6be6f488": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Support"
+      }
+    },
     "src.6be82514": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73725,6 +74057,16 @@
       ],
       "source": {
         "text": "Bureaucratic Offices"
+      }
+    },
+    "src.6c3a3c9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lobbying strength with redress evidence"
       }
     },
     "src.6c3c79af": {
@@ -74065,6 +74407,16 @@
       ],
       "source": {
         "text": "\" autocomplete=\"off\" spellcheck=\"false\""
+      }
+    },
+    "src.6d24df2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{influence} influence · {posture}"
       }
     },
     "src.6d258ebd": {
@@ -74435,16 +74787,6 @@
       ],
       "source": {
         "text": "custody of the sacred places"
-      }
-    },
-    "src.6df9f75b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good."
       }
     },
     "src.6dfdb027": {
@@ -75125,6 +75467,16 @@
       ],
       "source": {
         "text": "Peace pact with {realm}"
+      }
+    },
+    "src.703f43eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls, and the liege’s courtesy promises nothing good."
       }
     },
     "src.7042145c": {
@@ -76360,6 +76712,16 @@
         "text": "Agder"
       }
     },
+    "src.740b70d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No motion is pending. Allegiances persist, while influence and interests follow the current court."
+      }
+    },
     "src.74158d7a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76458,6 +76820,16 @@
       ],
       "source": {
         "text": "of {province}"
+      }
+    },
+    "src.744e1222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: commercial interests in {count} counties."
       }
     },
     "src.744e4979": {
@@ -77492,16 +77864,6 @@
         "text": "The liege’s war is done. The great camp folds tent by tent, and the banners turn for home — yours among them, with honor."
       }
     },
-    "src.772f1688": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "A poor season for it. Another year, perhaps."
-      }
-    },
     "src.77348cc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78203,6 +78565,16 @@
         "text": "They open more than doors."
       }
     },
+    "src.797a772d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No motion is pending; current allegiances and ordinary Estates forecasts are shown below."
+      }
+    },
     "src.797c3dd8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78583,6 +78955,16 @@
         "text": "Carry it to the {temple}."
       }
     },
+    "src.7a854906": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No political court applies to the current household."
+      }
+    },
     "src.7a86f33a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78911,6 +79293,16 @@
       ],
       "source": {
         "text": "No coin is backing another merchant’s venture."
+      }
+    },
+    "src.7b816a4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Strict majority"
       }
     },
     "src.7b86e9b1": {
@@ -79595,6 +79987,16 @@
         "text": "Ongoing commitments"
       }
     },
+    "src.7da2f8f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: Council office — {office}."
+      }
+    },
     "src.7da4d4fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79783,6 +80185,16 @@
       ],
       "source": {
         "text": "Child of the lord’s house"
+      }
+    },
+    "src.7e213df1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "A house with no durable allegiance strong enough to bind it."
       }
     },
     "src.7e214055": {
@@ -80056,6 +80468,16 @@
         "text": "Keep them both waiting."
       }
     },
+    "src.7ef66804": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} leads this landed affinity."
+      }
+    },
     "src.7ef66911": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80214,16 +80636,6 @@
       ],
       "source": {
         "text": "📯 Answer the great holy war…"
-      }
-    },
-    "src.7f30e2ac": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "The crown will want its pound in coin — a small standing rise in the aid."
       }
     },
     "src.7f31041d": {
@@ -81026,16 +81438,6 @@
         "text": "Made peace with a rival through compensation."
       }
     },
-    "src.815084e7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Your voice in the hall"
-      }
-    },
     "src.815157b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81064,6 +81466,16 @@
       ],
       "source": {
         "text": "Affected direct vassals ({count}): {vassals}."
+      }
+    },
+    "src.817c050f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} — {bloc}"
       }
     },
     "src.8184e92b": {
@@ -82217,6 +82629,16 @@
       ],
       "source": {
         "text": "A wall wants mending and a wagon wants loading. Honest coin."
+      }
+    },
+    "src.84887ebb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The bloc pledges its support."
       }
     },
     "src.848a7820": {
@@ -83520,6 +83942,16 @@
         "text": "Scriptoria"
       }
     },
+    "src.884c158a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{leader}’s rank attracts {house}."
+      }
+    },
     "src.885b3daf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84239,6 +84671,16 @@
       ],
       "source": {
         "text": "Resident family"
+      }
+    },
+    "src.8aac0322": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The bloc remains undecided."
       }
     },
     "src.8aac9145": {
@@ -87308,6 +87750,16 @@
         "text": "The people and institutions tied to this household, and what each tie currently does."
       }
     },
+    "src.9479e137": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No motion is pending; current allegiances and influence are shown below."
+      }
+    },
     "src.947f1c8f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87780,6 +88232,16 @@
       ],
       "source": {
         "text": "Keep the roads open for the host without expanding the local muster."
+      }
+    },
+    "src.95f7a2d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included."
       }
     },
     "src.96093d9f": {
@@ -88946,6 +89408,16 @@
         "text": "Tempered Guild Tools"
       }
     },
+    "src.99351e29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lobby ({chance}%)"
+      }
+    },
     "src.9944b824": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89024,6 +89496,16 @@
       ],
       "source": {
         "text": "May begin or intensify a remembered rivalry."
+      }
+    },
+    "src.99975d6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Receive the carried vote."
       }
     },
     "src.9997afb4": {
@@ -89134,16 +89616,6 @@
       ],
       "source": {
         "text": "Each side produces an older document than the last."
-      }
-    },
-    "src.9a1c21ea": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Redress with gathered evidence"
       }
     },
     "src.9a282111": {
@@ -89828,6 +90300,16 @@
         "text": "Managed pigeon houses provide meat and concentrated manure."
       }
     },
+    "src.9bd93595": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Independent"
+      }
+    },
     "src.9bdb5094": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89866,6 +90348,16 @@
       ],
       "source": {
         "text": "Tutor: {name}"
+      }
+    },
+    "src.9bfaf3a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No valid political court is available."
       }
     },
     "src.9bfe96a5": {
@@ -90218,6 +90710,16 @@
         "text": "Complained about the leech bill until the very end."
       }
     },
+    "src.9ce5075c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{motion} campaign · {days} days remain."
+      }
+    },
     "src.9ce885dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90316,6 +90818,16 @@
       ],
       "source": {
         "text": "🧰 {name} returns to their former standing in {career}."
+      }
+    },
+    "src.9d36ebfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current aid: {percent}%"
       }
     },
     "src.9d5089f4": {
@@ -90978,6 +91490,16 @@
       ],
       "source": {
         "text": "The value of hard work."
+      }
+    },
+    "src.9f40f6de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Pending motion"
       }
     },
     "src.9f41ef83": {
@@ -91821,6 +92343,16 @@
         "text": "Orléans"
       }
     },
+    "src.a1e47ab9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: {count} monopoly charters."
+      }
+    },
     "src.a1fa9c2b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92432,6 +92964,16 @@
         "text": "You need {needed} piety (now {current})."
       }
     },
+    "src.a3afc173": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The motion carries. Henceforth the liege’s summons can be answered with a purse, and the aid creeps up to pay for the privilege."
+      }
+    },
     "src.a3bd1c2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92632,6 +93174,16 @@
         "text": "⌛ A payment is missed. The lender adds the signed penalty and grants two more seasons."
       }
     },
+    "src.a42be485": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Martial inclination: {martial}"
+      }
+    },
     "src.a430c2cf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92810,16 +93362,6 @@
       ],
       "source": {
         "text": "Simple majority"
-      }
-    },
-    "src.a4bc2bf8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Base"
       }
     },
     "src.a4bca4c0": {
@@ -93175,16 +93717,6 @@
         "text": "Venison in the pot, and none the wiser."
       }
     },
-    "src.a60b481a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Put it to a vote: silver for banner service — the aid creeps up in exchange."
-      }
-    },
     "src.a60dbaf3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93376,6 +93908,16 @@
         "text": "Simoniac"
       }
     },
+    "src.a674177b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Magnates"
+      }
+    },
     "src.a6751f2a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93464,6 +94006,16 @@
       ],
       "source": {
         "text": "Bought the bishop’s mitre."
+      }
+    },
+    "src.a6bf721e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Redress blocs"
       }
     },
     "src.a6c1c29f": {
@@ -94409,16 +94961,6 @@
         "text": "Siena"
       }
     },
-    "src.a982188f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "The war-hungry lords shout it down: what is a vassal without his spear? The liege looks pleased, and looks at you."
-      }
-    },
     "src.a987c2f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94920,6 +95462,16 @@
       ],
       "source": {
         "text": "Lérida"
+      }
+    },
+    "src.ab9abfed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{influence} of {total}"
       }
     },
     "src.aba4f2ec": {
@@ -95913,6 +96465,16 @@
         "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
       }
     },
+    "src.aec2bdcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Begin a scutage campaign ({money:cost})"
+      }
+    },
     "src.aec4d444": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96353,6 +96915,16 @@
       ],
       "source": {
         "text": "Enter"
+      }
+    },
+    "src.affaa3cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Review leaders, member houses, interests, influence, and any pending vote forecast."
       }
     },
     "src.affc10d9": {
@@ -97296,6 +97868,16 @@
         "text": "Political gifts remain on this ruler path."
       }
     },
+    "src.b2a71c85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{motion}: {posture}"
+      }
+    },
     "src.b2ad7e14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97526,6 +98108,16 @@
         "text": "Setup cost"
       }
     },
+    "src.b30989b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Support or opposition is pledged for this vote."
+      }
+    },
     "src.b326dbca": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97634,6 +98226,16 @@
       ],
       "source": {
         "text": "Keep the house accounts."
+      }
+    },
+    "src.b3805e0e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No political court applies to the current position."
       }
     },
     "src.b38ad88e": {
@@ -98118,6 +98720,16 @@
         "text": "The wall buckles where you least expect it. A blow you never see punches the wind and the sense clean out of you, and the rout washes over you like cold black water."
       }
     },
+    "src.b4da4d80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lobbying succeeded; the targeted bloc pledged support."
+      }
+    },
     "src.b4daad55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98367,6 +98979,16 @@
       ],
       "source": {
         "text": "Campaign supply adjustment: {money:amount}"
+      }
+    },
+    "src.b57c0d4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} is the ruler’s house."
       }
     },
     "src.b599eada": {
@@ -98657,6 +99279,16 @@
       ],
       "source": {
         "text": "your late spouse"
+      }
+    },
+    "src.b64fb0b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Member ruler traits"
       }
     },
     "src.b65f9bd3": {
@@ -99290,6 +99922,16 @@
         "text": "Finish the current journey before moving the capital."
       }
     },
+    "src.b81cadbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: {count} family enterprises."
+      }
+    },
     "src.b824312a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99298,6 +99940,16 @@
       ],
       "source": {
         "text": "Every county belongs by ancient right to a duchy, a kingdom, and an empire — its"
+      }
+    },
+    "src.b82b1e2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The war-hungry lords shout it down. The liege looks pleased, and looks at you."
       }
     },
     "src.b82dfbc8": {
@@ -100045,7 +100697,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js",
         "js/model.js"
       ],
       "source": {
@@ -100824,6 +101475,16 @@
         "text": "You have watched the older boys set snares along the hedgerow. Your fingers know the knots now, and supper is thin."
       }
     },
+    "src.bd6b318a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lobbying strength"
+      }
+    },
     "src.bd6c6b93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100873,16 +101534,6 @@
       ],
       "source": {
         "text": "Cosenza"
-      }
-    },
-    "src.bd87eadf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Vote chance"
       }
     },
     "src.bd888a3a": {
@@ -101597,6 +102248,16 @@
         "text": "Send a rich first gift. ({money:15})"
       }
     },
+    "src.c00b1c4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Withdraw the motion"
+      }
+    },
     "src.c00b4e84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102068,6 +102729,16 @@
       ],
       "source": {
         "text": "Parent"
+      }
+    },
+    "src.c1595930": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Crown"
       }
     },
     "src.c15be506": {
@@ -102785,16 +103456,6 @@
       ],
       "source": {
         "text": "The merchants accept the narrow guarantee, and {rname} matches it."
-      }
-    },
-    "src.c3131d6c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "The estates decide — rank, name, Standing with the liege, and any evidence gathered for redress all count now."
       }
     },
     "src.c3162e01": {
@@ -103717,6 +104378,16 @@
       ],
       "source": {
         "text": "A crowd is a rope, if someone holds the end."
+      }
+    },
+    "src.c600a1cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Redress forecast"
       }
     },
     "src.c6014545": {
@@ -105311,6 +105982,16 @@
       ],
       "source": {
         "text": "Burn the false ledger."
+      }
+    },
+    "src.cb0c4c96": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} shares the faith of {leader}."
       }
     },
     "src.cb0d859c": {
@@ -107088,6 +107769,16 @@
         "text": "{rate}%"
       }
     },
+    "src.d0824e5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house}: {count} active trade contracts."
+      }
+    },
     "src.d085ca9c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107307,6 +107998,16 @@
       ],
       "source": {
         "text": "Chests, Linens and Copperware"
+      }
+    },
+    "src.d173b4cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "No Estates motion is currently being campaigned."
       }
     },
     "src.d17ce893": {
@@ -107850,16 +108551,6 @@
         "text": "two-handed"
       }
     },
-    "src.d32e8ef9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "Press the motion to a vote."
-      }
-    },
     "src.d33b4f12": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108078,6 +108769,16 @@
       ],
       "source": {
         "text": "(lessons begin at age 6)"
+      }
+    },
+    "src.d3e8a3b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "Guild, charter, enterprise, and trade interests acting together."
       }
     },
     "src.d3ea2d38": {
@@ -109079,6 +109780,16 @@
       ],
       "source": {
         "text": "Answer from law, scripture, and authority."
+      }
+    },
+    "src.d6f69dfb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{motion} posture"
       }
     },
     "src.d6fc8a83": {
@@ -110171,6 +110882,16 @@
       ],
       "source": {
         "text": "Bind your chest, take a man’s name, and march. Madness — or the only road left."
+      }
+    },
+    "src.da1ce3ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Motion posture"
       }
     },
     "src.da24b3e8": {
@@ -112456,16 +113177,6 @@
         "text": "Current position"
       }
     },
-    "src.e0e7134c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_parliament.js"
-      ],
-      "source": {
-        "text": "Let it be talked out, and withdraw."
-      }
-    },
     "src.e0eba6c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113763,6 +114474,16 @@
         "text": "development {development} · {built} built · {remaining}"
       }
     },
+    "src.e4aecd8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_blocs.js"
+      ],
+      "source": {
+        "text": "A landed affinity gathered around an influential house."
+      }
+    },
     "src.e4bdd6be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113851,6 +114572,16 @@
       ],
       "source": {
         "text": "🤝 You swear fealty to {liege}. Your banners now fly under {realm}."
+      }
+    },
+    "src.e519b78b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} member houses"
       }
     },
     "src.e52e1315": {
@@ -115526,6 +116257,16 @@
         "text": "Scythes hiss in the fields from first light to last. The whole village works, prays, and counts."
       }
     },
+    "src.e9cf5aa0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{house} keeps its own counsel."
+      }
+    },
     "src.e9e17048": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115758,14 +116499,14 @@
         "text": "Refuse — and humiliate him."
       }
     },
-    "src.eae57ab9": {
+    "src.eaf2cdbb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
         "js/ui.js"
       ],
       "source": {
-        "text": "When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege."
+        "text": "Redress"
       }
     },
     "src.eaf38347": {
@@ -117047,6 +117788,16 @@
       ],
       "source": {
         "text": "development {development}"
+      }
+    },
+    "src.ef3971b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Only an undecided bloc can be targeted for lobbying."
       }
     },
     "src.ef530a48": {
@@ -118361,6 +119112,16 @@
         "text": "Renew for another year. ({money:8})"
       }
     },
+    "src.f3224aa6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Undecided"
+      }
+    },
     "src.f32714f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119635,6 +120396,16 @@
         "text": "Iron Weaponry"
       }
     },
+    "src.f6ea9604": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Leader"
+      }
+    },
     "src.f6f1dff9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119886,6 +120657,16 @@
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
       }
     },
+    "src.f7c55990": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Scutage blocs"
+      }
+    },
     "src.f7cb7982": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119914,6 +120695,16 @@
       ],
       "source": {
         "text": "Teaching {students}"
+      }
+    },
+    "src.f7f3e180": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Interests"
       }
     },
     "src.f7f58a7c": {
@@ -120164,6 +120955,16 @@
       ],
       "source": {
         "text": "Casks of wine and a purse of foreign silver, safely hidden."
+      }
+    },
+    "src.f8d80018": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Influence"
       }
     },
     "src.f8da209c": {
@@ -120776,14 +121577,14 @@
         "text": "Constantinople"
       }
     },
-    "src.faaf37c6": {
+    "src.faaa948c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/events_parliament.js"
+        "js/ui.js"
       ],
       "source": {
-        "text": "The motion carries, to the relief of every manor with a leaking hall. Henceforth the liege’s summons can be answered with a purse — and the aid creeps up to pay for the privilege."
+        "text": "Every undecided bloc resolves once, in stable order. There is no final global roll."
       }
     },
     "src.faba6f07": {
@@ -127620,6 +128421,14 @@
         "text": "A manor-sized holding is assembled here."
       }
     },
+    "ui:A motion is already being campaigned before the Estates.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "A motion is already being campaigned before the Estates."
+      }
+    },
     "ui:A new named character enters the chronicle in this office.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129272,14 +130081,6 @@
         "text": "Baltic-Finnic"
       }
     },
-    "ui:Banner service": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Banner service"
-      }
-    },
     "ui:Bargain for recognition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129304,14 +130105,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Barony at {county}"
-      }
-    },
-    "ui:Base": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Base"
       }
     },
     "ui:Base {money:amount} seasonal yield while staffed; the exact result appears in Money each season": {
@@ -129356,6 +130149,26 @@
         "text": "Begin a courtship before making a proposal."
       }
     },
+    "ui:Begin a redress campaign ({money:cost})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Begin a redress campaign ({money:cost})"
+      }
+    },
+    "ui:Begin a scutage campaign ({money:cost})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Begin a scutage campaign ({money:cost})"
+      }
+    },
     "ui:Begin courtship": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129370,6 +130183,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Begin research"
+      }
+    },
+    "ui:Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included."
       }
     },
     "ui:Beginning spends the day and assigns personal attention; a proposal requires +{threshold} Standing.": {
@@ -129456,16 +130279,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Betrothed"
-      }
-    },
-    "ui:Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Between sittings you can put a motion of your own before the estates — it costs {money:cost} in gifts and promises, and the lords will hear but one motion a year."
       }
     },
     "ui:Bind your friend to your house by oath — for life.": {
@@ -129731,6 +130544,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Call in guild commissions"
+      }
+    },
+    "ui:Call the vote": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Call the vote"
       }
     },
     "ui:Call {name} friend": {
@@ -130806,6 +131627,16 @@
         "text": "Current"
       }
     },
+    "ui:Current aid: {percent}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Current aid: {percent}%"
+      }
+    },
     "ui:Current campaign vow": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -131307,14 +132138,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Descendant matching only"
-      }
-    },
-    "ui:Diplomacy": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Diplomacy"
       }
     },
     "ui:Direct liege": {
@@ -132080,6 +132903,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting."
+      }
+    },
+    "ui:Every undecided bloc resolves once, in stable order. There is no final global roll.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Every undecided bloc resolves once, in stable order. There is no final global roll."
       }
     },
     "ui:Exact upfront cost: {money:cost}.": {
@@ -133254,6 +134085,22 @@
         "text": "Idle — eligible workers are available."
       }
     },
+    "ui:If carried, silver may answer banner service and the aid rises slightly.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "If carried, silver may answer banner service and the aid rises slightly."
+      }
+    },
+    "ui:If carried, the liege’s aid falls one step.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "If carried, the liege’s aid falls one step."
+      }
+    },
     "ui:If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133477,6 +134324,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Insult them publicly"
+      }
+    },
+    "ui:Interests": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Interests"
       }
     },
     "ui:Intrigue decides the outcome; success lowers Standing by 8, discovery by 20. Spends the day.": {
@@ -133979,6 +134834,32 @@
         "text": "Loans: {count}"
       }
     },
+    "ui:Lobby ({chance}%)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lobby ({chance}%)"
+      }
+    },
+    "ui:Lobbying failed; the targeted bloc remains undecided.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lobbying failed; the targeted bloc remains undecided."
+      }
+    },
+    "ui:Lobbying succeeded; the targeted bloc pledged support.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lobbying succeeded; the targeted bloc pledged support."
+      }
+    },
     "ui:Local to {province}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -134268,6 +135149,16 @@
         "text": "Married"
       }
     },
+    "ui:Martial inclination: {martial}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "martial"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Martial inclination: {martial}"
+      }
+    },
     "ui:Masterwork": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134358,6 +135249,22 @@
         "text": "May keep, reverse, or withdraw the current direction."
       }
     },
+    "ui:Member houses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Member houses"
+      }
+    },
+    "ui:Member ruler traits": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Member ruler traits"
+      }
+    },
     "ui:Men-at-arms food and supplies": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134418,6 +135325,14 @@
         "text": "Mosque Servant"
       }
     },
+    "ui:Motion posture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Motion posture"
+      }
+    },
     "ui:Move capital to {destination}?": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -134426,26 +135341,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Move capital to {destination}?"
-      }
-    },
-    "ui:Move for redress of grievances ({money:cost})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Move for redress of grievances ({money:cost})"
-      }
-    },
-    "ui:Move for scutage ({money:cost})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Move for scutage ({money:cost})"
       }
     },
     "ui:Move the capital and permanent household home from {from} to {destination}?": {
@@ -134742,6 +135637,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No Council office"
+      }
+    },
+    "ui:No Estates motion is currently being campaigned.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "No Estates motion is currently being campaigned."
       }
     },
     "ui:No active household obligations.": {
@@ -135314,6 +136217,30 @@
         "text": "No more children"
       }
     },
+    "ui:No motion is pending. Allegiances persist, while influence and interests follow the current court.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No motion is pending. Allegiances persist, while influence and interests follow the current court."
+      }
+    },
+    "ui:No motion is pending; current allegiances and influence are shown below.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No motion is pending; current allegiances and influence are shown below."
+      }
+    },
+    "ui:No motion is pending; current allegiances and ordinary Estates forecasts are shown below.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No motion is pending; current allegiances and ordinary Estates forecasts are shown below."
+      }
+    },
     "ui:No named personal connections are recorded.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -135418,6 +136345,22 @@
       "location": "js/events.js",
       "source": {
         "text": "No personal-attention assignment is available."
+      }
+    },
+    "ui:No political court applies to the current household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No political court applies to the current household."
+      }
+    },
+    "ui:No political court applies to the current position.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No political court applies to the current position."
       }
     },
     "ui:No political deed applies to the current position.": {
@@ -135668,6 +136611,22 @@
       "location": "js/economy.js",
       "source": {
         "text": "No valid local grantor can hear this petition."
+      }
+    },
+    "ui:No valid political court is available for this motion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "No valid political court is available for this motion."
+      }
+    },
+    "ui:No valid political court is available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No valid political court is available."
       }
     },
     "ui:No visible royal child": {
@@ -136182,6 +137141,14 @@
         "text": "Only an independent king or emperor may offer a defensive alliance."
       }
     },
+    "ui:Only an undecided bloc can be targeted for lobbying.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Only an undecided bloc can be targeted for lobbying."
+      }
+    },
     "ui:Only freeholders and gentry can form a trade venture.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136282,6 +137249,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Open personal traits, family, courtship, rivalry, and household dealings."
+      }
+    },
+    "ui:Open political blocs in Governance…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Open political blocs in Governance…"
       }
     },
     "ui:Open political office, capital, diplomacy, war, succession, and ruler gifts.": {
@@ -136452,6 +137427,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Opportunity"
+      }
+    },
+    "ui:Opposition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Opposition"
       }
     },
     "ui:Options…": {
@@ -137163,6 +138146,14 @@
         "text": "Political attention: {used} of {capacity} assigned."
       }
     },
+    "ui:Political blocs": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Political blocs"
+      }
+    },
     "ui:Political gifts remain on this ruler path.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -137265,14 +138256,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Press {cause}…"
-      }
-    },
-    "ui:Prestige": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Prestige"
       }
     },
     "ui:Prestige and popular trust will fall. Repeated debasement worsens loan terms, and sophisticated lenders may demand repayment by weight. Existing nominal debts become easier in real terms by design.": {
@@ -137485,24 +138468,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Provoke direction"
-      }
-    },
-    "ui:Put it to a vote: silver for banner service — the aid creeps up in exchange.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Put it to a vote: silver for banner service — the aid creeps up in exchange."
-      }
-    },
-    "ui:Put it to a vote: the liege’s aid down one step, if the hall backs you. Current chance {chance}%.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "chance"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Put it to a vote: the liege’s aid down one step, if the hall backs you. Current chance {chance}%."
       }
     },
     "ui:Qadi": {
@@ -137872,12 +138837,12 @@
         "text": "Recurring cost"
       }
     },
-    "ui:Redress with gathered evidence": {
+    "ui:Redress": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Redress with gathered evidence"
+        "text": "Redress"
       }
     },
     "ui:Reduce this standard by one level…": {
@@ -138657,6 +139622,14 @@
         "text": "Review journey"
       }
     },
+    "ui:Review leaders, member houses, interests, influence, and any pending vote forecast.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Review leaders, member houses, interests, influence, and any pending vote forecast."
+      }
+    },
     "ui:Review loans, trade partnerships, dispatched ventures, and coinage.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138987,6 +139960,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Scope"
+      }
+    },
+    "ui:Scutage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Scutage"
       }
     },
     "ui:Scutage is already part of the terms of service.": {
@@ -139922,6 +140903,22 @@
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
       }
     },
+    "ui:Support": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Support"
+      }
+    },
+    "ui:Support or opposition is pledged for this vote.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Support or opposition is pledged for this vote."
+      }
+    },
     "ui:Sworn subject": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140390,6 +141387,22 @@
         "text": "The assistant’s recommendation is listed first. Every family remains your decision."
       }
     },
+    "ui:The bloc pledges its support.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The bloc pledges its support."
+      }
+    },
+    "ui:The bloc remains undecided.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The bloc remains undecided."
+      }
+    },
     "ui:The campaign’s partition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140600,6 +141613,14 @@
         "text": "The following remote enterprises will lose their workers and become idle:"
       }
     },
+    "ui:The gold and yearly motion remain spent; unused redress evidence is preserved.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
+      }
+    },
     "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140700,6 +141721,14 @@
         "text": "The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again."
       }
     },
+    "ui:The interest score locks this bloc’s vote.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The interest score locks this bloc’s vote."
+      }
+    },
     "ui:The journey costs {money:cost}; you have {money:current}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -140719,14 +141748,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}."
-      }
-    },
-    "ui:The liege’s aid": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "The liege’s aid"
       }
     },
     "ui:The liege’s aid is already at its customary minimum.": {
@@ -140751,6 +141772,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "The marriage that created this choice is no longer in force."
+      }
+    },
+    "ui:The motion has already been called to a vote.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "The motion has already been called to a vote."
       }
     },
     "ui:The new worker": {
@@ -141104,6 +142133,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "These assignments keep their own capacities, rules, and consequences."
+      }
+    },
+    "ui:These crown-side blocs are authoritative, but no Estates motion applies to this court.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "These crown-side blocs are authoritative, but no Estates motion applies to this court."
       }
     },
     "ui:They are not yet of age.": {
@@ -141558,14 +142595,6 @@
         "text": "Trade partnership"
       }
     },
-    "ui:Traits": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Traits"
-      }
-    },
     "ui:Transfer rule": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141732,6 +142761,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Unchanged"
+      }
+    },
+    "ui:Undecided": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Undecided"
       }
     },
     "ui:Underage": {
@@ -142255,14 +143292,14 @@
         "text": "Well-made {item}"
       }
     },
-    "ui:When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege.": {
+    "ui:When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "liege"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "When {liege} summons the estates, the lords of the realm haggle over the terms of service — and your voice in the hall grows with your rank, your diplomacy, your name, and your Standing with the liege."
+        "text": "When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests."
       }
     },
     "ui:While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.": {
@@ -142320,6 +143357,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Withdraw personal attention. This costs no day."
+      }
+    },
+    "ui:Withdraw the motion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Withdraw the motion"
       }
     },
     "ui:Withdraw your court’s attention and free this assignment.": {
@@ -143073,6 +144118,14 @@
         "text": "Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill."
       }
     },
+    "ui:Your one lobbying attempt has already been used.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Your one lobbying attempt has already been used."
+      }
+    },
     "ui:Your participation in this great holy war": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -143219,14 +144272,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your venture to {destination}"
-      }
-    },
-    "ui:Your voice in the hall": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Your voice in the hall"
       }
     },
     "ui:Your vow seeks no territorial evidence.": {
@@ -145284,6 +146329,16 @@
         "text": "{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment"
       }
     },
+    "ui:{bloc} starting posture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bloc"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{bloc} starting posture"
+      }
+    },
     "ui:{building} upkeep": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -145372,6 +146427,26 @@
       "location": "js/ui.js",
       "source": {
         "text": "{chance}% merit chance"
+      }
+    },
+    "ui:{chance}% natural support": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{chance}% natural support"
+      }
+    },
+    "ui:{chance}% natural support chance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{chance}% natural support chance."
       }
     },
     "ui:{chance}% yearly": {
@@ -145527,6 +146602,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{count} household service slots are open. Service is paid each season."
+      }
+    },
+    "ui:{count} member houses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} member houses"
       }
     },
     "ui:{count} need attention": {
@@ -145994,6 +147079,177 @@
         "text": "{held} of {cap} counties"
       }
     },
+    "ui:{house} holds land beside {leader}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "leader"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} holds land beside {leader}."
+      }
+    },
+    "ui:{house} is the ruler’s house.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} is the ruler’s house."
+      }
+    },
+    "ui:{house} keeps its own counsel.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} keeps its own counsel."
+      }
+    },
+    "ui:{house} leads this landed affinity.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} leads this landed affinity."
+      }
+    },
+    "ui:{house} shares the faith of {leader}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "leader"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} shares the faith of {leader}."
+      }
+    },
+    "ui:{house} shares the ruler’s faith.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} shares the ruler’s faith."
+      }
+    },
+    "ui:{house} shares {leader}’s culture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "leader"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} shares {leader}’s culture."
+      }
+    },
+    "ui:{house} — {bloc}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bloc",
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house} — {bloc}"
+      }
+    },
+    "ui:{house}: Council office — {office}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "office"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: Council office — {office}."
+      }
+    },
+    "ui:{house}: active guild allegiance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: active guild allegiance."
+      }
+    },
+    "ui:{house}: commercial interests in {count} counties.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: commercial interests in {count} counties."
+      }
+    },
+    "ui:{house}: court Standing {standing}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: court Standing {standing}."
+      }
+    },
+    "ui:{house}: {count} active trade contracts.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: {count} active trade contracts."
+      }
+    },
+    "ui:{house}: {count} family enterprises.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: {count} family enterprises."
+      }
+    },
+    "ui:{house}: {count} monopoly charters.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "house"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: {count} monopoly charters."
+      }
+    },
+    "ui:{house}: {trait} temperament.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "trait"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{house}: {trait} temperament."
+      }
+    },
     "ui:{icon} level {level}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -146048,6 +147304,38 @@
       "location": "js/ui.js",
       "source": {
         "text": "{incoming} replaces {outgoing}."
+      }
+    },
+    "ui:{influence} influence": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "influence"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{influence} influence"
+      }
+    },
+    "ui:{influence} influence · {posture}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "influence",
+        "posture"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{influence} influence · {posture}"
+      }
+    },
+    "ui:{influence} of {total}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "influence",
+        "total"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{influence} of {total}"
       }
     },
     "ui:{item} moves from the family armory to {name} ({slots}).": {
@@ -146138,6 +147426,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{label}: {amount}"
+      }
+    },
+    "ui:{leader}’s rank attracts {house}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "house",
+        "leader"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{leader}’s rank attracts {house}."
       }
     },
     "ui:{legs} county legs · {days} days each way": {
@@ -146454,6 +147753,50 @@
       "location": "js/ui.js",
       "source": {
         "text": "{money:stake} invested · resolves {date}"
+      }
+    },
+    "ui:{motion} campaign · {days} days remain.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "motion"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{motion} campaign · {days} days remain."
+      }
+    },
+    "ui:{motion} posture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "motion"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{motion} posture"
+      }
+    },
+    "ui:{motion}: {posture}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "motion",
+        "posture"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{motion}: {posture}"
+      }
+    },
+    "ui:{motion}: {posture} ({chance}%)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "motion",
+        "posture"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{motion}: {posture} ({chance}%)"
       }
     },
     "ui:{name} (heir)": {
@@ -147696,6 +149039,19 @@
       "location": "js/ui.js",
       "source": {
         "text": "{summary} · {money:amount} each season"
+      }
+    },
+    "ui:{support} support · {opposition} opposition · {uncertain} uncertain · {majority} needed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "majority",
+        "opposition",
+        "support",
+        "uncertain"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{support} support · {opposition} opposition · {uncertain} uncertain · {majority} needed"
       }
     },
     "ui:{threshold}+ with a sour Council": {

@@ -39,21 +39,23 @@ FBDATA.events.push(
 /* ---- the player's own motions (the 🏛 Estates deed) ---- */
 { id:'parliament_redress', title:'A Motion for Redress',
   trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
   text:'Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything.',
   options:[
-    { label:'Press the motion to a vote.', desc:'The estates decide — rank, name, Standing with the liege, and any evidence gathered for redress all count now.', require:{ custom:'parliament_redress_possible' }, chance:'parliament_redress_vote',
-      success:{ text:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls. The liege inclines his head to you with great courtesy, which costs him nothing and promises nothing good.', effects:{ custom:'parliament_redress_won', addModifier:{id:'custom_confirmed'}, prestige:5, traitProgress:{id:'moot_speaker'}, log:'Won redress of grievances in the estates.' } },
-      failure:{ text:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', effects:{ custom:'parliament_redress_lost', prestige:-4, removeTrait:'moot_speaker' } } },
-    { label:'Let it be talked out, and withdraw.', desc:'Some motions serve better as threats than as votes.', effects:{ prestige:-2 } }
+    { label:'Receive the carried vote.', desc:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls, and the liege’s courtesy promises nothing good.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_redress_won', addModifier:{id:'custom_confirmed'}, prestige:5, traitProgress:{id:'moot_speaker'}, log:'Won redress of grievances in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_redress_lost', prestige:-4, removeTrait:'moot_speaker' } }
   ]},
 { id:'parliament_scutage', title:'A Motion for Scutage',
   trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
   text:'Your motion before the estates: that the lords of the realm may answer {liege}’s banner call with silver instead of service — scutage, the shield-tax, as the old charters name it. The young lords who love a campaign scoff; the old ones with roofs to mend lean forward.',
   options:[
-    { label:'Press the motion to a vote.', desc:'The crown will want its pound in coin — a small standing rise in the aid.', require:{ custom:'parliament_scutage_possible' }, chance:'parliament_vote',
-      success:{ text:'The motion carries, to the relief of every manor with a leaking hall. Henceforth the liege’s summons can be answered with a purse — and the aid creeps up to pay for the privilege.', effects:{ custom:'parliament_scutage_pass', prestige:4, traitProgress:{id:'moot_speaker'}, log:'Carried a scutage motion in the estates.' } },
-      failure:{ text:'The war-hungry lords shout it down: what is a vassal without his spear? The liege looks pleased, and looks at you.', effects:{ opinionLiege:-6, prestige:-3, removeTrait:'moot_speaker' } } },
-    { label:'Let it be talked out, and withdraw.', desc:'A poor season for it. Another year, perhaps.', effects:{ prestige:-2 } }
+    { label:'Receive the carried vote.', desc:'The motion carries. Henceforth the liege’s summons can be answered with a purse, and the aid creeps up to pay for the privilege.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_scutage_pass', prestige:4, traitProgress:{id:'moot_speaker'}, log:'Carried a scutage motion in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The war-hungry lords shout it down. The liege looks pleased, and looks at you.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_scutage_lost', opinionLiege:-6, prestige:-3, removeTrait:'moot_speaker' } }
   ]},
 
 /* ---- wartime: the subsidy vote ---- */

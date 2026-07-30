@@ -1609,6 +1609,7 @@ window.FB = window.FB || {};
     realmCounties.sort();
     const council = FB.councilSummary ? FB.councilSummary(state) : null;
     const estates = FB.parliamentSummary ? FB.parliamentSummary(state) : null;
+    const politics = FB.politicalSummary ? FB.politicalSummary(state) : null;
     const obligations = p.liege && FB.parliamentTerms
       ? FB.parliamentTerms(state) : null;
     const levyFavors = p.vassalLevyFavors || {};
@@ -1716,6 +1717,7 @@ window.FB = window.FB || {};
       institution:institution,
       estates:estates,
       council:council,
+      politics:politics,
       obligations:obligations,
       warService:p.warService || 0,
       servingLiegeWar:!!(p.flags && p.flags.with_liege_host),
@@ -2363,6 +2365,7 @@ window.FB = window.FB || {};
       state.realms.player.liege = rid;
     }
     if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+    if (FB.repairPolitics) FB.repairPolitics(state);
     return rid;
   };
 

@@ -10,7 +10,8 @@
    more than a baron's — plus diplomacy, prestige, and Standing with the liege
    (FB.parliamentVoteChance, the `parliament_vote` chance fn). Sessions arrive
    as queued events once a year (FB.parliamentYearly); between sittings the
-   player can buy a motion of their own via the 🏛 Estates deed. The king-side
+   player can begin a 90-day bloc campaign of their own via the 🏛 Estates
+   deed, lobby one undecided bloc, and call or withdraw the vote. The king-side
    mirror of all this is the royal council (js/council.js). See
    docs/designs/parliament.md. */
 window.FB = window.FB || {};
@@ -82,7 +83,9 @@ window.FB = window.FB || {};
     const out = {
       base:0.30,
       rank:([0, 0, 0, 0.05, 0.12, 0.20][p.tier] || 0),
-      diplomacy:FB.skillOf(me, 'dip') * 0.02,
+      diplomacy:(FB.skillSnapshot
+        ? FB.skillSnapshot(state, me, 'dip')
+        : FB.skillOf(me, 'dip')) * 0.02,
       prestige:p.prestige / 1200,
       standing:liegeStanding(state) / 400,
       traits:FB.traitBonus
@@ -106,6 +109,8 @@ window.FB = window.FB || {};
   FB.parliamentSummary = function (state) {
     if (!FB.parliamentActive(state)) return null;
     const terms = FB.parliamentTerms(state);
+    const politics = FB.politicalSummary
+      ? FB.politicalSummary(state) : null;
     const pending = [];
     for (const item of (state.eventQueue || [])) {
       if (item && typeof item.id === 'string' &&
@@ -121,7 +126,9 @@ window.FB = window.FB || {};
       sessionChance:FBDATA.balance.parliamentSessionChance || 0.5,
       pendingEventIds:pending,
       vote:FB.parliamentVoteBreakdown(state),
-      redressVote:FB.parliamentVoteBreakdown(state, true)
+      redressVote:FB.parliamentVoteBreakdown(state, true),
+      pendingMotion:politics ? politics.pendingMotion : null,
+      motionForecast:politics ? politics.motion : null
     };
   };
 
@@ -136,6 +143,22 @@ window.FB = window.FB || {};
       return {
         ready:false,
         reason:FB.T('That motion is not recognized by the Estates.')
+      };
+    }
+    const politics = FB.politicalSummary
+      ? FB.politicalSummary(state) : null;
+    if (!politics) {
+      return {
+        ready:false,
+        reason:FB.T('No valid political court is available for this motion.')
+      };
+    }
+    const pending = politics && politics.pendingMotion;
+    if (pending) {
+      return {
+        ready:false,
+        pending:true,
+        reason:FB.T('A motion is already being campaigned before the Estates.')
       };
     }
     const terms = FB.parliamentTerms(state);
@@ -170,16 +193,143 @@ window.FB = window.FB || {};
     return { ready:true, reason:'' };
   };
 
-  FB.parliamentMove = function (state, motionId) {
+  FB.parliamentBeginMotion = function (state, motionId) {
     const status = FB.parliamentMotionStatus(state, motionId);
     if (!status.ready) return false;
+    const politics = FB.ensurePolitics ? FB.ensurePolitics(state) : null;
+    if (!politics || politics.polityId !== state.player.liege ||
+        politics.pendingMotion) return false;
     const terms = FB.parliamentEnsure(state);
     if (!terms) return false;
     state.player.gold -= FBDATA.balance.parliamentMotionCost || 15;
     terms.lastMotion = state.date.year;
-    FB.queueEvent(state, 'parliament_' + motionId, {
-      locationId:state.player.provinceId
+    politics.pendingMotion = {
+      id:'motion:' + politics.polityId + ':' + state.date.year + ':' +
+        state.turn + ':' + motionId,
+      motionId:motionId,
+      polityId:politics.polityId,
+      proposerHouseId:'player',
+      startedTurn:state.turn,
+      expiresTurn:state.turn + 90,
+      locationId:state.player.provinceId,
+      pledges:{},
+      lobby:{ used:false, blocId:null, success:null },
+      result:null
+    };
+    return true;
+  };
+  /* Compatibility entry point retained for older UI mods. */
+  FB.parliamentMove = FB.parliamentBeginMotion;
+
+  FB.parliamentLobbyStatus = function (state, blocId) {
+    const politics = FB.politicalSummary
+      ? FB.politicalSummary(state) : null;
+    const pending = politics && politics.pendingMotion;
+    if (!FB.parliamentActive(state) || !pending ||
+        pending.polityId !== state.player.liege) {
+      return {
+        ready:false,
+        reason:FB.T('No Estates motion is currently being campaigned.')
+      };
+    }
+    if (pending.result) {
+      return {
+        ready:false,
+        reason:FB.T('The motion has already been called to a vote.')
+      };
+    }
+    if (pending.lobby && pending.lobby.used) {
+      return {
+        ready:false,
+        reason:FB.T('Your one lobbying attempt has already been used.')
+      };
+    }
+    const forecast = politics.motion;
+    let target = null;
+    for (const bloc of forecast ? forecast.blocs : []) {
+      if (bloc.id === blocId) {
+        target = bloc;
+        break;
+      }
+    }
+    if (!target || target.posture !== 'undecided') {
+      return {
+        ready:false,
+        reason:FB.T('Only an undecided bloc can be targeted for lobbying.')
+      };
+    }
+    return {
+      ready:true,
+      reason:'',
+      blocId:target.id,
+      chance:(target.naturalSupportChance + forecast.playerVoteChance) / 2
+    };
+  };
+
+  FB.parliamentLobbyMotion = function (state, blocId) {
+    const politics = FB.ensurePolitics ? FB.ensurePolitics(state) : null;
+    const pending = politics && politics.pendingMotion;
+    const status = FB.parliamentLobbyStatus(state, blocId);
+    if (!pending || !status.ready) return false;
+    const success = FB.chance(status.chance);
+    pending.lobby = {
+      used:true,
+      blocId:blocId,
+      success:success
+    };
+    if (success) pending.pledges[blocId] = 'support';
+    return {
+      ok:true,
+      success:success,
+      chance:status.chance,
+      blocId:blocId
+    };
+  };
+
+  FB.parliamentCallVote = function (state) {
+    const politics = FB.ensurePolitics ? FB.ensurePolitics(state) : null;
+    const pending = politics && politics.pendingMotion;
+    if (!FB.parliamentActive(state) || !pending || pending.result ||
+        pending.polityId !== state.player.liege) return false;
+    const forecast = FB.politicalMotionForecast &&
+      FB.politicalMotionForecast(state, pending.motionId);
+    if (!forecast) return false;
+    const outcomes = {};
+    const ordered = forecast.blocs.slice().sort(function (a, b) {
+      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
     });
+    for (const bloc of ordered) {
+      if (bloc.posture === 'undecided') {
+        outcomes[bloc.id] = FB.chance(bloc.naturalSupportChance)
+          ? 'support' : 'oppose';
+      } else {
+        outcomes[bloc.id] = bloc.posture;
+      }
+    }
+    pending.result = {
+      passed:false,
+      outcomes:outcomes,
+      talliedTurn:state.turn
+    };
+    const resultForecast = FB.politicalMotionForecast(
+      state, pending.motionId);
+    pending.result.passed =
+      resultForecast.supportInfluence >= resultForecast.majority;
+    FB.queueEvent(state, 'parliament_' + pending.motionId, {
+      locationId:pending.locationId || state.player.provinceId,
+      politicsPolityId:pending.polityId,
+      politicsPendingId:pending.id,
+      politicsMotionId:pending.motionId,
+      politicsResult:pending.result.passed ? 'pass' : 'fail'
+    });
+    return resultForecast;
+  };
+
+  FB.parliamentWithdrawMotion = function (state) {
+    const politics = state.politics;
+    const pending = politics && politics.pendingMotion;
+    if (!pending || pending.result) return false;
+    politics.pendingMotion = null;
     return true;
   };
 
@@ -239,6 +389,40 @@ window.FB = window.FB || {};
   /* ---------- event helpers (FB.fns.parliament_* — triggers & effects) ---------- */
 
   FB.fns = FB.fns || {};
+  function pendingMotionMatches(state, ctx, result) {
+    const politics = state.politics;
+    const pending = politics && politics.pendingMotion;
+    const court = FB.politicalCourt
+      ? FB.politicalCourt(state) : null;
+    return !!(FB.parliamentActive(state) && court &&
+      pending && pending.result &&
+      court.polityId === pending.polityId &&
+      pending.polityId === state.player.liege &&
+      pending.polityId === ctx.politicsPolityId &&
+      pending.id === ctx.politicsPendingId &&
+      pending.motionId === ctx.politicsMotionId &&
+      pending.result.passed === result &&
+      ctx.politicsResult === (result ? 'pass' : 'fail'));
+  }
+  function finishPendingMotion(state, ctx) {
+    const pending = state.politics && state.politics.pendingMotion;
+    if (!pending || !pending.result) return false;
+    if (pendingMotionMatches(state, ctx, !!pending.result.passed)) {
+      state.politics.pendingMotion = null;
+      return true;
+    }
+    return false;
+  }
+  FB.fns.parliament_motion_context_valid = function (state, ctx) {
+    return pendingMotionMatches(state, ctx, true) ||
+      pendingMotionMatches(state, ctx, false);
+  };
+  FB.fns.parliament_motion_passed = function (state, ctx) {
+    return pendingMotionMatches(state, ctx, true);
+  };
+  FB.fns.parliament_motion_failed = function (state, ctx) {
+    return pendingMotionMatches(state, ctx, false);
+  };
   /* triggers (also usable as option `require` gates) */
   FB.fns.parliament_has_scutage = function (state) { return FB.parliamentScutage(state); };
   FB.fns.parliament_redress_possible = function (state) {
@@ -262,19 +446,24 @@ window.FB = window.FB || {};
     // the hall refuses the crown's demand; the crown remembers the ringleader
     adjustLiegeStanding(state, -12, 'aid_hike_rebuff');
   };
-  FB.fns.parliament_redress_won = function (state) {
+  FB.fns.parliament_redress_won = function (state, ctx) {
     const aid = FB.parliamentAidAdjust(state, -1);
-    if (aid === null) return;
+    if (aid === null) {
+      finishPendingMotion(state, ctx || {});
+      return;
+    }
     delete state.player.flags.plot_obligation_evidence;
     // the liege is bound by the vote — and displeased with its author
     adjustLiegeStanding(state, -5, 'redress_won');
     FB.news(state, FB.msg('news.parliament.aid_down',
       '⚖ The estates vote redress — {liege}’s cut of your revenue falls to {pct}%.',
       { liege: state.realms[state.player.liege].name, pct: Math.round(aid * 100) }));
+    finishPendingMotion(state, ctx || {});
   };
-  FB.fns.parliament_redress_lost = function (state) {
+  FB.fns.parliament_redress_lost = function (state, ctx) {
     delete state.player.flags.plot_obligation_evidence;
     adjustLiegeStanding(state, -8, 'redress_lost');
+    finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_trade_redress = function (state) {
     const aid = FB.parliamentAidAdjust(state, -1);
@@ -287,9 +476,12 @@ window.FB = window.FB || {};
         pct:Math.round(aid * 100)
       }));
   };
-  FB.fns.parliament_scutage_pass = function (state) {
+  FB.fns.parliament_scutage_pass = function (state, ctx) {
     const obl = FB.parliamentEnsure(state);
-    if (!obl) return;
+    if (!obl) {
+      finishPendingMotion(state, ctx || {});
+      return;
+    }
     obl.scutage = true;
     // the crown takes its pound in coin instead: a small standing rise in the aid
     const B = FBDATA.balance;
@@ -299,6 +491,10 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.parliament.scutage',
       '🛡 The estates vote scutage — silver, not spears, when {liege} calls the banners (the aid rises to {pct}%).',
       { liege: state.realms[state.player.liege].name, pct: Math.round(obl.aid * 100) }));
+    finishPendingMotion(state, ctx || {});
+  };
+  FB.fns.parliament_scutage_lost = function (state, ctx) {
+    finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_subsidy_pay = function (state) {
     const p = state.player;
