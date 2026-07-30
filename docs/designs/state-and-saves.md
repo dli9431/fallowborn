@@ -250,6 +250,17 @@ spouse receive `homeProvinceId` in the destination; their marriage and family
 links remain ordinary character state, while household enumeration follows the
 new protagonist.
 
+Personal family-display state is additive at save format 3. A character may
+carry `byname`, distinct from the stable house key `dyn`; restore derives a
+missing patronymic only from an existing recorded father and does not consume
+RNG. A child may also carry unique `stepParentIds`. These ids supplement rather
+than replace `fatherId`/`motherId`, do not enter the blood-heir walk, and remain
+after divorce or death. Restore normalizes invalid/duplicate ids and records the
+current protagonist's existing spouse family. If that spouse belongs to a
+compact royal family, required direct children are materialized while the RNG
+state is snapshotted and restored, so compatibility repair cannot alter the
+future random sequence.
+
 Pregnancy is family state rather than current-protagonist state. Its saved record
 is `{due,motherId,fatherId,lineParentId}`, where `lineParentId` identifies the parent
 whose culture, faith, and dynasty the playable line supplies to the newborn. A
@@ -263,12 +274,15 @@ parent. A dead or missing mother ends the pregnancy on the next daily birth tick
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and
 charges no upkeep. Saves old enough to hold bare id
-strings are NOT rejected: `FB.builtIn` migrates them lazily in place at first touch,
-landing the old buildings in the head settlement (`s: 0`) — the same no-version-bump
-pattern as the other lazy inits.
+strings are NOT rejected: `FB.builtIn` projects them into the head settlement (`s: 0`)
+without mutating state during reads, and the next construction or demolition in that
+county persists the canonical object entries. This remains a no-version-bump
+compatibility path.
 
-Livelihood state is additive and does not raise the save-format version. Careers live on
-characters; repeatable enterprises live in `player.enterprises` as
+Livelihood state is additive and does not raise the save-format version. Careers
+live on characters; `character.careerHistory` maps profession ids to complete
+inactive career snapshots and is absent/empty on old saves until the first
+calling is changed. Repeatable enterprises live in `player.enterprises` as
 `{uid,type,provinceId,settlement,workerId,workerLocked?}`. Only `workerLocked:true` is
 stored; absence means the current assignment is available to batch staffing. Old
 characters gain a career deterministically from the current compatibility
@@ -276,7 +290,8 @@ profession/station when first read. Old business-like holdings migrate once into
 enterprise instances in the home settlement, while all other holdings remain unchanged.
 Valid locks pass through ordinary JSON snapshots and succession. `FB.enterpriseList`
 repairs them lazily without RNG: an idle, duplicate, departed, dead, rank-ineligible,
-career-ineligible, or guild-ineligible assignment loses both its worker id and lock.
+career-ineligible, guild-ineligible, or non-local assignment loses both its
+worker id and lock. The enterprise itself remains owned.
 Manual reassignment and explicit unassignment clear affected locks as well. Staffing
 previews and their signatures are transient derived values and are never serialized, so
 the assistant remains an additive save-format-3 feature.
@@ -305,6 +320,10 @@ character ids to current-life contact timestamps; the canonical friend remains
 `state.roles.friend` for events and mods. `player.socialAttention` is a character-id-keyed
 assignment map (one entry with core balance) and `player.socialGiftTurns` stores the last
 explicit cash-or-item gift turn per character recipient for the current life.
+An active formal courtship may also carry
+`player.courtshipTerms:{suitorId,amount,playerPays}`. The snapshot freezes the
+visible transfer through proposal and wedding; restore recreates it for a valid
+legacy courtship and clears it when the suitor or courtship is gone.
 `player.realmGiftTurns[realmId] = {turn,generation}` stores the corresponding ruler clock;
 the generation is compared with `realm.ruler.generation`, so a newly succeeded ruler is a
 fresh recipient while save/restore preserves a living ruler's cooldown. Invalid, dead,

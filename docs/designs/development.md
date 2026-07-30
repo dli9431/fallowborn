@@ -31,9 +31,12 @@ Ruins use the same row with no benefit or upkeep.
 
 Buildings are **per-settlement**: each of a province's 2–4 derived settlements
 (`FB.settlementsOf` — stable indices that only grow with development) may hold one copy of
-each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries;
-old saves with bare id strings migrate lazily in `FB.builtIn` into the head settlement
-(`s: 0`). Tapping a settlement in your own demesne (Land tab) opens `UI.showSettlement`:
+each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries.
+`FB.builtIn` is a read-only projection: it neither creates empty county arrays nor
+rewrites old saves while a UI or derived calculation reads them. Bare ids from old saves
+project into the head settlement (`s: 0`) and are persisted in canonical form on the next
+construction or demolition in that county. Tapping a settlement in your own demesne
+(Land tab) opens `UI.showSettlement`:
 only the buildings standing in THAT settlement, with what each provides, plus a raise
 button.
 

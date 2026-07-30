@@ -3648,15 +3648,31 @@ window.FB = window.FB || {};
   };
 
   FB.builtIn = function (state, pid) {
-    state.buildings = state.buildings || {}; // lazy init for older saves
+    const list = state.buildings && state.buildings[pid];
+    if (!list) return [];
+    /* Read paths must not change the save. Old bare ids still project into the
+       head settlement; a later building write persists that normalization. */
+    let legacy = false;
+    for (let i = 0; i < list.length; i++) {
+      if (typeof list[i] === 'string') {
+        legacy = true;
+        break;
+      }
+    }
+    if (!legacy) return list;
+    return list.map(function (entry) {
+      return typeof entry === 'string' ? { s: 0, id: entry } : entry;
+    });
+  };
+
+  function builtInForWrite(state, pid) {
+    state.buildings = state.buildings || {};
     const list = state.buildings[pid] = state.buildings[pid] || [];
-    /* old saves hold bare id strings: migrate lazily in place — those
-       buildings land in the head settlement (s: 0) */
     for (let i = 0; i < list.length; i++) {
       if (typeof list[i] === 'string') list[i] = { s: 0, id: list[i] };
     }
     return list;
-  };
+  }
 
   FB.buildingCountIn = function (state, pid, id, includeRuins) {
     let count = 0;
@@ -3763,9 +3779,9 @@ window.FB = window.FB || {};
   FB.build = function (state, pid, idx, id) {
     const def = FBDATA.buildings[id];
     if (!def || !FB.canBuildAt(state, pid, idx, id)) return false;
-    const done = FB.builtIn(state, pid);
     const cost = FB.buildCost(state, pid, id);
     if (state.player.gold < cost) return false;
+    const done = builtInForWrite(state, pid);
     state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
     done.push({ s: idx, id: id });
@@ -3785,9 +3801,10 @@ window.FB = window.FB || {};
 
   FB.demolishBuilding = function (state, pid, idx, id) {
     if (FB.demesne(state).indexOf(pid) < 0) return false;
-    for (const e of FB.builtIn(state, pid)) {
-      if (e.id === id && e.s === idx && !e.ruined) {
-        e.ruined = true;
+    const done = FB.builtIn(state, pid);
+    for (let i = 0; i < done.length; i++) {
+      if (done[i].id === id && done[i].s === idx && !done[i].ruined) {
+        builtInForWrite(state, pid)[i].ruined = true;
         return true;
       }
     }

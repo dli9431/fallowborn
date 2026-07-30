@@ -90,12 +90,19 @@ staffing; a missing field means unlocked, so the addition remains compatible wit
 save format 3. One copy of a type may stand in each derived settlement, so a family may
 own several workshops or stalls; further copies grow dearer by
 `balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing while idle.
-`FB.enterpriseWorkers` limits staffing to resident family or a paid retainer in the
-matching career (and, where required, guild rank). A retained factor or steward is still
-paid through the household contract ledger; staffing an enterprise does not turn that
-person into family or grant a second wage. Legacy Orchard, Press, Shop, Stall, and
-Trading House holdings migrate lazily to equivalent enterprise instances; household
-rights, equipment, and cultural capital remain unique holdings.
+`FB.enterpriseWorkersFor` limits staffing to resident family or a paid retainer
+in the matching career (and, where required, guild rank) whose
+`FB.characterResidence` is the enterprise's province. A retained factor or
+steward is still paid through the household contract ledger; staffing an
+enterprise does not turn that person into family or grant a second wage. A
+permanent household move preserves remote enterprise ownership but immediately
+clears its worker and lock; an additional yield guard keeps such property idle
+even before normalization. Relocation confirmation derives the exact affected
+enterprise/worker pairs through `FB.enterpriseRelocationImpact`, and the Work
+surface names the remote site and explains why it is idle. Legacy Orchard,
+Press, Shop, Stall, and Trading House holdings migrate lazily to equivalent
+enterprise instances; household rights, equipment, and cultural capital remain
+unique holdings.
 The staffing picker uses the shared person-assignment card to preview each eligible
 worker's live yield, occupation, Standing, present enterprise, and every worker or enterprise
 that reassignment would displace. Manual replacement or unassignment may override a lock

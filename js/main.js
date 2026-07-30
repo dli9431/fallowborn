@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.5';
+  FB.VERSION = '1.93.6';
   FB.CHANGELOG = [
+    { v: '1.93.6', date: '2026-07-30', changes: [
+      'Family names, marriage terms, stepchildren, career histories, Guild Standing, and enterprise staffing now follow consistent household rules. Large-list returns and building previews no longer disturb focus or play state.'
+    ] },
     { v: '1.93.5', date: '2026-07-30', changes: [
       'Ongoing commitments no longer repeats the daily focus on desktop, while its mobile focus shortcut now opens the top of the focus list.'
     ] },
@@ -586,7 +589,9 @@ window.FB = window.FB || {};
       desc: 'The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat.',
       tier: 1, profession: 'monk', gold: 2, prestige: 0, piety: 25,
       intro: 'You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
-      intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.' },
+      intro_f: 'You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
+      intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.',
+      intro_other: 'You are {name}, a novice of the faith in {province}. Letters, devotion, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.' },
     { id: 'soldier', name: 'Man-at-Arms', diff: '★★★ tricky',
       desc: 'Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them.',
       tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3, sex: 'm',
@@ -1025,7 +1030,8 @@ window.FB = window.FB || {};
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         traitProgress: {},
-        flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        courtshipTerms: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
@@ -1061,7 +1067,7 @@ window.FB = window.FB || {};
       quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
     });
     me.health = 8;
-    me.dyn = FB.dynastyName(pr.culture, me.name, pr.name);
+    me.dyn = FB.dynastyName(pr.culture, me.name, pr.name, me.sex);
     if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
     state.player.charId = me.id;
     FB.setCareer(state, me, sc.profession, 'journeyman');
@@ -1094,13 +1100,34 @@ window.FB = window.FB || {};
     dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
     me.fatherId = dad.id; me.motherId = mom.id;
 
+    /* Patronymic starts record the father whose name each byname actually
+       carries. The house id remains stable even though personal bynames vary. */
+    if (FB.cultureOf(pr.culture).dyn === 'patronym') {
+      const granddad = FB.makeCharacter(state, {
+        sex:'m', culture:pr.culture, religion:pr.religion,
+        born:dad.born - FB.ri(20, 40), role:'grandparent',
+        quality:1, dyn:me.dyn, byname:''
+      });
+      const grandmom = FB.makeCharacter(state, {
+        sex:'f', culture:pr.culture, religion:pr.religion,
+        born:dad.born - FB.ri(18, 34), role:'grandparent'
+      });
+      granddad.health = 8; grandmom.health = 8;
+      granddad.spouseId = grandmom.id; grandmom.spouseId = granddad.id;
+      granddad.childrenIds.push(dad.id); grandmom.childrenIds.push(dad.id);
+      dad.fatherId = granddad.id; dad.motherId = grandmom.id;
+      dad.byname = FB.patronym(granddad.name, dad.sex);
+      me.byname = FB.patronym(dad.name, me.sex);
+    }
+
     // siblings — a safety net of heirs
     const nSib = FB.ri(1, 2);
     for (let i = 0; i < nSib; i++) {
       const sib = FB.makeCharacter(state, {
         culture: pr.culture, religion: pr.religion,
         born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
-        role: 'sibling', dyn: me.dyn
+        role: 'sibling', dyn: me.dyn,
+        fatherId:dad.id, motherId:mom.id
       });
       sib.health = 8;
       sib.fatherId = dad.id; sib.motherId = mom.id;
@@ -1129,8 +1156,14 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
       { dynasty: me.dyn, province: pr.name, year: state.date.year }));
-    const introPath = (FB.religionOf(pr.religion).group === 'muslim' && sc.intro_muslim)
-      ? 'intro_muslim' : 'intro';
+    const introGroup = FB.religionOf(pr.religion).group;
+    let introPath = 'intro';
+    if (introGroup === 'muslim' && sc.intro_muslim) introPath = 'intro_muslim';
+    else if (introGroup === 'christian' && sex === 'f' && sc.intro_f) {
+      introPath = 'intro_f';
+    } else if (introGroup !== 'christian' && sc.intro_other) {
+      introPath = 'intro_other';
+    }
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
       FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
       '</p><p class="hint">' +
@@ -1181,7 +1214,8 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         traitProgress: {},
-        flags: {}, cooldowns: {}, fired: {}, courtingId: null, suitorIds: null,
+        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        courtshipTerms: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
@@ -1550,7 +1584,7 @@ window.FB = window.FB || {};
         me.betrothedId = null; b.betrothedId = null;
         delete b.dowryAsk; delete b.dowryDue; // settled between the houses long ago
         p.courtingId = b.id;
-        FB.doMarry(s);
+        FB.doMarry(s, { settleDowry:false });
         FB.news(s, FB.msg('news.life.pledged_wedding',
           '💒 You wed {name}, as your late parent pledged.', { name: b.name }));
       }
@@ -2184,7 +2218,8 @@ window.FB = window.FB || {};
     if (heir.edu && heir.edu.tutorId === 'self') heir.edu.tutorId = null;
     // coming-of-age events queued for a player who died a teen must not fire for the heir
     s.eventQueue = s.eventQueue.filter(function (ev) {
-      return ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated' &&
+      return !(ev.ctx && ev.ctx.protagonistId === old.id) &&
+        ev.id !== 'player_comes_of_age' && ev.id !== 'player_educated' &&
         ev.id !== 'station_farewell';
     });
     /* Old saves did not record which parent supplied the playable line's
@@ -2210,6 +2245,7 @@ window.FB = window.FB || {};
     if (!livingAbdication) p.gold = Math.round(p.gold * 0.9); // death dues
     FB.financeSuccession(s); // household contracts survive; mature ones settle at transition
     p.courtingId = null;
+    p.courtshipTerms = null;
     p.suitorIds = null; // the predecessor's prospects do not follow the heir
     p.socialAttention = {};
     p.socialGiftTurns = {};
@@ -2249,6 +2285,7 @@ window.FB = window.FB || {};
     p.foreignPolicy = {};
     p.vassalLevyFavors = {};
     p.warService = 0; p.liegeGrants = 0;
+    p.professionBack = null;
     p.travelHistory = [];
     p.travelSettlement = null;
     p.capitalRelocation = null;

@@ -169,7 +169,13 @@ window.FB = window.FB || {};
        metadata, while own null vacancies and changed holders persist. */
     if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(FB.state);
     backfillParents(FB.state);
+    if (FB.ensureCharacterBynames) FB.ensureCharacterBynames(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.ensureStepRelations) {
+      const stepfamilyRng = FB.getRngState();
+      FB.ensureStepRelations(FB.state);
+      FB.setRngState(stepfamilyRng);
+    }
     /* The elective Papacy is an additive subsystem. Old saves retain their
        reigning Roman Pope and receive a date-appropriate College around him. */
     if (FB.ensurePapacyState) FB.ensurePapacyState(FB.state);
@@ -192,6 +198,7 @@ window.FB = window.FB || {};
     /* Personal attention and explicit-gift clocks are additive life-local
        fields. This also converts the removed court_suitor focus in old saves. */
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);
+    if (FB.ensureCourtshipTerms) FB.ensureCourtshipTerms(FB.state);
     if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
     if (FB.realmGiftTurns) FB.realmGiftTurns(FB.state);
     if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);

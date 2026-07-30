@@ -94,6 +94,51 @@
           }
         }
       }
+      if (character.stepParentIds !== undefined) {
+        if (!Array.isArray(character.stepParentIds)) {
+          errors.push('character ' + id + ' stepParentIds must be an array');
+        } else {
+          const seenStepParents = {};
+          for (const parentId of character.stepParentIds) {
+            if (!state.chars[parentId]) {
+              errors.push('character ' + id +
+                ' has missing step-parent ' + parentId);
+            } else if (parentId === character.fatherId ||
+                parentId === character.motherId) {
+              errors.push('character ' + id +
+                ' records a biological parent as a step-parent');
+            } else if (seenStepParents[parentId]) {
+              errors.push('character ' + id +
+                ' repeats step-parent ' + parentId);
+            }
+            seenStepParents[parentId] = true;
+          }
+        }
+      }
+      if (character.careerHistory !== undefined) {
+        if (!character.careerHistory ||
+            typeof character.careerHistory !== 'object' ||
+            Array.isArray(character.careerHistory)) {
+          errors.push('character ' + id + ' careerHistory must be an object');
+        } else {
+          for (const profession in character.careerHistory) {
+            if (!own(character.careerHistory, profession)) continue;
+            const record = character.careerHistory[profession];
+            if (!record || typeof record !== 'object' ||
+                Array.isArray(record) || record.profession !== profession) {
+              errors.push('character ' + id +
+                ' has invalid archived career ' + profession);
+            }
+          }
+        }
+      }
+    }
+
+    const courtshipTerms = state.player.courtshipTerms;
+    if (courtshipTerms && (!state.chars[courtshipTerms.suitorId] ||
+        !Number.isFinite(courtshipTerms.amount) ||
+        typeof courtshipTerms.playerPays !== 'boolean')) {
+      errors.push('state.player.courtshipTerms is invalid');
     }
 
     for (const role in state.roles) {

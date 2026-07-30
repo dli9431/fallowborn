@@ -247,6 +247,7 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     await lockedRow.click();
     await expect(page.locator('#enterprise-worker-lock')).toBeChecked();
     await page.locator('#gm-cancel').click();
+    await expect(page.locator('#work-list-search')).not.toBeFocused();
     await expect(page.locator(
       '[data-enterprise="' + fixture.lockedUid + '"]')).toBeFocused();
     await expect.poll(function () {

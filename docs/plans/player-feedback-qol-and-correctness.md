@@ -1,6 +1,6 @@
 # Player feedback: QoL and correctness plan
 
-Status: proposed  
+Status: in progress — Milestone 1 implemented
 Audit baseline: Fallowborn v1.93.3, 2026-07-30
 
 ## Purpose
@@ -57,7 +57,7 @@ predict from the UI.
 #### 1. Correct gendered religious and patronymic names
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 The female novice introduction can still call the protagonist “Brother.”
 Scandinavian founder naming can also construct a woman as `Fastvisson`, and the
@@ -74,6 +74,10 @@ Required outcome:
   like their own descendants;
 - non-patronymic dynasty naming remains unchanged.
 
+Implemented outcome: character-specific bynames now derive from recorded parents,
+female patronyms use the daughter form, patronymic starts include the required
+paternal generation, and female Christian novices are introduced as Sister.
+
 Regression coverage should include a female novice, male and female Scandinavian
 siblings, their father, and at least one prior generation.
 
@@ -83,7 +87,7 @@ Relevant design: [characters.md](../designs/characters.md),
 #### 2. Make marriage transfers follow the displayed marriage arrangement
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 The protagonist currently receives the spouse's dowry regardless of the
 protagonist's gender, while marrying off a daughter charges the player's house.
@@ -100,6 +104,11 @@ Required outcome:
 - AI-child and protagonist marriages use the same rule;
 - no transfer is applied twice when a courtship becomes a marriage.
 
+Implemented outcome: the bride's house pays under one shared marriage-terms
+function. Protagonist terms are frozen for the active courtship and displayed
+before proposal; formal weddings settle once, while explicitly informal story
+weddings transfer no dowry.
+
 The exact historical convention is a balance/design choice, but the rule must be
 consistent and visible before money moves.
 
@@ -109,7 +118,7 @@ Relevant design: [marriage.md](../designs/marriage.md),
 #### 3. Integrate stepchildren into the visible family
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 A spouse's children from an earlier relationship can exist in ruler succession
 data without appearing as that spouse's children in the player's family tree or
@@ -125,13 +134,18 @@ Required outcome:
 - they are not silently treated as the protagonist's direct descendants or heirs;
 - death, divorce, remarriage, and save/load do not duplicate or detach them.
 
+Implemented outcome: spouse children retain their biological and political state,
+gain an additive step-parent link, and appear in Kin and a separate Stepfamily
+tree branch. Royal spouse children materialize through the same link repair;
+stepchildren remain outside the managed household and blood-heir walk.
+
 Relevant design: [marriage.md](../designs/marriage.md),
 [state-and-saves.md](../designs/state-and-saves.md).
 
 #### 4. Enforce locality when a household relocates
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 Permanent relocation changes the household home while owned enterprises remain in
 their original settlements. The relocation warning acknowledges separation, but
@@ -151,13 +165,18 @@ Required outcome:
 - a future local-manager or remote-administration mechanic may restore production,
   but distance must not be ignored implicitly.
 
+Implemented outcome: staffing eligibility and yield now require the worker's
+resolved residence to match the enterprise province. Relocation previews exact
+affected worker/property pairs, clears invalid assignments and locks, and leaves
+the remote enterprise visibly owned but idle.
+
 Relevant design: [holdings.md](../designs/holdings.md),
 [travel.md](../designs/travel.md).
 
 #### 5. Give Guild Standing a renewable recovery path
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 Guild ranks grant a finite amount of Standing, guild commissions consume it, and
 only a rare story outcome restores a small amount. A character can permanently
@@ -172,13 +191,18 @@ Required outcome:
 - gain and spend rates receive a later balance pass, but recovery must not depend
   only on a rare event.
 
+Implemented outcome: an active adult guild vocation renews 5 Standing per
+vocational year up to 100 by default. The values are balance keys and the Work
+and guild detail surfaces explain the source and cap; inactive and landed
+callings remain frozen.
+
 Relevant design: [characters.md](../designs/characters.md),
 [finance.md](../designs/finance.md).
 
 #### 6. Preserve career history when a calling is set aside
 
 Category: **Bug**  
-Validity: **Valid**
+Validity: **Resolved**
 
 The UI describes an old occupation as a calling that was “set aside,” but the
 single career record is overwritten when occupations change. Returning to a
@@ -192,6 +216,10 @@ Required outcome:
 - current occupation, former calling, and unavailable tier-3+ career changes remain
   clearly distinct;
 - old saves initialize missing history additively without a save-version bump.
+
+Implemented outcome: each character archives complete profession-specific career
+records. Resuming restores rank, experience, guild rank, Standing, and start
+year without another fee; inactive records do not progress or decay.
 
 Whether unused Standing decays is a separate balance decision and must be stated
 explicitly if introduced.
@@ -747,7 +775,7 @@ section that owns further work.
 | Network becomes unreadable | QoL | Resolved | Item 17 |
 | Royal war targets become unreadable | QoL | Valid | Item 15 |
 | Dead protagonist's storyline continues on the heir | Bug | Resolved | Regression section |
-| Remote children keep working in old enterprises | Bug | Valid | Item 4 |
+| Remote children keep working in old enterprises | Bug | Resolved | Item 4 |
 | Travel chooses implausible routes | Balance | Valid | Deferred balance |
 | Child culture, religion, and house after foreign marriage | Writing | Partial | Item 11 |
 | Foreign conversion, suspicion, and homeland spying | Writing | Partial | Deferred writing |
@@ -755,8 +783,8 @@ section that owns further work.
 | Unclear house versus direct-family succession | Writing | Partial | Item 11 |
 | Siblings can inherit but cannot be managed | QoL | Valid | Item 19 |
 | House investment has unclear value for collateral relatives | Balance | Partial | Deferred balance |
-| Returning to a former career loses progression | Bug | Valid | Item 6 |
-| Guild Standing has no reliable renewal loop | Bug | Valid | Item 5 |
+| Returning to a former career loses progression | Bug | Resolved | Item 6 |
+| Guild Standing has no reliable renewal loop | Bug | Resolved | Item 5 |
 | Career changes become unavailable without explanation | Writing | Resolved | Deferred writing |
 | Vowed protagonist has no dynasty continuation | Balance | Resolved | Deferred balance |
 | Voluntary retirement or abdication | QoL | Partial | Item 18 |
@@ -773,12 +801,12 @@ section that owns further work.
 | Timed or conditional unique historical NPCs | Writing | Partial | Deferred writing |
 | NPCs lack traceable family names | Writing | Partial | Item 21 |
 | House rename, territorial names, and cadet branches | QoL | Partial | Item 21 |
-| Female Scandinavian patronym uses a male suffix | Bug | Valid | Item 1 |
-| Female novice is called Brother | Bug | Valid | Item 1 |
-| Parents and siblings receive impossible copied patronyms | Bug | Valid | Item 1 |
-| Dowry direction is inconsistent for a female protagonist | Bug | Valid | Item 2 |
+| Female Scandinavian patronym uses a male suffix | Bug | Resolved | Item 1 |
+| Female novice is called Brother | Bug | Resolved | Item 1 |
+| Parents and siblings receive impossible copied patronyms | Bug | Resolved | Item 1 |
+| Dowry direction is inconsistent for a female protagonist | Bug | Resolved | Item 2 |
 | Female protagonist's children keep her dynasty name | Writing | Partial | Item 11 |
-| Spouse's prior children are missing and cannot be interacted with | Bug | Valid | Item 3 |
+| Spouse's prior children are missing and cannot be interacted with | Bug | Resolved | Item 3 |
 | Enterprise list lacks category, value, and settlement grouping | QoL | Partial | Item 16 |
 | Orchard is gated later than Press House | Balance | Valid | Deferred balance |
 

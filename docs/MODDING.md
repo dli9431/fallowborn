@@ -626,7 +626,9 @@ contact with the active rival also adds `score × balance.rivalContactHeat` heat
 rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `tierSet` (raise rank), `tierUp`
 (liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
-`marry`, `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
+`marry` (`true` settles the current suitor's saved formal courtship transfer;
+`"informal"` uses the same wedding and family-link mechanics without a dowry),
+`clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
 `killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
 the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
 `convertToProvince` · `declareIndependence` · `devUp` · `research: n` (points added to
@@ -1103,8 +1105,8 @@ productive property:
 ```
 
 - `profession` identifies eligible workers; resident family and paid retainers with
-  that career may staff the enterprise. `guildRank` optionally sets the minimum
-  guild standing.
+  that career may staff the enterprise only while their resolved residence is the
+  enterprise province. `guildRank` optionally sets the minimum guild rank.
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `requiresTech` optionally requires a completed technology in the household's effective
   sovereign nation. Purchase costs honor national `fx.costs.enterprise` modifiers.
@@ -1118,8 +1120,8 @@ productive property:
   further copies elsewhere; repeat cost grows by `balance.enterpriseRepeatCostGrowth`.
 - An idle or invalidly staffed enterprise earns nothing.
 - Runtime normalization removes both `workerId` and `workerLocked` when a worker dies,
-  leaves the household, becomes career/guild ineligible, or is manually replaced or
-  unassigned. Valid locks survive saves and succession.
+  leaves the household or enterprise province, becomes career/guild ineligible, or is
+  manually replaced or unassigned. Valid locks survive saves and succession.
 - The core staffing preview optimizes all unlocked instances together against all
   eligible household workers. It maximizes `FB.enterpriseYield` rounded to thousandths,
   preserves current pairings on a yield tie, then uses stable enterprise UID and
@@ -1282,6 +1284,8 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   define the shared relationship threshold. Wedding and authored event gifts do not use
   the explicit-recipient cooldowns. Other Network
   tunables include `retainerCapacity`, `guildFavorStandingCost`, `guildFavorCooldown`,
+  `guildStandingYearlyGain` (repeatable annual Standing for an active adult guild
+  vocation), and `guildStandingMax` (the cap for that renewal),
   `vassalLevyFavorRate`, and `vassalLevyFavorDays`. `guildMonopolyTerms` maps grantor
   tiers `3`–`7` to `{years,enterpriseBonus,rulerFee,taxBonus,popularOpinion}`. A new
   charter copies those numeric values into its save record, so a later mod or balance
@@ -1829,7 +1833,8 @@ conception is impossible regardless); men stay full through 40 and decline mildl
 old age. The multiplier stacks with trait leanings and each character's hidden
 fertility roll at every conception site (the player's household and kin alike).
 The marriage-of-station knobs live there too: `dowryByStation` (gold by the spouse's rank
-0–4), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
+0–4; the bride's house pays, and protagonist courtship snapshots the resulting
+amount/direction before proposal), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
 `proposalStationPenalty` (chance lost per step the suitor stands above the player), and
 `wivesByGroup` (wives a man of each religion group may hold; unlisted groups are monogamous).
 Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,

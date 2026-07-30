@@ -28513,6 +28513,17 @@
         "text": "🧰 {name} completes their apprenticeship and becomes {rank}."
       }
     },
+    "news.career.resumes": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "career",
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🧰 {name} returns to their former standing in {career}."
+      }
+    },
     "news.council.appointed": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -29131,6 +29142,17 @@
       "location": "js/events.js",
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {money:gold} on the match."
+      }
+    },
+    "news.event.marriage_dowry_paid": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:gold",
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "💰 Your house settles a dowry of {money:gold} with the kin of {name}."
       }
     },
     "news.event.married_above": {
@@ -37802,6 +37824,17 @@
         "text": "You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
     },
+    "scenario.monk.intro_f.default": {
+      "context": "New-game scenario monk, intro_f.",
+      "glossary": [
+        "name",
+        "province"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
+      }
+    },
     "scenario.monk.intro_muslim.default": {
       "context": "New-game scenario monk, intro_muslim.",
       "glossary": [
@@ -37811,6 +37844,17 @@
       "location": "js/main.js",
       "source": {
         "text": "You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house."
+      }
+    },
+    "scenario.monk.intro_other.default": {
+      "context": "New-game scenario monk, intro_other.",
+      "glossary": [
+        "name",
+        "province"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "You are {name}, a novice of the faith in {province}. Letters, devotion, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
     },
     "scenario.monk.name.default": {
@@ -40482,6 +40526,16 @@
         "text": "Petition for {money:gold}"
       }
     },
+    "src.07aa4c50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "+{gain} each active vocational year · maximum {maximum}"
+      }
+    },
     "src.07bb9220": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41293,6 +41347,16 @@
         "text": "Sweat now buys blood saved later."
       }
     },
+    "src.09e192b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires +{threshold} Standing; currently {standing}. {dowry} Asking spends the day."
+      }
+    },
     "src.09ec2d23": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41451,6 +41515,16 @@
       ],
       "source": {
         "text": "🏡 The consolidated lands at {settlement} are declared a manor. The household joins the gentry."
+      }
+    },
+    "src.0a71cf48": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "biological family"
       }
     },
     "src.0a7932e1": {
@@ -45434,16 +45508,6 @@
         "text": "Physician’s Chest"
       }
     },
-    "src.15accd31": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Requires {standing} standing; currently {current}."
-      }
-    },
     "src.15b2df2e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46116,6 +46180,17 @@
       ],
       "source": {
         "text": "+{amount} domain capacity"
+      }
+    },
+    "src.178c45cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stepdaughter"
       }
     },
     "src.1795ea0d": {
@@ -46940,6 +47015,16 @@
         "text": "🧭 The planned visit can no longer continue; you turn toward home."
       }
     },
+    "src.19e31d29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The following remote enterprises will lose their workers and become idle:"
+      }
+    },
     "src.19e7d6c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47378,6 +47463,16 @@
       ],
       "source": {
         "text": "Assistant on · current recommendations: {count}"
+      }
+    },
+    "src.1b3ea333": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "💰 Your house settles a dowry of {money:gold} with the kin of {name}."
       }
     },
     "src.1b422dc6": {
@@ -48931,6 +49026,16 @@
       ],
       "source": {
         "text": "Projected learning"
+      }
+    },
+    "src.20b0728a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "If {name} moves the household, these enterprises will lose their workers:"
       }
     },
     "src.20bd7337": {
@@ -51879,6 +51984,16 @@
         "text": "💰 The value of coin changes this year."
       }
     },
+    "src.29ac17e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stepchildren"
+      }
+    },
     "src.29afae2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52557,6 +52672,16 @@
       ],
       "source": {
         "text": "The Reeve’s Two Tallies"
+      }
+    },
+    "src.2b99c2e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged."
       }
     },
     "src.2b9afe76": {
@@ -57728,6 +57853,16 @@
         "text": "Strike half-ready, and pray speed makes up for it."
       }
     },
+    "src.3c69237b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No dowry will change hands."
+      }
+    },
     "src.3c6f493a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58541,6 +58676,16 @@
       ],
       "source": {
         "text": "A Motion for Scutage"
+      }
+    },
+    "src.3f042844": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "You are {name}, a novice of the faith in {province}. Letters, devotion, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
     },
     "src.3f07c829": {
@@ -59988,6 +60133,16 @@
         "text": "Pay the fine before it grows. ({money:6})"
       }
     },
+    "src.4368c362": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your house must provide {money:cost}; you have {money:current}."
+      }
+    },
     "src.4368f42f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60951,6 +61106,16 @@
       ],
       "source": {
         "text": "The hall is not with you today. The old lord’s suit fails, and you have damaged your Standing on a losing cause."
+      }
+    },
+    "src.45e320b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
     },
     "src.45f7c617": {
@@ -64612,6 +64777,16 @@
         "text": "Gold-spend cap: {money:amount}"
       }
     },
+    "src.514ffe90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Marriage terms: the house of {name} will provide {money:gold} to your house."
+      }
+    },
     "src.5150452c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67188,6 +67363,16 @@
         "text": "For once, the council earns its keep: the Seneschal’s tidy ledgers, the Almoner’s quiet wisdom, a long evening of actual governance. It is almost pleasant. You understand why your grandfather drank."
       }
     },
+    "src.590b0bce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}"
+      }
+    },
     "src.5910a2d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67667,6 +67852,16 @@
       ],
       "source": {
         "text": "Soldiering"
+      }
+    },
+    "src.5a8765dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No resident worker in {place}; it remains owned but idle."
       }
     },
     "src.5a903158": {
@@ -69366,6 +69561,16 @@
         "text": "all art procedural"
       }
     },
+    "src.5fa265be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Earlier household"
+      }
+    },
     "src.5fa78529": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69816,6 +70021,16 @@
       ],
       "source": {
         "text": "Command your men in the field. (better odds at the war council)"
+      }
+    },
+    "src.60eb25b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your house will provide {money:gold}."
       }
     },
     "src.60fa4cba": {
@@ -81854,6 +82069,16 @@
         "text": "War begins only after the existing cause selection is confirmed."
       }
     },
+    "src.845595a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Marriage terms: no dowry will change hands."
+      }
+    },
     "src.84673379": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84507,6 +84732,16 @@
         "text": "The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives."
       }
     },
+    "src.8c656307": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stepfamily"
+      }
+    },
     "src.8c65fea8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84515,6 +84750,16 @@
       ],
       "source": {
         "text": "Safe service is service nonetheless."
+      }
+    },
+    "src.8c6bc0a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your family tie by marriage forbids this match."
       }
     },
     "src.8c7221d4": {
@@ -89973,6 +90218,16 @@
         "text": "Chambéry"
       }
     },
+    "src.9d35bfae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧰 {name} returns to their former standing in {career}."
+      }
+    },
     "src.9d5089f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91746,6 +92001,16 @@
         "text": "Suzdal"
       }
     },
+    "src.a2a8d739": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Resume {rank}; guild rank {guild}; Guild Standing {standing}. No new apprenticeship fee."
+      }
+    },
     "src.a2ab3784": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92587,6 +92852,16 @@
       ],
       "source": {
         "text": "Foreign sovereign"
+      }
+    },
+    "src.a5412fc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "your house would provide exactly {money:gold}"
       }
     },
     "src.a5437415": {
@@ -94404,6 +94679,16 @@
       ],
       "source": {
         "text": "The Go-Between"
+      }
+    },
+    "src.ab3e50ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Marriage terms: your house will provide {money:gold} to the house of {name}."
       }
     },
     "src.ab4394ac": {
@@ -101182,6 +101467,16 @@
         "text": "{realm} (bound to defend)"
       }
     },
+    "src.bfee9d6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Biological mother"
+      }
+    },
     "src.bffa8121": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101815,6 +102110,16 @@
       ],
       "source": {
         "text": "Active commitment"
+      }
+    },
+    "src.c1ba09e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}."
       }
     },
     "src.c1bdd495": {
@@ -102550,6 +102855,16 @@
       ],
       "source": {
         "text": "The estates have heard your motion this year; they will take another come the new year."
+      }
+    },
+    "src.c3abfada": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Their house will provide {money:gold}."
       }
     },
     "src.c3bc8a35": {
@@ -111841,6 +112156,16 @@
         "text": "A thread snaps — a bought man sells you back. Every neighbor knows whose hand held the knife."
       }
     },
+    "src.e07a3b36": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Biological father"
+      }
+    },
     "src.e0911029": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112713,6 +113038,16 @@
       ],
       "source": {
         "text": "Birka"
+      }
+    },
+    "src.e2e5bc4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "their house would provide exactly {money:gold}"
       }
     },
     "src.e2e6d4bc": {
@@ -114479,6 +114814,17 @@
         "text": "Give the word."
       }
     },
+    "src.e828ec9d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Stepson"
+      }
+    },
     "src.e82f860d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115231,16 +115577,6 @@
         "text": "Your word carries. The charge is dropped, and {friend} will not forget it."
       }
     },
-    "src.eac3ede2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "would bring a dowry of about {money:gold}"
-      }
-    },
     "src.eac952f1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115822,16 +116158,6 @@
         "text": "The captain recognizes the words and takes only what is owed."
       }
     },
-    "src.ecd4127f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Requires +{threshold} Standing; currently {standing}. Asking spends the day."
-      }
-    },
     "src.ecdd1dff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116301,6 +116627,16 @@
       ],
       "source": {
         "text": "Ox Tackle and Mouldboard Plough"
+      }
+    },
+    "src.ee720ea4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{enterprise} — {worker} will be unassigned."
       }
     },
     "src.ee74299a": {
@@ -126755,6 +127091,17 @@
         "text": "+{enterprise}% matching enterprise profit"
       }
     },
+    "ui:+{gain} each active vocational year · maximum {maximum}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "gain",
+        "maximum"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "+{gain} each active vocational year · maximum {maximum}"
+      }
+    },
     "ui:+{men} archers": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -131107,6 +131454,14 @@
         "text": "Each settlement keeps its own buildings — tap one to see them and raise more."
       }
     },
+    "ui:Earlier household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Earlier household"
+      }
+    },
     "ui:Earned: {guidance}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -132322,6 +132677,18 @@
         "text": "Guarded"
       }
     },
+    "ui:Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "gain",
+        "maximum",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}"
+      }
+    },
     "ui:Guild monopoly tolls": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -132733,6 +133100,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later."
+      }
+    },
+    "ui:If {name} moves the household, these enterprises will lose their workers:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "If {name} moves the household, these enterprises will lose their workers:"
       }
     },
     "ui:Ill": {
@@ -133693,6 +134070,36 @@
         "text": "Map filter: {mode} (R)"
       }
     },
+    "ui:Marriage terms: no dowry will change hands.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Marriage terms: no dowry will change hands."
+      }
+    },
+    "ui:Marriage terms: the house of {name} will provide {money:gold} to your house.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Marriage terms: the house of {name} will provide {money:gold} to your house."
+      }
+    },
+    "ui:Marriage terms: your house will provide {money:gold} to the house of {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Marriage terms: your house will provide {money:gold} to the house of {name}."
+      }
+    },
     "ui:Married": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134363,6 +134770,14 @@
         "text": "No directed study"
       }
     },
+    "ui:No dowry will change hands.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No dowry will change hands."
+      }
+    },
     "ui:No eligible claimant remains for this asset.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134971,6 +135386,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12."
+      }
+    },
+    "ui:No resident worker in {place}; it remains owned but idle.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "place"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No resident worker in {place}; it remains owned but idle."
       }
     },
     "ui:No self-founded venture is active.": {
@@ -137604,15 +138029,16 @@
         "text": "Requires +{threshold} Standing; currently {standing}."
       }
     },
-    "ui:Requires +{threshold} Standing; currently {standing}. Asking spends the day.": {
+    "ui:Requires +{threshold} Standing; currently {standing}. {dowry} Asking spends the day.": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "dowry",
         "standing",
         "threshold"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Requires +{threshold} Standing; currently {standing}. Asking spends the day."
+        "text": "Requires +{threshold} Standing; currently {standing}. {dowry} Asking spends the day."
       }
     },
     "ui:Requires 40 Standing; currently {standing}.": {
@@ -137844,15 +138270,17 @@
         "text": "Requires {standing} Standing, costs {money:cost}, and succeeds at about {chance}%."
       }
     },
-    "ui:Requires {standing} standing; currently {current}.": {
+    "ui:Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "current",
+        "gain",
+        "maximum",
         "standing"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "Requires {standing} standing; currently {current}."
+        "text": "Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}."
       }
     },
     "ui:Research priority": {
@@ -137935,6 +138363,18 @@
       "location": "js/ui.js",
       "source": {
         "text": "Restore the crown of {title}"
+      }
+    },
+    "ui:Resume {rank}; guild rank {guild}; Guild Standing {standing}. No new apprenticeship fee.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "guild",
+        "rank",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Resume {rank}; guild rank {guild}; Guild Standing {standing}. No new apprenticeship fee."
       }
     },
     "ui:Retain your own name.": {
@@ -139982,6 +140422,14 @@
         "text": "The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later."
       }
     },
+    "ui:The following remote enterprises will lose their workers and become idle:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The following remote enterprises will lose their workers and become idle:"
+      }
+    },
     "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140422,6 +140870,16 @@
         "text": "Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally."
       }
     },
+    "ui:Their house will provide {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Their house will provide {money:gold}."
+      }
+    },
     "ui:Their residence cannot be reached by road.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140460,6 +140918,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held."
+      }
+    },
+    "ui:These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged."
       }
     },
     "ui:These assignments keep their own capacities, rules, and consequences.": {
@@ -142265,6 +142731,14 @@
         "text": "Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again."
       }
     },
+    "ui:Your family tie by marriage forbids this match.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Your family tie by marriage forbids this match."
+      }
+    },
     "ui:Your father": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142303,6 +142777,27 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your house is newly gentle. An heir must inherit its standing before a lord will entrust it with a banner."
+      }
+    },
+    "ui:Your house must provide {money:cost}; you have {money:current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:current"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Your house must provide {money:cost}; you have {money:current}."
+      }
+    },
+    "ui:Your house will provide {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your house will provide {money:gold}."
       }
     },
     "ui:Your household": {
@@ -142852,6 +143347,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "best: {skill} {value}"
+      }
+    },
+    "ui:biological family": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "biological family"
       }
     },
     "ui:blessed +0.10": {
@@ -143995,6 +144498,16 @@
         "text": "the two-year refusal cooldown ({days} days remain)"
       }
     },
+    "ui:their house would provide exactly {money:gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "their house would provide exactly {money:gold}"
+      }
+    },
     "ui:their kin ask a dowry of {money:gold}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -144105,16 +144618,6 @@
         "text": "worth ~{money:gold}"
       }
     },
-    "ui:would bring a dowry of about {money:gold}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:gold"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "would bring a dowry of about {money:gold}"
-      }
-    },
     "ui:yearly health": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144145,6 +144648,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "your friend"
+      }
+    },
+    "ui:your house would provide exactly {money:gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "your house would provide exactly {money:gold}"
       }
     },
     "ui:your lands": {
@@ -145199,6 +145712,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{enterprise} · 🔒 locked"
+      }
+    },
+    "ui:{enterprise} — {worker} will be unassigned.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "worker"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{enterprise} — {worker} will be unassigned."
       }
     },
     "ui:{expense} · {prestige}": {

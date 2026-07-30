@@ -1,7 +1,7 @@
 /* =========================================================================
    Fallowborn — CULTURES & RELIGIONS (moddable)
    Each culture: male/female name lists + a dynasty-name pattern.
-   dyn patterns: 'of_place' -> "of <Province>", 'patronym' -> "<Father>sson",
+   dyn patterns: 'of_place' -> "of <Province>", 'patronym' -> "<Father>sson/datter",
    'mac' -> "mac <Name>", 'ibn' -> "Banu <Name>", 'ov' -> "<Name>ovich",
    'ap'  -> "ap <Name>", 'plain' -> family name from list below.
    ========================================================================= */

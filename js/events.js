@@ -835,12 +835,68 @@ window.FB = window.FB || {};
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, sp.id);
   };
 
+  /* A marriage transfer is defined from the managed house's point of view.
+     The bride's house pays; caller-supplied amounts preserve negotiated
+     descendant matches while protagonist courtships use the stable base. */
+  FB.marriageTerms = function (state, subject, partner, amount) {
+    const bride = subject && subject.sex === 'f' ? subject :
+      (partner && partner.sex === 'f' ? partner : null);
+    const value = amount === undefined
+      ? Math.round((FBDATA.balance.dowryByStation[
+        partner ? FB.stationOf(partner) : 0] || 0))
+      : Math.max(0, Math.round(Number(amount) || 0));
+    const subjectPays = !!(bride && subject && bride.id === subject.id);
+    return {
+      amount:bride ? value : 0,
+      subjectPays:subjectPays,
+      playerPays:subjectPays,
+      playerDelta:subjectPays ? -value : value
+    };
+  };
+
+  FB.courtshipTerms = function (state, c, persist) {
+    const p = state.player;
+    const me = state.chars[p.charId];
+    const saved = p.courtshipTerms;
+    if (saved && c && saved.suitorId === c.id) {
+      return {
+        amount:Math.max(0, Math.round(Number(saved.amount) || 0)),
+        subjectPays:!!saved.playerPays,
+        playerPays:!!saved.playerPays,
+        playerDelta:saved.playerPays
+          ? -Math.max(0, Math.round(Number(saved.amount) || 0))
+          : Math.max(0, Math.round(Number(saved.amount) || 0))
+      };
+    }
+    const terms = FB.marriageTerms(state, me, c);
+    if (persist && c) {
+      p.courtshipTerms = {
+        suitorId:c.id,
+        amount:terms.amount,
+        playerPays:terms.playerPays
+      };
+    }
+    return terms;
+  };
+
+  FB.ensureCourtshipTerms = function (state) {
+    const p = state && state.player;
+    const c = p && p.flags && p.flags.courting && p.courtingId &&
+      state.chars[p.courtingId];
+    if (!c) {
+      if (p) p.courtshipTerms = null;
+      return null;
+    }
+    return FB.courtshipTerms(state, c, true);
+  };
+
   FB.clearCourtship = function (state, opts) {
     opts = opts || {};
     const p = state.player;
     const c = p.courtingId ? state.chars[p.courtingId] : null;
     if (c) FB.socialAttentionWithdraw(state, c.id, true);
     p.courtingId = null;
+    p.courtshipTerms = null;
     delete p.flags.courting;
     if (c && !c.dead && opts.penalty) {
       adjustCharacterStanding(state, c, -20, 'relationship:broken_courtship');
@@ -879,7 +935,13 @@ window.FB = window.FB || {};
     }
     p.courtingId = c.id;
     p.flags.courting = 1;
-    return FB.socialAttentionAssign(state, c, { courtship:true });
+    if (!FB.socialAttentionAssign(state, c, { courtship:true })) {
+      p.courtingId = null;
+      delete p.flags.courting;
+      return false;
+    }
+    FB.courtshipTerms(state, c, true);
+    return true;
   };
 
   FB.proposalStatus = function (state, c) {
@@ -891,6 +953,7 @@ window.FB = window.FB || {};
       characterId:c && c.id || null,
       threshold:threshold,
       standing:standing,
+      terms:c ? FB.courtshipTerms(state, c, false) : null,
       reason:''
     };
     if (!c || !p.flags.courting || p.courtingId !== c.id) {
@@ -907,6 +970,15 @@ window.FB = window.FB || {};
         'Requires +{threshold} Standing; currently {standing}.', {
           threshold:threshold,
           standing:Math.round(standing * 10) / 10
+        });
+      return status;
+    }
+    if (status.terms.playerPays &&
+        state.player.gold + 0.0001 < status.terms.amount) {
+      status.reason = FB.T(
+        'Your house must provide {money:cost}; you have {money:current}.', {
+          cost:status.terms.amount,
+          current:Math.floor(state.player.gold)
         });
       return status;
     }
@@ -1060,6 +1132,13 @@ window.FB = window.FB || {};
     if (FB.royalCloseKinSnapshot &&
         FB.royalCloseKinSnapshot(state, me, c)) {
       return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    }
+    if ((Array.isArray(c.stepParentIds) &&
+        c.stepParentIds.indexOf(me.id) >= 0) ||
+        (Array.isArray(me.stepParentIds) &&
+          me.stepParentIds.indexOf(c.id) >= 0)) {
+      return blocked('affinity',
+        FB.T('Your family tie by marriage forbids this match.'), false);
     }
     const y = state.date.year;
     if (FB.ageOf(me, y) < 16) {
@@ -1414,7 +1493,11 @@ window.FB = window.FB || {};
      never disable a manual choice. */
   FB.kinMatchTerms = function (state, child, cand) {
     const station = cand ? FB.stationOf(cand) : 0;
-    const dowry = cand ? Math.max(0, Number(cand.dowryAsk) || 0) : 0;
+    const savedAmount = cand
+      ? (cand.dowryAsk !== undefined ? cand.dowryAsk : cand.dowryDue)
+      : 0;
+    const marriage = FB.marriageTerms(state, child, cand, savedAmount);
+    const dowry = marriage.subjectPays ? marriage.amount : 0;
     const prestigeNeed = cand ?
       Math.max(0, station - FB.playerStation(state)) * 20 : 0;
     let reason = null;
@@ -1438,7 +1521,8 @@ window.FB = window.FB || {};
       station:station,
       dowry:dowry,
       goldCost:dowry,
-      prestigeNeed:prestigeNeed
+      prestigeNeed:prestigeNeed,
+      marriage:marriage
     };
   };
 
@@ -1621,7 +1705,8 @@ window.FB = window.FB || {};
       m.epithetMsg = FB.pick(SUITOR_EPITHETS[st][m.sex]);
       if (FB.applyMarriageBackground) FB.applyMarriageBackground(m, st, m.epithetMsg);
       const sum = Math.round((FBDATA.balance.dowryByStation[st] || 0) * FB.rf(0.7, 1.3));
-      if (child.sex === 'f') m.dowryAsk = sum; else m.dowryDue = sum;
+      const marriage = FB.marriageTerms(state, child, m, sum);
+      if (marriage.subjectPays) m.dowryAsk = sum; else m.dowryDue = sum;
       out.push(m);
       child.matchIds.push(m.id);
     }
@@ -1664,10 +1749,12 @@ window.FB = window.FB || {};
     child.betrothedId = cand.id;
     cand.betrothedId = child.id;
     cand.role = 'kinspouse';
-    if (cand.dowryAsk) {
-      p.gold = Math.max(0, p.gold - cand.dowryAsk);
+    if (terms.marriage.subjectPays && terms.marriage.amount) {
+      p.gold = Math.max(0, p.gold - terms.marriage.amount);
       FB.news(state, FB.msg('news.event.match_dowry_paid',
-        '💰 You settle a dowry of {money:gold} on the match.', { gold: cand.dowryAsk }));
+        '💰 You settle a dowry of {money:gold} on the match.', {
+          gold:terms.marriage.amount
+        }));
     }
     FB.news(state, FB.msg('news.event.child_betrothed',
       '🤝 {child} is betrothed to {match}.', { child: child.name, match: cand.name }));
@@ -1718,10 +1805,14 @@ window.FB = window.FB || {};
         }
       }, { sex:k.sex, child:k.name, spouse:sp.name }));
     }
-    if (sp.dowryDue) {
-      p.gold += sp.dowryDue;
+    const marriage = FB.marriageTerms(state, k, sp,
+      sp.dowryAsk !== undefined ? sp.dowryAsk : sp.dowryDue);
+    if (!marriage.subjectPays && marriage.amount) {
+      p.gold += marriage.amount;
       FB.news(state, FB.msg('news.event.bride_dowry',
-        '💰 The bride brings a dowry of {money:gold} to the house.', { gold: sp.dowryDue }));
+        '💰 The bride brings a dowry of {money:gold} to the house.', {
+          gold:marriage.amount
+        }));
       delete sp.dowryDue;
     }
     delete sp.dowryAsk; // settled at the pledge; nothing owed back once wed
@@ -2493,6 +2584,9 @@ window.FB = window.FB || {};
     if (out.formerProfession === undefined) {
       out.formerProfession = state.player.professionBack || state.player.profession;
     }
+    if (out.protagonistId === undefined) {
+      out.protagonistId = state.player.charId;
+    }
     if (out.locationId === undefined) {
       const location = FB.travelLocation ? FB.travelLocation(state) : null;
       out.locationId = location && location.id ? location.id : state.player.provinceId;
@@ -3055,7 +3149,9 @@ window.FB = window.FB || {};
          instance, while an authored unique remains a single heirloom. */
       if (FB.issueItem) FB.issueItem(state, fx.giveItem);
     }
-    if (fx.marry) FB.doMarry(state);
+    if (fx.marry) {
+      FB.doMarry(state, { settleDowry:fx.marry !== 'informal' });
+    }
     if (fx.clearSuitor) FB.clearCourtship(state);
     if (fx.adoptChild) {
       const baby = FB.makeCharacter(state, {
@@ -3140,11 +3236,18 @@ window.FB = window.FB || {};
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
 
-  FB.doMarry = function (state) {
+  FB.doMarry = function (state, options) {
+    options = options || {};
     const p = state.player;
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    const settleDowry = options.settleDowry !== false;
+    const marriageTerms = settleDowry
+      ? FB.courtshipTerms(state, s, false)
+      : { amount:0, playerPays:false, playerDelta:0 };
+    if (marriageTerms.playerPays &&
+        p.gold + 0.0001 < marriageTerms.amount) return false;
     if (FB.papacyCelibate &&
         (FB.papacyCelibate(state, me) || FB.papacyCelibate(state, s))) {
       FB.clearCourtship(state, { news:true });
@@ -3190,6 +3293,10 @@ window.FB = window.FB || {};
         }
       }, { order: order, name: s.name }));
     }
+    if (FB.recordStepfamily) {
+      FB.recordStepfamily(state, me, s);
+      FB.recordStepfamily(state, s, me);
+    }
     /* An object given during courtship was external character property.
        Once its owner enters the household, move that exact object into the
        shared armory so the household ownership invariant continues to hold. */
@@ -3213,6 +3320,7 @@ window.FB = window.FB || {};
     }
     adjustCharacterStanding(state, s, 30, 'relationship:marriage');
     p.courtingId = null;
+    p.courtshipTerms = null;
     delete p.flags.courting;
     p.marriedAt = state.turn;
     if (s.royalLine) {
@@ -3244,12 +3352,15 @@ window.FB = window.FB || {};
     // the match settles a dowry, and rank rubs off both ways
     const B = FBDATA.balance;
     const gap = FB.stationOf(s) - FB.playerStation(state);
-    const dowry = Math.round((B.dowryByStation[FB.stationOf(s)] || 0) * FB.rf(0.7, 1.3));
-    if (dowry > 0) {
-      p.gold += dowry;
-      FB.news(state, FB.msg('news.event.marriage_dowry',
-        '💰 The kin of {name} settle a dowry of {money:gold} on the match.',
-        { name: s.name, gold: dowry }));
+    if (marriageTerms.amount > 0) {
+      p.gold += marriageTerms.playerDelta;
+      FB.news(state, marriageTerms.playerPays
+        ? FB.msg('news.event.marriage_dowry_paid',
+          '💰 Your house settles a dowry of {money:gold} with the kin of {name}.',
+          { name:s.name, gold:marriageTerms.amount })
+        : FB.msg('news.event.marriage_dowry',
+          '💰 The kin of {name} settle a dowry of {money:gold} on the match.',
+          { name:s.name, gold:marriageTerms.amount }));
     }
     if (gap > 0) {
       p.prestige += gap * B.marryUpPrestige;
@@ -3277,6 +3388,7 @@ window.FB = window.FB || {};
         promptPending:true
       };
     }
+    return true;
   };
 
   /* custom trigger fns for the station-marriage events (events_common.js).
@@ -3574,6 +3686,7 @@ window.FB = window.FB || {};
         p.tier >= 3 && rid && rid !== 'player' ? rid : null,
         'travel:permanent_move');
       if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+      if (FB.enterpriseList) FB.enterpriseList(state);
       FB.news(state, FB.msg('news.event.moved',
         '🧭 You now dwell in {province}.', { province: FB.world.byId[dest].name }));
       if (FB.map) { FB.map.playerProv = dest; FB.map.request(); }

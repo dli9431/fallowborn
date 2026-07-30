@@ -992,6 +992,7 @@ FBDATA.balance = {
   rulerCashGiftOpinion: 15,
   retainerCapacity: [0,1,2,2,3,3,4,5], // paid non-family household servants by player tier
   guildFavorStandingCost: 20, guildFavorCooldown: 360,
+  guildStandingYearlyGain: 5, guildStandingMax: 100,
   /* Guild monopoly charters. Numeric keys are the grantor's social tier:
      3 baron, 4 count, 5 duke, 6 king, 7 emperor. Active charters copy these
      values into saved records, so changing balance affects only new grants. */

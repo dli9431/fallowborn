@@ -190,6 +190,12 @@ queued immediately; they are once per life. Short lower-station incidents remain
 cooldown events. Chain flags are life-local and disappear at succession with the rest of
 `player.flags`.
 
+Prepared and queued event contexts record `protagonistId`. Succession discards
+any pending story owned by the outgoing protagonist before the heir's events
+can be selected. This prevents a dead character's station, profession, or war
+chain from continuing under a renamed heir; legacy coming-of-age and
+station-transition queues retain their explicit compatibility cleanup.
+
 Promotion does not cut one of these stories short. The Old Custom, Mill's Due,
 Master's Empty Bench, Words Before Dawn, levy-service, and Sweet Polly stage flags
 remain eligible until their final decision. No new lower-station opener begins
@@ -210,8 +216,10 @@ five-flag chain (`polly_1 → polly_2 → polly_3 → polly_4 → polly_reunion`
 the soldier into the `{suitor}` role via `FB.fns.polly_court`; the proposal opener simply reuses
 the suitor she is already courting (and clears the `courting` flag so the ordinary
 courtship/proposal events stand down while she is afield). Either way his card and name carry
-through every chapter, and the reunion weds him with a plain `marry:true` or dismisses him with
-`clearSuitor`. The shield-wall chapter can win loot, leave scars, or kill: the grave wound is a
+through every chapter, and the reunion weds him with `marry:'informal'` or dismisses him with
+`clearSuitor`. The informal wedding uses the ordinary marriage and family-link mechanics but
+does not settle a second dowry after the story's own arrangements. The shield-wall chapter can
+win loot, leave scars, or kill: the grave wound is a
 visible `health` hit (so the autoresolve guard in [time.md](time.md) can see it) plus a small,
 martial-tempered `FB.fns.polly_rout` roll that the rout proved mortal. It fires for women of
 every faith — the woman-in-arms motif is at home in the Persian and Arabic epics too (Gordāfarid,

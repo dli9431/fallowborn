@@ -887,7 +887,10 @@ def extract_structured(inv: Inventory) -> None:
     for index, item_node in enumerate(scenarios):
         item = node_object(item_node) or {}
         item_id = node_string(item.get("id")) or str(index)
-        for field in ("name", "diff", "desc", "intro", "intro_muslim"):
+        for field in (
+            "name", "diff", "desc", "intro", "intro_f",
+            "intro_muslim", "intro_other"
+        ):
             for branch, record, line in branch_records(item.get(field)):
                 inv.add(
                     f"scenario.{item_id}.{field}.{branch}",

@@ -803,6 +803,10 @@ window.FB = window.FB || {};
       '[data-large-list-surface="' + surface + '"]');
     const view = largeListViews[surface];
     if (!root || !view) return;
+    /* openModal's deferred first-control focus can fire before this deferred
+       restoration and update view.focusKey through focusin. Keep the semantic
+       return target from this render so generic autofocus cannot replace it. */
+    const restoreFocusKey = opts.restoreFocus ? view.focusKey : null;
     const search = root.querySelector('[data-list-search]');
     if (search) {
       search.addEventListener('input', function () {
@@ -877,12 +881,12 @@ window.FB = window.FB || {};
     applyLargeListView(root);
     setTimeout(function () {
       if (container) container.scrollTop = view.scrollTop || 0;
-      if (!opts.restoreFocus || !view.focusKey) return;
+      if (!restoreFocusKey) return;
       const focusTargets = root.querySelectorAll('[data-list-focus-key]');
       let focus = null;
       for (let i = 0; i < focusTargets.length; i++) {
         if (focusTargets[i].getAttribute('data-list-focus-key') ===
-            view.focusKey) {
+            restoreFocusKey) {
           focus = focusTargets[i];
           break;
         }
@@ -2996,6 +3000,7 @@ window.FB = window.FB || {};
       }
     }
     kinSection('Grandchildren', kin.grandchildren);
+    kinSection('Stepchildren', kin.stepchildren);
     kinSection('Parents', kin.parents);
     kinSection('Grandparents', kin.grandparents);
     kinSection('Siblings', kin.siblings);
@@ -3491,6 +3496,12 @@ window.FB = window.FB || {};
         FB.T('Guild standing {standing}', {
           standing:Math.round(career.guildStanding || 0)
         }),
+        FB.T('+{gain} each active vocational year · maximum {maximum}', {
+          gain:FBDATA.balance.guildStandingYearlyGain !== undefined
+            ? FBDATA.balance.guildStandingYearlyGain : 5,
+          maximum:FBDATA.balance.guildStandingMax !== undefined
+            ? FBDATA.balance.guildStandingMax : 100
+        }),
         FB.T('+{percent}% enterprise profit', {
           percent:Math.round((mult - 1) * 100)
         })
@@ -3521,8 +3532,13 @@ window.FB = window.FB || {};
         esc(!favor ? FB.T('No guild favor is available.')
           : !favor.cooldownReady ? FB.T('Only one guild favor may be called each year.')
           : favor.standing < favor.cost ? FB.T(
-            'Requires {standing} standing; currently {current}.', {
-              standing:favor.cost, current:Math.round(favor.standing)
+            'Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}.', {
+              standing:favor.cost,
+              current:Math.round(favor.standing),
+              gain:FBDATA.balance.guildStandingYearlyGain !== undefined
+                ? FBDATA.balance.guildStandingYearlyGain : 5,
+              maximum:FBDATA.balance.guildStandingMax !== undefined
+                ? FBDATA.balance.guildStandingMax : 100
             }) : FB.T(
               'Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)', {
                 standing:favor.cost, amount:favor.amount
@@ -4006,6 +4022,51 @@ window.FB = window.FB || {};
       if (mroot.id !== mo.id && !drawn[mroot.id]) {
         h += panelh('Your mother’s kin') +
           '<div class="ftwrap"><div class="fttree">' + unit(mroot, 0) + '</div></div>';
+      }
+    }
+    const stepchildren = FB.stepchildrenOf ? FB.stepchildrenOf(s, me) : [];
+    if (stepchildren.length) {
+      const stepGroups = {};
+      for (const child of stepchildren) {
+        const parentIds = [child.fatherId, child.motherId].filter(function (id) {
+          return !!(id && id !== me.id && s.chars[id]);
+        }).sort();
+        const key = parentIds.join('|') || child.id;
+        if (!stepGroups[key]) {
+          stepGroups[key] = { parents:parentIds, children:[] };
+        }
+        stepGroups[key].children.push(child);
+      }
+      h += panelh('Stepfamily') +
+        '<div class="cmeta" style="font-size:13px">' +
+        esc(FB.T('These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged.')) +
+        '</div>';
+      for (const key in stepGroups) {
+        const group = stepGroups[key];
+        let couple = '';
+        for (const parentId of group.parents) {
+          const parent = s.chars[parentId];
+          couple += chip(parent, parent.sex === 'f'
+            ? 'Biological mother' : 'Biological father',
+          drawn[parent.id] ? ' dup' : '');
+          drawn[parent.id] = 1;
+        }
+        if (!couple) {
+          couple = '<div class="ftchip ghost"><span class="fname">' +
+            esc(FB.T('Earlier household')) + '</span><span class="frel">' +
+            esc(FB.T('biological family')) + '</span></div>';
+        }
+        let branch = '<div class="ftnode"><div class="ftcouple">' + couple +
+          '</div><div class="ftstem"></div><div class="ftkids">';
+        group.children.sort(function (a, b) { return a.born - b.born; });
+        for (const child of group.children) {
+          branch += '<div class="ftnode"><div class="ftcouple">' +
+            chip(child, child.sex === 'f' ? 'Stepdaughter' : 'Stepson',
+              drawn[child.id] ? ' dup' : '') + '</div></div>';
+          drawn[child.id] = 1;
+        }
+        h += '<div class="ftwrap"><div class="fttree">' + branch +
+          '</div></div></div></div>';
       }
     }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
@@ -5152,6 +5213,25 @@ window.FB = window.FB || {};
     if (FB.prepareEvent) FB.prepareEvent(s, ev, ctx);
     $('ev-title').textContent = FB.eventText(s, s.player.charId, ev, 'title', ctx);
     let bodyHtml = esc(FB.eventText(s, s.player.charId, ev, 'text', ctx));
+    if (ev.id === 'proposal_made' && s.player.courtingId) {
+      const suitor = s.chars[s.player.courtingId];
+      const terms = suitor && FB.courtshipTerms
+        ? FB.courtshipTerms(s, suitor, false) : null;
+      const termsText = !terms || !terms.amount
+        ? FB.T('Marriage terms: no dowry will change hands.')
+        : (terms.playerPays
+          ? FB.T(
+            'Marriage terms: your house will provide {money:gold} to the house of {name}.', {
+              gold:terms.amount,
+              name:FB.fullName(suitor)
+            })
+          : FB.T(
+            'Marriage terms: the house of {name} will provide {money:gold} to your house.', {
+              gold:terms.amount,
+              name:FB.fullName(suitor)
+            }));
+      bodyHtml += '<p class="adesc"><b>' + esc(termsText) + '</b></p>';
+    }
     if (ev.warStatus && FB.warStateText) {
       bodyHtml += '<p class="adesc">' + esc(FB.warStateText(s, s.player.charId)) + '</p>';
     }
@@ -6120,6 +6200,26 @@ window.FB = window.FB || {};
     if (!discard && closed && closed.cancelAction) closed.cancelAction();
   };
 
+  function enterpriseRelocationWarningHtml(s, destinationId, heading) {
+    const impact = FB.enterpriseRelocationImpact
+      ? FB.enterpriseRelocationImpact(s, destinationId) : null;
+    if (!impact || !impact.rows.length) return '';
+    let h = '<div class="warnote"><b>' + esc(heading || FB.T(
+      'The following remote enterprises will lose their workers and become idle:')) +
+      '</b><ul>';
+    for (const row of impact.rows) {
+      const def = FBDATA.enterprises[row.enterprise.type];
+      h += '<li>' + esc(FB.T('{enterprise} — {worker} will be unassigned.', {
+        enterprise:def
+          ? dt(s, 'enterprise', row.enterprise.type, def, 'name') +
+            ' · ' + enterprisePlace(s, row.enterprise)
+          : row.enterprise.type,
+        worker:FB.fullName(row.worker)
+      })) + '</li>';
+    }
+    return h + '</ul></div>';
+  }
+
   UI.showTravelSettlement = function () {
     const s = FB.state;
     const t = s && s.player.travel;
@@ -6135,7 +6235,9 @@ window.FB = window.FB || {};
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Move the household home to {destination}. Existing land, enterprises, culture, and faith will not move or change.', {
         destination:destination.name
-      })) + '</p><p class="warnote"><b>' + esc(FB.T(
+      })) + '</p>' +
+      enterpriseRelocationWarningHtml(s, t.destinationId) +
+      '<p class="warnote"><b>' + esc(FB.T(
       'This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.', {
         name:FB.fullName(c)
       })) + '</b></p></div><div class="gm-list">' +
@@ -6183,6 +6285,11 @@ window.FB = window.FB || {};
     const currentHeir = heir
       ? FB.T('Your current lawful heir is {heir}.', { heir:heirName })
       : FB.T('No lawful heir is living.');
+    const selfEnterpriseImpact = enterpriseRelocationWarningHtml(
+      s, residence.destinationId, FB.T(
+        'If {name} moves the household, these enterprises will lose their workers:', {
+          name:FB.fullName(protagonist)
+        }));
     const selfDetail = s.player.tier >= 4
       ? (heir
         ? FB.T('{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}.', {
@@ -6217,7 +6324,8 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives.', {
         destination:destination.name
-      })) + '</p><p><b>' + esc(currentHeir) + '</b></p></div><div class="gm-list">' +
+      })) + '</p><p><b>' + esc(currentHeir) + '</b></p>' +
+      selfEnterpriseImpact + '</div><div class="gm-list">' +
       '<button type="button" class="actionbtn" id="marriage-residence-self"' +
       (selfEligible === true ? '' : ' disabled') + '>👤 ' +
       esc(FB.T('Abdicate and continue as {name}', {
@@ -12713,6 +12821,16 @@ window.FB = window.FB || {};
             ? ' · ' + FB.guildTitle(career) : ''),
         roles.join(' · ')
       ];
+      if (def && def.guild && career.guildRank !== 'none') {
+        metadata.push(FB.T(
+          'Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}', {
+            standing:Math.round(career.guildStanding || 0),
+            gain:FBDATA.balance.guildStandingYearlyGain !== undefined
+              ? FBDATA.balance.guildStandingYearlyGain : 5,
+            maximum:FBDATA.balance.guildStandingMax !== undefined
+              ? FBDATA.balance.guildStandingMax : 100
+          }));
+      }
       if (workNames.length) {
         metadata.push(FB.T('Enterprise: {enterprise}', {
           enterprise:workNames.join(', ')
@@ -12756,7 +12874,8 @@ window.FB = window.FB || {};
       if (!def) continue;
       const worker = e.workerId && s.chars[e.workerId] && !s.chars[e.workerId].dead ?
         s.chars[e.workerId] : null;
-      const eligible = FB.enterpriseWorkers(s, e.type);
+      const eligible = FB.enterpriseWorkersFor(s, e);
+      const remote = e.provinceId !== s.player.provinceId;
       let validWorker = false;
       for (const candidate of eligible) {
         if (worker && candidate.id === worker.id) validWorker = true;
@@ -12778,11 +12897,15 @@ window.FB = window.FB || {};
         stateLabel = FB.T('Blocked');
         blockedEnterprises++;
         idleEnterprises++;
-        workerText = worker
-          ? FB.T('{name} is no longer eligible; no replacement is available.', {
-            name:worker.name
+        workerText = remote
+          ? FB.T('No resident worker in {place}; it remains owned but idle.', {
+            place:enterprisePlace(s, e)
           })
-          : FB.T('No eligible worker is available.');
+          : (worker
+            ? FB.T('{name} is no longer eligible; no replacement is available.', {
+              name:worker.name
+            })
+            : FB.T('No eligible worker is available.'));
       } else {
         state = 'idle';
         stateLabel = FB.T('Idle');
@@ -12927,11 +13050,22 @@ window.FB = window.FB || {};
     for (const item of FB.careerChoices(s, c)) {
       const same = career.chosen && career.profession === item.id;
       const short = s.player.gold < item.cost;
+      const resumeDetail = item.resuming
+        ? FB.T('Resume {rank}; guild rank {guild}; Guild Standing {standing}. No new apprenticeship fee.', {
+          rank:item.def.ranks && item.def.ranks[item.restoredRank]
+            ? dt(s, 'career', item.id, item.def,
+              'ranks.' + item.restoredRank)
+            : item.restoredRank,
+          guild:FB.guildTitle({ guildRank:item.restoredGuildRank }),
+          standing:item.restoredStanding
+        })
+        : '';
       h += '<button class="actionbtn" data-career-choice="' + item.id + '"' +
         (same || short ? ' disabled' : '') + '>' +
         esc(item.def.icon + ' ' + dt(s, 'career', item.id, item.def, 'name') +
           (item.cost ? FB.T(' — {money:gold}', { gold:item.cost }) : '')) +
         '<span class="adesc">' + esc(dt(s, 'career', item.id, item.def, 'desc')) +
+        (resumeDetail ? ' ' + esc(resumeDetail) : '') +
         (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough money)')) : '') +
         '</span></button>';
     }
@@ -14244,7 +14378,7 @@ window.FB = window.FB || {};
         ? FB.T('The staffing assistant will preserve this pairing. Manual changes may still replace it.')
         : FB.T('Assign a worker before locking this enterprise.')) +
       '</span></label><div class="gm-list">';
-    for (const c of FB.enterpriseWorkers(s, e.type)) {
+    for (const c of FB.enterpriseWorkersFor(s, e)) {
       const current = workerAssignment(c.id);
       const preview = {
         type:e.type, provinceId:e.provinceId, settlement:e.settlement,
@@ -15343,14 +15477,24 @@ window.FB = window.FB || {};
       }
     } else if (s.player.courtingId === c.id) {
       const proposal = FB.proposalStatus(s, c);
+      const proposalDowry = proposal.terms && proposal.terms.amount
+        ? (proposal.terms.playerPays
+          ? FB.T('Your house will provide {money:gold}.', {
+            gold:proposal.terms.amount
+          })
+          : FB.T('Their house will provide {money:gold}.', {
+            gold:proposal.terms.amount
+          }))
+        : FB.T('No dowry will change hands.');
       addInteractionAction(model, {
         id:'relationship.proposal',
         group:'relationship',
         label:FB.T('Propose marriage'),
         detail:FB.T(
-          'Requires +{threshold} Standing; currently {standing}. Asking spends the day.', {
+          'Requires +{threshold} Standing; currently {standing}. {dowry} Asking spends the day.', {
             threshold:proposal.threshold,
-            standing:Math.round(proposal.standing * 10) / 10
+            standing:Math.round(proposal.standing * 10) / 10,
+            dowry:proposalDowry
           }),
         enabled:proposal.ready,
         blockedReason:proposal.reason || null,
@@ -16118,9 +16262,16 @@ window.FB = window.FB || {};
         FB.stationName(st),
         FB.T('age {age}', { age: age })
       ];
-      const dowry = Math.round(FBDATA.balance.dowryByStation[st] || 0);
-      if (dowry) {
-        details.push(FB.T('would bring a dowry of about {money:gold}', { gold: dowry }));
+      const marriage = FB.marriageTerms(s,
+        s.chars[s.player.charId], m);
+      if (marriage.amount) {
+        details.push(marriage.playerPays
+          ? FB.T('your house would provide exactly {money:gold}', {
+            gold:marriage.amount
+          })
+          : FB.T('their house would provide exactly {money:gold}', {
+            gold:marriage.amount
+          }));
       }
       details.push((m.sex === 'f' && age > 45) ? FB.T('🌱 past childbearing')
         : FB.T('🌱 fertility {percent}%', {
@@ -16303,7 +16454,7 @@ window.FB = window.FB || {};
     }
     if (s.player.courtingId) add(s.chars[s.player.courtingId], FB.T('courting'));
     const kin = FB.kinOf(s);
-    for (const g of ['children', 'parents', 'siblings', 'grandchildren',
+    for (const g of ['children', 'stepchildren', 'parents', 'siblings', 'grandchildren',
       'niecesNephews', 'unclesAunts', 'cousins', 'grandparents']) {
       for (const e of kin[g]) add(e.c, FB.T(e.rel));
     }

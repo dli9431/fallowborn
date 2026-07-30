@@ -1288,12 +1288,44 @@ window.FB = window.FB || {};
     FB.refreshRealmSuccession(state, rid);
   }
 
+  function linkMaterializedRoyalFamily(state, succession, member, c) {
+    if (!succession || !member || !c) return c;
+    const parentMember = member.parentId &&
+      succession.members[member.parentId];
+    const parent = parentMember && parentMember.charId &&
+      state.chars[parentMember.charId];
+    if (parent) {
+      if (parent.sex === 'f') {
+        if (!c.motherId) c.motherId = parent.id;
+      } else if (!c.fatherId) c.fatherId = parent.id;
+      parent.childrenIds = parent.childrenIds || [];
+      if (parent.childrenIds.indexOf(c.id) < 0) {
+        parent.childrenIds.push(c.id);
+      }
+    }
+    for (const childMemberId of (member.childIds || [])) {
+      const childMember = succession.members[childMemberId];
+      const child = childMember && childMember.charId &&
+        state.chars[childMember.charId];
+      if (!child) continue;
+      if (c.sex === 'f') {
+        if (!child.motherId) child.motherId = c.id;
+      } else if (!child.fatherId) child.fatherId = c.id;
+      c.childrenIds = c.childrenIds || [];
+      if (c.childrenIds.indexOf(child.id) < 0) c.childrenIds.push(child.id);
+    }
+    if (FB.ensureCharacterBynames) FB.ensureCharacterBynames(state);
+    return c;
+  }
+
   FB.materializeRoyalChild = function (state, rid, memberId) {
     const r = state.realms[rid];
     const s = FB.ensureRealmSuccession(state, rid);
     const m = s && s.members[memberId];
     if (!r || !m || m.alive === false) return null;
-    if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) return state.chars[m.charId];
+    if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) {
+      return linkMaterializedRoyalFamily(state, s, m, state.chars[m.charId]);
+    }
     const cap = FB.world.byId[r.capital];
     const c = FB.makeCharacter(state, {
       name: m.name,
@@ -1310,7 +1342,28 @@ window.FB = window.FB || {};
     c.health = 8;
     c.royalLine = { realmId: rid, memberId: memberId };
     m.charId = c.id;
-    return c;
+    return linkMaterializedRoyalFamily(state, s, m, c);
+  };
+
+  FB.materializeRoyalStepchildren = function (state, spouse) {
+    const line = spouse && spouse.royalLine;
+    const realm = line && state.realms[line.realmId];
+    const succession = realm && FB.ensureRealmSuccession(state, line.realmId);
+    const member = succession && succession.members[line.memberId];
+    if (!member) return [];
+    const ids = (member.childIds || []).slice();
+    for (const id in succession.members) {
+      if (succession.members[id].parentId === member.id &&
+          ids.indexOf(id) < 0) ids.push(id);
+    }
+    const out = [];
+    for (const id of ids) {
+      const childMember = succession.members[id];
+      if (!childMember || childMember.alive === false) continue;
+      const child = FB.materializeRoyalChild(state, line.realmId, id);
+      if (child && !child.dead) out.push(child);
+    }
+    return out;
   };
 
   function storedRealmStanding(state, rid) {
@@ -1427,7 +1480,10 @@ window.FB = window.FB || {};
     const m = ensureRealmRulerMember(state, rid);
     if (!m) return null;
     let c = m.charId && state.chars[m.charId];
-    if (c && !c.dead) return FB.realmRulerCharacter(state, rid);
+    if (c && !c.dead) {
+      linkMaterializedRoyalFamily(state, r.succession, m, c);
+      return FB.realmRulerCharacter(state, rid);
+    }
     const cap = FB.world.byId[r.capital];
     const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
       ? [r.ruler.trait] : [];
@@ -1450,6 +1506,7 @@ window.FB = window.FB || {};
     c.royalLine = { realmId:rid, memberId:m.id };
     c.realmStanding = standing;
     m.charId = c.id;
+    linkMaterializedRoyalFamily(state, r.succession, m, c);
     return c;
   };
 

@@ -168,7 +168,12 @@ The initial suite covers:
   and the named-beneficiary installation journey;
 - a relevant serialization and restore contract after every representative council outcome;
 - council focus entry and return, modal Tab containment, Enter and numbered activation,
-  principal panel shortcuts, and desktop/mobile-width structure.
+  principal panel shortcuts, and desktop/mobile-width structure;
+- gendered novice copy and recorded patronyms, formal and informal dowry settlement,
+  ordinary and royal stepfamilies, succession cleanup, career resumption, renewable Guild
+  Standing, and enterprise locality after relocation;
+- large-list filtering, search, collapse, Back navigation, narrow rendering, and
+  read-only building projections without play-state mutation.
 
 Target-specific cases use explicit skips. For example, the full storage contract runs only on the
 served project, while the initial determinism and simulation canaries run only on the file

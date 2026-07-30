@@ -92,6 +92,15 @@ follows. Outliving a spouse of higher station queues `widow_settlement` /
 `house_claim` (`FB.spouseDied`, called from the mortality tick and `killRole:'spouse'`;
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
 
+`FB.marriageTerms` is the single transfer rule for protagonist and descendant
+marriages: the bride's house pays the displayed dowry. A protagonist courtship
+freezes `{suitorId,amount,playerPays}` in `player.courtshipTerms`, so proposal
+status and confirmation show the exact payer, recipient, and amount that
+`FB.doMarry` later settles. The wedding preflights an outgoing payment and moves
+the money exactly once. Authored story weddings may use `marry:'informal'` when
+the story itself replaces formal family negotiations; those marriages transfer
+no dowry.
+
 Faith sets doctrine (`FB.marriageDoctrine` in model.js): muslim/pagan/jewish players
 divorce from the spouse's char sheet (muslim `talaq` and jewish `get` scale off
 `dowryByStation`; pagan `sunder` costs no coin but a prestige hit instead), Christians
@@ -160,6 +169,17 @@ then uses the ordinary courtship and travel gates. A materialized reigning
 spouse links between personal and political sheets; the political side retains
 succession and ruler gifts while the personal side retains marriage and
 residence choices.
+
+**Stepfamily is visible without rewriting blood or succession.** At marriage,
+every existing child of either spouse retains their biological parent ids,
+dynasty, residence, and any royal succession membership. Royal compact children
+of the spouse are materialized and reconciled with the same ordinary
+parent-child links used by the family tree. The child records the additive
+`stepParentIds` relationship; this powers a separate Stepfamily branch, kin
+links, gift access, and the marriage-affinity gate. It does not make the child a
+managed descendant, household worker, or heir. The relationship remains family
+history after divorce or death, and restore repairs missing current-spouse
+links without duplicating an existing one.
 
 **Occupational marriage backgrounds are real state.** The station-flavored match
 epithets seed a compatible career on the candidate. In particular, a

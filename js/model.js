@@ -238,10 +238,16 @@ window.FB = window.FB || {};
     return set;
   };
 
-  FB.dynastyName = function (cultureId, founderName, provinceName) {
+  FB.patronym = function (parentName, sex) {
+    parentName = String(parentName || '');
+    if (sex === 'f') return parentName + 'datter';
+    return parentName + (parentName.slice(-1) === 's' ? 'son' : 'sson');
+  };
+
+  FB.dynastyName = function (cultureId, founderName, provinceName, founderSex) {
     const c = FB.cultureOf(cultureId);
     switch (c.dyn) {
-      case 'patronym': return founderName + (founderName.slice(-1) === 's' ? 'son' : 'sson');
+      case 'patronym': return FB.patronym(founderName, founderSex || 'm');
       case 'mac': return 'mac ' + founderName;
       case 'ap': return 'ap ' + founderName;
       case 'ibn': return 'Banu ' + founderName.split(' ').pop();
@@ -274,6 +280,12 @@ window.FB = window.FB || {};
       spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null,
       childrenIds: []
     };
+    if (Object.prototype.hasOwnProperty.call(opts, 'byname')) {
+      c.byname = opts.byname;
+    } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' &&
+        c.fatherId && state.chars[c.fatherId]) {
+      c.byname = FB.patronym(state.chars[c.fatherId].name, c.sex);
+    }
     const q = opts.quality || 0;
     for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q);
     if (!opts.traits) {
@@ -620,7 +632,24 @@ window.FB = window.FB || {};
   };
 
   FB.fullName = function (c) {
+    if (Object.prototype.hasOwnProperty.call(c, 'byname')) {
+      return c.byname ? c.name + ' ' + c.byname : c.name;
+    }
     return c.dyn ? c.name + ' ' + c.dyn : c.name;
+  };
+
+  /* Patronyms describe a person while dyn remains the stable house identity
+     used by succession and heraldry. Old saves repair deterministically from
+     recorded fathers; no ancestor or RNG state is invented here. */
+  FB.ensureCharacterBynames = function (state) {
+    if (!state || !state.chars) return;
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (!c || Object.prototype.hasOwnProperty.call(c, 'byname') ||
+          FB.cultureOf(c.culture).dyn !== 'patronym') continue;
+      const father = c.fatherId && state.chars[c.fatherId];
+      if (father) c.byname = FB.patronym(father.name, c.sex);
+    }
   };
 
   /* ---------- kinship ----------
@@ -670,6 +699,70 @@ window.FB = window.FB || {};
   FB.parentsOf = parentsOf;
   FB.childrenOf = childrenOf;
   FB.siblingsOf = siblingsOf;
+
+  FB.stepchildrenOf = function (state, c) {
+    const out = [];
+    if (!state || !state.chars || !c) return out;
+    for (const id in state.chars) {
+      const child = state.chars[id];
+      if (child && Array.isArray(child.stepParentIds) &&
+          child.stepParentIds.indexOf(c.id) >= 0) out.push(child);
+    }
+    return out;
+  };
+
+  FB.addStepRelation = function (state, stepParent, child) {
+    if (!state || !stepParent || !child || stepParent.id === child.id ||
+        child.fatherId === stepParent.id || child.motherId === stepParent.id) {
+      return false;
+    }
+    child.stepParentIds = Array.isArray(child.stepParentIds)
+      ? child.stepParentIds : [];
+    if (child.stepParentIds.indexOf(stepParent.id) >= 0) return false;
+    child.stepParentIds.push(stepParent.id);
+    return true;
+  };
+
+  FB.recordStepfamily = function (state, stepParent, spouse) {
+    if (!state || !stepParent || !spouse) return [];
+    if (FB.materializeRoyalStepchildren) {
+      FB.materializeRoyalStepchildren(state, spouse);
+    }
+    const out = [];
+    for (const child of childrenOf(state, spouse)) {
+      if (child.fatherId === stepParent.id ||
+          child.motherId === stepParent.id) continue;
+      FB.addStepRelation(state, stepParent, child);
+      out.push(child);
+    }
+    return out;
+  };
+
+  FB.ensureStepRelations = function (state) {
+    if (!state || !state.chars || !state.player) return;
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (!c || !Array.isArray(c.stepParentIds)) continue;
+      const clean = [];
+      for (const parentId of c.stepParentIds) {
+        if (!state.chars[parentId] || parentId === c.id ||
+            c.fatherId === parentId || c.motherId === parentId ||
+            clean.indexOf(parentId) >= 0) continue;
+        clean.push(parentId);
+      }
+      if (clean.length) c.stepParentIds = clean;
+      else delete c.stepParentIds;
+    }
+    const me = state.chars[state.player.charId];
+    if (!me) return;
+    const spouses = FB.spousesOf ? FB.spousesOf(state, me) :
+      (me.spouseId && state.chars[me.spouseId]
+        ? [state.chars[me.spouseId]] : []);
+    for (const spouse of spouses) {
+      FB.recordStepfamily(state, me, spouse);
+      FB.recordStepfamily(state, spouse, me);
+    }
+  };
 
   /* Relationship to the current protagonist, independent of life or marital
      status. Callers layer those residence gates on top so the same rule can
@@ -724,6 +817,8 @@ window.FB = window.FB || {};
     const grandparents = grp(list, bySex('Grandfather', 'Grandmother'));
     const siblings = grp(siblingsOf(state, me), bySex('Brother', 'Sister'));
     const children = grp(childrenOf(state, me), bySex('Son', 'Daughter'));
+    const stepchildren = grp(FB.stepchildrenOf(state, me),
+      bySex('Stepson', 'Stepdaughter'));
     list = [];
     for (const k of children) list = list.concat(childrenOf(state, k.c));
     const grandchildren = grp(list, bySex('Grandson', 'Granddaughter'));
@@ -737,7 +832,8 @@ window.FB = window.FB || {};
     for (const u of unclesAunts) list = list.concat(childrenOf(state, u.c));
     const cousins = grp(list, 'Cousin');
     return { parents: parents, grandparents: grandparents, siblings: siblings,
-      children: children, grandchildren: grandchildren, niecesNephews: niecesNephews,
+      children: children, stepchildren: stepchildren,
+      grandchildren: grandchildren, niecesNephews: niecesNephews,
       unclesAunts: unclesAunts, cousins: cousins, byId: byId };
   };
 

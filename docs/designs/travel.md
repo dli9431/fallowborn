@@ -175,8 +175,11 @@ write durable localized Chronicle descriptors.
 
 `FB.travelSettle` is restricted to freeholders and gentry and moves
 `player.provinceId` only after the destination capstone.
-Culture, faith, dynasty property, enterprises, finance contracts, and the active
-rival remain unchanged. Home-local lord, priest, friend, notable, cultivated-friend
+Culture, faith, enterprise ownership, finance contracts, and the active rival
+remain unchanged. Enterprise staffing does not: the confirmation lists every
+assigned worker who will no longer share the enterprise's province, and
+settlement clears those worker ids and locks so the remote property stands idle.
+Home-local lord, priest, friend, notable, cultivated-friend
 contacts, courtship, and personal social attention are cleared; the lord and priest are
 immediately regenerated from the destination.
 The map’s household marker then moves to the new home. The action is exposed only
@@ -190,7 +193,9 @@ The marriage-residence move deliberately bypasses the year and four-story
 requirements, but it consumes the same one-per-character
 `player.travelSettlement`. Continuing as the same character uses the ordinary
 settlement cleanup for destination-local roles and relationships while keeping
-marriage, household wealth, items, holdings, enterprises, and finance contracts.
+marriage, household wealth, items, holdings, enterprise ownership, and finance
+contracts. Its confirmation uses the same exact enterprise staffing-impact
+preview.
 Continuing as the heir cancels the journey through living succession instead:
 the household home does not move, and the former protagonist and wedding spouse
 receive explicit residence in the destination county.

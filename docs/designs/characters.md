@@ -245,6 +245,16 @@ Old saves with a rival lazily receive `balance.rivalHeatOldSave`.
 Related: [marriage.md](marriage.md) for spouses and child matches,
 [events.md](events.md) for the event picker.
 
+**A character's house and personal byname are separate.** `c.dyn` is the stable
+house identity used by descendants and political systems; optional `c.byname` is
+the character-specific surname rendered by `FB.fullName`. Patronymic cultures
+derive that byname from the recorded father, using the culture's son or daughter
+form. New patronymic starts therefore generate and link the paternal generations
+needed to name the protagonist, father, and siblings consistently instead of
+copying one founder label onto every generation. Restore deterministically fills
+missing bynames only where a recorded father makes the relationship unambiguous;
+non-patronymic house naming is unchanged.
+
 **Careers belong to characters.** Every managed household member lazily receives
 `c.career = {profession,rank,experience,startedYear,guildRank,guildStanding,chosen}` through
 `FB.careerOf` (`js/economy.js`). `player.profession` remains a compatibility mirror for
@@ -252,6 +262,14 @@ existing events, portraits, titles, and mods; succession mirrors the heir's own 
 instead of inheriting the dead parent's occupation. That mirror now remains the head's
 actual career at every station: acquiring a landed title does not silently replace a
 merchant, craft, clerical, or military occupation with `noble`.
+
+Changing professions archives the complete active record in
+`c.careerHistory[profession]`. Returning to that calling restores its vocational
+rank, experience, guild rank, Guild Standing, and original start year without a
+second entry fee. A restored adult apprentice resumes as a journeyman so a
+childhood apprenticeship cannot reappear as an adult-only dead end. Inactive
+records do not progress or decay. Old saves begin with an empty history and
+archive their first active calling when it is changed.
 
 At tier 3+, that career is biography rather than daily employment. The player cannot
 change occupation, seek guild advancement, earn ordinary career experience, or staff
@@ -266,6 +284,14 @@ hands-on scriptorium and parish work stops.
 Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the
 character's vocational `rank` from journeyman to master.
+
+An active adult guild career with a chosen, working vocation renews
+`balance.guildStandingYearlyGain` Standing each vocational year, capped by
+`balance.guildStandingMax` (5 and 100 by default). Apprentices, unassigned
+characters, inactive archived callings, and landed protagonists do not gain it;
+there is no passive decay. The Work and guild detail surfaces state the annual
+source, cap, and commission threshold so spending Standing cannot create a
+permanent unexplained lockout.
 
 Guildmaster is also the personal qualification for the **Petition for a guild monopoly**
 deed. The deed reads the protagonist's preserved character career, including at tier 3+,

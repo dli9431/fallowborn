@@ -637,7 +637,7 @@ FBDATA.events.push(
     pagan:'The fighting is done and the ravens have come down to their work. Battered or triumphant, you find {suitor} among the living — and when you drag the helm off your cropped head and speak in your own true voice at last, he goes white, then red, then utterly and gratifyingly speechless. A year of blisters and terror and midnight fear, all for this face gaping at you like a fish just landed. Let them keep their talk of a woman’s place; the skalds will know where you stood.' },
   options:[
     { label:'Take his hand — you did not cross a war to lose him now.', desc:'Wed him, and let the whole muddy camp make of it what it will.',
-      effects:{ marry:true, prestige:10, clearFlag:'polly_reunion', log:'Wed the soldier she followed to war.' } },
+      effects:{ marry:'informal', prestige:10, clearFlag:'polly_reunion', log:'Wed the soldier she followed to war.' } },
     { label:'“I crossed a war to find you — and found I like myself better.”', desc:'Spurn him grandly. You have outgrown the blushing boy from the muster line.',
       effects:{ clearSuitor:true, prestige:6, popularOpinion:3, clearFlag:'polly_reunion', log:'Spurned her sweetheart and marched home her own woman.' } },
     { label:'Pull the helm back on and slip away a stranger.', desc:'Let him wonder to his grave who that soldier was. Keep the tale for yourself.',
