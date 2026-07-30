@@ -2,7 +2,7 @@
 
 Date: 2026-07-29
 
-Status: **implemented 2026-07-29** as step 3 of the
+Status: **implemented and archived 2026-07-29** as step 3 of the
 [systems-audit roadmap](systems-audit-00-roadmap.md), after
 [Standing](systems-audit-01-standing.md) and the
 [Governance shell](systems-audit-02-governance-shell.md). The
@@ -10,11 +10,11 @@ Status: **implemented 2026-07-29** as step 3 of the
 and owns roster-scale scanning in Network and Work & Enterprises.
 
 Related design:
-[characters](../designs/characters.md),
-[marriage](../designs/marriage.md),
-[realms](../designs/realms.md),
-[piety, intrigue, and diplomacy](../designs/piety-intrigue-diplomacy.md), and
-[UI](../designs/ui.md).
+[characters](../../designs/characters.md),
+[marriage](../../designs/marriage.md),
+[realms](../../designs/realms.md),
+[piety, intrigue, and diplomacy](../../designs/piety-intrigue-diplomacy.md), and
+[UI](../../designs/ui.md).
 
 ## Goal
 

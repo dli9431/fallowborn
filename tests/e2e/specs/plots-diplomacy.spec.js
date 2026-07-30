@@ -182,11 +182,12 @@ test('stores a semantic realm target through export and fails safely when it die
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
-      const priorFocus = p.focus;
       p.tier = 4;
       p.liege = null;
       p.provs = [p.provinceId];
       FB.foundPlayerRealm(s);
+      FB.validateFocus(s);
+      const priorFocus = p.focus;
       const rid = FB.foreignPolicyTargets(s)[0];
       FB.beginPlot(s, 'diplomatic_correspondence', { realmId:rid });
       const begun = JSON.parse(JSON.stringify(p.plot));

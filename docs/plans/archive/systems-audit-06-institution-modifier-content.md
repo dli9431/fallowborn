@@ -2,19 +2,19 @@
 
 Date: 2026-07-29
 
-Status: step 6 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md); implemented 2026-07-29 after
+Status: **implemented and archived 2026-07-29** as step 6 of the
+[systems-audit roadmap](systems-audit-00-roadmap.md), after
 [plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md). Integration
 connected plot discovery, tax-audit, and merchant outcomes without changing the
 modifier contract.
 
 Related design:
-[Royal Council](../designs/council.md),
-[Estates](../designs/parliament.md),
-[temporary modifiers](../designs/modifiers.md),
-[events](../designs/events.md), and
-[realms](../designs/realms.md).
-Schema changes, if any, must also update [MODDING](../MODDING.md).
+[Royal Council](../../designs/council.md),
+[Estates](../../designs/parliament.md),
+[temporary modifiers](../../designs/modifiers.md),
+[events](../../designs/events.md), and
+[realms](../../designs/realms.md).
+Schema changes, if any, must also update [MODDING](../../MODDING.md).
 
 ## Goal
 

@@ -2912,12 +2912,14 @@ window.FB = window.FB || {};
     const def = career && FBDATA.careers[career.profession];
     if (!def || !def.guild || career.guildRank === 'none') return null;
     const p = state.player;
-    if (!p.guildFavorTurns || typeof p.guildFavorTurns !== 'object' ||
-      Array.isArray(p.guildFavorTurns)) p.guildFavorTurns = {};
+    const favorTurns = p.guildFavorTurns &&
+      typeof p.guildFavorTurns === 'object' &&
+      !Array.isArray(p.guildFavorTurns) ? p.guildFavorTurns : {};
     const key = c.id;
     const cost = FBDATA.balance.guildFavorStandingCost || 20;
     const cooldown = FBDATA.balance.guildFavorCooldown || 360;
-    const ready = !p.guildFavorTurns[key] || state.turn - p.guildFavorTurns[key] >= cooldown;
+    const ready = !favorTurns[key] ||
+      state.turn - favorTurns[key] >= cooldown;
     const rankValue = GUILD_ORDER[career.guildRank] || 1;
     return {
       cost:cost,
@@ -2934,6 +2936,11 @@ window.FB = window.FB || {};
     if (!favor || !favor.ready) return false;
     const career = FB.careerOf(state, c);
     career.guildStanding -= favor.cost;
+    if (!state.player.guildFavorTurns ||
+        typeof state.player.guildFavorTurns !== 'object' ||
+        Array.isArray(state.player.guildFavorTurns)) {
+      state.player.guildFavorTurns = {};
+    }
     state.player.guildFavorTurns[c.id] = state.turn;
     state.player.gold += favor.amount;
     FB.news(state, FB.msg('news.guild.favor_called',

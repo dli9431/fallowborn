@@ -3,15 +3,16 @@
 Date: 2026-07-29
 
 Status: step 2 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md); implemented 2026-07-29.
+[systems-audit roadmap](systems-audit-00-roadmap.md); implemented and archived
+2026-07-29.
 This is the next serial UI step after the implemented
 [Standing integration](systems-audit-01-standing.md).
 
 Related design:
-[realms](../designs/realms.md),
-[Royal Council](../designs/council.md),
-[Estates](../designs/parliament.md), and
-[UI](../designs/ui.md).
+[realms](../../designs/realms.md),
+[Royal Council](../../designs/council.md),
+[Estates](../../designs/parliament.md), and
+[UI](../../designs/ui.md).
 
 ## Goal
 

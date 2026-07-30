@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.1';
+  FB.VERSION = '1.93.2';
   FB.CHANGELOG = [
+    { v: '1.93.2', date: '2026-07-29', changes: [
+      'Work & Enterprises now returns to the exact managed enterprise, while list browsing and fresh-game intrigue state remain stable.'
+    ] },
     { v: '1.93.1', date: '2026-07-29', changes: [
       'Household standard details now present the current state and next upgrade in a shorter, clearer layout.'
     ] },
@@ -1017,7 +1020,8 @@ window.FB = window.FB || {};
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, greatHolyWar: null, focus: null, dead: false,
+        provs: [], war: null, greatHolyWar: null, plot: null,
+        focus: null, dead: false,
         capitalRelocation: null,
         holdings: [], enterprises: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
@@ -1172,7 +1176,8 @@ window.FB = window.FB || {};
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
-        provs: [], war: null, greatHolyWar: null, focus: null, dead: false, holdings: [],
+        provs: [], war: null, greatHolyWar: null, plot: null,
+        focus: null, dead: false, holdings: [],
         capitalRelocation: null,
         householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },

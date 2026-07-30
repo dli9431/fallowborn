@@ -2,15 +2,15 @@
 
 Date: 2026-07-29
 
-Status: implemented. Step 4 of the
+Status: **implemented and archived 2026-07-29**. Step 4 of the
 [systems-audit roadmap](systems-audit-00-roadmap.md), after
 [interaction-card consolidation](systems-audit-03-interaction-cards.md). The shared
 defaults are a 12-row surface threshold and a 5-routine-row initial section budget.
 
 Related design:
-[UI](../designs/ui.md),
-[characters](../designs/characters.md), and
-[holdings](../designs/holdings.md).
+[UI](../../designs/ui.md),
+[characters](../../designs/characters.md), and
+[holdings](../../designs/holdings.md).
 
 ## Goal
 

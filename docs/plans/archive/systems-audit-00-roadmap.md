@@ -2,20 +2,20 @@
 
 Date: 2026-07-29
 
-Status: active roadmap for the follow-up work derived from the
-[systems audit](../2026-07-27-systems-audit.md).
+Status: **completed and archived 2026-07-29**. This roadmap records the follow-up
+work derived from the [systems audit](../../2026-07-27-systems-audit.md).
 
 The numbered `systems-audit-NN-*` filenames define **integration order**. They do
 not mean that every part of a later plan must wait for every earlier plan to finish.
-The archived [first pass](archive/audit-first-pass.md) is already implemented and is
+The archived [first pass](audit-first-pass.md) is already implemented and is
 not part of this numbered queue.
 
 ## Ordered plans
 
-1. [Standing](systems-audit-01-standing.md) — one canonical relationship score,
-   API, renderer, and succession rule. **Implemented 2026-07-29.**
+1. [Standing](systems-audit-01-standing.md) — one canonical relationship
+   score, API, renderer, and succession rule. **Implemented and archived 2026-07-29.**
 2. [Governance shell](systems-audit-02-governance-shell.md) — one political
-   overview using the Standing API. **Implemented 2026-07-29.**
+   overview using the Standing API. **Implemented and archived 2026-07-29.**
 3. [Interaction cards](systems-audit-03-interaction-cards.md) — authoritative
    actions for one character or ruler, using Standing and Governance routes.
    **Implemented 2026-07-29.**
@@ -28,6 +28,11 @@ not part of this numbered queue.
 6. [Institution and modifier content](systems-audit-06-institution-modifier-content.md)
    — institution stories and durable consequences, including cross-links from
    the expanded plot/diplomacy catalog. **Implemented 2026-07-29.**
+
+## Current progress
+
+The first-pass plan and numbered steps 01–06 are integrated on `main`. The numbered
+systems-audit implementation roadmap is complete.
 
 ## Dependency and concurrency map
 
@@ -75,13 +80,15 @@ shared files such as `data/events_council.js`, `data/events_world.js`,
 
 ## Recommended delivery schedule
 
-1. Finish and integrate step 01.
-2. Implement step 02 while step 05's data-only work begins separately.
-3. Implement step 03, then step 04, while disjoint step 05 content continues.
-4. After the Governance contract is stable, begin step 06 definitions and
-   non-overlapping institution content if ownership of shared event files is clear.
-5. Integrate step 05 after the UI consolidation lane is complete.
-6. Connect step 05 outcomes to step 06, then integrate step 06.
+1. ~~Finish and integrate step 01.~~ **Complete.**
+2. ~~Implement step 02 while step 05's data-only work begins separately.~~ **Complete.**
+3. ~~Implement step 03, then step 04, while disjoint step 05 content continues.~~
+   **Complete.**
+4. ~~With the Governance contract stable, continue step 06 definitions and
+   non-overlapping institution content if ownership of shared event files is clear.~~
+   **Complete.**
+5. ~~Integrate step 05 after the UI consolidation lane is complete.~~ **Complete.**
+6. ~~Connect step 05 outcomes to step 06, then integrate step 06.~~ **Complete.**
 
 Planning, source inventory, test authoring, and deterministic fixture construction can
 start earlier than these gates when they do not assume unfinished APIs or edit files

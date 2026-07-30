@@ -2,10 +2,10 @@
 
 Date: 2026-07-29
 
-Status: implemented in repository source on 2026-07-29. Owner-run deployment and browser QA
-remain pending.
+Status: implemented and archived on 2026-07-29. Owner-run deployment and browser QA remain
+pending.
 
-Deployment background and the two distribution targets: [deployment.md](../deployment.md).
+Deployment background and the two distribution targets: [deployment.md](../../deployment.md).
 
 ## Goal
 
@@ -350,7 +350,7 @@ Implemented player-facing state:
 
 The status text is routed through `FB.T`; generated preview-locale catalogs are refreshed during
 integration. Any new visible text must go through the game's i18n process. See
-[i18n-authoring.md](../i18n-authoring.md).
+[i18n-authoring.md](../../i18n-authoring.md).
 
 ## nginx configuration
 
@@ -534,13 +534,13 @@ complete release rather than a mixture of release generations.
 
 The normal `FB.VERSION` and `FB.CHANGELOG` integration rules still apply. The service
 worker is not a replacement for the existing asset cache-bust discipline. See
-[VERSIONS.md](../VERSIONS.md).
+[VERSIONS.md](../../VERSIONS.md).
 
 ## Test plan
 
 Use a normal browser against `https://play.fallowborn.com/`. Do not use shell or
 headless-browser gameplay tests. Test execution is owner-controlled, per
-[TESTS.md](../TESTS.md).
+[TESTS.md](../../TESTS.md).
 
 ### Generated asset list
 

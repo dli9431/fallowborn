@@ -853,6 +853,14 @@ window.FB = window.FB || {};
         event.target.closest('[data-list-focus-key]');
       if (target) view.focusKey = target.getAttribute('data-list-focus-key');
     });
+    /* Pointer activation is not guaranteed to focus a button in every
+       browser. Remember the semantic target before its click handler replaces
+       this surface with a nested sheet, so Back can still restore it. */
+    root.addEventListener('click', function (event) {
+      const target = event.target.closest &&
+        event.target.closest('[data-list-focus-key]');
+      if (target) view.focusKey = target.getAttribute('data-list-focus-key');
+    }, true);
     const container = largeListScrollContainer(surface);
     if (container) {
       container._largeListScrollSurface = surface;
@@ -14101,6 +14109,7 @@ window.FB = window.FB || {};
 
   UI.showEnterpriseManage = function (uid, returnContext) {
     const s = FB.state;
+    largeListViews.work.focusKey = 'work-enterprise-' + uid;
     let e = null;
     for (const item of FB.enterpriseList(s)) if (item.uid === uid) e = item;
     if (!e || !FBDATA.enterprises[e.type]) return;

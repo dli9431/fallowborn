@@ -2,18 +2,18 @@
 
 Date: 2026-07-29
 
-Status: implemented. Step 5 of the
+Status: **implemented and archived 2026-07-29**. Step 5 of the
 [systems-audit roadmap](systems-audit-00-roadmap.md), after
 [interaction-card consolidation](systems-audit-03-interaction-cards.md) and the
 [large-list readability](systems-audit-04-large-list-readability.md) pass. The core
 catalog now includes twelve plots and twelve targeted diplomatic stories.
 
 Related design:
-[piety, intrigue, and diplomacy](../designs/piety-intrigue-diplomacy.md),
-[events](../designs/events.md),
-[realms](../designs/realms.md), and
-[UI](../designs/ui.md).
-Schema changes, if any, must also update [MODDING](../MODDING.md).
+[piety, intrigue, and diplomacy](../../designs/piety-intrigue-diplomacy.md),
+[events](../../designs/events.md),
+[realms](../../designs/realms.md), and
+[UI](../../designs/ui.md).
+Schema changes, if any, must also update [MODDING](../../MODDING.md).
 
 ## Goal
 

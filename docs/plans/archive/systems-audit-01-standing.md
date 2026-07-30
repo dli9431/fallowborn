@@ -3,9 +3,10 @@
 Date: 2026-07-28
 
 Status: step 1 of the
-[systems-audit roadmap](systems-audit-00-roadmap.md); implemented 2026-07-29. This
+[systems-audit roadmap](systems-audit-00-roadmap.md); implemented and archived
+2026-07-29. This
 design finding follows the
-[systems audit](../2026-07-27-systems-audit.md) and supersedes its conservative
+[systems audit](../../2026-07-27-systems-audit.md) and supersedes its conservative
 recommendation to preserve Regard, Favor, and Opinion as three player-facing meters.
 
 ## Finding

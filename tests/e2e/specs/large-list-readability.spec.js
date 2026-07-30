@@ -90,9 +90,9 @@ async function makeLargeListFixture(page) {
       startedTurn:s.turn,
       lastTurn:s.turn
     };
+    p.courtingId = shared.id;
     s.roles.friend = shared.id;
     s.roles.rival = shared.id;
-    s.roles.suitor = shared.id;
     s.roles.priest = shared.id;
     s.roles.lord = shared.id;
     p.socialAttention[shared.id] = {
@@ -374,7 +374,7 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await page.locator('#network-list-search').fill(
       'Alexandria Extremely-Long Connection Name');
     var networkTarget = page.locator(
-      '[data-list-section="connections"] [data-cid="' +
+      '[data-list-section="connections"] button[data-cid="' +
       fixture.sharedId + '"]');
     var networkScroll = await networkTarget.evaluate(function (row) {
       row.scrollIntoView({ block:'center' });
