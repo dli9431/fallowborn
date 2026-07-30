@@ -1679,6 +1679,23 @@ window.FB = window.FB || {};
     }).sort(function (a, b) {
       return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
     });
+    const modifierCounties = [];
+    if (FB.countyModifierSnapshot) {
+      for (const pid of directCounties) {
+        const records = FB.countyModifierSnapshot(state, pid).map(
+          function (record) {
+            const out = { id:record.id };
+            if (record.endTurn !== undefined) out.endTurn = record.endTurn;
+            if (record.sourceEventId) {
+              out.sourceEventId = record.sourceEventId;
+            }
+            return out;
+          });
+        if (records.length) {
+          modifierCounties.push({ provinceId:pid, records:records });
+        }
+      }
+    }
     return {
       role:p.liege ? 'vassal' : (p.tier >= 6 ? 'crowned' : 'sovereign'),
       playerRealmId:playerRealm ? 'player' : null,
@@ -1689,6 +1706,7 @@ window.FB = window.FB || {};
         ? playerRealm.capital : (p.provinceId || null),
       directCounties:directCounties,
       realmCounties:realmCounties,
+      modifierCounties:modifierCounties,
       domainCap:domainCap,
       domainExcess:domainExcess,
       domainMultiplier:FB.domainPenalty(state),

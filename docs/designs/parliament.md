@@ -24,10 +24,13 @@ new lieges get the customary terms on first sight, no save-version bump):
 
 **Sessions arrive once a year** (`FB.parliamentYearly` in the yearly tick,
 `balance.parliamentSessionChance` odds): a queued event fires the next day.
-The agenda picker chooses a war subsidy vote while the liege fights
-(`parliament_subsidy`), the liege's demand for a greater aid
-(`parliament_aid_hike`), a fellow lord's grievance (`parliament_grievance`), or
-a quiet sitting of mixed business (`parliament_session`). Between sittings the
+`FB.parliamentSessionCandidates` derives the locale-neutral agenda pool. Its standing
+business remains a quiet sitting, a fellow lord's grievance, and—below the maximum—a
+demand for greater aid. Peacetime adds a market-charter dispute and a sanctuary/relief
+bargain; wartime replaces those with the existing subsidy and a
+service-beyond-custom bargain. Active Contested Tolls or Settlement Grudge adds a
+focused redress hearing. The yearly cadence is unchanged; the broader pool prevents the
+new stories from occupying every event slot. Between sittings the
 🏛 **Estates** deed (`UI.showParliament`) shows the current terms and the
 player's voice, and sells a motion of the player's own — redress
 (`parliament_redress`, aid down a step) or scutage (`parliament_scutage`) —
@@ -86,3 +89,11 @@ A successful player motion for redress also grants `Custom Confirmed` to the eve
 snapshotted home county for 3,600 days. Its Common Voice is demesne-wide only while that
 county remains directly held; the levy and unrest effects remain attached to the county.
 See [modifiers.md](modifiers.md).
+
+The four authored institution agendas use the same county contract. Market settlements
+grant Market Charter or Contested Tolls; wartime service grants Muster Burden, Levy
+Exemption, or Roads Patrolled; local redress declaratively removes a dispute and
+replaces it with Market Charter or Custom Confirmed; sanctuary choices grant relief or
+leave a Settlement Grudge. Only the trade-redress success needs a custom handler,
+because it moves the authoritative aid one ordinary step. No event creates a second
+obligation or institution state.

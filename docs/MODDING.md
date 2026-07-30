@@ -476,7 +476,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
 
 The same trigger keys may be used in an option's `require` object. Societal role does
@@ -639,6 +639,9 @@ converting culture/faith; limited to one permanent move per character life) ·
   `addModifier: {"id":"modifier_id","pid":"optional_county_id"}` (or a bare id string;
   county targeting falls back to the queued `locationId` and then the player's home,
   while campaign modifiers target the matching active great holy war) ·
+  `removeModifier: {"id":"modifier_id","pid":"optional_county_id"}` (or a bare id string;
+  uses the same county/campaign targeting and emits a durable end notice when a live
+  record is removed) ·
   `giveItem: "id"` (grant one definition from `FBDATA.items`; repeatable definitions create
 a fresh exact instance, while random finds use `custom: "loot_item"`) ·
 `deathProvenance: {kind:"battle|event", province:"context", enemy:"war|liegeWar|realmWar"}`
@@ -786,20 +789,26 @@ protagonist's valid participation in the active great holy war—never AI partie
 ordinary-war modifier array.
 
 County instances are saved as
-`state.modifiers.county[provinceId] = [{"id":"...","endTurn":123}]`; campaign instances
-use `state.greatHolyWar.modifiers`. Do not write these arrays directly. Use:
+`state.modifiers.county[provinceId] =
+[{"id":"...","endTurn":123,"sourceEventId":"event_id"}]`; campaign instances use
+`state.greatHolyWar.modifiers`. `sourceEventId` is optional and locale-neutral. The
+event interpreter supplies it automatically for `addModifier`; direct system calls may
+pass `{sourceEventId:"event_id"}` as the fourth `FB.addModifier` argument. Never save a
+rendered source title. Do not write these arrays directly. Use:
 
-- `FB.addModifier(state,id,pid?)`, `FB.removeModifier(state,id,pid?)`, and
+- `FB.addModifier(state,id,pid?,options?)`,
+  `FB.removeModifier(state,id,pid?,options?)`, and
   `FB.hasModifier(state,id,pid?)`
-- `FB.countyModifierRecords(state,pid)` / `FB.campaignModifierRecords(state)`
+- `FB.countyModifierRecords(state,pid)` / `FB.campaignModifierRecords(state)`;
+  read-only overview code may use `FB.countyModifierSnapshot(state,pid)`
 - `FB.modBonus(state,key,pid)` / `FB.campaignModBonus(state,key)`
 - `FB.modifierUpkeep(state,key?)`, `FB.modifierRemainingDays(state,record)`, and
   `FB.popEffective(state)`
 
-Re-adding an id refreshes its catalog duration without stacking. County records remain
-with the county when ownership changes. Unknown saved ids and malformed records are
-removed by additive save repair. Core definitions and the full lifecycle are documented
-in `docs/designs/modifiers.md`.
+Re-adding an id refreshes its catalog duration and semantic source without stacking.
+County records remain with the county when ownership changes. Unknown saved ids and
+malformed records are removed by additive save repair. Core definitions and the full
+lifecycle are documented in `docs/designs/modifiers.md`.
 
 ## Buildings
 

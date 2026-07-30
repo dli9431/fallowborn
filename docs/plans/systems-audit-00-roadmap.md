@@ -24,9 +24,10 @@ not part of this numbered queue.
    are stable. **Implemented 2026-07-29.**
 5. [Plot and diplomacy content](systems-audit-05-plots-diplomacy-content.md) —
    authored content using the consolidated Standing and interaction contracts.
+   **Implemented 2026-07-29.**
 6. [Institution and modifier content](systems-audit-06-institution-modifier-content.md)
    — institution stories and durable consequences, including cross-links from
-   step 5.
+   the expanded plot/diplomacy catalog. **Implemented 2026-07-29.**
 
 ## Dependency and concurrency map
 

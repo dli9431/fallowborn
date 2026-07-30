@@ -118,7 +118,8 @@ FBDATA.events.push(
     { label:'Raid them back, twice as hard.', desc:'Answer smoke with smoke — if your riders are lucky.', chance:'battle',
       success:{ text:'Your riders return laden, leaving mirrored smoke on their horizon.', effects:{ gold:12, prestige:10, popularOpinion:8, log:'Repaid a border raid.' } },
       failure:{ text:'An ambush awaits. You lose men and face.', effects:{ gold:-8, prestige:-8 } } },
-    { label:'Fortify the border farms.', desc:'Stone and ditch speak quieter than reprisal.', effects:{ gold:-10, popularOpinion:5 } },
+    { label:'Fortify the border farms.', desc:'Stone, ditch, and paid road patrols speak quieter than reprisal.',
+      effects:{ gold:-10, popularOpinion:5, addModifier:{id:'roads_patrolled'} } },
     { label:'Swallow it — this time.', desc:'Patience looks much like fear from the border.', effects:{ prestige:-6, popularOpinion:-5 } }
   ]},
 { id:'liege_summons', title:'The Liege’s Banner Call',

@@ -32,10 +32,11 @@ count-or-greater land, but excludes observe mode, landless offices, and a see-on
 Bishop. A Bishop who also holds temporal counties qualifies for those counties.
 `FB.governanceSummary` derives stable ids and numbers for role, player realm, liege,
 sovereign, demesne, whole territory, domain cap and multiplier, direct vassals,
-institution, pending business, and warnings. It delegates to the canonical hierarchy,
-Standing, tax, levy, Council, and Estates readers, is never saved, and performs no
-political mutation. Kings and emperors are reported as crowned rulers; independent
-counts and dukes as sovereign rulers; sworn territorial rulers as vassals.
+institution, active modifier records in the directly held demesne, pending business,
+and warnings. It delegates to the canonical hierarchy, Standing, tax, levy, modifier,
+Council, and Estates readers, is never saved, and performs no political mutation.
+Kings and emperors are reported as crowned rulers; independent counts and dukes as
+sovereign rulers; sworn territorial rulers as vassals.
 
 When a materialized rightful ruler becomes the protagonist, `FB.absorbRealm` joins that
 realm to the player's: its ruler's demesne enters the player's hand, its vassals reattach

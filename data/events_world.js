@@ -129,8 +129,9 @@ FBDATA.events.push(
       desc:'Lawful salvage belongs to the authority that keeps the coast.',
       effects:{ gold:15, prestige:5, popularOpinion:-3 } },
     { label:'Return marked goods to their owners.', require:{ societalRoles:['lord','crowned'] },
-      desc:'Costly honesty carries across the sea.',
-      effects:{ gold:-5, prestige:10, piety:5 } }
+      desc:'Costly honesty carries across the sea; their factors answer with a market compact.',
+      effects:{ gold:-5, prestige:10, piety:5,
+        addModifier:{id:'market_charter'} } }
   ]},
 
 /* ---- a deliberate plot against a foreign court ---- */

@@ -3751,7 +3751,7 @@
       "glossary": [],
       "location": "data/events_noble.js",
       "source": {
-        "text": "Stone and ditch speak quieter than reprisal."
+        "text": "Stone, ditch, and paid road patrols speak quieter than reprisal."
       }
     },
     "event.border_raid.options.1.label.default": {
@@ -5892,6 +5892,80 @@
         "text": "The Empty Chair"
       }
     },
+    "event.council_domain_pressure.options.0.desc.default": {
+      "context": "Event council_domain_pressure, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "No land changes hands here. The existing Governance grant flow remains the only way to name and confirm a recipient."
+      }
+    },
+    "event.council_domain_pressure.options.0.effects.log.default": {
+      "context": "Durable event log for council_domain_pressure, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Ordered the council to prepare an orderly grant."
+      }
+    },
+    "event.council_domain_pressure.options.0.label.default": {
+      "context": "Event council_domain_pressure, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Open the grant rolls and prepare an orderly transfer. ({money:10})"
+      }
+    },
+    "event.council_domain_pressure.options.1.desc.default": {
+      "context": "Event council_domain_pressure, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "A charter buys patience without pretending that a grant has already occurred."
+      }
+    },
+    "event.council_domain_pressure.options.1.label.default": {
+      "context": "Event council_domain_pressure, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Confirm the county’s customs while you consider."
+      }
+    },
+    "event.council_domain_pressure.options.2.desc.default": {
+      "context": "Event council_domain_pressure, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Keep every county for now and let the refusal settle into local resentment."
+      }
+    },
+    "event.council_domain_pressure.options.2.label.default": {
+      "context": "Event council_domain_pressure, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The crown grants when the crown chooses."
+      }
+    },
+    "event.council_domain_pressure.text.default": {
+      "context": "Event council_domain_pressure, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The council returns to the counties held in your own hand. The rolls are too long, the judgments late, and every magnate can count the fiefs the crown has not granted. They recommend that you prepare a county for enfeoffment."
+      }
+    },
+    "event.council_domain_pressure.title.default": {
+      "context": "Event council_domain_pressure, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Too Much in the Crown’s Hand"
+      }
+    },
     "event.council_feud.options.0.desc.default": {
       "context": "Event council_feud, authored option 0, desc, branch default.",
       "glossary": [],
@@ -6052,6 +6126,138 @@
         "text": "A Token of Esteem"
       }
     },
+    "event.council_market_charter.options.0.desc.default": {
+      "context": "Event council_market_charter, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Pay for clerks and enforcement; trade grows under rules everyone can read."
+      }
+    },
+    "event.council_market_charter.options.0.label.default": {
+      "context": "Event council_market_charter, authored option 0, label, branch default.",
+      "glossary": [
+        "money:15"
+      ],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Publish a measured market charter. ({money:15})"
+      }
+    },
+    "event.council_market_charter.options.1.desc.default": {
+      "context": "Event council_market_charter, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The treasury gains at once; the villages pay for the favoritism."
+      }
+    },
+    "event.council_market_charter.options.1.label.default": {
+      "context": "Event council_market_charter, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Sell the privilege to the highest guild."
+      }
+    },
+    "event.council_market_charter.options.2.desc.default": {
+      "context": "Event council_market_charter, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "No charter, no concession, and no agreement over who may collect."
+      }
+    },
+    "event.council_market_charter.options.2.label.default": {
+      "context": "Event council_market_charter, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Refuse both petitions and keep the old tolls."
+      }
+    },
+    "event.council_market_charter.text.default": {
+      "context": "Event council_market_charter, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The Treasurer lays two petitions beside the accounts. Guild masters ask for fixed tolls and protected stalls; their rivals offer ready silver for the same privileges without the inconvenient limits. The seal can make either bargain law."
+      }
+    },
+    "event.council_market_charter.title.default": {
+      "context": "Event council_market_charter, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The Charter at the Exchequer"
+      }
+    },
+    "event.council_muster_burden.options.0.desc.default": {
+      "context": "Event council_muster_burden, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "More spears now; the burden and its duration are written plainly."
+      }
+    },
+    "event.council_muster_burden.options.0.label.default": {
+      "context": "Event council_muster_burden, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Call the extraordinary muster."
+      }
+    },
+    "event.council_muster_burden.options.1.desc.default": {
+      "context": "Event council_muster_burden, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Keep the county’s hands at home and accept a smaller host."
+      }
+    },
+    "event.council_muster_burden.options.1.label.default": {
+      "context": "Event council_muster_burden, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Confirm a temporary levy exemption."
+      }
+    },
+    "event.council_muster_burden.options.2.desc.default": {
+      "context": "Event council_muster_burden, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Protect the roads feeding the host without another call on the fields."
+      }
+    },
+    "event.council_muster_burden.options.2.label.default": {
+      "context": "Event council_muster_burden, authored option 2, label, branch default.",
+      "glossary": [
+        "money:18"
+      ],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Fund patrols and supply officers instead. ({money:18})"
+      }
+    },
+    "event.council_muster_burden.text.default": {
+      "context": "Event council_muster_burden, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The Constable spreads the muster roll across the board. One more levy from the crown county would stiffen the host, but the Almoner warns that ploughs already stand idle and every extra spear leaves a hungry household."
+      }
+    },
+    "event.council_muster_burden.title.default": {
+      "context": "Event council_muster_burden, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The Constable’s Muster Roll"
+      }
+    },
     "event.council_petition.options.0.desc.default": {
       "context": "Event council_petition, authored option 0, desc, branch default.",
       "glossary": [],
@@ -6100,6 +6306,75 @@
       "location": "data/events_council.js",
       "source": {
         "text": "A Councillor’s Suit"
+      }
+    },
+    "event.council_sanctuary_claim.options.0.desc.default": {
+      "context": "Event council_sanctuary_claim, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Honor the sacred claim and write the local levy concession in full."
+      }
+    },
+    "event.council_sanctuary_claim.options.0.label.default": {
+      "context": "Event council_sanctuary_claim, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Confirm sanctuary from the muster."
+      }
+    },
+    "event.council_sanctuary_claim.options.1.desc.default": {
+      "context": "Event council_sanctuary_claim, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Ready coin for the crown, followed by a toll dispute no seal quite settles."
+      }
+    },
+    "event.council_sanctuary_claim.options.1.label.default": {
+      "context": "Event council_sanctuary_claim, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Tax the immunity and close the argument."
+      }
+    },
+    "event.council_sanctuary_claim.options.2.desc.default": {
+      "context": "Event council_sanctuary_claim, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Public relief and guarded roads answer both the Almoner and the market."
+      }
+    },
+    "event.council_sanctuary_claim.options.2.label.default": {
+      "context": "Event council_sanctuary_claim, authored option 2, label, branch default.",
+      "glossary": [
+        "money:16"
+      ],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Fund alms and patrol the pilgrim roads. ({money:16})"
+      }
+    },
+    "event.council_sanctuary_claim.text.default": {
+      "context": "Event council_sanctuary_claim, text, faith branch default.",
+      "glossary": [
+        "holy",
+        "temple"
+      ],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "The {holy} asks the Almoner to confirm the {temple}’s old sanctuary from levy and toll. The Chamberlain calls the claim convenient invention; outside the doors, petitioners wait to learn whether sacred custom still restrains the crown."
+      }
+    },
+    "event.council_sanctuary_claim.title.default": {
+      "context": "Event council_sanctuary_claim, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_council.js",
+      "source": {
+        "text": "Sanctuary and Service"
       }
     },
     "event.council_scheme_discovered.options.0.desc.default": {
@@ -14824,6 +15099,242 @@
         "text": "A Fellow Lord’s Grievance"
       }
     },
+    "event.parliament_levy_concession.options.0.desc.default": {
+      "context": "Event parliament_levy_concession, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The county yields more spears and bears the resentment openly."
+      }
+    },
+    "event.parliament_levy_concession.options.0.label.default": {
+      "context": "Event parliament_levy_concession, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Send the extraordinary muster."
+      }
+    },
+    "event.parliament_levy_concession.options.1.desc.default": {
+      "context": "Event parliament_levy_concession, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The liege’s revenue rises one step; this county’s levy concession remains bounded."
+      }
+    },
+    "event.parliament_levy_concession.options.1.label.default": {
+      "context": "Event parliament_levy_concession, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Trade a higher aid for temporary exemption."
+      }
+    },
+    "event.parliament_levy_concession.options.2.desc.default": {
+      "context": "Event parliament_levy_concession, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Keep the roads open for the host without expanding the local muster."
+      }
+    },
+    "event.parliament_levy_concession.options.2.label.default": {
+      "context": "Event parliament_levy_concession, authored option 2, label, branch default.",
+      "glossary": [
+        "money:18"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Pay for patrols and supply officers. ({money:18})"
+      }
+    },
+    "event.parliament_levy_concession.text.default": {
+      "context": "Event parliament_levy_concession, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The liege’s captains ask the estates for service beyond custom. The benches answer with three prices: men now, silver every season, or guarded roads that keep the host supplied without stripping another field."
+      }
+    },
+    "event.parliament_levy_concession.title.default": {
+      "context": "Event parliament_levy_concession, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Service Beyond Custom"
+      }
+    },
+    "event.parliament_local_redress.options.0.desc.default": {
+      "context": "Event parliament_local_redress, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Compensate the rival claimants, end the toll dispute, and replace it with a measured charter."
+      }
+    },
+    "event.parliament_local_redress.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_local_redress, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Settled the county’s disputed tolls before the estates."
+      }
+    },
+    "event.parliament_local_redress.options.0.label.default": {
+      "context": "Event parliament_local_redress, authored option 0, label, branch default.",
+      "glossary": [
+        "money:15"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Settle the disputed tolls. ({money:15})"
+      }
+    },
+    "event.parliament_local_redress.options.1.desc.default": {
+      "context": "Event parliament_local_redress, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Pay for redress, end the grudge, and bind the judgment by charter."
+      }
+    },
+    "event.parliament_local_redress.options.1.effects.log.default": {
+      "context": "Durable event log for parliament_local_redress, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Won local redress through the estates."
+      }
+    },
+    "event.parliament_local_redress.options.1.label.default": {
+      "context": "Event parliament_local_redress, authored option 1, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Hear the grievance and confirm the old custom. ({money:10})"
+      }
+    },
+    "event.parliament_local_redress.options.2.desc.default": {
+      "context": "Event parliament_local_redress, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The active local consequence remains until another settlement or its natural expiry."
+      }
+    },
+    "event.parliament_local_redress.options.2.label.default": {
+      "context": "Event parliament_local_redress, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Let the petitions stand over."
+      }
+    },
+    "event.parliament_local_redress.text.default": {
+      "context": "Event parliament_local_redress, text, faith branch default.",
+      "glossary": [
+        "province"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A delegation from {province} waits while the estates read the petitions. The quarrel is no abstraction now: toll receipts, sworn grievances, and names of households that still remember the last settlement."
+      }
+    },
+    "event.parliament_local_redress.title.default": {
+      "context": "Event parliament_local_redress, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Redress for the County"
+      }
+    },
+    "event.parliament_market_charter.options.0.desc.default": {
+      "context": "Event parliament_market_charter, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Spend locally, gain the liege’s notice, and put the bargain in writing."
+      }
+    },
+    "event.parliament_market_charter.options.0.label.default": {
+      "context": "Event parliament_market_charter, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept a fair charter and help enforce it. ({money:10})"
+      }
+    },
+    "event.parliament_market_charter.options.1.desc.default": {
+      "context": "Event parliament_market_charter, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Put the trade bargain to the benches as a service concession."
+      }
+    },
+    "event.parliament_market_charter.options.1.failure.text.default": {
+      "context": "Event parliament_market_charter, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The bargain collapses in accusation. Toll collectors return to the roads with rival instructions."
+      }
+    },
+    "event.parliament_market_charter.options.1.label.default": {
+      "context": "Event parliament_market_charter, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Demand lower aid in return for your support."
+      }
+    },
+    "event.parliament_market_charter.options.1.success.text.default": {
+      "context": "Event parliament_market_charter, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The benches join trade and redress in one settlement. The charter passes, and the liege’s aid falls a step."
+      }
+    },
+    "event.parliament_market_charter.options.2.desc.default": {
+      "context": "Event parliament_market_charter, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "No one yields a right; no trader knows which right will be demanded next."
+      }
+    },
+    "event.parliament_market_charter.options.2.label.default": {
+      "context": "Event parliament_market_charter, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Reject the charter and keep every old claim alive."
+      }
+    },
+    "event.parliament_market_charter.text.default": {
+      "context": "Event parliament_market_charter, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Merchants and guild masters crowd the lower end of the hall while {liege}’s officers argue over tolls. A fixed charter would make trade predictable; a failed settlement would leave every bridge and market claiming a different due."
+      }
+    },
+    "event.parliament_market_charter.title.default": {
+      "context": "Event parliament_market_charter, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The Market Charter"
+      }
+    },
     "event.parliament_redress.options.0.desc.default": {
       "context": "Event parliament_redress, authored option 0, desc, branch default.",
       "glossary": [],
@@ -14896,6 +15407,74 @@
       "location": "data/events_parliament.js",
       "source": {
         "text": "A Motion for Redress"
+      }
+    },
+    "event.parliament_sanctuary_relief.options.0.desc.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A bounded exemption answers the clergy and the county together."
+      }
+    },
+    "event.parliament_sanctuary_relief.options.0.label.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Confirm sanctuary from the levy."
+      }
+    },
+    "event.parliament_sanctuary_relief.options.1.desc.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Pay for public relief and the riders who keep it moving."
+      }
+    },
+    "event.parliament_sanctuary_relief.options.1.label.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 1, label, branch default.",
+      "glossary": [
+        "money:16"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Fund relief and patrol the roads. ({money:16})"
+      }
+    },
+    "event.parliament_sanctuary_relief.options.2.desc.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The crown is pleased; the county remembers that its petition was refused."
+      }
+    },
+    "event.parliament_sanctuary_relief.options.2.label.default": {
+      "context": "Event parliament_sanctuary_relief, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Give the liege the service demanded."
+      }
+    },
+    "event.parliament_sanctuary_relief.text.default": {
+      "context": "Event parliament_sanctuary_relief, text, faith branch default.",
+      "glossary": [
+        "province"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The clergy ask the estates to protect sanctuary and relief in {province}; the liege’s officers answer that every exemption leaves another household to serve. The hall must decide whether legitimacy is bought with spears, silver, or mercy."
+      }
+    },
+    "event.parliament_sanctuary_relief.title.default": {
+      "context": "Event parliament_sanctuary_relief, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Sanctuary, Aid, and the Poor"
       }
     },
     "event.parliament_scutage.options.0.desc.default": {
@@ -19717,7 +20296,7 @@
       "glossary": [],
       "location": "data/events_world.js",
       "source": {
-        "text": "Costly honesty carries across the sea."
+        "text": "Costly honesty carries across the sea; their factors answer with a market compact."
       }
     },
     "event.strange_bounty.options.4.label.default": {
@@ -27339,6 +27918,22 @@
         "text": "Corrected priests on doctrine; has presumably gone to check."
       }
     },
+    "modifier.contested_tolls.desc.default": {
+      "context": "modifier contested_tolls, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Rival claims at bridge and market turn trade into grievance."
+      }
+    },
+    "modifier.contested_tolls.name.default": {
+      "context": "modifier contested_tolls, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Contested Tolls"
+      }
+    },
     "modifier.custom_confirmed.desc.default": {
       "context": "modifier custom_confirmed, desc, faith branch default.",
       "glossary": [],
@@ -27387,6 +27982,54 @@
         "text": "Granaries Opened"
       }
     },
+    "modifier.levy_exemption.desc.default": {
+      "context": "modifier levy_exemption, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "A witnessed concession shelters this county from the full muster."
+      }
+    },
+    "modifier.levy_exemption.name.default": {
+      "context": "modifier levy_exemption, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Levy Exemption"
+      }
+    },
+    "modifier.market_charter.desc.default": {
+      "context": "modifier market_charter, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Measured tolls and protected stalls draw trade under a public charter."
+      }
+    },
+    "modifier.market_charter.name.default": {
+      "context": "modifier market_charter, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Market Charter"
+      }
+    },
+    "modifier.muster_burden.desc.default": {
+      "context": "modifier muster_burden, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "An extraordinary call brings more spears at the cost of local patience."
+      }
+    },
+    "modifier.muster_burden.name.default": {
+      "context": "modifier muster_burden, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Muster Burden"
+      }
+    },
     "modifier.oathbound_host.desc.default": {
       "context": "modifier oathbound_host, desc, faith branch default.",
       "glossary": [],
@@ -27401,6 +28044,38 @@
       "location": "data/modifiers.js",
       "source": {
         "text": "Oathbound Host"
+      }
+    },
+    "modifier.roads_patrolled.desc.default": {
+      "context": "modifier roads_patrolled, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Paid riders keep the markets open and trouble away from the roads."
+      }
+    },
+    "modifier.roads_patrolled.name.default": {
+      "context": "modifier roads_patrolled, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Roads Patrolled"
+      }
+    },
+    "modifier.settlement_grudge.desc.default": {
+      "context": "modifier settlement_grudge, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "A coerced settlement is obeyed in public and resented in every village."
+      }
+    },
+    "modifier.settlement_grudge.name.default": {
+      "context": "modifier settlement_grudge, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Settlement Grudge"
       }
     },
     "news.action.alliance_failure": {
@@ -29872,6 +30547,17 @@
       "location": "js/parliament.js",
       "source": {
         "text": "💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
+      }
+    },
+    "news.parliament.trade_redress": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "liege",
+        "pct"
+      ],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "⚖ The estates bind market charter and redress together — {liege}’s aid falls to {pct}%."
       }
     },
     "news.plot.correspondence_temper": {
@@ -37539,6 +38225,16 @@
         "text": "Patient figures may find where the coin vanished."
       }
     },
+    "src.00ae76ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The liege’s captains ask the estates for service beyond custom. The benches answer with three prices: men now, silver every season, or guarded roads that keep the host supplied without stripping another field."
+      }
+    },
     "src.00c27443": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37620,6 +38316,16 @@
         "text": "Already worn by {name}"
       }
     },
+    "src.00f84c2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Open the grant rolls and prepare an orderly transfer. ({money:10})"
+      }
+    },
     "src.00fb0aa9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -37658,6 +38364,16 @@
       ],
       "source": {
         "text": "🕸 A plot is set in motion: {plot}."
+      }
+    },
+    "src.0122fe6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Send the extraordinary muster."
       }
     },
     "src.012a02a5": {
@@ -38743,6 +39459,16 @@
         "text": "Clear"
       }
     },
+    "src.04b50cf4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Fund relief and patrol the roads. ({money:16})"
+      }
+    },
     "src.04c08ce7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39191,6 +39917,16 @@
       ],
       "source": {
         "text": "their realm"
+      }
+    },
+    "src.061cf712": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "An extraordinary call brings more spears at the cost of local patience."
       }
     },
     "src.061d099e": {
@@ -39673,6 +40409,16 @@
         "text": "Loans: {count}"
       }
     },
+    "src.076a2194": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Pay for patrols and supply officers. ({money:18})"
+      }
+    },
     "src.0781ecec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -39764,6 +40510,16 @@
       ],
       "source": {
         "text": "A session or motion is pending"
+      }
+    },
+    "src.07c24e76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The Constable’s Muster Roll"
       }
     },
     "src.07c30fc4": {
@@ -41649,6 +42405,16 @@
         "text": "Kingdom of Croatia"
       }
     },
+    "src.0d22c862": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Too Much in the Crown’s Hand"
+      }
+    },
     "src.0d245b0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42182,6 +42948,16 @@
         "text": "🌱 You settle the empty land of {province} — smoke rises where only the wind went before."
       }
     },
+    "src.0ee94399": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Event: {event}"
+      }
+    },
     "src.0eec1aae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42190,6 +42966,16 @@
       ],
       "source": {
         "text": "Adds {percent}% levy for one year and lowers Standing by 15. (spends the day)"
+      }
+    },
+    "src.0f004c88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Confirm sanctuary from the muster."
       }
     },
     "src.0f03e1a9": {
@@ -42964,6 +43750,16 @@
         "text": "Give the sickness a warm bed and time."
       }
     },
+    "src.115cbd65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Pay for redress, end the grudge, and bind the judgment by charter."
+      }
+    },
     "src.115f189d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43032,6 +43828,16 @@
       ],
       "source": {
         "text": "The Moved Stone"
+      }
+    },
+    "src.11a2f022": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The crown grants when the crown chooses."
       }
     },
     "src.11aa883f": {
@@ -43304,6 +44110,16 @@
         "text": "Path: petition your liege for a county — or declare independence and take one."
       }
     },
+    "src.125f83a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Tax the immunity and close the argument."
+      }
+    },
     "src.12613f4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43483,6 +44299,16 @@
       ],
       "source": {
         "text": "No notable traits."
+      }
+    },
+    "src.12ce2753": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Confirm the county’s customs while you consider."
       }
     },
     "src.12d1245e": {
@@ -44425,6 +45251,16 @@
         "text": "Hang them before the tents."
       }
     },
+    "src.150e851f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Put the trade bargain to the benches as a service concession."
+      }
+    },
     "src.150fbead": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45019,6 +45855,16 @@
       ],
       "source": {
         "text": "The fruit is good; what the fruit becomes is better."
+      }
+    },
+    "src.16d3e74f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "More spears now; the burden and its duration are written plainly."
       }
     },
     "src.16dae359": {
@@ -46154,6 +47000,16 @@
         "text": "The Levy Is Called"
       }
     },
+    "src.19fe48e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The treasury gains at once; the villages pay for the favoritism."
+      }
+    },
     "src.19ff8ace": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47252,6 +48108,16 @@
       ],
       "source": {
         "text": "Lustful"
+      }
+    },
+    "src.1e1af803": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The Market Charter"
       }
     },
     "src.1e2f6d81": {
@@ -51093,6 +51959,16 @@
         "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
       }
     },
+    "src.29f561a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Stone, ditch, and paid road patrols speak quieter than reprisal."
+      }
+    },
     "src.2a04ea20": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51593,6 +52469,16 @@
         "text": "Your campaign service"
       }
     },
+    "src.2b729250": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Sell the privilege to the highest guild."
+      }
+    },
     "src.2b760001": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51641,6 +52527,16 @@
       ],
       "source": {
         "text": "Uncles & aunts"
+      }
+    },
+    "src.2b87ddac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "No one yields a right; no trader knows which right will be demanded next."
       }
     },
     "src.2b881087": {
@@ -51811,6 +52707,16 @@
       ],
       "source": {
         "text": "The cup won in the end, exactly as the cup predicted."
+      }
+    },
+    "src.2c35c9cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Reject the charter and keep every old claim alive."
       }
     },
     "src.2c3a2874": {
@@ -53273,6 +54179,16 @@
       ],
       "source": {
         "text": "The fighting is done and the crows have come down to their work. Battered or triumphant, you find {suitor} among the living — and when you drag the helm off your cropped head and speak in your own true voice at last, he goes white, then red, then utterly and gratifyingly speechless. A year of blisters and terror and midnight fear, all for this face gaping at you like a fish just landed."
+      }
+    },
+    "src.30c52d0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Demand lower aid in return for your support."
       }
     },
     "src.30d22602": {
@@ -55842,6 +56758,16 @@
         "text": "Rode to the liege’s war."
       }
     },
+    "src.396bdd93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "A coerced settlement is obeyed in public and resented in every village."
+      }
+    },
     "src.3978d2b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56722,6 +57648,16 @@
         "text": "Taste everything offered."
       }
     },
+    "src.3c214327": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Spend locally, gain the liege’s notice, and put the bargain in writing."
+      }
+    },
     "src.3c289c7d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57246,6 +58182,16 @@
         "text": "Requires {rank} rank."
       }
     },
+    "src.3de81cdf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "⚖ The estates bind market charter and redress together — {liege}’s aid falls to {pct}%."
+      }
+    },
     "src.3de8daea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57524,6 +58470,16 @@
       ],
       "source": {
         "text": "Buy {plots} plots for {money:cost}"
+      }
+    },
+    "src.3edea13e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Market Charter"
       }
     },
     "src.3ee978c6": {
@@ -57886,6 +58842,16 @@
       ],
       "source": {
         "text": "🪙 Two seasons without pay drive {name} from the household."
+      }
+    },
+    "src.3fc440f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "no mechanical effect"
       }
     },
     "src.3fcf83bf": {
@@ -58581,6 +59547,16 @@
         "text": "Began a season in residence at {destination}."
       }
     },
+    "src.4238897e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "On success: {result}"
+      }
+    },
     "src.423ea7e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58850,6 +59826,16 @@
       ],
       "source": {
         "text": "Eligible"
+      }
+    },
+    "src.4305821e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Hear the grievance and confirm the old custom. ({money:10})"
       }
     },
     "src.4318715c": {
@@ -61673,6 +62659,16 @@
         "text": "Large synthetic medical works organize theory, substances, and practice."
       }
     },
+    "src.4b84f0cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "for {days} days"
+      }
+    },
     "src.4b8bcd3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63156,6 +64152,16 @@
         "text": "Only a guildmaster of the Craft or Trade profession may petition."
       }
     },
+    "src.4fd6b3fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The Constable spreads the muster roll across the board. One more levy from the crown county would stiffen the host, but the Almoner warns that ploughs already stand idle and every extra spear leaves a hungry household."
+      }
+    },
     "src.4fe59259": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63244,6 +64250,16 @@
       ],
       "source": {
         "text": "{worker} · {place} · about {money:amount}/season{lock}"
+      }
+    },
+    "src.50328fb4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this great holy war."
       }
     },
     "src.5039669e": {
@@ -64247,6 +65263,16 @@
         "text": "Repairs, hospitality, and obligations have thinned the episcopal chest. The diocese can be made to answer — or spared."
       }
     },
+    "src.52df497c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Pay for clerks and enforcement; trade grows under rules everyone can read."
+      }
+    },
     "src.52e6f8db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64295,6 +65321,16 @@
       ],
       "source": {
         "text": "Home"
+      }
+    },
+    "src.52fcb558": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Keep every county for now and let the refusal settle into local resentment."
       }
     },
     "src.52fefb42": {
@@ -64435,6 +65471,16 @@
       ],
       "source": {
         "text": "Save Game"
+      }
+    },
+    "src.539e04b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Levy Exemption"
       }
     },
     "src.53a84ee0": {
@@ -65016,6 +66062,16 @@
       ],
       "source": {
         "text": "Stand with him when he rises."
+      }
+    },
+    "src.55ba155e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Active local consequences"
       }
     },
     "src.55c22bbb": {
@@ -65850,6 +66906,16 @@
         "text": "Nicaea"
       }
     },
+    "src.5818f919": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held."
+      }
+    },
     "src.58198ac2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66088,6 +67154,16 @@
       ],
       "source": {
         "text": "Ask {priest} to stand as protector. (5 piety)"
+      }
+    },
+    "src.58e3916e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "no seasonal upkeep"
       }
     },
     "src.58ecdec7": {
@@ -66702,6 +67778,16 @@
         "text": "+{standing} Standing on arrival after {days} courier days. This exact object remains in transit until delivery. (spends the day)"
       }
     },
+    "src.5aec9004": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Ordered the council to prepare an orderly grant."
+      }
+    },
     "src.5af03138": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66840,6 +67926,16 @@
       ],
       "source": {
         "text": "No equipment bonuses."
+      }
+    },
+    "src.5b722f18": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Costly honesty carries across the sea; their factors answer with a market compact."
       }
     },
     "src.5b77f5fa": {
@@ -69040,6 +70136,16 @@
         "text": "Their blade is quicker. You yield, bleeding — and before the witnesses concede that satisfaction has been given."
       }
     },
+    "src.61e2a3f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Source"
+      }
+    },
     "src.61e6da22": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70030,6 +71136,16 @@
       ],
       "source": {
         "text": "Bishop"
+      }
+    },
+    "src.65367bdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "with no fixed end"
       }
     },
     "src.654edbe9": {
@@ -71302,6 +72418,16 @@
         "text": "An iron cap and a long guard over the nose."
       }
     },
+    "src.694370a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Contested Tolls"
+      }
+    },
     "src.694d4d79": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71604,6 +72730,16 @@
         "text": "You come home dragging a grey carcass. The village feasts you as a hero."
       }
     },
+    "src.69dd7c19": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Give the liege the service demanded."
+      }
+    },
     "src.69e2d9dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71784,6 +72920,16 @@
         "text": "Raises merchant output by 15%."
       }
     },
+    "src.6a8e7e77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "No charter, no concession, and no agreement over who may collect."
+      }
+    },
     "src.6a950ed8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71852,6 +72998,16 @@
       ],
       "source": {
         "text": "A feigned misunderstanding draws out the second tally — the one the lord has never seen."
+      }
+    },
+    "src.6ac52670": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The Treasurer lays two petitions beside the accounts. Guild masters ask for fixed tolls and protected stalls; their rivals offer ready silver for the same privileges without the inconvenient limits. The seal can make either bargain law."
       }
     },
     "src.6ad48ef6": {
@@ -72164,6 +73320,16 @@
         "text": "Political position"
       }
     },
+    "src.6bb69de4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Settled the county’s disputed tolls before the estates."
+      }
+    },
     "src.6bb6abce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72222,6 +73388,16 @@
       ],
       "source": {
         "text": "West Francia"
+      }
+    },
+    "src.6bf882c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The active local consequence remains until another settlement or its natural expiry."
       }
     },
     "src.6bfa492c": {
@@ -72302,6 +73478,16 @@
       ],
       "source": {
         "text": "Bureaucratic Offices"
+      }
+    },
+    "src.6c3c79af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Redress for the County"
       }
     },
     "src.6c42b0ab": {
@@ -73094,6 +74280,16 @@
         "text": "Other"
       }
     },
+    "src.6e3de297": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Roads Patrolled"
+      }
+    },
     "src.6e40214e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73652,6 +74848,16 @@
       ],
       "source": {
         "text": "Keep the hearth, keep the faith, and pray the war gives him back to ask again."
+      }
+    },
+    "src.701bf884": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Measured tolls and protected stalls draw trade under a public charter."
       }
     },
     "src.702cb746": {
@@ -76139,6 +77345,16 @@
         "text": "Temporal justice is satisfied; the nave remembers."
       }
     },
+    "src.779ab804": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Settle the disputed tolls. ({money:15})"
+      }
+    },
     "src.77a12c51": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77692,6 +78908,16 @@
         "text": "Adds 0.25 prestige each season."
       }
     },
+    "src.7c39de80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The county yields more spears and bears the resentment openly."
+      }
+    },
     "src.7c3bee79": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77870,16 +79096,6 @@
       ],
       "source": {
         "text": "Current total"
-      }
-    },
-    "src.7cdefd83": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_noble.js"
-      ],
-      "source": {
-        "text": "Stone and ditch speak quieter than reprisal."
       }
     },
     "src.7ce42f13": {
@@ -79714,6 +80930,16 @@
         "text": "That stake or market is not available."
       }
     },
+    "src.81cccf7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Protect the roads feeding the host without another call on the fields."
+      }
+    },
     "src.81dd7293": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80935,6 +82161,16 @@
       ],
       "source": {
         "text": "A clear conscience, at market price."
+      }
+    },
+    "src.85211b3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "On failure: {result}"
       }
     },
     "src.8523a34e": {
@@ -83038,6 +84274,16 @@
         "text": "Crucible Steel"
       }
     },
+    "src.8ba1e78c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Current campaign vow"
+      }
+    },
     "src.8ba57009": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83420,6 +84666,16 @@
         "text": "Pray through the night."
       }
     },
+    "src.8ccef1f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The benches join trade and redress in one settlement. The charter passes, and the liege’s aid falls a step."
+      }
+    },
     "src.8ce6d8e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83448,6 +84704,16 @@
       ],
       "source": {
         "text": "This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again."
+      }
+    },
+    "src.8cefa4d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ends {modifier} for this great holy war."
       }
     },
     "src.8cf745c5": {
@@ -84344,6 +85610,16 @@
         "text": "Hard words soften across your table. Both houses owe you now."
       }
     },
+    "src.8f4fdf03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Public relief and guarded roads answer both the Almoner and the market."
+      }
+    },
     "src.8f5945ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84622,6 +85898,16 @@
       ],
       "source": {
         "text": "So often ill that the end registered as a scheduling change."
+      }
+    },
+    "src.904c24cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The Charter at the Exchequer"
       }
     },
     "src.90614496": {
@@ -85063,6 +86349,16 @@
       ],
       "source": {
         "text": "Let your mind wander to business."
+      }
+    },
+    "src.91bb9f42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Confirm a temporary levy exemption."
       }
     },
     "src.91ca809b": {
@@ -86177,6 +87473,16 @@
       ],
       "source": {
         "text": "Steady work that sharpens the mind."
+      }
+    },
+    "src.95f2e466": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Keep the roads open for the host without expanding the local muster."
       }
     },
     "src.96093d9f": {
@@ -88135,6 +89441,16 @@
         "text": "The intercepted letters name {rulername} of {rname}: payments to singers, promises to dissatisfied captains, careful guesses at how long your crown would survive a bad harvest. The evidence is real. How honestly you use it is another question."
       }
     },
+    "src.9ba238e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Won local redress through the estates."
+      }
+    },
     "src.9ba7d086": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88925,6 +90241,16 @@
       ],
       "source": {
         "text": "Joined the craft guild."
+      }
+    },
+    "src.9e357d4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The liege’s revenue rises one step; this county’s levy concession remains bounded."
       }
     },
     "src.9e4528a0": {
@@ -90148,6 +91474,16 @@
         "text": "The Locked Chest"
       }
     },
+    "src.a1d28ef2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Let the petitions stand over."
+      }
+    },
     "src.a1d5f9fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90698,6 +92034,16 @@
         "text": "your friend"
       }
     },
+    "src.a3a3240b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Refuse both petitions and keep the old tolls."
+      }
+    },
     "src.a3a44a39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90837,6 +92183,16 @@
       ],
       "source": {
         "text": "🛡 {realm} promises an exceptional levy for one year; Standing falls by 15."
+      }
+    },
+    "src.a3f61172": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Fund patrols and supply officers instead. ({money:18})"
       }
     },
     "src.a3f9baec": {
@@ -92947,6 +94303,16 @@
         "text": "Nothing more can be raised in your lands."
       }
     },
+    "src.aa99dae7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Adds or refreshes {modifier} in {province} {duration}: {effects}; {upkeep}. It stays with the county after transfer."
+      }
+    },
     "src.aa9d6043": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94059,6 +95425,16 @@
         "text": "⚑ (home)"
       }
     },
+    "src.ae2e8377": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Sanctuary, Aid, and the Poor"
+      }
+    },
     "src.ae32f5f3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94380,6 +95756,16 @@
         "text": "Stays with the county when political control changes"
       }
     },
+    "src.af68e681": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Paid riders keep the markets open and trouble away from the roads."
+      }
+    },
     "src.af71adb0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94660,6 +96046,16 @@
       ],
       "source": {
         "text": "Bolghar"
+      }
+    },
+    "src.b0253f7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Trade a higher aid for temporary exemption."
       }
     },
     "src.b026c94a": {
@@ -94973,6 +96369,16 @@
         "text": "This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household."
       }
     },
+    "src.b0bd6526": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Call the extraordinary muster."
+      }
+    },
     "src.b0c67ed6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94981,6 +96387,16 @@
       ],
       "source": {
         "text": "Sworn towns negotiate collective jurisdiction and public responsibilities."
+      }
+    },
+    "src.b0cd26cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The {holy} asks the Almoner to confirm the {temple}’s old sanctuary from levy and toll. The Chamberlain calls the claim convenient invention; outside the doors, petitioners wait to learn whether sacred custom still restrains the crown."
       }
     },
     "src.b0d588e4": {
@@ -95271,6 +96687,16 @@
       ],
       "source": {
         "text": "Bread bought dear is loyalty bought cheap."
+      }
+    },
+    "src.b1cd1048": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Confirm sanctuary from the levy."
       }
     },
     "src.b1d130e9": {
@@ -95991,16 +97417,6 @@
       ],
       "source": {
         "text": "⚔ Rome changes hands; the victorious claimant becomes the Roman Pope, but the schism endures."
-      }
-    },
-    "src.b3da5477": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_world.js"
-      ],
-      "source": {
-        "text": "Costly honesty carries across the sea."
       }
     },
     "src.b3dc8779": {
@@ -96756,6 +98172,16 @@
         "text": "Expected yield"
       }
     },
+    "src.b5f22ae9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Merchants and guild masters crowd the lower end of the hall while {liege}’s officers argue over tolls. A fixed charter would make trade predictable; a failed settlement would leave every bridge and market claiming a different due."
+      }
+    },
     "src.b5f93aa5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96764,6 +98190,16 @@
       ],
       "source": {
         "text": "Buy off the waverers. ({money:20})"
+      }
+    },
+    "src.b6152b42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Direct system grant or an older save"
       }
     },
     "src.b619a155": {
@@ -97527,6 +98963,16 @@
         "text": "They catch you in the thorns and take what they can."
       }
     },
+    "src.b84919b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A delegation from {province} waits while the estates read the petitions. The quarrel is no abstraction now: toll receipts, sworn grievances, and names of households that still remember the last settlement."
+      }
+    },
     "src.b84bdb02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97785,6 +99231,16 @@
       ],
       "source": {
         "text": "Cowardice, some say. Sense, say your bones."
+      }
+    },
+    "src.b92d59f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Accept a fair charter and help enforce it. ({money:10})"
       }
     },
     "src.b9480456": {
@@ -98066,6 +99522,16 @@
       ],
       "source": {
         "text": "Poor flour, quietly made, is still flour."
+      }
+    },
+    "src.ba23327e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} active"
       }
     },
     "src.ba2c5c62": {
@@ -99222,6 +100688,16 @@
         "text": "Loan against revenues"
       }
     },
+    "src.bdf1d95c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "until the campaign ends"
+      }
+    },
     "src.bdf23d71": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99661,6 +101137,16 @@
       ],
       "source": {
         "text": "Fee unpaid · term paused"
+      }
+    },
+    "src.bfb48627": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Sanctuary and Service"
       }
     },
     "src.bfc383b5": {
@@ -101695,6 +103181,16 @@
         "text": "Coin and prices this year"
       }
     },
+    "src.c595796a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Honor the sacred claim and write the local levy concession in full."
+      }
+    },
     "src.c5a4c167": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101723,6 +103219,16 @@
       ],
       "source": {
         "text": "Settled most disputes by winning them."
+      }
+    },
+    "src.c5bc7a69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The crown is pleased; the county remembers that its petition was refused."
       }
     },
     "src.c5d023a5": {
@@ -102727,6 +104233,16 @@
         "text": "Let the masters associate prosperity with your name."
       }
     },
+    "src.c8a47961": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Pay for public relief and the riders who keep it moving."
+      }
+    },
     "src.c8a59f58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103600,6 +105116,16 @@
         "text": "head.greatHolyWar.name"
       }
     },
+    "src.cba97ee6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Settlement Grudge"
+      }
+    },
     "src.cbb314f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104444,6 +105970,16 @@
         "text": "Mobile navigation"
       }
     },
+    "src.ce0aae2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Rival claims at bridge and market turn trade into grievance."
+      }
+    },
     "src.ce1194ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104632,6 +106168,16 @@
       ],
       "source": {
         "text": "Seal follows witness follows payment. {rulername} cannot explain the chain, and the chair is emptied in disgrace."
+      }
+    },
+    "src.ce947392": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Fund alms and patrol the pilgrim roads. ({money:16})"
       }
     },
     "src.ce9b71ed": {
@@ -108310,6 +109856,16 @@
         "text": "Quick to fury."
       }
     },
+    "src.da70e740": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "A charter buys patience without pretending that a grant has already occurred."
+      }
+    },
     "src.da7145b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109189,6 +110745,16 @@
       ],
       "source": {
         "text": "{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}."
+      }
+    },
+    "src.ddb06ec6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A bounded exemption answers the clergy and the county together."
       }
     },
     "src.ddb88f28": {
@@ -110482,6 +112048,16 @@
         "text": "🕯 {name}, betrothed to your grandchild {child}, has died before the wedding."
       }
     },
+    "src.e1016065": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The clergy ask the estates to protect sanctuary and relief in {province}; the liege’s officers answer that every exemption leaves another household to serve. The hall must decide whether legitimacy is bought with spears, silver, or mercy."
+      }
+    },
     "src.e1121e8e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110650,6 +112226,16 @@
       ],
       "source": {
         "text": "{rulername} now rules {rname}. The predecessor’s Standing is gone with the predecessor; only regard already earned with this exact person can meet the new seal."
+      }
+    },
+    "src.e1a5cfe9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Publish a measured market charter. ({money:15})"
       }
     },
     "src.e1a623f4": {
@@ -112040,6 +113626,16 @@
         "text": "Guards burst in; the assassin dives through the window into the night."
       }
     },
+    "src.e5e6f552": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Compensate the rival claimants, end the toll dispute, and replace it with a measured charter."
+      }
+    },
     "src.e5f125ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112130,6 +113726,16 @@
         "text": "Hunt down their field host."
       }
     },
+    "src.e634a14e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "No land changes hands here. The existing Governance grant flow remains the only way to name and confirm a recipient."
+      }
+    },
     "src.e6365466": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112158,6 +113764,16 @@
       ],
       "source": {
         "text": "Recipient cooldown: {days} days remain."
+      }
+    },
+    "src.e651baad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Muster Burden"
       }
     },
     "src.e663df00": {
@@ -113923,6 +115539,16 @@
         "text": "Assert episcopal authority."
       }
     },
+    "src.ebfebdb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The bargain collapses in accusation. Toll collectors return to the roads with rival instructions."
+      }
+    },
     "src.ec260eb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114964,6 +116590,26 @@
         "text": "{amount}% desertion per season"
       }
     },
+    "src.ef58d932": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Service Beyond Custom"
+      }
+    },
+    "src.ef5b46c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Ready coin for the crown, followed by a toll dispute no seal quite settles."
+      }
+    },
     "src.ef615082": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115896,6 +117542,16 @@
         "text": "🐙 GitHub Issues"
       }
     },
+    "src.f1f8cf21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Ends {modifier} in {province}; its effects and upkeep stop."
+      }
+    },
     "src.f20446fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116454,6 +118110,16 @@
       ],
       "source": {
         "text": "Seasonal fee"
+      }
+    },
+    "src.f3f0a119": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "The council returns to the counties held in your own hand. The rolls are too long, the judgments late, and every magnate can count the fiefs the crown has not granted. They recommend that you prepare a county for enfeoffment."
       }
     },
     "src.f3f740ab": {
@@ -117498,6 +119164,16 @@
       ],
       "source": {
         "text": "Trade"
+      }
+    },
+    "src.f6f2a422": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "A witnessed concession shelters this county from the full muster."
       }
     },
     "src.f6fbc4f0": {
@@ -120321,6 +121997,16 @@
       ],
       "source": {
         "text": "Eligible freeholders and rulers can answer from the Deeds tab during the 180-day gathering."
+      }
+    },
+    "src.fff6eadb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Keep the county’s hands at home and accept a smaller host."
       }
     },
     "src.fffda848": {
@@ -125910,6 +127596,14 @@
         "text": "Active courtship"
       }
     },
+    "ui:Active local consequences": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Active local consequences"
+      }
+    },
     "ui:Active rivalry": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -125934,6 +127628,33 @@
       "location": "js/ui.js",
       "source": {
         "text": "Adds national research slot {slot}."
+      }
+    },
+    "ui:Adds or refreshes {modifier} in {province} {duration}: {effects}; {upkeep}. It stays with the county after transfer.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "duration",
+        "effects",
+        "modifier",
+        "province",
+        "upkeep"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Adds or refreshes {modifier} in {province} {duration}: {effects}; {upkeep}. It stays with the county after transfer."
+      }
+    },
+    "ui:Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this great holy war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "duration",
+        "effects",
+        "modifier",
+        "upkeep"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this great holy war."
       }
     },
     "ui:Adds this office; the current occupation remains unchanged.": {
@@ -128585,6 +130306,14 @@
         "text": "Current"
       }
     },
+    "ui:Current campaign vow": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Current campaign vow"
+      }
+    },
     "ui:Current commitments and urgent state": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -129086,6 +130815,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Direct liege"
+      }
+    },
+    "ui:Direct system grant or an older save": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Direct system grant or an older save"
       }
     },
     "ui:Direct their formative years toward one art.": {
@@ -129602,6 +131339,27 @@
         "text": "Ends the marriage, preserves children and claims, and lowers Standing by 50."
       }
     },
+    "ui:Ends {modifier} for this great holy war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "modifier"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ends {modifier} for this great holy war."
+      }
+    },
+    "ui:Ends {modifier} in {province}; its effects and upkeep stop.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "modifier",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Ends {modifier} in {province}; its effects and upkeep stop."
+      }
+    },
     "ui:Enterprise in {settlement}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -129756,6 +131514,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "Established"
+      }
+    },
+    "ui:Event: {event}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "event"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Event: {event}"
       }
     },
     "ui:Events and oaths use this exact person.": {
@@ -133670,6 +135438,26 @@
       "location": "js/ui.js",
       "source": {
         "text": "Office: {offices}"
+      }
+    },
+    "ui:On failure: {result}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "result"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "On failure: {result}"
+      }
+    },
+    "ui:On success: {result}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "result"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "On success: {result}"
       }
     },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
@@ -138681,6 +140469,14 @@
         "text": "There is no heir."
       }
     },
+    "ui:These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held."
+      }
+    },
     "ui:These assignments keep their own capacities, rules, and consequences.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141342,6 +143138,16 @@
         "text": "envoy compact"
       }
     },
+    "ui:for {days} days": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "for {days} days"
+      }
+    },
     "ui:friend": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141587,6 +143393,14 @@
         "text": "no longer eligible"
       }
     },
+    "ui:no mechanical effect": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "no mechanical effect"
+      }
+    },
     "ui:no one, watching": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141601,6 +143415,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "no particular prize"
+      }
+    },
+    "ui:no seasonal upkeep": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "no seasonal upkeep"
       }
     },
     "ui:no territorial claim": {
@@ -142254,6 +144076,14 @@
         "text": "unmarried or widowed"
       }
     },
+    "ui:until the campaign ends": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "until the campaign ends"
+      }
+    },
     "ui:vassal of": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142270,6 +144100,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "venture settled: {money:payout} returned"
+      }
+    },
+    "ui:with no fixed end": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "with no fixed end"
       }
     },
     "ui:worth ~{money:gold}": {
@@ -142955,6 +144793,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{counties} objective counties{holy}"
+      }
+    },
+    "ui:{count} active": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} active"
       }
     },
     "ui:{count} counties": {
