@@ -254,6 +254,38 @@ window.FB = window.FB || {};
     };
   };
 
+  /* Everything a face is drawn from, as one string. A portrait is derived
+     state and never persisted, so a caller that wants to skip a repaint has
+     to know exactly what would change it. Registering that list once here,
+     instead of in each caller, is what keeps a newly added appearance field
+     from silently freezing one view's portrait while updating another's.
+     Eager courts multiply the number of distinct faces the game draws, so
+     this is the single place to extend when a field starts affecting looks. */
+  FB.characterVisualKey = function (state, c, opts) {
+    if (!c) return '';
+    opts = opts || {};
+    const year = opts.year !== undefined ? opts.year
+      : (state && state.date ? state.date.year : 0);
+    const isPlayer = !!(state && state.player && c.id === state.player.charId);
+    const profession = opts.profession !== undefined ? opts.profession
+      : (isPlayer && state.player ? state.player.profession : null);
+    const tier = opts.tier !== undefined ? opts.tier
+      : (isPlayer && state.player ? state.player.tier : (c.station || 0));
+    const ill = opts.ill !== undefined ? opts.ill
+      : !!(isPlayer && state.player.flags && state.player.flags.ill);
+    const ailments = (c.ailments || []).map(function (ail) {
+      return typeof ail === 'string' ? ail : (ail && (ail.id || ail.kind) || '');
+    }).join(',');
+    return [
+      c.id, c.name, c.dyn || '', c.sex, c.culture || '', c.religion || '',
+      year, c.born, c.health === undefined ? 8 : c.health,
+      (c.traits || []).join(','), ailments,
+      (c.career && c.career.profession) || '', c.role || '',
+      profession || '', tier, ill ? 1 : 0,
+      FB.loadoutVisualKey && state ? FB.loadoutVisualKey(state, c.id) : ''
+    ].join('|');
+  };
+
   FB.paintPortrait = function (canvas, c, year, opts) {
     if (!canvas || !c) return;
     const ctx = canvas.getContext('2d');

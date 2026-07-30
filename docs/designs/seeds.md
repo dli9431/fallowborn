@@ -33,6 +33,27 @@ become a different world. The old five-part format is still accepted and explici
 means bookmark 867. Anything else is treated as a bare world seed and proceeds to
 the bookmark picker.
 
+## Scoped sub-streams
+
+One thing must *not* ride the shared stream: royal court generation. A court can be
+built at world creation, at the moment a player first opens that realm, or during the
+ensure chain on the load of an older save, and the same world must produce the same
+people in all three cases. Determinism is a property of stored data, not of call order.
+
+`FB.withSeed(scope, fn)` (`js/util.js`) saves the shared stream's state, re-seeds from
+`FB.hashSeed(scope)`, runs `fn`, and restores what it found. Everything inside still
+draws through `FB.rng` and friends, so the repository rule against `Math.random` in game
+logic is untouched, and nothing a court draws perturbs a downstream world roll.
+
+Court scopes are keyed on stored identifiers only - the **world seed** and bookmark, the
+realm id, the ruler generation, and the member id. Nothing about call order, wall time,
+or map-iteration position may enter that string. Note the world seed and not the whole
+start code: `state.seed` also carries the scenario, province, sex, and name, and two
+players sharing a world seed are promised the same political world whatever they then
+pick. For the same reason a court character's id is *derived* from its succession member
+(`FB.courtCharacterId`) rather than drawn from the sequential `FB.uid` counter, so eager
+and on-demand materialization agree on one identity.
+
 ## Caveats
 
 Codes reproduce only on the same game version and mod set: any change to `FBDATA`

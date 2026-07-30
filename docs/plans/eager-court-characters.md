@@ -2,7 +2,9 @@
 
 Date: 2026-07-30
 
-Status: **proposed, not implemented**. Every reigning ruler and the living members of
+Status: **implemented**, all eight milestones, awaiting the owner's manual review and
+test run (see *Manual review targets for the owner* below; the automated coverage listed
+here was authored but not executed). Every reigning ruler and the living members of
 their court become real `state.chars` records, created eagerly rather than on first
 interaction, and compacted back to succession-tree members when they die. The
 realm-level simulation stays authoritative for AI aging, death, and succession. No new
@@ -632,6 +634,43 @@ in [`docs/MODDING.md`](../MODDING.md) with the rest of the realm contracts.
 - **No separate character map.** Rejected above on the strength of the call-site count.
 - **No hand-authored skills or traits for authored bookmark rulers.** They keep seeded
   sheets; authoring is a content decision for later.
+
+## As implemented: where the build differs from this plan
+
+Seven decisions the implementation settled that the plan left open or did not foresee.
+
+- **Court scopes key on the world seed and bookmark, not `state.seed`.** `state.seed`
+  stores the whole start code, including the player's scenario, province, sex, and name.
+  Scoping on it would have made a realm's court depend on what the player called
+  themselves, breaking the "same world seed, same political world" promise in
+  [seeds.md](../designs/seeds.md).
+- **The reigning-ruler index answers misses, not only hits.** Verify-on-hit alone leaves
+  every non-ruler paying the full realm scan, which is the whole cost this milestone
+  exists to remove. The index is trusted for a miss only while it belongs to the current
+  `state` object; a fresh game or a load falls back to scanning until it is rebuilt.
+- **Compaction also covers dead rulers and courts whose realm has died.** The plan
+  placed compaction in the court-member death path, which `FB.worldTick` bypasses for a
+  ruler and which a realm's death takes characters out of entirely. Both leak: one dead
+  ruler per realm per generation, plus a whole court each time a realm is conquered.
+  Acceptance criterion 5 needs both, so `FB.worldTick` compacts an unretained outgoing
+  ruler and the player's mortality pass compacts an unretained former royal.
+- **Retention is always read before `FB.killChar`, never after.** That path severs the
+  links `FB.courtRecordRetained` consults, so a dead spouse asked about afterwards reads
+  as a stranger and loses their record. Both death paths capture the answer first; the
+  re-check inside `FB.compactCourtRecord` is a one-way net that can only refuse.
+- **No consort backfill for an existing generation**, per this plan's stated preference.
+  Old saves gain consorts as generations turn over rather than acquiring a spouse for a
+  ruler who has reigned twenty years. A dowager keeps her member entry, stamped with the
+  generation she belonged to, and is never read as the sitting consort.
+- **Milestone 7 is one shared family index rather than three separate memos.**
+  `FB.kinOf`, `FB.spousesOf`, and `FB.stepchildrenOf` read one derived index in
+  `js/model.js`, invalidated by `FB.touchFamily` at the family-mutating writers and
+  additionally keyed on `state.turn`. `childrenOf`'s reconciliation scan was **not**
+  deleted, per this plan's warning; only its per-relative cost was.
+- **The consort is not modeled as the mother of the ruler's children.** The compact tree
+  gives a member one `parentId`, so char-level maternity would assert a link the
+  tombstone layer cannot carry through a compaction or a reload. The court strip labels
+  her Consort and the heirs Son/Daughter, which reads correctly without it.
 
 ## Acceptance criteria
 

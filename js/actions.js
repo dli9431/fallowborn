@@ -2692,6 +2692,10 @@ window.FB = window.FB || {};
     if (state.realms[vid]) {
       state.realms[vid].alive = true;
       state.realms[vid].liege = 'player';
+      /* A revived realm brings its ruler back with it. Rebuild the derived
+         reigning-ruler index rather than leave a miss that would read as
+         "does not reign" until the next world tick healed it. */
+      if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     } else {
       FB.makeVassalRealm(state, { id: vid, name: 'County of ' + pr.name, capital: pid, rank: 1, liege: 'player', culture: pr.culture });
     }
@@ -2742,6 +2746,10 @@ window.FB = window.FB || {};
       state.realms[vid].alive = true;
       state.realms[vid].liege = 'player';
       state.realms[vid].capital = seat;
+      /* A revived realm brings its ruler back with it. Rebuild the derived
+         reigning-ruler index rather than leave a miss that would read as
+         "does not reign" until the next world tick healed it. */
+      if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     } else {
       FB.makeVassalRealm(state, { id: vid, name: 'Duchy of ' + dname, capital: seat, rank: 2, liege: 'player', culture: (FB.world.byId[seat] || {}).culture });
     }

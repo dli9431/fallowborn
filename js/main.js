@@ -1654,6 +1654,13 @@ window.FB = window.FB || {};
       /* The compact realm yearly roll is authoritative for a reigning ruler,
          including a materialized ruler married to the player. */
       if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, c)) continue;
+      /* The same exemption covers the rest of a court. A consort or heir the
+         player has no tie to is aged and killed by tickRoyalFamily, which also
+         compacts the record; one the player can reach stays here, where the
+         death is reported. The two conditions are exact complements, so no
+         court character is rolled twice and none is immortal. */
+      if (FB.isCourtCharacter && FB.isCourtCharacter(s, c) &&
+          !FB.courtRecordRetained(s, c)) continue;
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
       /* the house's resident descendants share its table: each station above serf means
@@ -1679,7 +1686,16 @@ window.FB = window.FB || {};
         const pledgedKind = pledgedChild ?
           FB.playerDescendantKind(s, pledgedChild.id) : null;
         const refund = pledgedChild && c.dowryAsk ? c.dowryAsk : 0;
+        /* A royal whose realm has since died reaches this loop rather than
+           tickRoyalFamily, so the record compacts from here. Read retention
+           BEFORE the death: FB.killChar severs the very links the predicate
+           consults, and a spouse checked afterwards reads as a stranger. */
+        const compactRoyal = !!(c.royalLine && FB.courtRecordRetained &&
+          !FB.courtRecordRetained(s, c));
         FB.killChar(s, c);
+        if (compactRoyal && FB.compactRoyalRecordOnDeath) {
+          FB.compactRoyalRecordOnDeath(s, c);
+        }
         if (wasSpouse) {
           FB.news(s, FB.msg('news.life.spouse_died',
             '🕯 Your spouse {name} has died. The house is quieter, and colder.', { name: c.name }));
@@ -1864,6 +1880,7 @@ window.FB = window.FB || {};
         if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
+        FB.touchFamily();
         if (close) {
           if (e.rel === 'Grandson' || e.rel === 'Granddaughter') {
             FB.news(s, FB.msg('news.life.close_grandchild_wedding', {
@@ -1907,6 +1924,7 @@ window.FB = window.FB || {};
         });
         baby.health = 7;
         k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
+        FB.touchFamily();
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         if (close) {
           FB.news(s, FB.msg('news.life.close_kin_birth', {
@@ -1965,6 +1983,7 @@ window.FB = window.FB || {};
             parent.childrenIds.push(baby.id);
           }
         }
+        FB.touchFamily();
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
       }

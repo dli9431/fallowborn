@@ -1598,6 +1598,13 @@ textarea.modjson, textarea.savetext {
 .ftchip.dup { opacity: 0.5; }
 .ftchip.ghost { cursor: default; justify-content: center; min-height: 56px; }
 
+/* the living court beside a realm's ruler - consort and heirs, bounded */
+.court-strip {
+  display: flex; flex-wrap: wrap; gap: 2px; margin: 0 0 8px;
+  padding: 4px 2px; border-top: 1px solid #3a3122;
+  border-bottom: 1px solid #3a3122;
+}
+
 /* ---------- autoresolve dialog ---------- */
 .autorow { display: block; margin: 7px 0; cursor: pointer; }
 .autorow input { margin-right: 7px; }

@@ -258,11 +258,15 @@ window.FB = window.FB || {};
   };
 
   /* ---------- character factory ----------
-     opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN} */
+     opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN}
+     opts.id installs a caller-derived identity instead of drawing the next
+     sequential uid. Court records use it so the same succession member always
+     resolves to the same character id, whether it was created at world
+     creation or at the moment a player first opened the realm. */
   FB.makeCharacter = function (state, opts) {
     const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f');
     const c = {
-      id: FB.uid(),
+      id: opts.id || FB.uid(),
       name: opts.name || FB.randomName(opts.culture, sex,
         opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null),
       sex: sex,
@@ -295,7 +299,10 @@ window.FB = window.FB || {};
       const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3);
       for (let i = 0; i < n; i++) FB.addTrait(c, FB.pick(pool));
     }
-    if (state) state.chars[c.id] = c;
+    if (state) {
+      state.chars[c.id] = c;
+      FB.touchFamily();
+    }
     return c;
   };
 
@@ -652,6 +659,60 @@ window.FB = window.FB || {};
     }
   };
 
+  /* ---------- family index ----------
+     The Self/Kin panel rebuilds on every UI refresh, and refresh runs on the
+     day ticker. Each walker below used to scan the whole character map once
+     per relative, so the panel paid roughly twenty-five scans a tick. Eager
+     royal courts multiply that map several times over without adding a single
+     relative of the player's, so the scans are folded into one indexed pass.
+
+     The index is derived, never serialized, and rebuilt whenever the day turns
+     or a family link moves. Keying on the turn as well as the explicit stamp
+     means a writer that forgets to call FB.touchFamily costs a card that is
+     stale until tomorrow, not one that is wrong forever. */
+  let familyStamp = 0;
+  let familyIndex = null;
+
+  FB.touchFamily = function () {
+    familyStamp++;
+    familyIndex = null;
+  };
+
+  function familyIndexOf(state) {
+    if (familyIndex && familyIndex.state === state &&
+        familyIndex.stamp === familyStamp &&
+        familyIndex.turn === state.turn) return familyIndex;
+    const children = Object.create(null);
+    const spouses = Object.create(null);
+    const stepchildren = Object.create(null);
+    function push(map, key, value) {
+      if (map[key]) map[key].push(value);
+      else map[key] = [value];
+    }
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (!c) continue;
+      if (c.fatherId) push(children, c.fatherId, c.id);
+      if (c.motherId && c.motherId !== c.fatherId) push(children, c.motherId, c.id);
+      if (!c.dead && c.spouseId) push(spouses, c.spouseId, c.id);
+      if (Array.isArray(c.stepParentIds)) {
+        for (const parentId of c.stepParentIds) push(stepchildren, parentId, c.id);
+      }
+    }
+    familyIndex = {
+      state:state, stamp:familyStamp, turn:state.turn,
+      children:children, spouses:spouses, stepchildren:stepchildren, kin:null
+    };
+    return familyIndex;
+  }
+
+  /* Ids whose spouseId points at cid. Callers re-check the link and the life
+     of each one, so the index stays a candidate list rather than an answer. */
+  FB.spouseLinksTo = function (state, cid) {
+    if (!state || !state.chars || !cid) return [];
+    return familyIndexOf(state).spouses[cid] || [];
+  };
+
   /* ---------- kinship ----------
      The family tree hangs off fatherId/motherId (set for every birth) and
      childrenIds (also covers adopted children). Dead chars stay in the tree —
@@ -668,11 +729,15 @@ window.FB = window.FB || {};
       const k = state.chars[id];
       if (k && !seen[id]) { seen[id] = 1; out.push(k); }
     }
-    for (const id in state.chars) {
+    /* childrenIds is the adoption-aware list, but a birth writes fatherId and
+       motherId first. The reconciliation below is deliberately kept - deleting
+       it in favour of trusting childrenIds would make any writer that sets a
+       parent without pushing the back-link silently lose kin. The index only
+       removes the per-relative scan it used to cost. */
+    const byParent = familyIndexOf(state).children[c.id];
+    for (const id of (byParent || [])) {
       const k = state.chars[id];
-      if ((k.fatherId === c.id || k.motherId === c.id) && !seen[k.id]) {
-        seen[k.id] = 1; out.push(k);
-      }
+      if (k && !seen[id]) { seen[id] = 1; out.push(k); }
     }
     return out;
   }
@@ -703,10 +768,10 @@ window.FB = window.FB || {};
   FB.stepchildrenOf = function (state, c) {
     const out = [];
     if (!state || !state.chars || !c) return out;
-    for (const id in state.chars) {
+    const ids = familyIndexOf(state).stepchildren[c.id];
+    for (const id of (ids || [])) {
       const child = state.chars[id];
-      if (child && Array.isArray(child.stepParentIds) &&
-          child.stepParentIds.indexOf(c.id) >= 0) out.push(child);
+      if (child) out.push(child);
     }
     return out;
   };
@@ -720,6 +785,7 @@ window.FB = window.FB || {};
       ? child.stepParentIds : [];
     if (child.stepParentIds.indexOf(stepParent.id) >= 0) return false;
     child.stepParentIds.push(stepParent.id);
+    FB.touchFamily();
     return true;
   };
 
@@ -794,8 +860,21 @@ window.FB = window.FB || {};
   };
 
   /* The player's living and dead kin, grouped by closeness. Each group is a
-     list of {c, rel}; byId maps charId → rel for news and death notices. */
+     list of {c, rel}; byId maps charId → rel for news and death notices.
+     Memoized on the family index: the answer is rebuilt when the day turns or
+     a family link moves, not once per panel render. Treat the result as
+     read-only - callers share one object for the life of the stamp. */
   FB.kinOf = function (state) {
+    const index = familyIndexOf(state);
+    if (index.kin && index.kin.playerId === state.player.charId) {
+      return index.kin.value;
+    }
+    const value = buildKin(state);
+    index.kin = { playerId:state.player.charId, value:value };
+    return value;
+  };
+
+  function buildKin(state) {
     const me = state.chars[state.player.charId];
     const seen = {}, byId = {};
     seen[me.id] = 1;
@@ -835,7 +914,7 @@ window.FB = window.FB || {};
       children: children, stepchildren: stepchildren,
       grandchildren: grandchildren, niecesNephews: niecesNephews,
       unclesAunts: unclesAunts, cousins: cousins, byId: byId };
-  };
+  }
 
   /* ---------- titles ---------- */
   /* the bare rank word for any tier ("Count", "Emira"…) from the player's

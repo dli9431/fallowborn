@@ -1,5 +1,35 @@
 # Game state & saves
 
+Eager royal courts are additive and keep save version 3, and the bump would be actively
+harmful rather than merely unnecessary: both `S.read` and `S.parseExport` gate on
+`d.v === 3` by strict equality, so raising it to 4 would make every save written after
+this change unreadable by every build before it. Every addition is either defaulted or
+derived. `member.role` is absent on older saves and reads as "child or collateral", so
+no migration step is needed and none should be written; old saves grow their ruler
+records through `FB.ensureDynasticState`, already called on restore. A save written now
+stays readable by an older build, but degrades: court members that are not reigning
+rulers fall back under that build's player mortality loop, compaction does not run, and
+a consort with a null `parentId` can be read as an heir where there is no `role` concept
+to exclude it.
+
+**The reigning-ruler index must not live on `state`.** `S.serialize` dumps `state`
+wholesale, so a `charId → realmId` map hung there would be written into every save as
+pure derived bloat at roughly the full court population. It is module-private in
+`js/world.js`, rebuilt by `FB.ensureDynasticState` on both new game and load, and
+verified on every hit. The family index behind `FB.kinOf`, `FB.spousesOf`, and
+`FB.stepchildrenOf` is derived in the same way and lives in `js/model.js`; it is keyed
+on the turn as well as on an explicit stamp the family writers bump, so a writer that
+forgets `FB.touchFamily` costs a card that is stale until tomorrow rather than one that
+is wrong forever.
+
+**The ensure chain on load is not RNG-protected, and court materialization consumes
+randomness.** `S.restore` sets the saved RNG state and then runs the whole chain; only
+`FB.ensureStepRelations` saves and restores the stream around itself. Court generation
+therefore runs on its own scoped stream (see [seeds.md](seeds.md)) rather than relying
+on the chain, so the first load of an older save cannot consume thousands of rolls and
+hand that world a different future than the same save on the previous build, and a
+save-load-save cycle cannot diverge from an uninterrupted session.
+
 Catholic elective state is additive and keeps save version 3. `state.papacy` stores
 `obediences`, full-character Cardinal office records, elections and ballots,
 `realmObedience`, sovereign investiture policies, per-obedience excommunications and

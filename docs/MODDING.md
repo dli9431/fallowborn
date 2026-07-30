@@ -376,6 +376,20 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
   `"ruler":{"name":"Name","sex":"m","culture":"frankish","born":1028,"mar":14,"trait":"ambitious"}`.
   These authored fields are copied verbatim at campaign creation. The culture and trait
   ids must exist; generated vassals, succession children, and later rulers remain seeded.
+- **Courts come for free.** A modded realm's ruler, consort, and heirs are generated
+  and materialized as full characters through `FB.ensureRealmSuccession`, so an authored
+  realm opens on a real face and card with no extra data. Authored rulers keep their
+  authored identity and receive a seeded sheet around it; hand-authored skills and
+  traits for a bookmark ruler are not a supported field. A mod that writes `realm.ruler`
+  directly still works, because `FB.realmRulerCharacter` keeps that stub a projection of
+  the character record.
+- A `realm.succession` member carries
+  `{id, name, sex, born, alive, parentId, childIds, charId, role}`. `role` is `null` for
+  a child or collateral and `'consort'` for the ruler's spouse of record. **A consort is
+  excluded from the line of succession by that role and never by parent grouping** - a
+  consort's `parentId` is legitimately `null`. Code that walks a succession must apply
+  the same rule. `role` is absent on saves written before consorts existed and reads as
+  `null`.
 
 ### Complete start bookmarks
 
