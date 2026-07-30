@@ -72,7 +72,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    land, drill with the levy, haggle at market, copy manuscripts, or manage your household.
    The **Ongoing commitments** ledger above the deeds keeps that focus beside personal and
    political attention, national research policy, active travel, and financial contracts;
-   select a row to reach the existing control for that commitment.
+   select a row to reach the existing control for that commitment, or select its title to
+   collapse the ledger.
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
    Commoners can open **🏠 Better the household…** without spending a day. Five living
@@ -198,7 +199,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
 ### The ladder
 
 Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor.
-The *Deeds* tab always shows a hint for the next rung. Wealth buys freedom; Freeholders
+The *Deeds* tab shows a hint for the next rung by default; experienced players can hide
+beginner hints in Settings. Wealth buys freedom; Freeholders
 then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has
 the standing to join the gentry. Standing with a lord then earns an established gentle house a

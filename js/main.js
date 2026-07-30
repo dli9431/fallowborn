@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.3';
+  FB.VERSION = '1.93.4';
   FB.CHANGELOG = [
+    { v: '1.93.4', date: '2026-07-30', changes: [
+      'The Deeds panel now keeps daily focuses together, collapses ongoing commitments from their heading, and lets players hide beginner path hints.'
+    ] },
     { v: '1.93.3', date: '2026-07-30', changes: [
       'Governance now uses compact section tabs and a denser vassal ledger on desktop and mobile.'
     ] },
@@ -1398,12 +1401,16 @@ window.FB = window.FB || {};
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
-  G.uiPrefs = { combinedFocuses:false, hideOngoingCommitments:false };
+  G.uiPrefs = { commitmentsCollapsed:false, hideBeginnerHints:false };
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
-      G.uiPrefs.combinedFocuses = !!storedUiPrefs.combinedFocuses;
-      G.uiPrefs.hideOngoingCommitments = !!storedUiPrefs.hideOngoingCommitments;
+      G.uiPrefs.commitmentsCollapsed =
+        Object.prototype.hasOwnProperty.call(
+          storedUiPrefs, 'commitmentsCollapsed')
+          ? !!storedUiPrefs.commitmentsCollapsed
+          : !!storedUiPrefs.hideOngoingCommitments;
+      G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
     }
   } catch (e) { /* keep defaults */ }
   G.saveUiPrefs = function () {

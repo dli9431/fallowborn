@@ -277,8 +277,10 @@ columns, and narrow layouts stack every labeled field. Shared presentation
 does not create a common asset record or mutation path.
 
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
-rendered by `UI.ongoingCommitmentsHtml`. It always shows the current daily
-focus, personal-attention assignment, and national research projects/policy;
+rendered by `UI.ongoingCommitmentsHtml`. Its title is an accessible
+collapse/expand button, and the browser-local collapsed state (`fb_ui`) changes
+only its presentation. When expanded it always shows the current daily focus,
+personal-attention assignment, and national research projects/policy;
 political attention appears only when the independent ruler has that capacity,
 while travel and financial-contract rows appear only while active. Each native
 row routes to the authoritative existing control: the current focus group, the
@@ -333,12 +335,12 @@ prices this year** line.
 The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Family,
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
 with `aria-expanded`; closed actions are not rendered, so number-key selection can never
-activate an invisible deed. The current daily focus remains pinned above the groups.
-Settings offers a browser-local **Keep daily focuses together** preference (`fb_ui`).
-When enabled, every available focus appears in one block above the category accordions;
-the accordions continue to split and count deeds by category. The categorized layout
-remains the default. The same browser-local settings offer **Hide ongoing commitments**;
-it removes the ledger from the Deeds panel without changing or cancelling any assignment.
+activate an invisible deed. Every available daily focus appears together in one block
+above the category accordions; the accordions split and count only deeds by category.
+The promotion-path note is new-player guidance rather than a mechanic. Settings offers
+a browser-local **Hide beginner hints** preference (`fb_ui`) so experienced players can
+remove it without changing progression or available deeds. The preference deliberately
+covers future beginner guidance as that layer grows.
 The Self sheet's faith block names the live religious head or the number of days its
 office has been vacant, and states excommunication separately from the trait chip.
 Faith & Community contains the contextual absolution, Papal-restoration, and

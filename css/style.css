@@ -393,14 +393,23 @@ a.actionbtn { text-decoration: none; }
   border: 1px solid #65512d; border-radius: 9px; background: #211a12;
 }
 .ongoing-commitments-head {
-  padding: 9px 10px 8px; border-bottom: 1px solid #493b25;
+  border-bottom: 1px solid #493b25;
   background: linear-gradient(180deg, #302719, #282015);
 }
+.ongoing-commitments.collapsed .ongoing-commitments-head { border-bottom: 0; }
 .ongoing-commitments-head h3 {
   margin: 0; color: #d8b24a; font-size: 15px; font-weight: normal;
 }
+.ongoing-commitments-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; min-height: 44px; padding: 8px 10px; border: 0;
+  background: transparent; color: #d8b24a; font: inherit; text-align: left;
+  cursor: pointer;
+}
+.ongoing-commitments-toggle:hover,
+.ongoing-commitments-toggle:focus-visible { background: #362b1b; }
 .ongoing-commitments-head p {
-  margin: 2px 0 0; color: #8f8066; font-size: 11px; line-height: 1.35;
+  margin: -4px 10px 8px; color: #8f8066; font-size: 11px; line-height: 1.35;
 }
 .ongoing-commitment-list {
   display: grid; gap: 1px; background: #493b25;

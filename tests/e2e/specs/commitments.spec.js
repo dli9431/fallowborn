@@ -54,38 +54,89 @@ test('ongoing commitments route to their existing controls',
     await expect(page.locator('#network-connections')).toBeFocused();
   });
 
-test('settings can hide and restore the ongoing commitments ledger',
+test('the commitments title collapses and restores its ledger',
   async function ({ page }, testInfo) {
-    await page.locator('#btn-menu').click();
-    await page.locator('#m-settings').click();
-
-    const hideCommitments = page.getByRole('checkbox', {
-      name:/Hide ongoing commitments/
+    const summary = page.locator('#ongoing-commitments');
+    const toggle = summary.getByRole('button', {
+      name:'Ongoing commitments',
+      exact:true
     });
-    await expect(hideCommitments).not.toBeChecked();
-    await hideCommitments.check();
-    await expect(page.locator('#ongoing-commitments')).toHaveCount(0);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.click();
+    await expect(summary).toBeVisible();
+    await expect(summary.locator('#ongoing-commitment-list')).toBeHidden();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle).toBeFocused();
     await expect.poll(async function () {
       return page.evaluate(function () {
-        return FB.game.uiPrefs.hideOngoingCommitments;
+        return FB.game.uiPrefs.commitmentsCollapsed;
       });
     }).toBe(true);
     if (testInfo.project.name.endsWith('-served')) {
       await expect.poll(async function () {
         return page.evaluate(function () {
           const prefs = JSON.parse(localStorage.getItem('fb_ui') || '{}');
-          return prefs.hideOngoingCommitments;
+          return prefs.commitmentsCollapsed;
         });
       }).toBe(true);
     }
 
-    await hideCommitments.uncheck();
-    await expect(page.locator('#ongoing-commitments')).toBeVisible();
+    await toggle.click();
+    await expect(summary.locator('#ongoing-commitment-list')).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect.poll(async function () {
       return page.evaluate(function () {
-        return FB.game.uiPrefs.hideOngoingCommitments;
+        return FB.game.uiPrefs.commitmentsCollapsed;
       });
     }).toBe(false);
+  });
+
+test('daily focuses stay together and Settings can hide beginner hints',
+  async function ({ page }) {
+    const structure = await page.locator('#tab-actions').evaluate(
+      function (panel) {
+        const children = Array.prototype.slice.call(panel.children);
+        const focusIndexes = [];
+        let firstGroup = -1;
+        for (let i = 0; i < children.length; i++) {
+          if (children[i].matches('[data-focus-id]')) focusIndexes.push(i);
+          if (firstGroup < 0 &&
+              children[i].matches('[data-action-group]')) firstGroup = i;
+        }
+        return {
+          focusCount:focusIndexes.length,
+          firstGroup:firstGroup,
+          allBeforeGroups:focusIndexes.every(function (index) {
+            return firstGroup < 0 || index < firstGroup;
+          })
+        };
+      });
+    expect(structure.focusCount).toBeGreaterThan(0);
+    expect(structure.firstGroup).toBeGreaterThanOrEqual(0);
+    expect(structure.allBeforeGroups).toBe(true);
+
+    const pathHint = page.locator('#tab-actions .path-hint');
+    await expect(pathHint).toBeVisible();
+    await page.locator('#btn-menu').click();
+    await page.locator('#m-settings').click();
+    await expect(page.getByRole('checkbox', {
+      name:/Keep daily focuses together/
+    })).toHaveCount(0);
+    await expect(page.getByRole('checkbox', {
+      name:/Hide ongoing commitments/
+    })).toHaveCount(0);
+
+    const hideBeginnerHints = page.getByRole('checkbox', {
+      name:/Hide beginner hints/
+    });
+    await expect(hideBeginnerHints).not.toBeChecked();
+    await hideBeginnerHints.check();
+    await expect(pathHint).toHaveCount(0);
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return FB.game.uiPrefs.hideBeginnerHints;
+      });
+    }).toBe(true);
   });
 
 test('conditional commitments expose travel, finance, and political management',

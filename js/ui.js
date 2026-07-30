@@ -1874,12 +1874,27 @@ window.FB = window.FB || {};
     const attentionTarget = FB.socialAttentionTarget(s);
     const attentionCapacity = FB.politicalAttentionCapacity(s);
     const finance = financeCommitmentText(s);
-    let h = '<section class="ongoing-commitments" id="ongoing-commitments" ' +
+    const collapsed = !!(FB.game.uiPrefs &&
+      FB.game.uiPrefs.commitmentsCollapsed);
+    let h = '<section class="ongoing-commitments' +
+      (collapsed ? ' collapsed' : '') +
+      '" id="ongoing-commitments" ' +
       'aria-labelledby="ongoing-commitments-title"><div class="ongoing-commitments-head">' +
-      '<h3 id="ongoing-commitments-title">' + esc(FB.T('Ongoing commitments')) +
-      '</h3><p>' + esc(FB.T(
-        'These assignments keep their own capacities, rules, and consequences.')) +
-      '</p></div><div class="ongoing-commitment-list">';
+      '<h3 id="ongoing-commitments-title"><button type="button" ' +
+      'class="ongoing-commitments-toggle" id="ongoing-commitments-toggle" ' +
+      'aria-expanded="' + (collapsed ? 'false' : 'true') + '" ' +
+      'aria-controls="ongoing-commitment-list"><span>' +
+      esc(FB.T('Ongoing commitments')) +
+      '</span><span aria-hidden="true">' + (collapsed ? '▸' : '▾') +
+      '</span></button></h3>' + (collapsed
+        ? '</div><div class="ongoing-commitment-list" ' +
+          'id="ongoing-commitment-list" hidden></div></section>'
+        :
+        '<p>' + esc(FB.T(
+          'These assignments keep their own capacities, rules, and consequences.')) +
+        '</p></div><div class="ongoing-commitment-list" ' +
+        'id="ongoing-commitment-list">');
+    if (collapsed) return h;
     h += ongoingCommitmentRow({
       id:'focus',
       icon:'◉',
@@ -1957,8 +1972,7 @@ window.FB = window.FB || {};
 
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
-    let h = FB.game.uiPrefs && FB.game.uiPrefs.hideOngoingCommitments
-      ? '' : ongoingCommitmentsHtml(s);
+    let h = ongoingCommitmentsHtml(s);
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -2052,12 +2066,13 @@ window.FB = window.FB || {};
       }
       if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
     }
-    h += nextStepHint(s);
+    if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
+      h += nextStepHint(s);
+    }
     box.innerHTML = h;
     let n = 0; // hotkey numbering covers only actions visible in open groups
     const focuses = FB.listFocuses(s);
     const instants = FB.listInstants(s);
-    const combinedFocuses = !!(FB.game.uiPrefs && FB.game.uiPrefs.combinedFocuses);
     function appendFocus(f) {
       const cur = s.player.focus === f.id;
       const btn = document.createElement('button');
@@ -2072,7 +2087,7 @@ window.FB = window.FB || {};
       box.appendChild(btn);
       n++;
     }
-    if (combinedFocuses && focuses.length) {
+    if (focuses.length) {
       const fh = document.createElement('div');
       fh.className = 'actionsubhead';
       fh.textContent = FB.T('Daily focus — continues until changed');
@@ -2080,18 +2095,15 @@ window.FB = window.FB || {};
       for (const f of focuses) appendFocus(f);
     }
     for (const group of ACTION_GROUPS) {
-      const gf = combinedFocuses ? [] : focuses.filter(function (f) {
-        return (FOCUS_GROUP[f.id] || 'realm') === group.id;
-      });
       const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
-      if (!gf.length && !ga.length) continue;
+      if (!ga.length) continue;
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];
       toggle.className = 'actiongroup-toggle';
       toggle.setAttribute('data-action-group', group.id);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.innerHTML = '<span>' + esc(FB.T(group.label)) + '</span><span>' +
-        esc(String(gf.length + ga.length)) + ' ' +
+        esc(String(ga.length)) + ' ' +
         (open ? '▾' : '▸') + '</span>';
       (function (id) {
         toggle.addEventListener('click', function () {
@@ -2101,19 +2113,10 @@ window.FB = window.FB || {};
       })(group.id);
       box.appendChild(toggle);
       if (!open) continue;
-      if (gf.length) {
-        const fh = document.createElement('div');
-        fh.className = 'actionsubhead';
-        fh.textContent = FB.T('Daily focus — continues until changed');
-        box.appendChild(fh);
-      }
-      for (const f of gf) appendFocus(f);
-      if (ga.length) {
-        const ih = document.createElement('div');
-        ih.className = 'actionsubhead';
-        ih.textContent = FB.T('Deeds — done at once unless noted');
-        box.appendChild(ih);
-      }
+      const ih = document.createElement('div');
+      ih.className = 'actionsubhead';
+      ih.textContent = FB.T('Deeds — done at once unless noted');
+      box.appendChild(ih);
       for (const item of ga) {
         const btn = document.createElement('button');
         btn.className = 'actionbtn';
@@ -2142,6 +2145,17 @@ window.FB = window.FB || {};
       if (groupId) actionGroupsOpen[groupId] = true;
       renderActions();
       focusActionControl(selector, groupId, scrollBlock);
+    }
+    const commitmentsToggle = $('ongoing-commitments-toggle');
+    if (commitmentsToggle) {
+      commitmentsToggle.addEventListener('click', function () {
+        FB.game.uiPrefs.commitmentsCollapsed =
+          !FB.game.uiPrefs.commitmentsCollapsed;
+        FB.game.saveUiPrefs();
+        renderActions();
+        const replacement = $('ongoing-commitments-toggle');
+        if (replacement) replacement.focus({ preventScroll:true });
+      });
     }
     document.querySelectorAll('#ongoing-commitments button[data-commitment]').forEach(
       function (button) {
@@ -2184,13 +2198,13 @@ window.FB = window.FB || {};
 
   function nextStepHint(s) {
     if (s.player.tier === 0) {
-      return '<div class="progressnote">🧭 ' + esc(FB.T(
+      return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: save {money:gold} (or build Standing with your lord) to buy freedom.',
         { gold: FBDATA.balance.freedomCost })) + '</div>';
     }
     if (s.player.tier === 1) {
       const cluster = FB.largestLandCluster(s);
-      return '<div class="progressnote">🧭 ' + esc(FB.T(
+      return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads.',
         {
           cluster:cluster ? cluster.count : 0,
@@ -2206,7 +2220,7 @@ window.FB = window.FB || {};
             standing:FBDATA.balance.baronyOpinion
           })
         : FB.T('Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.');
-      return '<div class="progressnote">🧭 ' + esc(text) + '</div>';
+      return '<div class="progressnote path-hint">🧭 ' + esc(text) + '</div>';
     }
     const tips = {
       3: 'Path: petition your liege for a county — or declare independence and take one.',
@@ -2215,7 +2229,8 @@ window.FB = window.FB || {};
       6: 'Path: hold the majority of two kingdoms of one empire to be crowned emperor.',
       7: 'You stand at the summit of the world.'
     };
-    return '<div class="progressnote">🧭 ' + esc(FB.T(tips[s.player.tier] || '')) + '</div>';
+    return '<div class="progressnote path-hint">🧭 ' +
+      esc(FB.T(tips[s.player.tier] || '')) + '</div>';
   }
 
   function skillBars(c) {
@@ -17427,15 +17442,10 @@ window.FB = window.FB || {};
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Deeds panel')) + '</p></div>' +
-      '<label class="autorow"><input type="checkbox" id="set-combined-focuses"' +
-      (G.uiPrefs.combinedFocuses ? ' checked' : '') + '> <b>' +
-      esc(FB.T('Keep daily focuses together')) + '</b><span class="adesc">' +
-      esc(FB.T('Show all daily focuses before the category groups; deeds remain grouped.')) +
-      '</span></label>' +
-      '<label class="autorow"><input type="checkbox" id="set-hide-commitments"' +
-      (G.uiPrefs.hideOngoingCommitments ? ' checked' : '') + '> <b>' +
-      esc(FB.T('Hide ongoing commitments')) + '</b><span class="adesc">' +
-      esc(FB.T('Remove the ongoing commitments ledger from the Deeds panel.')) +
+      '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
+      (G.uiPrefs.hideBeginnerHints ? ' checked' : '') + '> <b>' +
+      esc(FB.T('Hide beginner hints')) + '</b><span class="adesc">' +
+      esc(FB.T('Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.')) +
       '</span></label>';
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
@@ -17461,13 +17471,8 @@ window.FB = window.FB || {};
     slider.addEventListener('change', function () { // commit once, on release
       G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
     });
-    $('set-combined-focuses').addEventListener('change', function () {
-      G.uiPrefs.combinedFocuses = $('set-combined-focuses').checked;
-      G.saveUiPrefs();
-      if (FB.state && !G.observe) renderActions();
-    });
-    $('set-hide-commitments').addEventListener('change', function () {
-      G.uiPrefs.hideOngoingCommitments = $('set-hide-commitments').checked;
+    $('set-hide-beginner-hints').addEventListener('change', function () {
+      G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();
       if (FB.state && !G.observe) renderActions();
     });
@@ -17656,7 +17661,7 @@ window.FB = window.FB || {};
       '<li><b>Deeds</b> are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated.</li>' +
       '<li>Press <b>Space</b> (or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause. <b>F</b> (or ▶▶) skips straight to the next happening. Events halt the days while they await your choice.</li></ul>' +
       '<h4>Climbing the ladder</h4>' +
-      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
+      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can hide beginner hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +

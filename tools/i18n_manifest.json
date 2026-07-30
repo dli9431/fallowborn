@@ -39519,16 +39519,6 @@
         "text": "Abdicate and continue as {name}"
       }
     },
-    "src.04f7a3fb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab always shows a hint for your next step. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you."
-      }
-    },
     "src.0505a7bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40961,6 +40951,16 @@
       ],
       "source": {
         "text": "A Feud on Your Doorstep"
+      }
+    },
+    "src.08e28da7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Hide beginner hints"
       }
     },
     "src.08ec733a": {
@@ -52617,16 +52617,6 @@
       ],
       "source": {
         "text": "Let a small concession prove that the words have weight."
-      }
-    },
-    "src.2be49131": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Keep daily focuses together"
       }
     },
     "src.2bf75eea": {
@@ -80781,6 +80771,16 @@
         "text": "Your voice in the hall"
       }
     },
+    "src.815157b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too."
+      }
+    },
     "src.81546d49": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86461,16 +86461,6 @@
       ],
       "source": {
         "text": "Barony"
-      }
-    },
-    "src.923d7464": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Show all daily focuses before the category groups; deeds remain grouped."
       }
     },
     "src.924185d7": {
@@ -103975,16 +103965,6 @@
         "text": "There is little to do now but bar the door and pray."
       }
     },
-    "src.c7c21722": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Remove the ongoing commitments ledger from the Deeds panel."
-      }
-    },
     "src.c7e38268": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107215,16 +107195,6 @@
         "text": "You pass a season in the great host: dusty marches, cold watches, and the endless labor that keeps an army together."
       }
     },
-    "src.d27151aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Hide ongoing commitments"
-      }
-    },
     "src.d29a17d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109988,6 +109958,16 @@
       ],
       "source": {
         "text": "Rest at the ale-house. ({money:2})"
+      }
+    },
+    "src.daf278fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can hide beginner hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you."
       }
     },
     "src.daf9076d": {
@@ -132447,12 +132427,20 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
-    "ui:Hide ongoing commitments": {
+    "ui:Hide beginner hints": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Hide ongoing commitments"
+        "text": "Hide beginner hints"
+      }
+    },
+    "ui:Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too."
       }
     },
     "ui:High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.": {
@@ -133072,14 +133060,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Keep current projects, but leave future slots for you to choose."
-      }
-    },
-    "ui:Keep daily focuses together": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Keep daily focuses together"
       }
     },
     "ui:Keep in service": {
@@ -137427,14 +137407,6 @@
         "text": "Remain on the visit for {days} more days before returning home."
       }
     },
-    "ui:Remove the ongoing commitments ledger from the Deeds panel.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Remove the ongoing commitments ledger from the Deeds panel."
-      }
-    },
     "ui:Renew the vow": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138804,14 +138776,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Setup cost"
-      }
-    },
-    "ui:Show all daily focuses before the category groups; deeds remain grouped.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Show all daily focuses before the category groups; deeds remain grouped."
       }
     },
     "ui:Show all {count}": {
