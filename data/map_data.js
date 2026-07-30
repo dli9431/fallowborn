@@ -14,6 +14,7 @@
                   — no province drawing needed to mod the map!)
    - realms:      starting realms of 867 AD
    - straits:     extra adjacency across water [provinceId, provinceId]
+   - crossingClasses: optional army crossing class by canonical strait key
    - scripted:    dated historical invasions that spawn realms
    See docs/MODDING.md for the full reference.
    ========================================================================= */
@@ -592,6 +593,41 @@ FBDATA.straits = [
 ['zeila','aden'], ['sohar','hormuz'], ['muscat','tiz']
 ];
 
+/* Army-only water-crossing class, keyed by the canonical (sorted) county
+   pair. The public straits format remains two-element arrays for mods and
+   compatibility callers. */
+FBDATA.crossingClasses = {
+  'boulogne|canterbury':'narrow',
+  'caen|dorset':'coastal',
+  'lewes|rouen':'coastal',
+  'hedeby|roskilde':'coastal',
+  'lund|roskilde':'narrow',
+  'lubeck|roskilde':'coastal',
+  'messina|reggio':'narrow',
+  'palermo|tunis':'open',
+  'malaga|tangier':'narrow',
+  'silves|tangier':'coastal',
+  'constantinople|nicaea':'narrow',
+  'athens|candia':'open',
+  'antioch|nicosia':'open',
+  'cagliari|pisa':'open',
+  'ajaccio|lucca':'coastal',
+  'ajaccio|nice':'coastal',
+  'mallorca|valencia':'open',
+  'dublin|gwynedd':'coastal',
+  'dublin|man':'coastal',
+  'man|whithorn':'narrow',
+  'ulaid|whithorn':'narrow',
+  'birka|visby':'coastal',
+  'riga|visby':'open',
+  'arhus|scarborough':'open',
+  'arhus|tonsberg':'coastal',
+  'cherson|sinope':'open',
+  'aden|zeila':'narrow',
+  'hormuz|sohar':'coastal',
+  'muscat|tiz':'open'
+};
+
 /* Dated historical shocks. type 'conquest': newRealm (same shape as a
    realm, or null) spawns at that date before seizing the target counties. */
 FBDATA.scripted = [
@@ -908,6 +944,12 @@ FBDATA.balance = {
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
   /* field armies (js/armies.js): hosts on the map */
   armyMarchDays: 6, // days for a host to cross one province
+  armySeaTransportBase: 250, // men carried per crossing cycle before national technology
+  armySeaCrossings: {
+    narrow: { cycleDays:2, capacityMult:2 },
+    coastal: { cycleDays:4, capacityMult:1 },
+    open: { cycleDays:7, capacityMult:0.75 }
+  },
   armyRearmDays: 60, // a shattered host may muster again after this long
   armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day

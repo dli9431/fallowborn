@@ -138,6 +138,7 @@ A JSON mod is one object with any of these keys:
   "duchies":   { "id": { ... } },
   "events":    [ ... ],
   "straits":   [ ["provA","provB"] ],
+  "crossingClasses": { "provA|provB": "coastal" },
   "scripted":  [ ... ],
   "cultures":  { "id": { ... } },
   "religions": { "id": { ... } },
@@ -316,7 +317,25 @@ province objects; mods merge full objects as before:
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
 - Adjacency is computed automatically from the generated shapes. For connections across
-  water, add a `straits` pair.
+  water, add a `straits` pair. Field armies treat an unclassified pair as a `narrow`
+  crossing. To opt into a slower passage, add the same lexicographically sorted county
+  ids to `crossingClasses` with `coastal` or `open` (or explicitly `narrow`):
+
+```json
+{
+  "straits": [["island_county", "mainland_county"]],
+  "crossingClasses": {
+    "island_county|mainland_county": "coastal"
+  }
+}
+```
+
+`straits` must remain exact two-element arrays. A crossing-class key must put the lower
+county id first, name an existing strait in that same complete world, and use only
+`narrow`, `coastal`, or `open`. Reversed, orphaned, or unknown classifications reject
+bookmark activation. The classification affects field-army time and routing only:
+personal travel, political adjacency, and `FB.findPath` continue to use ordinary strait
+adjacency.
 
 ### The de jure hierarchy
 
@@ -372,6 +391,7 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
       "kingdoms": { "...": { "name": "...", "empire": "..." } },
       "empires": { "...": { "name": "..." } },
       "straits": [ ["county_a", "county_b"] ],
+      "crossingClasses": { "county_a|county_b": "coastal" },
       "scripted": []
     }
   }
@@ -380,7 +400,9 @@ realm naming, and the Land panel's hierarchy display. Mods may add to all three 
 
 Activation rejects a bookmark with duplicate ids; missing or cyclic lieges; missing
 capitals; invalid province realm/de-jure/culture/faith references; development outside
-1–10; broken straits; or invalid scripted targets. `religiousHeads` is optional; when
+1–10; broken straits; invalid crossing classifications; or invalid scripted targets.
+`crossingClasses` is optional and missing entries default to `narrow`.
+`religiousHeads` is optional; when
 present it is an exact religion-id to authored-realm-id map. Every faith must define
 `religion.head`, and every mapped realm must exist in this complete bookmark. Omitting
 the map falls back to each faith's global `head.realm`, which is suitable only when the
@@ -389,7 +411,7 @@ underscores. Preserve an existing county id when it still denotes the same place
 genuinely different geography a new stable id, and never recycle a retired id.
 
 A legacy mod that changes `provinces`, `realms`, `empires`, `kingdoms`, `duchies`,
-`straits`, `scripted`, `land`, `seas`, or `bounds` without supplying a complete
+`straits`, `crossingClasses`, `scripted`, `land`, `seas`, or `bounds` without supplying a complete
 `bookmarks.1066` definition hides 1066 from the new-game picker and explains why.
 Its 867 games still work. Ordinary non-world mods expose both built-in dates, and
 matching stamped saves retain access to their recorded bookmark even when it is hidden
@@ -1434,8 +1456,13 @@ sovereigns fill slots with saved RNG.
 - Scalar `fx` keys summed by `FB.techBonus` are `tax`/`levy` (fractional multipliers),
   `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
   mortality), `research` (national points each season), `domain` (domain capacity),
-  `siege`, `movement`, `education`, `finance`, and `trade`. All are subject to
+  `siege`, `movement` (overland army speed), `seaMovement` (water-crossing speed),
+  `education`, `finance`, and `trade`. All are subject to
   `FBDATA.techCaps`.
+- `fx.seaTransport` is different: it must be a finite positive integer and the effective
+  sovereign uses the largest completed value, not a sum. Without one, field armies use
+  `balance.armySeaTransportBase`. Mods do not need ship, port, or fleet objects; technology
+  details display both sea effects automatically.
 - `fx.costs` contains signed fractional modifiers for `build`, `enterprise`, and
   `training`; final factors have category floors.
 - `fx.units` adds flat player-host `levy`, `arch`, `cav`, or `ret` troops.
@@ -1876,7 +1903,12 @@ For AI declarations against the player it multiplies the base chance by
 `1 - opinion / 100`, clamped between `foreignOpinionAttackMin` and
 `foreignOpinionAttackMax`.
 The field-army knobs drive the hosts on the map (`js/armies.js`): `armyMarchDays` (days to
-cross one province), `armyRearmDays` (how long a shattered host must wait to muster
+cross one land province), `armySeaTransportBase` (national men per crossing cycle without
+a completed transport tier), and `armySeaCrossings` (the `cycleDays` and `capacityMult`
+for `narrow`, `coastal`, and `open` water legs). Effective crossing capacity is the
+rounded national capacity times the class multiplier; an indivisible host needs
+`ceil(men / effective capacity)` cycles and remains on the departure county until all
+cycles finish. `armyRearmDays` (how long a shattered host must wait to muster
 again), `armyReinforceRate` (the fraction of its mustered size a host resting on home
 land refills per day), `armyDemusterKeepOwn` / `armyDemusterKeepRealm` /
 `armyDemusterKeepOther` (the share of a voluntarily de-mustered host preserved for the

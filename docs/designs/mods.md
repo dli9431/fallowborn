@@ -14,16 +14,20 @@ differs from the active one.
 
 **Bookmarks are atomic world definitions.** A mod may provide `bookmarks` keyed by
 bookmark id; each value replaces that entire bookmark and must include its date,
-provinces, realms, de jure hierarchy, straits, and scripted history. It is validated
+provinces, realms, de jure hierarchy, straits, optional crossing classes, and scripted
+history. It is validated
 only when activated, after all enabled mods have applied. The existing top-level
-`provinces`/`realms`/hierarchy/straits/scripted fields remain the public 867 merge API.
+`provinces`/`realms`/hierarchy/straits/crossingClasses/scripted fields remain the public
+867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its
+canonical pair key and may classify an existing edge as `narrow`, `coastal`, or `open`.
+An omitted classification defaults to `narrow`.
 An optional `religiousHeads` map binds centralized faith offices to realm ids inside
 that atomic bookmark. Activation rejects unknown faiths, faiths without head metadata,
 and mapped realms absent from the bookmark; omission uses each religion's global
 `head.realm` fallback.
 
 A legacy mod that changes any world-shaping top-level field—provinces, realms,
-hierarchy, straits, scripted history, coastline, seas, or bounds—without also providing
+hierarchy, straits, crossing classes, scripted history, coastline, seas, or bounds—without also providing
 its own complete `1066` bookmark makes 1066 unavailable for new games. The picker
 explains the restriction; 867 still works. Non-world mods leave both bookmarks
 available. Hidden bookmarks are not deleted, so an existing matching mod-stamped save
@@ -70,6 +74,9 @@ restrictions remain valid. New definitions should author `domain`, `cost`, `req`
 optional `reqAny`, full `history`, localized `name`/`desc`, `unlocks`, and `fx`.
 Bookmark realms may add `techTraditions` and `techSeed` overrides. Cycles, unknown
 prerequisites/traditions/unlocks, and malformed historical ranges reject the bookmark.
+Mod technologies may add capped fractional `fx.seaMovement`; `fx.seaTransport` must be a
+finite positive integer and competes by maximum value rather than summing. These effects
+automatically appear in Technology details and require no ship, port, or fleet objects.
 
 Household-standard definitions replace atomically by id. Their ordered `levels` arrays are
 never deep-merged: a replacement supplies its complete rank gates, setup/upkeep values,

@@ -15,7 +15,7 @@ window.FB = window.FB || {};
   };
   var SCALAR_KEYS = {
     tax:1, levy:1, battle:1, devCap:1, health:1, research:1, domain:1,
-    siege:1, movement:1, education:1, finance:1, trade:1
+    siege:1, movement:1, seaMovement:1, education:1, finance:1, trade:1
   };
   var COST_KEYS = { build:1, enterprise:1, training:1 };
   var UNIT_KEYS = { levy:1, arch:1, cav:1, ret:1 };
@@ -653,6 +653,20 @@ window.FB = window.FB || {};
     return cap === undefined ? sum : FB.clamp(sum, -Math.abs(cap), Math.abs(cap));
   };
 
+  FB.techSeaTransportCapacity = function (state, realmId) {
+    var capacity = null, list = FB.techList(state, realmId);
+    for (var i = 0; i < list.length; i++) {
+      var fx = FBDATA.tech[list[i]] && FBDATA.tech[list[i]].fx;
+      var value = fx && fx.seaTransport;
+      if (typeof value === 'number' && isFinite(value) && value > 0 &&
+          Math.floor(value) === value &&
+          (capacity === null || value > capacity)) capacity = value;
+    }
+    return capacity === null
+      ? Math.max(1, Math.round(Number(FBDATA.balance.armySeaTransportBase) || 250))
+      : capacity;
+  };
+
   FB.techCostModifier = function (state, category, realmId) {
     var sum = 0, list = FB.techList(state, realmId);
     for (var i = 0; i < list.length; i++) {
@@ -878,6 +892,12 @@ window.FB = window.FB || {};
       if (trait === 'greedy') score *= 1.4;
     } else if (def.domain === 'seafaring') {
       score *= techAIRealmCoastal(context) ? 1.8 : 0.45;
+    }
+    var seaTransport = def.fx && def.fx.seaTransport;
+    if (typeof seaTransport === 'number' && isFinite(seaTransport) &&
+        seaTransport >
+        FB.techSeaTransportCapacity(context.state, context.rid)) {
+      score *= techAIRealmCoastal(context) ? 1.25 : 0.5;
     }
     var unlockWeight = 1;
     for (var unlockIndex = 0; unlockIndex < (def.unlocks || []).length; unlockIndex++) {
@@ -1383,7 +1403,8 @@ window.FB = window.FB || {};
       }
       for (var u = 0; u < def.unlocks.length; u++) validateUnlock(id, def.unlocks[u], errors);
       for (var fxKey in def.fx) if (own(def.fx, fxKey)) {
-        if (SCALAR_KEYS[fxKey] || fxKey === 'costs' || fxKey === 'units' ||
+        if (SCALAR_KEYS[fxKey] || fxKey === 'seaTransport' ||
+            fxKey === 'costs' || fxKey === 'units' ||
             fxKey === 'aiUnits' || fxKey === 'build' || fxKey === 'retinue' ||
             fxKey === 'archers') continue;
         errors.push('Technology ' + id + ': invalid effect ' + fxKey + '.');
@@ -1391,6 +1412,14 @@ window.FB = window.FB || {};
       for (var scalarKey in SCALAR_KEYS) if (own(SCALAR_KEYS, scalarKey) &&
           def.fx[scalarKey] !== undefined && !isFinite(Number(def.fx[scalarKey]))) {
         errors.push('Technology ' + id + ': non-numeric effect ' + scalarKey + '.');
+      }
+      if (def.fx.seaTransport !== undefined &&
+          (typeof def.fx.seaTransport !== 'number' ||
+           !isFinite(def.fx.seaTransport) ||
+           def.fx.seaTransport <= 0 ||
+           Math.floor(def.fx.seaTransport) !== def.fx.seaTransport)) {
+        errors.push('Technology ' + id +
+          ': seaTransport must be a positive integer.');
       }
       if (def.fx.costs) for (var costKey in def.fx.costs) {
         if (own(def.fx.costs, costKey) && !COST_KEYS[costKey]) {

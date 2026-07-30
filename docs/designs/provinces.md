@@ -27,10 +27,19 @@ legacy `FBDATA.provinces` array as its public source, while 1066 has an independ
 province snapshot in `data/bookmarks.js`. Province ids endure across bookmarks wherever
 the county seed represents the same place; an id is never reassigned to a different
 place. Each definition also owns its terrain, culture, faith, development, de jure
-duchy, owner, straits, realms, hierarchy, and scripted history.
+duchy, owner, straits, crossing classes, realms, hierarchy, and scripted history.
 It may also map exact centralized faith offices to bookmark-local realm ids through
 `religiousHeads`; activation validates those ids against both the religion table and
 the bookmark's authored realms.
+
+`straits` remain exact two-county adjacency pairs used by every reachability consumer.
+The optional `crossingClasses` bookmark object annotates canonical `countyA|countyB`
+pairs as `narrow`, `coastal`, or `open` for army logistics only. Activation validates
+that each key is sorted, references an existing strait, and uses a supported class;
+missing entries default to `narrow`. Raster compilation keeps the edge in unchanged
+`FB.world.adj` and also records its class symmetrically in `FB.world.waterAdj`, exposed
+through `FB.waterCrossing`. Personal travel, political adjacency, and other plain path
+callers therefore retain their old behavior.
 
 The authored coastline, inland seas, rivers, and projection bounds are shared because
 the physical map window is the same. `FB.activateBookmark` validates the complete

@@ -297,7 +297,11 @@ create no such right.
 
 Your host musters the moment war begins — tap it on the map, then tap a
 province to march it (the ⚙ automation can also command it, defensively or
-offensively). **Land is taken only by siege:** keep your host standing on the prize
+offensively). Water links use local boats at low throughput. If the host is larger
+than the available transport, it waits through repeated crossing cycles before the
+whole host arrives; national seafaring and naval-organization technologies raise
+transport capacity and crossing speed. You do not raise a separate fleet.
+**Land is taken only by siege:** keep your host standing on the prize
 and press the siege at each season's war council — after three seasons of works the
 county falls to you. Field victories never hand over land by themselves; enough of
 them make the enemy sue for peace, and then the choice is yours — take the tribute,

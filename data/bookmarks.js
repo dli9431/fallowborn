@@ -31,6 +31,14 @@ window.FBDATA = window.FBDATA || {};
     return (source || []).map(function (pair) { return [pair[0], pair[1]]; });
   }
 
+  function copyValues(source) {
+    var out = {};
+    for (var key in (source || {})) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) out[key] = source[key];
+    }
+    return out;
+  }
+
   function profile(name, culture, born, mar, trait, sex) {
     return {
       name:name, sex:sex || 'm', culture:culture, born:born, mar:mar, trait:trait
@@ -555,6 +563,7 @@ window.FBDATA = window.FBDATA || {};
     kingdoms:FBDATA.kingdoms,
     empires:FBDATA.empires,
     straits:FBDATA.straits,
+    crossingClasses:FBDATA.crossingClasses,
     scripted:FBDATA.scripted
   };
 
@@ -570,6 +579,7 @@ window.FBDATA = window.FBDATA || {};
     kingdoms:kingdoms1066,
     empires:empires1066,
     straits:copyPairs(FBDATA.straits),
+    crossingClasses:copyValues(FBDATA.crossingClasses),
     scripted:[]
   };
 

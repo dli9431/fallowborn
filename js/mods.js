@@ -154,7 +154,7 @@ window.FBMODS = window.FBMODS || [];
   M.apply = function (mod) {
     const legacyWorldKeys = [
       'provinces','realms','empires','kingdoms','duchies','straits',
-      'scripted','bounds','land','seas'
+      'crossingClasses','scripted','bounds','land','seas'
     ];
     let changesLegacyWorld = false;
     for (let wi = 0; wi < legacyWorldKeys.length; wi++) {
@@ -189,6 +189,13 @@ window.FBMODS = window.FBMODS || [];
     if (mod.duchies) for (const k in mod.duchies) FBDATA.duchies[k] = mod.duchies[k];
     if (mod.straits) {
       for (const strait of mod.straits) FBDATA.straits.push(strait);
+    }
+    if (mod.crossingClasses) {
+      for (const crossingKey in mod.crossingClasses) {
+        if (own(mod.crossingClasses, crossingKey)) {
+          FBDATA.crossingClasses[crossingKey] = mod.crossingClasses[crossingKey];
+        }
+      }
     }
     // scripted entries are replaced only on a (year, realm) match — several
     // realms may act in the same year without clobbering one another

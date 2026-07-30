@@ -50,7 +50,7 @@ window.FBDATA = window.FBDATA || {};
      ordinary 867 baseline instead of inflating it. */
   FBDATA.techCaps = {
     tax:0.35, levy:0.35, battle:0.15, devCap:4, health:0.03,
-    research:5, domain:2, siege:0.35, movement:0.25,
+    research:5, domain:2, siege:0.35, movement:0.25, seaMovement:0.40,
     education:0.20, finance:0.30, trade:0.30,
     costFloor:{ build:0.55, enterprise:0.55, training:0.65 },
     units:{ levy:250, arch:200, cav:160, ret:160 },
@@ -613,7 +613,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['unit:retinue'], fx:{ units:{ ret:25 }, aiUnits:{ ret:0.03 } } });
   add('naval_levies','Organized Naval Levies','⚓','warfare',[800,1200],[980,1230],['harbor_works'],
     'Ports assess ships, crews, and service for planned royal fleets.',
-    { leaders:['byzantine','nordic','islamic','latin'], unlocks:['rule:naval_levies'], fx:{ levy:0.005 } });
+    { leaders:['byzantine','nordic','islamic','latin'], unlocks:['rule:naval_levies'], fx:{ levy:0.005, seaTransport:4000 } });
   add('incendiary_weapons','Incendiary Weapons','🔥','warfare',[600,1100],[780,1120],['distillation','siege_engineering'],
     'Prepared combustible mixtures attack ships, engines, and wooden defenses.',
     { leaders:['byzantine','islamic'], unlocks:['rule:incendiaries'], fx:{ siege:0.025 }, confidence:'medium', sources:['PRYOR','DEVRIES'] });
@@ -633,53 +633,53 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:shell_built_hulls'], fx:{ trade:0.005 } });
   add('square_sail','Square Sails','⛵','seafaring',[-1000,600],[-400,350],[],
     'Broad square sails drive cargo and war craft efficiently before the wind.',
-    { leaders:TRADITIONS, unlocks:['practice:square_sails'], fx:{ movement:0.005 } });
+    { leaders:TRADITIONS, unlocks:['practice:square_sails'], fx:{ seaMovement:0.005, seaTransport:400 } });
   add('steering_oars','Quarter Steering Oars','🛶','seafaring',[-700,700],[480,680],[],
     'Large side-mounted oars give helmsmen leverage over substantial hulls.',
     { leaders:TRADITIONS, unlocks:['practice:steering_oars'] });
   add('coastal_piloting','Coastal Piloting','🗺','seafaring',[-1000,700],[480,650],[],
     'Remembered landmarks, winds, currents, and anchorages guide coastal voyages.',
-    { leaders:TRADITIONS, unlocks:['practice:coastal_piloting'], fx:{ movement:0.005 } });
+    { leaders:TRADITIONS, unlocks:['practice:coastal_piloting'], fx:{ seaMovement:0.005, seaTransport:500 } });
   add('sounding_lead','Sounding Lead','⚓','seafaring',[-500,700],[520,700],['coastal_piloting'],
     'A weighted line measures depth and samples the seabed near hidden hazards.',
     { leaders:TRADITIONS, unlocks:['practice:soundings'] });
   add('harbor_works','Harbor Works','⚓','seafaring',[-500,700],[500,720],['lime_mortar'],
     'Quays, moles, slips, and beacons shelter vessels and speed their loading.',
-    { leaders:TRADITIONS, unlocks:['building:harbor'] });
+    { leaders:TRADITIONS, unlocks:['building:harbor'], fx:{ seaTransport:750 } });
   add('clinker_shipbuilding','Clinker Shipbuilding','🛶','seafaring',[300,850],[500,850],['mortise_tenon_shipbuilding'],
     'Overlapping planks make light, flexible hulls suited to northern seas.',
-    { leaders:['nordic','latin','slavic','baltic_finnic'], unlocks:['rule:clinker_hulls'], fx:{ trade:0.005 } });
+    { leaders:['nordic','latin','slavic','baltic_finnic'], unlocks:['rule:clinker_hulls'], fx:{ trade:0.005, seaTransport:1000 } });
   add('lateen_sail','Lateen Sail','⛵','seafaring',[200,850],[500,850],['square_sail'],
     'A fore-and-aft triangular sail improves control across variable winds.',
-    { leaders:['byzantine','islamic','northeast_african'], unlocks:['rule:lateen_rig'], fx:{ movement:0.015 } });
+    { leaders:['byzantine','islamic','northeast_african'], unlocks:['rule:lateen_rig'], fx:{ seaMovement:0.015, seaTransport:1000 } });
   add('dhow_construction','Dhow Construction','⛵','seafaring',[400,950],[600,940],['lateen_sail'],
     'Sewn and later fastened ocean-going hulls serve monsoon trade routes.',
-    { leaders:['islamic','persianate','northeast_african'], unlocks:['rule:dhow_routes'], fx:{ trade:0.015 } });
+    { leaders:['islamic','persianate','northeast_african'], unlocks:['rule:dhow_routes'], fx:{ trade:0.015, seaTransport:1500 } });
   add('longships','Longships','🛶','seafaring',[650,1000],[730,990],['clinker_shipbuilding','square_sail'],
     'Shallow, double-ended hulls combine oars, sail, speed, and beach landings.',
-    { leaders:['nordic','baltic_finnic'], unlocks:['rule:longships'], fx:{ movement:0.02 } });
+    { leaders:['nordic','baltic_finnic'], unlocks:['rule:longships'], fx:{ seaMovement:0.02, seaTransport:1500 } });
   add('knarrs','Ocean-Going Knarrs','⛵','seafaring',[750,1050],[830,1040],['clinker_shipbuilding','square_sail'],
     'Deep-bellied sailing ships carry cargo and livestock across northern oceans.',
-    { leaders:['nordic','latin'], unlocks:['enterprise:fishing_boat_business','rule:knarr_trade'], fx:{ trade:0.015 } });
+    { leaders:['nordic','latin'], unlocks:['enterprise:fishing_boat_business','rule:knarr_trade'], fx:{ trade:0.015, seaTransport:1500 } });
   add('celestial_navigation','Celestial Navigation','🌟','seafaring',[700,1100],[850,1120],['astronomical_observation','coastal_piloting'],
     'Observed stars and solar height extend direction finding beyond sight of land.',
-    { leaders:['islamic','nordic','byzantine'], unlocks:['rule:celestial_navigation'], fx:{ movement:0.015 } });
+    { leaders:['islamic','nordic','byzantine'], unlocks:['rule:celestial_navigation'], fx:{ seaMovement:0.015 } });
   add('naval_logbooks','Sailing Directions','📖','seafaring',[850,1200],[1000,1230],['scriptoria','coastal_piloting'],
     'Written routes preserve distances, hazards, winds, and harbor approaches.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['rule:sailing_directions'], fx:{ trade:0.01 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['rule:sailing_directions'], fx:{ seaMovement:0.01 } });
   add('convoy_systems','Merchant Convoys','🛡','seafaring',[850,1200],[1010,1230],['merchant_guilds','naval_levies'],
     'Scheduled group sailings share protection and information.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:merchant_convoys'], fx:{ trade:0.015 } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:merchant_convoys'], fx:{ trade:0.015, seaTransport:8000 } });
   add('sternpost_rudder','Sternpost Rudder','⛵','seafaring',[1050,1250],[1150,1280],['clinker_shipbuilding'],
     'A centerline hinged rudder controls larger sailing ships from the stern.',
-    { leaders:['latin','islamic'], unlocks:['rule:sternpost_rudder'], fx:{ movement:0.02 } });
+    { leaders:['latin','islamic'], unlocks:['rule:sternpost_rudder'], fx:{ seaMovement:0.02 } });
   add('mariners_compass','Mariner’s Compass','🧭','seafaring',[1050,1250],[1160,1280],['celestial_navigation'],
     'A magnetized direction indicator gives a heading in cloud or poor visibility.',
-    { leaders:['islamic','latin'], unlocks:['rule:mariners_compass'], fx:{ movement:0.02 }, confidence:'medium', sources:['UNGER','NEEDHAM'] });
+    { leaders:['islamic','latin'], unlocks:['rule:mariners_compass'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','NEEDHAM'] });
   add('portolan_charts','Portolan Charts','🗺','seafaring',[1200,1320],[1270,1380],['naval_logbooks','mariners_compass'],
     'Coastline charts and rhumb networks turn accumulated sailing directions into a graphic tool.',
-    { leaders:['latin','islamic'], unlocks:['rule:portolan_charts'], fx:{ trade:0.02 }, confidence:'medium', sources:['UNGER','CAMPBELL'] });
+    { leaders:['latin','islamic'], unlocks:['rule:portolan_charts'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','CAMPBELL'] });
   add('dry_docks','Graving Docks','⚓','seafaring',[900,1250],[1070,1280],['harbor_works','stone_bridgebuilding'],
     'Drainable basins expose hulls for inspection and major repair.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks'], fx:{ movement:0.01 } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks'], fx:{ seaMovement:0.01 } });
 })();

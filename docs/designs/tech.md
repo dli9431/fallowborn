@@ -185,8 +185,15 @@ the AI selection weight by six, and never interrupts an active project.
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
 schooling, household standards, careers, enterprises, credit, and trade partnerships.
-Warfare technologies alter the existing levy/archer/cavalry/retinue classes, movement,
-quality, siege progress, and composition; they do not add a second unit taxonomy.
+Warfare technologies alter the existing levy/archer/cavalry/retinue classes, overland
+movement, quality, siege progress, and composition; they do not add a second unit taxonomy.
+Seafaring and naval-organization technologies provide two army effects without adding
+fleets: additive `fx.seaMovement` shortens water-crossing cycles (capped at 0.40), while
+positive-integer `fx.seaTransport` is max-valued rather than summed. The best completed
+transport tier of the effective sovereign replaces the 250-man base capacity; vassal
+hosts therefore gain and lose access with allegiance, just like other national effects.
+`FB.techSeaTransportCapacity` is the authoritative national lookup, and
+`FB.armySeaTransportCapacity` is the future fleet seam used by army quotes.
 
 The in-game detail sheet reports only effects that gameplay consumes: numeric `fx`,
 concrete typed unlocks, and content or contracts gated by `requiresTech`. Every technology
@@ -206,9 +213,15 @@ its frozen numeric terms until expiry or scope invalidation.
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
 composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,
-research, domain, siege, movement, education, finance, trade, cost reductions, and unit
+research, domain, siege, overland movement, sea-crossing movement, education, finance,
+trade, cost reductions, and unit
 additions. Inherited foundations deliberately carry almost no scalar bonuses, so normal
 867 income, health, development, and military power remain the baseline.
+
+AI scoring retains its ordinary domain preference, then gives a candidate that raises
+current sea-transport capacity a further ×1.25 weight for a coastal sovereign or ×0.5
+for a landlocked one. Technology details label overland and sea-crossing speed separately
+and show the concrete men-per-cycle capacity supplied by a transport tier.
 
 For mod compatibility, flat `build`, `retinue`, and `archers` effects remain aliases for a
 building-cost discount, `units.ret`, and `units.arch`.

@@ -45215,6 +45215,16 @@
         "text": "A manufactured charge may finish the case, or turn the whole board against the crown."
       }
     },
+    "src.14df3542": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "references a missing province."
+      }
+    },
     "src.14ea7bf9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47503,6 +47513,16 @@
       ],
       "source": {
         "text": "{relation} · Standing {standing}"
+      }
+    },
+    "src.1b6d2da9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "crossing class"
       }
     },
     "src.1b7a30eb": {
@@ -52724,16 +52744,6 @@
         "text": "Sultan"
       }
     },
-    "src.2bdd68e0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province}."
-      }
-    },
     "src.2be372fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54685,6 +54695,16 @@
       ],
       "source": {
         "text": "no one, watching"
+      }
+    },
+    "src.3217c25e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles."
       }
     },
     "src.321bdcfb": {
@@ -59037,6 +59057,16 @@
       ],
       "source": {
         "text": "Ruler’s Martial"
+      }
+    },
+    "src.400646e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches on {province} — about {days} days."
       }
     },
     "src.400e05fe": {
@@ -71875,6 +71905,16 @@
         "text": "Permanent imperial regiments maintain a trained core of horse and foot."
       }
     },
+    "src.66d13353": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": seaTransport must be a positive integer."
+      }
+    },
     "src.66d67c2c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75015,6 +75055,16 @@
       ],
       "source": {
         "text": "Wages for hunger — labor that may pay double."
+      }
+    },
+    "src.7005b160": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles."
       }
     },
     "src.7011b931": {
@@ -81076,6 +81126,16 @@
         "text": "War enemy"
       }
     },
+    "src.81aa9432": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "crossing class key"
+      }
+    },
     "src.81aec6f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82930,6 +82990,16 @@
         "text": "Let wiser heads weigh what yours could not."
       }
     },
+    "src.87086c0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has invalid class"
+      }
+    },
     "src.8718c132": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83918,6 +83988,16 @@
       ],
       "source": {
         "text": "Withdraw from the campaign"
+      }
+    },
+    "src.89e7ea24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
       }
     },
     "src.89e9f6ed": {
@@ -85524,6 +85604,16 @@
         "text": "Stand for the council."
       }
     },
+    "src.8eaa0410": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Sea transport capacity: up to {capacity} per crossing cycle."
+      }
+    },
     "src.8eabb66f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85724,16 +85814,6 @@
       ],
       "source": {
         "text": "🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name."
-      }
-    },
-    "src.8f28954e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "army movement speed"
       }
     },
     "src.8f29a261": {
@@ -88282,6 +88362,16 @@
       ],
       "source": {
         "text": "No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12."
+      }
+    },
+    "src.97a6f1b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
       }
     },
     "src.97a80d1c": {
@@ -91789,6 +91879,16 @@
       ],
       "source": {
         "text": "Promised service"
+      }
+    },
+    "src.a21b0ea4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "is not canonical."
       }
     },
     "src.a21b5b5d": {
@@ -104611,6 +104711,16 @@
         "text": "Reason it through."
       }
     },
+    "src.c8ddfbb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "sea-crossing speed"
+      }
+    },
     "src.c8e03468": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106858,6 +106968,16 @@
         "text": "Take the loss; keep the lord’s good regard."
       }
     },
+    "src.d04c1363": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
+      }
+    },
     "src.d053a042": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107848,6 +107968,16 @@
       ],
       "source": {
         "text": "Your copies are precise and sought after. Scholars speak your name."
+      }
+    },
+    "src.d39c19ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "does not reference a strait."
       }
     },
     "src.d39cb0c9": {
@@ -109101,6 +109231,16 @@
         "text": "A Voice Behind the Throne"
       }
     },
+    "src.d76ea691": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised."
+      }
+    },
     "src.d774663a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109991,6 +110131,16 @@
       ],
       "source": {
         "text": "Aosta"
+      }
+    },
+    "src.da03cf68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "crossingClasses must be an object keyed by canonical strait pairs."
       }
     },
     "src.da060654": {
@@ -119996,6 +120146,16 @@
         "text": "Let the house of {god} answer for the child."
       }
     },
+    "src.f8d3ceef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "overland army movement speed"
+      }
+    },
     "src.f8d54909": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120434,6 +120594,16 @@
       ],
       "source": {
         "text": "Pay for a physician."
+      }
+    },
+    "src.fa0f6265": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
       }
     },
     "src.fa262b54": {
@@ -121545,16 +121715,6 @@
       ],
       "source": {
         "text": "Private negotiation"
-      }
-    },
-    "src.fdaf212c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt."
       }
     },
     "src.fdb9046e": {
@@ -138853,6 +139013,16 @@
         "text": "Scutage — silver may answer the summons"
       }
     },
+    "ui:Sea transport capacity: up to {capacity} per crossing cycle.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "capacity"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Sea transport capacity: up to {capacity} per crossing cycle."
+      }
+    },
     "ui:Seafaring and navigation": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142032,6 +142202,14 @@
         "text": "Watches for schemes against you; your own plots weave faster"
       }
     },
+    "ui:Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised."
+      }
+    },
     "ui:Weak authority blocks extraordinary taxes and revocation.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -143287,14 +143465,6 @@
         "text": "archers"
       }
     },
-    "ui:army movement speed": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "army movement speed"
-      }
-    },
     "ui:at the destination": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144087,6 +144257,14 @@
         "text": "overextended — your income & levy cut {pct}%"
       }
     },
+    "ui:overland army movement speed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "overland army movement speed"
+      }
+    },
     "ui:paused while traveling": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144252,6 +144430,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "scutage in force"
+      }
+    },
+    "ui:sea-crossing speed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "sea-crossing speed"
       }
     },
     "ui:settlement": {
@@ -148380,16 +148566,30 @@
         "text": "🗝 Hire a Retainer"
       }
     },
-    "ui:🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt.": {
+    "ui:🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "goal",
+        "days",
         "men",
+        "next",
         "place"
       ],
       "location": "js/ui.js",
       "source": {
-        "text": "🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt."
+        "text": "🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
+      }
+    },
+    "ui:🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "men",
+        "next",
+        "place"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
       }
     },
     "ui:🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.": {

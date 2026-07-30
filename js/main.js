@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.93.6';
+  FB.VERSION = '1.94.0';
   FB.CHANGELOG = [
+    { v: '1.94.0', date: '2026-07-30', changes: [
+      'Field armies now cross water according to national transport capacity and seafaring technology, with route and crossing details shown when orders are issued.'
+    ] },
     { v: '1.93.6', date: '2026-07-30', changes: [
       'Family names, marriage terms, stepchildren, career histories, Guild Standing, and enterprise staffing now follow consistent household rules. Large-list returns and building previews no longer disturb focus or play state.'
     ] },

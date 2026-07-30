@@ -4481,15 +4481,24 @@ window.FB = window.FB || {};
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
-      const marching = selA.goal && selA.goal !== selA.at && FB.world.byId[selA.goal];
-      const hostText = marching
-        ? FB.T('🚩 Your host — {men} at {place}, marching on {goal}. Tap a province on the map to march; tap the host again to halt.', {
-          men: menText(s, selA.men), place: selPr ? selPr.name : '?',
-          goal: FB.world.byId[selA.goal].name
-        })
-        : FB.T('🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.', {
+      const nextPid = selA.path && selA.path.length ? selA.path[0] : null;
+      const nextPr = nextPid && FB.world.byId[nextPid];
+      let hostText;
+      if (nextPr && selA.moveLeft > 0) {
+        hostText = FB.waterCrossing && FB.waterCrossing(selA.at, nextPid)
+          ? FB.T('🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.', {
+            men:menText(s, selA.men), place:selPr ? selPr.name : '?',
+            next:nextPr.name, days:selA.moveLeft
+          })
+          : FB.T('🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.', {
+            men:menText(s, selA.men), place:selPr ? selPr.name : '?',
+            next:nextPr.name, days:selA.moveLeft
+          });
+      } else {
+        hostText = FB.T('🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.', {
           men: menText(s, selA.men), place: selPr ? selPr.name : '?'
         });
+      }
       h += '<div class="progressnote">' + esc(hostText) + '</div>';
       // what the host is made of (the same breakdown the war status shows)
       const selectedHostUpkeep = FB.playerHostUpkeepParts
@@ -14688,7 +14697,9 @@ window.FB = window.FB || {};
     const percentKeys = {
       tax:FB.T('tax income'), levy:FB.T('levy size'), battle:FB.T('battle odds'),
       health:FB.T('yearly health'), siege:FB.T('siege progress'),
-      movement:FB.T('army movement speed'), education:FB.T('education success chance'),
+      movement:FB.T('overland army movement speed'),
+      seaMovement:FB.T('sea-crossing speed'),
+      education:FB.T('education success chance'),
       finance:FB.T('credit capacity'), trade:FB.T('merchant and craft income')
     };
     for (const key in percentKeys) {
@@ -14704,6 +14715,10 @@ window.FB = window.FB || {};
       amount:researchNumber(fx.research)
     }));
     if (fx.domain) out.push(FB.T('+{amount} domain capacity', { amount:fx.domain }));
+    if (fx.seaTransport) out.push(FB.T(
+      'Sea transport capacity: up to {capacity} per crossing cycle.', {
+        capacity:menText(FB.state, fx.seaTransport)
+      }));
     if (fx.costs) for (const category in fx.costs) {
       if (!fx.costs[category]) continue;
       const categoryNames = {
@@ -17822,6 +17837,7 @@ window.FB = window.FB || {};
       '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
       '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war requires a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
+      '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +

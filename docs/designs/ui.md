@@ -408,6 +408,14 @@ cheapest-first, or a preferred domain and fills open slots as soon as an automat
 is chosen; the general Automation sheet exposes the same linked setting. Eligible tier-3+
 vassals receive advocacy controls. Foreign ruler sheets show the same nation's
 completed/exposed totals and active projects read-only.
+Overland movement and sea-crossing speed use distinct effect labels, and a transport-tier
+technology states its concrete men-per-crossing-cycle capacity. A manual host order uses
+the same weighted route assigned to the army to report destination ETA, water-crossing
+count, and the limiting crossing's capacity and cycles. Pointer and keyboard orders share
+that path. When a moving host is selected, Land reports the immediate leg and remaining
+days as either marching or preparing a crossing; the marker remains on the departure
+county. These long feedback lines wrap naturally in narrow layouts and add no fixed-width
+controls.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
