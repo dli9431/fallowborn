@@ -5,9 +5,6 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
 
-  var DOMAIN_ORDER = [
-    'agriculture','crafts','commerce','learning','governance','warfare','seafaring'
-  ];
   var LEGACY_DOMAIN = {
     military:'warfare',
     economy:'agriculture',
@@ -44,6 +41,12 @@ window.FB = window.FB || {};
   function asList(value) {
     if (value === undefined || value === null || value === '') return [];
     return Array.isArray(value) ? value.slice() : [value];
+  }
+
+  function domainOrder(id) {
+    var def = FBDATA.techDomains && FBDATA.techDomains[id];
+    var order = def && Number(def.order);
+    return isFinite(order) ? order : Number.MAX_VALUE;
   }
 
   function emptyTechRecord() {
@@ -592,9 +595,11 @@ window.FB = window.FB || {};
     }
     if (!skipSort) {
       out.sort(function (a, b) {
-        var da = DOMAIN_ORDER.indexOf(a.domain), db = DOMAIN_ORDER.indexOf(b.domain);
+        var da = domainOrder(a.domain), db = domainOrder(b.domain);
         var aa = a.def.history.attested[0], ab = b.def.history.attested[0];
-        return da - db || aa - ab || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+        return da - db ||
+          (a.domain < b.domain ? -1 : a.domain > b.domain ? 1 : 0) ||
+          aa - ab || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
       });
     }
     return out;
@@ -1337,13 +1342,62 @@ window.FB = window.FB || {};
   }
 
   FB.validateTechnologyData = function () {
-    var errors = [], traditions = FBDATA.techTraditions || {};
+    var errors = [], domains = FBDATA.techDomains || {};
+    var traditions = FBDATA.techTraditions || {};
+    for (var domain in domains) {
+      if (!own(domains, domain)) continue;
+      var domainDef = domains[domain];
+      if (!domainDef || !domainDef.name ||
+          (domainDef.order !== undefined &&
+           (typeof domainDef.order !== 'number' || !isFinite(domainDef.order)))) {
+        errors.push('Technology domain ' + domain + ' is invalid.');
+      }
+    }
     for (var tradition in traditions) {
       if (!own(traditions, tradition)) continue;
       var traditionDef = traditions[tradition];
       if (!traditionDef || !traditionDef.name ||
           !Array.isArray(traditionDef.cultures) || !Array.isArray(traditionDef.religions)) {
         errors.push('Technology tradition ' + tradition + ' is invalid.');
+      }
+    }
+    var caps = FBDATA.techCaps;
+    if (!caps || typeof caps !== 'object' || Array.isArray(caps)) {
+      errors.push('Technology caps are invalid.');
+    } else {
+      for (var scalarCap in SCALAR_KEYS) if (own(SCALAR_KEYS, scalarCap) &&
+          caps[scalarCap] !== undefined &&
+          (typeof caps[scalarCap] !== 'number' || !isFinite(caps[scalarCap]) ||
+           caps[scalarCap] < 0)) {
+        errors.push('Technology cap ' + scalarCap +
+          ' must be a non-negative number.');
+      }
+      var capTables = {
+        costFloor:COST_KEYS,
+        units:UNIT_KEYS,
+        aiUnits:AI_UNIT_KEYS
+      };
+      for (var capName in caps) if (own(caps, capName) &&
+          !own(SCALAR_KEYS, capName) && !own(capTables, capName)) {
+        errors.push('Technology caps have unknown key ' + capName + '.');
+      }
+      for (var capTableName in capTables) {
+        if (!own(capTables, capTableName) || caps[capTableName] === undefined) continue;
+        var capTable = caps[capTableName];
+        if (!capTable || typeof capTable !== 'object' || Array.isArray(capTable)) {
+          errors.push('Technology cap group ' + capTableName + ' is invalid.');
+          continue;
+        }
+        for (var capKey in capTable) if (own(capTable, capKey)) {
+          if (!own(capTables[capTableName], capKey)) {
+            errors.push('Technology cap group ' + capTableName +
+              ' has unknown key ' + capKey + '.');
+          } else if (typeof capTable[capKey] !== 'number' ||
+              !isFinite(capTable[capKey]) || capTable[capKey] < 0) {
+            errors.push('Technology cap ' + capTableName + '.' + capKey +
+              ' must be a non-negative number.');
+          }
+        }
       }
     }
     for (var id in (FBDATA.tech || {})) {

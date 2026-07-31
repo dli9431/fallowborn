@@ -7,7 +7,7 @@ hard calendar locks, exposure continues, and the historical cost curve becomes a
 discount rather than stopping.
 
 The live catalogue is `FBDATA.tech` in `data/technology.js`. It contains 180 entries in a
-directed prerequisite graph across seven domains:
+directed prerequisite graph across seven built-in domains:
 
 - agriculture and animal power;
 - crafts, materials, and industry;
@@ -24,6 +24,13 @@ research catalogue and bibliography are in
 The validator rejects unknown domains or traditions, malformed or reversed dates, missing
 prerequisites, cycles, invalid effects or unlock references, and bad bookmark seed
 overrides.
+
+Runtime mods may add or replace `techDomains`, `techTraditions`, and `tech` entries by id.
+Domain `order` is authoritative for catalogue grouping; domain and tradition names use
+structured-data localization with authored-English fallback. `techCaps` is also moddable:
+scalar entries merge directly, while `costFloor`, `units`, and `aiUnits` merge by their
+members so focused overrides preserve unrelated caps. All cap values are finite and
+non-negative.
 
 ## National records and sovereignty
 

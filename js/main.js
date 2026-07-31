@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.98.1';
+  FB.VERSION = '1.99.0';
   FB.CHANGELOG = [
+    { v: '1.99.0', date: '2026-07-31', changes: [
+      'Mods can now customize technology domains, traditions, caps, and the default bookmark.'
+    ] },
     { v: '1.98.1', date: '2026-07-31', changes: [
       'The Guide now explains wars, claims, aggression, and sieges, with a direct link from the conquest picker.'
     ] },
@@ -718,7 +721,8 @@ window.FB = window.FB || {};
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
       refreshOfflineStatus();
-      FB.activateBookmark(FBDATA.defaultBookmark || '867',
+      FB.activateBookmark(FBDATA.defaultBookmark === undefined
+        ? '867' : FBDATA.defaultBookmark,
         function (frac, msg) {
           $('loadbar').style.width = Math.round(frac * 100) + '%';
           $('loadmsg').textContent = FB.T(msg);

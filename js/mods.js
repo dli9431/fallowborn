@@ -151,6 +151,28 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function mergeTable(table, additions) {
+    for (const k in additions) if (own(additions, k)) table[k] = additions[k];
+  }
+
+  /* Cap groups are configuration maps rather than atomic definitions. A mod
+     can raise one unit/cost cap without silently dropping every sibling cap. */
+  function mergeTechCaps(additions) {
+    const nested = { costFloor:true, units:true, aiUnits:true };
+    for (const k in additions) {
+      if (!own(additions, k)) continue;
+      const value = additions[k];
+      if (nested[k] && value && typeof value === 'object' &&
+          !Array.isArray(value) && FBDATA.techCaps[k] &&
+          typeof FBDATA.techCaps[k] === 'object' &&
+          !Array.isArray(FBDATA.techCaps[k])) {
+        mergeTable(FBDATA.techCaps[k], value);
+      } else {
+        FBDATA.techCaps[k] = value;
+      }
+    }
+  }
+
   M.apply = function (mod) {
     const legacyWorldKeys = [
       'provinces','realms','empires','kingdoms','duchies','straits',
@@ -218,6 +240,9 @@ window.FBMODS = window.FBMODS || [];
     if (mod.modifiers) for (const k in mod.modifiers) FBDATA.modifiers[k] = mod.modifiers[k];
     if (mod.buildings) for (const k in mod.buildings) FBDATA.buildings[k] = mod.buildings[k];
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
+    if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
+    if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);
+    if (mod.techCaps) mergeTechCaps(mod.techCaps);
     if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];
     if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
     if (mod.positions) for (const k in mod.positions) FBDATA.positions[k] = mod.positions[k];
@@ -251,6 +276,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.land) FBDATA.land = mod.land;
     if (mod.seas) FBDATA.seas = mod.seas;
     if (mod.rivers) FBDATA.rivers = mod.rivers;
+    if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
   };
 
   M.applyStored = function () {

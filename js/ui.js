@@ -15519,16 +15519,20 @@ window.FB = window.FB || {};
   const techCatalogueView = { domain:'all', status:'all', query:'' };
 
   function techDomainName(id) {
-    const names = {
-      agriculture:FB.T('Agriculture and animal power'),
-      crafts:FB.T('Crafts, materials, and industry'),
-      commerce:FB.T('Commerce, transport, and infrastructure'),
-      learning:FB.T('Learning, medicine, and natural knowledge'),
-      governance:FB.T('Governance, law, and institutions'),
-      warfare:FB.T('Warfare and fortification'),
-      seafaring:FB.T('Seafaring and navigation')
-    };
-    return names[id] || id;
+    const def = FBDATA.techDomains && FBDATA.techDomains[id];
+    return def && FB.state
+      ? FB.dataText(FB.state, FB.state.player.charId, 'techDomain', id, def, 'name', {})
+      : id;
+  }
+
+  function techDomainIds() {
+    return Object.keys(FBDATA.techDomains || {}).sort(function (a, b) {
+      const ad = FBDATA.techDomains[a] || {};
+      const bd = FBDATA.techDomains[b] || {};
+      const ao = isFinite(Number(ad.order)) ? Number(ad.order) : Number.MAX_VALUE;
+      const bo = isFinite(Number(bd.order)) ? Number(bd.order) : Number.MAX_VALUE;
+      return ao - bo || (a < b ? -1 : a > b ? 1 : 0);
+    });
   }
 
   function techAutomationMode(mode) {
@@ -15548,8 +15552,7 @@ window.FB = window.FB || {};
     let h = '<option value="cheapest"' +
       (selected === 'cheapest' ? ' selected' : '') + '>' +
       esc(FB.T('Cheapest available first')) + '</option>';
-    for (const domain in (FBDATA.techDomains || {})) {
-      if (!Object.prototype.hasOwnProperty.call(FBDATA.techDomains, domain)) continue;
+    for (const domain of techDomainIds()) {
       h += '<option value="' + esc(domain) + '"' +
         (selected === domain ? ' selected' : '') + '>' +
         esc(FB.T('{domain} first', { domain:techDomainName(domain) })) + '</option>';
@@ -15558,19 +15561,10 @@ window.FB = window.FB || {};
   }
 
   function techTraditionName(id) {
-    const names = {
-      latin:FB.T('Latin West'),
-      byzantine:FB.T('Byzantine'),
-      islamic:FB.T('Islamic Mediterranean'),
-      persianate:FB.T('Persianate'),
-      slavic:FB.T('Slavic'),
-      nordic:FB.T('Nordic'),
-      steppe:FB.T('Steppe'),
-      baltic_finnic:FB.T('Baltic-Finnic'),
-      caucasian:FB.T('Caucasian'),
-      northeast_african:FB.T('Northeast African')
-    };
-    return names[id] || id;
+    const def = FBDATA.techTraditions && FBDATA.techTraditions[id];
+    return def && FB.state
+      ? FB.dataText(FB.state, FB.state.player.charId, 'techTradition', id, def, 'name', {})
+      : id;
   }
 
   function techYear(year) {
@@ -15847,7 +15841,7 @@ window.FB = window.FB || {};
         esc(FB.T('Name, effect, or unlock')) + '"></label>' +
       '<label><span>' + esc(FB.T('Domain')) + '</span><select id="tech-domain">' +
         '<option value="all">' + esc(FB.T('All domains')) + '</option>';
-    for (const domain in FBDATA.techDomains) {
+    for (const domain of techDomainIds()) {
       h += '<option value="' + esc(domain) + '"' +
         (techCatalogueView.domain === domain ? ' selected' : '') + '>' +
         esc(techDomainName(domain)) + '</option>';
@@ -15954,8 +15948,7 @@ window.FB = window.FB || {};
       FB.T('Keep current projects, but leave future slots for you to choose.'));
     h += choice('cheapest', FB.T('Cheapest available first'),
       FB.T('Fill slots with the eligible technologies that currently cost the least research.'));
-    for (const domain in (FBDATA.techDomains || {})) {
-      if (!Object.prototype.hasOwnProperty.call(FBDATA.techDomains, domain)) continue;
+    for (const domain of techDomainIds()) {
       h += choice(domain,
         FB.T('{domain} first', { domain:techDomainName(domain) }),
         FB.T('Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains.', {
@@ -19417,7 +19410,7 @@ window.FB = window.FB || {};
       });
     }
     h += '<div class="gm-body-text">' +
-      '<p>Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, currency, balance). See <b>docs/MODDING.md</b> in the game folder for the format. You can also edit the files in <b>data/</b> directly.</p>' +
+      '<p>Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, technology, currency, balance). See <b>docs/MODDING.md</b> in the game folder for the format. You can also edit the files in <b>data/</b> directly.</p>' +
       '<p>Mods stay on until removed, and saves remember their world — a life begun with a mod continues only while that mod is active.</p></div>' +
       (FB.mods.currencyInvalid && FB.mods.currencyInvalid()
         ? '<div class="progressnote warnote">' +

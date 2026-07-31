@@ -38745,7 +38745,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Governance, law, and institutions"
@@ -40177,7 +40177,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Steppe"
@@ -42204,7 +42204,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Commerce, transport, and infrastructure"
@@ -44043,16 +44043,6 @@
       ],
       "source": {
         "text": "Work & Enterprises…"
-      }
-    },
-    "src.1117ac21": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, currency, balance). See"
       }
     },
     "src.11184a32": {
@@ -49233,7 +49223,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Learning, medicine, and natural knowledge"
@@ -52419,7 +52409,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Northeast African"
@@ -53160,7 +53150,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Baltic-Finnic"
@@ -54722,7 +54712,7 @@
       "glossary": [],
       "location": [
         "data/cultures.js",
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Slavic"
@@ -64411,7 +64401,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Byzantine"
@@ -64782,7 +64772,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Warfare and fortification"
@@ -64932,7 +64922,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Nordic"
@@ -70096,6 +70086,16 @@
       ],
       "source": {
         "text": "Messina"
+      }
+    },
+    "src.5cedee49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology domain"
       }
     },
     "src.5cf95c37": {
@@ -78407,7 +78407,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Agriculture and animal power"
@@ -79019,7 +79019,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Latin West"
@@ -93349,7 +93349,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Persianate"
@@ -94104,6 +94104,16 @@
       ],
       "source": {
         "text": "Use Deeds to build money, reputation, and a route to freedom."
+      }
+    },
+    "src.a1d5ba92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "must be a non-negative number."
       }
     },
     "src.a1d5f9fd": {
@@ -100115,7 +100125,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Islamic Mediterranean"
@@ -106627,7 +106637,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Crafts, materials, and industry"
@@ -107473,6 +107483,16 @@
       ],
       "source": {
         "text": "This contract is reckoned by weight: price changes do not change the amount due."
+      }
+    },
+    "src.c8d10d3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Mods are JSON files merged over the game data (events, provinces, realms, cultures, traits, technology, currency, balance). See"
       }
     },
     "src.c8d3af98": {
@@ -108729,6 +108749,16 @@
         "text": "Let braver fools go."
       }
     },
+    "src.cc95daf0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology cap group"
+      }
+    },
     "src.cc96233c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109716,7 +109746,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Caucasian"
@@ -110130,6 +110160,16 @@
       ],
       "source": {
         "text": "“Come and take it,” he answers, and rides home to raise his spears."
+      }
+    },
+    "src.d1313001": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology caps are invalid."
       }
     },
     "src.d13eeeb7": {
@@ -113507,6 +113547,16 @@
       ],
       "source": {
         "text": "{friend} does not answer the roll. You find them at last among the rows of the dead, looking almost surprised."
+      }
+    },
+    "src.dadb856f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology caps have unknown key"
       }
     },
     "src.dae5bd36": {
@@ -120787,6 +120837,16 @@
         "text": "Masses sung for your ancestors. (25 piety)"
       }
     },
+    "src.f027ec76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "has unknown key"
+      }
+    },
     "src.f02839ef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121061,7 +121121,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js"
+        "data/technology.js"
       ],
       "source": {
         "text": "Seafaring and navigation"
@@ -124161,6 +124221,16 @@
       ],
       "source": {
         "text": "An old schedule fixes a modest toll and saves both faces."
+      }
+    },
+    "src.f9fedce3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology cap"
       }
     },
     "src.fa0e861d": {
@@ -129011,6 +129081,142 @@
         "text": "Positional Zero"
       }
     },
+    "techDomain.agriculture.name.default": {
+      "context": "techDomain agriculture, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Agriculture and animal power"
+      }
+    },
+    "techDomain.commerce.name.default": {
+      "context": "techDomain commerce, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Commerce, transport, and infrastructure"
+      }
+    },
+    "techDomain.crafts.name.default": {
+      "context": "techDomain crafts, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Crafts, materials, and industry"
+      }
+    },
+    "techDomain.governance.name.default": {
+      "context": "techDomain governance, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Governance, law, and institutions"
+      }
+    },
+    "techDomain.learning.name.default": {
+      "context": "techDomain learning, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Learning, medicine, and natural knowledge"
+      }
+    },
+    "techDomain.seafaring.name.default": {
+      "context": "techDomain seafaring, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Seafaring and navigation"
+      }
+    },
+    "techDomain.warfare.name.default": {
+      "context": "techDomain warfare, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Warfare and fortification"
+      }
+    },
+    "techTradition.baltic_finnic.name.default": {
+      "context": "techTradition baltic_finnic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Baltic-Finnic"
+      }
+    },
+    "techTradition.byzantine.name.default": {
+      "context": "techTradition byzantine, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Byzantine"
+      }
+    },
+    "techTradition.caucasian.name.default": {
+      "context": "techTradition caucasian, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Caucasian"
+      }
+    },
+    "techTradition.islamic.name.default": {
+      "context": "techTradition islamic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Islamic Mediterranean"
+      }
+    },
+    "techTradition.latin.name.default": {
+      "context": "techTradition latin, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Latin West"
+      }
+    },
+    "techTradition.nordic.name.default": {
+      "context": "techTradition nordic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Nordic"
+      }
+    },
+    "techTradition.northeast_african.name.default": {
+      "context": "techTradition northeast_african, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Northeast African"
+      }
+    },
+    "techTradition.persianate.name.default": {
+      "context": "techTradition persianate, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Persianate"
+      }
+    },
+    "techTradition.slavic.name.default": {
+      "context": "techTradition slavic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Slavic"
+      }
+    },
+    "techTradition.steppe.name.default": {
+      "context": "techTradition steppe, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Steppe"
+      }
+    },
     "terrain.desert.default": {
       "context": "Structured war-status display message.",
       "glossary": [],
@@ -131965,14 +132171,6 @@
         "text": "Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}"
       }
     },
-    "ui:Agriculture and animal power": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Agriculture and animal power"
-      }
-    },
     "ui:Aid {aid}% · {scutage}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -132983,14 +133181,6 @@
         "text": "Balloting"
       }
     },
-    "ui:Baltic-Finnic": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Baltic-Finnic"
-      }
-    },
     "ui:Bargain for recognition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133504,14 +133694,6 @@
         "text": "Buy {plots} plots for {money:cost}"
       }
     },
-    "ui:Byzantine": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Byzantine"
-      }
-    },
     "ui:Call a Catholic great holy war": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133764,14 +133946,6 @@
       "location": "js/papacy.js",
       "source": {
         "text": "Catholic faith"
-      }
-    },
-    "ui:Caucasian": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Caucasian"
       }
     },
     "ui:Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.": {
@@ -134385,14 +134559,6 @@
         "text": "Commenda partnership"
       }
     },
-    "ui:Commerce, transport, and infrastructure": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Commerce, transport, and infrastructure"
-      }
-    },
     "ui:Commoner household": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134735,14 +134901,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Courtship"
-      }
-    },
-    "ui:Crafts, materials, and industry": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Crafts, materials, and industry"
       }
     },
     "ui:Creates the one canonical active rivalry.": {
@@ -136933,14 +137091,6 @@
         "text": "Governance sections"
       }
     },
-    "ui:Governance, law, and institutions": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Governance, law, and institutions"
-      }
-    },
     "ui:Governance…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -137962,14 +138112,6 @@
         "text": "Investiture policy"
       }
     },
-    "ui:Islamic Mediterranean": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Islamic Mediterranean"
-      }
-    },
     "ui:Issue an excommunication": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138286,14 +138428,6 @@
         "text": "Last lines of the chronicle"
       }
     },
-    "ui:Latin West": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Latin West"
-      }
-    },
     "ui:Leans: {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -138321,14 +138455,6 @@
       "location": "js/papacy.js",
       "source": {
         "text": "Learning {needed} (now {current})"
-      }
-    },
-    "ui:Learning, medicine, and natural knowledge": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Learning, medicine, and natural knowledge"
       }
     },
     "ui:Learning, piety, religious Standing, and vocation experience support advancement.": {
@@ -140526,22 +140652,6 @@
         "text": "None — this land feeds no duchy or crown."
       }
     },
-    "ui:Nordic": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Nordic"
-      }
-    },
-    "ui:Northeast African": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Northeast African"
-      }
-    },
     "ui:Not applicable": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141808,14 +141918,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Permanent ruins; the site remains occupied"
-      }
-    },
-    "ui:Persianate": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Persianate"
       }
     },
     "ui:Person": {
@@ -144227,14 +144329,6 @@
         "text": "Sea transport capacity: up to {capacity} per crossing cycle."
       }
     },
-    "ui:Seafaring and navigation": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Seafaring and navigation"
-      }
-    },
     "ui:Search": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144716,14 +144810,6 @@
         "text": "Skills"
       }
     },
-    "ui:Slavic": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Slavic"
-      }
-    },
     "ui:Social and religious roles": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -145158,14 +145244,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Stays with the county when political control changes"
-      }
-    },
-    "ui:Steppe": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Steppe"
       }
     },
     "ui:Stewardship turns land, labor, and property into reliable value.": {
@@ -147848,14 +147926,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "War, claims, and conquest"
-      }
-    },
-    "ui:Warfare and fortification": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Warfare and fortification"
       }
     },
     "ui:Warm": {
