@@ -625,6 +625,8 @@ test('plot target picker shows realm cards and starts the exact selected plot',
       p.liege = null;
       p.provs = [p.provinceId];
       FB.foundPlayerRealm(s);
+      p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+      p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
       FB.ui.refresh();
       FB.ui.showPlotTargets('diplomatic_correspondence');
       return {

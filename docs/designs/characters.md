@@ -72,6 +72,13 @@ applies `balance.focusSkillGainRate` (0.75) to its authored seasonal chance befo
 this diminishing-return roll; event, education, and coming-of-age gains are
 unaffected.
 
+The in-game Guide gives every skill a short conceptual purpose and names its major
+current consumers without claiming to enumerate event scripts. Character skill labels
+and full character sheets link to those entries. Learning explicitly covers national
+research, education and tutoring, religious advancement, Papal systems, and
+knowledge-oriented checks; these descriptions remain conceptual when the current
+character cannot access one of those systems.
+
 **Equipment bonuses belong to the wearer.** `FB.skillOf` adds skill effects from that
 character's household loadout, not from every object the dynasty owns. Equipped health
 protection likewise lowers that wearer's yearly mortality, including spouses and resident
@@ -389,6 +396,20 @@ religious-standing, enterprise, office, marriage, and loadout records without in
 policy or assignment record. Applicable cells open the same detailed pickers as character
 sheets and Work & Enterprises. No-day changes return to a freshly derived plan; choices
 that already spend a day keep their ordinary close-and-advance behavior.
+
+**Family visibility is not household control.** Work & Enterprises names its scope:
+the playable head, resident spouses and descendants, and hired retainers appear when
+old enough for work or training. A visible relative outside the managed household is
+not assignable. Each present but unavailable row states the applicable age, station,
+faith, career, or landed-head rule. The Guide separately defines playable line, house,
+managed household, visible kin, and royal branch.
+
+`FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
+that review instead of rebuilding the order. The review preserves the existing named
+heir, children-first, then same-house grandchildren/siblings/nieces-nephews/
+uncles-aunts/cousins order and attaches a stable eligibility code for UI prose.
+Spouses, dead relatives, different-house branches, and branches behind living
+children remain visible with an explicit reason rather than silently disappearing.
 
 **Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
 career's `apprenticeAge` may be placed with that trade from their sheet. It costs the

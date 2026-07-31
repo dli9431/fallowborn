@@ -2526,6 +2526,29 @@ window.FB = window.FB || {};
     return s.pre[h % s.pre.length] + s.suf[(h >>> 4) % s.suf.length];
   };
 
+  FB.settlementDevelopment = function (state, pid) {
+    const pr = FB.world.byId[pid];
+    if (!pr || pr.wasteland) return null;
+    const development = (state && state.dev && state.dev[pid]) || pr.dev || 1;
+    let next = null, change = null;
+    if (development < 4) {
+      next = 4; change = 'head_town';
+    } else if (development < 5) {
+      next = 5; change = 'new_village';
+    } else if (development < 6) {
+      next = 6; change = 'second_town';
+    } else if (development < 7) {
+      next = 7; change = 'head_city';
+    }
+    return {
+      development:development,
+      bookmark:pr.dev || 1,
+      next:next,
+      change:change,
+      remaining:next === null ? 0 : next - development
+    };
+  };
+
   FB.settlementsOf = function (state, pid) {
     const pr = FB.world.byId[pid];
     if (!pr || pr.wasteland) return [];

@@ -32,6 +32,10 @@ test('raises buildings in two held counties from the narrow county ledger',
           record.completed.push(requirement);
         }
       }
+      state.player.roleOrientationsSeen =
+        state.player.roleOrientationsSeen || {};
+      state.player.roleOrientationsSeen[
+        'role-tier-' + state.player.tier] = 1;
       FB.ui.refresh();
       FB.ui.showBuildings();
       return {

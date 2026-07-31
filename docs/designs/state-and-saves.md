@@ -513,3 +513,10 @@ records live at `state.greatHolyWar.modifiers`. After holy-war and ordinary-war 
 `FB.ensureModifiers` creates missing containers, discards malformed or unknown records,
 and collapses duplicate ids without migrating the save version. County records remain
 with their county through ownership changes. See [modifiers.md](modifiers.md).
+
+Role orientation history is a lazy additive player field:
+`player.roleOrientationsSeen = {orientationId:1}`. It contains no prose and belongs to
+the campaign household, so it survives protagonist succession and ordinary save/export
+round trips. Missing state means no orientation has been seen and requires no save-version
+migration. Manually replaying a Guide orientation records it as seen but never clears
+another entry.

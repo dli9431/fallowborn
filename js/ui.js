@@ -28,6 +28,104 @@ window.FB = window.FB || {};
     const def = FBDATA.positions && FBDATA.positions[id];
     return def ? dt(s, 'position', id, def, 'desc') : '';
   }
+  function techRequirementIds(requirement) {
+    if (!requirement) return [];
+    return Array.isArray(requirement) ? requirement.slice() : [requirement];
+  }
+  function firstMissingTech(s, requirement) {
+    const ids = techRequirementIds(requirement);
+    for (const id of ids) if (!FB.hasTech(s, id)) return id;
+    return ids[0] || null;
+  }
+  function technologyName(s, id) {
+    const def = FBDATA.tech && FBDATA.tech[id];
+    return def ? dt(s, 'tech', id, def, 'name') : id;
+  }
+  function techRequirementText(s, requirement) {
+    const ids = techRequirementIds(requirement);
+    const names = ids.map(function (id) { return technologyName(s, id); });
+    if (!names.length) return '';
+    if (names.length === 1) {
+      return FB.T('Requires {technology}.', { technology:names[0] });
+    }
+    return FB.T('Requires every listed technology: {technologies}.', {
+      technologies:names.join(', ')
+    });
+  }
+  function settlementDevelopmentText(s, pid) {
+    const status = FB.settlementDevelopment(s, pid);
+    if (!status) return '';
+    if (status.next === null) {
+      return FB.T(
+        'Development {development}: every current settlement-growth threshold has been reached.', {
+          development:status.development
+        });
+    }
+    const changes = {
+      head_town:FB.T('the first village becomes a town'),
+      new_village:FB.T('an additional village appears'),
+      second_town:FB.T('the second settlement becomes a town'),
+      head_city:FB.T('the first settlement becomes a city')
+    };
+    return FB.T('Next at development {threshold}: {change}.', {
+      threshold:status.next,
+      change:changes[status.change] || status.change
+    });
+  }
+  function bookmarkDevelopmentText(s, pid) {
+    const status = FB.settlementDevelopment(s, pid);
+    if (!status) return '';
+    if (status.development === status.bookmark) {
+      return FB.T('Bookmark start: {development}; no net growth during play yet.', {
+        development:status.bookmark
+      });
+    }
+    return status.development > status.bookmark
+      ? FB.T('Bookmark start: {start}; growth during play: +{amount}.', {
+        start:status.bookmark,
+        amount:status.development - status.bookmark
+      })
+      : FB.T('Bookmark start: {start}; change during play: {amount}.', {
+        start:status.bookmark,
+        amount:status.development - status.bookmark
+      });
+  }
+  function childIdentityPreviewText(s, familyParent, spouse, playableLine) {
+    const preview = FB.childIdentityPreview(s, familyParent, spouse, playableLine);
+    const cultureSource = s.chars[preview.cultureParentId];
+    const religionSource = s.chars[preview.religionParentId];
+    const dynastySource = s.chars[preview.dynastyParentId];
+    return FB.T(
+      'Child identity preview — culture: {culture} from {cultureParent}; faith: {faith} from {faithParent}; house: {dynasty} from {dynastyParent}.', {
+        culture:cultureName(s, preview.culture),
+        cultureParent:cultureSource ? cultureSource.name : FB.T('the family line'),
+        faith:religionName(s, preview.religion),
+        faithParent:religionSource ? religionSource.name : FB.T('the family line'),
+        dynasty:preview.dynasty || FB.T('no house'),
+        dynastyParent:dynastySource ? dynastySource.name : FB.T('no parent’s house')
+      });
+  }
+  function heirEligibilityText(s, row) {
+    if (!row) return '';
+    if (row.eligible) {
+      const eligible = {
+        child:FB.T('Eligible: living child of the current playable head.'),
+        grandchildren:FB.T('Eligible: same-house grandchild; no living child is ahead of this branch.'),
+        siblings:FB.T('Eligible: same-house sibling; no living child or grandchild is ahead.'),
+        nieces_nephews:FB.T('Eligible: same-house niece or nephew; closer branches have no living candidate.'),
+        uncles_aunts:FB.T('Eligible: same-house uncle or aunt; closer branches have no living candidate.'),
+        cousins:FB.T('Eligible: same-house cousin; closer branches have no living candidate.')
+      };
+      return eligible[row.code] || FB.T('Eligible under the current house succession order.');
+    }
+    const blocked = {
+      dead:FB.T('Not eligible: this relative has died.'),
+      spouse:FB.T('Not eligible: marriage joins the household but does not make a spouse a blood successor.'),
+      different_house:FB.T('Not eligible: this relative belongs to a different house.'),
+      closer_children:FB.T('Not eligible now: a living child of the playable head takes precedence.')
+    };
+    return blocked[row.code] || FB.T('Not eligible under the current house succession order.');
+  }
   function signedPercent(value) {
     const percent = Math.round((Number(value) || 0) * 100);
     return (percent > 0 ? '+' : '') + percent;
@@ -1526,6 +1624,7 @@ window.FB = window.FB || {};
     requestAnimationFrame(function () {
       refreshQueued = false;
       refreshNow();
+      if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
     });
   };
 
@@ -2123,6 +2222,20 @@ window.FB = window.FB || {};
           btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
         })(item.a.id);
         box.appendChild(btn);
+        if (!item.can && item.a.requiresTech &&
+            !FB.techRequirementMet(s, item.a.requiresTech)) {
+          const techId = firstMissingTech(s, item.a.requiresTech);
+          const techButton = document.createElement('button');
+          techButton.className = 'btn small contextual-help-link';
+          techButton.setAttribute('data-action-tech', techId);
+          techButton.textContent = FB.T('View prerequisite: {technology}', {
+            technology:technologyName(s, techId)
+          });
+          techButton.addEventListener('click', function () {
+            UI.showTechDetail(techId);
+          });
+          box.appendChild(techButton);
+        }
         n++;
       }
     }
@@ -2230,8 +2343,10 @@ window.FB = window.FB || {};
       const name = FB.skillName(k);
       // the bar fills to the soft cap; past it the number keeps climbing and
       // the bar turns bright to mark mastery beyond the soft cap
-      h += '<div class="skillrow"><span class="skill-label" title="' + esc(name) + '">' +
-        esc(name) + '</span>' +
+      h += '<div class="skillrow"><button type="button" class="skill-label linklike" ' +
+        'data-guide-skill="' + esc(k) + '" title="' +
+        esc(FB.T('What does {skill} affect?', { skill:name })) + '">' +
+        esc(name) + '</button>' +
         '<span class="bar"><i' + (v > soft ? ' class="over"' : '') + ' style="width:' +
         Math.min(100, v / soft * 100) + '%"></i></span><span class="num">' + v + '</span></div>';
     }
@@ -2689,6 +2804,12 @@ window.FB = window.FB || {};
         renderChar();
         const next = $('tab-char').querySelector('[data-self-section="' + id + '"]');
         if (next) next.focus({ preventScroll:true });
+      });
+    }
+    const skillLinks = $('tab-char').querySelectorAll('[data-guide-skill]');
+    for (let i = 0; i < skillLinks.length; i++) {
+      skillLinks[i].addEventListener('click', function () {
+        UI.showGuideEntry('skill-' + skillLinks[i].dataset.guideSkill);
       });
     }
     const sef = $('self-edufocus');
@@ -4695,6 +4816,8 @@ window.FB = window.FB || {};
         kv('Faith', rel.icon + ' ' + esc(religionName(s, pr.religion))) +
         kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
+        kv('Settlement growth', esc(settlementDevelopmentText(s, pid))) +
+        kv('Historical starting point', esc(bookmarkDevelopmentText(s, pid))) +
         (realm ? kv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
         kv('Province levy', '~' + esc(menText(s,
@@ -5766,6 +5889,9 @@ window.FB = window.FB || {};
     closeGenericModalRaw();
     mobileNavClosedAll('modal-view', true);
     mobileNavClosed('generic-modal', false);
+    setTimeout(function () {
+      if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
+    }, 0);
   };
 
   /* ================= overland travel picker ================= */
@@ -5805,7 +5931,9 @@ window.FB = window.FB || {};
           ? FB.T('{count} destinations in reach.', {count:destinations.length})
           : FB.T('No qualifying destination can be reached.')) + '</span></button>';
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="travel-purpose-cancel">' +
+    h += '</div><div class="gm-footer"><button class="btn" id="travel-guide">' +
+      esc(FB.T('Guide: travel')) +
+      '</button><button class="btn" id="travel-purpose-cancel">' +
       esc(FB.T('Cancel')) + '</button></div>';
     openModal('🧭 Take to the road…', h);
     document.querySelectorAll('[data-travel-purpose]').forEach(function (button) {
@@ -5818,6 +5946,9 @@ window.FB = window.FB || {};
         UI.closeModal();
         UI.showTravelDestinations(purposeId);
       });
+    });
+    $('travel-guide').addEventListener('click', function () {
+      UI.showGuideEntry('travel');
     });
     $('travel-purpose-cancel').addEventListener('click', UI.closeModal);
   };
@@ -7636,6 +7767,9 @@ window.FB = window.FB || {};
 
   function buildingUnavailableText(s, pid, id, d) {
     const pr = FB.world.byId[pid];
+    if (d.requiresTech && !FB.techRequirementMet(s, d.requiresTech)) {
+      return techRequirementText(s, d.requiresTech);
+    }
     if (d.homeOnly && FB.homeProv(s) !== pid) return FB.T('Only your home county can raise this.');
     if (d.maxDemesne && FB.buildingCount(s, id, false) >= d.maxDemesne) {
       return FB.T('Only {count} may stand across your demesne.', { count: d.maxDemesne });
@@ -7898,7 +8032,12 @@ window.FB = window.FB || {};
     if (!st) return;
     const done = [];
     for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
-    let h = '';
+    let h = '<div class="gm-body-text settlement-development-summary">' +
+      '<p><b>' + esc(FB.T('County development: {current} / {cap}', {
+        current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
+      })) + '</b></p><p>' + esc(settlementDevelopmentText(s, pid)) +
+      '</p><p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
+      '</p></div>';
     if (done.length) {
       for (const e of done) {
         const id = e.id;
@@ -7946,11 +8085,17 @@ window.FB = window.FB || {};
       h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
-    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
+    h += '<div class="gm-footer"><button class="btn" id="settlement-guide">' +
+      esc(FB.T('Guide: settlements and development')) +
+      '</button><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Done')) + '</button></div>';
     openModal(SETT_ICON[st.kind] + ' ' + st.name, h);
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
+    $('settlement-guide').addEventListener('click', function () {
+      UI.showGuideEntry('settlements-development');
+    });
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const id = btn.dataset.demolish;
@@ -10482,6 +10627,8 @@ window.FB = window.FB || {};
       '<h4>' + esc(FB.T('Political actions')) + '</h4>' +
       governanceActionGroups(s, summary) + '</section></div>' +
       '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="governance-guide">' + esc(FB.T('Guide: government')) +
+      '</button><button type="button" class="btn" ' +
       'id="governance-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('🏛 Governance'), h, {
       modalClass:'fullsheet-modal governance-modal'
@@ -10601,6 +10748,9 @@ window.FB = window.FB || {};
           }
         });
       });
+    $('governance-guide').addEventListener('click', function () {
+      UI.showGuideEntry('government');
+    });
     $('governance-close').addEventListener('click', UI.closeModal);
     if (sectionId) {
       setTimeout(function () {
@@ -13326,6 +13476,8 @@ window.FB = window.FB || {};
       s.player.tier >= 3
         ? 'Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season.'
         : 'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.')) +
       '</p></div>';
     const enterprises = FB.enterpriseList(s);
     const assignments = {};
@@ -13543,7 +13695,7 @@ window.FB = window.FB || {};
     }
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
-      if (!FB.enterpriseAvailable(s, i).length) continue;
+      if (!FB.enterpriseAvailable(s, i, true).length) continue;
       enterpriseFooter += '<button class="actionbtn" data-enterprise-settlement="' + i + '">🏪 ' +
         esc(FB.T('Open an enterprise in {settlement}…', { settlement:settlements[i].name })) +
         '<span class="adesc">' + esc(FB.T('Buy productive property; further copies of one kind cost more.')) +
@@ -13573,7 +13725,10 @@ window.FB = window.FB || {};
       { id:'idle', label:FB.T('Idle') },
       { id:'unavailable', label:FB.T('Unavailable') }
     ]);
-    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
+    h += '<div class="gm-footer"><button class="btn" id="work-guide">' +
+      esc(FB.T('Guide: work and family scope')) +
+      '</button><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
     modalOptions.modalClass = 'large-list-modal work-list-modal';
     openModal(FB.T('🧰 Work & Enterprises'), h, modalOptions);
@@ -13600,6 +13755,9 @@ window.FB = window.FB || {};
         UI.showEnterpriseStaffingPreview(returnContext);
       });
     }
+    $('work-guide').addEventListener('click', function () {
+      UI.showGuideEntry('family-scopes');
+    });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, UI.closeModal);
     });
@@ -14846,12 +15004,25 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.')) +
       '</p></div><div class="gm-list">';
-    for (const item of FB.enterpriseAvailable(s, settlement)) {
+    for (const item of FB.enterpriseAvailable(s, settlement, true)) {
       const short = s.player.gold < item.cost;
       const preview = {
         provinceId:s.player.provinceId,
         settlement:settlement
       };
+      if (item.techLocked) {
+        const techId = firstMissingTech(s, item.def.requiresTech);
+        h += '<button class="actionbtn tech-locked-link" data-enterprise-tech="' +
+          esc(techId) + '">' +
+          esc(FB.T('{icon} {name}', {
+            icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name')
+          })) + '<span class="adesc">' +
+          esc(dt(s, 'enterprise', item.id, item.def, 'desc')) + ' ' +
+          esc(techRequirementText(s, item.def.requiresTech)) + ' ' +
+          esc(FB.T('Open the technology entry.')) +
+          '</span></button>';
+        continue;
+      }
       h += '<button class="actionbtn" data-enterprise-buy="' + item.id + '"' +
         (short ? ' disabled' : '') + '>' +
         esc(FB.T('{icon} {name}', {
@@ -14879,6 +15050,11 @@ window.FB = window.FB || {};
         if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+      });
+    });
+    document.querySelectorAll('[data-enterprise-tech]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        UI.showTechDetail(b.dataset.enterpriseTech);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -15274,7 +15450,10 @@ window.FB = window.FB || {};
         effect:percentKeys[key]
       }));
     }
-    if (fx.devCap) out.push(FB.T('+{amount} development ceiling', { amount:fx.devCap }));
+    if (fx.devCap) out.push(FB.T(
+      '+{amount} to every county’s development ceiling in the nation, above the base of 10', {
+        amount:fx.devCap
+      }));
     if (fx.research) out.push(FB.T('+{amount} research each season', {
       amount:researchNumber(fx.research)
     }));
@@ -15407,7 +15586,34 @@ window.FB = window.FB || {};
       add('finance:' + financeId,
         FB.T('Makes {content} available.', { content:financeName }));
     }
+    for (const action of (FB.instants || [])) {
+      if (!action || !techRequiresId(action.requiresTech, id)) continue;
+      add('action:' + action.id, FB.T('Makes the deed {content} available.', {
+        content:dt(s, 'action', action.id, action, 'label')
+      }));
+    }
     return out;
+  }
+
+  function techPrerequisiteSummary(s, def) {
+    const parts = [];
+    const req = Array.isArray(def.req) ? def.req : [];
+    const reqAny = Array.isArray(def.reqAny) ? def.reqAny : [];
+    if (req.length) {
+      parts.push(FB.T('Requires all: {technologies}.', {
+        technologies:req.map(function (id) {
+          return technologyName(s, id);
+        }).join(', ')
+      }));
+    }
+    if (reqAny.length) {
+      parts.push(FB.T('Requires any one: {technologies}.', {
+        technologies:reqAny.map(function (id) {
+          return technologyName(s, id);
+        }).join(', ')
+      }));
+    }
+    return parts.join(' ');
   }
 
   function techPrerequisiteButtons(s, def) {
@@ -15472,7 +15678,8 @@ window.FB = window.FB || {};
     }
     h += '<div class="tech-controls">' +
       '<label><span>' + esc(FB.T('Search')) + '</span><input id="tech-search" type="search" value="' +
-        esc(techCatalogueView.query) + '" placeholder="' + esc(FB.T('Name or description')) + '"></label>' +
+        esc(techCatalogueView.query) + '" placeholder="' +
+        esc(FB.T('Name, effect, or unlock')) + '"></label>' +
       '<label><span>' + esc(FB.T('Domain')) + '</span><select id="tech-domain">' +
         '<option value="all">' + esc(FB.T('All domains')) + '</option>';
     for (const domain in FBDATA.techDomains) {
@@ -15498,22 +15705,32 @@ window.FB = window.FB || {};
       }
       const name = dt(s, 'tech', item.id, item.def, 'name');
       const desc = dt(s, 'tech', item.id, item.def, 'desc');
-      const search = (name + ' ' + desc + ' ' + techDomainName(item.domain)).toLowerCase();
+      const effects = techScalarEffects(item.def);
+      const unlocks = techGameplayUnlocks(s, item.id, item.def);
+      const prerequisites = techPrerequisiteSummary(s, item.def);
+      const discovery = unlocks.concat(effects).concat(
+        prerequisites ? [prerequisites] : []).join(' · ');
+      const search = (name + ' ' + desc + ' ' + techDomainName(item.domain) +
+        ' ' + discovery).toLowerCase();
       h += '<button class="tech-entry tech-' +
         esc(techItemStatus(item).replace(/ /g, ' tech-')) +
         '" data-tech-open="' + esc(item.id) + '" data-domain="' + esc(item.domain) +
         '" data-status="' + esc(techItemStatus(item)) + '" data-search="' + esc(search) + '">' +
         '<span class="tech-entry-icon">' + esc(item.def.icon) + '</span>' +
         '<span class="tech-entry-copy"><b>' + esc(name) + '</b><small>' +
-        esc(techStatusText(item)) +
-        '</small></span><span class="tech-entry-cost">' +
+        esc(techStatusText(item)) + '</small>' +
+        (discovery ? '<small class="tech-entry-discovery">' +
+          esc(discovery) + '</small>' : '') +
+        '</span><span class="tech-entry-cost">' +
         (item.completed ? '✓' : item.active ? '◉' : esc(researchNumber(item.cost))) +
         '</span></button>';
     }
     if (lastDomain !== null) h += '</section>';
     h += '</div><div class="tech-empty hidden" id="tech-empty">' +
       esc(FB.T('No technologies match these filters.')) +
-      '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      '</div><div class="gm-footer"><button class="btn" id="tech-guide">' +
+      esc(FB.T('Guide: technology')) +
+      '</button><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Technology'), h, { modalClass:'fullsheet-modal technology-modal' });
     $('tech-status').value = techCatalogueView.status;
@@ -15548,6 +15765,9 @@ window.FB = window.FB || {};
     });
     const autoButton = $('tech-auto');
     if (autoButton) autoButton.addEventListener('click', UI.showTechAutomation);
+    $('tech-guide').addEventListener('click', function () {
+      UI.showGuideEntry('technology');
+    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
     applyFilters();
   };
@@ -15655,7 +15875,9 @@ window.FB = window.FB || {};
       h += '<button class="btn primary" id="tech-advocate">' +
         esc(FB.T('Advocate · {money:20} · Standing −15')) + '</button>';
     }
-    h += '<button class="btn" id="tech-back">' + esc(FB.T('Back')) +
+    h += '<button class="btn" id="tech-detail-guide">' +
+      esc(FB.T('Guide: technology')) +
+      '</button><button class="btn" id="tech-back">' + esc(FB.T('Back')) +
       '</button></div>';
     openModal(def.icon + ' ' + dt(s, 'tech', id, def, 'name'), h,
       { modalClass:'fullsheet-modal technology-modal' });
@@ -15680,6 +15902,9 @@ window.FB = window.FB || {};
         UI.refresh();
         UI.showTechDetail(id);
       }
+    });
+    $('tech-detail-guide').addEventListener('click', function () {
+      UI.showGuideEntry('technology');
     });
     $('tech-back').addEventListener('click', UI.showTech);
   };
@@ -16313,7 +16538,10 @@ window.FB = window.FB || {};
     const c = s && s.chars[cid];
     const model = s && buildCharacterInteractionCard(s, cid);
     if (!s || !c || !model) return;
-    let h = UI.charCardHtml(s, c, false, true);
+    let h = UI.charCardHtml(s, c, false, true) +
+      '<button type="button" class="btn small character-skills-guide" ' +
+      'id="character-skills-guide">' +
+      esc(FB.T('What do these skills affect?')) + '</button>';
     if (!c.dead) h += interactionCardHtml(model);
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
@@ -16326,6 +16554,9 @@ window.FB = window.FB || {};
       }
     });
     FB.paintFaces($('gm-body'), s);
+    $('character-skills-guide').addEventListener('click', function () {
+      UI.showGuide({ category:'skills' });
+    });
     if (!c.dead) {
       const me = s.chars[s.player.charId];
       function actThen(fn) {
@@ -16784,6 +17015,7 @@ window.FB = window.FB || {};
                 : FB.T('no longer eligible');
         details.push(blocked);
       }
+      details.push(childIdentityPreviewText(s, c, m, false));
       h += '<button class="actionbtn' +
         (m.id === recommendedId ? ' match-policy-recommended' : '') +
         '" data-match="' + m.id + '"' + (ok ? '' : ' disabled') +
@@ -16859,6 +17091,8 @@ window.FB = window.FB || {};
         }));
       if (gap > 0) details.push(FB.T('a step up — a harder suit'));
       else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
+      details.push(childIdentityPreviewText(
+        s, s.chars[s.player.charId], m, true));
       h += '<button class="actionbtn" data-suitor="' + m.id + '">💍 ' +
         esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
         '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
@@ -17773,16 +18007,37 @@ window.FB = window.FB || {};
   UI.showHeirPick = function () {
     const s = FB.state;
     if (!s) return;
-    const heirs = FB.heirsOf(s).slice(0, 6);
+    const review = FB.heirReview(s);
+    const eligibleRows = review.filter(function (row) {
+      return row.eligible;
+    }).slice(0, 6);
+    const heirs = eligibleRows.map(function (row) { return row.character; });
     if (!heirs.length) {
-      openModal('📜 Name Your Heir',
-        '<div class="gm-body-text"><p>You have no living kin to name. Before a succession can be settled, an heir must exist.</p></div>' +
-        '<button class="btn" id="hp-close">Close</button>');
+      let empty = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'You have no eligible living kin to name. A successor must belong to the current playable line or an eligible same-house branch.')) +
+        '</p></div>';
+      for (const row of review.slice(0, 8)) {
+        empty += '<div class="succession-review-row"><b>' +
+          esc(FB.fullName(row.character)) + '</b><span>' +
+          esc(heirEligibilityText(s, row)) + '</span></div>';
+      }
+      empty += '<div class="gm-footer"><button class="btn" id="heir-guide">' +
+        esc(FB.T('Guide: inheritance')) +
+        '</button><button class="btn" id="hp-close">' +
+        esc(FB.T('Close')) + '</button></div>';
+      openModal(FB.T('📜 Name Your Heir'), empty);
+      $('heir-guide').addEventListener('click', function () {
+        UI.showGuideEntry('inheritance');
+      });
       $('hp-close').addEventListener('click', UI.closeModal);
       return;
     }
-    let h = '<div class="gm-body-text"><p>Who shall carry the name when you are gone? The choice, once witnessed, steadies the realm — and the family.</p></div><div class="gm-list">';
-    for (const c of heirs) {
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Who shall carry the name when you are gone? Naming changes priority among eligible successors; it does not make an ineligible relative eligible.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < heirs.length; i++) {
+      const c = heirs[i];
+      const row = eligibleRows[i];
       const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
         age: FB.ageOf(c, s.date.year),
         mar: FB.skillName('mar'), marValue: FB.skillOf(c, 'mar'),
@@ -17791,10 +18046,26 @@ window.FB = window.FB || {};
       });
       h += '<button class="actionbtn" data-namedheir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
         (s.player.namedHeirId === c.id ? '★ ' : '') + esc(FB.fullName(c)) +
-        '<span class="adesc">' + esc(details) + '</span></button>';
+        '<span class="adesc">' + esc(details + ' · ' +
+          heirEligibilityText(s, row)) + '</span></button>';
     }
-    h += '</div><button class="btn" id="hp-close">Decide later</button>';
-    openModal('📜 Name Your Heir', h);
+    const ineligible = review.filter(function (row) {
+      return !row.eligible;
+    }).slice(0, 8);
+    if (ineligible.length) {
+      h += '</div><div class="panelh">' + esc(FB.T('Not eligible now')) +
+        '</div><div class="succession-review">';
+      for (const row of ineligible) {
+        h += '<div class="succession-review-row"><b>' +
+          esc(FB.fullName(row.character)) + '</b><span>' +
+          esc(heirEligibilityText(s, row)) + '</span></div>';
+      }
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="heir-guide">' +
+      esc(FB.T('Guide: inheritance')) +
+      '</button><button class="btn" id="hp-close">' +
+      esc(FB.T('Decide later')) + '</button></div>';
+    openModal(FB.T('📜 Name Your Heir'), h);
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-namedheir]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -17806,6 +18077,9 @@ window.FB = window.FB || {};
           '📜 {name} is named heir before witnesses.', { name: FB.fullName(c) }));
         UI.closeModal();
       });
+    });
+    $('heir-guide').addEventListener('click', function () {
+      UI.showGuideEntry('inheritance');
     });
     $('hp-close').addEventListener('click', UI.closeModal);
   };
@@ -17997,6 +18271,9 @@ window.FB = window.FB || {};
       h += '<p>' + esc(FB.T('But a house is more than one life. Who carries the name onward?')) +
         '</p></div><div class="gm-list">';
       for (const c of heirs) {
+        const reviewRow = FB.heirReview(s).filter(function (row) {
+          return row.character.id === c.id;
+        })[0];
         const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
           age: FB.ageOf(c, s.date.year),
           mar: FB.skillName('mar'), marValue: FB.skillOf(c, 'mar'),
@@ -18004,7 +18281,9 @@ window.FB = window.FB || {};
           dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
         });
         h += '<button class="actionbtn" data-heir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
-          esc(FB.fullName(c)) + '<span class="adesc">' + esc(details) + '</span></button>';
+          esc(FB.fullName(c)) + '<span class="adesc">' +
+          esc(details + ' · ' + heirEligibilityText(s, reviewRow)) +
+          '</span></button>';
       }
       h += '</div>';
       openModal(FB.T('☠ {name} is Dead', { name: me.name }), h,
@@ -18374,7 +18653,518 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showHelp = function () {
+  function guideBody(paragraphs, bullets) {
+    let h = '<div class="guide-entry-body">';
+    for (const paragraph of (paragraphs || [])) {
+      h += '<p>' + esc(paragraph) + '</p>';
+    }
+    if (bullets && bullets.length) {
+      h += '<ul>';
+      for (const bullet of bullets) h += '<li>' + esc(bullet) + '</li>';
+      h += '</ul>';
+    }
+    return h + '</div>';
+  }
+
+  function skillGuideDefinition(id) {
+    const defs = {
+      dip:{
+        purpose:FB.T('Diplomacy wins trust and makes other people easier to persuade.'),
+        consumers:FB.T('It shapes Standing, courtship and marriage, diplomacy, councils, and many social event checks.'),
+        aliases:'charisma persuasion standing courtship marriage relations'
+      },
+      mar:{
+        purpose:FB.T('Martial measures command, drill, and judgment in dangerous contests.'),
+        consumers:FB.T('It shapes levies, army command, battle and war choices, and physical or military event checks.'),
+        aliases:'war warfare battle army levy command combat'
+      },
+      ste:{
+        purpose:FB.T('Stewardship turns land, labor, and property into reliable value.'),
+        consumers:FB.T('It shapes livelihood income, enterprises, construction, trade, and many economic event checks.'),
+        aliases:'economy income work enterprise trade building money'
+      },
+      int:{
+        purpose:FB.T('Intrigue finds secrets, hides intentions, and anticipates hostile schemes.'),
+        consumers:FB.T('It shapes plots, rivalries, covert diplomacy, counter-schemes, and many deceptive event checks.'),
+        aliases:'plots schemes secrets rivalry spy deception'
+      },
+      lea:{
+        purpose:FB.T('Learning joins literacy, law, medicine, doctrine, and accumulated knowledge.'),
+        consumers:FB.T('It shapes national research, education and tutoring, religious advancement, Papal systems, and knowledge-oriented checks.'),
+        aliases:'research education tutoring religion papal medicine knowledge literacy'
+      }
+    };
+    return defs[id];
+  }
+
+  function roleOrientationDefinitions(s) {
+    const social = [
+      {
+        title:FB.T('Serf'),
+        summary:FB.T('Your household survives under another lord’s authority.'),
+        resources:FB.T('Money, Common Voice, and Standing with your lord measure your immediate room to act.'),
+        duties:FB.T('Seasonal subsistence and obligations leave little margin; a livelihood keeps the household viable.'),
+        actions:[FB.T('Choose a daily focus.'), FB.T('Review Work & Enterprises.'), FB.T('Use Deeds to build money, reputation, and a route to freedom.')]
+      },
+      {
+        title:FB.T('Freeholder'),
+        summary:FB.T('Your household is personally free and can accumulate durable property and local influence.'),
+        resources:FB.T('Money, land plots, guild Standing, and local relationships open longer plans.'),
+        duties:FB.T('Keep the household working and turn scattered assets into a stable holding.'),
+        actions:[FB.T('Review Work & Enterprises.'), FB.T('Build a connected holding.'), FB.T('Use local service, guilds, or faith to establish the family.')]
+      },
+      {
+        title:FB.T('Gentry'),
+        summary:FB.T('Your house has social standing but no territorial title.'),
+        resources:FB.T('Prestige, liege Standing, household offices, and an established house support noble advancement.'),
+        duties:FB.T('Maintain the house across generations; landed status usually belongs to an heir of an established line.'),
+        actions:[FB.T('Review Household Plan.'), FB.T('Serve a lord or church office.'), FB.T('Prepare an eligible heir and the prestige for a barony.')]
+      },
+      {
+        title:FB.T('Baron'),
+        summary:FB.T('You now hold territorial land and its county-level obligations.'),
+        resources:FB.T('County tax, levy, development, domain capacity, and liege Standing become central.'),
+        duties:FB.T('Develop and defend the holding while meeting feudal and institutional obligations.'),
+        actions:[FB.T('Open Governance.'), FB.T('Inspect county development and buildings.'), FB.T('Pursue a county through right, petition, or war.')]
+      },
+      {
+        title:FB.T('Count'),
+        summary:FB.T('A county and its settlements now anchor your territorial house.'),
+        resources:FB.T('Domain tax, levy, vassal relations, development, and de jure rights drive expansion.'),
+        duties:FB.T('Balance direct land, vassals, liege demands, and succession.'),
+        actions:[FB.T('Review Governance.'), FB.T('Develop the demesne.'), FB.T('Consolidate the rightful duchy.')]
+      },
+      {
+        title:FB.T('Duke'),
+        summary:FB.T('Several counties now form a regional principality under your rule.'),
+        resources:FB.T('Vassals, domain capacity, de jure duchy rights, councils, and national technology matter together.'),
+        duties:FB.T('Keep regional lords useful and contain overextension or factional pressure.'),
+        actions:[FB.T('Review vassals and institutions.'), FB.T('Set political and research priorities.'), FB.T('Consolidate a kingdom and independence.')]
+      },
+      {
+        title:FB.T('King'),
+        summary:FB.T('You are sovereign over a kingdom and its national institutions.'),
+        resources:FB.T('Crown authority, council support, national research, diplomacy, and the full realm host become strategic resources.'),
+        duties:FB.T('Govern institutions, manage great vassals, defend the crown, and secure succession.'),
+        actions:[FB.T('Review Governance and Council.'), FB.T('Direct national research.'), FB.T('Build alliances and imperial rights.')]
+      },
+      {
+        title:FB.T('Emperor'),
+        summary:FB.T('Several kingdoms answer to an imperial crown.'),
+        resources:FB.T('Imperial vassals, national institutions, diplomacy, and succession determine whether the realm endures.'),
+        duties:FB.T('Hold the summit: contain powerful subjects, preserve legitimacy, and keep the dynasty playable.'),
+        actions:[FB.T('Review every Governance section.'), FB.T('Protect the successor and crown.'), FB.T('Choose long-range diplomatic and research priorities.')]
+      }
+    ];
+    const out = {};
+    for (let tier = 0; tier < social.length; tier++) {
+      const def = social[tier];
+      out['role-tier-' + tier] = {
+        id:'role-tier-' + tier,
+        title:def.title,
+        summary:def.summary,
+        resources:def.resources,
+        duties:def.duties,
+        actions:def.actions,
+        guideId:'role-tier-' + tier
+      };
+    }
+    const vocations = {
+      monk:{
+        title:FB.T('Letters & Faith'),
+        summary:FB.T('A learned religious vocation advances through study, service, and the rules of the current faith.'),
+        resources:FB.T('Learning, piety, religious Standing, and vocation experience support advancement.'),
+        duties:FB.T('Continue the vocation’s yearly work and meet the faith-specific rank requirements.'),
+        actions:[FB.T('Review Work & Enterprises.'), FB.T('Inspect religious advancement.'), FB.T('Use study, pilgrimage, teaching, or patronage when available.')]
+      },
+      priest:{
+        title:FB.T('Clerical Service'),
+        summary:FB.T('A public religious vocation combines worship, teaching, law, and care of souls.'),
+        resources:FB.T('Learning, piety, religious Standing, and vocation experience support advancement.'),
+        duties:FB.T('Continue clerical service and meet the current faith’s office requirements.'),
+        actions:[FB.T('Review Work & Enterprises.'), FB.T('Inspect religious advancement.'), FB.T('Build piety and relationships with religious authorities.')]
+      },
+      bishop:{
+        title:FB.T('Bishop'),
+        summary:FB.T('A bishop governs a non-hereditary church see beside the playable dynasty.'),
+        resources:FB.T('See income, retinue, piety, church Standing, and appointment authority matter.'),
+        duties:FB.T('Govern the see without confusing it with hereditary family land.'),
+        actions:[FB.T('Open the Bishopric.'), FB.T('Review investiture and episcopal powers.'), FB.T('Prepare for Cardinal eligibility when available.')]
+      },
+      cardinal:{
+        title:FB.T('Cardinal'),
+        summary:FB.T('A Cardinal belongs to the Papal college and can shape or contest an election.'),
+        resources:FB.T('Curial Standing, order, bloc, piety, and relationships within the college matter.'),
+        duties:FB.T('Navigate the college while maintaining the character’s household and other offices.'),
+        actions:[FB.T('Open Papacy.'), FB.T('Review the college and current obedience.'), FB.T('Build support before an election.')]
+      },
+      pope:{
+        title:FB.T('Pope'),
+        summary:FB.T('The Pope directs an obedience while remaining the playable member of the dynasty.'),
+        resources:FB.T('Papal authority, Curial opinion, investiture law, piety, and international Standing matter.'),
+        duties:FB.T('Govern the church, appointments, sanctions, and any rival obedience.'),
+        actions:[FB.T('Open Papacy.'), FB.T('Review authority and investiture.'), FB.T('Use appointments and diplomacy before coercive powers.')]
+      }
+    };
+    for (const id in vocations) {
+      const def = vocations[id];
+      out['role-' + id] = {
+        id:'role-' + id,
+        title:def.title,
+        summary:def.summary,
+        resources:def.resources,
+        duties:def.duties,
+        actions:def.actions,
+        guideId:'role-' + id
+      };
+    }
+    return out;
+  }
+
+  function currentOrientationIds(s) {
+    if (!s || !s.player || !s.chars[s.player.charId]) return [];
+    const me = s.chars[s.player.charId];
+    const ids = ['role-tier-' + s.player.tier];
+    const career = FB.careerOf && FB.careerOf(s, me);
+    if (career && (career.profession === 'monk' ||
+        career.profession === 'priest')) {
+      ids.push('role-' + career.profession);
+    }
+    if (FB.hasBishopric && FB.hasBishopric(s, me)) ids.push('role-bishop');
+    const papal = FB.papalOfficeOf && FB.papalOfficeOf(s, me);
+    if (papal && papal.office === 'cardinal') ids.push('role-cardinal');
+    if (papal && papal.office === 'pope') ids.push('role-pope');
+    return ids;
+  }
+
+  UI.showRoleOrientation = function (id) {
+    const s = FB.state;
+    const def = roleOrientationDefinitions(s)[id];
+    if (!s || !def) return false;
+    if (!s.player.roleOrientationsSeen) s.player.roleOrientationsSeen = {};
+    s.player.roleOrientationsSeen[id] = 1;
+    let h = '<div class="role-orientation">' +
+      '<p class="role-orientation-summary">' + esc(def.summary) + '</p>' +
+      kv('New resources', esc(def.resources)) +
+      kv('Recurring duties', esc(def.duties)) +
+      '<div class="panelh">' + esc(FB.T('Good first actions')) +
+      '</div><ol>';
+    for (const action of def.actions) h += '<li>' + esc(action) + '</li>';
+    h += '</ol></div><div class="gm-footer">' +
+      '<button class="btn" id="orientation-guide">' +
+      esc(FB.T('Open deeper guide')) +
+      '</button><button class="btn primary" id="orientation-close">' +
+      esc(FB.T('Got it')) + '</button></div>';
+    openModal(FB.T('New role: {role}', { role:def.title }), h, {
+      modalClass:'fullsheet-modal role-orientation-modal'
+    });
+    $('orientation-guide').addEventListener('click', function () {
+      UI.showGuideEntry(def.guideId);
+    });
+    $('orientation-close').addEventListener('click', UI.closeModal);
+    return true;
+  };
+
+  UI.maybeShowRoleOrientation = function () {
+    const s = FB.state;
+    if (!s || !s.player || s.player.dead || FB.game.observe ||
+        !$('eventmodal').classList.contains('hidden') ||
+        !$('genmodal').classList.contains('hidden') ||
+        $('game').classList.contains('hidden')) return false;
+    if (!s.player.roleOrientationsSeen) s.player.roleOrientationsSeen = {};
+    const ids = currentOrientationIds(s);
+    for (const id of ids) {
+      if (!s.player.roleOrientationsSeen[id]) {
+        return UI.showRoleOrientation(id);
+      }
+    }
+    return false;
+  };
+
+  function guideEntries(s) {
+    const entries = [];
+    function add(id, category, title, summary, body, aliases, route) {
+      entries.push({
+        id:id, category:category, title:title, summary:summary,
+        body:body, aliases:aliases || '', route:route || null
+      });
+    }
+    add('day-to-day', 'basics', FB.T('Day by day'),
+      FB.T('Focuses continue; deeds happen once; time stops for choices.'),
+      guideBody([
+        FB.T('A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose.'),
+        FB.T('Space plays or pauses time; F skips to the next happening. On touch screens the same controls are in the top bar.')
+      ]), 'focus deed actions pause skip time keyboard mobile');
+
+    for (const id of FB.SKILLS) {
+      const def = skillGuideDefinition(id);
+      add('skill-' + id, 'skills', FB.skillName(id),
+        def.purpose,
+        guideBody([def.purpose, def.consumers,
+          FB.T('The displayed value is current even when one of these systems is unavailable to this character. Individual events may use the skill in additional checks.')]),
+        def.aliases + ' ' + id);
+    }
+
+    add('resources', 'resources', FB.T('Resources and reputation'),
+      FB.T('Money pays; prestige legitimizes; piety supports faith; Standing belongs to a relationship.'),
+      guideBody([
+        FB.T('Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices.'),
+        FB.T('Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Common Voice is popular support. Guild Standing belongs to an active vocational guild record.'),
+        s ? FB.T('Current household: {money:gold}; prestige {prestige}; piety {piety}; Common Voice {voice}.', {
+          gold:Math.floor(s.player.gold),
+          prestige:Math.floor(s.player.prestige),
+          piety:Math.floor(s.player.piety),
+          voice:Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)
+        }) : FB.T('Start a life to see current resource values here.')
+      ]), 'gold wealth coin prestige piety standing opinion common voice guild research');
+
+    add('roles', 'roles', FB.T('Social and religious roles'),
+      FB.T('Rank changes authority and duties; vocations and offices can sit beside it.'),
+      guideBody([
+        FB.T('The social ladder runs Serf, Freeholder, Gentry, Baron, Count, Duke, King, and Emperor. Rank controls authority and access; it does not erase a livelihood or religious vocation.'),
+        FB.T('Religious ranks and offices can coexist with the dynasty’s social station. Open a role entry below to replay its orientation.')
+      ]), 'rank station promotion vocation office noble church');
+    const orientations = roleOrientationDefinitions(s);
+    for (const id in orientations) {
+      const def = orientations[id];
+      add(id, 'roles', def.title, def.summary,
+        guideBody([def.summary, def.resources, def.duties], def.actions),
+        'orientation onboarding promotion duties resources first actions', {
+          kind:'orientation', id:id
+        });
+    }
+
+    add('careers', 'careers', FB.T('Careers, training, and work'),
+      FB.T('A career record keeps rank and experience even while inactive.'),
+      guideBody([
+        FB.T('Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor.'),
+        FB.T('Changing careers preserves the inactive record’s rank, experience, guild rank, Standing, and start year. Apprentices train until sixteen; landed rulers keep their former calling as biography.')
+      ]), 'work livelihood apprenticeship occupation inactive household');
+    if (s) {
+      for (const id in (FBDATA.careers || {})) {
+        const def = FBDATA.careers[id];
+        const name = dt(s, 'career', id, def, 'name');
+        const requirements = [];
+        if (def.tierMin) requirements.push(FB.T('{station} or higher', {
+          station:FB.stationName(def.tierMin)
+        }));
+        if (def.apprenticeAge) requirements.push(FB.T('training from age {age}', {
+          age:def.apprenticeAge
+        }));
+        if (def.requiresTech) requirements.push(techRequirementText(s, def.requiresTech));
+        add('career-' + id, 'careers', name,
+          dt(s, 'career', id, def, 'desc'),
+          guideBody([
+            dt(s, 'career', id, def, 'desc'),
+            FB.T('Primary skill: {skill}. {requirements}', {
+              skill:FB.skillName(def.skill),
+              requirements:requirements.join(' · ') || FB.T('No special prerequisite.')
+            })
+          ]), id + ' ' + FB.skillName(def.skill) + ' ' +
+          requirements.join(' '));
+      }
+    }
+
+    add('family-scopes', 'family', FB.T('Family, house, and household scope'),
+      FB.T('Visible kin, a dynasty, the managed household, and the playable line are different sets.'),
+      guideBody([], [
+        FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
+        FB.T('House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident.'),
+        FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow.'),
+        FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
+        FB.T('Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line.')
+      ]), 'dynasty house kin relatives resident controllable assignable work royal branch');
+    add('inheritance', 'family', FB.T('Succession and inheritance'),
+      FB.T('Living children lead; without them the succession walks outward through same-house branches.'),
+      guideBody([
+        FB.T('A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible.'),
+        FB.T('Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins.'),
+        FB.T('The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules.')
+      ]), 'heir successor named heir children grandchildren siblings house death');
+    add('child-identity', 'family', FB.T('Child culture, faith, and house'),
+      FB.T('Marriage previews show which parent supplies each identity.'),
+      guideBody([
+        FB.T('Children in the protagonist line take culture, faith, and house from the recorded playable-line parent, preserving the line across succession.'),
+        FB.T('Collateral births take culture and faith from the managed family parent. Their house follows the father: a son keeps his house, while a daughter’s child normally belongs to her spouse’s house.'),
+        FB.T('These identity rules do not change the child’s recorded mother and father.')
+      ]), 'birth culture religion faith dynasty house father mother collateral protagonist marriage');
+
+    const provinceId = s && s.player && s.player.provinceId;
+    add('settlements-development', 'settlements',
+      FB.T('Settlements and development'),
+      FB.T('Settlement composition is derived from county development.'),
+      guideBody([
+        FB.T('Settlements are not founded manually. The county’s current development derives how many appear and whether the leading places are villages, towns, or a city.'),
+        provinceId ? settlementDevelopmentText(s, provinceId) :
+          FB.T('Start a life to see the next threshold for the current county.'),
+        provinceId ? bookmarkDevelopmentText(s, provinceId) :
+          FB.T('The county screen separates its authored bookmark start from later growth.'),
+        FB.T('Buildings that grant development identify the immediate amount when raised. National technologies can raise every county’s development ceiling in that nation above its base of 10.')
+      ]), 'county village town city threshold growth bookmark historical buildings development ceiling');
+
+    add('technology', 'technology', FB.T('Technology and research'),
+      FB.T('Technology belongs to the sovereign nation and unlocks authored content.'),
+      guideBody([
+        FB.T('National research fills sovereign research slots. Knowledge follows sovereign allegiance, not the player’s dynasty or ownership of one county.'),
+        FB.T('Catalogue search includes technology names, descriptions, effects, prerequisite labels, and every authored unlock. Details distinguish prerequisites that require all listed technologies from those that accept any one.'),
+        FB.T('Locked enterprises and deeds link back to their prerequisite technology.')
+      ]), 'research national tech unlock prerequisite all any orchard seed selection');
+    if (s) {
+      for (const id in (FBDATA.tech || {})) {
+        const def = FBDATA.tech[id];
+        const unlocks = techGameplayUnlocks(s, id, def);
+        const effects = techScalarEffects(def);
+        const prerequisite = techPrerequisiteSummary(s, def);
+        const discovery = unlocks.concat(effects);
+        if (prerequisite) discovery.push(prerequisite);
+        add('tech-' + id, 'technology',
+          def.icon + ' ' + dt(s, 'tech', id, def, 'name'),
+          dt(s, 'tech', id, def, 'desc'),
+          guideBody([dt(s, 'tech', id, def, 'desc')],
+            discovery.length ? discovery : [FB.T('No separate gameplay unlock is authored.')]),
+          id + ' ' + discovery.join(' '), { kind:'tech', id:id });
+      }
+    }
+
+    add('travel', 'travel', FB.T('Travel and journeys'),
+      FB.T('Choose a purpose first; valid destinations and the route are then derived.'),
+      guideBody([
+        FB.T('Travel uses settled county adjacency and authored straits. Purpose, destination, route length, cost, and current eligibility are shown before departure.'),
+        FB.T('A journey has outbound, stay, and return phases. The Deeds commitment row shows its current state, and some purposes add decisions while away.')
+      ]), 'journey road destination purpose pilgrimage trade court marriage route');
+    add('government', 'government', FB.T('Government systems'),
+      FB.T('Territorial rank opens Governance; institutions vary by relationship to the crown.'),
+      guideBody([
+        FB.T('Governance appears for territorial landed rulers. It brings together position, vassals, institutions, political blocs, and available realm actions.'),
+        FB.T('Vassal-tier estates negotiate aid and scutage. Sovereign kings and emperors instead govern through the royal council, crown authority, national research, diplomacy, and other crown systems.'),
+        FB.T('Unavailable sections state the rank, relationship, office, or current-state reason that keeps them inactive.')
+      ]), 'governance realm council parliament estates crown authority vassal king emperor');
+    return entries;
+  }
+
+  const guideView = { query:'', category:'all' };
+  const GUIDE_CATEGORIES = [
+    'all', 'basics', 'skills', 'resources', 'roles', 'careers',
+    'family', 'settlements', 'technology', 'travel', 'government'
+  ];
+  function guideCategoryName(id) {
+    const names = {
+      all:FB.T('All topics'),
+      basics:FB.T('Basics'),
+      skills:FB.T('Skills'),
+      resources:FB.T('Resources'),
+      roles:FB.T('Roles'),
+      careers:FB.T('Careers'),
+      family:FB.T('Family'),
+      settlements:FB.T('Settlements'),
+      technology:FB.T('Technology'),
+      travel:FB.T('Travel'),
+      government:FB.T('Government')
+    };
+    return names[id] || id;
+  }
+
+  UI.showGuide = function (options) {
+    if (options && typeof options.preventDefault === 'function') options = null;
+    options = options || {};
+    const s = FB.state;
+    if (options.category) guideView.category = options.category;
+    if (options.query !== undefined) guideView.query = options.query;
+    const entries = guideEntries(s);
+    let h = '<div class="guide-controls">' +
+      '<label><span>' + esc(FB.T('Search guide')) +
+      '</span><input id="guide-search" type="search" value="' +
+      esc(guideView.query) + '" placeholder="' +
+      esc(FB.T('Topic, alias, unlock, or term')) + '"></label>' +
+      '<label><span>' + esc(FB.T('Category')) +
+      '</span><select id="guide-category">';
+    for (const category of GUIDE_CATEGORIES) {
+      h += '<option value="' + esc(category) + '"' +
+        (guideView.category === category ? ' selected' : '') + '>' +
+        esc(guideCategoryName(category)) + '</option>';
+    }
+    h += '</select></label></div><div class="guide-results" id="guide-results">';
+    for (const entry of entries) {
+      const search = (entry.title + ' ' + entry.summary + ' ' +
+        entry.aliases + ' ' + entry.category).toLowerCase();
+      h += '<button type="button" class="guide-result" data-guide-entry="' +
+        esc(entry.id) + '" data-guide-category="' + esc(entry.category) +
+        '" data-search="' + esc(search) + '"><b>' + esc(entry.title) +
+        '</b><span>' + esc(entry.summary) + '</span></button>';
+    }
+    h += '</div><div class="tech-empty hidden" id="guide-empty">' +
+      esc(FB.T('No guide entries match this search.')) +
+      '</div><div class="gm-footer"><button class="btn" id="guide-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Guide'), h, {
+      modalClass:'fullsheet-modal guide-modal', historyView:true
+    });
+    $('guide-category').value = guideView.category;
+    function applyGuideFilters() {
+      guideView.query = $('guide-search').value.trim();
+      guideView.category = $('guide-category').value;
+      const query = guideView.query.toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('[data-guide-entry]').forEach(function (button) {
+        const categoryMatch = guideView.category === 'all' ||
+          button.dataset.guideCategory === guideView.category;
+        const queryMatch = !query || button.dataset.search.indexOf(query) >= 0;
+        button.classList.toggle('hidden', !(categoryMatch && queryMatch));
+        if (categoryMatch && queryMatch) visible++;
+      });
+      $('guide-empty').classList.toggle('hidden', visible > 0);
+    }
+    $('guide-search').addEventListener('input', applyGuideFilters);
+    $('guide-category').addEventListener('change', applyGuideFilters);
+    document.querySelectorAll('[data-guide-entry]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showGuideEntry(button.dataset.guideEntry);
+      });
+    });
+    $('guide-close').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        if (FB.state) UI.showMenu(); else UI.closeModal();
+      });
+    });
+    applyGuideFilters();
+  };
+
+  UI.showGuideEntry = function (id) {
+    const entry = guideEntries(FB.state).filter(function (candidate) {
+      return candidate.id === id;
+    })[0];
+    if (!entry) return UI.showGuide();
+    let h = '<div class="guide-entry-summary">' + esc(entry.summary) +
+      '</div>' + entry.body + '<div class="gm-footer">';
+    if (entry.route && entry.route.kind === 'tech') {
+      h += '<button class="btn primary" id="guide-related">' +
+        esc(FB.T('Open technology detail')) + '</button>';
+    } else if (entry.route && entry.route.kind === 'orientation') {
+      h += '<button class="btn primary" id="guide-related">' +
+        esc(FB.T('Replay this orientation')) + '</button>';
+    }
+    h += '<button class="btn" id="guide-back">' +
+      esc(FB.T('Back to Guide')) + '</button></div>';
+    openModal(entry.title, h, {
+      modalClass:'fullsheet-modal guide-modal',
+      historyView:true,
+      historyBackRender:function () {
+        UI.showGuide({ category:entry.category });
+      }
+    });
+    const related = $('guide-related');
+    if (related) related.addEventListener('click', function () {
+      if (entry.route.kind === 'tech') UI.showTechDetail(entry.route.id);
+      else UI.showRoleOrientation(entry.route.id);
+    });
+    $('guide-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showGuide({ category:entry.category });
+      });
+    });
+  };
+
+  UI.showLegacyHelp = function () {
     openModal('How to Play', '<div class="gm-body-text">' +
       '<p><b>Fallowborn</b> is a life-and-dynasty game. You begin in an authored medieval world — most likely poor — and try to raise your family through the ranks of society before old age claims each generation.</p>' +
       '<h4>Day by day</h4><ul>' +
@@ -18412,6 +19202,10 @@ window.FB = window.FB || {};
     $('gm-ok').addEventListener('click', function () {
       modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
     });
+  };
+
+  UI.showHelp = function () {
+    UI.showGuide();
   };
 
   UI.showChangelog = function () {

@@ -14,6 +14,14 @@ effective sovereign's separate 0–10 **Technological development** rating besid
 it. The technology rating is informational; it does not replace county
 development or change development-driven calculations.
 
+`FB.settlementDevelopment(state, pid)` is the read-only growth explanation shared by
+province, settlement, and Guide UI. It returns current and bookmark development plus
+the next derived settlement threshold: 4 promotes the head village to a town, 5 adds
+one settlement, 6 promotes the second settlement to a town, and 7 promotes the head
+settlement to a city. The UI displays the next threshold and explicitly compares current
+state with the bookmark value so historical starting advantage is not described as
+growth achieved during play.
+
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent
@@ -28,6 +36,9 @@ It identifies the county owner and exact settlement scope, separates the live
 construction quote from seasonal upkeep, lists all effects, states that the
 building follows conquest, and names demolition/ruin as its end condition.
 Ruins use the same row with no benefit or upkeep.
+An authored `d.dev` is labeled as immediate county development when raised.
+Technology `fx.devCap` is labeled as the development ceiling above the base of 10
+for every county in the nation that owns it, not as current development.
 
 Buildings are **per-settlement**: each of a province's 2–4 derived settlements
 (`FB.settlementsOf` — stable indices that only grow with development) may hold one copy of

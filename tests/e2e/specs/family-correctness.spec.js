@@ -20,6 +20,15 @@ async function startWithCode(page, code, name) {
   })).toBeVisible();
 }
 
+async function dismissRoleOrientations(page, count) {
+  for (let i = 0; i < count; i++) {
+    await expect(page.getByRole('heading', { name:/New role:/ }))
+      .toBeVisible();
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+  }
+  await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+}
+
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
@@ -31,12 +40,14 @@ test('uses sex-aware novice address and recorded Norse patronyms',
     await expect(page.locator('#gm-body')).toContainText(
       'You are Sister Alberada');
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await dismissRoleOrientations(page, 2);
 
     await page.getByRole('button', { name:'Menu', exact:true }).click();
     await page.getByRole('button', { name:/Abandon to title/ }).click();
     await startWithCode(page,
       'PATRONYM-867-farmer-arhus-f-Fastvi', 'Fastvi');
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await dismissRoleOrientations(page, 1);
 
     const result = await page.evaluate(function () {
       const state = FB.state;
@@ -448,6 +459,7 @@ test('the memoized kin walk tracks marriages, births, deaths, and consorts',
   async function ({ page }) {
     await startWithCode(page, 'KINMEMO-867-farmer-london-f-Ada', 'Ada');
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await dismissRoleOrientations(page, 1);
 
     expect(await page.evaluate(function () {
       const s = FB.state;
@@ -503,6 +515,7 @@ test('a materialized consort links to the ruler in both directions',
   async function ({ page }) {
     await startWithCode(page, 'CONSORT-867-farmer-london-f-Ada', 'Ada');
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await dismissRoleOrientations(page, 1);
 
     expect(await page.evaluate(function () {
       const s = FB.state;

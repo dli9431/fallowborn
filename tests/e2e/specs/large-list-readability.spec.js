@@ -140,6 +140,8 @@ async function makeLargeListFixture(page) {
       FB.careerOf(s, workers[k]);
     }
     FB.ui.characterInteractionCard(s, shared.id);
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     return {
       headId:me.id,

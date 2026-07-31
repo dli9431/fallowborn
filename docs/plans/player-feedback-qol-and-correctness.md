@@ -233,10 +233,18 @@ This milestone should begin with small changes that answer a player's immediate
 question in the screen where it arises. A full codex can then consolidate the
 same material instead of becoming a second, divergent rules source.
 
+**Implementation status: complete.** Contextual screens now expose their live rule
+sources and deep-link into one searchable offline Guide. The implementation adds no
+second numeric rules table: technology unlocks/effects, career requirements,
+successor eligibility, child identity, resource values, and settlement thresholds
+are derived from the same definitions and functions used by simulation.
+
 #### 7. Search technologies by what they unlock
 
 Category: **Writing**  
 Validity: **Partial**
+
+Status: **Implemented**
 
 Technology details list their unlocks, but catalogue search indexes only technology
 name, description, and domain. Searching for “Orchard” therefore does not lead to
@@ -257,6 +265,8 @@ Relevant design: [tech.md](../designs/tech.md).
 
 Category: **Writing**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 Learning is used by research, education, events, rights, religion, and Papal
 systems, but the player-facing explanation does not summarize those uses. Similar
@@ -280,6 +290,8 @@ Relevant design: [characters.md](../designs/characters.md),
 Category: **Writing**  
 Validity: **Partial**
 
+Status: **Implemented**
+
 Grouped Deeds, dashboard cards, Household Plan, and Governance reduce some overload,
 but a promotion can still expose Serf, Freeholder, monastic, noble, territorial, or
 royal actions without explaining the new role.
@@ -302,6 +314,8 @@ Relevant design: [ui.md](../designs/ui.md),
 
 Category: **QoL**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 “How to Play” is a long modal and the external repository documentation is fuller,
 but the game has no general searchable knowledge base.
@@ -329,6 +343,8 @@ Relevant design: [ui.md](../designs/ui.md),
 Category: **Writing**  
 Validity: **Partial**
 
+Status: **Implemented**
+
 Current succession reaches beyond direct descendants, but the UI does not clearly
 distinguish the playable line, dynasty/house, managed household, royal branch, and
 relatives who are visible but not controllable.
@@ -350,6 +366,8 @@ Relevant design: [characters.md](../designs/characters.md),
 
 Category: **Writing**  
 Validity: **Partial**
+
+Status: **Implemented**
 
 Settlements now grow from development, but the player cannot easily learn the
 thresholds that create extra villages, towns, or cities or how buildings and

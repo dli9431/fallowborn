@@ -803,6 +803,10 @@ button.modifierchip:hover, button.modifierchip:focus-visible {
 .skillrow .skill-label {
   width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.skillrow button.skill-label {
+  padding: 0; border: 0; background: transparent; font: inherit;
+  text-align: left;
+}
 .skillrow .bar { flex: 1; height: 7px; background: #191410; border-radius: 4px; overflow: hidden; }
 .skillrow .bar i { display: block; height: 100%; background: #c9a24a; }
 .skillrow .bar i.over { background: #ffe08a; box-shadow: 0 0 4px #c9a24a; }
@@ -1671,6 +1675,10 @@ textarea.modjson, textarea.savetext {
   color: #ecd9a0; font-size: 13px; white-space: nowrap;
 }
 .tech-entry-copy small { display: block; color: #9f8e6d; font-size: 11px; margin-top: 2px; }
+.tech-entry-copy .tech-entry-discovery {
+  overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; color: #b8a477; line-height: 1.35;
+}
 .tech-entry-cost { color: #d0ad54; font-size: 12px; text-align: right; }
 .tech-empty { padding: 22px 8px; color: #9f8e6d; text-align: center; }
 .tech-detail-meta { margin-bottom: 8px; color: #9f8e6d; font-size: 12px; }
@@ -1685,6 +1693,67 @@ textarea.modjson, textarea.savetext {
   margin: 6px 0 12px; padding: 8px 10px; border: 1px solid #4d402b;
   border-radius: 7px; background: #211a13; color: #cbbb94;
   font-size: 12px; line-height: 1.55;
+}
+.tech-locked-link { border-style: dashed; }
+.contextual-help-link {
+  display: block; margin: -3px 0 8px auto; color: #dbc37f;
+}
+
+/* ---------- searchable offline guide and role orientation ---------- */
+.guide-controls {
+  position: sticky; top: 0; z-index: 3;
+  display: grid; grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr);
+  gap: 8px; padding: 8px 0 10px;
+  background: linear-gradient(180deg, #2c2418 86%, rgba(44,36,24,.94));
+}
+.guide-controls label { color: #ad9b78; font-size: 11px; }
+.guide-controls label span { display: block; margin: 0 0 3px 2px; }
+.guide-controls input, .guide-controls select {
+  width: 100%; min-height: 40px; padding: 7px 8px;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #211a12; color: #eadbb6; font: inherit;
+}
+.guide-results {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px; align-content: start;
+}
+.guide-result {
+  min-width: 0; min-height: 66px; padding: 9px 10px;
+  border: 1px solid #4f422d; border-radius: 8px;
+  background: #241d15; color: #e8d7ac; cursor: pointer; text-align: left;
+}
+.guide-result:hover, .guide-result:focus-visible {
+  border-color: #b28a35; background: #2e2518;
+}
+.guide-result b { display: block; color: #ecd9a0; font-size: 14px; }
+.guide-result span {
+  display: block; margin-top: 3px; color: #a99875;
+  font-size: 12px; line-height: 1.4;
+}
+.guide-entry-summary, .role-orientation-summary {
+  margin: 0 0 10px; padding: 10px 12px;
+  border-left: 3px solid #b28a35; background: #2b2217;
+  color: #dfc985; line-height: 1.5;
+}
+.guide-entry-body {
+  color: #d4c6a4; font-size: 14px; line-height: 1.55;
+}
+.guide-entry-body p { margin: 0 0 10px; }
+.guide-entry-body ul, .role-orientation ol { padding-left: 22px; }
+.guide-entry-body li, .role-orientation li { margin-bottom: 7px; }
+.role-orientation .kv { align-items: flex-start; }
+.role-orientation .kv b { max-width: 68%; text-align: right; }
+.succession-review { margin: 5px 0 10px; }
+.succession-review-row {
+  display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1.6fr);
+  gap: 10px; padding: 8px 9px; margin: 4px 0;
+  border: 1px solid #4a3d29; border-radius: 7px; background: #241d15;
+}
+.succession-review-row span { color: #ab9a77; font-size: 12px; }
+.character-skills-guide { display: block; margin: 6px 0 10px auto; }
+.settlement-development-summary {
+  padding: 8px 10px; margin-bottom: 10px;
+  border: 1px solid #4a3d29; border-radius: 7px; background: #241d15;
 }
 
 /* ---------- settings: speed-of-days slider ---------- */
@@ -1786,6 +1855,15 @@ textarea.modjson, textarea.savetext {
   .tech-entry { min-height: 52px; padding: 9px; }
   .tech-entry-copy b { font-size: 14px; }
   .tech-entry-copy small { font-size: 12px; white-space: normal; }
+  .guide-controls { grid-template-columns: 1fr; padding-top: 4px; }
+  .guide-controls input, .guide-controls select { min-height: 44px; }
+  .guide-results { grid-template-columns: 1fr; }
+  .guide-result { min-height: 58px; }
+  .succession-review-row { grid-template-columns: 1fr; gap: 3px; }
+  .role-orientation .kv { display: block; }
+  .role-orientation .kv b {
+    display: block; max-width: none; margin-top: 3px; text-align: left;
+  }
   /* the flow of time lives in the thumb zone, always visible */
   #timebtns {
     position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; margin: 0;

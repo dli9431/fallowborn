@@ -2428,14 +2428,16 @@ window.FB = window.FB || {};
     return { destinationId:destinationId, rows:rows, count:rows.length };
   };
 
-  FB.enterpriseAvailable = function (state, settlement) {
+  FB.enterpriseAvailable = function (state, settlement, includeTechLocked) {
     const p = state.player;
     const pr = FB.world.byId[p.provinceId];
     const out = [];
     const standing = FB.enterpriseList(state);
     for (const id in FBDATA.enterprises) {
       const def = FBDATA.enterprises[id];
-      if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
+      const techLocked = !!(def.requiresTech &&
+        !FB.techRequirementMet(state, def.requiresTech));
+      if (techLocked && !includeTechLocked) continue;
       if (def.devMin && (state.dev[p.provinceId] || 1) < def.devMin) continue;
       if (def.coastal && (!pr || !pr.coastal)) continue;
       if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) continue;
@@ -2451,7 +2453,10 @@ window.FB = window.FB || {};
         provinceId:p.provinceId,
         settlement:settlement
       });
-      out.push({ id:id, def:def, cost:FB.enterpriseCost(state, id), workers:workers });
+      out.push({
+        id:id, def:def, cost:FB.enterpriseCost(state, id),
+        workers:workers, techLocked:techLocked
+      });
     }
     return out;
   };

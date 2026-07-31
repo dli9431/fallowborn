@@ -14,6 +14,11 @@ derived from that raster. Changing `FBDATA.provinces` (authored as compact rows 
 **Settlements are derived, not stored.** `FB.settlementsOf(state, pid)` (world.js)
 generates 2–4 named places per province from a plain string hash (never the seeded RNG)
 and `FBDATA.settlementNames` (cultures.js); size tracks current dev (village→town→city).
+The deterministic count and kind thresholds are exposed through
+`FB.settlementDevelopment`: the head becomes a town at development 4, a further
+settlement appears at 5, the second place becomes a town at 6, and the head becomes
+a city at 7. Province and settlement sheets render the next threshold and the active
+bookmark baseline; no separate settlement state or founding action is introduced.
 The go-into-town deed queues `visit_*` events (events_common.js) with the name in
 `ctx.settlement` (`{settlement}` token); options are require-gated by station.
 

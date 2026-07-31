@@ -1185,7 +1185,10 @@ window.FB = window.FB || {};
       '</p><p class="hint">' +
       FB.esc(FB.T('Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.')) +
       '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
-    $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
+    $('gm-go').addEventListener('click', function () {
+      FB.ui.closeModal();
+      if (FB.ui.maybeShowRoleOrientation) FB.ui.maybeShowRoleOrientation();
+    });
     FB.save.autosave();
     FB.save.warnIfBlocked();
   };
@@ -2035,41 +2038,112 @@ window.FB = window.FB || {};
   }
 
   /* ---------- death & succession ---------- */
-  /* Eligible heirs in order: named heir first, then sons, daughters, siblings. */
-  FB.heirsOf = function (s) {
+  FB.childIdentityPreview = function (s, familyParent, spouse, playableLine) {
+    const me = s && s.player && s.chars[s.player.charId];
+    const source = playableLine ? me : familyParent;
+    const father = familyParent && familyParent.sex === 'm'
+      ? familyParent : spouse;
+    return {
+      culture:source && source.culture,
+      cultureParentId:source && source.id,
+      religion:source && source.religion,
+      religionParentId:source && source.id,
+      dynasty:playableLine
+        ? (source && source.dyn) : (father && father.dyn || null),
+      dynastyParentId:playableLine
+        ? (source && source.id) : (father && father.id || null),
+      playableLine:!!playableLine
+    };
+  };
+
+  /* The review is the single source for both the playable successor list and
+     the explanations shown beside relatives who cannot currently inherit. */
+  FB.heirReview = function (s) {
     const me = s.chars[s.player.charId];
-    const kids = me.childrenIds.map(function (id) { return s.chars[id]; })
-      .filter(function (c) { return c && !c.dead; });
-    const sons = kids.filter(function (c) { return c.sex === 'm'; }).sort(function (a, b) { return a.born - b.born; });
-    const daughters = kids.filter(function (c) { return c.sex === 'f'; }).sort(function (a, b) { return a.born - b.born; });
-    let heirs = sons.concat(daughters);
-    if (!heirs.length) {
-      // no children of the body — grandchildren first, then the wider house:
-      // siblings, their children, uncles/aunts, cousins
+    const rows = [], seen = {};
+    function add(c, eligible, code, group) {
+      if (!c || seen[c.id]) return;
+      seen[c.id] = true;
+      rows.push({
+        character:c,
+        eligible:!!eligible,
+        code:code,
+        group:group
+      });
+    }
+    function ordered(list) {
+      const live = list.filter(function (c) { return c && !c.dead; });
+      return live.filter(function (c) { return c.sex === 'm'; })
+        .sort(function (a, b) { return a.born - b.born; })
+        .concat(live.filter(function (c) { return c.sex === 'f'; })
+          .sort(function (a, b) { return a.born - b.born; }));
+    }
+
+    const kids = me.childrenIds.map(function (id) { return s.chars[id]; });
+    const livingKids = ordered(kids);
+    for (const child of livingKids) add(child, true, 'child', 'children');
+    for (const child of kids) {
+      if (child && child.dead) add(child, false, 'dead', 'children');
+    }
+    const spouse = FB.spouseOf(s, me);
+    if (spouse) add(spouse, false, 'spouse', 'household');
+
+    if (livingKids.length) {
+      // Wider relatives stay visible for explanation, but living children
+      // keep every more distant branch out of the current successor list.
       const kin = FB.kinOf(s);
       const groups = [kin.grandchildren, kin.siblings, kin.niecesNephews, kin.unclesAunts, kin.cousins];
-      for (const g of groups) {
-        const live = [];
-        for (const e of g) {
-          if (!e.c.dead && e.c.dyn === me.dyn) live.push(e.c);
+      for (const group of groups) {
+        for (const entry of group) {
+          const c = entry.c;
+          add(c, false, c.dead ? 'dead' :
+            (c.dyn !== me.dyn ? 'different_house' : 'closer_children'),
+          entry.rel);
         }
-        heirs = heirs.concat(
-          live.filter(function (c) { return c.sex === 'm'; }).sort(function (a, b) { return a.born - b.born; }),
-          live.filter(function (c) { return c.sex === 'f'; }).sort(function (a, b) { return a.born - b.born; })
-        );
+      }
+    } else {
+      const kin = FB.kinOf(s);
+      const groups = [
+        { list:kin.grandchildren, name:'grandchildren' },
+        { list:kin.siblings, name:'siblings' },
+        { list:kin.niecesNephews, name:'nieces_nephews' },
+        { list:kin.unclesAunts, name:'uncles_aunts' },
+        { list:kin.cousins, name:'cousins' }
+      ];
+      for (const group of groups) {
+        const eligible = ordered(group.list.map(function (entry) {
+          const c = entry.c;
+          return c && c.dyn === me.dyn ? c : null;
+        }));
+        for (const c of eligible) add(c, true, group.name, group.name);
+        for (const entry of group.list) {
+          const c = entry.c;
+          if (!c || seen[c.id]) continue;
+          add(c, false, c.dead ? 'dead' : 'different_house', group.name);
+        }
       }
     }
     const nid = s.player.namedHeirId;
     if (nid) {
-      for (let i = 0; i < heirs.length; i++) {
-        if (heirs[i].id === nid) {
-          const named = heirs.splice(i, 1)[0];
-          heirs.unshift(named);
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].character.id === nid && rows[i].eligible) {
+          const named = rows.splice(i, 1)[0];
+          rows.unshift(named);
           break;
         }
       }
     }
-    return heirs;
+    return rows;
+  };
+
+  /* Eligible heirs in order: named heir first, then sons, daughters, and the
+     wider same-house branches when no living child survives. */
+  FB.heirsOf = function (s) {
+    return FB.heirReview(s).filter(function (row) {
+      return row.eligible;
+    }).map(function (row) {
+      return row.character;
+    });
   };
 
   G.die = function (cause, provenance) {
