@@ -286,6 +286,11 @@ test('records ordinary and royal stepchildren without changing inheritance',
         succession.members[childMember.id] = childMember;
         root.childIds.push(childMember.id);
       }
+      /* A reigning ruler now has a consort of record, and the courtship gate
+         refuses a wed target. Widow this one so the fixture reaches doMarry
+         in the state a player would actually have reached it in. */
+      const consort = FB.realmConsortCharacter(state, rid);
+      if (consort) FB.killChar(state, consort);
       me.sex = spouse.sex === 'm' ? 'f' : 'm';
       state.player.courtingId = spouse.id;
       FB.doMarry(state, { settleDowry:false });

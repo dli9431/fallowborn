@@ -39,7 +39,18 @@ is also as much of the intent as a build without the `role` concept can read. Co
 of past generations stay in the tree as dated tombstones and are never read as the
 sitting spouse; `FB.realmConsortMember` and `FB.realmConsortCharacter` resolve only the
 current generation's. There is no AI remarriage, so a generation whose consort has died
-simply has none. Saves written before consorts existed keep their current generation
+simply has none.
+
+**A ruler who already has a spouse is never handed a second.** The case that matters is
+an heir the protagonist married taking the throne: seeding a consort beside that
+marriage would put two spouses on one character whatever the faith's doctrine allows.
+Both the seeding and the linkage test for a living spouse through
+`FB.spousesSnapshot`, on both people, because a wife's `spouseId` points at her husband
+while his holds only the first - so a wed ruler can otherwise read as unmarried on his
+own record. Whether anyone may hold more than one spouse belongs to the marriage system,
+and this path must never answer it by accident. A consequence worth knowing: a consorted
+ruler fails the courtship gate's married check, so the player courts royal children
+rather than reigning rulers unless a throne is widowed. Saves written before consorts existed keep their current generation
 unchanged - inventing a spouse for a ruler twenty years into a reign reads worse than
 waiting, so those courts gain one at their next succession.
 

@@ -1322,6 +1322,21 @@ window.FB = window.FB || {};
     };
   }
 
+  /* Is this person already wed? The stored spouseId is authoritative in one
+     direction only - a wife's points at her husband while his holds only the
+     first - so the reverse link is checked too. The bulk path deliberately
+     skips that reverse walk: it runs at world creation, where every couple
+     being made is new and nobody can already point at them, and the family
+     index it consults is invalidated by each record the sweep creates, which
+     would make the sweep quadratic in the size of the character map. */
+  function alreadyWed(state, c, opts) {
+    if (!c) return false;
+    const direct = c.spouseId && state.chars[c.spouseId];
+    if (direct && !direct.dead) return true;
+    if (opts && opts.bulk) return false;
+    return !!(FB.spousesSnapshot && FB.spousesSnapshot(state, c).length);
+  }
+
   /* The ruler's spouse of record. Seeded once per ruler generation, of the
      opposite sex and a plausible age, so every court holds a woman and the
      family card reads as a household rather than a list of names. */
@@ -1331,6 +1346,14 @@ window.FB = window.FB || {};
     if (!r || !s || !s.members || !r.ruler) return null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     if (FB.realmConsortMember(state, rid)) return null;
+    /* A ruler who already has a spouse of record is never handed a second
+       one. The case that matters is an heir the protagonist married taking
+       the throne: generating a consort beside that marriage would put two
+       spouses on one character no matter what the faith's doctrine allows.
+       Whether anyone may hold more than one spouse belongs to the marriage
+       system, and this path must not answer it by accident. */
+    const sitting = FB.realmRulerCharacterSnapshot(state, rid);
+    if (alreadyWed(state, sitting)) return null;
     const rulerAge = Math.max(16, Number(r.ruler.age) || 0);
     const person = FB.withSeed(
       courtScope(state, rid, 'g' + generation + ':consort'), function () {
@@ -1679,12 +1702,17 @@ window.FB = window.FB || {};
       m.charId = c.id;
     }
     linkMaterializedRoyalFamily(state, s, m, c, opts);
+    /* Link only a genuinely unwed pair, in both directions. Checking the
+       stored spouseId fields alone is not enough: a wife's spouseId points at
+       her husband while his holds only the first, so a ruler already wed to
+       the protagonist can still read as unmarried on his own record. Adding a
+       consort there would grant a second spouse without any doctrine having
+       allowed it. */
     const ruler = FB.realmRulerCharacterSnapshot(state, rid);
-    if (ruler && !ruler.dead && !c.dead) {
-      /* Existing links win: a ruler already wed to the protagonist keeps that
-         marriage, exactly as any other engine-made couple would. */
-      if (!c.spouseId) c.spouseId = ruler.id;
-      if (!ruler.spouseId) ruler.spouseId = c.id;
+    if (ruler && !ruler.dead && !c.dead &&
+        !alreadyWed(state, ruler, opts) && !alreadyWed(state, c, opts)) {
+      c.spouseId = ruler.id;
+      ruler.spouseId = c.id;
       if (FB.touchFamily) FB.touchFamily();
     }
     return c;
@@ -1921,6 +1949,15 @@ window.FB = window.FB || {};
     if (c.items && c.items.length) return true;
     if (p.loadouts && p.loadouts[c.id]) return true;
     for (const role in state.roles) if (state.roles[role] === c.id) return true;
+    /* Live attention on this exact person, as distinct from the standing it
+       earns. The standing is realm-keyed and survives compaction on its own;
+       an assignment, a journey under way to visit them, and the friend and
+       rival contact clocks are all references the player's own UI resolves
+       back through state.chars, and each would break on a missing record. */
+    if (p.socialAttention && p.socialAttention[c.id]) return true;
+    if (p.travel && p.travel.targetCharId === c.id) return true;
+    if (p.friendContacts && p.friendContacts[c.id]) return true;
+    if (p.rivalContacts && p.rivalContacts[c.id]) return true;
     const me = state.chars[p.charId];
     if (!me) return false; // no protagonist yet: nothing to navigate from
     if (me.spouseId === c.id || c.spouseId === me.id ||

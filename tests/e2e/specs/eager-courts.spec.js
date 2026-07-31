@@ -165,8 +165,10 @@ test('materializing a court draws no randomness from the world stream',
   async function ({ page }) {
     expect(await page.evaluate(function () {
       const s = FB.state;
-      /* Find a member that is still compact, so this is a real creation and
-         not an idempotent second call. */
+      /* Under 'court' eagerness every initial heir is already materialized,
+         so there is no compact one to find. Return one to its compact form
+         first; what follows is then a real creation, not an idempotent
+         second call. */
       let target = null;
       for (const rid in s.realms) {
         const r = s.realms[rid];
@@ -174,22 +176,39 @@ test('materializing a court draws no randomness from the world stream',
         if (!succession) continue;
         for (const id in succession.members) {
           const m = succession.members[id];
-          if (m && m.alive !== false && !m.charId &&
-              m.role !== 'consort' && id !== succession.rulerMemberId) {
-            target = { rid:rid, memberId:id };
+          if (m && m.alive !== false && m.role !== 'consort' &&
+              id !== succession.rulerMemberId && m.charId && s.chars[m.charId]) {
+            target = { rid:rid, memberId:id, charId:m.charId };
             break;
           }
         }
         if (target) break;
       }
       if (!target) return { skipped:true };
+
+      const original = s.chars[target.charId];
+      const sheet = {
+        skills:JSON.stringify(original.skills),
+        traits:original.traits.join(','),
+        fertility:original.fertility
+      };
+      delete s.chars[target.charId];
+      s.realms[target.rid].succession.members[target.memberId].charId = null;
+      FB.touchFamily();
+
       const rngBefore = FB.getRngState();
       const uidBefore = FB.getUidCounter();
       const made = FB.materializeRoyalChild(s, target.rid, target.memberId);
       return {
         skipped:false,
         created:!!made,
-        derivedId:made && made.id === FB.courtCharacterId(target.memberId),
+        derivedId:!!made && made.id === FB.courtCharacterId(target.memberId),
+        sameId:!!made && made.id === target.charId,
+        /* Same scope, same person: a scoped stream reproduces the sheet, an
+           unscoped one would draw whatever the world stream held next. */
+        reproduced:!!made && JSON.stringify(made.skills) === sheet.skills &&
+          made.traits.join(',') === sheet.traits &&
+          made.fertility === sheet.fertility,
         rngUnchanged:FB.getRngState() === rngBefore,
         uidUnchanged:FB.getUidCounter() === uidBefore
       };
@@ -197,6 +216,8 @@ test('materializing a court draws no randomness from the world stream',
       skipped:false,
       created:true,
       derivedId:true,
+      sameId:true,
+      reproduced:true,
       rngUnchanged:true,
       uidUnchanged:true
     });
@@ -305,6 +326,98 @@ test('a cultivated heir keeps their sheet through their accession',
     });
   });
 
+test('an heir wed to the protagonist gains no second spouse on accession',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      let rid = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        const succession = r && r.alive && id !== 'player' && r.succession;
+        if (succession && succession.heirId &&
+            succession.members[succession.heirId]) { rid = id; break; }
+      }
+      if (!rid) return { skipped:true };
+      const succession = s.realms[rid].succession;
+      const heir = FB.materializeRoyalChild(s, rid, succession.heirId);
+      if (!heir) return { skipped:true };
+
+      /* Marry the protagonist to the heir, then kill the sitting ruler so the
+         heir takes the throne. Succession must not hand a married ruler a
+         generated consort: doctrine decides who may hold more than one
+         spouse, and this path must never decide it by accident. */
+      heir.spouseId = me.id;
+      me.spouseId = heir.id;
+      FB.touchFamily();
+      FB.advanceRealmSuccession(s, rid);
+
+      const crowned = FB.realmRulerCharacterSnapshot(s, rid);
+      const consort = FB.realmConsortCharacter(s, rid);
+      const spouses = crowned ? FB.spousesOf(s, crowned) : [];
+      return {
+        skipped:false,
+        heirReigns:!!crowned && crowned.id === heir.id,
+        noGeneratedConsort:!consort,
+        oneSpouse:spouses.length === 1,
+        spouseIsPlayer:spouses.length === 1 && spouses[0].id === me.id
+      };
+    })).toEqual({
+      skipped:false,
+      heirReigns:true,
+      noGeneratedConsort:true,
+      oneSpouse:true,
+      spouseIsPlayer:true
+    });
+  });
+
+test('an actively cultivated or visited court member survives their death',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const found = [];
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        const succession = r && r.alive && rid !== 'player' && r.succession;
+        if (!succession) continue;
+        for (const id in succession.members) {
+          const m = succession.members[id];
+          const c = m && m.charId && s.chars[m.charId];
+          if (!c || c.dead || id === succession.rulerMemberId) continue;
+          found.push({ member:m, c:c });
+          if (found.length === 3) break;
+        }
+        if (found.length === 3) break;
+      }
+      if (found.length < 3) return { skipped:true };
+
+      /* Three live references the player's own UI resolves back through
+         state.chars. Each must keep the record through the death. */
+      s.player.socialAttention = s.player.socialAttention || {};
+      s.player.socialAttention[found[0].c.id] = { startedTurn:s.turn, lastTurn:s.turn };
+      s.player.travel = { purpose:'relationship', targetCharId:found[1].c.id };
+      s.player.rivalContacts = s.player.rivalContacts || {};
+      s.player.rivalContacts[found[2].c.id] = { score:5, lastTurn:s.turn };
+
+      const ids = found.map(function (f) { return f.c.id; });
+      for (const f of found) {
+        f.member.alive = false;
+        FB.courtMemberDied(s, f.member, f.c);
+      }
+      return {
+        skipped:false,
+        cultivatedKept:!!s.chars[ids[0]],
+        visitedKept:!!s.chars[ids[1]],
+        rivalKept:!!s.chars[ids[2]]
+      };
+    })).toEqual({
+      skipped:false,
+      cultivatedKept:true,
+      visitedKept:true,
+      rivalKept:true
+    });
+  });
+
 test('the serialized payload carries no derived court data',
   async function ({ page }) {
     expect(await page.evaluate(function () {
@@ -319,18 +432,28 @@ test('the serialized payload carries no derived court data',
         if (!succession) continue;
         for (const key in succession) realmKeys[key] = 1;
       }
+      const successionKeys = Object.keys(realmKeys);
+      /* Deliberately not an exact allowlist: a succession legitimately grows
+         additive keys (papalElective once a conclave has resolved, for one),
+         and a test that fails on those is testing the wrong thing. What must
+         never appear is derived data that belongs in memory. */
+      const expected = ['members', 'order', 'heirId', 'rulerGeneration',
+        'rulerMemberId'];
       return {
         version:data.v,
         derived:derived,
-        successionKeys:Object.keys(realmKeys).sort()
+        missing:expected.filter(function (key) {
+          return successionKeys.indexOf(key) < 0;
+        }),
+        derivedInSuccession:successionKeys.filter(function (key) {
+          return /index|cache|derived/i.test(key);
+        })
       };
     })).toEqual({
       version:3,
       derived:[],
-      successionKeys:[
-        'heirCharId', 'heirId', 'members', 'order', 'playerDynasty',
-        'rulerGeneration', 'rulerMemberId'
-      ]
+      missing:[],
+      derivedInSuccession:[]
     });
   });
 

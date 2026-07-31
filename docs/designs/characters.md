@@ -15,10 +15,16 @@ accumulation, and the succession member already holds what the game needs about 
 dead: a name, dates, and parent/child links. So when a court character dies,
 `FB.courtRecordRetained` asks whether the player can still navigate to them - a kin tie,
 a marriage or betrothal, held items, a household or retainer place, a role, a papal
-office. If not, the record is deleted and the member entry becomes the tombstone.
-**Cultivation opinion alone deliberately does not count**: standing lives in the
-realm-keyed store `FB.syncRealmRulerStanding` mirrors, and survives compaction without
-the record.
+office, an attention assignment, a journey under way to visit them, or a friend or
+rival contact clock. If not, the record is deleted and the member entry becomes the
+tombstone.
+
+**Cultivation opinion alone deliberately does not count**, and the distinction is
+narrow: the *standing* a person earned lives in the realm-keyed store
+`FB.syncRealmRulerStanding` mirrors and survives compaction without them, but an
+*active* assignment on that exact person is a live reference the UI resolves back
+through `state.chars` and does retain the record. The score is not a reason to keep a
+sheet; a screen currently pointing at one is.
 
 Two rules keep that safe. The member is marked dead **before** the record is removed, so
 `FB.refreshRealmSuccession` can never mistake a compacted member for a living one whose
