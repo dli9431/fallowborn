@@ -352,6 +352,79 @@ test('direct-court scope, affiliation interests, and influence are authoritative
     expect(result.crownAffiliation).toBe('crown');
   });
 
+test('institutional allegiance thresholds outrank stronger magnate affinity',
+  async function ({ page }, testInfo) {
+    await startPoliticsGame(page, testInfo);
+    var ids = await configurePolitics(page);
+    var result = await page.evaluate(function (setup) {
+      var s = FB.state;
+      var alphaProvince = setup.countyIds[4];
+      var gammaProvinces = [
+        setup.countyIds[7],
+        setup.countyIds[8],
+        setup.countyIds[9]
+      ];
+      for (var i = 0; i < gammaProvinces.length; i++) {
+        s.holder[gammaProvinces[i]] = setup.gammaId;
+        FB.addModifier(s, 'market_charter', gammaProvinces[i], {
+          silent:true,
+          sourceEventId:'politics_precedence_test'
+        });
+      }
+      var gammaAdj = FB.world.adj[gammaProvinces[0]];
+      var alphaAdj = FB.world.adj[alphaProvince];
+      var oldGammaAdj = gammaAdj[alphaProvince];
+      var oldAlphaAdj = alphaAdj[gammaProvinces[0]];
+      gammaAdj[alphaProvince] = 1;
+      alphaAdj[gammaProvinces[0]] = 1;
+      FB.invalidateRealmCache();
+
+      function affiliation(summary, houseId) {
+        for (var b = 0; b < summary.blocs.length; b++) {
+          if (summary.blocs[b].members.some(function (house) {
+            return house.id === houseId;
+          })) return summary.blocs[b].id;
+        }
+        return null;
+      }
+
+      s.politics = {
+        polityId:setup.polityId,
+        allegiances:{},
+        pendingMotion:null
+      };
+      s.politics.allegiances[setup.alphaId] = {
+        blocId:'magnate:' + setup.alphaId,
+        reviewedYear:s.date.year
+      };
+
+      /* Gamma now has a 58-point affinity with Alpha: shared culture and
+         faith, adjacent lands, and Alpha's ducal rank. Crown reaches only 37
+         at +40 Standing, while three commercial counties give Mercantile 36.
+         Both institutional results must therefore be precedence, not score. */
+      s.realms[setup.gammaId].favor = 40;
+      var crownAffiliation = affiliation(
+        FB.politicalSummary(s), setup.gammaId);
+      s.realms[setup.gammaId].favor = -60;
+      var mercantileAffiliation = affiliation(
+        FB.politicalSummary(s), setup.gammaId);
+
+      if (oldGammaAdj === undefined) delete gammaAdj[alphaProvince];
+      else gammaAdj[alphaProvince] = oldGammaAdj;
+      if (oldAlphaAdj === undefined) delete alphaAdj[gammaProvinces[0]];
+      else alphaAdj[gammaProvinces[0]] = oldAlphaAdj;
+      return {
+        crownAffiliation:crownAffiliation,
+        mercantileAffiliation:mercantileAffiliation
+      };
+    }, ids);
+
+    expect(result).toEqual({
+      crownAffiliation:'crown',
+      mercantileAffiliation:'mercantile'
+    });
+  });
+
 test('annual allegiance review uses hysteresis and defers voluntary realignment',
   async function ({ page }, testInfo) {
     await startPoliticsGame(page, testInfo);

@@ -491,6 +491,14 @@ window.FB = window.FB || {};
   function bestAllegiance(house, evaluation) {
     var options = evaluation.interests[house.id];
     if (house.isRuler && options.crown) return 'crown';
+    /* Crown office/favor and concrete commercial constituencies are direct
+       commitments. Once their threshold is met they take precedence over a
+       stronger ambient magnate affinity; the latter remains the scored
+       fallback for houses without either institutional alignment. */
+    if (candidateAllowed('crown', options.crown)) return 'crown';
+    if (candidateAllowed('mercantile', options.mercantile)) {
+      return 'mercantile';
+    }
     var bestId = INDEPENDENT_PREFIX + house.id;
     var bestScore = 0;
     var ids = Object.keys(options).sort(compareId);

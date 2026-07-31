@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.96.2';
+  FB.VERSION = '1.96.3';
   FB.CHANGELOG = [
+    { v: '1.96.3', date: '2026-07-31', changes: [
+      'Court houses with qualifying Crown or Mercantile commitments now keep those allegiances ahead of broader Magnate affinities.'
+    ] },
     { v: '1.96.2', date: '2026-07-31', changes: [
       'Realm courts now preserve thrones, pledges, and child accessions correctly, while Papal households and yearly family cleanup stay bounded.'
     ] },

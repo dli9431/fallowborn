@@ -165,7 +165,10 @@ temperament; Mercantile uses guild rank, monopolies, enterprises, active
 trade contracts, and commercial county modifiers. Up to two highest-influence
 otherwise unaligned houses lead Magnate affinities, whose followers respond
 to culture, faith, adjacent land, and leader rank. A house without a strong
-alignment forms its own singleton Independent bloc.
+alignment forms its own singleton Independent bloc. Meeting the Crown
+threshold takes precedence, followed by meeting the Mercantile threshold;
+only otherwise unaligned houses choose their strongest Magnate affinity or
+remain Independent.
 
 Only the allegiance is durable. An annual review retains an ordinary
 affiliation unless its basis disappears or another valid interest exceeds it
