@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Status: **in progress; steps 1–2 implemented**. This plan organizes player feedback
+Status: **in progress; steps 1–3 implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
@@ -221,7 +221,7 @@ prestige and applies the timed county modifier described above.
 
 Classification: **QoL and Writing, with a small Balance correction**.
 
-Status: **proposed**.
+Status: **complete (2026-07-31)**.
 
 Improve the current war view before rebuilding combat:
 
@@ -253,6 +253,20 @@ Add a first military-writing tranche across all three existing scales:
 
 Events should react to real campaign facts and apply equivalent effects when
 autoresolved.
+
+The implemented slice keeps an additive campaign ledger on the ordinary player-war
+record: bounded battle results, streaks, per-class live-host losses, and recent
+non-battle effects. The Deeds war summary and selected-host Land view now distinguish
+abstract campaign condition from live headcount, show authoritative seasonal logistics,
+and explain supply, thin ranks, discipline, and desertion without introducing a second
+combat simulation.
+
+`war_deserters` now requires a live host, a recent defeat or loss streak, meaningful
+recorded casualties, and a per-war interval. Paying costs two current seasonal host
+upkeep bills (subject to a configurable floor); accepting desertion removes a seeded,
+configurable 10–18% of the live roster through the shared deterministic casualty
+allocator. A first campaign-writing tranche adds personal, host, and whole-war stories,
+all resolved through the same event effects whether shown or autoresolved.
 
 ### 4. Bounded jousting tournaments
 

@@ -532,6 +532,14 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
 | `never` | only fired by other events' `queue` |
 
+Ordinary player-campaign custom gates in `js/world.js` are `war_live_host`,
+`war_host_under_pressure`, `war_deserters_due`, `war_can_pay_deserters`,
+`war_campaign_deep`, `war_campaign_exhausted`, `war_objective_under_debate`,
+`war_has_allied_host`, `war_host_abroad`, `war_enemy_offer_possible`,
+`war_active_occupation`, and `war_negotiation_possible`. They inspect the active
+ordinary war and, where relevant, its live host; each returns false outside an
+ordinary player war.
+
 The same trigger keys may be used in an option's `require` object. Societal role does
 not imply political position: combine it with `isVassal` or `isLiege` where that
 distinction matters. `roleOpinionAbove/Below` is a compatibility key name; it tests the
@@ -750,6 +758,15 @@ diplomatic pact/alliance handlers live in `js/actions.js`; obligation handlers l
 `js/parliament.js`, monopoly handlers in `js/economy.js`, and Council counter-scheme
 handlers in `js/council.js`; mods may register their own before use).
 
+The ordinary campaign-writing handlers also live in `js/world.js`.
+`war_discipline` and `war_disorder` change only abstract campaign condition;
+`war_discipline_deserters` and `war_pay_deserters` do the same and stamp the current
+war's desertion interval. `war_desert` removes a seeded percentage from the live host,
+`war_allied_withdrawal` removes the active allied contribution and lowers condition,
+and `war_negotiated_withdrawal` ends the ordinary war. Live losses use the shared fixed
+class allocation and these handlers record whether they changed abstract strength,
+live troops, or both for the campaign-feedback UI.
+
 Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
 loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;
 severity 2 at −4 or worse), `setFlag:'ill'` adds a random sickness, and
@@ -776,6 +793,11 @@ liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
 `{student}` is the exact character named by queued-event `ctx.studentId`; mentioning it
 also gives that student a character card in the event modal. Annual schooling queues also
 provide `ctx.studentFocus` and `ctx.schoolId` for custom effects.
+During an active ordinary player war, `{hostMen}` is the current live host headcount,
+`{warLosses}` is the campaign ledger's cumulative live-host loss total, `{alliedMen}` is
+the current allied contribution, and `{deserterMinPercent}` / `{deserterMaxPercent}` are
+the configured desertion bounds. `{money:deserterPay}` renders the current arrears cost,
+derived from authoritative seasonal host logistics and the configured payment floor.
 `{god}`/`{holy}`/`{temple}` adapt to the player's faith (God/priest/church,
 Allah/imam/mosque, the gods/godi/shrine…) — prefer them over hard-coded religious words so
 events read correctly for every culture.
@@ -2090,3 +2112,11 @@ Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
 `hostLogisticsMercenaryCompany` (4) is charged for each hired company. A missing
 player host produces no logistics cost. These rates apply equally to ordinary and
 sovereign great holy-war hosts.
+Loss-aware desertion uses `warDeserterMinCasualties` and
+`warDeserterMinCasualtyRate`; the larger absolute-or-initial-host threshold is required.
+`warDeserterDefeatWindowDays` defines how recently the host must have lost, while a
+current two-loss streak also qualifies, and `warDeserterIntervalDays` limits resolution
+to once per that many campaign days. `warDeserterLossMin` / `warDeserterLossMax` bound
+the seeded fraction removed from the live host. Paying costs the ceiling of current
+seasonal upkeep times `warDeserterPayUpkeepSeasons`, with `warDeserterPayMin` as the
+minimum.

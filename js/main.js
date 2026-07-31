@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.100.0';
+  FB.VERSION = '1.101.0';
   FB.CHANGELOG = [
+    { v: '1.101.0', date: '2026-07-31', changes: [
+      'Wars now track recent battles, troop losses, campaign effects, and live logistics, with new personal, host, and whole-war events.'
+    ] },
     { v: '1.100.0', date: '2026-07-31', changes: [
       'Settings now offers configurable action shortcuts, while family trees, conquest targets, and enterprise lists gain navigation, filtering, grouping, and sorting tools.'
     ] },

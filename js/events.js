@@ -1997,6 +1997,32 @@ window.FB = window.FB || {};
             (semantic ? neutralParam('fx.param.their_lands') : FB.T('their lands'));
           break;
         }
+        case 'deserterPay':
+          out[k] = FB.warDeserterPayment ? FB.warDeserterPayment(state) : 0;
+          break;
+        case 'hostMen': {
+          const host = FB.playerHost ? FB.playerHost(state) : null;
+          out[k] = host ? host.men : 0;
+          break;
+        }
+        case 'warLosses': {
+          const feedback = FB.warFeedback ? FB.warFeedback(state) : null;
+          out[k] = feedback ? feedback.lossTotal : 0;
+          break;
+        }
+        case 'deserterMinPercent':
+          out[k] = Math.round((FBDATA.balance.warDeserterLossMin === undefined
+            ? 0.10 : FBDATA.balance.warDeserterLossMin) * 100);
+          break;
+        case 'deserterMaxPercent':
+          out[k] = Math.round((FBDATA.balance.warDeserterLossMax === undefined
+            ? 0.18 : FBDATA.balance.warDeserterLossMax) * 100);
+          break;
+        case 'alliedMen': {
+          const alliedHost = FB.playerHost ? FB.playerHost(state) : null;
+          out[k] = alliedHost && alliedHost.allied ? alliedHost.allied.men : 0;
+          break;
+        }
         case 'liege': {
           const liege = state.player.liege ? state.realms[state.player.liege] : null;
           out[k] = liege ? liege.name :
@@ -2146,9 +2172,177 @@ window.FB = window.FB || {};
     }
   };
 
+  function warUnitParts(units) {
+    units = units || {};
+    const compKeys = [
+      ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
+      ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
+      ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
+      ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
+      ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
+    ];
+    const parts = [];
+    for (const item of compKeys) {
+      if (!units[item[0]]) continue;
+      parts.push(FB.renderKey(item[1], {
+        forms:{ select:'plural', param:'count', cases:item[2] }
+      }, { count:units[item[0]] }));
+    }
+    return parts;
+  }
+
+  FB.warBattleRecordText = function (state, feedback) {
+    feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
+    if (!feedback || !feedback.battles.length) {
+      return FB.renderKey('fx.warstate.no_battles',
+        { text:'Battle record: no battles recorded' }, {});
+    }
+    const rows = [];
+    const start = Math.max(0, feedback.battles.length - 5);
+    for (let i = start; i < feedback.battles.length; i++) {
+      const battle = feedback.battles[i];
+      const place = battle.mode === 'field' && battle.pid && FB.world.byId[battle.pid]
+        ? FB.world.byId[battle.pid].name : '';
+      if (battle.outcome === 'win') {
+        rows.push(place
+          ? FB.renderKey('fx.warstate.battle_win_place',
+            { text:'Victory at {place}' }, { place:place })
+          : FB.renderKey('fx.warstate.battle_win',
+            { text:'Victory at the war council' }, {}));
+      } else {
+        rows.push(place
+          ? FB.renderKey('fx.warstate.battle_loss_place',
+            { text:'Defeat at {place}' }, { place:place })
+          : FB.renderKey('fx.warstate.battle_loss',
+            { text:'Defeat at the war council' }, {}));
+      }
+    }
+    let streak = '';
+    if (feedback.streak && feedback.streak.count) {
+      streak = feedback.streak.outcome === 'win'
+        ? FB.renderKey('fx.warstate.win_streak', {
+          forms:{ select:'plural', param:'count', cases:{
+            one:'{count}-victory streak', other:'{count}-victory streak'
+          }}
+        }, { count:feedback.streak.count })
+        : FB.renderKey('fx.warstate.loss_streak', {
+          forms:{ select:'plural', param:'count', cases:{
+            one:'{count}-defeat streak', other:'{count}-defeat streak'
+          }}
+        }, { count:feedback.streak.count });
+    }
+    return FB.renderKey('fx.warstate.battle_record',
+      { text:'Battle record: {record} · current: {streak}' }, {
+        record:rows.join(' → '), streak:streak
+      });
+  };
+
+  FB.warLossesText = function (state, feedback) {
+    feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
+    const parts = feedback ? warUnitParts(feedback.losses) : [];
+    return parts.length
+      ? FB.renderKey('fx.warstate.losses',
+        { text:'Campaign losses from the live host: {losses}' }, {
+          losses:parts.join(', ')
+        })
+      : FB.renderKey('fx.warstate.no_losses',
+        { text:'Campaign losses from the live host: none recorded' }, {});
+  };
+
+  function warConditionText(condition) {
+    if (condition === 'supply') return FB.T('Supply');
+    if (condition === 'thin_ranks') return FB.T('Thin ranks');
+    if (condition === 'discipline') return FB.T('Discipline');
+    if (condition === 'disorder') return FB.T('Disorder');
+    if (condition === 'desertion') return FB.T('Desertion');
+    if (condition === 'battle') return FB.T('Battle losses');
+    return FB.T('Campaign pressure');
+  }
+
+  function warEffectTargetText(target) {
+    if (target === 'both') {
+      return FB.renderKey('fx.warstate.target_both',
+        { text:'abstract strength and live troops' }, {});
+    }
+    if (target === 'troops') {
+      return FB.renderKey('fx.warstate.target_troops',
+        { text:'live troops only' }, {});
+    }
+    return FB.renderKey('fx.warstate.target_strength',
+      { text:'abstract strength only' }, {});
+  }
+
+  FB.warEffectsText = function (state, feedback) {
+    feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
+    const effects = feedback ? feedback.effects : [];
+    const chosen = [], seen = {};
+    for (let i = effects.length - 1; i >= 0 && chosen.length < 4; i--) {
+      const effect = effects[i];
+      if (effect.condition === 'battle' || seen[effect.condition]) continue;
+      seen[effect.condition] = 1;
+      chosen.unshift(effect);
+    }
+    if (!chosen.length) return '';
+    const rows = [];
+    for (const effect of chosen) {
+      const deltas = [];
+      const strength = Math.round((effect.strengthDelta || 0) * 100);
+      if (strength) {
+        deltas.push(FB.renderKey('fx.warstate.condition_delta',
+          { text:'{amount} condition' }, {
+            amount:(strength > 0 ? '+' : '') + strength
+          }));
+      }
+      if (effect.troopTotal) {
+        deltas.push(FB.renderKey('fx.warstate.troop_delta',
+          { text:'−{men} men' }, { men:effect.troopTotal }));
+      }
+      rows.push(FB.renderKey('fx.warstate.effect_row',
+        { text:'{condition}: {change} ({target})' }, {
+          condition:warConditionText(effect.condition),
+          change:deltas.join(', '),
+          target:warEffectTargetText(effect.target)
+        }));
+    }
+    return FB.renderKey('fx.warstate.effects',
+      { text:'Campaign effects: {effects}' }, { effects:rows.join('; ') });
+  };
+
+  FB.warUpkeepText = function (state, feedback) {
+    feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
+    if (!feedback || !feedback.host) {
+      return FB.renderKey('fx.warstate.no_logistics',
+        { text:'Seasonal host logistics: none while no host is raised' }, {});
+    }
+    const upkeep = feedback.upkeep;
+    const rows = [];
+    const parts = [
+      ['base', 'fx.warstate.upkeep_camp', FB.T('camp')],
+      ['levy', 'fx.warstate.upkeep_levy', FB.T('levy')],
+      ['archers', 'fx.warstate.upkeep_archers', FB.T('archers')],
+      ['cavalry', 'fx.warstate.upkeep_cavalry', FB.T('cavalry')],
+      ['retinue', 'fx.warstate.upkeep_retinue', FB.T('men-at-arms')],
+      ['mercenaries', 'fx.warstate.upkeep_mercenaries', FB.T('mercenaries')],
+      ['campaignModifier', 'fx.warstate.upkeep_campaign', FB.T('campaign adjustment')]
+    ];
+    for (const item of parts) {
+      if (!upkeep[item[0]]) continue;
+      rows.push(FB.renderKey(item[1], { text:'{label} {money:amount}' }, {
+        label:item[2],
+        amount:Math.round(upkeep[item[0]] * 10) / 10
+      }));
+    }
+    return FB.renderKey('fx.warstate.logistics_ledger',
+      { text:'Seasonal host logistics: {money:total} ({parts})' }, {
+        total:Math.round(upkeep.total * 10) / 10,
+        parts:rows.join('; ')
+      });
+  };
+
   FB.warStateText = function (state) {
     const war = state.player.war;
     if (!war) return '';
+    const feedback = FB.warFeedback ? FB.warFeedback(state) : null;
     const host = FB.playerHost ? FB.playerHost(state) : null;
     const men = host ? host.men :
       Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(state)) * (war.strength || 1) +
@@ -2160,20 +2354,7 @@ window.FB = window.FB || {};
     ];
     // what the host is made of: the levy mass, the bowmen, the hard core
     if (host && host.units) {
-      const u = host.units;
-      const compKeys = [
-        ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
-        ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
-        ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
-        ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }]
-      ];
-      const parts = [];
-      for (const ck of compKeys) {
-        if (!u[ck[0]]) continue;
-        parts.push(FB.renderKey(ck[1], {
-          forms: { select: 'plural', param: 'count', cases: ck[2] }
-        }, { count: u[ck[0]] }));
-      }
+      const parts = warUnitParts(host.units);
       if (parts.length) clauses.push(parts.join(', '));
     }
     if (war.mercCos) {
@@ -2186,10 +2367,15 @@ window.FB = window.FB || {};
         }
       }, { count: war.mercCos }));
     }
-    if (host && FB.playerHostUpkeepParts) {
-      clauses.push(FB.renderKey('fx.warstate.logistics',
-        { text: 'Seasonal host logistics: {money:amount}' },
-        { amount: Math.round(FB.playerHostUpkeepParts(state).total * 10) / 10 }));
+    if (feedback) {
+      clauses.push(FB.warBattleRecordText(state, feedback));
+      clauses.push(FB.warLossesText(state, feedback));
+      const effectText = FB.warEffectsText(state, feedback);
+      if (effectText) clauses.push(effectText);
+      clauses.push(FB.warUpkeepText(state, feedback));
+      clauses.push(FB.renderKey('fx.warstate.condition_explainer', {
+        text:'Campaign condition changes war-council odds; live troop totals change only when a loss names the host.'
+      }, {}));
     }
     clauses.push(host
       ? FB.renderKey('fx.warstate.in_field', { text: 'In the field at {place}' },
@@ -3255,7 +3441,7 @@ window.FB = window.FB || {};
     if (fx.queue) FB.queueEvent(state, fx.queue, ctx);
     if (fx.worldNews) FB.randomWorldNews(state);
     if (fx.log) FB.news(state, FB.eventLogMessage(state, sourceFx, ctx));
-    if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx);
+    if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx, ev);
     if (FB.travelValidate) FB.travelValidate(state);
     /* Lethal effects may freeze where and against whom the blow fell. The
        marker is short-lived unless this exact resolution proves mortal. */

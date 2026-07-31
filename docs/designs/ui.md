@@ -195,7 +195,7 @@ footer, and the `fullsheet-modal` narrow/mobile layout.
 The conquest picker previews the current household's normal-muster logistics before
 the player declares. Selecting the player's raised host in the Land panel shows the
 current live logistics total beside its composition; ordinary war-status text repeats
-that total. These surfaces read `FB.playerMusterUpkeepParts` and
+the component breakdown and total. These surfaces read `FB.playerMusterUpkeepParts` and
 `FB.playerHostUpkeepParts`, so great levies, reinforcements, casualties, mercenary
 companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
 The conquest picker is a session-state catalogue over `FB.warCauses(state, true, true)`:
@@ -205,6 +205,11 @@ adjacency, relative-rank, and diplomatic filters compose; deterministic sorts of
 recommended available-rights-first order plus realm, territory, rank, and defensive
 strength. Filtering and sorting only hide or reorder semantic cause rows, then rebuild
 visible modal number badges from that DOM order.
+The selected-host Land panel and Deeds war summary also show the bounded battle record,
+recent streak, live composition, campaign losses by class, and recent non-battle
+effects. Every effect is labeled as changing abstract strength, live troops, or both;
+the accompanying explanation keeps supply, thin ranks, and discipline from implying
+unrecorded casualties.
 
 **Managed household sheets keep compact bust portraits and open equipment separately.**
 The Self sheet and the sheets for living spouses, resident unmarried children and

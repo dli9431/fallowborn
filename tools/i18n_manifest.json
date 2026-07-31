@@ -4114,6 +4114,70 @@
         "text": "Empty Wagons"
       }
     },
+    "event.campaign_camp_fever.options.0.desc.default": {
+      "context": "Event campaign_camp_fever, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Lose a little standing and perhaps save your life."
+      }
+    },
+    "event.campaign_camp_fever.options.0.label.default": {
+      "context": "Event campaign_camp_fever, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Go to the infirmary before it worsens."
+      }
+    },
+    "event.campaign_camp_fever.options.1.desc.default": {
+      "context": "Event campaign_camp_fever, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The body may master it. The camp may remember."
+      }
+    },
+    "event.campaign_camp_fever.options.1.failure.text.default": {
+      "context": "Event campaign_camp_fever, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "You collapse against the spear-rack before relief comes."
+      }
+    },
+    "event.campaign_camp_fever.options.1.label.default": {
+      "context": "Event campaign_camp_fever, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Keep the watch and say nothing."
+      }
+    },
+    "event.campaign_camp_fever.options.1.success.text.default": {
+      "context": "Event campaign_camp_fever, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "By dawn the fever breaks and you are still at your post."
+      }
+    },
+    "event.campaign_camp_fever.text.default": {
+      "context": "Event campaign_camp_fever, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A sour fever moves from tent to tent. Men who marched yesterday cannot stand today, and tonight your own skin feels too hot."
+      }
+    },
+    "event.campaign_camp_fever.title.default": {
+      "context": "Event campaign_camp_fever, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Heat Beneath the Blanket"
+      }
+    },
     "event.campaign_ends.options.0.desc.default": {
       "context": "Event campaign_ends, authored option 0, desc, branch default.",
       "glossary": [],
@@ -4152,6 +4216,262 @@
       "location": "data/events_world.js",
       "source": {
         "text": "The War Lets You Go"
+      }
+    },
+    "event.campaign_fear_before_dawn.options.0.desc.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Courage is what remains after fear is admitted."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.0.label.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Name the fear, then master it."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.1.desc.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Valor may burn the fear out — or burn you with it."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.1.failure.text.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A spear finds the gap beneath your arm. The line advances over you."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.1.label.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Ask for the most dangerous place."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.1.success.text.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "You are first across the ditch and still standing when the line follows."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.2.desc.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Safer work, if the others let you forget why you chose it."
+      }
+    },
+    "event.campaign_fear_before_dawn.options.2.label.default": {
+      "context": "Event campaign_fear_before_dawn, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Find duty with the baggage."
+      }
+    },
+    "event.campaign_fear_before_dawn.text.default": {
+      "context": "Event campaign_fear_before_dawn, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Before dawn the word passes down the line: battle today. Your hands will not stop shaking. No one speaks of fear, which leaves it everywhere."
+      }
+    },
+    "event.campaign_fear_before_dawn.title.default": {
+      "context": "Event campaign_fear_before_dawn, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Before the Horns"
+      }
+    },
+    "event.campaign_name_on_the_roll.options.0.desc.default": {
+      "context": "Event campaign_name_on_the_roll, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Reputation becomes responsibility."
+      }
+    },
+    "event.campaign_name_on_the_roll.options.0.label.default": {
+      "context": "Event campaign_name_on_the_roll, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Use the name to steady the new men."
+      }
+    },
+    "event.campaign_name_on_the_roll.options.1.desc.default": {
+      "context": "Event campaign_name_on_the_roll, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A famous hand can reach deeper into the purse."
+      }
+    },
+    "event.campaign_name_on_the_roll.options.1.label.default": {
+      "context": "Event campaign_name_on_the_roll, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Use it to claim a better share."
+      }
+    },
+    "event.campaign_name_on_the_roll.text.default": {
+      "context": "Event campaign_name_on_the_roll, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The captain reads the night-watch roll, pauses at your name, and looks up. Around you, strangers now know whom he means."
+      }
+    },
+    "event.campaign_name_on_the_roll.title.default": {
+      "context": "Event campaign_name_on_the_roll, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A Name the Captain Knows"
+      }
+    },
+    "event.campaign_orders_in_mud.options.0.desc.default": {
+      "context": "Event campaign_orders_in_mud, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A clear wrong order can be better than two right ones."
+      }
+    },
+    "event.campaign_orders_in_mud.options.0.failure.text.default": {
+      "context": "Event campaign_orders_in_mud, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The ford becomes a trap, and your name travels back with the wounded."
+      }
+    },
+    "event.campaign_orders_in_mud.options.0.label.default": {
+      "context": "Event campaign_orders_in_mud, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Choose the ford and take the blame."
+      }
+    },
+    "event.campaign_orders_in_mud.options.0.success.text.default": {
+      "context": "Event campaign_orders_in_mud, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The ford holds. By dusk even the angry officer calls it judgment."
+      }
+    },
+    "event.campaign_orders_in_mud.options.1.desc.default": {
+      "context": "Event campaign_orders_in_mud, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Discipline preserved; opportunity surrendered."
+      }
+    },
+    "event.campaign_orders_in_mud.options.1.label.default": {
+      "context": "Event campaign_orders_in_mud, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Hold until the officers agree."
+      }
+    },
+    "event.campaign_orders_in_mud.text.default": {
+      "context": "Event campaign_orders_in_mud, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "One officer orders your file to the ford; another shouts for it at the ridge. Rain eats both voices while the soldiers wait for yours."
+      }
+    },
+    "event.campaign_orders_in_mud.title.default": {
+      "context": "Event campaign_orders_in_mud, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Two Orders in the Rain"
+      }
+    },
+    "event.campaign_wound_watch.options.0.desc.default": {
+      "context": "Event campaign_wound_watch, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Protect your health and accept the muttering."
+      }
+    },
+    "event.campaign_wound_watch.options.0.label.default": {
+      "context": "Event campaign_wound_watch, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Report to the surgeon."
+      }
+    },
+    "event.campaign_wound_watch.options.1.desc.default": {
+      "context": "Event campaign_wound_watch, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Your reputation rises if the body holds."
+      }
+    },
+    "event.campaign_wound_watch.options.1.failure.text.default": {
+      "context": "Event campaign_wound_watch, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Blood soaks the binding before noon."
+      }
+    },
+    "event.campaign_wound_watch.options.1.label.default": {
+      "context": "Event campaign_wound_watch, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Bind it tight and stay in line."
+      }
+    },
+    "event.campaign_wound_watch.options.1.success.text.default": {
+      "context": "Event campaign_wound_watch, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The binding holds through the march. The veterans begin to use your name."
+      }
+    },
+    "event.campaign_wound_watch.text.default": {
+      "context": "Event campaign_wound_watch, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The old wound has opened beneath sweat and mail. The surgeon says one quiet week may close it; the captain says the line is already short."
+      }
+    },
+    "event.campaign_wound_watch.title.default": {
+      "context": "Event campaign_wound_watch, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The Wound Will Not Close"
       }
     },
     "event.caravan_venture.options.0.desc.default": {
@@ -23782,6 +24102,202 @@
         "text": "The Storyteller"
       }
     },
+    "event.war_allied_hesitation.options.0.desc.default": {
+      "context": "Event war_allied_hesitation, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The allied live troops remain and abstract supply improves."
+      }
+    },
+    "event.war_allied_hesitation.options.0.label.default": {
+      "context": "Event war_allied_hesitation, authored option 0, label, branch default.",
+      "glossary": [
+        "money:8"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Pay their disputed costs. ({money:8})"
+      }
+    },
+    "event.war_allied_hesitation.options.1.desc.default": {
+      "context": "Event war_allied_hesitation, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Discipline rises in the abstract ledger; allied troops remain."
+      }
+    },
+    "event.war_allied_hesitation.options.1.label.default": {
+      "context": "Event war_allied_hesitation, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Call on the honor of their oath."
+      }
+    },
+    "event.war_allied_hesitation.options.2.desc.default": {
+      "context": "Event war_allied_hesitation, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Their men leave the live host and abstract condition falls; the feedback ledger records both."
+      }
+    },
+    "event.war_allied_hesitation.options.2.label.default": {
+      "context": "Event war_allied_hesitation, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Let them march home."
+      }
+    },
+    "event.war_allied_hesitation.text.default": {
+      "context": "Event war_allied_hesitation, text, faith branch default.",
+      "glossary": [
+        "alliedMen"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Your ally’s captain says {alliedMen} spears were promised for defense, not for every road the campaign might choose. Their camp is already packing."
+      }
+    },
+    "event.war_allied_hesitation.title.default": {
+      "context": "Event war_allied_hesitation, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "An Ally Counts the Cost"
+      }
+    },
+    "event.war_camp_discipline.options.0.desc.default": {
+      "context": "Event war_camp_discipline, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Discipline raises abstract condition; the live roster is unchanged."
+      }
+    },
+    "event.war_camp_discipline.options.0.label.default": {
+      "context": "Event war_camp_discipline, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Judge the killers in public."
+      }
+    },
+    "event.war_camp_discipline.options.1.desc.default": {
+      "context": "Event war_camp_discipline, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Slow reconciliation raises abstract discipline without executions."
+      }
+    },
+    "event.war_camp_discipline.options.1.label.default": {
+      "context": "Event war_camp_discipline, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Make both companies drill together."
+      }
+    },
+    "event.war_camp_discipline.options.2.desc.default": {
+      "context": "Event war_camp_discipline, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Disorder lowers abstract condition; live troop totals do not change."
+      }
+    },
+    "event.war_camp_discipline.options.2.label.default": {
+      "context": "Event war_camp_discipline, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Let their captains settle it."
+      }
+    },
+    "event.war_camp_discipline.text.default": {
+      "context": "Event war_camp_discipline, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A quarrel between two companies ends with a knife in the mud and both sides reaching for spears. The whole camp waits on the judgment."
+      }
+    },
+    "event.war_camp_discipline.title.default": {
+      "context": "Event war_camp_discipline, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A Knife Between Companies"
+      }
+    },
+    "event.war_camp_followers.options.0.desc.default": {
+      "context": "Event war_camp_followers, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Order and supplies raise abstract campaign condition."
+      }
+    },
+    "event.war_camp_followers.options.0.label.default": {
+      "context": "Event war_camp_followers, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "License the camp market."
+      }
+    },
+    "event.war_camp_followers.options.1.desc.default": {
+      "context": "Event war_camp_followers, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Harsh discipline raises abstract condition at a cost in reputation."
+      }
+    },
+    "event.war_camp_followers.options.1.label.default": {
+      "context": "Event war_camp_followers, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Drive away everyone without a spear."
+      }
+    },
+    "event.war_camp_followers.options.2.desc.default": {
+      "context": "Event war_camp_followers, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Disorder lowers abstract condition; the live roster is unchanged."
+      }
+    },
+    "event.war_camp_followers.options.2.label.default": {
+      "context": "Event war_camp_followers, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Leave the road to govern itself."
+      }
+    },
+    "event.war_camp_followers.text.default": {
+      "context": "Event war_camp_followers, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Smiths, laundresses, traders, children, gamblers, and wounded men stretch the camp into a second army. They feed the host and slow it in equal measure."
+      }
+    },
+    "event.war_camp_followers.title.default": {
+      "context": "Event war_camp_followers, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The Road Behind the Host"
+      }
+    },
     "event.war_council.options.0.desc.default": {
       "context": "Event war_council, authored option 0, desc, branch default.",
       "glossary": [],
@@ -24021,7 +24537,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Fear keeps ranks better than love does."
+        "text": "Discipline raises abstract campaign condition; no live troops return or leave."
       }
     },
     "event.war_deserters.options.0.label.default": {
@@ -24037,23 +24553,28 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "The ranks steady."
+        "text": "Pay two seasons of current live-host logistics. Supply raises abstract condition; live troops do not change."
       }
     },
     "event.war_deserters.options.1.label.default": {
       "context": "Event war_deserters, authored option 1, label, branch default.",
-      "glossary": [],
+      "glossary": [
+        "money:deserterPay"
+      ],
       "location": "data/events_war.js",
       "source": {
-        "text": "Promise double pay at war’s end."
+        "text": "Clear the arrears. ({money:deserterPay})"
       }
     },
     "event.war_deserters.options.2.desc.default": {
       "context": "Event war_deserters, authored option 2, desc, branch default.",
-      "glossary": [],
+      "glossary": [
+        "deserterMaxPercent",
+        "deserterMinPercent"
+      ],
       "location": "data/events_war.js",
       "source": {
-        "text": "A thin host, but a willing one."
+        "text": "A seeded {deserterMinPercent}–{deserterMaxPercent}% leave the live host by deterministic casualty order; abstract condition does not change."
       }
     },
     "event.war_deserters.options.2.label.default": {
@@ -24066,10 +24587,13 @@
     },
     "event.war_deserters.text.default": {
       "context": "Event war_deserters, text, faith branch default.",
-      "glossary": [],
+      "glossary": [
+        "hostMen",
+        "warLosses"
+      ],
       "location": "data/events_war.js",
       "source": {
-        "text": "Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you."
+        "text": "After a recent defeat and {warLosses} recorded campaign losses, the morning count wavers. {hostMen} soldiers still stand beneath the banner, but men are slipping home to harvests, wives, and unfinished lives."
       }
     },
     "event.war_deserters.title.default": {
@@ -24080,12 +24604,78 @@
         "text": "Empty Bedrolls"
       }
     },
+    "event.war_enemy_concessions.options.0.desc.default": {
+      "context": "Event war_enemy_concessions, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Supplies raise abstract condition; the live roster does not change."
+      }
+    },
+    "event.war_enemy_concessions.options.0.label.default": {
+      "context": "Event war_enemy_concessions, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Exchange prisoners and take the wagons."
+      }
+    },
+    "event.war_enemy_concessions.options.1.desc.default": {
+      "context": "Event war_enemy_concessions, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Mercy helps public resolve without altering either army ledger."
+      }
+    },
+    "event.war_enemy_concessions.options.1.label.default": {
+      "context": "Event war_enemy_concessions, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take only the wounded home."
+      }
+    },
+    "event.war_enemy_concessions.options.2.desc.default": {
+      "context": "Event war_enemy_concessions, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A show of discipline raises abstract condition."
+      }
+    },
+    "event.war_enemy_concessions.options.2.label.default": {
+      "context": "Event war_enemy_concessions, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Send them back unheard."
+      }
+    },
+    "event.war_enemy_concessions.text.default": {
+      "context": "Event war_enemy_concessions, text, faith branch default.",
+      "glossary": [
+        "target"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Enemy envoys offer prisoners, wagons, and a purse — not peace, and not {target}, but enough to test whether the war’s purpose is still worth its price."
+      }
+    },
+    "event.war_enemy_concessions.title.default": {
+      "context": "Event war_enemy_concessions, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A Lesser Offer from the Enemy"
+      }
+    },
     "event.war_grain_seller.options.0.desc.default": {
       "context": "Event war_grain_seller, authored option 0, desc, branch default.",
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "A fed host fights better."
+        "text": "Supply raises abstract campaign condition; live troop totals do not change."
       }
     },
     "event.war_grain_seller.options.0.label.default": {
@@ -24103,7 +24693,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Take it by right of hunger — if his guards allow."
+        "text": "Take it by right of hunger — success changes abstract supply, not live troops."
       }
     },
     "event.war_grain_seller.options.1.failure.text.default": {
@@ -24135,7 +24725,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Hunger is cheaper than grain this season."
+        "text": "Thin ranks lower abstract campaign condition; live troop totals do not change."
       }
     },
     "event.war_grain_seller.options.2.label.default": {
@@ -24160,6 +24750,72 @@
       "location": "data/events_war.js",
       "source": {
         "text": "Grain at Sword-Season Prices"
+      }
+    },
+    "event.war_local_requisition.options.0.desc.default": {
+      "context": "Event war_local_requisition, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Bought food raises abstract supply; live troops do not change."
+      }
+    },
+    "event.war_local_requisition.options.0.label.default": {
+      "context": "Event war_local_requisition, authored option 0, label, branch default.",
+      "glossary": [
+        "money:6"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Pay for every sack. ({money:6})"
+      }
+    },
+    "event.war_local_requisition.options.1.desc.default": {
+      "context": "Event war_local_requisition, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Requisition raises abstract supply and damages your name."
+      }
+    },
+    "event.war_local_requisition.options.1.label.default": {
+      "context": "Event war_local_requisition, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take what the campaign requires."
+      }
+    },
+    "event.war_local_requisition.options.2.desc.default": {
+      "context": "Event war_local_requisition, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Thin ranks lower abstract condition; no troops are directly removed."
+      }
+    },
+    "event.war_local_requisition.options.2.label.default": {
+      "context": "Event war_local_requisition, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Move on hungry."
+      }
+    },
+    "event.war_local_requisition.text.default": {
+      "context": "Event war_local_requisition, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The host stands on enemy soil and the nearby villages hide grain, carts, and livestock. Your foragers ask how much law follows a banner across the border."
+      }
+    },
+    "event.war_local_requisition.title.default": {
+      "context": "Event war_local_requisition, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The Villages Bar Their Doors"
       }
     },
     "event.war_muster.options.0.desc.default": {
@@ -24247,6 +24903,402 @@
       "location": "data/events_war.js",
       "source": {
         "text": "The Banners Rise"
+      }
+    },
+    "event.war_negotiated_withdrawal.options.0.desc.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "End the war now with a smaller prestige loss than abandoning it unilaterally."
+      }
+    },
+    "event.war_negotiated_withdrawal.options.0.label.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Negotiate the withdrawal."
+      }
+    },
+    "event.war_negotiated_withdrawal.options.1.desc.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Supply raises abstract condition; the war continues."
+      }
+    },
+    "event.war_negotiated_withdrawal.options.1.label.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Use the talks to rest the host."
+      }
+    },
+    "event.war_negotiated_withdrawal.options.2.desc.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Discipline rises in the abstract ledger; the war continues."
+      }
+    },
+    "event.war_negotiated_withdrawal.options.2.label.default": {
+      "context": "Event war_negotiated_withdrawal, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Break off the talks."
+      }
+    },
+    "event.war_negotiated_withdrawal.text.default": {
+      "context": "Event war_negotiated_withdrawal, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A neutral household offers safe conduct, an exchange of captives, and an end without triumph. The road home is open now; another defeat may close it."
+      }
+    },
+    "event.war_negotiated_withdrawal.title.default": {
+      "context": "Event war_negotiated_withdrawal, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A Road Out of the War"
+      }
+    },
+    "event.war_objective_council.options.0.desc.default": {
+      "context": "Event war_objective_council, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A limited objective restores abstract discipline."
+      }
+    },
+    "event.war_objective_council.options.0.label.default": {
+      "context": "Event war_objective_council, authored option 0, label, branch default.",
+      "glossary": [
+        "target"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Name {target}, and nothing beyond it."
+      }
+    },
+    "event.war_objective_council.options.1.desc.default": {
+      "context": "Event war_objective_council, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Plunder buys enthusiasm but weakens abstract discipline."
+      }
+    },
+    "event.war_objective_council.options.1.label.default": {
+      "context": "Event war_objective_council, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Promise the host whatever it can take."
+      }
+    },
+    "event.war_objective_council.options.2.desc.default": {
+      "context": "Event war_objective_council, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Restored supply raises condition, but public resolve suffers."
+      }
+    },
+    "event.war_objective_council.options.2.label.default": {
+      "context": "Event war_objective_council, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Admit the objective must wait."
+      }
+    },
+    "event.war_objective_council.text.default": {
+      "context": "Event war_objective_council, text, faith branch default.",
+      "glossary": [
+        "target"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The captains point at {target}; the treasurer points at the empty columns beside it. What began as one clean objective now carries a dozen private ambitions."
+      }
+    },
+    "event.war_objective_council.title.default": {
+      "context": "Event war_objective_council, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "What Is This War For?"
+      }
+    },
+    "event.war_occupation_policy.options.0.desc.default": {
+      "context": "Event war_occupation_policy, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:4"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Restraint raises abstract discipline and costs {money:4}."
+      }
+    },
+    "event.war_occupation_policy.options.0.label.default": {
+      "context": "Event war_occupation_policy, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Protect market, shrine, and field."
+      }
+    },
+    "event.war_occupation_policy.options.1.desc.default": {
+      "context": "Event war_occupation_policy, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Supplies raise abstract condition; promises burden your reputation."
+      }
+    },
+    "event.war_occupation_policy.options.1.label.default": {
+      "context": "Event war_occupation_policy, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Requisition under written receipts."
+      }
+    },
+    "event.war_occupation_policy.options.2.desc.default": {
+      "context": "Event war_occupation_policy, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Disorder and cruelty lower abstract condition despite immediate plunder."
+      }
+    },
+    "event.war_occupation_policy.options.2.label.default": {
+      "context": "Event war_occupation_policy, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Let fear shorten the siege."
+      }
+    },
+    "event.war_occupation_policy.text.default": {
+      "context": "Event war_occupation_policy, text, faith branch default.",
+      "glossary": [
+        "target"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The siege works bite into {target}. Farms and streets behind your lines now answer to soldiers who ask whether they are conquerors, guests, or thieves."
+      }
+    },
+    "event.war_occupation_policy.title.default": {
+      "context": "Event war_occupation_policy, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Under Your Banner"
+      }
+    },
+    "event.war_officers_divided.options.0.desc.default": {
+      "context": "Event war_officers_divided, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A clear chain of command raises abstract discipline."
+      }
+    },
+    "event.war_officers_divided.options.0.label.default": {
+      "context": "Event war_officers_divided, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Set one command and own it."
+      }
+    },
+    "event.war_officers_divided.options.1.desc.default": {
+      "context": "Event war_officers_divided, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Diplomacy may reconcile them; failure deepens abstract disorder."
+      }
+    },
+    "event.war_officers_divided.options.1.failure.text.default": {
+      "context": "Event war_officers_divided, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Each hears a different promise and distrusts the others more."
+      }
+    },
+    "event.war_officers_divided.options.1.label.default": {
+      "context": "Event war_officers_divided, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Balance every grievance."
+      }
+    },
+    "event.war_officers_divided.options.1.success.text.default": {
+      "context": "Event war_officers_divided, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Each captain leaves heard, and all leave with the same written order."
+      }
+    },
+    "event.war_officers_divided.text.default": {
+      "context": "Event war_officers_divided, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The senior captains no longer argue about roads. They argue about who will be blamed for the road already taken."
+      }
+    },
+    "event.war_officers_divided.title.default": {
+      "context": "Event war_officers_divided, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Captains at Cross Purposes"
+      }
+    },
+    "event.war_pay_chest.options.0.desc.default": {
+      "context": "Event war_pay_chest, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Restored supply raises abstract campaign condition; no live troops change."
+      }
+    },
+    "event.war_pay_chest.options.0.label.default": {
+      "context": "Event war_pay_chest, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Make up the arrears yourself. ({money:10})"
+      }
+    },
+    "event.war_pay_chest.options.1.desc.default": {
+      "context": "Event war_pay_chest, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Visible discipline raises abstract condition, but the purse stays empty."
+      }
+    },
+    "event.war_pay_chest.options.1.label.default": {
+      "context": "Event war_pay_chest, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Put the officers before the ranks."
+      }
+    },
+    "event.war_pay_chest.options.2.desc.default": {
+      "context": "Event war_pay_chest, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Disorder lowers abstract condition; live troop totals do not change yet."
+      }
+    },
+    "event.war_pay_chest.options.2.label.default": {
+      "context": "Event war_pay_chest, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Issue another promise."
+      }
+    },
+    "event.war_pay_chest.text.default": {
+      "context": "Event war_pay_chest, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The paymaster opens a chest that should be heavy and is not. The host has already suffered; another promise may sound like an insult."
+      }
+    },
+    "event.war_pay_chest.title.default": {
+      "context": "Event war_pay_chest, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The Pay Chest Is Light"
+      }
+    },
+    "event.war_public_exhaustion.options.0.desc.default": {
+      "context": "Event war_public_exhaustion, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Public patience and abstract supply recover; live troops remain."
+      }
+    },
+    "event.war_public_exhaustion.options.0.label.default": {
+      "context": "Event war_public_exhaustion, authored option 0, label, branch default.",
+      "glossary": [
+        "money:8"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Send relief home. ({money:8})"
+      }
+    },
+    "event.war_public_exhaustion.options.1.desc.default": {
+      "context": "Event war_public_exhaustion, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Discipline rises while Common Voice falls."
+      }
+    },
+    "event.war_public_exhaustion.options.1.label.default": {
+      "context": "Event war_public_exhaustion, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Demand one more effort."
+      }
+    },
+    "event.war_public_exhaustion.options.2.desc.default": {
+      "context": "Event war_public_exhaustion, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Common Voice recovers, but thin ranks lower abstract condition."
+      }
+    },
+    "event.war_public_exhaustion.options.2.label.default": {
+      "context": "Event war_public_exhaustion, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Acknowledge the cost in public."
+      }
+    },
+    "event.war_public_exhaustion.text.default": {
+      "context": "Event war_public_exhaustion, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Four seasons and more have passed. At home, rents arrive late, fields go short of hands, and every household tally seems to count someone beneath your banner."
+      }
+    },
+    "event.war_public_exhaustion.title.default": {
+      "context": "Event war_public_exhaustion, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The Roll Counts Empty Houses"
       }
     },
     "event.war_tribute_offer.options.0.desc.default": {
@@ -31264,6 +32316,27 @@
         }
       }
     },
+    "news.war.deserters_leave": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "men",
+        "percent"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏳 {men} soldiers leave the live host ({percent}% of those who stood in the morning)."
+      }
+    },
+    "news.war.deserters_paid": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "💰 {money:amount} clears the host’s arrears; the wavering ranks steady."
+      }
+    },
     "news.war.enemy_advance": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -31351,6 +32424,14 @@
       "location": "js/world.js",
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
+      }
+    },
+    "news.war.negotiated_withdrawal": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "🕊 Safe conduct is agreed; the surviving host withdraws and the war ends."
       }
     },
     "news.war.no_road_to_enemy": {
@@ -38279,6 +39360,16 @@
         "text": "A dry night is worth a delayed dawn."
       }
     },
+    "src.0091e562": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Balance every grievance."
+      }
+    },
     "src.0094ac54": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -38658,6 +39749,16 @@
       ],
       "source": {
         "text": "Guadix"
+      }
+    },
+    "src.01ac36d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Campaign losses from the live host: none recorded"
       }
     },
     "src.01b4638d": {
@@ -39080,6 +40181,16 @@
       ],
       "source": {
         "text": "{count} cavalry"
+      }
+    },
+    "src.0313cce3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "By dawn the fever breaks and you are still at your post."
       }
     },
     "src.03174b1e": {
@@ -39663,6 +40774,16 @@
         "text": "Fund relief and patrol the roads. ({money:16})"
       }
     },
+    "src.04bc8160": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Two Orders in the Rain"
+      }
+    },
     "src.04c08ce7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40173,6 +41294,16 @@
         "text": "Sow the proven barley."
       }
     },
+    "src.063fb84f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Let their captains settle it."
+      }
+    },
     "src.0652215e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -40351,6 +41482,16 @@
       ],
       "source": {
         "text": "🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained."
+      }
+    },
+    "src.06cdd7f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Clear the arrears. ({money:deserterPay})"
       }
     },
     "src.06cfd35a": {
@@ -41078,6 +42219,16 @@
         "text": "Already used"
       }
     },
+    "src.08b39e62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Campaign losses from the live host: {losses}"
+      }
+    },
     "src.08b3ecce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41348,6 +42499,16 @@
         "text": "Political attention: {used} of {capacity} assigned · current direction: {stance}."
       }
     },
+    "src.0952cc73": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A seeded {deserterMinPercent}–{deserterMaxPercent}% leave the live host by deterministic casualty order; abstract condition does not change."
+      }
+    },
     "src.095bb211": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41566,6 +42727,16 @@
       ],
       "source": {
         "text": "Sweat now buys blood saved later."
+      }
+    },
+    "src.09db7d78": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Courage is what remains after fear is admitted."
       }
     },
     "src.09e192b6": {
@@ -42710,6 +43881,16 @@
         "text": "A Step on the Stair"
       }
     },
+    "src.0d17eaf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline rises while Common Voice falls."
+      }
+    },
     "src.0d18e734": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43361,6 +44542,16 @@
       ],
       "source": {
         "text": "Confirm sanctuary from the muster."
+      }
+    },
+    "src.0f017530": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Use it to claim a better share."
       }
     },
     "src.0f03e1a9": {
@@ -44537,16 +45728,6 @@
         "text": "The clergy offered public prayers for the realm."
       }
     },
-    "src.12492d0d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Promise double pay at war’s end."
-      }
-    },
     "src.124a49aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44635,6 +45816,16 @@
       ],
       "source": {
         "text": "Careers, training, and work"
+      }
+    },
+    "src.127509ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A sour fever moves from tent to tent. Men who marched yesterday cannot stand today, and tonight your own skin feels too hot."
       }
     },
     "src.127b4c82": {
@@ -45186,6 +46377,16 @@
       ],
       "source": {
         "text": "It is nothing like the drill-yard. The line locks shield to shield, the horns wail, and across a hundred paces of trampled barley the enemy comes on like a grey tide. Somewhere down the wall is {suitor}, white-knuckled on his spear. There is no hiding left now — only the wall, and whether you hold your span of it."
+      }
+    },
+    "src.139bfdba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Campaign condition changes war-council odds; live troop totals change only when a loss names the host."
       }
     },
     "src.13a198a3": {
@@ -46241,6 +47442,16 @@
       ],
       "source": {
         "text": "A full table buys the captain’s goodwill."
+      }
+    },
+    "src.1673ab74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Move on hungry."
       }
     },
     "src.1679e05e": {
@@ -48348,6 +49559,16 @@
         "text": "Recommend descendant matches"
       }
     },
+    "src.1ca89959": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The Road Behind the Host"
+      }
+    },
     "src.1caf5f02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48668,6 +49889,16 @@
         "text": "Turkic"
       }
     },
+    "src.1dbd0ec7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Promise the host whatever it can take."
+      }
+    },
     "src.1dbe15fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48716,6 +49947,16 @@
       ],
       "source": {
         "text": "🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} Standing."
+      }
+    },
+    "src.1debc360": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Send relief home. ({money:8})"
       }
     },
     "src.1df97089": {
@@ -48907,6 +50148,16 @@
       ],
       "source": {
         "text": "work livelihood apprenticeship occupation inactive household"
+      }
+    },
+    "src.1e906801": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Let fear shorten the siege."
       }
     },
     "src.1e93f87f": {
@@ -49224,6 +50475,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -50191,6 +51443,16 @@
         "text": "Wends"
       }
     },
+    "src.221a7ace": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "You are first across the ditch and still standing when the line follows."
+      }
+    },
     "src.221ab430": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50269,6 +51531,16 @@
       ],
       "source": {
         "text": "🗝 The inherited household servants renew their service to the new head."
+      }
+    },
+    "src.2241dd5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "live troops only"
       }
     },
     "src.22464686": {
@@ -51232,6 +52504,16 @@
         "text": "🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly"
       }
     },
+    "src.24e00473": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Demand one more effort."
+      }
+    },
     "src.24ea689e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51591,6 +52873,16 @@
       ],
       "source": {
         "text": "{authority}/100"
+      }
+    },
+    "src.25dac59c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Leave the road to govern itself."
       }
     },
     "src.25db363e": {
@@ -52767,6 +54059,16 @@
         "text": "Take it out of his hide."
       }
     },
+    "src.29207e9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A Knife Between Companies"
+      }
+    },
     "src.29477599": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52837,6 +54139,16 @@
         "text": "Household work"
       }
     },
+    "src.29809af7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Name {target}, and nothing beyond it."
+      }
+    },
     "src.29984523": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52865,6 +54177,16 @@
       ],
       "source": {
         "text": "Stepchildren"
+      }
+    },
+    "src.29ad0e90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Heat Beneath the Blanket"
       }
     },
     "src.29afae2d": {
@@ -52945,6 +54267,16 @@
       ],
       "source": {
         "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
+      }
+    },
+    "src.29eac42d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Disorder and cruelty lower abstract condition despite immediate plunder."
       }
     },
     "src.29f561a2": {
@@ -53417,6 +54749,16 @@
         "text": "Replaces {name}; the former officer loses 8 Standing and the appointee gains 10 Standing."
       }
     },
+    "src.2b1519f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Pay two seasons of current live-host logistics. Supply raises abstract condition; live troops do not change."
+      }
+    },
     "src.2b340185": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53545,6 +54887,16 @@
       ],
       "source": {
         "text": "Uncles & aunts"
+      }
+    },
+    "src.2b86c5d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A clear chain of command raises abstract discipline."
       }
     },
     "src.2b87ddac": {
@@ -54015,6 +55367,16 @@
       ],
       "source": {
         "text": "desert"
+      }
+    },
+    "src.2cbcbfad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Enemy envoys offer prisoners, wagons, and a purse — not peace, and not {target}, but enough to test whether the war’s purpose is still worth its price."
       }
     },
     "src.2cc35566": {
@@ -55069,6 +56431,16 @@
         "text": "You seize the wrong people, and the true conspirators use the fear — half your servants flee, and the rest dare not warn you now."
       }
     },
+    "src.304d987a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Battle record: no battles recorded"
+      }
+    },
     "src.304fa77b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55097,6 +56469,16 @@
       ],
       "source": {
         "text": "Ballot"
+      }
+    },
+    "src.30682fdd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The Villages Bar Their Doors"
       }
     },
     "src.306adcd8": {
@@ -55700,6 +57082,16 @@
         "text": "Topic, alias, unlock, or term"
       }
     },
+    "src.32172685": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Break off the talks."
+      }
+    },
     "src.3217c25e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55768,6 +57160,16 @@
       ],
       "source": {
         "text": "Tír Eoghain"
+      }
+    },
+    "src.3235e803": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Lose a little standing and perhaps save your life."
       }
     },
     "src.323a4ef8": {
@@ -55978,6 +57380,16 @@
       ],
       "source": {
         "text": "You — held in your own hand"
+      }
+    },
+    "src.3310a4d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Campaign effects: {effects}"
       }
     },
     "src.33118474": {
@@ -56238,6 +57650,16 @@
       ],
       "source": {
         "text": "Carry water and tend the weary."
+      }
+    },
+    "src.33cfa351": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Acknowledge the cost in public."
       }
     },
     "src.33da0e67": {
@@ -56840,6 +58262,16 @@
       ],
       "source": {
         "text": "Iron ends rebellions — or feeds them martyrs."
+      }
+    },
+    "src.358267d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Blood soaks the binding before noon."
       }
     },
     "src.35958675": {
@@ -57703,6 +59135,16 @@
       ],
       "source": {
         "text": "Daily focus — continues until changed"
+      }
+    },
+    "src.38b35cc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Call on the honor of their oath."
       }
     },
     "src.38c2c018": {
@@ -58586,6 +60028,16 @@
         "text": "{occupied}/{total} counties occupied · {development}/{totalDevelopment} objective development · attackers need every lost holy county, half the counties, and 60% of development."
       }
     },
+    "src.3b1323c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Your ally’s captain says {alliedMen} spears were promised for defense, not for every road the campaign might choose. Their camp is already packing."
+      }
+    },
     "src.3b13f16e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59020,6 +60472,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -59154,6 +60607,16 @@
       ],
       "source": {
         "text": "Apprentice Clerk"
+      }
+    },
+    "src.3cdcd938": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The captains point at {target}; the treasurer points at the empty columns beside it. What began as one clean objective now carries a dozen private ambitions."
       }
     },
     "src.3ce30400": {
@@ -59309,6 +60772,16 @@
         "text": "Claim it for yourself"
       }
     },
+    "src.3d866c03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Send them back unheard."
+      }
+    },
     "src.3d86add1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59327,6 +60800,16 @@
       ],
       "source": {
         "text": "Recipes for saltpeter mixtures open a new field of incendiary and explosive experiment."
+      }
+    },
+    "src.3d9779e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Each hears a different promise and distrusts the others more."
       }
     },
     "src.3d98daaa": {
@@ -59992,6 +61475,16 @@
         "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
       }
     },
+    "src.3f7de41b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{label} {money:amount}"
+      }
+    },
     "src.3f7ee9ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60412,6 +61905,16 @@
         "text": "They are not yet of age."
       }
     },
+    "src.407e1a66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Pay their disputed costs. ({money:8})"
+      }
+    },
     "src.4085b1fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60793,6 +62296,16 @@
       ],
       "source": {
         "text": "Seasonal musters rehearse commands, formations, and weapon handling."
+      }
+    },
+    "src.41d56d4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Requisition raises abstract supply and damages your name."
       }
     },
     "src.41d87d9b": {
@@ -64769,6 +66282,16 @@
         "text": "Take the gift, and the warning."
       }
     },
+    "src.4ce669e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Judge the killers in public."
+      }
+    },
     "src.4cf7a9c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64969,6 +66492,16 @@
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
       }
     },
+    "src.4d9e3b0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Report to the surgeon."
+      }
+    },
     "src.4da08ca9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65077,6 +66610,16 @@
       ],
       "source": {
         "text": "Equipment for {name}"
+      }
+    },
+    "src.4e05a3aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Bind it tight and stay in line."
       }
     },
     "src.4e068032": {
@@ -65860,6 +67403,16 @@
         "text": "Professional Bailiffs"
       }
     },
+    "src.50196ec2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "abstract strength and live troops"
+      }
+    },
     "src.501ca757": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65958,6 +67511,16 @@
       ],
       "source": {
         "text": "🕊 {pope} grants absolution to {target}; the sentence is lifted."
+      }
+    },
+    "src.505e2372": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Before dawn the word passes down the line: battle today. Your hands will not stop shaking. No one speaks of fear, which leaves it everywhere."
       }
     },
     "src.507547ca": {
@@ -66230,6 +67793,16 @@
         "text": "Your lord"
       }
     },
+    "src.51131884": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "After a recent defeat and {warLosses} recorded campaign losses, the morning count wavers. {hostMen} soldiers still stand beneath the banner, but men are slipping home to harvests, wives, and unfinished lives."
+      }
+    },
     "src.511dfae9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66378,6 +67951,26 @@
       ],
       "source": {
         "text": "👑 The match ties your house to a greater one — your name rises."
+      }
+    },
+    "src.518c473f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The host stands on enemy soil and the nearby villages hide grain, carts, and livestock. Your foragers ask how much law follows a banner across the border."
+      }
+    },
+    "src.519087af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Discipline"
       }
     },
     "src.5192363e": {
@@ -66829,6 +68422,16 @@
       ],
       "source": {
         "text": "{house}: {trait} temperament."
+      }
+    },
+    "src.527a5fb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Supplies raise abstract condition; the live roster does not change."
       }
     },
     "src.52865eaa": {
@@ -67794,6 +69397,16 @@
         "text": "Active local consequences"
       }
     },
+    "src.55bee16e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Supply raises abstract condition; the war continues."
+      }
+    },
     "src.55c22bbb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67823,6 +69436,16 @@
       ],
       "source": {
         "text": "🕊 The campaign is abandoned. The banners come home."
+      }
+    },
+    "src.55c4836a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Protect market, shrine, and field."
       }
     },
     "src.55ce7410": {
@@ -67975,6 +69598,16 @@
         "text": "Glory above, cold water below."
       }
     },
+    "src.563775ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Campaign pressure"
+      }
+    },
     "src.563afe14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68025,6 +69658,16 @@
         "text": "Those who carried the name"
       }
     },
+    "src.564e816b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A spear finds the gap beneath your arm. The line advances over you."
+      }
+    },
     "src.5650da26": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68053,6 +69696,16 @@
       ],
       "source": {
         "text": "Stay. This is home, chains and all."
+      }
+    },
+    "src.565b0199": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Victory at {place}"
       }
     },
     "src.5660fb01": {
@@ -68143,6 +69796,26 @@
       ],
       "source": {
         "text": "A pledge is recorded"
+      }
+    },
+    "src.56a07c91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Seasonal host logistics: {money:total} ({parts})"
+      }
+    },
+    "src.56b19fa7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Put the officers before the ranks."
       }
     },
     "src.56b57acf": {
@@ -69738,6 +71411,16 @@
         "text": "That life uses a starting date this game does not know."
       }
     },
+    "src.5b4d0ed0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "An Ally Counts the Cost"
+      }
+    },
     "src.5b522a6b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70673,6 +72356,16 @@
         "text": "About {money:amount} each season"
       }
     },
+    "src.5dfa81cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "What Is This War For?"
+      }
+    },
     "src.5dff3902": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71004,6 +72697,16 @@
         "text": "merchant and craft income"
       }
     },
+    "src.5ed42ea6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Set one command and own it."
+      }
+    },
     "src.5ee19d92": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71032,6 +72735,16 @@
       ],
       "source": {
         "text": "They double down, and the crowd murmurs against you."
+      }
+    },
+    "src.5f0dadba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Thin ranks lower abstract condition; no troops are directly removed."
       }
     },
     "src.5f0f68f8": {
@@ -71706,6 +73419,16 @@
         "text": "Water-Powered Stone Sawing"
       }
     },
+    "src.60ba76ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{condition}: {change} ({target})"
+      }
+    },
     "src.60bcf769": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72066,6 +73789,16 @@
         "text": "Expiry"
       }
     },
+    "src.61a5104b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Visible discipline raises abstract condition, but the purse stays empty."
+      }
+    },
     "src.61aae50d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72104,6 +73837,16 @@
       ],
       "source": {
         "text": "Technology tradition"
+      }
+    },
+    "src.61e193a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "💰 {money:amount} clears the host’s arrears; the wavering ranks steady."
       }
     },
     "src.61e1e8c4": {
@@ -72656,6 +74399,16 @@
         "text": "Lyon"
       }
     },
+    "src.6366e2b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Defeat at the war council"
+      }
+    },
     "src.63680942": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72664,6 +74417,16 @@
       ],
       "source": {
         "text": "The Old Sergeant’s Wager"
+      }
+    },
+    "src.6369a8e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Admit the objective must wait."
       }
     },
     "src.6374ca60": {
@@ -72884,6 +74647,16 @@
       ],
       "source": {
         "text": "First copy in this county: {money:cost}."
+      }
+    },
+    "src.6456eaa4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{amount} condition"
       }
     },
     "src.645927a5": {
@@ -74019,6 +75792,16 @@
         "text": "Papermaking"
       }
     },
+    "src.67b52494": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A famous hand can reach deeper into the purse."
+      }
+    },
     "src.67b9b853": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74447,6 +76230,16 @@
       ],
       "source": {
         "text": "Take their baptism."
+      }
+    },
+    "src.68ff9e2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Battle losses"
       }
     },
     "src.68ffad35": {
@@ -75431,6 +77224,16 @@
         "text": "Pay {money:amount} now and clear this obligation. There is no early-payment penalty."
       }
     },
+    "src.6baafd9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline raises abstract condition; the live roster is unchanged."
+      }
+    },
     "src.6bab5d56": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76161,6 +77964,16 @@
         "text": "Great Moravia"
       }
     },
+    "src.6d7ad35b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Before the Horns"
+      }
+    },
     "src.6d7b1d62": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76209,6 +78022,16 @@
       ],
       "source": {
         "text": "Walk away from luck that glances over its shoulder."
+      }
+    },
+    "src.6d8e5fef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Thin ranks lower abstract campaign condition; live troop totals do not change."
       }
     },
     "src.6d937e72": {
@@ -76451,6 +78274,16 @@
         "text": "No trade, guild, enterprise, or office tie is recorded."
       }
     },
+    "src.6e36f21e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Use the talks to rest the host."
+      }
+    },
     "src.6e38ff65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76679,6 +78512,16 @@
       ],
       "source": {
         "text": "Raise a Building in {settlement}"
+      }
+    },
+    "src.6ed80a89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Public patience and abstract supply recover; live troops remain."
       }
     },
     "src.6ee7b6da": {
@@ -77492,6 +79335,26 @@
         "text": "in the game folder for the format. You can also edit the files in"
       }
     },
+    "src.717e4f8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Disorder lowers abstract condition; live troop totals do not change."
+      }
+    },
+    "src.717f9f8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🕊 Safe conduct is agreed; the surviving host withdraws and the war ends."
+      }
+    },
     "src.717fd33a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77530,6 +79393,16 @@
       ],
       "source": {
         "text": "New to the household"
+      }
+    },
+    "src.71926968": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Common Voice recovers, but thin ranks lower abstract condition."
       }
     },
     "src.71984b47": {
@@ -77792,6 +79665,16 @@
         "text": "A deliberate cooling of relations; the generation-bound compact ends cleanly."
       }
     },
+    "src.72846d41": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The Roll Counts Empty Houses"
+      }
+    },
     "src.72889f0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77800,6 +79683,16 @@
       ],
       "source": {
         "text": "Empty loops and one angry goose. There is always tomorrow."
+      }
+    },
+    "src.7295039e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The body may master it. The camp may remember."
       }
     },
     "src.7295200c": {
@@ -77923,6 +79816,16 @@
         "text": "The bones favor you tonight."
       }
     },
+    "src.72e65ad5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "−{men} men"
+      }
+    },
     "src.72e8b104": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77961,6 +79864,16 @@
       ],
       "source": {
         "text": "This is a temporary ruler’s journey; it cannot relocate your court or household."
+      }
+    },
+    "src.72ffce3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline rises in the abstract ledger; allied troops remain."
       }
     },
     "src.7307442a": {
@@ -78352,6 +80265,16 @@
       ],
       "source": {
         "text": "Agder"
+      }
+    },
+    "src.73fbe6c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The old wound has opened beneath sweat and mail. The surgeon says one quiet week may close it; the captain says the line is already short."
       }
     },
     "src.740b70d9": {
@@ -78885,6 +80808,16 @@
         "text": "Prepared skins provide a durable surface for books and records."
       }
     },
+    "src.755cf880": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Victory at the war council"
+      }
+    },
     "src.75648b7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78893,6 +80826,16 @@
       ],
       "source": {
         "text": "Order the reeve to collect in full."
+      }
+    },
+    "src.756c1921": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The siege works bite into {target}. Farms and streets behind your lines now answer to soldiers who ask whether they are conquerors, guests, or thieves."
       }
     },
     "src.756c9e13": {
@@ -79416,6 +81359,16 @@
         "text": "A poacher stands before your bench with a thin hare, three hungry children, and a forester demanding the full penalty."
       }
     },
+    "src.76f97829": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take what the campaign requires."
+      }
+    },
     "src.76faee85": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79734,6 +81687,16 @@
       ],
       "source": {
         "text": "👑 Royal line of {realm} · {status}"
+      }
+    },
+    "src.77e068c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Defeat at {place}"
       }
     },
     "src.77e3740b": {
@@ -80667,6 +82630,16 @@
         "text": "War"
       }
     },
+    "src.7a7077ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A clear wrong order can be better than two right ones."
+      }
+    },
     "src.7a7a9dad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80745,6 +82718,16 @@
       ],
       "source": {
         "text": "Give up a few coins."
+      }
+    },
+    "src.7aa3e3ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏳 {men} soldiers leave the live host ({percent}% of those who stood in the morning)."
       }
     },
     "src.7aaef746": {
@@ -80835,6 +82818,16 @@
       ],
       "source": {
         "text": "Empty Wagons"
+      }
+    },
+    "src.7ad012ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The paymaster opens a chest that should be heavy and is not. The host has already suffered; another promise may sound like an insult."
       }
     },
     "src.7ad336e5": {
@@ -81277,6 +83270,16 @@
       ],
       "source": {
         "text": "Adds 0.25 prestige each season."
+      }
+    },
+    "src.7c2f2e0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The captain reads the night-watch roll, pauses at your name, and looks up. Around you, strangers now know whom he means."
       }
     },
     "src.7c39de80": {
@@ -82700,6 +84703,16 @@
         "text": "Let {childname}’s claim on the house of {late} rest."
       }
     },
+    "src.7fe60b1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "mercenaries"
+      }
+    },
     "src.7fe6b658": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83150,6 +85163,16 @@
         "text": "Positive spouse and blood-kin Standing"
       }
     },
+    "src.8106af44": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Let them march home."
+      }
+    },
     "src.810d72f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83208,6 +85231,16 @@
       ],
       "source": {
         "text": "Peace bought with a little pride."
+      }
+    },
+    "src.8125b301": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "End the war now with a smaller prestige loss than abandoning it unilaterally."
       }
     },
     "src.81353024": {
@@ -83439,16 +85472,6 @@
       ],
       "source": {
         "text": "Quays, moles, slips, and beacons shelter vessels and speed their loading."
-      }
-    },
-    "src.81e7bcb9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you."
       }
     },
     "src.81f1bf0f": {
@@ -83800,6 +85823,16 @@
       ],
       "source": {
         "text": "Risk blood for a larger share of the campaign’s honor."
+      }
+    },
+    "src.82fcabc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Valor may burn the fear out — or burn you with it."
       }
     },
     "src.831099e2": {
@@ -84633,6 +86666,16 @@
         "text": "a step up — a harder suit"
       }
     },
+    "src.84d305f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Protect your health and accept the muttering."
+      }
+    },
     "src.84d5e739": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84712,6 +86755,16 @@
       ],
       "source": {
         "text": "🌱 Fresh start"
+      }
+    },
+    "src.850210f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline rises in the abstract ledger; the war continues."
       }
     },
     "src.850f334e": {
@@ -84942,6 +86995,16 @@
       ],
       "source": {
         "text": "⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you."
+      }
+    },
+    "src.85bc64ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Find duty with the baggage."
       }
     },
     "src.85c5320d": {
@@ -85302,6 +87365,16 @@
       ],
       "source": {
         "text": "Petitioners fill the hall with broken vows, disputed penances, and quarrels that no lay court can settle cleanly."
+      }
+    },
+    "src.86f764b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The Wound Will Not Close"
       }
     },
     "src.86f974cd": {
@@ -85974,6 +88047,16 @@
         "text": "Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building."
       }
     },
+    "src.88c6946b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A Lesser Offer from the Enemy"
+      }
+    },
     "src.88c8d6e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86418,6 +88501,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -86603,6 +88687,16 @@
       ],
       "source": {
         "text": "Ourense"
+      }
+    },
+    "src.8a8a7ee1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The Pay Chest Is Light"
       }
     },
     "src.8aa5b803": {
@@ -87146,6 +89240,16 @@
         "text": "Reliable seasonal net"
       }
     },
+    "src.8c2dcad4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Harsh discipline raises abstract condition at a cost in reputation."
+      }
+    },
     "src.8c2efc6e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87320,8 +89424,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui.js",
-        "js/events.js"
+        "js/ui.js"
       ],
       "source": {
         "text": "Seasonal host logistics: {money:amount}"
@@ -87515,6 +89618,16 @@
       ],
       "source": {
         "text": "At the destination you must remain in guest residence for at least {days} days before returning home."
+      }
+    },
+    "src.8d2b06aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Desertion"
       }
     },
     "src.8d2be821": {
@@ -87998,6 +90111,16 @@
         "text": "Daughter of the lord’s house"
       }
     },
+    "src.8e788a4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "campaign adjustment"
+      }
+    },
     "src.8e869ad5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88086,6 +90209,16 @@
       ],
       "source": {
         "text": "Rust is for lazy blades."
+      }
+    },
+    "src.8eb4adad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Battle record: {record} · current: {streak}"
       }
     },
     "src.8ec3e658": {
@@ -89162,6 +91295,16 @@
       ],
       "source": {
         "text": "+{amount} national research each season"
+      }
+    },
+    "src.91dac4d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A limited objective restores abstract discipline."
       }
     },
     "src.91dd41a7": {
@@ -90518,16 +92661,6 @@
         "text": "Stores, ledgers, and agents gathered beneath one family name."
       }
     },
-    "src.9636068b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "The ranks steady."
-      }
-    },
     "src.963b53b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90628,6 +92761,16 @@
       ],
       "source": {
         "text": "Not enough money: requires {money:cost}."
+      }
+    },
+    "src.96d4cb58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Issue another promise."
       }
     },
     "src.96e7a8f2": {
@@ -90778,6 +92921,16 @@
       ],
       "source": {
         "text": "Pavise Formations"
+      }
+    },
+    "src.9740ec52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Choose the ford and take the blame."
       }
     },
     "src.97462227": {
@@ -91763,6 +93916,16 @@
         "text": "Each side produces an older document than the last."
       }
     },
+    "src.9a2740a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "One officer orders your file to the ford; another shouts for it at the ridge. Rain eats both voices while the soldiers wait for yours."
+      }
+    },
     "src.9a282111": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92253,6 +94416,16 @@
       ],
       "source": {
         "text": "Earned"
+      }
+    },
+    "src.9b2cbcac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Supply raises abstract campaign condition; live troop totals do not change."
       }
     },
     "src.9b46d5d4": {
@@ -93737,16 +95910,6 @@
         "text": "Horns. Mud. A line of strangers who mean to kill you, close enough now to see their teeth. The man beside you is praying; the man beyond him is laughing."
       }
     },
-    "src.9f4ef352": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Take it by right of hunger — if his guards allow."
-      }
-    },
     "src.9f5a3b71": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94047,6 +96210,16 @@
         "text": "A Suit Against a Neighbor"
       }
     },
+    "src.a0517dfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take only the wounded home."
+      }
+    },
     "src.a05931c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94085,6 +96258,16 @@
       ],
       "source": {
         "text": "No qualifying family"
+      }
+    },
+    "src.a08fe6b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Restored supply raises abstract campaign condition; no live troops change."
       }
     },
     "src.a095c50f": {
@@ -94185,6 +96368,16 @@
       ],
       "source": {
         "text": "He calls the figures a dead man’s fraud and your demand extortion."
+      }
+    },
+    "src.a0cb98f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The binding holds through the march. The veterans begin to use your name."
       }
     },
     "src.a0d0a410": {
@@ -94321,6 +96514,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -95118,6 +97312,16 @@
         "text": "Zoom in"
       }
     },
+    "src.a35f5863": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Negotiate the withdrawal."
+      }
+    },
     "src.a364c854": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95126,6 +97330,16 @@
       ],
       "source": {
         "text": "Give thanks, then tend the wounded."
+      }
+    },
+    "src.a3664733": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Mercy helps public resolve without altering either army ledger."
       }
     },
     "src.a36dd97e": {
@@ -95409,6 +97623,16 @@
         "text": "Keep {seat}"
       }
     },
+    "src.a404e3f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Thin ranks"
+      }
+    },
     "src.a409e477": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95497,6 +97721,26 @@
       ],
       "source": {
         "text": "Inflated glass permits thin vessels, lamps, and window pieces."
+      }
+    },
+    "src.a4386587": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Go to the infirmary before it worsens."
+      }
+    },
+    "src.a442e754": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Seasonal host logistics: none while no host is raised"
       }
     },
     "src.a4522136": {
@@ -95835,6 +98079,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -96020,6 +98265,16 @@
       ],
       "source": {
         "text": "Venison in the pot, and none the wiser."
+      }
+    },
+    "src.a5f97fae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "License the camp market."
       }
     },
     "src.a60dbaf3": {
@@ -96353,6 +98608,16 @@
         "text": "Redress blocs"
       }
     },
+    "src.a6c05154": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Reputation becomes responsibility."
+      }
+    },
     "src.a6c1c29f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96481,6 +98746,16 @@
       ],
       "source": {
         "text": "Cáceres"
+      }
+    },
+    "src.a75c1afc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Drive away everyone without a spear."
       }
     },
     "src.a7633950": {
@@ -96885,6 +99160,16 @@
         "text": "Your Story Begins"
       }
     },
+    "src.a88a131c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline preserved; opportunity surrendered."
+      }
+    },
     "src.a891c4ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97266,6 +99551,16 @@
         "text": "Household standard"
       }
     },
+    "src.a95e12f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Ask for the most dangerous place."
+      }
+    },
     "src.a9605a14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97386,6 +99681,16 @@
         "text": "📈 Your intrigue improves ({value})."
       }
     },
+    "src.a9e67252": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{count}-defeat streak"
+      }
+    },
     "src.a9e6b01a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97445,6 +99750,16 @@
       ],
       "source": {
         "text": "Merchant’s daughter"
+      }
+    },
+    "src.a9ef3654": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "camp"
       }
     },
     "src.aa23b380": {
@@ -97628,6 +99943,16 @@
         "text": "A crown may define the customs it inherits."
       }
     },
+    "src.aad4b76c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Disorder lowers abstract condition; live troop totals do not change yet."
+      }
+    },
     "src.aaef38a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97656,6 +99981,16 @@
       ],
       "source": {
         "text": "Synagogue or charity school"
+      }
+    },
+    "src.ab169476": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A show of discipline raises abstract condition."
       }
     },
     "src.ab1c1ccc": {
@@ -97877,6 +100212,16 @@
       ],
       "source": {
         "text": "Lord by lord, the benches shake their heads. The steward folds his tally. The demand dies in the hall — and the liege marks who led the “no.”"
+      }
+    },
+    "src.abbc30f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Safer work, if the others let you forget why you chose it."
       }
     },
     "src.abbc86c1": {
@@ -98489,6 +100834,16 @@
         "text": "After the Reapers"
       }
     },
+    "src.ad7219a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Make both companies drill together."
+      }
+    },
     "src.ad73b875": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98637,16 +100992,6 @@
       ],
       "source": {
         "text": "Nothing will move. This character already wears the best available outfit."
-      }
-    },
-    "src.adff4511": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "A thin host, but a willing one."
       }
     },
     "src.ae061392": {
@@ -98830,6 +101175,16 @@
         "text": "Supporters"
       }
     },
+    "src.ae9c29e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Your reputation rises if the body holds."
+      }
+    },
     "src.aea2e186": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98938,6 +101293,16 @@
       ],
       "source": {
         "text": "Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Standing with Catholic rulers recovers by {standing}."
+      }
+    },
+    "src.af07b692": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Under Your Banner"
       }
     },
     "src.af088eed": {
@@ -99432,6 +101797,16 @@
         "text": "That visit cannot begin."
       }
     },
+    "src.b03eca56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Four seasons and more have passed. At home, rents arrive late, fields go short of hands, and every household tally seems to count someone beneath your banner."
+      }
+    },
     "src.b041fd22": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99711,6 +102086,16 @@
       ],
       "source": {
         "text": "This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household."
+      }
+    },
+    "src.b0ba34e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Captains at Cross Purposes"
       }
     },
     "src.b0bd6526": {
@@ -100173,6 +102558,16 @@
         "text": "taught by {name}"
       }
     },
+    "src.b238a079": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take it by right of hunger — success changes abstract supply, not live troops."
+      }
+    },
     "src.b23b9e72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100571,6 +102966,16 @@
       ],
       "source": {
         "text": "Pass them to the next fool."
+      }
+    },
+    "src.b33bcc6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{count}-victory streak"
       }
     },
     "src.b346b1a6": {
@@ -102417,6 +104822,16 @@
         "text": "Roma"
       }
     },
+    "src.b835cb75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Name the fear, then master it."
+      }
+    },
     "src.b836eca1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102797,6 +105212,16 @@
         "text": "⚔ Battle at {province}: {winner} breaks {loser} in the great holy war."
       }
     },
+    "src.b9547fa3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Requisition under written receipts."
+      }
+    },
     "src.b95f4e76": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103128,6 +105553,16 @@
         "text": "None — no JSON mods applied."
       }
     },
+    "src.ba770e42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Smiths, laundresses, traders, children, gamblers, and wounded men stretch the camp into a second army. They feed the host and slow it in equal measure."
+      }
+    },
     "src.ba8e6021": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103247,6 +105682,16 @@
       ],
       "source": {
         "text": "A firm no may cow him — or spur his riders."
+      }
+    },
+    "src.bb0415cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Exchange prisoners and take the wagons."
       }
     },
     "src.bb053bae": {
@@ -103537,6 +105982,16 @@
       ],
       "source": {
         "text": "🌾 The household buys another plot at {settlement}."
+      }
+    },
+    "src.bc0cf9cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The ford holds. By dusk even the angry officer calls it judgment."
       }
     },
     "src.bc0e4473": {
@@ -104416,6 +106871,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/events.js",
         "js/ui.js"
       ],
       "source": {
@@ -105692,6 +108148,16 @@
         "text": "Find work and lodging."
       }
     },
+    "src.c222f79b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "You collapse against the spear-rack before relief comes."
+      }
+    },
     "src.c230942c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106214,6 +108680,16 @@
         "text": "Person"
       }
     },
+    "src.c3756bce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Bought food raises abstract supply; live troops do not change."
+      }
+    },
     "src.c3894449": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106502,6 +108978,16 @@
       ],
       "source": {
         "text": "Won an academy patron’s notice through {student}’s merit."
+      }
+    },
+    "src.c4835f52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Plunder buys enthusiasm but weakens abstract discipline."
       }
     },
     "src.c4880ae1": {
@@ -106815,16 +109301,6 @@
         "text": "🕯 Gave alms to the poor."
       }
     },
-    "src.c55986fe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "A fed host fights better."
-      }
-    },
     "src.c55f7d0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106954,6 +109430,16 @@
       ],
       "source": {
         "text": "No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible."
+      }
+    },
+    "src.c5e24bd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Disorder"
       }
     },
     "src.c5e289e3": {
@@ -107677,6 +110163,16 @@
         "text": "Declare the succession war"
       }
     },
+    "src.c79bd784": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Make up the arrears yourself. ({money:10})"
+      }
+    },
     "src.c79cfed4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107735,6 +110231,16 @@
       ],
       "source": {
         "text": "There is little to do now but bar the door and pray."
+      }
+    },
+    "src.c7c62fda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Order and supplies raise abstract campaign condition."
       }
     },
     "src.c7e38268": {
@@ -107836,6 +110342,16 @@
       ],
       "source": {
         "text": "simmering"
+      }
+    },
+    "src.c818c0bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Keep the watch and say nothing."
       }
     },
     "src.c821df28": {
@@ -109032,6 +111548,16 @@
         "text": "Dynasty"
       }
     },
+    "src.cbd7de3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Restored supply raises condition, but public resolve suffers."
+      }
+    },
     "src.cbe1c376": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109876,6 +112402,16 @@
         "text": "Mobile navigation"
       }
     },
+    "src.ce04e384": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Discipline raises abstract campaign condition; no live troops return or leave."
+      }
+    },
     "src.ce0aae2a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110484,6 +113020,16 @@
       ],
       "source": {
         "text": "Event"
+      }
+    },
+    "src.d03d8625": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The senior captains no longer argue about roads. They argue about who will be blamed for the road already taken."
       }
     },
     "src.d03f26b5": {
@@ -111896,6 +114442,16 @@
       ],
       "source": {
         "text": "Bishop of {see}"
+      }
+    },
+    "src.d43dc166": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Their men leave the live host and abstract condition falls; the feedback ledger records both."
       }
     },
     "src.d4446aa0": {
@@ -114513,6 +117069,16 @@
         "text": "I will do the family proud."
       }
     },
+    "src.dba7f44e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Supply"
+      }
+    },
     "src.dbb6d9d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114551,6 +117117,16 @@
       ],
       "source": {
         "text": "See the whole family drawn as a tree"
+      }
+    },
+    "src.dbd4ea6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Use the name to steady the new men."
       }
     },
     "src.dbde076e": {
@@ -116909,6 +119485,16 @@
         "text": "{name} — {title}, {season} {year}"
       }
     },
+    "src.e27c3ef4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Hold until the officers agree."
+      }
+    },
     "src.e27f342a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117077,6 +119663,16 @@
       ],
       "source": {
         "text": "❓ How to play"
+      }
+    },
+    "src.e2c4b3b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The allied live troops remain and abstract supply improves."
       }
     },
     "src.e2c7095a": {
@@ -117952,6 +120548,16 @@
         "text": "Mine"
       }
     },
+    "src.e56e0ca9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A neutral household offers safe conduct, an exchange of captives, and an end without triumph. The road home is open now; another defeat may close it."
+      }
+    },
     "src.e5761363": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118041,6 +120647,16 @@
       ],
       "source": {
         "text": "Protect the successor and crown."
+      }
+    },
+    "src.e5a60aa6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A Road Out of the War"
       }
     },
     "src.e5acff75": {
@@ -119274,6 +121890,16 @@
         "text": "Illuminator’s Desk and Pigments"
       }
     },
+    "src.e8b0bb52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A quarrel between two companies ends with a knife in the mud and both sides reaching for spears. The whole camp waits on the judgment."
+      }
+    },
     "src.e8b7107b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120005,6 +122631,16 @@
       ],
       "source": {
         "text": "The Emir’s Hawking"
+      }
+    },
+    "src.eb79e5c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Diplomacy may reconcile them; failure deepens abstract disorder."
       }
     },
     "src.eb8053d2": {
@@ -120765,6 +123401,16 @@
       ],
       "source": {
         "text": "Keep the old ways."
+      }
+    },
+    "src.edc8b2b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A Name the Captain Knows"
       }
     },
     "src.edc98f22": {
@@ -122321,6 +124967,16 @@
         "text": "🐙 GitHub Issues"
       }
     },
+    "src.f1eaccd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Each captain leaves heard, and all leave with the same written order."
+      }
+    },
     "src.f1f8cf21": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123435,6 +126091,16 @@
         "text": "Kneel and swear."
       }
     },
+    "src.f529799e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "abstract strength only"
+      }
+    },
     "src.f530151d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124017,16 +126683,6 @@
         "text": "A witnessed concession shelters this county from the full muster."
       }
     },
-    "src.f6fbc4f0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Fear keeps ranks better than love does."
-      }
-    },
     "src.f6fc5f5b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124067,6 +126723,16 @@
         "text": "Matching household work and enterprises"
       }
     },
+    "src.f72a3271": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Slow reconciliation raises abstract discipline without executions."
+      }
+    },
     "src.f72ace0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124085,6 +126751,16 @@
       ],
       "source": {
         "text": "The false link sits neatly among the true ones. Nobody questions the complete chain."
+      }
+    },
+    "src.f73d79f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Restraint raises abstract discipline and costs {money:4}."
       }
     },
     "src.f73e30cb": {
@@ -124218,6 +126894,16 @@
         "text": "🎓 You will be schooled in intrigue."
       }
     },
+    "src.f7799e64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Pay for every sack. ({money:6})"
+      }
+    },
     "src.f77ebee6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124338,6 +127024,16 @@
         "text": "Lower rank"
       }
     },
+    "src.f7fc4cf7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The ford becomes a trap, and your name travels back with the wounded."
+      }
+    },
     "src.f8075687": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124386,6 +127082,16 @@
       ],
       "source": {
         "text": "Canonical investiture"
+      }
+    },
+    "src.f827f566": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Disorder lowers abstract condition; the live roster is unchanged."
       }
     },
     "src.f83a9af9": {
@@ -126410,6 +129116,16 @@
         "text": "Refuse and say nothing."
       }
     },
+    "src.fe1a188c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Supplies raise abstract condition; promises burden your reputation."
+      }
+    },
     "src.fe3c1341": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126828,16 +129544,6 @@
       ],
       "source": {
         "text": "higher"
-      }
-    },
-    "src.ff960793": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Hunger is cheaper than grain this season."
       }
     },
     "src.ff965d03": {
@@ -134166,6 +136872,14 @@
         "text": "Basics"
       }
     },
+    "ui:Battle losses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Battle losses"
+      }
+    },
     "ui:Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134709,6 +137423,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Camerlengo"
+      }
+    },
+    "ui:Campaign pressure": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Campaign pressure"
       }
     },
     "ui:Campaign supply adjustment: {money:amount}": {
@@ -136574,6 +139296,14 @@
         "text": "Descendant matching only"
       }
     },
+    "ui:Desertion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Desertion"
+      }
+    },
     "ui:Develop and defend the holding while meeting feudal and institutional obligations.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136703,6 +139433,14 @@
         "text": "Directed study"
       }
     },
+    "ui:Discipline": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Discipline"
+      }
+    },
     "ui:Dismiss": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136746,6 +139484,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end."
+      }
+    },
+    "ui:Disorder": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Disorder"
       }
     },
     "ui:Dispatch boldly": {
@@ -146707,6 +149453,14 @@
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
       }
     },
+    "ui:Supply": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Supply"
+      }
+    },
     "ui:Support": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148139,6 +150893,14 @@
       "location": "js/events.js",
       "source": {
         "text": "They stand too far above your station."
+      }
+    },
+    "ui:Thin ranks": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Thin ranks"
       }
     },
     "ui:Think better of it": {
@@ -150932,6 +153694,22 @@
         "text": "building"
       }
     },
+    "ui:camp": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "camp"
+      }
+    },
+    "ui:campaign adjustment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "campaign adjustment"
+      }
+    },
     "ui:capital": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -151361,6 +154139,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "men-at-arms"
+      }
+    },
+    "ui:mercenaries": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "mercenaries"
       }
     },
     "ui:merchant and craft income": {

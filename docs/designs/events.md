@@ -78,6 +78,18 @@ liege service, and a shattered or absent player host. The custom outcomes reinfo
 the live host immediately, while non-`first` automation scores every recruit above
 refusal and prefers the larger mercenary package by default.
 
+Ordinary campaign writing uses the same random-event and effect-interpreter path at
+three scales. Personal stories cover the ruler's fear, wounds, courage, command
+friction, illness, and reputation; host stories cover pay, food, discipline,
+desertion, officers, camp followers, and requisition; whole-war stories cover the
+objective, allies, enemy offers, exhaustion, occupation, and withdrawal. Their custom
+gates inspect facts already present in the active player war and live host rather than
+inventing narrative state. Their custom effects either adjust the abstract campaign
+condition, mutate the live host through the shared deterministic allocator, or end the
+ordinary war, and write the affected ledger into the campaign-feedback record. Because
+visible choices and non-`first` autoresolve both finish through `FB.applyEffects`, they
+produce the same mechanical outcome for a selected option.
+
 **Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
 to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
 `crowned`. Event triggers and option requirements may use `societalRoles`; vassal,

@@ -124,6 +124,50 @@ FBDATA.events.push(
       failure:{ text:'You eat mud to great applause.', effects:{ health:-1 } } },
     { label:'Listen, and learn the old tricks.', desc:'Old soldiers’ tales are lessons in disguise.', effects:{ skills:{mar:1} } }
   ]},
+{ id:'campaign_fear_before_dawn', title:'Before the Horns',
+  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:4,
+  text:'Before dawn the word passes down the line: battle today. Your hands will not stop shaking. No one speaks of fear, which leaves it everywhere.',
+  options:[
+    { label:'Name the fear, then master it.', desc:'Courage is what remains after fear is admitted.', effects:{ prestige:3, skills:{mar:1} } },
+    { label:'Ask for the most dangerous place.', chance:'battle', desc:'Valor may burn the fear out — or burn you with it.',
+      success:{ text:'You are first across the ditch and still standing when the line follows.', effects:{ prestige:9, skills:{mar:1}, warService:1 } },
+      failure:{ text:'A spear finds the gap beneath your arm. The line advances over you.', effects:{ health:-2, prestige:2, warService:1, deathProvenance:{kind:'battle',enemy:'realmWar'} } } },
+    { label:'Find duty with the baggage.', desc:'Safer work, if the others let you forget why you chose it.', effects:{ prestige:-3 } }
+  ]},
+{ id:'campaign_wound_watch', title:'The Wound Will Not Close',
+  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], healthMax:7, chance:0.25 }, wartime:true, weight:6, cooldown:4,
+  text:'The old wound has opened beneath sweat and mail. The surgeon says one quiet week may close it; the captain says the line is already short.',
+  options:[
+    { label:'Report to the surgeon.', desc:'Protect your health and accept the muttering.', effects:{ health:1, prestige:-2 } },
+    { label:'Bind it tight and stay in line.', chance:0.65, desc:'Your reputation rises if the body holds.',
+      success:{ text:'The binding holds through the march. The veterans begin to use your name.', effects:{ prestige:6, warService:1 } },
+      failure:{ text:'Blood soaks the binding before noon.', effects:{ health:-2, prestige:2 } } }
+  ]},
+{ id:'campaign_orders_in_mud', title:'Two Orders in the Rain',
+  trigger:{ professions:['soldier'], realmAtWar:true, flags:['sergeant'], chance:0.25 }, wartime:true, weight:6, cooldown:4,
+  text:'One officer orders your file to the ford; another shouts for it at the ridge. Rain eats both voices while the soldiers wait for yours.',
+  options:[
+    { label:'Choose the ford and take the blame.', chance:0.6, desc:'A clear wrong order can be better than two right ones.',
+      success:{ text:'The ford holds. By dusk even the angry officer calls it judgment.', effects:{ prestige:7, skills:{mar:1}, warService:1 } },
+      failure:{ text:'The ford becomes a trap, and your name travels back with the wounded.', effects:{ prestige:-5, health:-1 } } },
+    { label:'Hold until the officers agree.', desc:'Discipline preserved; opportunity surrendered.', effects:{ prestige:-1, skills:{int:1} } }
+  ]},
+{ id:'campaign_camp_fever', title:'Heat Beneath the Blanket',
+  trigger:{ professions:['soldier'], realmAtWar:true, chance:0.22 }, wartime:true, weight:6, cooldown:5,
+  text:'A sour fever moves from tent to tent. Men who marched yesterday cannot stand today, and tonight your own skin feels too hot.',
+  options:[
+    { label:'Go to the infirmary before it worsens.', desc:'Lose a little standing and perhaps save your life.', effects:{ health:-1, setFlag:'ill', prestige:-1 } },
+    { label:'Keep the watch and say nothing.', chance:0.55, desc:'The body may master it. The camp may remember.',
+      success:{ text:'By dawn the fever breaks and you are still at your post.', effects:{ prestige:5, health:-1 } },
+      failure:{ text:'You collapse against the spear-rack before relief comes.', effects:{ health:-2, setFlag:'ill' } } }
+  ]},
+{ id:'campaign_name_on_the_roll', title:'A Name the Captain Knows',
+  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], prestigeMin:25, chance:0.2 }, wartime:true, weight:5, cooldown:6,
+  text:'The captain reads the night-watch roll, pauses at your name, and looks up. Around you, strangers now know whom he means.',
+  options:[
+    { label:'Use the name to steady the new men.', desc:'Reputation becomes responsibility.', effects:{ prestige:5, skills:{dip:1}, warService:1 } },
+    { label:'Use it to claim a better share.', desc:'A famous hand can reach deeper into the purse.', effects:{ gold:4, prestige:-1 } }
+  ]},
 
 /* ---------- the ruler’s camp (random wartime happenings) ---------- */
 { id:'host_discipline', title:'Plunder in the Baggage',
@@ -135,22 +179,113 @@ FBDATA.events.push(
     { label:'“Spoils of war.” Look away.', desc:'The camp remembers what you forgive.', effects:{ piety:-4, prestige:-2 } }
   ]},
 { id:'war_deserters', title:'Empty Bedrolls',
-  trigger:{ tierMin:3, atWar:true, chance:0.2 }, wartime:true, weight:7, cooldown:4,
-  text:'Morning count comes up short again — men slipping home to their harvests, their wives, their unfinished lives. The ones who stay are watching you.',
+  trigger:{ tierMin:3, atWar:true, custom:'war_deserters_due', chance:0.35 }, wartime:true, warStatus:true, weight:9, cooldown:2,
+  text:'After a recent defeat and {warLosses} recorded campaign losses, the morning count wavers. {hostMen} soldiers still stand beneath the banner, but men are slipping home to harvests, wives, and unfinished lives.',
   options:[
-    { label:'Hunt them down and hang one.', desc:'Fear keeps ranks better than love does.', effects:{ prestige:3, popularOpinion:-5 } },
-    { label:'Promise double pay at war’s end.', require:{ goldMin:8 }, desc:'The ranks steady.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'Let the faint-hearted go.', desc:'A thin host, but a willing one.', effects:{ custom:'war_thin', prestige:-2 } }
+    { label:'Hunt them down and hang one.', desc:'Discipline raises abstract campaign condition; no live troops return or leave.', effects:{ custom:'war_discipline_deserters', prestige:3, popularOpinion:-5 } },
+    { label:'Clear the arrears. ({money:deserterPay})', require:{ custom:'war_can_pay_deserters' }, desc:'Pay two seasons of current live-host logistics. Supply raises abstract condition; live troops do not change.', effects:{ custom:'war_pay_deserters' } },
+    { label:'Let the faint-hearted go.', desc:'A seeded {deserterMinPercent}–{deserterMaxPercent}% leave the live host by deterministic casualty order; abstract condition does not change.', effects:{ custom:'war_desert', prestige:-2 } }
   ]},
 { id:'war_grain_seller', title:'Grain at Sword-Season Prices',
-  trigger:{ tierMin:3, atWar:true, chance:0.2 }, wartime:true, weight:7, cooldown:4,
+  trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.2 }, wartime:true, warStatus:true, weight:7, cooldown:4,
   text:'A merchant with excellent timing and no shame offers grain enough to keep the host fed — at thrice the honest price.',
   options:[
-    { label:'Pay him. ({money:8})', require:{ goldMin:8 }, desc:'A fed host fights better.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'“Requisition” the wagons.', chance:0.6, desc:'Take it by right of hunger — if his guards allow.',
+    { label:'Pay him. ({money:8})', require:{ goldMin:8 }, desc:'Supply raises abstract campaign condition; live troop totals do not change.', effects:{ gold:-8, custom:'war_supply' } },
+    { label:'“Requisition” the wagons.', chance:0.6, desc:'Take it by right of hunger — success changes abstract supply, not live troops.',
       success:{ text:'The host eats; the merchant curses your name in three ports.', effects:{ custom:'war_supply', prestige:-2, piety:-3 } },
       failure:{ text:'His guards were better than his prices. Men are hurt for nothing.', effects:{ custom:'war_thin', prestige:-3 } } },
-    { label:'The men can tighten their belts.', desc:'Hunger is cheaper than grain this season.', effects:{ custom:'war_thin' } }
+    { label:'The men can tighten their belts.', desc:'Thin ranks lower abstract campaign condition; live troop totals do not change.', effects:{ custom:'war_thin' } }
+  ]},
+{ id:'war_pay_chest', title:'The Pay Chest Is Light',
+  trigger:{ tierMin:3, atWar:true, custom:'war_host_under_pressure', chance:0.28 }, wartime:true, warStatus:true, weight:7, cooldown:3,
+  text:'The paymaster opens a chest that should be heavy and is not. The host has already suffered; another promise may sound like an insult.',
+  options:[
+    { label:'Make up the arrears yourself. ({money:10})', require:{ goldMin:10 }, desc:'Restored supply raises abstract campaign condition; no live troops change.', effects:{ gold:-10, custom:'war_supply', prestige:2 } },
+    { label:'Put the officers before the ranks.', desc:'Visible discipline raises abstract condition, but the purse stays empty.', effects:{ custom:'war_discipline', prestige:1 } },
+    { label:'Issue another promise.', desc:'Disorder lowers abstract condition; live troop totals do not change yet.', effects:{ custom:'war_disorder', prestige:-2 } }
+  ]},
+{ id:'war_camp_discipline', title:'A Knife Between Companies',
+  trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.22 }, wartime:true, warStatus:true, weight:6, cooldown:3,
+  text:'A quarrel between two companies ends with a knife in the mud and both sides reaching for spears. The whole camp waits on the judgment.',
+  options:[
+    { label:'Judge the killers in public.', desc:'Discipline raises abstract condition; the live roster is unchanged.', effects:{ custom:'war_discipline', prestige:3, popularOpinion:-2 } },
+    { label:'Make both companies drill together.', desc:'Slow reconciliation raises abstract discipline without executions.', effects:{ custom:'war_discipline', skills:{mar:1} } },
+    { label:'Let their captains settle it.', desc:'Disorder lowers abstract condition; live troop totals do not change.', effects:{ custom:'war_disorder', prestige:-2 } }
+  ]},
+{ id:'war_officers_divided', title:'Captains at Cross Purposes',
+  trigger:{ tierMin:3, atWar:true, custom:'war_campaign_deep', chance:0.2 }, wartime:true, warStatus:true, weight:6, cooldown:4,
+  text:'The senior captains no longer argue about roads. They argue about who will be blamed for the road already taken.',
+  options:[
+    { label:'Set one command and own it.', desc:'A clear chain of command raises abstract discipline.', effects:{ custom:'war_discipline', prestige:3, skills:{mar:1} } },
+    { label:'Balance every grievance.', chance:0.55, desc:'Diplomacy may reconcile them; failure deepens abstract disorder.',
+      success:{ text:'Each captain leaves heard, and all leave with the same written order.', effects:{ custom:'war_discipline', skills:{dip:1} } },
+      failure:{ text:'Each hears a different promise and distrusts the others more.', effects:{ custom:'war_disorder', prestige:-2 } } }
+  ]},
+{ id:'war_camp_followers', title:'The Road Behind the Host',
+  trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.18 }, wartime:true, warStatus:true, weight:5, cooldown:4,
+  text:'Smiths, laundresses, traders, children, gamblers, and wounded men stretch the camp into a second army. They feed the host and slow it in equal measure.',
+  options:[
+    { label:'License the camp market.', desc:'Order and supplies raise abstract campaign condition.', effects:{ gold:3, custom:'war_supply', popularOpinion:1 } },
+    { label:'Drive away everyone without a spear.', desc:'Harsh discipline raises abstract condition at a cost in reputation.', effects:{ custom:'war_discipline', prestige:-2, popularOpinion:-2 } },
+    { label:'Leave the road to govern itself.', desc:'Disorder lowers abstract condition; the live roster is unchanged.', effects:{ custom:'war_disorder' } }
+  ]},
+{ id:'war_local_requisition', title:'The Villages Bar Their Doors',
+  trigger:{ tierMin:3, atWar:true, custom:'war_host_abroad', chance:0.25 }, wartime:true, warStatus:true, weight:7, cooldown:3,
+  text:'The host stands on enemy soil and the nearby villages hide grain, carts, and livestock. Your foragers ask how much law follows a banner across the border.',
+  options:[
+    { label:'Pay for every sack. ({money:6})', require:{ goldMin:6 }, desc:'Bought food raises abstract supply; live troops do not change.', effects:{ gold:-6, custom:'war_supply', piety:2 } },
+    { label:'Take what the campaign requires.', desc:'Requisition raises abstract supply and damages your name.', effects:{ custom:'war_supply', gold:3, piety:-3, prestige:-2 } },
+    { label:'Move on hungry.', desc:'Thin ranks lower abstract condition; no troops are directly removed.', effects:{ custom:'war_thin', piety:2 } }
+  ]},
+
+/* ---------- the whole war: objectives, allies, exhaustion, and peace ---------- */
+{ id:'war_objective_council', title:'What Is This War For?',
+  trigger:{ tierMin:3, atWar:true, custom:'war_objective_under_debate', chance:0.2 }, wartime:true, warStatus:true, weight:6, cooldown:4,
+  text:'The captains point at {target}; the treasurer points at the empty columns beside it. What began as one clean objective now carries a dozen private ambitions.',
+  options:[
+    { label:'Name {target}, and nothing beyond it.', desc:'A limited objective restores abstract discipline.', effects:{ custom:'war_discipline', prestige:3 } },
+    { label:'Promise the host whatever it can take.', desc:'Plunder buys enthusiasm but weakens abstract discipline.', effects:{ gold:4, custom:'war_disorder', piety:-3 } },
+    { label:'Admit the objective must wait.', desc:'Restored supply raises condition, but public resolve suffers.', effects:{ custom:'war_supply', popularOpinion:2, prestige:-3 } }
+  ]},
+{ id:'war_allied_hesitation', title:'An Ally Counts the Cost',
+  trigger:{ tierMin:3, atWar:true, custom:'war_has_allied_host', chance:0.22 }, wartime:true, warStatus:true, weight:7, cooldown:4,
+  text:'Your ally’s captain says {alliedMen} spears were promised for defense, not for every road the campaign might choose. Their camp is already packing.',
+  options:[
+    { label:'Pay their disputed costs. ({money:8})', require:{ goldMin:8 }, desc:'The allied live troops remain and abstract supply improves.', effects:{ gold:-8, custom:'war_supply' } },
+    { label:'Call on the honor of their oath.', desc:'Discipline rises in the abstract ledger; allied troops remain.', effects:{ custom:'war_discipline', prestige:3 } },
+    { label:'Let them march home.', desc:'Their men leave the live host and abstract condition falls; the feedback ledger records both.', effects:{ custom:'war_allied_withdrawal', prestige:-2 } }
+  ]},
+{ id:'war_enemy_concessions', title:'A Lesser Offer from the Enemy',
+  trigger:{ tierMin:3, atWar:true, custom:'war_enemy_offer_possible', chance:0.18 }, wartime:true, warStatus:true, weight:5, cooldown:4,
+  text:'Enemy envoys offer prisoners, wagons, and a purse — not peace, and not {target}, but enough to test whether the war’s purpose is still worth its price.',
+  options:[
+    { label:'Exchange prisoners and take the wagons.', desc:'Supplies raise abstract condition; the live roster does not change.', effects:{ gold:5, custom:'war_supply', piety:2 } },
+    { label:'Take only the wounded home.', desc:'Mercy helps public resolve without altering either army ledger.', effects:{ popularOpinion:3, piety:3 } },
+    { label:'Send them back unheard.', desc:'A show of discipline raises abstract condition.', effects:{ custom:'war_discipline', prestige:2 } }
+  ]},
+{ id:'war_public_exhaustion', title:'The Roll Counts Empty Houses',
+  trigger:{ tierMin:3, atWar:true, custom:'war_campaign_exhausted', chance:0.28 }, wartime:true, warStatus:true, weight:8, cooldown:3,
+  text:'Four seasons and more have passed. At home, rents arrive late, fields go short of hands, and every household tally seems to count someone beneath your banner.',
+  options:[
+    { label:'Send relief home. ({money:8})', require:{ goldMin:8 }, desc:'Public patience and abstract supply recover; live troops remain.', effects:{ gold:-8, popularOpinion:5, custom:'war_supply' } },
+    { label:'Demand one more effort.', desc:'Discipline rises while Common Voice falls.', effects:{ custom:'war_discipline', popularOpinion:-7, prestige:2 } },
+    { label:'Acknowledge the cost in public.', desc:'Common Voice recovers, but thin ranks lower abstract condition.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
+  ]},
+{ id:'war_occupation_policy', title:'Under Your Banner',
+  trigger:{ tierMin:3, atWar:true, custom:'war_active_occupation', chance:0.24 }, wartime:true, warStatus:true, weight:7, cooldown:3,
+  text:'The siege works bite into {target}. Farms and streets behind your lines now answer to soldiers who ask whether they are conquerors, guests, or thieves.',
+  options:[
+    { label:'Protect market, shrine, and field.', require:{ goldMin:4 }, desc:'Restraint raises abstract discipline and costs {money:4}.', effects:{ gold:-4, custom:'war_discipline', piety:4, popularOpinion:2 } },
+    { label:'Requisition under written receipts.', desc:'Supplies raise abstract condition; promises burden your reputation.', effects:{ custom:'war_supply', prestige:-1 } },
+    { label:'Let fear shorten the siege.', desc:'Disorder and cruelty lower abstract condition despite immediate plunder.', effects:{ gold:7, custom:'war_disorder', piety:-6, popularOpinion:-4 } }
+  ]},
+{ id:'war_negotiated_withdrawal', title:'A Road Out of the War',
+  trigger:{ tierMin:3, atWar:true, custom:'war_negotiation_possible', chance:0.24 }, wartime:true, warStatus:true, weight:7, cooldown:3,
+  text:'A neutral household offers safe conduct, an exchange of captives, and an end without triumph. The road home is open now; another defeat may close it.',
+  options:[
+    { label:'Negotiate the withdrawal.', desc:'End the war now with a smaller prestige loss than abandoning it unilaterally.', effects:{ custom:'war_negotiated_withdrawal' } },
+    { label:'Use the talks to rest the host.', desc:'Supply raises abstract condition; the war continues.', effects:{ custom:'war_supply', prestige:-1 } },
+    { label:'Break off the talks.', desc:'Discipline rises in the abstract ledger; the war continues.', effects:{ custom:'war_discipline', prestige:2 } }
   ]},
 
 /* ---------- battles on the map (hosts meeting in a province, js/armies.js) ---------- */

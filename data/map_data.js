@@ -981,6 +981,12 @@ FBDATA.balance = {
   hostLogisticsArcherPer100: 1, hostLogisticsCavalryPer100: 2,
   hostLogisticsRetinuePer100: 2,
   hostLogisticsMercenaryCompany: 4,
+  /* loss-aware campaign events: Empty Bedrolls needs a recent defeat,
+     meaningful recorded losses, a live host, and a per-war interval */
+  warDeserterMinCasualties: 60, warDeserterMinCasualtyRate: 0.08,
+  warDeserterDefeatWindowDays: 180, warDeserterIntervalDays: 180,
+  warDeserterLossMin: 0.10, warDeserterLossMax: 0.18,
+  warDeserterPayUpkeepSeasons: 2, warDeserterPayMin: 6,
   /* independent-ruler foreign policy (js/actions.js): capacity by rank,
      seasonal Standing pressure, and the two places foreign Standing matters */
   politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,
