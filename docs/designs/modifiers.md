@@ -77,11 +77,11 @@ dispute with a positive charter; natural expiry remains the fallback.
 - `FB.campaignModBonus(state,key)` sums campaign effects only while the protagonist has a
   current, renewed, unwithdrawn vow.
 - `FB.modifierUpkeepEntries(state,key?)` and `FB.modifierUpkeep(state,key?)` read costs
-  from directly held counties only.
+  from `FB.modifierCounties` (see *Whose counties* below).
 - `FB.modifierRemainingDays(state,record)` returns an integer or `null` for an untimed
   record.
-- `FB.popEffective(state)` adds `commonVoice` from active modifiers in the directly held
-  demesne to stored `player.pop`.
+- `FB.popEffective(state)` adds `commonVoice` from active modifiers in
+  `FB.modifierCounties` to stored `player.pop`.
 
 Callers do not write effective Common Voice back into state. Existing gains, losses, and
 yearly decay continue to change the stored value alone.
@@ -95,14 +95,36 @@ Supported county keys are:
   player's own counties.
 - `levy`: fractional base county levy before technology, Martial, and domain adjustments.
 - `buildingCost`: fractional construction-cost multiplier in the affected county.
-- `commonVoice`: flat effective Common Voice while the county is directly held.
+- `commonVoice`: flat effective Common Voice while the county is one of
+  `FB.modifierCounties`.
 - Event tags such as `famine` and `unrest`: fractional scaling of harmful tagged-event
   outcomes in the event's snapshotted county.
 
-County upkeep is charged only while the county is in the player's direct demesne. It feeds
+County upkeep is charged only while the county is one of `FB.modifierCounties`. It feeds
 seasonal settlement, reliable income, and the localized income ledger. County-local
 effects and the Land-panel chip continue after a transfer even though player-wide Common
 Voice and upkeep stop.
+
+## Whose counties a county modifier acts on
+
+One explicit rule, `FB.modifierCounties(state)`, because several consumers used to decide
+it separately and disagreed. A landed ruler experiences the modifiers on the counties
+they hold directly. A baron holds none: their seat is their liege's county. But the
+estates that grant these records sit from tier 3, and the agenda that grants them is
+chosen by reading that seat, so the seat is where they act. `FB.modifierSeat(state)`
+names that substituted county, and returns `null` for a ruler who holds counties of
+their own.
+
+Upkeep, Common Voice, county tax, county levy, and the Governance projection all read
+this rule. They did not always: upkeep and Common Voice went through `FB.demesne`, which
+substitutes the seat, while tax, levy, and Governance read `player.provs`, which is empty
+at tier 3. A baron therefore paid for a Market Charter that returned no tax, was granted
+a Levy Exemption that changed no muster, and could find neither record in Governance.
+
+Consumers that sum over held counties do not gain rent or levy from a seat they do not
+hold. They add the seat's *effect* to what the player does have: the tier-3 rent floor
+carries the seat's `tax` fraction, and the standing barony household carries its `levy`
+fraction, each itemized like any other modifier line.
 
 ## Campaign effects
 

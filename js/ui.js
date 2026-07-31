@@ -1601,13 +1601,7 @@ window.FB = window.FB || {};
       ? me.papalName || me.name : FB.fullName(me);
     // the topbar portrait and crest change rarely; repaint only when
     // something they draw from has moved
-    const pk = me.id + '|' + (me.dyn || me.name) + '|' + s.date.year + '|' +
-      s.player.profession + '|' + s.player.tier + '|' + me.health + '|' +
-      me.traits.join(',') + '|' +
-      (me.ailments || []).map(function (ail) {
-        return typeof ail === 'string' ? ail : (ail && (ail.id || ail.kind) || '');
-      }).join(',') + '|' +
-      (FB.loadoutVisualKey ? FB.loadoutVisualKey(s, me.id) : '');
+    const pk = FB.characterVisualKey(s, me);
     if (pk !== portraitKey) {
       portraitKey = pk;
       FB.paintPortrait($('tb-portrait'), me, s.date.year, {
@@ -8814,6 +8808,9 @@ window.FB = window.FB || {};
     const parentId = succession.rulerMemberId || null;
     for (const id in succession.members) {
       const member = succession.members[id];
+      /* The consort is shown beside the ruler, never in the line of
+         succession - excluded by the explicit role, as everywhere else. */
+      if (member && member.role === 'consort') continue;
       if (member && member.alive !== false &&
           (member.parentId || null) === parentId) ids.push(id);
     }
@@ -9363,19 +9360,58 @@ window.FB = window.FB || {};
     };
   }
 
+  /* The living court beside the ruler: the consort and whichever heirs carry
+     a record. Faces are painted through FB.faceTag and the one FB.paintFaces
+     pass this modal already runs, and the list is bounded by the same
+     six-member cap the succession snapshot uses. */
+  function realmCourtStripHtml(s, rid) {
+    const rows = [];
+    const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
+    if (consort) rows.push({ c:consort, rel:FB.T('Consort') });
+    const succession = s.realms[rid] && s.realms[rid].succession;
+    for (const member of realmFamilySnapshot(s, rid)) {
+      const c = member.charId && s.chars[member.charId];
+      if (!c || c.dead) continue;
+      rows.push({
+        c:c,
+        rel:succession && succession.heirId === member.id
+          ? FB.T('Heir') : FB.T(c.sex === 'f' ? 'Daughter' : 'Son')
+      });
+    }
+    if (!rows.length) return '';
+    let h = '<div class="court-strip" role="list" aria-label="' +
+      esc(FB.T('The court')) + '">';
+    for (const row of rows) {
+      h += '<button type="button" class="ftchip" role="listitem" data-cid="' +
+        esc(row.c.id) + '" title="' + esc(FB.fullName(row.c)) + '">' +
+        FB.faceTag(row.c, 40, 46) +
+        '<span class="fname">' + esc(row.c.name) + '</span>' +
+        '<span class="frel">' + esc(FB.T('{relation} · age {age}', {
+          relation:row.rel, age:FB.ageOf(row.c, s.date.year)
+        })) + '</span></button>';
+    }
+    return h + '</div>';
+  }
+
   function showRealmInteractionSheet(rid, returnContext) {
     const s = FB.state;
     const realm = s && rid && s.realms[rid];
     const model = s && buildRealmInteractionCard(s, rid);
     if (!s || !realm || !model) return;
     const rulerCharacter = interactionRealmRulerCharacter(s, rid);
-    let h = '<div class="charcard">' +
-      '<canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
-      '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
-        title:FB.realmRankTitle(s, realm),
-        name:realm.ruler.name
-      })) + '</div><div class="ccmeta">' + esc(FB.L(realm.name)) +
-      '</div></div></div>' + interactionCardHtml(model) +
+    /* A living realm's ruler is a real record, so the sheet opens on the same
+       character card every other view uses. The crest header remains for the
+       cases that genuinely have no person behind them. */
+    const header = rulerCharacter
+      ? UI.charCardHtml(s, rulerCharacter)
+      : '<div class="charcard">' +
+        '<canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
+        '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
+          title:FB.realmRankTitle(s, realm),
+          name:realm.ruler.name
+        })) + '</div><div class="ccmeta">' + esc(FB.L(realm.name)) +
+        '</div></div></div>';
+    let h = header + realmCourtStripHtml(s, rid) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
@@ -9387,7 +9423,8 @@ window.FB = window.FB || {};
           interactionReturn(returnContext);
         }
       });
-    FB.drawCrest($('liegecrest'), rid);
+    if ($('liegecrest')) FB.drawCrest($('liegecrest'), rid);
+    FB.paintFaces($('gm-body'), s);
     wireInteractionCard(model, function (action) {
       if (action.route === 'ruler-gift') {
         UI.showRulerGiftModal(rid, realmGiftReturnView(rid, returnContext));
@@ -10247,7 +10284,7 @@ window.FB = window.FB || {};
         '</div></div>';
     }
     h += '<div class="hint">' + esc(FB.T(
-      'These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held.')) +
+      'These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.')) +
       '</div>';
     return h;
   }

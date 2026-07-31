@@ -110,9 +110,15 @@ Related: [council.md](council.md) for the king-side mirror,
 [realms.md](realms.md) for the liege chain and Standing, [events.md](events.md)
 for the interpreter.
 
+The yearly session is queued with an explicit `locationId` of the player's home county.
+Its agenda is chosen by reading the modifiers on that county, so an unstamped context
+would let `FB.travelLocation` aim a New Year session at whatever county the player
+happened to be visiting, and carry its modifier effects there with it.
+
 A successful player motion for redress also grants `Custom Confirmed` to the event's
 snapshotted home county for 3,600 days. Its Common Voice is demesne-wide only while that
-county remains directly held; the levy and unrest effects remain attached to the county.
+county is one of `FB.modifierCounties`, which is the county itself for a baron who holds
+none directly; the levy and unrest effects remain attached to the county.
 See [modifiers.md](modifiers.md).
 
 The four authored institution agendas use the same county contract. Market settlements

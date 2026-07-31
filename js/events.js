@@ -732,9 +732,10 @@ window.FB = window.FB || {};
     if (!c) return out;
     const first = FB.spouseOf(state, c);
     if (first) out.push(first);
-    for (const id in state.chars) {
+    for (const id of FB.spouseLinksTo(state, c.id)) {
       const o = state.chars[id];
-      if (!o.dead && o.spouseId === c.id && (!first || o.id !== first.id)) out.push(o);
+      if (o && !o.dead && o.spouseId === c.id &&
+          (!first || o.id !== first.id)) out.push(o);
     }
     return out;
   };
@@ -750,9 +751,9 @@ window.FB = window.FB || {};
     if (!c) return out;
     const first = FB.spouseSnapshot(state, c);
     if (first) out.push(first);
-    for (const id in state.chars) {
+    for (const id of FB.spouseLinksTo(state, c.id)) {
       const other = state.chars[id];
-      if (!other.dead && other.spouseId === c.id &&
+      if (other && !other.dead && other.spouseId === c.id &&
           (!first || other.id !== first.id)) out.push(other);
     }
     return out;
@@ -1058,6 +1059,11 @@ window.FB = window.FB || {};
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
+    /* A dead character no longer reigns, and no longer belongs to any
+       family walk: close the derived indexes here, in the one true death
+       path, rather than waiting for a verify-on-hit to notice. */
+    if (FB.dropRulerIndexEntry) FB.dropRulerIndexEntry(c.id);
+    if (FB.touchFamily) FB.touchFamily();
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, c.id);
     if (!papalClaimant && FB.royalCharDied) FB.royalCharDied(state, c);
     if (c.betrothedId && c.dowryAsk) {
@@ -1079,6 +1085,9 @@ window.FB = window.FB || {};
     }
     if (state.player.courtingId === c.id) FB.clearCourtship(state);
     if (FB.papacyCharacterDied) FB.papacyCharacterDied(state, c);
+    /* Again at the end: the spouse and betrothal links above were severed
+       after the first bump, and the family index reads exactly those. */
+    if (FB.touchFamily) FB.touchFamily();
   };
 
   /* Can the player begin courting this character? */
@@ -1749,6 +1758,7 @@ window.FB = window.FB || {};
     child.betrothedId = cand.id;
     cand.betrothedId = child.id;
     cand.role = 'kinspouse';
+    FB.touchFamily();
     if (terms.marriage.subjectPays && terms.marriage.amount) {
       p.gold = Math.max(0, p.gold - terms.marriage.amount);
       FB.news(state, FB.msg('news.event.match_dowry_paid',
@@ -1781,6 +1791,7 @@ window.FB = window.FB || {};
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';
+    FB.touchFamily();
     if (k.id === state.player.charId && FB.receiveMarriageLivelihood) {
       FB.receiveMarriageLivelihood(state, sp);
     }
@@ -3160,6 +3171,7 @@ window.FB = window.FB || {};
         traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn
       });
       me.childrenIds.push(baby.id);
+      FB.touchFamily();
     }
     if (fx.killChild) {
       let victim = ctx.childId ? state.chars[ctx.childId] : null;
@@ -3279,6 +3291,7 @@ window.FB = window.FB || {};
       me.betrothedId = null;
     }
     s.spouseId = me.id;
+    FB.touchFamily();
     if (!others.length) { me.spouseId = s.id; state.roles.spouse = s.id; }
     else {
       const order = ['second', 'third', 'fourth', 'fifth'][others.length - 1] || 'newest';

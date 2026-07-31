@@ -286,6 +286,11 @@ test('records ordinary and royal stepchildren without changing inheritance',
         succession.members[childMember.id] = childMember;
         root.childIds.push(childMember.id);
       }
+      /* A reigning ruler now has a consort of record, and the courtship gate
+         refuses a wed target. Widow this one so the fixture reaches doMarry
+         in the state a player would actually have reached it in. */
+      const consort = FB.realmConsortCharacter(state, rid);
+      if (consort) FB.killChar(state, consort);
       me.sex = spouse.sex === 'm' ? 'f' : 'm';
       state.player.courtingId = spouse.id;
       FB.doMarry(state, { settleDowry:false });
@@ -437,4 +442,91 @@ test('clears predecessor story state and keeps a living cousin eligible',
     expect(result.succession.fired).toEqual([]);
     expect(result.succession.cooldowns).toEqual([]);
     expect(result.heirIds).toContain(result.cousinId);
+  });
+
+test('the memoized kin walk tracks marriages, births, deaths, and consorts',
+  async function ({ page }) {
+    await startWithCode(page, 'KINMEMO-867-farmer-london-f-Ada', 'Ada');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const before = FB.kinOf(s);
+      const cached = FB.kinOf(s) === before;
+
+      /* A birth inside the same turn must be visible immediately: the kin
+         answer is memoized on a stamp the family writers bump, not merely on
+         the day turning. */
+      const baby = FB.makeCharacter(s, {
+        culture:me.culture, religion:me.religion, born:s.date.year,
+        traitsN:0, fatherId:null, motherId:me.id
+      });
+      me.childrenIds.push(baby.id);
+      FB.touchFamily();
+      const sawBirth = !!FB.kinOf(s).byId[baby.id];
+
+      FB.killChar(s, baby);
+      const deadStillKin = !!FB.kinOf(s).byId[baby.id];
+
+      /* A consort is a court character's spouse, and a spouse is not kin -
+         the walk must not start dragging whole courts into the panel. */
+      let consort = null;
+      for (const rid in s.realms) {
+        consort = FB.realmConsortCharacter(s, rid);
+        if (consort) break;
+      }
+      const kin = FB.kinOf(s);
+      let courtInKin = 0;
+      for (const id in kin.byId) {
+        if (s.chars[id] && s.chars[id].royalLine) courtInKin++;
+      }
+      return {
+        cached:cached,
+        sawBirth:sawBirth,
+        deadStillKin:deadStillKin,
+        foundConsort:!!consort,
+        consortIsKin:!!(consort && kin.byId[consort.id]),
+        courtInKin:courtInKin
+      };
+    })).toEqual({
+      cached:true,
+      sawBirth:true,
+      deadStillKin:true,
+      foundConsort:true,
+      consortIsKin:false,
+      courtInKin:0
+    });
+  });
+
+test('a materialized consort links to the ruler in both directions',
+  async function ({ page }) {
+    await startWithCode(page, 'CONSORT-867-farmer-london-f-Ada', 'Ada');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const faults = [];
+      let checked = 0;
+      const ids = [];
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        if (r && r.alive && rid !== 'player') ids.push(rid);
+      }
+      ids.sort();
+      for (const rid of ids.slice(0, 20)) {
+        const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+        const consort = FB.realmConsortCharacter(s, rid);
+        if (!ruler || !consort) { faults.push(rid + ': incomplete couple'); continue; }
+        checked++;
+        const fromRuler = FB.spousesOf(s, ruler).map(function (c) { return c.id; });
+        const fromConsort = FB.spousesOf(s, consort).map(function (c) { return c.id; });
+        if (fromRuler.indexOf(consort.id) < 0) faults.push(rid + ': ruler side');
+        if (fromConsort.indexOf(ruler.id) < 0) faults.push(rid + ': consort side');
+        if (FB.stepchildrenOf(s, consort).length) {
+          faults.push(rid + ': consort has invented stepchildren');
+        }
+      }
+      return { checked:checked, faults:faults.slice(0, 6) };
+    })).toEqual({ checked:20, faults:[] });
   });

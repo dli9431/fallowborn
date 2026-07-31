@@ -55469,6 +55469,16 @@
         "text": "Unavailable while traveling"
       }
     },
+    "src.340f2427": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The court"
+      }
+    },
     "src.341738cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67395,16 +67405,6 @@
         "text": "Nicaea"
       }
     },
-    "src.5818f919": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held."
-      }
-    },
     "src.58198ac2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68685,6 +68685,16 @@
       ],
       "source": {
         "text": "Leave merchants to buy their own guards."
+      }
+    },
+    "src.5bfe0453": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Consort"
       }
     },
     "src.5bff0903": {
@@ -99852,6 +99862,16 @@
         "text": "Mercy now may preserve a good tenant."
       }
     },
+    "src.b7f86957": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat."
+      }
+    },
     "src.b7fbfef6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100140,6 +100160,16 @@
       ],
       "source": {
         "text": "+{amount} {standing}. This exact object permanently leaves the family armory. (spends the day)"
+      }
+    },
+    "src.b8aabc0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Heir"
       }
     },
     "src.b8b6afa4": {
@@ -106664,6 +106694,16 @@
       ],
       "source": {
         "text": "Vacancy"
+      }
+    },
+    "src.ccdc4a3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{relation} · age {age}"
       }
     },
     "src.ccec04ec": {
@@ -131324,6 +131364,14 @@
         "text": "Consider for household service…"
       }
     },
+    "ui:Consort": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Consort"
+      }
+    },
     "ui:Constable": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133754,6 +133802,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Head"
+      }
+    },
+    "ui:Heir": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Heir"
       }
     },
     "ui:Held by another realm": {
@@ -141505,6 +141561,14 @@
         "text": "The council’s final settlement"
       }
     },
+    "ui:The court": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The court"
+      }
+    },
     "ui:The current assignments already produce the best available total yield.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142111,12 +142175,12 @@
         "text": "There is no heir."
       }
     },
-    "ui:These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held.": {
+    "ui:These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held."
+        "text": "These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat."
       }
     },
     "ui:These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged.": {
@@ -148623,6 +148687,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "{relation} · Standing {standing} · gift ready now"
+      }
+    },
+    "ui:{relation} · age {age}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "relation"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{relation} · age {age}"
       }
     },
     "ui:{relation} · {marital} · Standing {standing}": {

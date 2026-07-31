@@ -28,6 +28,18 @@ window.FB = window.FB || {};
     return h >>> 0;
   };
 
+  /* Run fn on a private stream seeded from a stable identifier, then hand the
+     shared world stream back untouched. Generation that may happen at world
+     creation, at first interaction, or on the load of an old save must not
+     depend on which of those came first: the scope string decides the result,
+     never the call order. All randomness inside fn still flows through FB.rng
+     and friends, so nothing here reaches for Math.random. */
+  FB.withSeed = function (scope, fn) {
+    const prev = FB.getRngState();
+    FB.seedRng(FB.hashSeed(String(scope)));
+    try { return fn(); } finally { FB.setRngState(prev); }
+  };
+
   FB.clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
 
   /* A title's broad social audience. Political position (vassal, sovereign,

@@ -626,13 +626,19 @@ Standing effect, cooldown, and replacement consequence supplied by the owning
 system. Clicking routes to the existing action or confirmation, which
 revalidates its own gate.
 
-A materialized reigning ruler keeps two deliberately separate sheets. The realm
-sheet owns office, realm faith, capital, succession, courier gifts, diplomacy,
-feudal dealings, and war. The character sheet owns personal traits,
-courtship, rivalry, and household dealings. Typed Standing resolves to the
-same value on both. Reciprocal **Personal character** and **Realm and court**
-links preserve the distinction, and the personal sheet omits a duplicate gift
-action.
+Every living AI reigning ruler has a materialized character record. The realm
+sheet therefore begins with the standard full character card and a bounded
+court strip for the current consort and displayed heirs; each court member is
+a native character-sheet button, and all faces use the shared portrait
+pipeline. A crest-only header remains a defensive fallback for malformed or
+temporarily incomplete state.
+
+The ruler still keeps two deliberately separate sheets. The realm sheet owns
+office, realm faith, capital, succession, courier gifts, diplomacy, feudal
+dealings, and war. The character sheet owns personal traits, courtship,
+rivalry, and household dealings. Typed Standing resolves to the same value on
+both. Reciprocal **Personal character** and **Realm and court** links preserve
+the distinction, and the personal sheet omits a duplicate gift action.
 
 Modal return context records only the originating view, not simulation state.
 Governance, Council, Estates, and card-to-card routes reconstruct the exact

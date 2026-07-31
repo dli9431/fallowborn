@@ -235,10 +235,35 @@ window.FB = window.FB || {};
     return FB.campaignModBonus(state, key);
   };
 
+  /* ---------- whose counties a county modifier acts on ----------
+     One explicit rule, because six consumers used to decide it separately and
+     disagreed. A landed ruler experiences the modifiers on the counties they
+     hold directly. A baron holds none: their seat is the liege's county. But
+     the estates that grant these modifiers sit from tier 3, and the agenda
+     that grants them is chosen by reading that seat, so the seat is where
+     they act. Upkeep, Common Voice, tax, levy, and the Governance projection
+     all read this, so a player cannot pay for a record that gives them
+     nothing and does not appear anywhere they can look. */
+  FB.modifierCounties = function (state) {
+    const p = state && state.player;
+    if (!p) return [];
+    if (p.provs && p.provs.length) return p.provs.slice();
+    return p.provinceId ? [p.provinceId] : [];
+  };
+
+  /* The substituted seat, and null for a ruler who holds counties of their
+     own. Callers that already sum over held counties use this to add the
+     seat's effect without granting rent or levy from land they do not hold. */
+  FB.modifierSeat = function (state) {
+    const p = state && state.player;
+    if (!p || (p.provs && p.provs.length)) return null;
+    return p.provinceId || null;
+  };
+
   FB.modifierUpkeepEntries = function (state, key) {
     key = key || 'gold';
     const out = [];
-    const demesne = FB.demesne ? FB.demesne(state) : (state.player.provs || []);
+    const demesne = FB.modifierCounties(state);
     for (let p = 0; p < demesne.length; p++) {
       const pid = demesne[p], list = FB.countyModifierRecords(state, pid);
       for (let i = 0; i < list.length; i++) {
@@ -266,7 +291,7 @@ window.FB = window.FB || {};
 
   FB.popEffective = function (state) {
     let value = Number(state.player.pop) || 0;
-    const demesne = FB.demesne ? FB.demesne(state) : (state.player.provs || []);
+    const demesne = FB.modifierCounties(state);
     for (let i = 0; i < demesne.length; i++) {
       value += FB.modBonus(state, 'commonVoice', demesne[i]);
     }

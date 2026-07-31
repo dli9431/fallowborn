@@ -1156,6 +1156,10 @@ window.FB = window.FB || {};
     };
     realm.succession.members[rootId] = root;
     realm.religion = 'catholic';
+    /* This replaces the realm's succession wholesale, so the derived
+       reigning-ruler index has to be told: a missing entry for a sitting Pope
+       would read as "does not reign" everywhere that asks. */
+    if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     c.papalRealmId = rid;
     c.homeProvinceId = 'roma';
   }
@@ -2645,6 +2649,9 @@ window.FB = window.FB || {};
         if (state.holder) state.holder.roma = canonicalRealm;
         state.religiousHeads.catholic = canonicalRealm;
         papacy.realmObedience[canonicalRealm] = receivingId;
+        /* The See's realm is alive again, and so is its ruler: the derived
+           reigning-ruler index has to learn that before anything asks. */
+        if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
         if (FB.invalidateRealmCache) FB.invalidateRealmCache();
       } else {
         state.religiousHeads.catholic = toRealm;

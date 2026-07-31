@@ -1,5 +1,51 @@
 # Characters: skills & growing up
 
+**Royal courts are eager for the living and compact for the dead.** Every reigning
+realm's ruler, consort, and displayed heirs exist as full `state.chars` records from
+world creation, so opening a realm shows a face and a complete card instead of a stub
+line. A court record is a *complete* record - `sex`, `culture`, `religion`, `born`,
+`station`, `health`, `traits`, `skills`, and a resolvable loadout - because a record
+missing a field one of those readers consults produces a card or a face that disagrees
+with the sheet printed beside it. `FB.makeCharacter` fills all of it; the court paths do
+not bypass it.
+
+The living court population is bound by the map - roughly six people per realm,
+regardless of how long a campaign has run. Everything past that number would be dead
+accumulation, and the succession member already holds what the game needs about the
+dead: a name, dates, and parent/child links. So when a court character dies,
+`FB.courtRecordRetained` asks whether the player can still navigate to them - a kin tie,
+a marriage or betrothal, held items, a household or retainer place, a role, a papal
+office, an attention assignment, a journey under way to visit them, or a friend or
+rival contact clock. If not, the record is deleted and the member entry becomes the
+tombstone.
+
+**Cultivation opinion alone deliberately does not count**, and the distinction is
+narrow: the *standing* a person earned lives in the realm-keyed store
+`FB.syncRealmRulerStanding` mirrors and survives compaction without them, but an
+*active* assignment on that exact person is a live reference the UI resolves back
+through `state.chars` and does retain the record. The score is not a reason to keep a
+sheet; a screen currently pointing at one is.
+
+Two rules keep that safe. The member is marked dead **before** the record is removed, so
+`FB.refreshRealmSuccession` can never mistake a compacted member for a living one whose
+character merely went missing. And retention is read **before** `FB.killChar`, which
+severs the very links the predicate consults - a spouse asked about afterwards reads as
+a stranger. Compaction is forward-only: it lives in the death path and never runs
+retroactively over a loaded save, where dead materialized royals the player once met are
+already present.
+
+The accepted tradeoff: a never-inheriting royal child who died untouched has a name and
+dates in the family tree, but no posthumous character sheet. Records are spent on what
+the player can see and touch. See [realms.md](realms.md) for the court's structure and
+the consort.
+
+**A portrait is derived state and is never persisted.** `FB.characterVisualKey(state, c)`
+is the single registration point for every field a face is drawn from; callers that skip
+a repaint compare that key rather than hand-building their own list. Court UI paints
+faces through `FB.faceTag` plus `FB.paintFaces`, never through a direct
+`FB.paintPortrait` call, and no view paints an unbounded list of court faces - the realm
+sheet's court strip inherits the same six-member cap as `FB.realmFamily`.
+
 **Bishops, Cardinals, and Popes are personal Catholic offices.** Both Catholic vocation
 paths qualify for an appointed Bishopric, after which a qualified Bishop may petition
 for appointment to the College. Cardinal sets station 4 and a 3.5 seasonal piety yield without granting a
