@@ -715,6 +715,30 @@ test('the realm sheet shows a ruler card and a court strip', async function ({ p
   expect(await page.locator('#liegecrest').count()).toBe(0);
 });
 
+test('Land notable folk show ruler portraits instead of realm crests',
+  async function ({ page }) {
+    const selected = await page.evaluate(function () {
+      const s = FB.state;
+      const pids = Object.keys(s.owner || {}).sort();
+      for (const pid of pids) {
+        const rid = (s.holder && s.holder[pid]) || s.owner[pid];
+        const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+        if (!ruler) continue;
+        FB.ui.selectProvince(pid);
+        return { rid:rid, rulerId:ruler.id };
+      }
+      return null;
+    });
+
+    expect(selected).not.toBeNull();
+    const row = page.locator(
+      '#tab-prov .charrow[data-liege="' + selected.rid + '"]');
+    await expect(row).toBeVisible();
+    await expect(row.locator(
+      'canvas.pface[data-cid="' + selected.rulerId + '"]')).toBeVisible();
+    expect(await row.locator('canvas.crest').count()).toBe(0);
+  });
+
 test('court characters carry a resolvable loadout and portrait key',
   async function ({ page }) {
     expect(await page.evaluate(function () {

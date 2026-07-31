@@ -4348,7 +4348,9 @@ window.FB = window.FB || {};
       return !!(me && !me.dead);
     }
     const r = landRulerRealm(s, rid);
-    return !!(r && r.alive && r.ruler && r.ruler.name);
+    const c = FB.realmRulerCharacterSnapshot &&
+      FB.realmRulerCharacterSnapshot(s, rid);
+    return !!(r && r.alive && c);
   }
   function landRulerLiege(s, rid) {
     if (rid === 'player') {
@@ -4445,13 +4447,15 @@ window.FB = window.FB || {};
       standing = '<span class="cop op-mid">' + esc(FB.T('You')) + '</span>';
     } else {
       const r = landRulerRealm(s, rid);
+      const ruler = FB.realmRulerCharacterSnapshot(s, rid);
       const value = FB.standingOf(s, { kind:'realm', id:rid });
-      art = FB.crestTag(rid, 36, 42);
+      art = FB.faceTag(ruler, 36, 42);
       heading = FB.T('{title} {name}', {
-        title:FB.realmRankTitle(s, r), name:r.ruler.name
+        title:FB.realmRankTitle(s, r), name:ruler.name
       });
-      age = r.ruler.age;
-      martial = r.ruler.mar;
+      age = FB.ageOf(ruler, s.date.year);
+      martial = FB.skillSnapshot
+        ? FB.skillSnapshot(s, ruler, 'mar') : FB.skillOf(ruler, 'mar');
       action = ' data-liege="' + esc(rid) + '" title="' +
         esc(FB.T('Open this realm ruler’s sheet')) + '"';
       standing = '<span class="cop ' + standingClass(value) + '">' +

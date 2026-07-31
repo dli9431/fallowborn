@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.96.0';
+  FB.VERSION = '1.96.1';
   FB.CHANGELOG = [
+    { v: '1.96.1', date: '2026-07-30', changes: [
+      'The Land tab’s Notable folk list now shows each ruler’s portrait instead of their realm crest.',
+      'Political court ordering and narrow-screen Estates lobbying controls now stay consistent.'
+    ] },
     { v: '1.96.0', date: '2026-07-30', changes: [
       'Reigning dynasties now keep their ruler, consort, and heirs as full characters, with portraits, character sheets, and identity preserved through succession.',
       'Baronial county modifiers and Estates sessions begun while travelling now apply to the correct home seat.'

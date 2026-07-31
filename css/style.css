@@ -1765,6 +1765,7 @@ textarea.modjson, textarea.savetext {
   .evopt .odesc { font-size: 13px; }
   .btn { min-height: 44px; }
   .btn.small { min-height: 40px; min-width: 44px; }
+  .political-motion-row .btn.small { min-height: 44px; }
   .building-county-picker select { min-height: 48px; }
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }

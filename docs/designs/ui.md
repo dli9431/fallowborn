@@ -134,11 +134,11 @@ from the Land-tab settlement view. Province settlement lists wrap between places
 a settlement name, so each link stays readable.
 The Land tab's **Notable folk** list is ruler-first: it shows the county holder, all of
 that holder's direct vassal realms, then every liege through the sovereign, without a
-row cap or duplicates. AI entries are native focusable rows with procedural crests and
-open the realm-ruler sheet; a protagonist entry uses the character portrait and
-character sheet. Each row states realm, political relationship, age, Martial, and the
-player-relative Standing. Generated local characters appear only as a defensive
-fallback when no political ruler can be resolved.
+row cap or duplicates. Every entry is a native focusable row with the reigning
+character's procedural portrait. AI entries open the realm-ruler sheet; a protagonist
+entry opens the character sheet. Each row states realm, political relationship, age,
+Martial, and the player-relative Standing. Generated local characters appear only as a
+defensive fallback when no political ruler can be resolved.
 For a count or higher, the selected current seat is marked **capital and home**.
 Every other directly held demesne county shows **Move capital here…**; the native
 button remains visible but disabled with the exact prestige, journey, campaign, or

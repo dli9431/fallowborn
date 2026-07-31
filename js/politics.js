@@ -190,6 +190,8 @@ window.FB = window.FB || {};
     ids.sort(function (a, b) {
       if (a === rulerHouseId) return -1;
       if (b === rulerHouseId) return 1;
+      if (a === 'player') return 1;
+      if (b === 'player') return -1;
       return compareId(a, b);
     });
     var houses = [];

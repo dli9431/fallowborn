@@ -103,7 +103,9 @@ Political blocs are simulated only where they can affect the protagonist.
 directly to that ruler, and the player's house when sworn there. It excludes
 unrelated sovereign trees, indirect vassal houses, empty generated
 placeholders, and houses without a ruler or territory. For a player crown,
-the same rule covers the player house and its direct vassals.
+the same rule covers the player house and its direct vassals. The ruler stays
+first; other landed houses use stable realm-id order, with a sworn player
+house last.
 
 House influence is a current-state projection:
 
@@ -261,11 +263,12 @@ share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
 The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
 the selected county's direct holder, every living realm sworn directly to that holder
 (rank first, then stable realm name/id), and the holder's complete liege chain through
-the sovereign, with duplicates removed. The protagonist occupies the same list when
-`'player'` is one of those realm nodes, using their full character rather than the
-lightweight ruler snapshot. Generated province characters from `FB.provNotables` are a
-defensive fallback only when a settled county has no resolvable political ruler, so
-ordinary Land browsing neither creates `provChars` nor consumes RNG.
+the sovereign, with duplicates removed. Each row paints the canonical reigning
+character's portrait and derives age and Martial from that full character record. The
+protagonist occupies the same list when `'player'` is one of those realm nodes.
+Generated province characters from `FB.provNotables` are a defensive fallback only
+when a settled county has no resolvable political ruler, so ordinary Land browsing
+neither creates `provChars` nor consumes RNG.
 
 **A count-or-higher protagonist may move the realm seat once per lifetime.**
 `FB.capitalRelocationStatus` accepts only a different county held directly in the
