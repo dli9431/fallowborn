@@ -1,13 +1,27 @@
 # Characters: skills & growing up
 
 **Royal courts are eager for the living and compact for the dead.** Every reigning
-realm's ruler, consort, and displayed heirs exist as full `state.chars` records from
-world creation, so opening a realm shows a face and a complete card instead of a stub
-line. A court record is a *complete* record - `sex`, `culture`, `religion`, `born`,
+realm's ruler, adult consort, and displayed heirs exist as full
+`state.chars` records from world creation, so opening a realm shows a face and a
+complete card instead of a stub line. A child ruler's same-age future-consort
+reservation remains compact, unmaterialized, and unlinked until majority; the elective
+Papacy has no dynastic household. A court record is a *complete* record -
+`sex`, `culture`, `religion`, `born`,
 `station`, `health`, `traits`, `skills`, and a resolvable loadout - because a record
 missing a field one of those readers consults produces a card or a face that disagrees
 with the sheet printed beside it. `FB.makeCharacter` fills all of it; the court paths do
 not bypass it.
+
+Portrait invalidation follows that same complete-record rule. The shared
+`FB.characterVisualKey` reads the named ailment list from `c.ails`, matching the
+renderer, and includes the legacy player illness flag passed to the top-bar painter.
+Adding or curing a wound or sickness therefore repaints every cached face immediately.
+
+Eagerness is also a throne invariant, not just a display choice. Accession materializes
+the exact successor on the court's scoped stream before reading their ruler fields, and
+the ensure pass advances a dead ruler root immediately. A retained corpse and a
+previously compacted corpse therefore produce the same living successor on load or
+realm revival; neither is reanimated and neither waits for the next mortality roll.
 
 The living court population is bound by the map - roughly six people per realm,
 regardless of how long a campaign has run. Everything past that number would be dead

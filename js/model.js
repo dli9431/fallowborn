@@ -684,6 +684,7 @@ window.FB = window.FB || {};
         familyIndex.turn === state.turn) return familyIndex;
     const children = Object.create(null);
     const spouses = Object.create(null);
+    const betrotheds = Object.create(null);
     const stepchildren = Object.create(null);
     function push(map, key, value) {
       if (map[key]) map[key].push(value);
@@ -695,13 +696,15 @@ window.FB = window.FB || {};
       if (c.fatherId) push(children, c.fatherId, c.id);
       if (c.motherId && c.motherId !== c.fatherId) push(children, c.motherId, c.id);
       if (!c.dead && c.spouseId) push(spouses, c.spouseId, c.id);
+      if (!c.dead && c.betrothedId) push(betrotheds, c.betrothedId, c.id);
       if (Array.isArray(c.stepParentIds)) {
         for (const parentId of c.stepParentIds) push(stepchildren, parentId, c.id);
       }
     }
     familyIndex = {
       state:state, stamp:familyStamp, turn:state.turn,
-      children:children, spouses:spouses, stepchildren:stepchildren, kin:null
+      children:children, spouses:spouses, betrotheds:betrotheds,
+      stepchildren:stepchildren, kin:null
     };
     return familyIndex;
   }
@@ -711,6 +714,19 @@ window.FB = window.FB || {};
   FB.spouseLinksTo = function (state, cid) {
     if (!state || !state.chars || !cid) return [];
     return familyIndexOf(state).spouses[cid] || [];
+  };
+
+  /* Death cleanup needs both reverse relationship maps. Expose a read-only
+     same-tick snapshot so a yearly mortality sweep can keep using the one
+     indexed pass even though each death invalidates the live cache. */
+  FB.familyLinksSnapshot = function (state) {
+    const index = familyIndexOf(state);
+    const kin = FB.kinOf(state);
+    return {
+      spouses:index.spouses,
+      betrotheds:index.betrotheds,
+      kinById:kin.byId
+    };
   };
 
   /* ---------- kinship ----------

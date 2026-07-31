@@ -273,7 +273,7 @@ window.FB = window.FB || {};
       : (isPlayer && state.player ? state.player.tier : (c.station || 0));
     const ill = opts.ill !== undefined ? opts.ill
       : !!(isPlayer && state.player.flags && state.player.flags.ill);
-    const ailments = (c.ailments || []).map(function (ail) {
+    const ailments = (c.ails || []).map(function (ail) {
       return typeof ail === 'string' ? ail : (ail && (ail.id || ail.kind) || '');
     }).join(',');
     return [

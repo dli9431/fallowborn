@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.96.1';
+  FB.VERSION = '1.96.2';
   FB.CHANGELOG = [
+    { v: '1.96.2', date: '2026-07-31', changes: [
+      'Realm courts now preserve thrones, pledges, and child accessions correctly, while Papal households and yearly family cleanup stay bounded.'
+    ] },
     { v: '1.96.1', date: '2026-07-30', changes: [
       'The Land tab’s Notable folk list now shows each ruler’s portrait instead of their realm crest.',
       'Political court ordering and narrow-screen Estates lobbying controls now stay consistent.'
@@ -1613,7 +1616,9 @@ window.FB = window.FB || {};
 
     // the wider family weds, bears children, and is mourned
     kinLifeTick(s);
-    const kinRel = FB.kinOf(s).byId;
+    const familyLinks = FB.familyLinksSnapshot
+      ? FB.familyLinksSnapshot(s) : null;
+    const kinRel = familyLinks ? familyLinks.kinById : FB.kinOf(s).byId;
 
     // player mortality (curve scaled by the balance knob, 0.012 = as-authored)
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
@@ -1668,7 +1673,7 @@ window.FB = window.FB || {};
          death is reported. The two conditions are exact complements, so no
          court character is rolled twice and none is immortal. */
       if (FB.isCourtCharacter && FB.isCourtCharacter(s, c) &&
-          !FB.courtRecordRetained(s, c)) continue;
+          !FB.courtRecordRetained(s, c, kinRel)) continue;
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
       /* the house's resident descendants share its table: each station above serf means
@@ -1699,10 +1704,13 @@ window.FB = window.FB || {};
            BEFORE the death: FB.killChar severs the very links the predicate
            consults, and a spouse checked afterwards reads as a stranger. */
         const compactRoyal = !!(c.royalLine && FB.courtRecordRetained &&
-          !FB.courtRecordRetained(s, c));
-        FB.killChar(s, c);
+          !FB.courtRecordRetained(s, c, kinRel));
+        FB.killChar(s, c, { familyLinks:familyLinks });
         if (compactRoyal && FB.compactRoyalRecordOnDeath) {
-          FB.compactRoyalRecordOnDeath(s, c);
+          FB.compactRoyalRecordOnDeath(s, c, {
+            retentionChecked:true,
+            kinById:kinRel
+          });
         }
         if (wasSpouse) {
           FB.news(s, FB.msg('news.life.spouse_died',

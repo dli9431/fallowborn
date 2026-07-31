@@ -859,10 +859,10 @@ window.FB = window.FB || {};
 
   /* How much of each court exists as a full character from world creation.
      'ruler'  - the ruler only (~450 records; the kin walk stays near today's)
-     'court'  - ruler, consort and heirs (~2,500 records, map-bound rather than
+     'court'  - ruler, adult consort and heirs (~2,500 records, map-bound rather than
                 campaign-length-bound, and roughly 1.1-1.4 MB of save)
      Both settings show a real face and card for every living ruler; 'court'
-     also keeps consorts and heirs persistent before a player ever opens them.
+     also keeps adult consorts and heirs persistent before a player opens them.
      Everything below reads this one constant, so re-tuning after profiling on
      a real device is a one-line change rather than a rewrite. */
   const COURT_EAGERNESS = 'court';
@@ -906,7 +906,8 @@ window.FB = window.FB || {};
 
   function royalMemberSort(a, b) {
     if (a.sex !== b.sex) return a.sex === 'm' ? -1 : 1;
-    return a.born - b.born;
+    return ((Number(a.born) || 0) - (Number(b.born) || 0)) ||
+      String(a.id).localeCompare(String(b.id));
   }
 
   function realmFaithGroup(state, rid) {
@@ -1268,6 +1269,14 @@ window.FB = window.FB || {};
     return 'court|' + courtWorldKey(state) + '|' + rid + '|' + key;
   }
 
+  function isPapalTerritorialRealm(state, rid) {
+    if (FB.papacyTerritorialRealm) {
+      return FB.papacyTerritorialRealm(state, rid);
+    }
+    return !!(state && state.religiousHeads &&
+      state.religiousHeads.catholic === rid);
+  }
+
   /* A court character's id is derived from its succession member rather than
      drawn from FB.uid, so eager and on-demand materialization agree on one
      identity. Member ids always begin with 'royal_'; the 'ro_' prefix cannot
@@ -1278,11 +1287,27 @@ window.FB = window.FB || {};
   }
   FB.courtCharacterId = courtCharId;
 
-  /* Never overwrite a record that already holds the derived id. A malformed
-     save is not worth losing a character over. */
+  function courtMemberId(realm, key) {
+    return 'royal_' + realm.id + '_' + String(key || 'member')
+      .replace(/[^A-Za-z0-9_-]/g, '_');
+  }
+
+  /* Never overwrite a record that already holds the derived id, and never
+     escape to FB.uid: the member-to-character identity is a save contract.
+     A matching orphan can be reclaimed by the materializer; an unrelated
+     collision leaves the malformed member unmaterialized for repair. */
   function freeCourtCharId(state, memberId) {
     const id = courtCharId(memberId);
-    return state.chars[id] ? FB.uid() : id;
+    return state.chars[id] ? null : id;
+  }
+
+  function recoverCourtCharacter(state, rid, member) {
+    const c = state.chars[courtCharId(member.id)];
+    if (!c || c.dead || !c.royalLine ||
+        c.royalLine.realmId !== rid ||
+        c.royalLine.memberId !== member.id) return null;
+    member.charId = c.id;
+    return c;
   }
 
   /* Eager courts are built inside FB.initPolitics, before the protagonist
@@ -1307,8 +1332,12 @@ window.FB = window.FB || {};
       };
     };
     const person = opts.scope ? FB.withSeed(opts.scope, drawn) : drawn();
+    /* Before eager courts, compact heirs consumed one uid. Keep that counter
+       movement for non-court seed compatibility, but never put the result in
+       a member identity. */
+    FB.uid();
     return {
-      id: 'royal_' + realm.id + '_' + FB.uid(),
+      id:courtMemberId(realm, opts.key),
       name: person.name,
       sex: person.sex,
       born: person.born,
@@ -1337,9 +1366,71 @@ window.FB = window.FB || {};
     return !!(FB.spousesSnapshot && FB.spousesSnapshot(state, c).length);
   }
 
+  function alreadyBetrothed(state, c) {
+    if (!c || !c.betrothedId) return false;
+    const pledged = state.chars[c.betrothedId];
+    return !!(pledged && !pledged.dead);
+  }
+
+  function alreadyCommitted(state, c, opts) {
+    return alreadyWed(state, c, opts) || alreadyBetrothed(state, c);
+  }
+
+  function committedToOther(state, c, partner, opts) {
+    if (!c) return false;
+    const partnerId = partner && partner.id;
+    const directSpouse = c.spouseId && state.chars[c.spouseId];
+    if (directSpouse && !directSpouse.dead && directSpouse.id !== partnerId) {
+      return true;
+    }
+    if (!(opts && opts.bulk) && FB.spousesSnapshot) {
+      const spouses = FB.spousesSnapshot(state, c);
+      for (const spouse of spouses) {
+        if (spouse.id !== partnerId) return true;
+      }
+    }
+    const pledged = c.betrothedId && state.chars[c.betrothedId];
+    return !!(pledged && !pledged.dead && pledged.id !== partnerId);
+  }
+
+  function royalRulerAge(state, r, c) {
+    return c ? FB.ageOf(c, state.date.year) :
+      Math.max(0, Number(r && r.ruler && r.ruler.age) || 0);
+  }
+
+  function consortCommitmentSettled(state, r, ruler, consort) {
+    if (!ruler || !consort || ruler.dead || consort.dead) return false;
+    if (royalRulerAge(state, r, ruler) < 16 ||
+        FB.ageOf(consort, state.date.year) < 16) return false;
+    return ruler.spouseId === consort.id &&
+      consort.spouseId === ruler.id &&
+      ruler.betrothedId !== consort.id &&
+      consort.betrothedId !== ruler.id;
+  }
+
+  /* Saves from before the commitment guard can contain a generated consort
+     beside a ruler's real partner. Remove only the invented court role and
+     its invented links; keep the ordinary character record so load repair
+     never erases a person the player may already have met. */
+  function retireInvalidConsort(state, succession, member, c, ruler) {
+    if (!succession || !member) return;
+    if (c && ruler) {
+      if (c.spouseId === ruler.id) c.spouseId = null;
+      if (ruler.spouseId === c.id) ruler.spouseId = null;
+      if (c.betrothedId === ruler.id) c.betrothedId = null;
+      if (ruler.betrothedId === c.id) ruler.betrothedId = null;
+    }
+    if (c && c.royalLine &&
+        c.royalLine.realmId && c.royalLine.memberId === member.id) {
+      delete c.royalLine;
+    }
+    delete succession.members[member.id];
+    if (FB.touchFamily) FB.touchFamily();
+  }
+
   /* The ruler's spouse of record. Seeded once per ruler generation, of the
-     opposite sex and a plausible age, so every court holds a woman and the
-     family card reads as a household rather than a list of names. */
+     opposite sex and a plausible age, so an adult court reads as a household
+     rather than a list of names. */
   function seedConsortMember(state, rid) {
     const r = state.realms[rid];
     const s = r && r.succession;
@@ -1353,19 +1444,27 @@ window.FB = window.FB || {};
        Whether anyone may hold more than one spouse belongs to the marriage
        system, and this path must not answer it by accident. */
     const sitting = FB.realmRulerCharacterSnapshot(state, rid);
-    if (alreadyWed(state, sitting)) return null;
-    const rulerAge = Math.max(16, Number(r.ruler.age) || 0);
+    const rulerAge = royalRulerAge(state, r, sitting);
+    /* A pledge is as exclusive here as an existing marriage. A child ruler
+       receives only a same-age compact reservation; it is not materialized or
+       linked until both are adults, so a real pledge can still supersede it. */
+    if (alreadyCommitted(state, sitting)) return null;
     const person = FB.withSeed(
       courtScope(state, rid, 'g' + generation + ':consort'), function () {
         const sex = (r.ruler.sex || 'm') === 'f' ? 'm' : 'f';
         return {
           sex:sex,
           name:FB.randomName(r.ruler.culture, sex),
-          age:FB.clamp(rulerAge + FB.ri(-10, 6), 16, 74)
+          age:rulerAge < 16
+            ? FB.clamp(rulerAge + FB.ri(-2, 2), 0, 15)
+            : FB.clamp(rulerAge + FB.ri(-10, 6), 16, 74)
         };
       });
+    /* The old generated member id consumed one uid. Preserve that unrelated
+       counter movement while keeping the durable identity derived. */
+    FB.uid();
     const m = {
-      id:'royal_' + r.id + '_' + FB.uid(),
+      id:courtMemberId(r, 'g' + generation + '_consort'),
       name:person.name,
       sex:person.sex,
       born:state.date.year - person.age,
@@ -1425,6 +1524,7 @@ window.FB = window.FB || {};
     if (!r || !r.alive) return null;
     const s = r.succession;
     if (!s || !s.members) return FB.ensureRealmSuccession(state, rid);
+    if (s.papalElective) return s;
     const source = s.order && s.order.length ? s.order.slice() :
       orderedMemberIds(s, s.rulerMemberId || null);
     /* Keep the reigning-ruler index honest from the one place that already
@@ -1458,6 +1558,7 @@ window.FB = window.FB || {};
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive || rid === 'player') return null;
+    if (r.succession && r.succession.papalElective) return r.succession;
     if (!r.ruler) {
       const cap = FB.world.byId[r.capital];
       r.ruler = makeRuler(cap ? cap.culture : 'frankish', null, state.date && state.date.year);
@@ -1477,6 +1578,7 @@ window.FB = window.FB || {};
       const made = [];
       for (let i = 0; i < count; i++) {
         const m = newRoyalMember(state, r, null, possibleAge, {
+          key:'g' + generation + '_child' + i,
           scope:courtScope(state, rid, 'g' + generation + ':child' + i)
         });
         s.members[m.id] = m;
@@ -1495,6 +1597,54 @@ window.FB = window.FB || {};
     return FB.refreshRealmSuccession(state, rid);
   };
 
+  /* The initial Papal ruler consumes the same discarded count/id progression
+     as the former dynastic setup, preserving fixed-seed non-court state, but
+     never creates those members. It begins directly as one elective root.
+     Existing saves are left for FB.ensurePapacy's relationship-aware repair. */
+  function seedInitialPapalRuler(state, rid, opts) {
+    const r = state.realms[rid];
+    if (!r || r.succession) return false;
+    if (!r.ruler) {
+      const cap = FB.world.byId[r.capital];
+      r.ruler = makeRuler(cap ? cap.culture : 'frankish', null,
+        state.date && state.date.year);
+    }
+    if (r.ruler.generation === undefined) r.ruler.generation = 1;
+    const generation = r.ruler.generation;
+    /* ensureRealmSuccession formerly drew only the child count on the shared
+       stream; each child's sheet and the consort sheet were already scoped.
+       Discard the same uid slots without constructing a Papal dynasty. */
+    const discardedChildren = FB.ri(2, 4);
+    for (let i = 0; i < discardedChildren; i++) FB.uid();
+    FB.uid(); // discarded consort member id
+    FB.uid(); // discarded ruler-root member id
+    const root = {
+      id:courtMemberId(r, 'g' + generation + '_ruler'),
+      name:r.ruler.name,
+      sex:r.ruler.sex || 'm',
+      born:r.ruler.born !== undefined
+        ? r.ruler.born : state.date.year - Math.max(0, r.ruler.age || 0),
+      alive:true,
+      parentId:null,
+      childIds:[],
+      charId:null,
+      role:null
+    };
+    r.succession = {
+      rulerGeneration:generation,
+      rulerMemberId:root.id,
+      members:{},
+      order:[],
+      heirId:null,
+      papalElective:true
+    };
+    r.succession.members[root.id] = root;
+    const c = FB.materializeRealmRuler(state, rid, opts);
+    if (!c) return false;
+    c.royalLine = { realmId:rid, memberId:root.id };
+    return true;
+  }
+
   FB.ensureDynasticState = function (state) {
     state.alliances = state.alliances || [];
     let made = false;
@@ -1508,6 +1658,8 @@ window.FB = window.FB || {};
           rulerGeneration: r.ruler ? r.ruler.generation : 1,
           heirCharId: null
         };
+      } else if (isPapalTerritorialRealm(state, rid)) {
+        if (seedInitialPapalRuler(state, rid, { bulk:true })) made = true;
       } else {
         FB.ensureRealmSuccession(state, rid);
         if (ensureCourtMaterialized(state, rid, { bulk:true })) made = true;
@@ -1531,20 +1683,43 @@ window.FB = window.FB || {};
     const s = r.succession;
     /* The Roman realm's ruler is the sitting Pope, installed and replaced by
        the papacy's own elective path. It has no dynastic court to fill, and
-       reading the flag off the succession avoids waking the papacy during
-       world creation just to ask. */
-    if (s.papalElective) return false;
+       the saved marker plus bookmark head assignment identify it even before
+       the Papacy's additive state has been installed. */
+    if (s.papalElective || isPapalTerritorialRealm(state, rid)) return false;
     let made = false;
-    const rulerMember = s.rulerMemberId && s.members[s.rulerMemberId];
-    if (!rulerMember || !rulerMember.charId || !state.chars[rulerMember.charId]) {
+    let rulerMember = s.rulerMemberId && s.members[s.rulerMemberId];
+    let rulerChar = rulerMember && rulerMember.charId &&
+      state.chars[rulerMember.charId];
+    /* A living realm never waits for a mortality roll to notice that its
+       throne points at a corpse. This also makes retained and compacted dead
+       rulers follow the same recovery path when a dormant realm is revived:
+       both advance to a living, eagerly materialized successor. */
+    if (rulerMember && (rulerMember.alive === false ||
+        (rulerMember.charId && (!rulerChar || rulerChar.dead)))) {
+      rulerMember.alive = false;
+      if (!FB.advanceRealmSuccession(state, rid)) return made;
+      made = true;
+      if (!r.alive) return made;
+      rulerMember = s.rulerMemberId && s.members[s.rulerMemberId];
+      rulerChar = rulerMember && rulerMember.charId &&
+        state.chars[rulerMember.charId];
+    }
+    if (!rulerMember || !rulerMember.charId || !rulerChar || rulerChar.dead) {
       if (!FB.materializeRealmRuler(state, rid, opts)) return made;
       made = true;
     }
     if (COURT_EAGERNESS !== 'court') return made;
     const consort = FB.realmConsortMember(state, rid);
-    if (consort && consort.alive !== false &&
-        (!consort.charId || !state.chars[consort.charId])) {
-      if (FB.materializeRealmConsort(state, rid, opts)) made = true;
+    if (consort && consort.alive !== false) {
+      const before = consort.charId && state.chars[consort.charId];
+      const sitting = FB.realmRulerCharacterSnapshot(state, rid);
+      if (!before || !consortCommitmentSettled(state, r, sitting, before) ||
+          committedToOther(state, sitting, before, opts) ||
+          committedToOther(state, before, sitting, opts)) {
+        const linked = FB.materializeRealmConsort(state, rid, opts);
+        if (!before && linked) made = true;
+        if (!s.members[consort.id]) made = true;
+      }
     }
     /* This runs for every realm every world tick, so establish there is
        actually work before paying for the ordered walk below. */
@@ -1569,16 +1744,44 @@ window.FB = window.FB || {};
     return made;
   }
 
-  FB.realmFamily = function (state, rid) {
-    const r = state.realms[rid];
-    const s = FB.ensureRealmSuccession(state, rid);
-    if (!r || !s) return [];
+  /* A narrow eager-repair entry point for code that revives one dormant realm.
+     It establishes the succession first, advances a dead root immediately,
+     and returns only once the living ruler is a full character. */
+  FB.ensureRealmCourt = function (state, rid, opts) {
+    const r = state && state.realms && state.realms[rid];
+    if (!r || !r.alive || rid === 'player' ||
+        isPapalTerritorialRealm(state, rid)) return null;
+    if (!FB.ensureRealmSuccession(state, rid)) return null;
+    const made = ensureCourtMaterialized(state, rid, opts);
+    if (made && FB.ensureCharacterBynames) FB.ensureCharacterBynames(state);
+    return FB.realmRulerCharacterSnapshot(state, rid);
+  };
+
+  function realmFamilyMembers(s) {
+    if (!s || !s.members) return [];
     const parent = s.rulerMemberId || null;
     const ids = orderedMemberIds(s, parent).filter(function (id) {
       return s.members[id] && s.members[id].alive !== false;
     });
-    for (const id of s.order) if (ids.indexOf(id) < 0) ids.push(id);
+    for (const id of (s.order || [])) {
+      const member = s.members[id];
+      if (member && member.alive !== false && ids.indexOf(id) < 0) ids.push(id);
+    }
     return ids.slice(0, 6).map(function (id) { return s.members[id]; });
+  }
+
+  /* Pure display snapshot: unlike FB.realmFamily, this never creates or
+     repairs succession state. Both paths share one ordering and bound. */
+  FB.realmFamilySnapshot = function (state, rid) {
+    const r = state && state.realms && state.realms[rid];
+    return realmFamilyMembers(r && r.succession);
+  };
+
+  FB.realmFamily = function (state, rid) {
+    const r = state.realms[rid];
+    const s = FB.ensureRealmSuccession(state, rid);
+    if (!r || !s) return [];
+    return realmFamilyMembers(s);
   };
 
   /* The yearly roll for everyone in a court but its ruler, whose own death is
@@ -1586,23 +1789,36 @@ window.FB = window.FB || {};
      dies: the player's mortality pass leaves court characters alone unless the
      player has a tie to one, so nobody is rolled twice and nobody is immortal.
      A materialized member is rolled here exactly as a compact one is. */
-  function tickRoyalFamily(state, rid) {
+  function tickRoyalFamily(state, rid, familyLinks) {
     const s = FB.ensureRealmSuccession(state, rid);
     if (!s) return;
+    const kinById = familyLinks && familyLinks.kinById;
+    const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
     for (const id in s.members) {
       const m = s.members[id];
       if (m.alive === false || id === s.rulerMemberId) continue;
       const c = m.charId && state.chars[m.charId];
       if (c && c.dead) continue;
+      /* A royal descendant can retain their birth line while reigning
+         elsewhere. The crown's realm owns that person's mortality and
+         succession; this family's tick must leave them alone. */
+      if (c && FB.isReigningRealmRuler(state, c)) continue;
       /* A court character the player can reach belongs to the player's own
          yearly pass, which is the one that reports the death. */
-      if (c && FB.courtRecordRetained(state, c)) continue;
+      const retained = c && FB.courtRecordRetained(state, c, kinById);
+      if (retained) continue;
       const age = Math.max(0, state.date.year - m.born);
-      const q = age < 5 ? 0.03 : age < 16 ? 0.006 : age < 50 ? 0.008 :
-        age < 65 ? 0.03 : age < 80 ? 0.1 : 0.25;
-      if (!FB.chance(q)) continue;
+      const q = (age < 5 ? 0.03 : age < 16 ? 0.006 : age < 50 ? 0.008 :
+        age < 65 ? 0.03 : age < 80 ? 0.1 : 0.25) * mortScale;
+      if (!FB.chance(FB.clamp(q, 0, 1))) continue;
       m.alive = false;
-      if (c) FB.courtMemberDied(state, m, c);
+      if (c) {
+        FB.courtMemberDied(state, m, c, {
+          retained:false,
+          kinById:kinById,
+          familyLinks:familyLinks
+        });
+      }
     }
     FB.refreshRealmSuccession(state, rid);
   }
@@ -1650,10 +1866,14 @@ window.FB = window.FB || {};
     if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) {
       return linkMaterializedRoyalFamily(state, s, m, state.chars[m.charId], opts);
     }
+    const recovered = recoverCourtCharacter(state, rid, m);
+    if (recovered) return linkMaterializedRoyalFamily(state, s, m, recovered, opts);
+    const charId = freeCourtCharId(state, memberId);
+    if (!charId) return null;
     const cap = FB.world.byId[r.capital];
     const c = FB.withSeed(courtScope(state, rid, memberId), function () {
       return FB.makeCharacter(state, {
-        id: freeCourtCharId(state, memberId),
+        id:charId,
         name: m.name,
         sex: m.sex,
         culture: r.ruler.culture,
@@ -1671,9 +1891,9 @@ window.FB = window.FB || {};
     return linkMaterializedRoyalFamily(state, s, m, c, opts);
   };
 
-  /* The consort as an ordinary character, married to the sitting ruler so
-     FB.spousesOf reports the pair and the card reads as a household. Reuses
-     the shared linkage rather than writing a second kind of family link. */
+  /* The consort as an ordinary character. A child ruler's compact reservation
+     stays unmaterialized and unlinked; once both are adults this path creates
+     the character and installs the marriage. */
   FB.materializeRealmConsort = function (state, rid, opts) {
     const r = state && state.realms && state.realms[rid];
     const s = r && r.alive && rid !== 'player'
@@ -1681,11 +1901,46 @@ window.FB = window.FB || {};
     const m = s && FB.realmConsortMember(state, rid);
     if (!m || m.alive === false) return null;
     let c = m.charId && state.chars[m.charId];
+    const ruler = FB.realmRulerCharacterSnapshot(state, rid);
+    /* Repair an invalid old consort before materializing a brand-new record
+       for them. Existing records are preserved as ordinary people. */
+    if (ruler && (committedToOther(state, ruler, c, opts) ||
+        (c && committedToOther(state, c, ruler, opts)))) {
+      retireInvalidConsort(state, s, m, c, ruler);
+      return null;
+    }
+    if (ruler && (royalRulerAge(state, r, ruler) < 16 ||
+        Math.max(0, state.date.year - m.born) < 16)) {
+      /* Repair the old eager representation too: a minor ruler must have
+         neither a generated spouse nor a generated character betrothal. Keep
+         the member as the future reservation, and reuse any already-written
+         record after majority rather than deleting save-visible history. */
+      let changed = false;
+      if (c && !c.dead) {
+        if (ruler.spouseId === c.id) { ruler.spouseId = null; changed = true; }
+        if (c.spouseId === ruler.id) { c.spouseId = null; changed = true; }
+        if (ruler.betrothedId === c.id) {
+          ruler.betrothedId = null;
+          changed = true;
+        }
+        if (c.betrothedId === ruler.id) {
+          c.betrothedId = null;
+          changed = true;
+        }
+      }
+      if (changed && FB.touchFamily) FB.touchFamily();
+      return null;
+    }
     if (!c || c.dead) {
+      c = recoverCourtCharacter(state, rid, m);
+    }
+    if (!c || c.dead) {
+      const charId = freeCourtCharId(state, m.id);
+      if (!charId) return null;
       const cap = FB.world.byId[r.capital];
       c = FB.withSeed(courtScope(state, rid, m.id), function () {
         return FB.makeCharacter(state, {
-          id:freeCourtCharId(state, m.id),
+          id:charId,
           name:m.name,
           sex:m.sex,
           culture:r.ruler.culture,
@@ -1702,18 +1957,22 @@ window.FB = window.FB || {};
       m.charId = c.id;
     }
     linkMaterializedRoyalFamily(state, s, m, c, opts);
-    /* Link only a genuinely unwed pair, in both directions. Checking the
-       stored spouseId fields alone is not enough: a wife's spouseId points at
-       her husband while his holds only the first, so a ruler already wed to
-       the protagonist can still read as unmarried on his own record. Adding a
-       consort there would grant a second spouse without any doctrine having
-       allowed it. */
-    const ruler = FB.realmRulerCharacterSnapshot(state, rid);
-    if (ruler && !ruler.dead && !c.dead &&
-        !alreadyWed(state, ruler, opts) && !alreadyWed(state, c, opts)) {
-      c.spouseId = ruler.id;
-      ruler.spouseId = c.id;
-      if (FB.touchFamily) FB.touchFamily();
+    if (ruler && !ruler.dead && !c.dead) {
+      let changed = false;
+      if (!committedToOther(state, ruler, c, opts) &&
+          !committedToOther(state, c, ruler, opts)) {
+        if (ruler.betrothedId === c.id) {
+          ruler.betrothedId = null;
+          changed = true;
+        }
+        if (c.betrothedId === ruler.id) {
+          c.betrothedId = null;
+          changed = true;
+        }
+        if (c.spouseId !== ruler.id) { c.spouseId = ruler.id; changed = true; }
+        if (ruler.spouseId !== c.id) { ruler.spouseId = c.id; changed = true; }
+      }
+      if (changed && FB.touchFamily) FB.touchFamily();
     }
     return c;
   };
@@ -1723,7 +1982,9 @@ window.FB = window.FB || {};
     const m = FB.realmConsortMember(state, rid);
     const c = m && m.alive !== false && m.charId && state.chars &&
       state.chars[m.charId];
-    return c && !c.dead ? c : null;
+    const ruler = c && FB.realmRulerCharacterSnapshot(state, rid);
+    return c && !c.dead && ruler &&
+      ruler.spouseId === c.id && c.spouseId === ruler.id ? c : null;
   };
 
   FB.materializeRoyalStepchildren = function (state, spouse) {
@@ -1774,8 +2035,14 @@ window.FB = window.FB || {};
     if (!r || !s || !r.ruler) return null;
     let m = s.rulerMemberId && s.members[s.rulerMemberId];
     if (!m) {
+      const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
+      /* Initial eager ruler roots replaced uid-backed member ids. Burn the old
+         id only during initial world construction so the protagonist and other
+         non-court ids remain seed-compatible without reintroducing UI-order
+         dependence for realms founded later. */
+      if (state.turn === 0 && (!state.player || !state.player.charId)) FB.uid();
       m = {
-        id:'royal_' + r.id + '_' + FB.uid(),
+        id:courtMemberId(r, 'g' + generation + '_ruler'),
         name:r.ruler.name,
         sex:r.ruler.sex || 'm',
         born:r.ruler.born !== undefined
@@ -1818,6 +2085,11 @@ window.FB = window.FB || {};
     return c;
   };
 
+  function realmMartial(state, c) {
+    return FB.skillSnapshot ? FB.skillSnapshot(state, c, 'mar') :
+      FB.skillOf(c, 'mar');
+  }
+
   FB.realmRulerCharacter = function (state, rid) {
     const r = state && state.realms && state.realms[rid];
     const c = FB.realmRulerCharacterSnapshot(state, rid);
@@ -1827,8 +2099,7 @@ window.FB = window.FB || {};
     r.ruler.culture = c.culture;
     r.ruler.born = c.born;
     r.ruler.age = Math.max(0, FB.ageOf(c, state.date.year));
-    r.ruler.mar = c.skills && c.skills.mar !== undefined
-      ? c.skills.mar : r.ruler.mar;
+    r.ruler.mar = realmMartial(state, c);
     r.ruler.trait = c.traits && c.traits.length ? c.traits[0] : null;
     return c;
   };
@@ -1891,13 +2162,21 @@ window.FB = window.FB || {};
       linkMaterializedRoyalFamily(state, r.succession, m, c, opts);
       return FB.realmRulerCharacter(state, rid);
     }
+    c = recoverCourtCharacter(state, rid, m);
+    if (c) {
+      indexRuler(c.id, rid);
+      linkMaterializedRoyalFamily(state, r.succession, m, c, opts);
+      return FB.realmRulerCharacter(state, rid);
+    }
+    const charId = freeCourtCharId(state, m.id);
+    if (!charId) return null;
     const cap = FB.world.byId[r.capital];
     const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
       ? [r.ruler.trait] : [];
     const standing = storedRealmStanding(state, rid);
     c = FB.withSeed(courtScope(state, rid, m.id), function () {
       return FB.makeCharacter(state, {
-        id:freeCourtCharId(state, m.id),
+        id:charId,
         name:r.ruler.name,
         sex:r.ruler.sex || 'm',
         culture:r.ruler.culture || (cap && cap.culture),
@@ -1911,13 +2190,19 @@ window.FB = window.FB || {};
       });
     });
     c.health = 8;
-    c.skills.mar = Math.max(0, Number(r.ruler.mar) || 0);
+    /* r.ruler.mar is the effective war-strength projection. Reconstruct the
+       base skill beneath this character's trait/equipment bonuses so eager
+       loading or a later repair cannot add those bonuses twice. */
+    const projectedMartial = Math.max(0, Number(r.ruler.mar) || 0);
+    const generatedBaseMartial = Number(c.skills.mar) || 0;
+    const martialBonus = realmMartial(state, c) - generatedBaseMartial;
+    c.skills.mar = Math.max(0, projectedMartial - martialBonus);
     c.royalLine = { realmId:rid, memberId:m.id };
     c.realmStanding = standing;
     m.charId = c.id;
     indexRuler(c.id, rid);
     linkMaterializedRoyalFamily(state, r.succession, m, c, opts);
-    return c;
+    return FB.realmRulerCharacter(state, rid) || c;
   };
 
   /* ---------- court records: eager for the living, compact for the dead ----
@@ -1942,7 +2227,7 @@ window.FB = window.FB || {};
      the record. Everything that can put this person in front of the player
      again does count, and a missed reference class is the likeliest bug here,
      so the check errs toward keeping the record. */
-  FB.courtRecordRetained = function (state, c) {
+  FB.courtRecordRetained = function (state, c, kinById) {
     if (!state || !c || !state.player) return false;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
@@ -1968,7 +2253,16 @@ window.FB = window.FB || {};
     const partnerId = c.spouseId || c.betrothedId;
     const partner = partnerId && state.chars[partnerId];
     if (partner && !FB.isCourtCharacter(state, partner)) return true;
-    if (FB.kinOf(state).byId[c.id]) return true;
+    const kin = kinById || FB.kinOf(state).byId;
+    if (kin[c.id]) return true;
+    /* A divorced generated spouse may no longer be the protagonist's kin,
+       while still being a parent the living player-descendant tree resolves.
+       Keep that parent record so compaction cannot null the child's lineage. */
+    for (const childId of (c.childrenIds || [])) {
+      const child = state.chars[childId];
+      if (child && !child.dead &&
+          FB.playerDescendantKind(state, child.id)) return true;
+    }
     if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) return true;
     if (FB.retainerRecord && FB.retainerRecord(state, c.id)) return true;
     if (FB.papalOfficeOf && FB.papalOfficeOf(state, c)) return true;
@@ -1986,13 +2280,21 @@ window.FB = window.FB || {};
 
   /* Death of a court character. Retention is read before FB.killChar, because
      that path severs exactly the links the predicate consults. */
-  FB.courtMemberDied = function (state, member, c) {
+  FB.courtMemberDied = function (state, member, c, opts) {
     if (!member || !c) return false;
-    const retained = FB.courtRecordRetained(state, c);
-    if (!c.dead && FB.killChar) FB.killChar(state, c);
+    opts = opts || {};
+    const retained = opts.retained !== undefined
+      ? opts.retained
+      : FB.courtRecordRetained(state, c, opts.kinById);
+    if (!c.dead && FB.killChar) {
+      FB.killChar(state, c, { familyLinks:opts.familyLinks });
+    }
     member.alive = false;
     if (retained) return false;
-    return FB.compactCourtRecord(state, member, c);
+    return FB.compactCourtRecord(state, member, c, {
+      retentionChecked:true,
+      kinById:opts.kinById
+    });
   };
 
   /* Compaction: the member entry becomes the tombstone and the full record
@@ -2003,12 +2305,15 @@ window.FB = window.FB || {};
      materialized royals the player once met are already present.
 
      The retention decision belongs to the caller, made before FB.killChar
-     severed the links it reads. The re-check below is a one-way net: it can
-     only refuse a compaction, never authorize one. */
-  FB.compactCourtRecord = function (state, member, c) {
+     severed the links it reads. Direct callers keep a one-way defensive
+     re-check; a yearly mortality caller marks its snapshot answer checked so
+     each corpse does not rebuild the family index. */
+  FB.compactCourtRecord = function (state, member, c, opts) {
     if (!state || !member || !c || member.charId !== c.id) return false;
     if (member.alive !== false) return false;
-    if (FB.courtRecordRetained(state, c)) return false;
+    opts = opts || {};
+    if (!opts.retentionChecked &&
+        FB.courtRecordRetained(state, c, opts.kinById)) return false;
     member.name = c.name;
     member.born = c.born;
     if (c.died !== undefined) member.died = c.died;
@@ -2029,14 +2334,14 @@ window.FB = window.FB || {};
      Callers decide retention before the death, not here: FB.killChar severs
      the links FB.courtRecordRetained reads, so a spouse or betrothed asked
      about afterwards would read as a stranger and lose their record. */
-  FB.compactRoyalRecordOnDeath = function (state, c) {
+  FB.compactRoyalRecordOnDeath = function (state, c, opts) {
     if (!state || !c || !c.dead || !c.royalLine) return false;
     const r = state.realms && state.realms[c.royalLine.realmId];
     const s = r && r.succession;
     const m = s && s.members && s.members[c.royalLine.memberId];
     if (m && m.charId === c.id) {
       m.alive = false;
-      return FB.compactCourtRecord(state, m, c);
+      return FB.compactCourtRecord(state, m, c, opts);
     }
     dropRulerIndex(c.id);
     detachCourtRecord(state, c);
@@ -2126,7 +2431,7 @@ window.FB = window.FB || {};
       culture:c.culture,
       born:c.born,
       age:FB.ageOf(c, state.date.year),
-      mar:FB.skillOf(c, 'mar'),
+      mar:realmMartial(state, c),
       trait:c.traits && c.traits.length ? c.traits[0] : null,
       generation:generation
     };
@@ -2262,8 +2567,11 @@ window.FB = window.FB || {};
     const s = r && FB.ensureRealmSuccession(state, line.realmId);
     const parent = s && s.members[line.memberId];
     if (!r || !s || !parent) return;
+    /* Match the pre-eager counter movement without letting it define the
+       durable member identity. */
+    FB.uid();
     const m = {
-      id: 'royal_' + r.id + '_' + FB.uid(),
+      id:courtMemberId(r, 'child_' + child.id),
       name: child.name,
       sex: child.sex,
       born: child.born,
@@ -2285,28 +2593,58 @@ window.FB = window.FB || {};
     FB.refreshRealmSuccession(state, r.id);
   };
 
-  FB.royalCharDied = function (state, c) {
-    if (!c || !c.royalLine) return;
+  FB.royalCharDied = function (state, c, reigningRealmId) {
+    if (!state || !state.realms || !c) return;
     const line = c.royalLine;
-    const r = state.realms[line.realmId];
-    const s = r && FB.ensureRealmSuccession(state, line.realmId);
+    const r = line && state.realms[line.realmId];
+    const s = r && (r.alive
+      ? FB.ensureRealmSuccession(state, line.realmId) : r.succession);
     const m = s && s.members[line.memberId];
-    if (!m) return;
-    m.alive = false;
-    if (s.rulerMemberId === m.id && r.alive) FB.advanceRealmSuccession(state, r.id);
-    else FB.refreshRealmSuccession(state, r.id);
+    const advanced = {};
+    if (m) {
+      m.alive = false;
+      if (s.rulerMemberId === m.id && r.alive) {
+        FB.advanceRealmSuccession(state, r.id);
+        advanced[r.id] = 1;
+      } else if (r.alive) {
+        FB.refreshRealmSuccession(state, r.id);
+      }
+    }
+    /* royalLine is the person's birth claim, not necessarily the throne they
+       currently wear. killChar captured the indexed crown before marking the
+       character dead. An ordinary court death therefore stops here instead
+       of scanning every realm; a real ruler still scans the roots so every
+       corrupted legacy duplicate advances along with the legitimate crown. */
+    if (!reigningRealmId) return;
+    for (const rid in state.realms) {
+      if (advanced[rid] || rid === 'player') continue;
+      const realm = state.realms[rid];
+      const succession = realm && realm.alive && realm.succession;
+      const root = succession && succession.rulerMemberId &&
+        succession.members && succession.members[succession.rulerMemberId];
+      if (!root || root.charId !== c.id) continue;
+      root.alive = false;
+      FB.advanceRealmSuccession(state, rid);
+      advanced[rid] = 1;
+    }
   };
 
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return;
     const parentId = s.rulerMemberId || null;
+    const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
+    let ordinal = 0;
+    let key = 'g' + generation + '_heir' + ordinal;
+    while (s.members[courtMemberId(r, key)]) {
+      ordinal++;
+      key = 'g' + generation + '_heir' + ordinal;
+    }
     /* Scoped like every other court draw, so a line repaired during the yearly
        tick and the same line repaired while loading an old save agree. */
     const m = newRoyalMember(state, r, parentId,
       Math.max(0, Math.min(8, r.ruler.age - 16)), {
-        scope:courtScope(state, r.id, 'g' +
-          (s.rulerGeneration === undefined ? 1 : s.rulerGeneration) + ':heir' +
-          Object.keys(s.members).length)
+        key:key,
+        scope:courtScope(state, r.id, key)
       });
     s.members[m.id] = m;
     if (parentId && s.members[parentId]) {
@@ -2319,18 +2657,25 @@ window.FB = window.FB || {};
 
   FB.advanceRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
+    if (!r || isPapalTerritorialRealm(state, rid) ||
+        (r.succession && r.succession.papalElective)) return null;
     const s = FB.ensureRealmSuccession(state, rid);
-    if (!r || !s) return null;
+    if (!s) return null;
     const formerPlayerAlliance = rid !== 'player' &&
       FB.areAllied(state, 'player', rid);
     FB.refreshRealmSuccession(state, rid);
     makeHeirIfEmpty(state, r, s);
     const outgoing = s.rulerMemberId && s.members[s.rulerMemberId];
-    if (outgoing && outgoing.charId) dropRulerIndex(outgoing.charId);
-    const heirId = s.order.shift();
+    const heirId = s.order[0];
     const heir = s.members[heirId];
     if (!heir) return null;
-    const c = heir.charId && state.chars[heir.charId];
+    let c = heir.charId && state.chars[heir.charId];
+    /* Accession itself is an eager-loading boundary. A collateral beyond the
+       displayed six can still inherit, so materialize that exact member on
+       its scoped court stream before reading any ruler fields. */
+    if (!c || c.dead) c = FB.materializeRoyalChild(state, rid, heirId);
+    if (!c || c.dead) return null;
+    s.order.shift();
     /* Read the heir as a person before installing them as ruler. Once the
        crown pointer changes, the typed facade correctly resolves that same
        character through the realm store instead. */
@@ -2338,16 +2683,17 @@ window.FB = window.FB || {};
       kind:'character', id:c.id
     }) : 0;
     s.rulerMemberId = heirId;
+    if (outgoing && outgoing.charId) dropRulerIndex(outgoing.charId);
     const children = orderedMemberIds(s, heirId);
     s.order = children.concat(s.order.filter(function (id) { return children.indexOf(id) < 0; }));
     r.ruler = {
-      name: c ? c.name : heir.name,
-      sex: c ? c.sex : heir.sex,
-      culture: c ? c.culture : r.ruler.culture,
-      born: c ? c.born : heir.born,
-      age: c ? FB.ageOf(c, state.date.year) : Math.max(0, state.date.year - heir.born),
-      mar: c ? FB.skillOf(c, 'mar') : FB.ri(2, 14),
-      trait: c && c.traits && c.traits.length ? c.traits[0] : FB.pick(FB.RULER_TRAITS),
+      name:c.name,
+      sex:c.sex,
+      culture:c.culture,
+      born:c.born,
+      age:FB.ageOf(c, state.date.year),
+      mar:realmMartial(state, c),
+      trait:c.traits && c.traits.length ? c.traits[0] : null,
       generation: (s.rulerGeneration || 1) + 1
     };
     s.rulerGeneration = r.ruler.generation;
@@ -3199,6 +3545,11 @@ window.FB = window.FB || {};
     FB.ensureDynasticState(state);
     if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
+    /* Family deaths invalidate the live index. This read-only snapshot stays
+       valid for retention and reverse-link cleanup for the rest of this
+       mortality pass, avoiding one full character rebuild per corpse. */
+    const familyLinks = FB.familyLinksSnapshot
+      ? FB.familyLinksSnapshot(state) : null;
 
     // realm AI
     for (const id in state.realms) {
@@ -3209,7 +3560,7 @@ window.FB = window.FB || {};
         FB.papacyTerritorialRealm(state, id);
       const papalClaimantId = FB.papacyClaimantForRealm &&
         FB.papacyClaimantForRealm(state, id);
-      if (!papalTerritorialRealm) tickRoyalFamily(state, id);
+      if (!papalTerritorialRealm) tickRoyalFamily(state, id, familyLinks);
       // a vassal house's standing at its liege's court drifts with the years
       if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
       // ruler ages & dies
@@ -3241,14 +3592,18 @@ window.FB = window.FB || {};
              per realm per generation and stops being bound by the map. */
           const compactRuler = !papalClaimantId && rulerMember &&
             rulerMember.charId === rulerChar.id && FB.courtRecordRetained &&
-            !FB.courtRecordRetained(state, rulerChar);
+            !FB.courtRecordRetained(state, rulerChar,
+              familyLinks && familyLinks.kinById);
           // A courted royal remains a full character after taking the throne.
           // Use the normal death path so marriage and role links also close;
           // royalCharDied advances the realm exactly once.
-          FB.killChar(state, rulerChar);
+          FB.killChar(state, rulerChar, { familyLinks:familyLinks });
           if (compactRuler && FB.compactCourtRecord) {
             rulerMember.alive = false;
-            FB.compactCourtRecord(state, rulerMember, rulerChar);
+            FB.compactCourtRecord(state, rulerMember, rulerChar, {
+              retentionChecked:true,
+              kinById:familyLinks && familyLinks.kinById
+            });
           }
           if (wasPlayerSpouse) {
             FB.news(state, FB.msg('news.life.spouse_died',
@@ -4265,7 +4620,7 @@ window.FB = window.FB || {};
     r.liege = p.liege || null;
     r.ruler = {
       name: me.name, sex: me.sex, culture: me.culture,
-      age: FB.ageOf(me, state.date.year), mar: FB.skillOf(me, 'mar'),
+      age: FB.ageOf(me, state.date.year), mar: realmMartial(state, me),
       generation: generation
     };
     const playerHeirs = FB.heirsOf ? FB.heirsOf(state) : [];
@@ -4293,7 +4648,8 @@ window.FB = window.FB || {};
     const p = state && state.player;
     const realm = state && state.realms && state.realms.player;
     if (!p || !realm || !realm.alive || !heir || heir.dead ||
-        !p.provs || !p.provs.length) return null;
+        !p.provs || !p.provs.length ||
+        FB.isReigningRealmRuler(state, heir)) return null;
 
     let rid = 'abdicated_player_' + state.turn;
     let suffix = 2;
@@ -4310,7 +4666,7 @@ window.FB = window.FB || {};
       culture:heir.culture,
       born:heir.born,
       age:FB.ageOf(heir, state.date.year),
-      mar:FB.skillOf(heir, 'mar'),
+      mar:realmMartial(state, heir),
       trait:heir.traits && heir.traits.length ? heir.traits[0] : null,
       generation:generation
     };
@@ -4460,7 +4816,7 @@ window.FB = window.FB || {};
       sex: rulerChar ? rulerChar.sex : state.chars[p.charId].sex,
       culture: rulerChar ? rulerChar.culture : state.chars[p.charId].culture,
       age: FB.ageOf(rulerChar || state.chars[p.charId], state.date.year),
-      mar: FB.skillOf(rulerChar || state.chars[p.charId], 'mar'),
+      mar: realmMartial(state, rulerChar || state.chars[p.charId]),
       generation: (mine.ruler && mine.ruler.generation !== undefined ? mine.ruler.generation : 1)
     };
     mine.religion = (rulerChar || state.chars[p.charId]).religion || mine.religion;

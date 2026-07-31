@@ -52,7 +52,21 @@ start code: `state.seed` also carries the scenario, province, sex, and name, and
 players sharing a world seed are promised the same political world whatever they then
 pick. For the same reason a court character's id is *derived* from its succession member
 (`FB.courtCharacterId`) rather than drawn from the sequential `FB.uid` counter, so eager
-and on-demand materialization agree on one identity.
+and on-demand materialization agree on one identity. The member id itself is also
+derived from the realm, generation, role, and stable member ordinal or linked character;
+it never embeds a sequential uid. A matching orphaned character record can be reclaimed,
+but an unrelated derived-id collision is never replaced by an unscoped fallback.
+Accession is itself an eager
+materialization boundary: if a compact collateral beyond the displayed court inherits,
+`FB.advanceRealmSuccession` creates that member's full character on the same scoped
+stream before copying any ruler fields. Succession therefore has no shared-stream
+fallback for Martial or ruler traits.
+
+The initial Papal realm is a compatibility exception in bookkeeping only. It starts
+directly with one elective root and creates no dynasty, but advances the discarded
+legacy child-count and member-id slots that the earlier dynastic initializer consumed.
+That keeps the fixed-seed non-court world aligned without letting those discarded values
+define a Pope, consort, heir, or court scope.
 
 ## Caveats
 

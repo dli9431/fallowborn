@@ -39,6 +39,15 @@ protagonist. Divorce, the royal spouse's death, or the protagonist's death ends 
 marriage-based military alliance, but already-born descendants keep their succession
 position.
 
+A living betrothal remains exclusive when either partner inherits. Accession never
+seeds or links a generated consort beside the pledge, so the ordinary age-sixteen
+`FB.doKinWedding` path can still complete it. A ruler who inherits before sixteen
+receives only a same-age compact future-consort reservation: no character, spouse link,
+or generated betrothal exists until both turn sixteen. A real pledge made meanwhile
+supersedes that reservation; otherwise the eager court ensure materializes and marries
+the pair at majority. Divorce and primary-spouse promotion invalidate the shared family
+index in the same operation, so relationship views update within the turn.
+
 A reigning ruler who marries the player does not join the managed household. The ordinary
 spouse links, station effects, royal compact, alliance, and children remain, but
 `FB.characterResidence` keeps that spouse at the realm’s current capital. They provide no
@@ -163,8 +172,9 @@ marriage. `FB.spouseSnapshot`, `FB.canWedSnapshot`, and
 save without performing spouse cleanup or succession repair; the explicit
 courtship action performs those compatibility repairs before revalidating.
 
-Royal children remain compact succession members until the player chooses the
-realm card's courtship route. That route materializes the selected child and
+Royal children in the bounded displayed court are eager character records; collateral
+branches outside it remain compact until accession or an explicit interaction needs
+them. The realm card's courtship route reuses or materializes the selected child and
 then uses the ordinary courtship and travel gates. A materialized reigning
 spouse links between personal and political sheets; the political side retains
 succession and ruler gifts while the personal side retains marriage and

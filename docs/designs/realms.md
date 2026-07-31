@@ -2,64 +2,87 @@
 
 ## Dynastic realm identity
 
-Every living rank-1 through rank-4 AI realm carries `realm.succession`: lightweight
+Every living dynastic rank-1 through rank-4 AI realm carries `realm.succession`: lightweight
 sons and daughters, a consort, a ruler-generation stamp, a single designated heir, and
 an ordered line. Sons precede daughters and older children precede younger ones. If the
 designated heir dies, that child's living descendants retain the branch's place before
-the heir's siblings.
+the heir's siblings. The Papal States instead carry a one-root `papalElective`
+succession whose order remains empty.
 
 **The living court is materialized eagerly; the dead compact back to members.** A realm
 opens on a real face and a full character card rather than a crest and one line, because
-its ruler, consort, and displayed heirs are ordinary `state.chars` records from world
-creation. `FB.materializeRoyalChild`, `FB.materializeRealmRuler`, and
+its ruler, adult consort, and displayed heirs are ordinary `state.chars` records from
+world creation. `FB.materializeRoyalChild`, `FB.materializeRealmRuler`, and
 `FB.materializeRealmConsort` are the only three creation paths, and they are the same
 ones a player's first courtship has always used; eagerness only calls them earlier. How
 much of a court exists up front is the single `COURT_EAGERNESS` constant at the top of
 `js/world.js` - `'court'` (ruler, consort, and heirs) or `'ruler'` - so the setting can
 be re-tuned from one line after profiling. The record count stays bound by the map
 rather than by campaign length: see the compaction rule in
-[characters.md](characters.md).
+[characters.md](characters.md). Eager loading and the realm UI both take their bounded
+six-member set from `FB.realmFamilySnapshot`; the mutating `FB.realmFamily` ensure path
+delegates to the same order, so equal-age members cannot differ between loading and
+display.
 
 `FB.materializeRealmRuler` creates or reuses the current `succession.rulerMemberId`,
 reparents the existing compact children beneath that member, and attaches one ordinary
-character with the ruler’s saved identity, culture, faith, age, Martial, trait, station,
-and current political standing. `FB.realmRulerCharacter`,
+character with the ruler’s saved identity, culture, faith, age, effective Martial,
+trait, station, and current political standing. `FB.realmRulerCharacter`,
 `FB.realmIdForRulerCharacter`, and `FB.isReigningRealmRuler` preserve that identity
 through sheets, gifts, marriage, and succession. Personal and political Standing are one
 synchronized score while the character reigns. The typed facade routes that person
 through the realm backing store, so character and realm interactions cannot diverge.
 
-**The consort is a succession member with `role: 'consort'`.** One is seeded per ruler
-generation, of the opposite sex to the ruler and of a plausible age, and married to the
-ruler through the ordinary spouse fields so `FB.spousesOf` reports the pair. A consort
+**The consort is a succession member with `role: 'consort'`.** One is seeded per
+uncommitted ruler generation, of the opposite sex to the ruler and of a plausible age.
+An adult pair is married through the ordinary spouse fields so `FB.spousesOf` reports
+them; a child ruler instead gets a similarly aged compact reservation with no character
+or relationship link until both are sixteen. A consort
 is **excluded from the succession by that explicit role and never by parent grouping** -
 a consort's `parentId` is legitimately `null`, which is exactly what
 `FB.refreshRealmSuccession`'s order fallback matches when there is no ruler root, and it
 is also as much of the intent as a build without the `role` concept can read. Consorts
 of past generations stay in the tree as dated tombstones and are never read as the
-sitting spouse; `FB.realmConsortMember` and `FB.realmConsortCharacter` resolve only the
-current generation's. There is no AI remarriage, so a generation whose consort has died
-simply has none.
+sitting spouse; `FB.realmConsortMember` resolves the current generation's reservation,
+while `FB.realmConsortCharacter` resolves it only once it is an actual marriage. There
+is no AI remarriage, so a generation whose consort has died simply has none.
 
-**A ruler who already has a spouse is never handed a second.** The case that matters is
-an heir the protagonist married taking the throne: seeding a consort beside that
-marriage would put two spouses on one character whatever the faith's doctrine allows.
-Both the seeding and the linkage test for a living spouse through
-`FB.spousesSnapshot`, on both people, because a wife's `spouseId` points at her husband
-while his holds only the first - so a wed ruler can otherwise read as unmarried on his
-own record. Whether anyone may hold more than one spouse belongs to the marriage system,
-and this path must never answer it by accident. A consequence worth knowing: a consorted
-ruler fails the courtship gate's married check, so the player courts royal children
-rather than reigning rulers unless a throne is widowed. Saves written before consorts existed keep their current generation
+**A ruler who already has a spouse or living betrothal is never handed another.** The
+cases that matter are an heir the protagonist married taking the throne and a foreign
+heir pledged to the protagonist's child: seeding a consort beside either commitment
+would silently create two partners and block the promised wedding. Both the seeding and
+the linkage test use the ordinary spouse and betrothal fields, with
+`FB.spousesSnapshot` checking the reverse spouse direction because a wife's `spouseId`
+points at her husband while his holds only the first. Whether anyone may hold more than
+one spouse belongs to the marriage system, and this path must never answer it by
+accident. A child accession can therefore reserve its generated match without becoming
+unavailable for a real pledge; the reservation becomes an ordinary marriage only once
+both are sixteen and only if no outside commitment has superseded it. A
+consequence worth knowing: a consorted ruler fails the courtship gate's married check,
+so the player courts royal children rather than reigning rulers unless a throne is
+widowed. Saves written before consorts existed keep their current generation
 unchanged - inventing a spouse for a ruler twenty years into a reign reads worse than
 waiting, so those courts gain one at their next succession.
 
 **A succession is continuity of person, not a re-roll.** `FB.advanceRealmSuccession`
-promotes the heir's existing record rather than building a fresh stub with a newly drawn
-Martial score and temper, so the heir a player spent years cultivating is the ruler who
-takes the throne. `FB.realmRulerCharacter` remains the one place character fields are
-pushed back onto `realm.ruler`, keeping that stub a projection of the record rather than
-a rival truth.
+eagerly materializes the exact heir on their scoped court stream, then promotes that
+record rather than building a fresh stub with a newly drawn Martial score and temper.
+This applies even to a collateral beyond the six displayed relatives, so succession
+never consumes the shared world RNG. The heir a player spent years cultivating is the
+ruler who takes the throne. `FB.realmRulerCharacter` remains the one place character
+fields are pushed back onto `realm.ruler`, keeping that stub a projection of the record
+rather than a rival truth.
+That projection uses `FB.skillSnapshot`, as accession does, so trait and equipment
+Martial modifiers remain part of the war-strength stub instead of being overwritten by
+the raw trained value.
+
+Succession-member ids are derived from realm id, ruler generation, role, and stable
+member ordinal or character id. They never embed `FB.uid`, so founding or repairing a
+realm midway through a year cannot make court identity depend on which character sheet
+the player opened first. Character ids remain a direct `FB.courtCharacterId(memberId)`
+mapping. A materializer reclaims an orphan only when its `royalLine` names that exact
+member; an unrelated collision is left untouched and never triggers a sequential-id
+fallback.
 
 **`FB.isReigningRealmRuler` is answered from a derived index.** `realmIdForRulerCharacter`
 resolves a reigning ruler through a module-private `charId → realmId` map in
@@ -76,6 +99,24 @@ authoritative for AI aging, death, and succession; eager records add presence, n
 simulation. The player's own yearly mortality pass exempts every court character it
 has no navigable tie to, and `tickRoyalFamily` rolls exactly those. The two conditions
 are exact complements, so no court character is rolled twice and none is immortal.
+The court curve is scaled by `balance.mortalityBase`, matching the protagonist and
+household curves.
+A character may retain their birth `royalLine` after receiving a different crown;
+their birth family's tick therefore also exempts every character for whom
+`FB.isReigningRealmRuler` is true. Character death closes the birth member and scans
+living ruler roots to advance the throne actually worn. `FB.ensureDynasticState`
+immediately advances any living realm whose ruler member is already dead, so load or
+realm revival never waits inside the yearly mortality chance and never resurrects a
+compacted ruler. The county and duchy grant revival paths call the narrow
+`FB.ensureRealmCourt` form before returning.
+
+The yearly pass takes one read-only snapshot of the shared family index after ensure
+work. Court retention reads its cached `kinById`, and death cleanup reads the snapshot's
+reverse spouse and betrothal maps. Each death may invalidate the live index without
+forcing another full `state.chars` rebuild; compaction trusts the retention decision
+captured before `FB.killChar` severed those links. A generated former spouse is also
+retained while they parent a living player descendant, so detaching an unobserved court
+record cannot erase that descendant's mother or father.
 
 The special `state.realms.player` node is the player's landed realm, not a synonym for
 independence. It may have a `liege`; `state.owner` continues to name the top sovereign
@@ -153,7 +194,10 @@ religion, technology, and any religious-head office, while rewriting ownership,
 holder, vassal-liege, and live realm references from the player id to the new AI
 id. Because the realm never dies, this path creates no usurper, vacancy,
 restoration right, or death effects. Existing player-realm alliances end at the
-handoff. A tier-3 barony has no realm node to convert; relinquishing it simply
+handoff. The lawful heir is rejected if they already reign over another living
+realm, preserving the one-character/one-throne invariant instead of leaving two
+realm roots mapped to one character. A tier-3 barony has no realm node to convert;
+relinquishing it simply
 returns that local office to the county’s count.
 
 ## Religious head offices
@@ -334,12 +378,13 @@ count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearl
 tick): the fief escheats to the liege unless a bordering player of the same sovereign
 wins the scramble (Standing with the liege, prestige, service) — and heirless fiefs of the
 player's own vassals simply return to the player's hand.
-AI rulers ordinarily stay lightweight `realm.ruler` objects (name, culture, age, martial,
-and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal council reads
-at king tier and up). The Deeds banner's "vassal of X" links to their realm sheet via
-`UI.showLiegeModal` (`data-liege` click delegation); after cultivation materializes the
-ruler, both the top identity card and **Open full character sheet** action on that sheet
-link to the full character sheet. The cultivation action uses
+AI realms retain a lightweight `realm.ruler` projection (name, culture, age, effective
+Martial, and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal
+council reads at king tier and up), but every living ruler is backed by a full eager
+character. The Deeds banner's "vassal of X" links to their realm sheet via
+`UI.showLiegeModal` (`data-liege` click delegation); both the top identity card and
+**Open full character sheet** action on that sheet link to the full character sheet.
+The cultivation action uses
 the ordinary relationship visit to the current capital, including normal route cost and
 the 90-day minimum stay; attention advances only while the player is physically there. See
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great

@@ -637,7 +637,7 @@ in [`docs/MODDING.md`](../MODDING.md) with the rest of the realm contracts.
 
 ## As implemented: where the build differs from this plan
 
-Seven decisions the implementation settled that the plan left open or did not foresee.
+Nine decisions the implementation settled that the plan left open or did not foresee.
 
 - **Court scopes key on the world seed and bookmark, not `state.seed`.** `state.seed`
   stores the whole start code, including the player's scenario, province, sex, and name.
@@ -656,26 +656,34 @@ Seven decisions the implementation settled that the plan left open or did not fo
   ruler and the player's mortality pass compacts an unretained former royal.
 - **Retention is always read before `FB.killChar`, never after.** That path severs the
   links `FB.courtRecordRetained` consults, so a dead spouse asked about afterwards reads
-  as a stranger and loses their record. Both death paths capture the answer first; the
-  re-check inside `FB.compactCourtRecord` is a one-way net that can only refuse.
+  as a stranger and loses their record. Both death paths capture the answer first. The
+  yearly mortality passes also reuse one same-tick family snapshot and mark that answer
+  checked for compaction, avoiding an index rebuild for every dead court member; direct
+  callers retain the defensive re-check.
 - **No consort backfill for an existing generation**, per this plan's stated preference.
   Old saves gain consorts as generations turn over rather than acquiring a spouse for a
   ruler who has reigned twenty years. A dowager keeps her member entry, stamped with the
   generation she belonged to, and is never read as the sitting consort.
+- **A minor ruler reserves rather than receives a consort.** The similarly aged member
+  remains compact and unlinked until both are sixteen. An outside betrothal can supersede
+  it without competing with a generated character relationship.
 - **Milestone 7 is one shared family index rather than three separate memos.**
   `FB.kinOf`, `FB.spousesOf`, and `FB.stepchildrenOf` read one derived index in
   `js/model.js`, invalidated by `FB.touchFamily` at the family-mutating writers and
   additionally keyed on `state.turn`. `childrenOf`'s reconciliation scan was **not**
   deleted, per this plan's warning; only its per-relative cost was.
+- **Death cleanup uses that same index.** Its reverse spouse and betrothal maps replace
+  the former full `state.chars` scan in `FB.killChar`; a death-heavy year therefore
+  performs one indexed pass, not one pass per corpse.
 - **The consort is not modeled as the mother of the ruler's children.** The compact tree
   gives a member one `parentId`, so char-level maternity would assert a link the
   tombstone layer cannot carry through a compaction or a reload. The court strip labels
-  her Consort and the heirs Son/Daughter, which reads correctly without it.
+  the partner Consort and the heirs Son/Daughter, which reads correctly without it.
 
 ## Acceptance criteria
 
-1. Opening any realm shows a face and a full card for the ruler, plus a consort and
-   heirs, with no crest-only fallback for a living realm.
+1. Opening any realm shows a face and a full card for the ruler, plus an adult consort
+   where eligible and heirs, with no crest-only fallback for a living realm.
 2. Two new games on the same seed produce identical courts, and the non-court world is
    unchanged from a pre-plan build on that seed.
 3. `FB.isReigningRealmRuler` agrees with a brute-force realm scan in every tested

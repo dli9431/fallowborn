@@ -77,9 +77,13 @@ needed by the player's genealogy remains as a minimal deceased character.
 
 ## Vacancy and election
 
-The Papal States never use dynastic succession. The Pope's death starts an election in
-that obedience and leaves its Roman territory under the Camerlengo. Existing saves
-migrate without replacing their incumbent Pope.
+The Papal States never use dynastic succession. World court initialization recognizes
+the bookmark's Catholic territorial head before materializing a dynastic household, and
+`FB.ensurePapacy` installs the incumbent's `papalElective` ruler root from the first
+frame rather than waiting for the first conclave. Affected older saves keep the same
+incumbent character while the invented consort, child links, and dynastic succession
+roles are retired. The Pope's death starts an election in that obedience and leaves its
+Roman territory under the Camerlengo.
 
 | Years | Saved election law |
 |---|---|
@@ -185,3 +189,5 @@ Without a lawful dynasty successor, the ordinary game-over path remains.
 head realm's ruler as incumbent, generates a date-appropriate starter College, seeds
 regnal counts, and preserves the incumbent until death. Save/load can occur during a
 vacancy, ballot, name choice, schism, sanction, or policy dispute without special handling.
+Character-keyed sanction grounds are removed in `FB.papacyCharacterDied`; the sanction
+cannot outlive its target and the grounds table does not accumulate stale court ids.

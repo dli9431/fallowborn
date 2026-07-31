@@ -788,9 +788,15 @@ window.FB = window.FB || {};
     me.spouseId = null;
     for (const id in state.chars) {
       const o = state.chars[id];
-      if (!o.dead && o.spouseId === me.id) { me.spouseId = o.id; state.roles.spouse = o.id; return; }
+      if (!o.dead && o.spouseId === me.id) {
+        me.spouseId = o.id;
+        state.roles.spouse = o.id;
+        if (FB.touchFamily) FB.touchFamily();
+        return;
+      }
     }
     delete state.roles.spouse;
+    if (FB.touchFamily) FB.touchFamily();
   };
 
   FB.endRoyalCompact = function (state, sp) {
@@ -834,6 +840,7 @@ window.FB = window.FB || {};
     FB.noteRivalContact(state, sp, 2, 'divorce');
     FB.promoteSpouse(state);
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, sp.id);
+    if (FB.touchFamily) FB.touchFamily();
   };
 
   /* A marriage transfer is defined from the managed house's point of view.
@@ -1044,8 +1051,15 @@ window.FB = window.FB || {};
   /* The one true way to kill a character: severs marriage links and roles.
      A death also unmakes any betrothal, and a dowry settled at the pledge
      but not yet wed for returns to the player's coffers. */
-  FB.killChar = function (state, c) {
+  FB.killChar = function (state, c, opts) {
     if (!c || c.dead) return;
+    opts = opts || {};
+    const familyLinks = opts.familyLinks ||
+      (FB.familyLinksSnapshot ? FB.familyLinksSnapshot(state) : null);
+    const reverseSpouses = familyLinks && familyLinks.spouses[c.id] || [];
+    const reverseBetrotheds = familyLinks && familyLinks.betrotheds[c.id] || [];
+    const reigningRealmId = FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(state, c) : null;
     const me = state.chars[state.player.charId];
     const papalClaimant = FB.isPapalClaimant && FB.isPapalClaimant(state, c);
     FB.socialAttentionWithdraw(state, c.id, true);
@@ -1065,16 +1079,21 @@ window.FB = window.FB || {};
     if (FB.dropRulerIndexEntry) FB.dropRulerIndexEntry(c.id);
     if (FB.touchFamily) FB.touchFamily();
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(state, c.id);
-    if (!papalClaimant && FB.royalCharDied) FB.royalCharDied(state, c);
+    if (!papalClaimant && FB.royalCharDied) {
+      FB.royalCharDied(state, c, reigningRealmId);
+    }
     if (c.betrothedId && c.dowryAsk) {
       state.player.gold += c.dowryAsk;
       delete c.dowryAsk;
     }
     c.betrothedId = null;
-    for (const id in state.chars) {
-      if (state.chars[id].spouseId === c.id) state.chars[id].spouseId = null;
-      if (state.chars[id].betrothedId === c.id) {
-        const o = state.chars[id];
+    for (const id of reverseSpouses) {
+      const o = state.chars[id];
+      if (o && o.spouseId === c.id) o.spouseId = null;
+    }
+    for (const id of reverseBetrotheds) {
+      const o = state.chars[id];
+      if (o && o.betrothedId === c.id) {
         o.betrothedId = null;
         if (o.dowryAsk) { state.player.gold += o.dowryAsk; delete o.dowryAsk; }
       }

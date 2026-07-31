@@ -10,7 +10,17 @@ records through `FB.ensureDynasticState`, already called on restore. A save writ
 stays readable by an older build, but degrades: court members that are not reigning
 rulers fall back under that build's player mortality loop, compaction does not run, and
 a consort with a null `parentId` can be read as an heir where there is no `role` concept
-to exclude it.
+to exclude it. The same ensure pass treats a dead current ruler as a succession repair,
+whether the full dead record was retained or already compacted; it advances and eagerly
+loads the living successor instead of resurrecting the old member or waiting for a
+yearly mortality roll.
+
+Death compaction captures its retention answer before relationship cleanup and may
+reuse the year pass's family snapshot. In addition to direct player relationships,
+roles, attention, travel, offices, equipment, and genealogy, a court record is retained
+while it parents a living player descendant. Papal sanction grounds are transient
+character-keyed state and are deleted when that character dies rather than preserving
+an otherwise stale id.
 
 **The reigning-ruler index must not live on `state`.** `S.serialize` dumps `state`
 wholesale, so a `charId → realmId` map hung there would be written into every save as
@@ -248,8 +258,9 @@ the player-facing system.
 On protagonist succession, every character and realm score resets to neutral because
 the save stores only relationships with the outgoing protagonist, not an heir/counterpart
 matrix. Explicit inherited commitments may then apply a bounded new modifier (retainers
-renew at −15). On AI ruler succession, an unmaterialized heir starts neutral; a
-materialized heir preserves the score already tracked with that exact person.
+renew at −15). On AI ruler succession, a displayed heir preserves the score already
+tracked with that exact person. A compact collateral is first materialized on its scoped
+court stream and starts neutral before that same record takes the throne.
 
 `player.foreignPolicy` stores the current ruler’s political-attention assignments as
 realm-id keys with `1` (Improve) or `-1` (Provoke). It is lazily initialized, so older

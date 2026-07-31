@@ -1,0 +1,64 @@
+{
+  "sourceRevision": "249b935",
+  "sourceVersion": "1.95.0",
+  "projection": {
+    "startCode": "CADENCE-867-farmer-london-f-Ada",
+    "date": {
+      "year": 867,
+      "season": 0
+    },
+    "playerProvince": "london",
+    "provinces": {
+      "london": {
+        "owner": "mercia",
+        "holder": "d_essex",
+        "development": 3
+      },
+      "paris": {
+        "owner": "west_francia",
+        "holder": "west_francia",
+        "development": 5
+      },
+      "constantinople": {
+        "owner": "byzantium",
+        "holder": "byzantium",
+        "development": 10
+      },
+      "baghdad": {
+        "owner": "abbasid",
+        "holder": "abbasid",
+        "development": 10
+      }
+    },
+    "realms": {
+      "mercia": {
+        "name": "Mercia",
+        "capital": "tamworth",
+        "rank": 3,
+        "liege": null,
+        "religion": "catholic"
+      },
+      "west_francia": {
+        "name": "West Francia",
+        "capital": "paris",
+        "rank": 3,
+        "liege": null,
+        "religion": "catholic"
+      },
+      "byzantium": {
+        "name": "Byzantine Empire",
+        "capital": "constantinople",
+        "rank": 4,
+        "liege": null,
+        "religion": "orthodox"
+      },
+      "abbasid": {
+        "name": "Abbasid Caliphate",
+        "capital": "baghdad",
+        "rank": 4,
+        "liege": null,
+        "religion": "sunni"
+      }
+    }
+  }
+}

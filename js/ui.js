@@ -1605,7 +1605,8 @@ window.FB = window.FB || {};
     if (pk !== portraitKey) {
       portraitKey = pk;
       FB.paintPortrait($('tb-portrait'), me, s.date.year, {
-        state:s, profession:s.player.profession, tier:s.player.tier
+        state:s, profession:s.player.profession, tier:s.player.tier,
+        ill:!!s.player.flags.ill
       });
       FB.drawCrest($('crest'), me.dyn || me.name);
     }
@@ -8805,32 +8806,7 @@ window.FB = window.FB || {};
   }
 
   function realmFamilySnapshot(s, rid) {
-    const realm = s.realms[rid];
-    const succession = realm && realm.succession;
-    if (!succession || !succession.members) return [];
-    const ids = [];
-    const parentId = succession.rulerMemberId || null;
-    for (const id in succession.members) {
-      const member = succession.members[id];
-      /* The consort is shown beside the ruler, never in the line of
-         succession - excluded by the explicit role, as everywhere else. */
-      if (member && member.role === 'consort') continue;
-      if (member && member.alive !== false &&
-          (member.parentId || null) === parentId) ids.push(id);
-    }
-    ids.sort(function (a, b) {
-      const am = succession.members[a], bm = succession.members[b];
-      return (am.sex === bm.sex ? 0 : (am.sex === 'm' ? -1 : 1)) ||
-        (am.born || 0) - (bm.born || 0) ||
-        String(a).localeCompare(String(b));
-    });
-    for (const id of succession.order || []) {
-      const member = succession.members[id];
-      if (member && member.alive !== false && ids.indexOf(id) < 0) ids.push(id);
-    }
-    return ids.slice(0, 6).map(function (id) {
-      return succession.members[id];
-    });
+    return FB.realmFamilySnapshot ? FB.realmFamilySnapshot(s, rid) : [];
   }
 
   function realmCultivationPreview(s, rid, rulerCharacter) {

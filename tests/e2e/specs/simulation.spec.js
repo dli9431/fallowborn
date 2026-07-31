@@ -107,3 +107,65 @@ test('year-boundary work does not grow with the character record count',
       };
     })).toEqual({ grew:true, boundedPerRecord:true, manyRealms:true });
   });
+
+test('a death-heavy realm rollover reuses one family snapshot',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The rollover shape check runs against the primary file target.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const originalSnapshot = FB.familyLinksSnapshot;
+      const originalKin = FB.kinOf;
+      const originalChance = FB.chance;
+      const originalMortality = FBDATA.balance.mortalityBase;
+      let snapshots = 0;
+      let kinReads = 0;
+      let deaths = 0;
+      for (const rid in s.realms) {
+        const succession = s.realms[rid] && s.realms[rid].succession;
+        if (!succession) continue;
+        for (const memberId in succession.members) {
+          const member = succession.members[memberId];
+          if (member && memberId !== succession.rulerMemberId) {
+            member.born = s.date.year - 90;
+          }
+        }
+      }
+      FB.familyLinksSnapshot = function (state) {
+        snapshots++;
+        return originalSnapshot(state);
+      };
+      FB.kinOf = function (state) {
+        kinReads++;
+        return originalKin(state);
+      };
+      FBDATA.balance.mortalityBase = 0.024;
+      FB.chance = function (q) {
+        /* A 90-year-old court member has .25 base mortality, doubled by the
+           balance knob. Keep realm rulers and unrelated yearly rolls alive. */
+        if (Math.abs(q - 0.5) < 0.0000001) {
+          deaths++;
+          return true;
+        }
+        return false;
+      };
+      try {
+        s.date.year++;
+        s.turn += 360;
+        FB.worldTick(s);
+      } finally {
+        FB.familyLinksSnapshot = originalSnapshot;
+        FB.kinOf = originalKin;
+        FB.chance = originalChance;
+        FBDATA.balance.mortalityBase = originalMortality;
+      }
+      return {
+        manyDeaths:deaths > 20,
+        snapshots:snapshots,
+        kinReads:kinReads
+      };
+    })).toEqual({ manyDeaths:true, snapshots:1, kinReads:1 });
+  });

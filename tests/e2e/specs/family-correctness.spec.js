@@ -499,6 +499,56 @@ test('the memoized kin walk tracks marriages, births, deaths, and consorts',
     });
   });
 
+test('divorce and spouse promotion invalidate family views in the same turn',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const first = FB.makeCharacter(s, {
+        name:'First Spouse',
+        sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year - 22,
+        traitsN:0
+      });
+      me.spouseId = first.id;
+      first.spouseId = me.id;
+      FB.touchFamily();
+      const beforeDivorce = FB.spousesOf(s, me).length;
+      FB.doDivorce(s, first.id);
+      const afterDivorce = FB.spousesOf(s, me).length;
+
+      const next = FB.makeCharacter(s, {
+        name:'Next Spouse',
+        sex:first.sex,
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year - 21,
+        traitsN:0
+      });
+      next.spouseId = me.id;
+      FB.touchFamily();
+      FB.spousesOf(s, me);
+      FB.promoteSpouse(s);
+      return {
+        sawMarriage:beforeDivorce === 1,
+        divorceVisible:afterDivorce === 0,
+        promoted:me.spouseId === next.id &&
+          s.roles.spouse === next.id,
+        promotionVisible:FB.spousesOf(s, me).some(function (spouse) {
+          return spouse.id === next.id;
+        })
+      };
+    })).toEqual({
+      sawMarriage:true,
+      divorceVisible:true,
+      promoted:true,
+      promotionVisible:true
+    });
+  });
+
 test('a materialized consort links to the ruler in both directions',
   async function ({ page }) {
     await startWithCode(page, 'CONSORT-867-farmer-london-f-Ada', 'Ada');

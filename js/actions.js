@@ -2704,18 +2704,20 @@ window.FB = window.FB || {};
     if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) return;
     p.provs.splice(p.provs.indexOf(pid), 1);
     const vid = 'pv_' + pid;
+    let revivedCourt = false;
     if (state.realms[vid]) {
       state.realms[vid].alive = true;
       state.realms[vid].liege = 'player';
-      /* A revived realm brings its ruler back with it. Rebuild the derived
-         reigning-ruler index rather than leave a miss that would read as
-         "does not reign" until the next world tick healed it. */
-      if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+      revivedCourt = true;
     } else {
       FB.makeVassalRealm(state, { id: vid, name: 'County of ' + pr.name, capital: pid, rank: 1, liege: 'player', culture: pr.culture });
     }
     state.holder[pid] = vid;
     state.owner[pid] = FB.playerRealmId(state) || 'player';
+    /* Repair after the county is attached, so an heir who is the protagonist
+       can absorb the revived demesne through ordinary succession. */
+    if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
+    else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
       'deed:grant_county');
     FB.invalidateRealmCache();
@@ -2757,14 +2759,12 @@ window.FB = window.FB || {};
     for (const pid of cs) if ((state.dev[pid] || 1) > (state.dev[seat] || 1)) seat = pid; // richest = ducal seat
     const dname = (FBDATA.duchies[did] || {}).name || did;
     const vid = 'pd_' + did;
+    let revivedCourt = false;
     if (state.realms[vid]) {
       state.realms[vid].alive = true;
       state.realms[vid].liege = 'player';
       state.realms[vid].capital = seat;
-      /* A revived realm brings its ruler back with it. Rebuild the derived
-         reigning-ruler index rather than leave a miss that would read as
-         "does not reign" until the next world tick healed it. */
-      if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+      revivedCourt = true;
     } else {
       FB.makeVassalRealm(state, { id: vid, name: 'Duchy of ' + dname, capital: seat, rank: 2, liege: 'player', culture: (FB.world.byId[seat] || {}).culture });
     }
@@ -2773,6 +2773,10 @@ window.FB = window.FB || {};
       state.holder[pid] = vid;
       state.owner[pid] = FB.playerRealmId(state) || 'player';
     }
+    /* Keep revival identical for retained and compacted dead ruler records:
+       the successor is eagerly loaded before the grant returns. */
+    if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
+    else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
       'deed:grant_duchy');
     FB.invalidateRealmCache();

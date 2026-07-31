@@ -527,7 +527,11 @@ window.FB = window.FB || {};
       roman = makeObedience(state, papacy.romanObedience,
         authorityDefault(state), incumbent && incumbent.id, true);
       papacy.obediences[roman.id] = roman;
-      if (incumbent) installIncumbentRecord(state, papacy, incumbent, roman);
+      if (incumbent) {
+        installIncumbentRecord(state, papacy, incumbent, roman);
+        retireDynasticPapalCourt(state, rid, incumbent);
+        syncPapalRealmRuler(state, roman, incumbent);
+      }
       generateStarterCollege(state, papacy, roman);
     }
     roman.roman = true;
@@ -540,6 +544,22 @@ window.FB = window.FB || {};
         roman.claimantId = repaired.id;
         installIncumbentRecord(state, papacy, repaired, roman);
       }
+    }
+    /* The Papal States are elective from the first bookmark frame, not only
+       after the first conclave. Normalize older affected saves as well: their
+       incumbent survives, but an accidentally seeded wife and heirs cease to
+       be the Pope's family or the realm's succession. */
+    var claimant = roman.claimantId && state.chars[roman.claimantId];
+    var romanRealm = rid && state.realms[rid];
+    var romanSuccession = romanRealm && romanRealm.succession;
+    var romanRoot = romanSuccession && romanSuccession.rulerMemberId &&
+      romanSuccession.members &&
+      romanSuccession.members[romanSuccession.rulerMemberId];
+    if (claimant && !claimant.dead && romanRealm &&
+        (!romanSuccession || !romanSuccession.papalElective ||
+          !romanRoot || romanRoot.charId !== claimant.id)) {
+      retireDynasticPapalCourt(state, rid, claimant);
+      syncPapalRealmRuler(state, roman, claimant);
     }
 
     var sovereigns = livingCatholicSovereigns(state);
@@ -850,7 +870,8 @@ window.FB = window.FB || {};
       culture:c.culture,
       born:c.born,
       age:FB.ageOf(c, state.date.year),
-      mar:FB.skillOf(c, 'mar'),
+      mar:FB.skillSnapshot
+        ? FB.skillSnapshot(state, c, 'mar') : FB.skillOf(c, 'mar'),
       trait:c.traits && c.traits[0] || null,
       generation:generation,
       interregnum:true
@@ -1141,7 +1162,8 @@ window.FB = window.FB || {};
       culture:c.culture,
       born:c.born,
       age:FB.ageOf(c, state.date.year),
-      mar:FB.skillOf(c, 'mar'),
+      mar:FB.skillSnapshot
+        ? FB.skillSnapshot(state, c, 'mar') : FB.skillOf(c, 'mar'),
       trait:c.traits && c.traits[0] || null,
       generation:generation,
       papal:true
@@ -1162,6 +1184,63 @@ window.FB = window.FB || {};
     if (FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
     c.papalRealmId = rid;
     c.homeProvinceId = 'roma';
+    if (!c.royalLine || c.royalLine.realmId === rid) {
+      c.royalLine = { realmId:rid, memberId:rootId };
+    }
+  }
+
+  /* Early eager-court builds could seed a secular household before the Papacy
+     migration installed its elective marker. Preserve the ordinary records,
+     but remove the invented family links and royal-line roles. A player who
+     encountered one of these people therefore keeps the person, while the
+     Pope and Papal States immediately recover their intended structure. */
+  function retireDynasticPapalCourt(state, rid, claimant) {
+    var realm = state.realms[rid];
+    var succession = realm && realm.succession;
+    if (!succession || succession.papalElective || !succession.members) return;
+    var changed = false;
+    for (var memberId in succession.members) {
+      var member = succession.members[memberId];
+      var c = member && member.charId && state.chars[member.charId];
+      if (!c || c.id === claimant.id) continue;
+      if (claimant.spouseId === c.id) {
+        claimant.spouseId = null;
+        changed = true;
+      }
+      if (c.spouseId === claimant.id) {
+        c.spouseId = null;
+        changed = true;
+      }
+      if (claimant.betrothedId === c.id) {
+        claimant.betrothedId = null;
+        changed = true;
+      }
+      if (c.betrothedId === claimant.id) {
+        c.betrothedId = null;
+        changed = true;
+      }
+      if (c.fatherId === claimant.id) {
+        c.fatherId = null;
+        changed = true;
+      }
+      if (c.motherId === claimant.id) {
+        c.motherId = null;
+        changed = true;
+      }
+      if (c.royalLine && c.royalLine.realmId === rid &&
+          c.royalLine.memberId === memberId) {
+        delete c.royalLine;
+        changed = true;
+      }
+      if (claimant.childrenIds) {
+        var at = claimant.childrenIds.indexOf(c.id);
+        if (at >= 0) {
+          claimant.childrenIds.splice(at, 1);
+          changed = true;
+        }
+      }
+    }
+    if (changed && FB.touchFamily) FB.touchFamily();
   }
 
   function enterPlayerPapalOffice(state, obedience) {
@@ -2455,6 +2534,7 @@ window.FB = window.FB || {};
       papacy.archive.push(compactArchiveRecord(state, c, record));
       delete papacy.cardinals[c.id];
     }
+    delete papacy.grounds[c.id];
     removeDeadCardinalSocialState(state, c);
     if (record && !opts.preserve && !neededByPlayerGenealogy(state, c)) {
       delete state.chars[c.id];

@@ -9,6 +9,8 @@
    those fails silently in play and loudly only if asserted. */
 
 const { test, expect } = require('../support/fixture');
+const nonCourtWorldFixture =
+  require('../fixtures/pre-eager-courts-world.json');
 const {
   START_CODE,
   injectBrowserHarness,
@@ -21,7 +23,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('every living realm opens on a full ruler record, a consort and heirs',
+test('every living realm opens on a full ruler and every eligible court has a consort',
   async function ({ page }) {
     const report = await page.evaluate(function () {
       const s = FB.state;
@@ -32,8 +34,14 @@ test('every living realm opens on a full ruler record, a consort and heirs',
       }
       ids.sort();
       const sample = ids.slice(0, 40);
+      const papalRid = s.religiousHeads && s.religiousHeads.catholic;
+      if (papalRid && ids.indexOf(papalRid) >= 0 &&
+          sample.indexOf(papalRid) < 0) {
+        sample.push(papalRid);
+      }
       const faults = [];
       let withConsort = 0;
+      let expectedConsorts = 0;
       for (const rid of sample) {
         const ruler = FB.realmRulerCharacterSnapshot(s, rid);
         if (!ruler) { faults.push(rid + ': no ruler record'); continue; }
@@ -49,29 +57,115 @@ test('every living realm opens on a full ruler record, a consort and heirs',
             ruler.health === undefined) {
           faults.push(rid + ': ruler record is incomplete');
         }
+        if (s.realms[rid].ruler.mar !==
+            FB.skillSnapshot(s, ruler, 'mar')) {
+          faults.push(rid + ': ruler Martial projection is stale');
+        }
+        const papal = FB.papacyTerritorialRealm &&
+          FB.papacyTerritorialRealm(s, rid);
+        const adult = FB.ageOf(ruler, s.date.year) >= 16;
+        const expectsConsort = !papal && adult;
+        if (expectsConsort) expectedConsorts++;
         const consort = FB.realmConsortCharacter(s, rid);
         if (consort) {
           withConsort++;
+          if (!expectsConsort) faults.push(rid + ': ineligible ruler has a consort');
           if (consort.sex === ruler.sex) faults.push(rid + ': consort shares the ruler sex');
-          if (consort.spouseId !== ruler.id && ruler.spouseId !== consort.id) {
+          if (consort.spouseId !== ruler.id || ruler.spouseId !== consort.id) {
             faults.push(rid + ': consort is not married to the ruler');
           }
           const spouses = FB.spousesOf(s, ruler).map(function (c) { return c.id; });
           if (spouses.indexOf(consort.id) < 0) {
             faults.push(rid + ': FB.spousesOf does not report the consort');
           }
+        } else if (!papal && !adult) {
+          const reservation = FB.realmConsortMember(s, rid);
+          if (!reservation || reservation.charId || ruler.spouseId ||
+              ruler.betrothedId) {
+            faults.push(rid + ': child consort reservation is linked');
+          }
         }
       }
       return {
         sampled:sample.length,
+        papacySampled:!!papalRid && sample.indexOf(papalRid) >= 0,
         withConsort:withConsort,
+        expectedConsorts:expectedConsorts,
         faults:faults.slice(0, 12)
       };
     });
 
     expect(report.faults).toEqual([]);
     expect(report.sampled).toBeGreaterThan(20);
-    expect(report.withConsort).toBe(report.sampled);
+    expect(report.papacySampled).toBe(true);
+    expect(report.withConsort).toBe(report.expectedConsorts);
+  });
+
+test('the Papal States begin with an elective Pope and no dynastic household',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const rid = s.religiousHeads && s.religiousHeads.catholic;
+      const realm = rid && s.realms[rid];
+      if (rid) FB.ensureRealmSuccession(s, rid);
+      const succession = realm && realm.succession;
+      const root = succession && succession.rulerMemberId &&
+        succession.members[succession.rulerMemberId];
+      const pope = root && root.charId && s.chars[root.charId];
+      const papalRoyals = [];
+      for (const id in s.chars) {
+        const c = s.chars[id];
+        if (c.royalLine && c.royalLine.realmId === rid && c.id !== (pope && pope.id)) {
+          papalRoyals.push(c.id);
+        }
+      }
+      return {
+        hasRealm:!!realm,
+        elective:!!(succession && succession.papalElective),
+        oneMember:!!succession &&
+          Object.keys(succession.members || {}).length === 1,
+        noDynasticOrder:!!succession && succession.order.length === 0 &&
+          succession.heirId === null,
+        popeIsFullCharacter:!!pope && !pope.dead,
+        popeIsUnmarried:!!pope && FB.spousesOf(s, pope).length === 0,
+        noGeneratedConsort:!FB.realmConsortCharacter(s, rid),
+        noGeneratedHeirRecords:papalRoyals.length === 0
+      };
+    })).toEqual({
+      hasRealm:true,
+      elective:true,
+      oneMember:true,
+      noDynasticOrder:true,
+      popeIsFullCharacter:true,
+      popeIsUnmarried:true,
+      noGeneratedConsort:true,
+      noGeneratedHeirRecords:true
+    });
+  });
+
+test('papal sanction grounds are removed with their dead character',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let target = null;
+      for (const id in s.chars) {
+        const c = s.chars[id];
+        if (c && !c.dead && c.id !== s.player.charId &&
+            !(FB.isPapalClaimant && FB.isPapalClaimant(s, c))) {
+          target = c;
+          break;
+        }
+      }
+      if (!target) return { skipped:true };
+      const added = FB.addPapalGround(s, target, 'test_ground');
+      const existed = !!(added && s.papacy.grounds[target.id]);
+      FB.killChar(s, target);
+      return {
+        skipped:false,
+        existed:existed,
+        removed:!s.papacy.grounds[target.id]
+      };
+    })).toEqual({ skipped:false, existed:true, removed:true });
   });
 
 test('a consort never enters the line of succession',
@@ -107,6 +201,29 @@ test('a consort never enters the line of succession',
     })).toEqual([]);
   });
 
+test('eager loading and the realm sheet share one bounded family order',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const faults = [];
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        if (!r || !r.alive || rid === 'player' || !r.succession) continue;
+        const eager = FB.realmFamily(s, rid).map(function (member) {
+          return member.id;
+        });
+        const display = FB.realmFamilySnapshot(s, rid).map(function (member) {
+          return member.id;
+        });
+        if (eager.length > 6 ||
+            JSON.stringify(eager) !== JSON.stringify(display)) {
+          faults.push(rid);
+        }
+      }
+      return faults.slice(0, 12);
+    })).toEqual([]);
+  });
+
 test('the reigning-ruler index agrees with a brute-force realm scan',
   async function ({ page }) {
     await injectBrowserHarness(page);
@@ -128,9 +245,9 @@ test('the reigning-ruler index agrees with a brute-force realm scan',
             }
           }
           const indexed = FB.realmIdForRulerCharacter(state, c);
-          /* A character can root two realms after an abdication; the indexed
-             answer must still be a realm the brute-force scan agrees they
-             rule, and both must agree on whether they rule at all. */
+          /* A legacy or malformed state can root one character in two realms;
+             the indexed answer must still be a realm the brute-force scan
+             agrees they rule, and both must agree on whether they rule at all. */
           if (!!brute !== !!indexed) {
             faults.push(c.id + ': brute=' + brute + ' indexed=' + indexed);
           }
@@ -223,6 +340,110 @@ test('materializing a court draws no randomness from the world stream',
     });
   });
 
+test('derived court identity never falls back to the shared uid counter',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let target = null;
+      for (const rid in s.realms) {
+        const succession = s.realms[rid] && s.realms[rid].succession;
+        if (!succession || rid === 'player') continue;
+        for (const memberId in succession.members) {
+          const member = succession.members[memberId];
+          if (member && member.charId && memberId !== succession.rulerMemberId &&
+              member.role !== 'consort') {
+            target = { rid:rid, member:member };
+            break;
+          }
+        }
+        if (target) break;
+      }
+      if (!target) return { skipped:true };
+      const derivedId = FB.courtCharacterId(target.member.id);
+      delete s.chars[target.member.charId];
+      target.member.charId = null;
+      s.chars[derivedId] = {
+        id:derivedId,
+        name:'Collision',
+        sex:'m',
+        born:s.date.year - 30,
+        dead:false,
+        traits:[],
+        skills:{ dip:0, mar:0, ste:0, int:0, lea:0 },
+        childrenIds:[]
+      };
+      const uidBefore = FB.getUidCounter();
+      const made = FB.materializeRoyalChild(s, target.rid, target.member.id);
+      return {
+        skipped:false,
+        refused:made === null,
+        memberStillUnlinked:target.member.charId === null,
+        collisionUntouched:s.chars[derivedId] &&
+          s.chars[derivedId].name === 'Collision',
+        uidUnchanged:FB.getUidCounter() === uidBefore
+      };
+    })).toEqual({
+      skipped:false,
+      refused:true,
+      memberStillUnlinked:true,
+      collisionUntouched:true,
+      uidUnchanged:true
+    });
+  });
+
+test('realm court member ids and sheets ignore intervening uid activity',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let rid = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        if (r && r.alive && id !== 'player' &&
+            !(FB.papacyTerritorialRealm &&
+              FB.papacyTerritorialRealm(s, id))) {
+          rid = id;
+          break;
+        }
+      }
+      if (!rid) return { skipped:true };
+      const realm = s.realms[rid];
+      function clearCourt() {
+        for (const id in s.chars) {
+          const c = s.chars[id];
+          if (c.royalLine && c.royalLine.realmId === rid) delete s.chars[id];
+        }
+        realm.succession = null;
+        FB.touchFamily();
+      }
+      function build(extraUids) {
+        clearCourt();
+        for (let i = 0; i < extraUids; i++) FB.uid();
+        FB.ensureRealmCourt(s, rid, { bulk:true });
+        return Object.keys(realm.succession.members).sort().map(function (id) {
+          const member = realm.succession.members[id];
+          const c = member.charId && s.chars[member.charId];
+          return {
+            id:id,
+            name:member.name,
+            sex:member.sex,
+            born:member.born,
+            skills:c && c.skills,
+            traits:c && c.traits
+          };
+        });
+      }
+      const first = build(0);
+      const second = build(37);
+      return {
+        skipped:false,
+        same:JSON.stringify(first) === JSON.stringify(second),
+        allDerived:second.every(function (entry) {
+          return entry.id.indexOf('royal_' + rid + '_g') === 0;
+        })
+      };
+    })).toEqual({ skipped:false, same:true, allDerived:true });
+  });
+
 test('an untouched court death compacts to its member entry, a tied one does not',
   async function ({ page }) {
     expect(await page.evaluate(function () {
@@ -278,6 +499,59 @@ test('an untouched court death compacts to its member entry, a tied one does not
     });
   });
 
+test('a divorced court parent of a living player descendant is retained',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      let found = null;
+      for (const rid in s.realms) {
+        const succession = s.realms[rid] && s.realms[rid].succession;
+        if (!succession || rid === 'player') continue;
+        for (const memberId in succession.members) {
+          const member = succession.members[memberId];
+          const c = member && member.charId && s.chars[member.charId];
+          if (c && !c.dead && memberId !== succession.rulerMemberId &&
+              member.role !== 'consort' && c.sex !== me.sex) {
+            found = { member:member, c:c };
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (!found) return { skipped:true };
+      const child = FB.makeCharacter(s, {
+        name:'Lineage Fixture',
+        sex:'f',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year,
+        traitsN:0,
+        fatherId:found.c.sex === 'm' ? found.c.id : me.id,
+        motherId:found.c.sex === 'f' ? found.c.id : me.id
+      });
+      me.childrenIds.push(child.id);
+      found.c.childrenIds.push(child.id);
+      found.c.spouseId = null;
+      found.c.betrothedId = null;
+      FB.touchFamily();
+      found.member.alive = false;
+      FB.courtMemberDied(s, found.member, found.c);
+      return {
+        skipped:false,
+        recordRetained:!!s.chars[found.c.id] && s.chars[found.c.id].dead,
+        parentPreserved:child.fatherId === found.c.id ||
+          child.motherId === found.c.id,
+        memberStillLinked:found.member.charId === found.c.id
+      };
+    })).toEqual({
+      skipped:false,
+      recordRetained:true,
+      parentPreserved:true,
+      memberStillLinked:true
+    });
+  });
+
 test('a cultivated heir keeps their sheet through their accession',
   async function ({ page }) {
     expect(await page.evaluate(function () {
@@ -296,10 +570,20 @@ test('a cultivated heir keeps their sheet through their accession',
       /* A distinctive sheet, as cultivation would leave one. */
       heir.skills.mar = 11;
       heir.skills.dip = 9;
+      let martialTrait = null;
+      for (const traitId in FBDATA.traits) {
+        if (FBDATA.traits[traitId].mar) {
+          martialTrait = traitId;
+          break;
+        }
+      }
+      if (!martialTrait) return { skipped:true };
+      heir.traits = [martialTrait];
       const before = {
         id:heir.id,
         name:heir.name,
         mar:heir.skills.mar,
+        effectiveMar:FB.skillSnapshot(s, heir, 'mar'),
         dip:heir.skills.dip,
         traits:heir.traits.slice()
       };
@@ -313,7 +597,9 @@ test('a cultivated heir keeps their sheet through their accession',
         keptTraits:!!crowned &&
           crowned.traits.join(',') === before.traits.join(','),
         stubMatchesRecord:s.realms[rid].ruler.name === before.name &&
-          s.realms[rid].ruler.mar === before.mar,
+          s.realms[rid].ruler.mar === before.effectiveMar,
+        traitMartialKept:before.effectiveMar !== before.mar &&
+          s.realms[rid].ruler.mar === FB.skillSnapshot(s, crowned, 'mar'),
         reigns:FB.isReigningRealmRuler(s, crowned)
       };
     })).toEqual({
@@ -322,6 +608,7 @@ test('a cultivated heir keeps their sheet through their accession',
       keptSkills:true,
       keptTraits:true,
       stubMatchesRecord:true,
+      traitMartialKept:true,
       reigns:true
     });
   });
@@ -465,7 +752,7 @@ test('the serialized payload carries no derived court data',
       }
       const successionKeys = Object.keys(realmKeys);
       /* Deliberately not an exact allowlist: a succession legitimately grows
-         additive keys (papalElective once a conclave has resolved, for one),
+         additive keys (papalElective for the Roman succession, for one),
          and a test that fails on those is testing the wrong thing. What must
          never appear is derived data that belongs in memory. */
       const expected = ['members', 'order', 'heirId', 'rulerGeneration',
@@ -715,6 +1002,43 @@ test('the realm sheet shows a ruler card and a court strip', async function ({ p
   expect(await page.locator('#liegecrest').count()).toBe(0);
 });
 
+test('the fixed seed keeps its stored non-court world state',
+  async function ({ page }) {
+    expect(nonCourtWorldFixture.sourceRevision).toBe('249b935');
+    expect(nonCourtWorldFixture.sourceVersion).toBe('1.95.0');
+    const fixture = nonCourtWorldFixture.projection;
+    const projection = await page.evaluate(function (fixture) {
+      const s = FB.state;
+      const provinces = {};
+      const realms = {};
+      for (const pid in fixture.provinces) {
+        provinces[pid] = {
+          owner:s.owner[pid],
+          holder:s.holder[pid],
+          development:s.dev[pid]
+        };
+      }
+      for (const rid in fixture.realms) {
+        const r = s.realms[rid];
+        realms[rid] = {
+          name:r.name,
+          capital:r.capital,
+          rank:r.rank,
+          liege:r.liege,
+          religion:r.religion
+        };
+      }
+      return {
+        startCode:s.seed,
+        date:{ year:s.date.year, season:s.date.season },
+        playerProvince:s.player.provinceId,
+        provinces:provinces,
+        realms:realms
+      };
+    }, fixture);
+    expect(projection).toEqual(fixture);
+  });
+
 test('Land notable folk show ruler portraits instead of realm crests',
   async function ({ page }) {
     const selected = await page.evaluate(function () {
@@ -737,6 +1061,366 @@ test('Land notable folk show ruler portraits instead of realm crests',
     await expect(row.locator(
       'canvas.pface[data-cid="' + selected.rulerId + '"]')).toBeVisible();
     expect(await row.locator('canvas.crest').count()).toBe(0);
+  });
+
+test('a betrothed heir keeps the pledge and receives no generated consort',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      let rid = null;
+      let heir = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        const succession = r && r.alive && id !== 'player' &&
+          !(FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(s, id)) &&
+          r.succession;
+        const member = succession && succession.heirId &&
+          succession.members[succession.heirId];
+        const candidate = member && member.charId && s.chars[member.charId];
+        if (candidate && FB.ageOf(candidate, s.date.year) >= 16) {
+          rid = id;
+          heir = candidate;
+          break;
+        }
+      }
+      if (!rid || !heir) return { skipped:true };
+      me.betrothedId = heir.id;
+      heir.betrothedId = me.id;
+      FB.touchFamily();
+
+      FB.advanceRealmSuccession(s, rid);
+      const crowned = FB.realmRulerCharacterSnapshot(s, rid);
+      const beforeWedding = {
+        heirReigns:!!crowned && crowned.id === heir.id,
+        noGeneratedConsort:!FB.realmConsortCharacter(s, rid),
+        pledgeIntact:me.betrothedId === heir.id &&
+          heir.betrothedId === me.id,
+        noSpouse:FB.spousesOf(s, heir).length === 0
+      };
+      const wedding = FB.doKinWedding(s, me, heir);
+      return {
+        skipped:false,
+        heirReigns:beforeWedding.heirReigns,
+        noGeneratedConsort:beforeWedding.noGeneratedConsort,
+        pledgeIntact:beforeWedding.pledgeIntact,
+        noSpouse:beforeWedding.noSpouse,
+        weddingCompletes:wedding && me.spouseId === heir.id &&
+          heir.spouseId === me.id
+      };
+    })).toEqual({
+      skipped:false,
+      heirReigns:true,
+      noGeneratedConsort:true,
+      pledgeIntact:true,
+      noSpouse:true,
+      weddingCompletes:true
+    });
+  });
+
+test('a child ruler keeps an unlinked future consort until majority',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let rid = null;
+      let member = null;
+      let heir = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        const succession = r && r.alive && id !== 'player' &&
+          !(FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(s, id)) &&
+          r.succession;
+        const candidateMember = succession && succession.heirId &&
+          succession.members[succession.heirId];
+        const candidate = candidateMember && candidateMember.charId &&
+          s.chars[candidateMember.charId];
+        if (candidate) {
+          rid = id;
+          member = candidateMember;
+          heir = candidate;
+          break;
+        }
+      }
+      if (!rid || !heir) return { skipped:true };
+      member.born = s.date.year - 8;
+      heir.born = member.born;
+      FB.advanceRealmSuccession(s, rid);
+      const crowned = FB.realmRulerCharacterSnapshot(s, rid);
+      const futureMember = FB.realmConsortMember(s, rid);
+      const childState = {
+        age:FB.ageOf(crowned, s.date.year),
+        futureConsortAge:futureMember &&
+          s.date.year - futureMember.born,
+        reserved:!!futureMember,
+        unmaterialized:!!futureMember && !futureMember.charId,
+        unpledged:!crowned.betrothedId,
+        noSpouse:FB.spousesOf(s, crowned).length === 0
+      };
+
+      crowned.born = s.date.year - 16;
+      s.realms[rid].ruler.born = crowned.born;
+      s.realms[rid].ruler.age = 16;
+      if (futureMember) futureMember.born = s.date.year - 16;
+      FB.ensureRealmCourt(s, rid);
+      const futureConsort = FB.realmConsortCharacter(s, rid);
+      return {
+        skipped:false,
+        childAge:childState.age,
+        futureConsortIsChild:childState.reserved &&
+          childState.futureConsortAge >= 0 &&
+          childState.futureConsortAge < 16,
+        unmaterializedAsChild:childState.unmaterialized,
+        unpledgedAsChild:childState.unpledged,
+        noSpouseAsChild:childState.noSpouse,
+        marriedAtMajority:!!futureConsort &&
+          FB.spousesOf(s, crowned).some(function (spouse) {
+            return spouse.id === futureConsort.id;
+          }),
+        noGeneratedPledge:!!futureConsort && !crowned.betrothedId &&
+          !futureConsort.betrothedId
+      };
+    })).toEqual({
+      skipped:false,
+      childAge:8,
+      futureConsortIsChild:true,
+      unmaterializedAsChild:true,
+      unpledgedAsChild:true,
+      noSpouseAsChild:true,
+      marriedAtMajority:true,
+      noGeneratedPledge:true
+    });
+  });
+
+test('an unmaterialized collateral is eagerly loaded on a private succession stream',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let rid = null;
+      let member = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        const succession = r && r.alive && id !== 'player' &&
+          !(FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(s, id)) &&
+          r.succession;
+        const candidate = succession && succession.heirId &&
+          succession.members[succession.heirId];
+        if (candidate && candidate.charId && s.chars[candidate.charId]) {
+          rid = id;
+          member = candidate;
+          break;
+        }
+      }
+      if (!rid || !member) return { skipped:true };
+      const oldId = member.charId;
+      delete s.chars[oldId];
+      member.charId = null;
+      FB.touchFamily();
+      const rngBefore = FB.getRngState();
+
+      FB.advanceRealmSuccession(s, rid);
+      const crowned = FB.realmRulerCharacterSnapshot(s, rid);
+      return {
+        skipped:false,
+        fullCharacter:!!crowned &&
+          Object.keys(crowned.skills || {}).length === FB.SKILLS.length &&
+          !!(crowned.traits && crowned.traits.length),
+        derivedIdentity:!!crowned &&
+          crowned.id === FB.courtCharacterId(member.id) &&
+          crowned.id === oldId,
+        rngUnchanged:FB.getRngState() === rngBefore,
+        stubMatches:!!crowned &&
+          s.realms[rid].ruler.mar ===
+            FB.skillSnapshot(s, crowned, 'mar') &&
+          s.realms[rid].ruler.trait === crowned.traits[0]
+      };
+    })).toEqual({
+      skipped:false,
+      fullCharacter:true,
+      derivedIdentity:true,
+      rngUnchanged:true,
+      stubMatches:true
+    });
+  });
+
+test('a foreign royal family tick cannot kill another realm ruler',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let sourceRid = null;
+      let sourceMember = null;
+      let ruler = null;
+      let targetRid = null;
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        if (!r || !r.alive || rid === 'player' ||
+            (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(s, rid)) ||
+            !r.succession) continue;
+        for (const memberId in r.succession.members) {
+          const member = r.succession.members[memberId];
+          const c = member && member.charId && s.chars[member.charId];
+          if (c && !c.dead && memberId !== r.succession.rulerMemberId &&
+              member.role !== 'consort') {
+            sourceRid = rid;
+            sourceMember = member;
+            ruler = c;
+            break;
+          }
+        }
+        if (ruler) break;
+      }
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        if (r && r.alive && r.generated && rid !== sourceRid) {
+          targetRid = rid;
+          break;
+        }
+      }
+      if (!sourceRid || !targetRid || !ruler) return { skipped:true };
+      if (!FB.assignRealmRulerCharacter(s, targetRid, ruler.id)) {
+        return { skipped:true };
+      }
+      ruler.born = s.date.year - 90;
+      sourceMember.born = ruler.born;
+      s.realms[targetRid].ruler.born = ruler.born;
+      s.realms[targetRid].ruler.age = 90;
+      const targetGeneration = s.realms[targetRid].ruler.generation;
+      const originalChance = FB.chance;
+      try {
+        /* Court mortality for a 90-year-old is exactly .25; realm-ruler
+           mortality is .18. This forces the foreign family roll without
+           forcing the crown's own death roll. */
+        FB.chance = function (q) { return q === 0.25; };
+        s.date.year++;
+        s.turn += 360;
+        FB.worldTick(s);
+      } finally {
+        FB.chance = originalChance;
+      }
+      const survivedForeignTick = !ruler.dead && sourceMember.alive !== false &&
+        FB.realmIdForRulerCharacter(s, ruler) === targetRid;
+
+      FB.killChar(s, ruler);
+      const successor = FB.realmRulerCharacterSnapshot(s, targetRid);
+      return {
+        skipped:false,
+        survivedForeignTick:survivedForeignTick,
+        birthLineClosed:sourceMember.alive === false,
+        foreignRealmAdvanced:s.realms[targetRid].ruler.generation >
+          targetGeneration,
+        livingSuccessor:!!successor && !successor.dead &&
+          successor.id !== ruler.id
+      };
+    })).toEqual({
+      skipped:false,
+      survivedForeignTick:true,
+      birthLineClosed:true,
+      foreignRealmAdvanced:true,
+      livingSuccessor:true
+    });
+  });
+
+test('eager court repair advances retained and compacted dead rulers immediately',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const targets = [];
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        if (!r || !r.alive || rid === 'player' ||
+            (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(s, rid)) ||
+            !r.succession || !r.succession.heirId) continue;
+        targets.push(rid);
+        if (targets.length === 2) break;
+      }
+      if (targets.length < 2) return { skipped:true };
+
+      const retainedRealm = s.realms[targets[0]];
+      const retainedSuccession = retainedRealm.succession;
+      const retainedRoot =
+        retainedSuccession.members[retainedSuccession.rulerMemberId];
+      const retained = s.chars[retainedRoot.charId];
+      const retainedGeneration = retainedRealm.ruler.generation;
+      retained.dead = true;
+      retained.died = s.date.year;
+      retainedRealm.alive = false;
+      retainedRealm.alive = true;
+
+      const compactRealm = s.realms[targets[1]];
+      const compactSuccession = compactRealm.succession;
+      const compactRoot = compactSuccession.members[compactSuccession.rulerMemberId];
+      const compactGeneration = compactRealm.ruler.generation;
+      const compactId = compactRoot.charId;
+      compactRoot.alive = false;
+      compactRoot.charId = null;
+      delete s.chars[compactId];
+      compactRealm.alive = false;
+      compactRealm.alive = true;
+
+      const retainedSuccessor = FB.ensureRealmCourt(s, targets[0]);
+      const compactSuccessor = FB.ensureRealmCourt(s, targets[1]);
+      return {
+        skipped:false,
+        retainedAdvanced:retainedRealm.ruler.generation >
+          retainedGeneration && !!retainedSuccessor &&
+          retainedSuccessor.id !== retained.id && !retainedSuccessor.dead,
+        compactAdvanced:compactRealm.ruler.generation >
+          compactGeneration && !!compactSuccessor &&
+          compactSuccessor.id !== compactId && !compactSuccessor.dead,
+        compactNotResurrected:!s.chars[compactId]
+      };
+    })).toEqual({
+      skipped:false,
+      retainedAdvanced:true,
+      compactAdvanced:true,
+      compactNotResurrected:true
+    });
+  });
+
+test('living abdication refuses an heir who already reigns elsewhere',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let heir = null;
+      let foreignRid = null;
+      for (const rid in s.realms) {
+        const r = s.realms[rid];
+        const c = r && r.alive && rid !== 'player' &&
+          FB.realmRulerCharacterSnapshot(s, rid);
+        if (c) {
+          heir = c;
+          foreignRid = rid;
+          break;
+        }
+      }
+      if (!heir) return { skipped:true };
+      const priorPlayerRealm = s.realms.player;
+      s.realms.player = {
+        id:'player',
+        name:'Test Realm',
+        alive:true,
+        ruler:{ generation:1 }
+      };
+      s.player.provs = [s.player.provinceId];
+      const realmCount = Object.keys(s.realms).length;
+      const handed = FB.abdicatePlayerRealmToHeir(s, heir);
+      const result = {
+        skipped:false,
+        refused:handed === null,
+        playerRealmIntact:s.realms.player &&
+          s.realms.player.name === 'Test Realm',
+        noRealmCreated:Object.keys(s.realms).length === realmCount,
+        foreignCrownIntact:FB.realmIdForRulerCharacter(s, heir) === foreignRid
+      };
+      if (priorPlayerRealm) s.realms.player = priorPlayerRealm;
+      else delete s.realms.player;
+      return result;
+    })).toEqual({
+      skipped:false,
+      refused:true,
+      playerRealmIntact:true,
+      noRealmCreated:true,
+      foreignCrownIntact:true
+    });
   });
 
 test('court characters carry a resolvable loadout and portrait key',
@@ -772,6 +1456,38 @@ test('court characters carry a resolvable loadout and portrait key',
         distinctKeys:Object.keys(keys).length === checked
       };
     })).toEqual({ checked:true, faults:[], distinctKeys:true });
+  });
+
+test('named ailments and legacy illness both invalidate the portrait key',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const oldAils = me.ails && me.ails.slice();
+      const oldIll = s.player.flags.ill;
+      delete me.ails;
+      delete s.player.flags.ill;
+      const hale = FB.characterVisualKey(s, me);
+      const ailmentId = Object.keys(FBDATA.ailments)[0];
+      me.ails = [ailmentId];
+      const ailing = FB.characterVisualKey(s, me);
+      delete me.ails;
+      s.player.flags.ill = 1;
+      const ill = FB.characterVisualKey(s, me);
+      if (oldAils) me.ails = oldAils;
+      else delete me.ails;
+      if (oldIll) s.player.flags.ill = oldIll;
+      else delete s.player.flags.ill;
+      return {
+        hasFixture:!!ailmentId,
+        ailmentChangesKey:hale !== ailing,
+        illChangesKey:ailing !== ill && hale !== ill
+      };
+    })).toEqual({
+      hasFixture:true,
+      ailmentChangesKey:true,
+      illChangesKey:true
+    });
   });
 
 test.describe('with the start code held fixed', function () {
