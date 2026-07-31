@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.99.0';
+  FB.VERSION = '1.100.0';
   FB.CHANGELOG = [
+    { v: '1.100.0', date: '2026-07-31', changes: [
+      'Settings now offers configurable action shortcuts, while family trees, conquest targets, and enterprise lists gain navigation, filtering, grouping, and sorting tools.'
+    ] },
     { v: '1.99.0', date: '2026-07-31', changes: [
       'Mods can now customize technology domains, traditions, caps, and the default bookmark.'
     ] },
@@ -1065,7 +1068,8 @@ window.FB = window.FB || {};
       modifiers: { county:{} },
       politics: null,
       player: {
-        charId: null, tier: sc.tier, profession: sc.profession, professionBack: null,
+        charId: null, houseFounderId:null,
+        tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         foreignPolicy: {},
@@ -1112,6 +1116,7 @@ window.FB = window.FB || {};
     me.dyn = FB.dynastyName(pr.culture, me.name, pr.name, me.sex);
     if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
     state.player.charId = me.id;
+    state.player.houseFounderId = me.id;
     FB.setCareer(state, me, sc.profession, 'journeyman');
 
     /* Issued kit is ordinary gear, not an immortal named artifact. Its
@@ -1487,7 +1492,12 @@ window.FB = window.FB || {};
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
-  G.uiPrefs = { commitmentsCollapsed:false, hideBeginnerHints:false };
+  G.ACTION_SHORTCUT_DEFAULTS = { q:'action:livelihoods' };
+  G.uiPrefs = {
+    commitmentsCollapsed:false,
+    hideBeginnerHints:false,
+    actionBindings:{ q:'action:livelihoods' }
+  };
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
@@ -1497,6 +1507,17 @@ window.FB = window.FB || {};
           ? !!storedUiPrefs.commitmentsCollapsed
           : !!storedUiPrefs.hideOngoingCommitments;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
+      if (storedUiPrefs.actionBindings &&
+          typeof storedUiPrefs.actionBindings === 'object') {
+        G.uiPrefs.actionBindings = {};
+        for (const key in storedUiPrefs.actionBindings) {
+          const target = storedUiPrefs.actionBindings[key];
+          if (/^[abgijopqtuvwxy]$/.test(key) &&
+              typeof target === 'string' && target) {
+            G.uiPrefs.actionBindings[key] = target;
+          }
+        }
+      }
     }
   } catch (e) { /* keep defaults */ }
   G.saveUiPrefs = function () {

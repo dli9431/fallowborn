@@ -85,6 +85,11 @@ Related: [development.md](development.md) for the tier-3+ equivalent (buildings)
 `FBDATA.enterprises` (`data/economy.js`) defines repeatable family businesses. Instances
 live in `player.enterprises` as
 `{uid,type,provinceId,settlement,workerId,workerLocked?}` and pass to heirs.
+Acquisition order remains array order and authored `cost` is the stable base-value sort
+key; neither needs a new save field. Work & Enterprises derives localized name, exact
+settlement, live yield, and staffing state when sorting or grouping instances. These are
+session UI choices. Household Plan reuses the selected sort for assignment labels, so
+drilling between the screens cannot imply a different enterprise order.
 `workerLocked:true` preserves that explicit worker-enterprise pairing from batch
 staffing; a missing field means unlocked, so the addition remains compatible with
 save format 3. One copy of a type may stand in each derived settlement, so a family may
