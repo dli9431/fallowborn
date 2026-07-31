@@ -1,6 +1,6 @@
 # Player feedback: QoL and correctness plan
 
-Status: in progress — Milestone 1 implemented
+Status: in progress — Milestones 1–3 implemented
 Audit baseline: Fallowborn v1.93.3, 2026-07-30
 
 ## Purpose
@@ -387,10 +387,17 @@ Relevant design: [development.md](../designs/development.md),
 
 ### Milestone 3 — make growing interfaces manageable
 
+**Implementation status: complete.** Desktop shortcuts now bind semantic deeds and
+focus families, the bounded family tree has search/collapse/jump navigation, conquest
+targets expose live search/filter/sort controls and blocked reasons, and enterprises
+share session ordering between Work and Household Plan.
+
 #### 13. Add stable, configurable shortcuts
 
 Category: **QoL**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 Number shortcuts currently select the visible position in a dialog. Their meaning
 changes when deeds appear, disappear, or are replaced after promotion.
@@ -410,12 +417,19 @@ Required outcome:
 The implementation must define whether a promoted replacement such as “Toil in the
 Lord's fields” → “Work your land” shares an action family or requires a new binding.
 
+Implemented outcome: configurable unused-letter bindings persist in `fb_ui`, reject
+duplicate keys, retain unavailable semantic targets with a live explanation, and reset
+to Q for Work & Enterprises. Daily focuses normally bind by exact id; Toil and Work your
+land share the explicit `farmer-work` family so promotion preserves the binding.
+
 Relevant design: [ui.md](../designs/ui.md).
 
 #### 14. Add family-tree navigation tools
 
 Category: **QoL**  
 Validity: **Partial**
+
+Status: **Implemented**
 
 The family tree is hierarchical and depth-bounded, but large houses still lack
 search and branch collapsing.
@@ -432,10 +446,17 @@ Required outcome:
 Relevant design: [ui.md](../designs/ui.md),
 [characters.md](../designs/characters.md).
 
+Implemented outcome: the existing depth bound remains, while native controls search the
+rendered scope, collapse biological branches, and jump to the protagonist, first current
+successor, spouse, or recorded house founder. A standalone founder card keeps that target
+available after later generations move beyond the nearby tree.
+
 #### 15. Filter and sort war targets
 
 Category: **QoL**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 The royal war-target picker is still a flat list and becomes difficult to scan as
 the realm grows.
@@ -451,10 +472,18 @@ Required outcome:
 Relevant design: [war.md](../designs/war.md),
 [ui.md](../designs/ui.md).
 
+Implemented outcome: one live catalogue searches objectives, realms, rulers, and enemy
+territory; filters cause, adjacency, relative rank, and diplomatic availability; and
+offers deterministic recommended, name, rank, and strength sorts. Blocked causes remain
+visible and disabled with the shared reason, and visible number hints follow filtered
+DOM order.
+
 #### 16. Add enterprise grouping and sorting
 
 Category: **QoL**  
 Validity: **Partial**
+
+Status: **Implemented**
 
 Work & Enterprises gained search and state-priority ordering, but newly acquired
 enterprises otherwise retain acquisition order. There is no grouping by Farming,
@@ -471,10 +500,17 @@ Required outcome:
 Relevant design: [holdings.md](../designs/holdings.md),
 [ui.md](../designs/ui.md).
 
+Implemented outcome: enterprise groups cover profession category and exact settlement;
+sorts cover problems-first, localized name, acquisition, base value, live yield,
+settlement, and staffing state. The session view survives enterprise drill-down, and
+Household Plan reuses and can change the shared enterprise sort.
+
 #### 17. Extend large-list treatment only where still needed
 
 Category: **QoL**  
 Validity: **Resolved** for Work & Enterprises and Network
+
+Status: **Preserved**
 
 Search, filtering, state-priority ordering, and collapsible sections already
 address the original readability complaint in these two screens. Preserve that

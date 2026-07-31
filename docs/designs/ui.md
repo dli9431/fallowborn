@@ -28,6 +28,15 @@ Dialogs whose first choice must be deliberate focus the dialog container on entr
 than preselecting a choice; the first Tab still enters the dialog's controls.
 Closing a generic dialog restores its activating control after keyboard or pointer
 activation, including browsers that do not focus a button when it is clicked.
+Desktop Settings also owns persistent semantic action bindings. They map an otherwise
+unused letter to `action:<instant id>`, `focus:<focus id>`, or an authored
+`focus-family:<family id>` instead of a rendered list position. The default Q binding
+opens `livelihoods`; Reset to Defaults restores it. Duplicate keys block saving, removed
+action ids remain visible as unavailable saved bindings, and hidden or disabled targets
+keep their key while reporting the current reason. `toil` and `work_land` deliberately
+share the `farmer-work` focus family, so promotion preserves that binding's meaning.
+Modal 1–9/Shift+1–9 navigation still wins while a dialog is open. Touch layouts omit
+the desktop configuration entry and global-key badges.
 Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
 `[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
 text; narrow or short non-desktop layouts and coarse-pointer touch layouts keep the ordinary
@@ -189,6 +198,13 @@ current live logistics total beside its composition; ordinary war-status text re
 that total. These surfaces read `FB.playerMusterUpkeepParts` and
 `FB.playerHostUpkeepParts`, so great levies, reinforcements, casualties, mercenary
 companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
+The conquest picker is a session-state catalogue over `FB.warCauses(state, true, true)`:
+blocked causes stay present with the pact, alliance, or diplomatic reason preventing
+declaration. Search covers objective, enemy realm, ruler, and enemy territory. Cause,
+adjacency, relative-rank, and diplomatic filters compose; deterministic sorts offer the
+recommended available-rights-first order plus realm, territory, rank, and defensive
+strength. Filtering and sorting only hide or reorder semantic cause rows, then rebuild
+visible modal number badges from that DOM order.
 
 **Managed household sheets keep compact bust portraits and open equipment separately.**
 The Self sheet and the sheets for living spouses, resident unmarried children and
@@ -517,6 +533,15 @@ applying the routine budget. All and Needs attention are shared filters; Work ad
 Assigned, Staffed, Idle, and Unavailable, while Network adds People and Realms. Empty
 sections distinguish no records from a filter/search with no matches. Hidden rows use the
 native `hidden` state, receive no number-key position, and leave the accessibility tree.
+
+Work adds a session-only enterprise view on top of that grammar. Its compact default
+keeps idle and blocked property before staffed property; alternate deterministic sorts
+cover localized name, acquisition order, authored base value, live yield, settlement,
+and staffing state. Enterprises may remain in one section or be grouped by Farming,
+Craft, and Trade profession or by exact derived settlement. The selected view survives
+opening and returning from an enterprise. Household Plan consumes the same sorted
+enterprise records for assignment labels and exposes the shared order selector, but it
+does not pretend its person rows can be grouped as properties.
 
 Work keeps Household work and Family enterprises separate. Household rows label settled
 careers/offices, genuinely available career choices, former callings, and authoritative

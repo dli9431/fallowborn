@@ -23,6 +23,16 @@ political opposition, and the county burden victory will apply. Opening, canceli
 navigating that review neither writes state nor consumes RNG; the final action
 revalidates the live cause and diplomacy gates.
 
+The picker asks `FB.warCauses(state, true, true)` for available and diplomatically
+blocked semantic causes. Its search index derives realm, ruler, objective, and full
+enemy territory from live world state. Cause basis, border adjacency, enemy rank
+relative to the player, and diplomatic availability are filters over those records;
+the deterministic default sorts available recognized rights before aggression and
+blocked rows, then uses stable realm/objective/type ties. Alternative sorts cover realm,
+objective, rank, and defensive strength. A blocked row is disabled and names the shared
+`FB.warCauseBlockedReason`; an available row passes the untouched cause record into the
+existing confirmation and declaration path.
+
 The core first-declaration costs are 20 prestige, 8 Common Voice, 10 Standing with every
 direct vassal, and 5 Standing with every foreign sovereign. Each earlier aggressive
 declaration by the current ruler within 2,880 days adds 50% to all four costs. The values

@@ -5,7 +5,8 @@
    dialog items, Shift+1-9 reaches items 10-18 (physical keys, any layout) ·
    Space or E play/pause · F skip to the next happening ·
    Z autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/Network/Chronicle
-   panels · [ ] cycle panels · Esc menu / back / close dialog. */
+   panels · configurable unused letters fire semantic action bindings ·
+   [ ] cycle panels · Esc menu / back / close dialog. */
 window.FB = window.FB || {};
 
 (function () {
@@ -165,6 +166,15 @@ window.FB = window.FB || {};
     }
 
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }
+
+    /* User bindings are semantic deed/focus targets. Digits never enter this
+       path, so positional modal navigation keeps its independent meaning. */
+    if (!travelOpen() && !(FB.game && FB.game.pickMode) &&
+        !e.shiftKey && !e.repeat && FB.ui && FB.ui.runActionShortcut &&
+        FB.ui.runActionShortcut(k)) {
+      e.preventDefault();
+      return;
+    }
 
     /* ---- map & game keys ---- */
     const M = FB.map;

@@ -1042,6 +1042,29 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .large-list-empty, .large-list-no-results { margin: 6px 0; }
 .large-list-surface [hidden] { display: none !important; }
+.enterprise-list-summary { margin: 8px 0; }
+.enterprise-view-controls {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: end;
+  margin: 8px 0; padding: 8px; border: 1px solid #4a3b27;
+  border-radius: 8px; background: #211a13;
+}
+.enterprise-view-controls label {
+  display: grid; gap: 4px; flex: 1 1 220px; min-width: 0;
+}
+.enterprise-view-controls label > span { color: #a9997b; font-size: 12px; }
+.enterprise-view-controls select { width: 100%; min-width: 0; }
+
+.war-target-toolbar {
+  position: sticky; top: 0; z-index: 2;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 7px; padding: 8px; margin-bottom: 8px;
+  background: #1b1711; border: 1px solid #4a3b27; border-radius: 8px;
+}
+.war-target-search { grid-column: span 2; }
+.war-target-toolbar label { display: grid; gap: 4px; min-width: 0; }
+.war-target-toolbar label > span { color: #a9997b; font-size: 11px; }
+.war-target-toolbar input, .war-target-toolbar select { width: 100%; min-width: 0; }
+.war-target-row[disabled] { opacity: 0.72; cursor: not-allowed; }
 
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
@@ -1565,6 +1588,28 @@ textarea.modjson, textarea.savetext {
    keeps the tree's left edge scroll-reachable (a centered flex box that
    merely overflowed would clip its left side past scroll reach). */
 .ftwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 4px; }
+.family-tree-toolbar {
+  position: sticky; top: 0; z-index: 2; display: grid; gap: 7px;
+  padding: 8px; margin: 0 0 8px; background: #1b1711;
+  border: 1px solid #4a3b27; border-radius: 8px;
+}
+.family-tree-toolbar > label { display: grid; gap: 4px; color: #bbaa87; font-size: 12px; }
+.family-tree-toolbar input { width: 100%; min-height: 40px; }
+.family-tree-jumps, .family-tree-search-results {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.family-tree-search-results[hidden] { display: none; }
+.ftbranch-toggle {
+  display: inline-flex; align-items: center; gap: 4px; margin: 3px 0 0;
+  padding: 2px 6px; color: #bbaa87; background: #211a13;
+  border: 1px solid #4a3b27; border-radius: 10px; font-size: 10px; cursor: pointer;
+}
+.ftbranch-toggle:hover, .ftbranch-toggle:focus { border-color: #c9a24a; }
+@media (pointer: coarse) {
+  .ftbranch-toggle { min-height: 44px; min-width: 44px; padding: 7px 10px; font-size: 12px; }
+  .war-target-toolbar input, .war-target-toolbar select,
+  .enterprise-view-controls select { min-height: 44px; }
+}
 .fttree { display: flex; justify-content: center; min-width: max-content; }
 .ftnode { display: flex; flex-direction: column; align-items: center; }
 .ftcouple {
@@ -1597,6 +1642,7 @@ textarea.modjson, textarea.savetext {
 }
 .ftchip .frel { color: #97876a; font-size: 11px; }
 .ftchip.me { border-color: #a5842f; background: #332a18; }
+.ftchip.search-hit { border-color: #f0c75a; box-shadow: 0 0 0 2px #6d5620; }
 .ftchip.dead .pface { opacity: 0.55; }
 .ftchip.dead .fname { color: #b0a180; }
 .ftchip.dup { opacity: 0.5; }
@@ -1614,6 +1660,22 @@ textarea.modjson, textarea.savetext {
 .autorow input { margin-right: 7px; }
 .autorow .adesc { display: block; font-size: 12px; opacity: 0.7; margin: 2px 0 0 26px; }
 .autorow.auto-select { margin-left: 26px; cursor: default; }
+
+/* Semantic desktop shortcuts are edited as key/action pairs. Status stays on
+   its own line so long translated blocking reasons do not squeeze selects. */
+.shortcut-settings-entry { width: 100%; margin-top: 8px; text-align: left; }
+.shortcut-bindings { display: grid; gap: 8px; margin: 10px 0; }
+.shortcut-binding-row {
+  display: grid; grid-template-columns: 86px minmax(220px, 1fr) auto;
+  gap: 8px; align-items: end; padding: 9px;
+  border: 1px solid #4a3b27; border-radius: 8px; background: #211a13;
+}
+.shortcut-binding-row label { display: grid; gap: 4px; min-width: 0; }
+.shortcut-binding-row label > span,
+.shortcut-binding-status { color: #a9997b; font-size: 12px; }
+.shortcut-binding-row select { width: 100%; min-width: 0; }
+.shortcut-binding-status { grid-column: 1 / -1; }
+.action-keyhint { margin-left: 2px; }
 .autorow.auto-select > span:first-child { display: block; margin-bottom: 4px; }
 .autorow.auto-select select {
   width: min(100%, 420px); min-height: 38px; padding: 7px 8px;
@@ -2022,6 +2084,12 @@ textarea.modjson, textarea.savetext {
   .large-list-search input { flex-basis: 180px; min-height: 44px; }
   .large-list-search .btn { flex: 0 0 auto; }
   .large-list-filters .btn { flex: 1 1 105px; min-height: 44px; }
+  .enterprise-view-controls { align-items: stretch; flex-direction: column; }
+  .enterprise-view-controls label { width: 100%; flex-basis: auto; }
+  .war-target-toolbar { position: static; grid-template-columns: 1fr 1fr; }
+  .war-target-search { grid-column: 1 / -1; }
+  .shortcut-binding-row { grid-template-columns: 72px minmax(0, 1fr); }
+  .shortcut-binding-row > .btn { grid-column: 1 / -1; }
   .large-list-row.actionbtn, .large-list-target-button,
   .large-list-static-row { align-items: flex-start; flex-wrap: wrap; }
   .large-list-row-main { align-items: flex-start; }

@@ -421,6 +421,16 @@ not assignable. Each present but unavailable row states the applicable age, stat
 faith, career, or landed-head rule. The Guide separately defines playable line, house,
 managed household, visible kin, and royal branch.
 
+**The family tree is a bounded navigator, not an unbounded genealogy dump.** New
+campaigns record `player.houseFounderId` as the first playable head; old saves derive a
+jump target from the earliest protagonist legend or current head without a format
+migration. The modal still renders at most four descendant steps from its nearby root,
+plus bounded maternal and stepfamily branches. Search indexes that rendered scope,
+branch controls hide or reveal biological descendant subtrees without rewriting
+parentage, and jump controls target the protagonist, first eligible successor, spouse,
+and house founder. When the founder has moved beyond the nearby generation window, one
+standalone founder card keeps the jump reachable.
+
 `FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
 that review instead of rebuilding the order. The review preserves the existing named
 heir, children-first, then same-house grandchildren/siblings/nieces-nephews/

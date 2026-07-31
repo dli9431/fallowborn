@@ -87,7 +87,7 @@ window.FB = window.FB || {};
         'focus:pray');
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
-  { id: 'toil', label: '🌾 Toil in the lord’s fields',
+  { id: 'toil', label: '🌾 Toil in the lord’s fields', shortcutFamily:'farmer-work',
     vocational: 'farmer',
     desc: function () { return 'Hard bread, hard-earned.'; },
     show: function (s) { return s.player.tier === 0 && adult(s); },
@@ -106,7 +106,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk' && !female(s); },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
-  { id: 'work_land', label: '🌾 Work your land',
+  { id: 'work_land', label: '🌾 Work your land', shortcutFamily:'farmer-work',
     vocational: 'farmer',
     desc: function () { return 'Your own soil, your own sweat.'; },
     show: function (s) { return s.player.tier === 1 && s.player.profession === 'farmer'; },

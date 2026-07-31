@@ -339,6 +339,11 @@ current protagonist's existing spouse family. If that spouse belongs to a
 compact royal family, required direct children are materialized while the RNG
 state is snapshotted and restored, so compatibility repair cannot alter the
 future random sequence.
+New campaigns also record additive `player.houseFounderId` as the first playable
+character solely for the family-tree jump. Older saves need no migration: the UI
+falls back to the earliest protagonist legend still backed by a character, then
+to the current protagonist. The field never participates in inheritance or
+household membership.
 
 Pregnancy is family state rather than current-protagonist state. Its saved record
 is `{due,motherId,fatherId,lineParentId}`, where `lineParentId` identifies the parent

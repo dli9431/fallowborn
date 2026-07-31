@@ -638,7 +638,10 @@ window.FB = window.FB || {};
   const LARGE_LIST_THRESHOLD = 12;
   const LARGE_LIST_ROUTINE_BUDGET = 5;
   const largeListViews = {
-    work:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    work:{
+      search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null,
+      enterpriseGroup:'none', enterpriseSort:'attention'
+    },
     network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
   };
   UI.largeListDefaults = {
@@ -734,6 +737,10 @@ window.FB = window.FB || {};
       view.sections = {};
       view.scrollTop = 0;
       view.focusKey = null;
+      if (surface === 'work') {
+        view.enterpriseGroup = 'none';
+        view.enterpriseSort = 'attention';
+      }
     }
     const large = total > LARGE_LIST_THRESHOLD;
     let h = '<div class="large-list-surface" data-large-list-surface="' +
@@ -1783,6 +1790,159 @@ window.FB = window.FB || {};
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
     swear_fealty:'war'
   };
+  const ACTION_SHORTCUT_KEYS = [
+    'a', 'b', 'g', 'i', 'j', 'o', 'p', 'q', 't', 'u', 'v', 'w', 'x', 'y'
+  ];
+
+  function focusShortcutTarget(focus) {
+    return focus.shortcutFamily
+      ? 'focus-family:' + focus.shortcutFamily : 'focus:' + focus.id;
+  }
+
+  function shortcutFamilyLabel(id) {
+    if (id === 'farmer-work') return FB.T('Farming work focus');
+    return FB.T('Role-specific daily focus');
+  }
+
+  function shortcutBindings() {
+    const prefs = FB.game && FB.game.uiPrefs;
+    return prefs && prefs.actionBindings &&
+      typeof prefs.actionBindings === 'object'
+      ? prefs.actionBindings : {};
+  }
+
+  function shortcutKeyFor(target) {
+    const bindings = shortcutBindings();
+    for (const key of ACTION_SHORTCUT_KEYS) {
+      if (bindings[key] === target) return key.toUpperCase();
+    }
+    return '';
+  }
+
+  function shortcutHintFor(target) {
+    if (FB.isTouch) return '';
+    const key = shortcutKeyFor(target);
+    return key ? '<span class="keyhint action-keyhint">' + esc(key) + '</span>' : '';
+  }
+
+  function shortcutTargetDefinition(target) {
+    const s = FB.state;
+    if (target.indexOf('action:') === 0) {
+      const id = target.slice(7);
+      let action = null;
+      for (const candidate of FB.instants || []) {
+        if (candidate.id === id && !candidate.compatibilityAlias) {
+          action = candidate;
+          break;
+        }
+      }
+      if (!action) return null;
+      return {
+        kind:'action', id:id, definition:action,
+        label:s ? dt(s, 'action', id, action, 'label') : FB.T(action.label)
+      };
+    }
+    if (target.indexOf('focus-family:') === 0) {
+      const family = target.slice(13);
+      return {
+        kind:'focus-family', id:family,
+        label:shortcutFamilyLabel(family)
+      };
+    }
+    if (target.indexOf('focus:') === 0) {
+      const id = target.slice(6);
+      let focus = null;
+      for (const candidate of FB.focuses || []) {
+        if (candidate.id === id) { focus = candidate; break; }
+      }
+      if (!focus) return null;
+      return {
+        kind:'focus', id:id, definition:focus,
+        label:s ? dt(s, 'focus', id, focus, 'label') : FB.T(focus.label)
+      };
+    }
+    return null;
+  }
+
+  function actionShortcutStatus(target) {
+    const definition = shortcutTargetDefinition(target);
+    const s = FB.state;
+    if (!definition) {
+      return {
+        available:false,
+        label:FB.T('Unavailable saved action'),
+        reason:FB.T('This saved action no longer exists. Edit or reset the binding in Settings.')
+      };
+    }
+    if (!s || !s.player) {
+      return {
+        available:false, label:definition.label,
+        reason:FB.T('Start or load a game before using this shortcut.')
+      };
+    }
+    if (definition.kind === 'action') {
+      let listed = null;
+      for (const item of FB.listInstants(s)) {
+        if (item.a.id === definition.id) {
+          listed = item;
+          break;
+        }
+      }
+      if (!listed) {
+        return {
+          available:false, label:definition.label,
+          reason:FB.T('This action is not available in your current role or situation.')
+        };
+      }
+      return {
+        available:!!listed.can, label:definition.label,
+        reason:listed.can ? '' : FB.translateKnown(listed.reason),
+        run:function () { FB.runInstant(FB.state, definition.id); }
+      };
+    }
+    const shown = FB.listFocuses(s);
+    let selected = null;
+    for (const focus of shown) {
+      if ((definition.kind === 'focus' && focus.id === definition.id) ||
+          (definition.kind === 'focus-family' &&
+            focus.shortcutFamily === definition.id)) {
+        selected = focus;
+        break;
+      }
+    }
+    if (!selected) {
+      return {
+        available:false, label:definition.label,
+        reason:FB.T('No focus in this binding is available in your current role or situation.')
+      };
+    }
+    const label = definition.kind === 'focus-family'
+      ? FB.T('{family}: {focus}', {
+        family:definition.label,
+        focus:dt(s, 'focus', selected.id, selected, 'label')
+      }) : definition.label;
+    return {
+      available:true, label:label, reason:'',
+      run:function () { FB.setFocus(FB.state, selected.id); }
+    };
+  }
+  UI.actionShortcutStatus = actionShortcutStatus;
+  UI.actionShortcutKeys = ACTION_SHORTCUT_KEYS.slice();
+  UI.runActionShortcut = function (key) {
+    const normalized = String(key || '').toLocaleLowerCase();
+    if (ACTION_SHORTCUT_KEYS.indexOf(normalized) < 0) return false;
+    const target = shortcutBindings()[normalized];
+    if (!target) return false;
+    const status = actionShortcutStatus(target);
+    if (!status.available || !status.run) {
+      UI.toast(FB.T('{action} — {reason}', {
+        action:status.label, reason:status.reason
+      }));
+      return true;
+    }
+    status.run();
+    return true;
+  };
 
   function currentFocusDef(s) {
     for (const focus of FB.focuses) {
@@ -2167,7 +2327,7 @@ window.FB = window.FB || {};
       const btn = document.createElement('button');
       btn.className = 'actionbtn' + (cur ? ' focused' : '');
       btn.setAttribute('data-focus-id', f.id);
-      btn.innerHTML = hintFor(n) +
+      btn.innerHTML = hintFor(n) + shortcutHintFor(focusShortcutTarget(f)) +
         (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
         '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
       (function (id) {
@@ -2216,7 +2376,7 @@ window.FB = window.FB || {};
         btn.setAttribute('data-action-id', item.a.id);
         btn.disabled = !item.can;
         const label = dt(s, 'action', item.a.id, item.a, 'label');
-        btn.innerHTML = hintFor(n) +
+        btn.innerHTML = hintFor(n) + shortcutHintFor('action:' + item.a.id) +
           esc(label) + '<span class="adesc">' +
           esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) + '</span>';
         (function (id) {
@@ -4141,15 +4301,37 @@ window.FB = window.FB || {};
     const s = FB.state, me = s.chars[s.player.charId];
     const byId = FB.kinOf(s).byId;
     const drawn = {};
+    const searchIndex = [], searchSeen = {};
+    let branchSerial = 0;
     const MAXDEPTH = 4; // root couple → their great-great-grandchildren
+
+    const heirs = FB.heirsOf ? FB.heirsOf(s) : [];
+    const successor = heirs.length ? heirs[0] : null;
+    const spouse = FB.spouseOf ? FB.spouseOf(s, me) : null;
+    let founder = s.player.houseFounderId && s.chars[s.player.houseFounderId];
+    if (!founder && s.legends && s.legends.length) {
+      for (const legend of s.legends) {
+        const candidate = legend && s.chars[legend.id];
+        if (candidate && candidate.dyn === me.dyn) {
+          founder = candidate;
+          break;
+        }
+      }
+    }
+    if (!founder) founder = me;
 
     function chip(c, rel, cls) {
       const sourceLabel = rel || byId[c.id] || '';
       const label = sourceLabel ? FB.T(sourceLabel) : '';
       const meta = c.dead ? '†' : FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
       const again = cls && cls.indexOf('dup') >= 0;
+      if (!searchSeen[c.id]) {
+        searchSeen[c.id] = 1;
+        searchIndex.push(c);
+      }
       return '<button class="ftchip' + (cls || '') + (c.dead ? ' dead' : '') +
-        '" data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
+        '" data-cid="' + c.id + '" data-ft-name="' +
+        esc(FB.fullName(c).toLocaleLowerCase()) + '" title="' + esc(FB.fullName(c)) +
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 40, 46) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
@@ -4190,7 +4372,12 @@ window.FB = window.FB || {};
       const grow = kids.length > 0 && depth < MAXDEPTH;
       let h = '<div class="ftnode"><div class="ftcouple">' + couple + '</div>';
       if (grow) {
-        h += '<div class="ftstem"></div><div class="ftkids">';
+        const branchId = 'ft-branch-' + (++branchSerial);
+        h += '<button type="button" class="ftbranch-toggle" data-ft-toggle="' +
+          esc(c.id) + '" aria-expanded="true" aria-controls="' + branchId +
+          '"><span aria-hidden="true">−</span><span>' + esc(FB.T(
+            'Collapse {name}’s branch', { name:c.name })) + '</span></button>' +
+          '<div class="ftstem"></div><div class="ftkids" id="' + branchId + '">';
         for (const k of kids) h += unit(k, depth + 1);
         h += '</div>';
       }
@@ -4209,7 +4396,25 @@ window.FB = window.FB || {};
       return cur;
     }
 
-    let h = '<div class="cmeta" style="font-size:13px">' + esc(FB.isTouch
+    let h = '<div class="family-tree-toolbar"><label for="family-tree-search">' +
+      '<span>' + esc(FB.T('Search family by name')) + '</span>' +
+      '<input type="search" id="family-tree-search" autocomplete="off" ' +
+      'spellcheck="false" placeholder="' + esc(FB.T('Character name')) + '"></label>' +
+      '<div class="family-tree-jumps" role="group" aria-label="' +
+      esc(FB.T('Jump through the family tree')) + '">' +
+      '<button type="button" class="btn small" data-ft-jump="' + esc(me.id) + '">' +
+      esc(FB.T('You')) + '</button>' +
+      '<button type="button" class="btn small" data-ft-jump="' +
+      esc(successor ? successor.id : '') + '"' + (successor ? '' : ' disabled') + '>' +
+      esc(FB.T('Successor')) + '</button>' +
+      '<button type="button" class="btn small" data-ft-jump="' +
+      esc(spouse ? spouse.id : '') + '"' + (spouse ? '' : ' disabled') + '>' +
+      esc(FB.T('Spouse')) + '</button>' +
+      '<button type="button" class="btn small" data-ft-jump="' + esc(founder.id) + '">' +
+      esc(FB.T('House founder')) + '</button></div>' +
+      '<div class="family-tree-search-results" id="family-tree-search-results" ' +
+      'aria-live="polite" hidden></div></div>' +
+      '<div class="cmeta" style="font-size:13px">' + esc(FB.isTouch
       ? FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.')
       : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet.')) +
       '</div>';
@@ -4282,10 +4487,113 @@ window.FB = window.FB || {};
           '</div></div></div></div>';
       }
     }
+    if (!drawn[founder.id]) {
+      h += panelh('House founder') +
+        '<div class="cmeta" style="font-size:13px">' + esc(FB.T(
+          'The first playable head is kept here even when later generations move beyond the bounded tree.')) +
+        '</div><div class="ftwrap"><div class="fttree"><div class="ftnode">' +
+        '<div class="ftcouple">' + chip(founder, 'House founder') +
+        '</div></div></div></div>';
+    }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
     openModal('The Family Tree', h);
     $('gm-cancel').addEventListener('click', UI.closeModal);
     FB.paintFaces($('gm-body'), s);
+
+    function setBranch(toggle, open) {
+      const stem = toggle.nextElementSibling;
+      const kids = stem && stem.nextElementSibling;
+      if (!kids || !kids.classList.contains('ftkids')) return;
+      kids.hidden = !open;
+      stem.hidden = !open;
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.children[0].textContent = open ? '−' : '+';
+      const c = s.chars[toggle.getAttribute('data-ft-toggle')];
+      toggle.children[1].textContent = FB.T(open
+        ? 'Collapse {name}’s branch' : 'Expand {name}’s branch', {
+          name:c ? c.name : FB.T('this family')
+        });
+    }
+
+    function revealChip(chipNode) {
+      let node = chipNode && chipNode.parentElement;
+      while (node && node !== $('gm-body')) {
+        if (node.classList && node.classList.contains('ftkids') && node.hidden) {
+          const stem = node.previousElementSibling;
+          const toggle = stem && stem.previousElementSibling;
+          if (toggle && toggle.hasAttribute('data-ft-toggle')) {
+            setBranch(toggle, true);
+          }
+        }
+        node = node.parentElement;
+      }
+    }
+
+    function jumpToCharacter(cid) {
+      if (!cid) return;
+      const chips = $('gm-body').querySelectorAll('.ftchip[data-cid]');
+      let target = null;
+      for (let i = 0; i < chips.length; i++) {
+        if (chips[i].getAttribute('data-cid') === cid) {
+          target = chips[i];
+          break;
+        }
+      }
+      if (!target) return;
+      revealChip(target);
+      const previous = $('gm-body').querySelector('.ftchip.search-hit');
+      if (previous) previous.classList.remove('search-hit');
+      target.classList.add('search-hit');
+      target.scrollIntoView({ block:'center', inline:'center' });
+      target.focus({ preventScroll:true });
+    }
+
+    const toggles = $('gm-body').querySelectorAll('[data-ft-toggle]');
+    for (let i = 0; i < toggles.length; i++) {
+      toggles[i].addEventListener('click', function () {
+        setBranch(toggles[i],
+          toggles[i].getAttribute('aria-expanded') !== 'true');
+      });
+    }
+    const jumps = $('gm-body').querySelectorAll('[data-ft-jump]');
+    for (let i = 0; i < jumps.length; i++) {
+      jumps[i].addEventListener('click', function () {
+        jumpToCharacter(jumps[i].getAttribute('data-ft-jump'));
+      });
+    }
+    const search = $('family-tree-search');
+    const results = $('family-tree-search-results');
+    search.addEventListener('input', function () {
+      const query = search.value.trim().toLocaleLowerCase();
+      results.innerHTML = '';
+      if (!query) {
+        results.hidden = true;
+        return;
+      }
+      let matched = 0;
+      for (const c of searchIndex) {
+        if (FB.fullName(c).toLocaleLowerCase().indexOf(query) < 0) continue;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn small';
+        button.setAttribute('data-ft-result', c.id);
+        button.textContent = FB.fullName(c) +
+          (byId[c.id] ? ' · ' + FB.T(byId[c.id]) : '');
+        button.addEventListener('click', function () {
+          jumpToCharacter(c.id);
+        });
+        results.appendChild(button);
+        matched++;
+        if (matched >= 8) break;
+      }
+      if (!matched) {
+        const empty = document.createElement('span');
+        empty.className = 'hint';
+        empty.textContent = FB.T('No character in the bounded tree matches that name.');
+        results.appendChild(empty);
+      }
+      results.hidden = false;
+    });
   };
 
   /* ---------- map filters: what a selection highlights ---------- */
@@ -7622,19 +7930,94 @@ window.FB = window.FB || {};
       'No organized opposition group is currently visible, but the listed political costs still apply.');
   }
 
+  const warTargetView = {
+    stateRef:null, search:'', basis:'all', adjacency:'all', rank:'all',
+    diplomacy:'all', sort:'recommended'
+  };
+
+  function warCauseIsAdjacent(s, cause) {
+    const lands = s.realms.player && s.realms.player.alive
+      ? FB.realmTerritory(s, 'player') : (s.player.provs || []);
+    for (const pid of lands) {
+      if (FB.world.adj[pid] && Object.prototype.hasOwnProperty.call(
+        FB.world.adj[pid], cause.target)) return true;
+    }
+    return false;
+  }
+
+  function warCauseBasis(cause) {
+    if (cause.type === 'dejure') return 'dejure';
+    if (cause.type === 'aggression') return 'aggression';
+    return 'claim';
+  }
+
+  function warTargetToolbarHtml() {
+    function option(value, label, current) {
+      return '<option value="' + value + '"' +
+        (current === value ? ' selected' : '') + '>' + esc(label) + '</option>';
+    }
+    return '<div class="war-target-toolbar" id="war-target-toolbar">' +
+      '<label class="war-target-search"><span>' + esc(FB.T(
+        'Search realm, ruler, or territory')) + '</span><input type="search" ' +
+      'id="war-target-search" value="' + esc(warTargetView.search) +
+      '" autocomplete="off" spellcheck="false"></label>' +
+      '<label><span>' + esc(FB.T('Cause')) + '</span><select id="war-target-basis">' +
+      option('all', FB.T('All causes'), warTargetView.basis) +
+      option('dejure', FB.T('De jure rights'), warTargetView.basis) +
+      option('claim', FB.T('Claims and restorations'), warTargetView.basis) +
+      option('aggression', FB.T('War of Aggression'), warTargetView.basis) +
+      '</select></label><label><span>' + esc(FB.T('Adjacency')) +
+      '</span><select id="war-target-adjacency">' +
+      option('all', FB.T('Any distance'), warTargetView.adjacency) +
+      option('adjacent', FB.T('Border targets'), warTargetView.adjacency) +
+      option('distant', FB.T('Distant rights'), warTargetView.adjacency) +
+      '</select></label><label><span>' + esc(FB.T('Enemy rank')) +
+      '</span><select id="war-target-rank">' +
+      option('all', FB.T('Any rank'), warTargetView.rank) +
+      option('lower', FB.T('Lower rank'), warTargetView.rank) +
+      option('peer', FB.T('Same rank'), warTargetView.rank) +
+      option('higher', FB.T('Higher rank'), warTargetView.rank) +
+      '</select></label><label><span>' + esc(FB.T('Diplomacy')) +
+      '</span><select id="war-target-diplomacy">' +
+      option('all', FB.T('Available and blocked'), warTargetView.diplomacy) +
+      option('available', FB.T('Available now'), warTargetView.diplomacy) +
+      option('blocked', FB.T('Blocked now'), warTargetView.diplomacy) +
+      '</select></label><label><span>' + esc(FB.T('Sort')) +
+      '</span><select id="war-target-sort">' +
+      option('recommended', FB.T('Recommended: available rights first'), warTargetView.sort) +
+      option('realm', FB.T('Realm name'), warTargetView.sort) +
+      option('territory', FB.T('Territory name'), warTargetView.sort) +
+      option('rank', FB.T('Enemy rank'), warTargetView.sort) +
+      option('defense', FB.T('Defense strength'), warTargetView.sort) +
+      '</select></label></div>';
+  }
+
   UI.showWarTargets = function (focusRealmId, returnContext) {
     const s = FB.state;
+    if (warTargetView.stateRef !== s) {
+      warTargetView.stateRef = s;
+      warTargetView.search = '';
+      warTargetView.basis = 'all';
+      warTargetView.adjacency = 'all';
+      warTargetView.rank = 'all';
+      warTargetView.diplomacy = 'all';
+      warTargetView.sort = 'recommended';
+    }
     const causes = focusRealmId && FB.realmWarCauses
-      ? FB.realmWarCauses(s, focusRealmId, false)
-      : FB.warCauses(s);
+      ? FB.realmWarCauses(s, focusRealmId, true)
+      : FB.warCauses(s, true, true);
     const musterUpkeep = FB.playerMusterUpkeepParts
       ? FB.playerMusterUpkeepParts(s) : { total:0 };
+    const playerRank = s.realms.player && s.realms.player.alive
+      ? s.realms.player.rank : s.player.tier;
+    const models = [];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
-        })) + '</p></div><div class="gm-list">';
+        })) + '</p></div>' + warTargetToolbarHtml() + '<div class="gm-list war-target-list" ' +
+      'id="war-target-list">';
     for (let ci = 0; ci < causes.length; ci++) {
       const cause = causes[ci];
       const pid = cause.target;
@@ -7646,13 +8029,35 @@ window.FB = window.FB || {};
       const preview = FB.warCausePreview
         ? FB.warCausePreview(s, cause) : null;
       const support = FB.alliedReinforcement(s, rid);
-      h += '<button class="actionbtn" data-war-cause="' + ci +
+      const ruler = FB.realmRulerCharacterSnapshot
+        ? FB.realmRulerCharacterSnapshot(s, rid) : null;
+      const rulerName = ruler ? FB.fullName(ruler) :
+        (realm && realm.ruler && realm.ruler.name
+          ? realm.ruler.name : FB.T('unknown ruler'));
+      const territory = FB.realmProvinces(s, rid).map(function (id) {
+        return FB.world.byId[id] ? FB.world.byId[id].name : id;
+      });
+      const adjacent = warCauseIsAdjacent(s, cause);
+      const rank = realm ? realm.rank || 0 : 0;
+      const blockedReason = FB.warCauseBlockedReason(cause);
+      const search = [pr.name, realm ? realm.name : '', rulerName]
+        .concat(territory).join(' ').toLocaleLowerCase();
+      models.push({
+        index:ci, cause:cause, realmName:realm ? realm.name : '',
+        territoryName:pr.name, rank:rank, defense:enMen,
+        basis:warCauseBasis(cause), adjacent:adjacent,
+        blocked:!!cause.blocked, search:search
+      });
+      h += '<button class="actionbtn war-target-row" data-war-cause="' + ci +
         '" data-war-cause-type="' + esc(cause.type) +
-        '" data-war-cause-target="' + esc(cause.target) + '">⚔ ' + esc(pr.name) +
+        '" data-war-cause-target="' + esc(cause.target) + '"' +
+        (cause.blocked ? ' disabled' : '') + '>⚔ ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T(
-          '{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}', {
+          '{cause} · {rank} {realm}, ruled by {ruler} ({counties}) · defense ~{theirs} against your ~{yours}{support}', {
             cause: causeText,
             realm: realm ? realm.name : '?',
+            rank:realm ? FB.realmRankTitle(s, realm) : FB.T('Realm'),
+            ruler:rulerName,
             counties: countyCountText(s, FB.realmProvinces(s, rid).length),
             theirs: menText(s, enMen),
             yours: menText(s, FB.playerLevy(s)),
@@ -7663,12 +8068,18 @@ window.FB = window.FB || {};
           })) + '</span><span class="adesc' +
           (cause.type === 'aggression' ? ' warnote' : '') + '">' +
           esc(warCausePickerConsequenceText(s, preview)) +
-          '</span>' + (cause.sacrilegious
+          '</span><span class="adesc ' + (cause.blocked ? 'warnote' : 'op-good') + '">' +
+          esc(cause.blocked ? blockedReason : FB.T(
+            'Available now · {distance}', {
+              distance:adjacent ? FB.T('border target') : FB.T('distant right')
+            })) + '</span>' + (cause.sacrilegious
             ? '<span class="adesc warnote">' + esc(FB.T(
               '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
             : '') + '</button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' +
+    h += '</div><div class="hint large-list-no-results" id="war-target-empty" hidden>' +
+      esc(FB.T('No war target matches the current search and filters.')) +
+      '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Think better of it')) + '</button>';
     openModal(FB.T('Choose Your Conquest'), h, {
       historyView:!!returnContext,
@@ -7676,6 +8087,64 @@ window.FB = window.FB || {};
         interactionReturn(returnContext);
       }
     });
+    const list = $('war-target-list');
+    function compareWarTargets(a, b) {
+      let result = 0;
+      if (warTargetView.sort === 'recommended') {
+        result = Number(a.blocked) - Number(b.blocked) ||
+          (a.basis === 'aggression' ? 1 : 0) -
+            (b.basis === 'aggression' ? 1 : 0) ||
+          Number(!a.adjacent) - Number(!b.adjacent) ||
+          a.defense - b.defense;
+      } else if (warTargetView.sort === 'realm') {
+        result = a.realmName.localeCompare(b.realmName);
+      } else if (warTargetView.sort === 'territory') {
+        result = a.territoryName.localeCompare(b.territoryName);
+      } else if (warTargetView.sort === 'rank') {
+        result = a.rank - b.rank;
+      } else if (warTargetView.sort === 'defense') {
+        result = a.defense - b.defense;
+      }
+      return result || a.realmName.localeCompare(b.realmName) ||
+        a.territoryName.localeCompare(b.territoryName) ||
+        a.cause.type.localeCompare(b.cause.type) || a.index - b.index;
+    }
+    function applyWarTargetView() {
+      warTargetView.search = $('war-target-search').value.trim();
+      warTargetView.basis = $('war-target-basis').value;
+      warTargetView.adjacency = $('war-target-adjacency').value;
+      warTargetView.rank = $('war-target-rank').value;
+      warTargetView.diplomacy = $('war-target-diplomacy').value;
+      warTargetView.sort = $('war-target-sort').value;
+      const query = warTargetView.search.toLocaleLowerCase();
+      const ordered = models.slice().sort(compareWarTargets);
+      let visible = 0;
+      for (const model of ordered) {
+        const row = list.querySelector('[data-war-cause="' + model.index + '"]');
+        list.appendChild(row);
+        const rankMatch = warTargetView.rank === 'all' ||
+          (warTargetView.rank === 'lower' && model.rank < playerRank) ||
+          (warTargetView.rank === 'peer' && model.rank === playerRank) ||
+          (warTargetView.rank === 'higher' && model.rank > playerRank);
+        const show = (!query || model.search.indexOf(query) >= 0) &&
+          (warTargetView.basis === 'all' || model.basis === warTargetView.basis) &&
+          (warTargetView.adjacency === 'all' ||
+            (warTargetView.adjacency === 'adjacent') === model.adjacent) &&
+          rankMatch &&
+          (warTargetView.diplomacy === 'all' ||
+            (warTargetView.diplomacy === 'blocked') === model.blocked);
+        row.hidden = !show;
+        if (show) visible++;
+      }
+      $('war-target-empty').hidden = visible > 0;
+      refreshLargeListKeyhints($('war-target-toolbar'));
+    }
+    const controls = $('war-target-toolbar').querySelectorAll('input, select');
+    for (let i = 0; i < controls.length; i++) {
+      controls[i].addEventListener(controls[i].tagName === 'INPUT'
+        ? 'input' : 'change', applyWarTargetView);
+    }
+    applyWarTargetView();
     document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
         const cause = causes[Number(b.dataset.warCause)];
@@ -12801,7 +13270,10 @@ window.FB = window.FB || {};
     };
   }
 
-  UI.showHouseholdPlan = function () {
+  UI.showHouseholdPlan = function (replaceView) {
+    if (replaceView && typeof replaceView.preventDefault === 'function') {
+      replaceView = false;
+    }
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const head = s.chars[s.player.charId];
@@ -12825,7 +13297,7 @@ window.FB = window.FB || {};
       add(s.chars[record.charId], 'retainer', record);
     }
 
-    const enterprises = FB.enterpriseList(s);
+    const enterprises = sortedEnterpriseRecords(s, FB.enterpriseList(s).slice());
     const labels = {
       person:FB.T('Person'),
       education:FB.T('Education'),
@@ -12898,6 +13370,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn" id="household-match-policy" aria-label="' +
       esc(FB.T('Manage descendant match assistant')) + '">' +
       esc(FB.T('Manage assistant…')) + '</button></div>' +
+      (enterprises.length ? enterpriseViewControlsHtml('household', false) : '') +
       '<div class="household-plan-wrap"><table class="household-plan-table">' +
       '<thead><tr>';
     for (const header of headers) h += '<th scope="col">' + esc(header) + '</th>';
@@ -12937,9 +13410,13 @@ window.FB = window.FB || {};
       '<button type="button" class="btn" id="household-plan-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('📋 Household Plan'), h, {
-      modalClass:'fullsheet-modal household-plan-modal'
+      modalClass:'fullsheet-modal household-plan-modal',
+      replaceView:!!replaceView
     });
     FB.paintFaces($('gm-body'), s);
+    wireEnterpriseViewControls('household', function () {
+      UI.showHouseholdPlan(true);
+    });
     $('household-education-policy').addEventListener('click', function () {
       UI.showEducationPolicy();
     });
@@ -13404,6 +13881,129 @@ window.FB = window.FB || {};
     return FB.T('No property upkeep; worker contracts remain separate');
   }
 
+  function enterpriseCategoryName(profession) {
+    if (profession === 'farmer') return FB.T('Farming');
+    if (profession === 'craftsman') return FB.T('Craft');
+    if (profession === 'merchant') return FB.T('Trade');
+    return FB.T('Other enterprises');
+  }
+
+  function enterpriseProblemState(s, enterprise) {
+    const worker = enterprise.workerId && s.chars[enterprise.workerId];
+    const eligible = FB.enterpriseWorkersFor(s, enterprise);
+    let valid = false;
+    for (const candidate of eligible) {
+      if (worker && !worker.dead && candidate.id === worker.id) valid = true;
+    }
+    if (valid) return 'staffed';
+    return eligible.length ? 'idle' : 'blocked';
+  }
+
+  function sortedEnterpriseRecords(s, source) {
+    const view = largeListViews.work;
+    if (view.stateRef !== s) {
+      view.stateRef = s;
+      view.search = '';
+      view.filter = 'all';
+      view.sections = {};
+      view.scrollTop = 0;
+      view.focusKey = null;
+      view.enterpriseGroup = 'none';
+      view.enterpriseSort = 'attention';
+    }
+    const rows = source.map(function (enterprise, index) {
+      const def = FBDATA.enterprises[enterprise.type] || {};
+      return {
+        enterprise:enterprise,
+        index:index,
+        name:def.name ? dt(s, 'enterprise', enterprise.type, def, 'name') : enterprise.type,
+        place:enterprisePlace(s, enterprise),
+        value:Number(def.cost) || 0,
+        yield:FB.enterpriseYield(s, enterprise),
+        staffing:enterpriseProblemState(s, enterprise)
+      };
+    });
+    const staffingOrder = { staffed:0, idle:1, blocked:2 };
+    const attentionOrder = { idle:0, blocked:1, staffed:2 };
+    rows.sort(function (a, b) {
+      let result = 0;
+      if (view.enterpriseSort === 'name') {
+        result = a.name.localeCompare(b.name);
+      } else if (view.enterpriseSort === 'acquisition') {
+        result = a.index - b.index;
+      } else if (view.enterpriseSort === 'value') {
+        result = b.value - a.value;
+      } else if (view.enterpriseSort === 'yield') {
+        result = b.yield - a.yield;
+      } else if (view.enterpriseSort === 'settlement') {
+        result = a.place.localeCompare(b.place);
+      } else if (view.enterpriseSort === 'staffing') {
+        result = staffingOrder[a.staffing] - staffingOrder[b.staffing];
+      } else {
+        result = attentionOrder[a.staffing] - attentionOrder[b.staffing];
+      }
+      return result || a.name.localeCompare(b.name) || a.index - b.index ||
+        String(a.enterprise.uid).localeCompare(String(b.enterprise.uid));
+    });
+    return rows.map(function (row) { return row.enterprise; });
+  }
+
+  function enterpriseSortOptions(selected) {
+    const options = [
+      ['attention', FB.T('Problems first')],
+      ['name', FB.T('Name')],
+      ['acquisition', FB.T('Acquisition order')],
+      ['value', FB.T('Value, highest first')],
+      ['yield', FB.T('Yield, highest first')],
+      ['settlement', FB.T('Settlement')],
+      ['staffing', FB.T('Staffing state')]
+    ];
+    let h = '';
+    for (const option of options) {
+      h += '<option value="' + option[0] + '"' +
+        (selected === option[0] ? ' selected' : '') + '>' +
+        esc(option[1]) + '</option>';
+    }
+    return h;
+  }
+
+  function enterpriseViewControlsHtml(prefix, includeGroup) {
+    const view = largeListViews.work;
+    let h = '<div class="enterprise-view-controls" data-enterprise-view-controls="' +
+      esc(prefix) + '">';
+    if (includeGroup) {
+      h += '<label><span>' + esc(FB.T('Group enterprises')) + '</span><select ' +
+        'data-enterprise-group><option value="none"' +
+        (view.enterpriseGroup === 'none' ? ' selected' : '') + '>' +
+        esc(FB.T('No grouping')) + '</option><option value="category"' +
+        (view.enterpriseGroup === 'category' ? ' selected' : '') + '>' +
+        esc(FB.T('Farming, Craft, and Trade')) +
+        '</option><option value="settlement"' +
+        (view.enterpriseGroup === 'settlement' ? ' selected' : '') + '>' +
+        esc(FB.T('Settlement')) + '</option></select></label>';
+    }
+    h += '<label><span>' + esc(FB.T('Enterprise order')) + '</span><select ' +
+      'data-enterprise-sort>' + enterpriseSortOptions(view.enterpriseSort) +
+      '</select></label></div>';
+    return h;
+  }
+
+  function wireEnterpriseViewControls(prefix, onChange) {
+    const root = $('gm-body').querySelector(
+      '[data-enterprise-view-controls="' + prefix + '"]');
+    if (!root) return;
+    const group = root.querySelector('[data-enterprise-group]');
+    const sort = root.querySelector('[data-enterprise-sort]');
+    if (group) group.addEventListener('change', function () {
+      largeListViews.work.enterpriseGroup = group.value;
+      onChange();
+    });
+    if (sort) sort.addEventListener('change', function () {
+      largeListViews.work.enterpriseSort = sort.value;
+      onChange();
+    });
+  }
+
   function enterpriseTransferRule() {
     return FB.T('Passes to heirs as family property; does not follow conquest');
   }
@@ -13626,7 +14226,7 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showLivelihoods = function (returnContext) {
+  UI.showLivelihoods = function (returnContext, replaceView) {
     if (returnContext && typeof returnContext.preventDefault === 'function') {
       returnContext = null;
     }
@@ -13639,7 +14239,7 @@ window.FB = window.FB || {};
       '</p><p class="hint">' + esc(FB.T(
         'This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.')) +
       '</p></div>';
-    const enterprises = FB.enterpriseList(s);
+    const enterprises = sortedEnterpriseRecords(s, FB.enterpriseList(s).slice());
     const assignments = {};
     for (const enterprise of enterprises) {
       if (!enterprise.workerId) continue;
@@ -13817,9 +14417,10 @@ window.FB = window.FB || {};
         '<span class="large-list-row-title">' +
         esc(dt(s, 'enterprise', e.type, def, 'name')) +
         '</span><span class="adesc">' + esc(FB.T(
-          '{worker} · {place} · about {money:amount}/season{lock}', {
+          '{worker} · {place} · base value {money:value} · about {money:amount}/season{lock}', {
             worker:workerText,
             place:enterprisePlace(s, e),
+            value:def.cost,
             amount:Math.round(liveYield * 10) / 10,
             lock:e.workerLocked && unresolved ? FB.T(' · 🔒 lock recorded') : ''
           })) + '</span></span></span>' +
@@ -13827,13 +14428,13 @@ window.FB = window.FB || {};
       enterpriseModels.push({
         html:html, attention:attention,
         priority:state === 'idle' ? 0 : (state === 'unavailable' ? 1 : 2),
-        index:enterpriseIndex++, identity:e.uid
+        index:enterpriseIndex++, identity:e.uid,
+        groupKey:def.profession || 'other',
+        groupLabel:enterpriseCategoryName(def.profession),
+        settlementKey:e.provinceId + '-' + e.settlement,
+        settlementLabel:enterprisePlace(s, e)
       });
     }
-    enterpriseModels.sort(function (a, b) {
-      return a.priority - b.priority || a.index - b.index ||
-        String(a.identity).localeCompare(String(b.identity));
-    });
 
     const enterpriseSummary =
       kv('Owned enterprises', esc(String(enterpriseModels.length))) +
@@ -13861,23 +14462,41 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T('Buy productive property; further copies of one kind cost more.')) +
         '</span></button>';
     }
-    h += largeListSurfaceHtml('work', [
-      {
-        id:'household-work',
-        title:FB.T('Household work'),
-        summary:workSummary,
-        rows:workModels,
-        empty:FB.T('No household member is currently old enough to work or train.')
-      },
-      {
-        id:'family-enterprises',
-        title:FB.T('Family enterprises'),
-        summary:enterpriseSummary,
-        rows:enterpriseModels,
-        footer:enterpriseFooter,
+    const enterpriseSections = [];
+    const groupMode = largeListViews.work.enterpriseGroup;
+    if (groupMode === 'none' || !enterpriseModels.length) {
+      enterpriseSections.push({
+        id:'family-enterprises', title:FB.T('Family enterprises'),
+        rows:enterpriseModels, footer:enterpriseFooter,
         empty:FB.T('No enterprise yet. Open one in a settlement below.')
+      });
+    } else {
+      const groups = {}, groupOrder = [];
+      for (const model of enterpriseModels) {
+        const key = groupMode === 'category' ? model.groupKey : model.settlementKey;
+        if (!groups[key]) {
+          groups[key] = {
+            id:'family-enterprises-' + groupMode + '-' + key,
+            title:groupMode === 'category' ? model.groupLabel : model.settlementLabel,
+            rows:[]
+          };
+          groupOrder.push(key);
+        }
+        groups[key].rows.push(model);
       }
-    ], [
+      for (const key of groupOrder) enterpriseSections.push(groups[key]);
+      enterpriseSections[enterpriseSections.length - 1].footer = enterpriseFooter;
+    }
+    const workSections = [{
+      id:'household-work',
+      title:FB.T('Household work'),
+      summary:workSummary,
+      rows:workModels,
+      empty:FB.T('No household member is currently old enough to work or train.')
+    }].concat(enterpriseSections);
+    h += '<div class="enterprise-list-summary">' + enterpriseSummary + '</div>' +
+      enterpriseViewControlsHtml('work', true) +
+      largeListSurfaceHtml('work', workSections, [
       { id:'all', label:FB.T('All') },
       { id:'attention', label:FB.T('Needs attention') },
       { id:'assigned', label:FB.T('Assigned') },
@@ -13891,9 +14510,13 @@ window.FB = window.FB || {};
       esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
     modalOptions.modalClass = 'large-list-modal work-list-modal';
+    modalOptions.replaceView = !!replaceView;
     openModal(FB.T('🧰 Work & Enterprises'), h, modalOptions);
     FB.paintFaces($('gm-body'), s);
     initLargeListSurface('work', { restoreFocus:true });
+    wireEnterpriseViewControls('work', function () {
+      UI.showLivelihoods(returnContext, true);
+    });
     document.querySelectorAll('[data-career]').forEach(function (b) {
       b.addEventListener('click', function () {
         UI.showCareerPicker(b.dataset.career, returnContext);
@@ -18588,6 +19211,195 @@ window.FB = window.FB || {};
       '</p>';
   }
 
+  function shortcutTargetOptions(selected) {
+    const s = FB.state;
+    const seen = {};
+    let focusOptions = '';
+    for (const focus of FB.focuses || []) {
+      const target = focusShortcutTarget(focus);
+      if (seen[target]) continue;
+      seen[target] = 1;
+      const label = focus.shortcutFamily
+        ? shortcutFamilyLabel(focus.shortcutFamily)
+        : (s ? dt(s, 'focus', focus.id, focus, 'label') : FB.T(focus.label));
+      focusOptions += '<option value="' + esc(target) + '"' +
+        (selected === target ? ' selected' : '') + '>' + esc(label) +
+        '</option>';
+    }
+    const actions = [];
+    for (const action of FB.instants || []) {
+      if (action.compatibilityAlias) continue;
+      actions.push({
+        target:'action:' + action.id,
+        label:s ? dt(s, 'action', action.id, action, 'label') : FB.T(action.label)
+      });
+    }
+    actions.sort(function (a, b) {
+      return a.label.localeCompare(b.label) || a.target.localeCompare(b.target);
+    });
+    let actionOptions = '';
+    for (const action of actions) {
+      actionOptions += '<option value="' + esc(action.target) + '"' +
+        (selected === action.target ? ' selected' : '') + '>' +
+        esc(action.label) + '</option>';
+    }
+    let unknown = '';
+    if (selected && !seen[selected] &&
+        !actions.some(function (action) { return action.target === selected; })) {
+      unknown = '<option value="' + esc(selected) + '" selected>' +
+        esc(FB.T('Unavailable saved action: {id}', { id:selected })) +
+        '</option>';
+    }
+    return '<option value="">' + esc(FB.T('Choose an action')) +
+      '</option>' + unknown + '<optgroup label="' +
+      esc(FB.T('Daily focuses')) + '">' + focusOptions +
+      '</optgroup><optgroup label="' + esc(FB.T('Deeds')) + '">' +
+      actionOptions + '</optgroup>';
+  }
+
+  function shortcutKeyOptions(selected) {
+    let h = '<option value="">' + esc(FB.T('Key')) + '</option>';
+    for (const key of ACTION_SHORTCUT_KEYS) {
+      h += '<option value="' + key + '"' +
+        (selected === key ? ' selected' : '') + '>' +
+        key.toUpperCase() + '</option>';
+    }
+    return h;
+  }
+
+  function shortcutRowHtml(index, key, target) {
+    return '<div class="shortcut-binding-row" data-shortcut-row="' + index + '">' +
+      '<label><span>' + esc(FB.T('Key')) + '</span><select data-shortcut-key>' +
+      shortcutKeyOptions(key) + '</select></label>' +
+      '<label class="shortcut-action-select"><span>' + esc(FB.T('Action')) +
+      '</span><select data-shortcut-target>' + shortcutTargetOptions(target) +
+      '</select></label><button type="button" class="btn small" ' +
+      'data-shortcut-remove aria-label="' + esc(FB.T('Remove shortcut')) + '">' +
+      esc(FB.T('Remove')) + '</button><span class="shortcut-binding-status" ' +
+      'data-shortcut-status></span></div>';
+  }
+
+  function showShortcutSettings(replaceView) {
+    const bindings = shortcutBindings();
+    const rows = [];
+    for (const key of ACTION_SHORTCUT_KEYS) {
+      if (bindings[key]) rows.push({ key:key, target:bindings[key] });
+    }
+    if (!rows.length) rows.push({ key:'', target:'' });
+    let body = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds.')) +
+      '</p><p class="hint">' + esc(FB.T(
+        'The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block.')) +
+      '</p></div><div class="shortcut-bindings" id="shortcut-bindings">';
+    for (let i = 0; i < rows.length; i++) {
+      body += shortcutRowHtml(i, rows[i].key, rows[i].target);
+    }
+    body += '</div><button type="button" class="btn" id="shortcut-add">' +
+      esc(FB.T('Add shortcut')) + '</button><div class="progressnote warnote" ' +
+      'id="shortcut-conflict" role="alert" hidden></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="shortcut-save">' +
+      esc(FB.T('Save shortcuts')) + '</button>' +
+      '<button type="button" class="btn" id="shortcut-reset">' +
+      esc(FB.T('Reset to Defaults')) + '</button>' +
+      '<button type="button" class="btn" id="shortcut-back">' +
+      esc(FB.T('Back to Settings')) + '</button></div>';
+    openModal(FB.T('Keyboard shortcuts'), body, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      modalClass:'fullsheet-modal shortcut-settings-modal',
+      historyBackRender:function () { UI.showSettings(); }
+    });
+    let nextRow = rows.length;
+    const root = $('shortcut-bindings');
+
+    function validateShortcutDraft() {
+      const used = {};
+      let error = '';
+      const draftRows = root.querySelectorAll('[data-shortcut-row]');
+      for (let i = 0; i < draftRows.length; i++) {
+        const key = draftRows[i].querySelector('[data-shortcut-key]').value;
+        const target = draftRows[i].querySelector('[data-shortcut-target]').value;
+        const statusNode = draftRows[i].querySelector('[data-shortcut-status]');
+        if ((key && !target) || (!key && target)) {
+          if (!error) error = FB.T('Choose both a key and an action for every shortcut.');
+          statusNode.textContent = FB.T('Incomplete binding');
+        } else if (key && used[key]) {
+          if (!error) error = FB.T('{key} is assigned more than once.', {
+            key:key.toUpperCase()
+          });
+          statusNode.textContent = FB.T('Conflicts with another binding');
+        } else if (key && target) {
+          used[key] = 1;
+          const status = actionShortcutStatus(target);
+          statusNode.textContent = status.available
+            ? FB.T('Available now: {action}', { action:status.label })
+            : FB.T('Reserved but unavailable: {reason}', { reason:status.reason });
+        } else {
+          statusNode.textContent = '';
+        }
+      }
+      $('shortcut-conflict').hidden = !error;
+      $('shortcut-conflict').textContent = error;
+      $('shortcut-save').disabled = !!error;
+      $('shortcut-add').disabled = draftRows.length >= ACTION_SHORTCUT_KEYS.length;
+      return !error;
+    }
+
+    function wireShortcutRow(row) {
+      row.querySelector('[data-shortcut-key]').addEventListener(
+        'change', validateShortcutDraft);
+      row.querySelector('[data-shortcut-target]').addEventListener(
+        'change', validateShortcutDraft);
+      row.querySelector('[data-shortcut-remove]').addEventListener('click', function () {
+        row.parentNode.removeChild(row);
+        if (!root.querySelector('[data-shortcut-row]')) {
+          root.insertAdjacentHTML('beforeend', shortcutRowHtml(nextRow++, '', ''));
+          wireShortcutRow(root.lastElementChild);
+        }
+        validateShortcutDraft();
+      });
+    }
+    const initialRows = root.querySelectorAll('[data-shortcut-row]');
+    for (let i = 0; i < initialRows.length; i++) wireShortcutRow(initialRows[i]);
+    validateShortcutDraft();
+    $('shortcut-add').addEventListener('click', function () {
+      root.insertAdjacentHTML('beforeend', shortcutRowHtml(nextRow++, '', ''));
+      wireShortcutRow(root.lastElementChild);
+      validateShortcutDraft();
+      root.lastElementChild.querySelector('[data-shortcut-key]').focus();
+    });
+    $('shortcut-save').addEventListener('click', function () {
+      if (!validateShortcutDraft()) return;
+      const saved = {};
+      const draftRows = root.querySelectorAll('[data-shortcut-row]');
+      for (let i = 0; i < draftRows.length; i++) {
+        const key = draftRows[i].querySelector('[data-shortcut-key]').value;
+        const target = draftRows[i].querySelector('[data-shortcut-target]').value;
+        if (key && target) saved[key] = target;
+      }
+      FB.game.uiPrefs.actionBindings = saved;
+      FB.game.saveUiPrefs();
+      if (FB.state) UI.refresh();
+      modalHistoryBack(function () { UI.showSettings(); });
+    });
+    $('shortcut-reset').addEventListener('click', function () {
+      const defaults = FB.game.ACTION_SHORTCUT_DEFAULTS || {
+        q:'action:livelihoods'
+      };
+      FB.game.uiPrefs.actionBindings = {};
+      for (const key in defaults) {
+        FB.game.uiPrefs.actionBindings[key] = defaults[key];
+      }
+      FB.game.saveUiPrefs();
+      if (FB.state) UI.refresh();
+      showShortcutSettings(true);
+    });
+    $('shortcut-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showSettings(); });
+    });
+  }
+  UI.showShortcutSettings = function () { showShortcutSettings(false); };
+
   /* ================= settings ================= */
   UI.showSettings = function () {
     const G = FB.game;
@@ -18607,6 +19419,15 @@ window.FB = window.FB || {};
       esc(FB.T('Hide beginner hints')) + '</b><span class="adesc">' +
       esc(FB.T('Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.')) +
       '</span></label>';
+    if (!FB.isTouch) {
+      const bindingCount = Object.keys(shortcutBindings()).length;
+      h += '<button type="button" class="btn shortcut-settings-entry" ' +
+        'id="set-shortcuts">' + esc(FB.T('Keyboard shortcuts…')) +
+        '<span class="adesc">' + esc(FB.T(
+          '{count} semantic bindings saved. Number keys remain positional in dialogs.', {
+            count:bindingCount
+          })) + '</span></button>';
+    }
     if (G.observe) { // watcher comforts: quiet toasts, or no panel at all
       h += '<div class="gm-body-text" style="margin-top:8px"><p>While observing:</p></div>' +
         '<label class="autorow"><input type="checkbox" id="set-obsquiet"' + (G.obsQuiet ? ' checked' : '') + '> ' +
@@ -18636,6 +19457,9 @@ window.FB = window.FB || {};
       G.saveUiPrefs();
       if (FB.state && !G.observe) renderActions();
     });
+    if ($('set-shortcuts')) {
+      $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);
+    }
     if (G.observe) {
       $('set-obsquiet').addEventListener('change', function () { G.obsQuiet = $('set-obsquiet').checked; });
       $('set-obsbare').addEventListener('change', function () {
