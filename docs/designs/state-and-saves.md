@@ -24,15 +24,23 @@ while it parents a living player descendant. Papal sanction grounds are transien
 character-keyed state and are deleted when that character dies rather than preserving
 an otherwise stale id.
 
-**The reigning-ruler index must not live on `state`.** `S.serialize` dumps `state`
-wholesale, so a `charId → realmId` map hung there would be written into every save as
-pure derived bloat at roughly the full court population. It is module-private in
+**The reigning-ruler index must not live on `state`.** `S.serialize` writes `state`
+through a lossless compacting replacer, but a `charId → realmId` map hung there would
+still be pure derived bloat at roughly the full court population. It is module-private in
 `js/world.js`, rebuilt by `FB.ensureDynasticState` on both new game and load, and
 verified on every hit. The family index behind `FB.kinOf`, `FB.spousesOf`, and
 `FB.stepchildrenOf` is derived in the same way and lives in `js/model.js`; it is keyed
 on the turn as well as on an explicit stamp the family writers bump, so a writer that
 forgets `FB.touchFamily` costs a card that is stale until tomorrow rather than one that
 is wrong forever.
+
+The version-3 wire form omits only reconstructible court fields: member `childIds`
+(rebuilt from canonical `parentId`), a derived member-to-character id, true/null member
+defaults, and false/null defaults on royal characters. It also writes national
+`exposed` as the technologies not already in `completed`, because completion already
+implies exposure. `S.restore` expands all of these before the ordinary ensure chain, so
+live `FB.state` keeps its explicit object shape and uncompressed older version-3 saves
+pass through unchanged. The replacer never mutates the running state.
 
 **The ensure chain on load is not RNG-protected, and court materialization consumes
 randomness.** `S.restore` sets the saved RNG state and then runs the whole chain; only

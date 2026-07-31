@@ -8,6 +8,104 @@ window.FB = window.FB || {};
   FB.save = S;
   const PREFIX = 'fb_';
 
+  function own(o, key) {
+    return Object.prototype.hasOwnProperty.call(o, key);
+  }
+
+  function royalMemberRecord(o) {
+    return !!(o && typeof o.id === 'string' &&
+      o.id.indexOf('royal_') === 0 && own(o, 'parentId') &&
+      own(o, 'charId'));
+  }
+
+  /* Keep live state explicit, but do not pay for values the restore boundary
+     can reconstruct exactly. The member tree's parentId is canonical, derived
+     character ids come from member ids, and completed technology already
+     implies exposure. Returning undefined omits only object properties; no
+     live object is mutated while a slot or export is written. */
+  function saveReplacer(key, value) {
+    const holder = this;
+    if (royalMemberRecord(holder)) {
+      if (key === 'childIds') return undefined;
+      if (key === 'alive' && value === true) return undefined;
+      if (key === 'role' && value === null) return undefined;
+      if (key === 'charId' && value ===
+          'ro_' + holder.id.slice('royal_'.length)) {
+        const c = FB.state && FB.state.chars && FB.state.chars[value];
+        if (c && c.royalLine && c.royalLine.memberId === holder.id) {
+          return undefined;
+        }
+      }
+    }
+    if (holder && holder.royalLine) {
+      if (key === 'dead' && value === false) return undefined;
+      if (key === 'role' && value === null) return undefined;
+      if ((key === 'fatherId' || key === 'motherId' || key === 'spouseId') &&
+          value === null) return undefined;
+    }
+    if (key === 'exposed' && Array.isArray(value) && holder &&
+        Array.isArray(holder.completed) && Array.isArray(holder.active) &&
+        holder.progress && own(holder, 'reserve')) {
+      return value.filter(function (id) {
+        return holder.completed.indexOf(id) < 0;
+      });
+    }
+    return value;
+  }
+
+  /* Inverse of saveReplacer. This runs before any ordinary load repair so all
+     older code sees the same explicit runtime shape it saw before save
+     compaction was introduced. It is also additive: uncompressed version-3
+     saves already carrying these fields pass through unchanged. */
+  function inflateState(state) {
+    if (!state) return state;
+    const chars = state.chars || {};
+    for (const id in chars) {
+      const c = chars[id];
+      if (!c || !c.royalLine) continue;
+      if (!own(c, 'dead')) c.dead = false;
+      if (!own(c, 'role')) c.role = null;
+      if (!own(c, 'fatherId')) c.fatherId = null;
+      if (!own(c, 'motherId')) c.motherId = null;
+      if (!own(c, 'spouseId')) c.spouseId = null;
+    }
+    const realms = state.realms || {};
+    for (const rid in realms) {
+      const succession = realms[rid] && realms[rid].succession;
+      const members = succession && succession.members;
+      if (!members) continue;
+      for (const id in members) {
+        const member = members[id];
+        if (!member) continue;
+        if (!own(member, 'alive')) member.alive = true;
+        if (!own(member, 'role')) member.role = null;
+        if (!Array.isArray(member.childIds)) member.childIds = [];
+      }
+      for (const id in members) {
+        const member = members[id];
+        const parent = member && member.parentId && members[member.parentId];
+        if (parent && parent.childIds.indexOf(id) < 0) {
+          parent.childIds.push(id);
+        }
+        if (!member || member.charId || id.indexOf('royal_') !== 0) continue;
+        const charId = 'ro_' + id.slice('royal_'.length);
+        const c = chars[charId];
+        if (c && c.royalLine && c.royalLine.realmId === rid &&
+            c.royalLine.memberId === id) member.charId = charId;
+      }
+    }
+    const realmTech = state.realmTech || {};
+    for (const rid in realmTech) {
+      const record = realmTech[rid];
+      if (!record || !Array.isArray(record.completed) ||
+          !Array.isArray(record.exposed)) continue;
+      for (const id of record.completed) {
+        if (record.exposed.indexOf(id) < 0) record.exposed.push(id);
+      }
+    }
+    return state;
+  }
+
   function key(slot) { return PREFIX + (slot === 'auto' ? 'auto' : 'slot' + slot); }
 
   /* storage probe — some browsers refuse localStorage outright (iOS in-app
@@ -44,7 +142,7 @@ window.FB = window.FB || {};
         year: s.date.year,
         season: s.date.season
       }
-    });
+    }, saveReplacer);
   };
 
   S.toSlot = function (slot) {
@@ -158,7 +256,7 @@ window.FB = window.FB || {};
   S.restore = function (data) {
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
-    FB.state = data.state;
+    FB.state = inflateState(data.state);
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }

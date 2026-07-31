@@ -124,3 +124,88 @@ test('an eager-court save stays within the storage budget and reloads whole',
       withinBudget:true
     });
   });
+
+test('save compaction rehydrates court links and technology exposure',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let sample = null;
+      for (const rid in s.realms) {
+        const realm = s.realms[rid];
+        const succession = realm && realm.alive && rid !== 'player' &&
+          realm.succession;
+        const member = succession && succession.rulerMemberId &&
+          succession.members[succession.rulerMemberId];
+        const c = member && member.charId && s.chars[member.charId];
+        if (!member || !c || member.role === 'consort' ||
+            member.charId !== FB.courtCharacterId(member.id)) continue;
+        sample = {
+          rid:rid,
+          memberId:member.id,
+          charId:c.id,
+          childCount:member.childIds.length
+        };
+        break;
+      }
+      let techSample = null;
+      for (const rid in s.realmTech) {
+        const record = s.realmTech[rid];
+        for (const id of record.completed) {
+          if (record.exposed.indexOf(id) >= 0) {
+            techSample = { rid:rid, id:id };
+            break;
+          }
+        }
+        if (techSample) break;
+      }
+      if (!sample || !techSample) return { skipped:true };
+
+      const payload = JSON.parse(FB.save.serialize());
+      const rawSuccession = payload.state.realms[sample.rid].succession;
+      const rawMember = rawSuccession.members[sample.memberId];
+      const rawChar = payload.state.chars[sample.charId];
+      const rawTech = payload.state.realmTech[techSample.rid];
+      const own = Object.prototype.hasOwnProperty;
+      const compact = !own.call(rawMember, 'charId') &&
+        !own.call(rawMember, 'childIds') &&
+        !own.call(rawMember, 'alive') &&
+        !own.call(rawMember, 'role') &&
+        !own.call(rawChar, 'dead') &&
+        !own.call(rawChar, 'role') &&
+        !own.call(rawChar, 'fatherId') &&
+        !own.call(rawChar, 'motherId') &&
+        rawTech.completed.indexOf(techSample.id) >= 0 &&
+        rawTech.exposed.indexOf(techSample.id) < 0;
+
+      FB.save.restore(payload);
+      const restoredMember = FB.state.realms[sample.rid]
+        .succession.members[sample.memberId];
+      const restoredChar = FB.state.chars[sample.charId];
+      const restoredTech = FB.state.realmTech[techSample.rid];
+      const restoredRuler = FB.realmRulerCharacterSnapshot(
+        FB.state, sample.rid);
+      return {
+        skipped:false,
+        compact:compact,
+        member:!!restoredMember && restoredMember.charId === sample.charId &&
+          restoredMember.alive === true && restoredMember.role === null &&
+          restoredMember.childIds.length === sample.childCount,
+        character:!!restoredChar && restoredChar.dead === false &&
+          restoredChar.role === null && restoredChar.fatherId === null &&
+          restoredChar.motherId === null,
+        ruler:!!restoredRuler && restoredRuler.id === sample.charId,
+        exposure:!!restoredTech &&
+          restoredTech.exposed.indexOf(techSample.id) >= 0
+      };
+    })).toEqual({
+      skipped:false,
+      compact:true,
+      member:true,
+      character:true,
+      ruler:true,
+      exposure:true
+    });
+  });

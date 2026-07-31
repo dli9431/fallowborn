@@ -238,6 +238,11 @@ access boundary and are remembered outside serialized state for the lifetime of 
 loaded record; ordinary technology lookups neither rescan every sovereign record nor
 renormalize an unchanged record on every bonus query.
 
+The serialized version-3 wire form keeps `completed` and `exposed` disjoint to avoid
+writing every completed technology id twice. Restore unions `completed` back into
+`exposed` before technology repair, preserving the explicit runtime invariant that
+completed knowledge is also exposed and leaving old uncompressed saves valid.
+
 Runtime mods are normalized before validation: `branch` becomes `domain`, scalar or array
 `req` is accepted, and `yearMin` becomes an inferred soft history window rather than a
 lock. Existing `cultures` and `notCultures` restrictions remain supported.

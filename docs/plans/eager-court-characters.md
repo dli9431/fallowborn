@@ -43,7 +43,7 @@ longer exist.
 
 The living court population, by contrast, is map-bound and flat: roughly 400 realms at
 runtime times five or six living court members is about **2,200 to 2,500 records**,
-regardless of game length. Measured at that scale the save is 1.1 to 1.4 MB and
+regardless of game length. The compact version-3 wire form stays near 1.1 to 1.4 MB and
 stringifies in single-digit milliseconds, which is affordable. Everything past that
 number is dead accumulation, and the succession tree already holds what the game needs
 about the dead: name, dates, and parent/child links.
@@ -252,8 +252,9 @@ member. Absent on old saves, which means "child or collateral" and needs no migr
 ### The reigning-ruler index
 
 A derived map from character id to realm id. **It must not live on `state`.**
-`S.serialize` ([`js/save.js:33`](../../js/save.js)) dumps `state` wholesale, so
-anything hung there is written to every save; at full court population that is roughly
+`S.serialize` ([`js/save.js:33`](../../js/save.js)) writes the state graph, omitting
+only fields its restore boundary reconstructs; a new state map would still be written
+to every save. At full court population that is roughly
 2,500 entries of pure derived data on a save the rest of this plan is trying to keep
 near 1.2 MB. Hold it as module-private state in `js/world.js` instead, rebuilt from the
 succession trees:
@@ -290,8 +291,9 @@ Purpose: return the yearly pass to O(records).
 1. Add `FB.rebuildRulerIndex(state)` in `js/world.js`. Walk `state.realms`; for each
    living non-`player` realm whose `succession.members[succession.rulerMemberId]` has a
    `charId`, record `index[charId] = rid`. Keep the map in a module-private variable,
-   **not on `state`**: `S.serialize` dumps `state` wholesale, so a map hung there is
-   written into every save as derived bloat.
+   **not on `state`**: `S.serialize` traverses the state graph, so a map hung there is
+   written into every save as derived bloat unless it receives a special-case wire
+   rule. A transient index belongs outside both the state and that compatibility rule.
 2. Rewrite `FB.realmIdForRulerCharacter` ([`js/world.js:1495`](../../js/world.js)) to
    consult the index first. **Verify on hit before trusting it**: confirm that the
    named realm is alive and that

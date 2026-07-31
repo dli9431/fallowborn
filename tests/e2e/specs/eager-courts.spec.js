@@ -459,29 +459,31 @@ test('succession skips an heir whose derived character id is occupied',
 test('realm court member ids and sheets ignore intervening uid activity',
   async function ({ page }) {
     expect(await page.evaluate(function () {
-      const s = FB.state;
       let rid = null;
-      for (const id in s.realms) {
-        const r = s.realms[id];
+      for (const id in FB.state.realms) {
+        const r = FB.state.realms[id];
         if (r && r.alive && id !== 'player' &&
             !(FB.papacyTerritorialRealm &&
-              FB.papacyTerritorialRealm(s, id))) {
+              FB.papacyTerritorialRealm(FB.state, id))) {
           rid = id;
           break;
         }
       }
       if (!rid) return { skipped:true };
-      const realm = s.realms[rid];
-      function clearCourt() {
+      const checkpoint = FB.save.serialize();
+      function build(extraUids) {
+        /* Each rebuild starts from the same complete state. Mutations made by
+           the first materialization are therefore not a hidden second input
+           beside the intervening uid calls this spec is meant to isolate. */
+        FB.save.restore(JSON.parse(checkpoint));
+        const s = FB.state;
+        const realm = s.realms[rid];
         for (const id in s.chars) {
           const c = s.chars[id];
           if (c.royalLine && c.royalLine.realmId === rid) delete s.chars[id];
         }
         realm.succession = null;
         FB.touchFamily();
-      }
-      function build(extraUids) {
-        clearCourt();
         for (let i = 0; i < extraUids; i++) FB.uid();
         FB.ensureRealmCourt(s, rid, { bulk:true });
         return Object.keys(realm.succession.members).sort().map(function (id) {
@@ -907,7 +909,8 @@ test('compaction never runs retroactively over a loaded save',
         if (!succession || !succession.members) continue;
         for (const id in succession.members) {
           const m = succession.members[id];
-          const c = m.charId && data.state.chars[m.charId];
+          const charId = m.charId || FB.courtCharacterId(m.id);
+          const c = data.state.chars[charId];
           if (!c || id === succession.rulerMemberId || m.role === 'consort') continue;
           m.alive = false;
           c.dead = true;

@@ -564,10 +564,24 @@ test('a materialized consort links to the ruler in both directions',
         if (r && r.alive && rid !== 'player') ids.push(rid);
       }
       ids.sort();
-      for (const rid of ids.slice(0, 20)) {
+      for (const rid of ids) {
+        if (FB.papacyTerritorialRealm &&
+            FB.papacyTerritorialRealm(s, rid)) continue;
         const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+        if (!ruler) { faults.push(rid + ': missing ruler'); continue; }
+        const consortMember = FB.realmConsortMember(s, rid);
         const consort = FB.realmConsortCharacter(s, rid);
-        if (!ruler || !consort) { faults.push(rid + ': incomplete couple'); continue; }
+        /* A child ruler deliberately has only an unmaterialized reservation;
+           the marriage is installed when both partners reach adulthood. */
+        if (FB.ageOf(ruler, s.date.year) < 16 ||
+            (consortMember && s.date.year - consortMember.born < 16)) {
+          if (consort) faults.push(rid + ': minor has a consort');
+          continue;
+        }
+        if (!consortMember || !consort) {
+          faults.push(rid + ': incomplete couple');
+          continue;
+        }
         checked++;
         const fromRuler = FB.spousesOf(s, ruler).map(function (c) { return c.id; });
         const fromConsort = FB.spousesOf(s, consort).map(function (c) { return c.id; });
@@ -576,6 +590,7 @@ test('a materialized consort links to the ruler in both directions',
         if (FB.stepchildrenOf(s, consort).length) {
           faults.push(rid + ': consort has invented stepchildren');
         }
+        if (checked === 20) break;
       }
       return { checked:checked, faults:faults.slice(0, 6) };
     })).toEqual({ checked:20, faults:[] });
