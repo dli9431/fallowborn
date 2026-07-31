@@ -2,9 +2,10 @@
 
 Date: 2026-07-30
 
-Status: **implemented**, all eight milestones, awaiting the owner's manual review and
-test run (see *Manual review targets for the owner* below; the automated coverage listed
-here was authored but not executed). Every reigning ruler and the living members of
+Status: **implemented**, all eight milestones. Owner-run targeted coverage was reported
+through 2026-07-30 23:42, including the formerly failing politics case now green; the
+full matrix, manual review, and the follow-up ruler-mode modal regression remain
+outstanding. Every reigning ruler and the living members of
 their court become real `state.chars` records, created eagerly rather than on first
 interaction, and compacted back to succession-tree members when they die. The
 realm-level simulation stays authoritative for AI aging, death, and succession. No new
@@ -409,7 +410,7 @@ Purpose: the actual feature.
    a third materialization path.
 3. Materialize new rulers at succession in `FB.advanceRealmSuccession`.
 4. Under `'ruler'`, keep the modal's first open materializing consort and heirs on
-   demand, which is exactly today's behavior for a cultivated character.
+   demand through `FB.ensureRealmCourtForDisplay`, using the existing materializers.
 5. Extend the mortality loop's reigning-ruler exemption to cover court members, so
    `tickRoyalFamily` stays the only thing that ages and kills them. Reuse the index
    from Milestone 1 rather than adding a second predicate.
@@ -701,4 +702,6 @@ Nine decisions the implementation settled that the plan left open or did not for
 10. The serialized payload contains no ruler index or other derived court data.
 11. A dead, unretained, materialized royal already present in an old save survives the
     load rather than being compacted retroactively.
-12. Tests authored per the section above and listed in the handoff, unrun.
+12. Tests authored per the section above. Owner-run targeted coverage was reported
+    through 2026-07-30 23:42; the full matrix and the later ruler-mode modal regression
+    remain unrun.

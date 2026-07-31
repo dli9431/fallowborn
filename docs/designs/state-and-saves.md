@@ -13,7 +13,9 @@ a consort with a null `parentId` can be read as an heir where there is no `role`
 to exclude it. The same ensure pass treats a dead current ruler as a succession repair,
 whether the full dead record was retained or already compacted; it advances and eagerly
 loads the living successor instead of resurrecting the old member or waiting for a
-yearly mortality roll.
+yearly mortality roll. That repair updates the throne and generation-stamped alliances
+but suppresses diplomacy-story queuing and live household-loadout reconciliation, which
+are in-play succession side effects rather than load migrations.
 
 Death compaction captures its retention answer before relationship cleanup and may
 reuse the year pass's family snapshot. In addition to direct player relationships,

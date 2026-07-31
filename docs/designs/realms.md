@@ -17,8 +17,10 @@ world creation. `FB.materializeRoyalChild`, `FB.materializeRealmRuler`, and
 ones a player's first courtship has always used; eagerness only calls them earlier. How
 much of a court exists up front is the single `COURT_EAGERNESS` constant at the top of
 `js/world.js` - `'court'` (ruler, consort, and heirs) or `'ruler'` - so the setting can
-be re-tuned from one line after profiling. The record count stays bound by the map
-rather than by campaign length: see the compaction rule in
+be re-tuned from one line after profiling. Under `'ruler'`, the first realm-sheet open
+calls `FB.ensureRealmCourtForDisplay`, which invokes those same materializers for the
+bounded consort and heir set; the modal never silently degrades to a ruler-only court.
+The record count stays bound by the map rather than by campaign length: see the compaction rule in
 [characters.md](characters.md). Eager loading and the realm UI both take their bounded
 six-member set from `FB.realmFamilySnapshot`; the mutating `FB.realmFamily` ensure path
 delegates to the same order, so equal-age members cannot differ between loading and
@@ -45,7 +47,10 @@ is also as much of the intent as a build without the `role` concept can read. Co
 of past generations stay in the tree as dated tombstones and are never read as the
 sitting spouse; `FB.realmConsortMember` resolves the current generation's reservation,
 while `FB.realmConsortCharacter` resolves it only once it is an actual marriage. There
-is no AI remarriage, so a generation whose consort has died simply has none.
+is no AI remarriage, so a generation whose consort has died simply has none. If an
+invalid generated consort is retired because a real commitment superseded it, its
+ordinary character record remains navigable; any future same-generation replacement
+uses the next deterministic consort suffix rather than colliding with that retained id.
 
 **A ruler who already has a spouse or living betrothal is never handed another.** The
 cases that matter are an heir the protagonist married taking the throne and a foreign
@@ -75,6 +80,12 @@ rather than a rival truth.
 That projection uses `FB.skillSnapshot`, as accession does, so trait and equipment
 Martial modifiers remain part of the war-strength stub instead of being overwritten by
 the raw trained value.
+If a malformed save has an unrelated record occupying the designated heir's derived
+character id, accession preserves that unrelated person, retires only the unusable
+compact candidate, and continues through the ordered line. A repair-driven accession
+from load or realm revival restores the throne and generation-stamped alliances without
+queuing a diplomacy story or reconciling the live player household; those side effects
+belong to an in-play succession.
 
 Succession-member ids are derived from realm id, ruler generation, role, and stable
 member ordinal or character id. They never embed `FB.uid`, so founding or repairing a
@@ -533,14 +544,15 @@ war. A materialized ruler character adds personal traits and relationships but
 does not replace those records. `UI.realmInteractionCard` and
 `UI.characterInteractionCard` both resolve the ruler through typed Standing,
 so the displayed value is identical and a political gift appears only once.
-Reading either card does not call succession creation or ruler
-materialization. `FB.realmRulerCharacterSnapshot` also avoids the compatibility
-sync performed by the older ruler getter, while
+Building either card model does not call succession creation or ruler
+materialization. Opening the realm sheet is an explicit exception: it fills the bounded
+court on demand when startup eagerness is `'ruler'`. `FB.realmRulerCharacterSnapshot`
+also avoids the compatibility sync performed by the older ruler getter, while
 `FB.realmRulerStandingSnapshot` reconciles the two legacy Standing stores
 without writing either one. Explicit adjustments and the ordinary daily
-materialized-ruler synchronization still persist the reconciled value.
-Royal-family materialization occurs only after its explicit courtship route is
-chosen.
+materialized-ruler synchronization still persist the reconciled value. A compact royal
+outside the displayed court still materializes only after an explicit courtship route
+or when accession selects that exact member.
 
 ## Realm faith and campaign settlements
 

@@ -9376,8 +9376,14 @@ window.FB = window.FB || {};
   function showRealmInteractionSheet(rid, returnContext) {
     const s = FB.state;
     const realm = s && rid && s.realms[rid];
-    const model = s && buildRealmInteractionCard(s, rid);
-    if (!s || !realm || !model) return;
+    if (!s || !realm) return;
+    /* If startup eagerness is tuned to rulers only, the first realm open is
+       the explicit boundary that fills its same bounded court on demand. */
+    if (FB.ensureRealmCourtForDisplay) {
+      FB.ensureRealmCourtForDisplay(s, rid);
+    }
+    const model = buildRealmInteractionCard(s, rid);
+    if (!model) return;
     const rulerCharacter = interactionRealmRulerCharacter(s, rid);
     /* A living realm's ruler is a real record, so the sheet opens on the same
        character card every other view uses. The crest header remains for the

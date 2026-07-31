@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.96.3';
+  FB.VERSION = '1.96.4';
   FB.CHANGELOG = [
+    { v: '1.96.4', date: '2026-07-31', changes: [
+      'Realm courts now recover missing household members when opened and continue past malformed heirs instead of leaving a throne stalled.'
+    ] },
     { v: '1.96.3', date: '2026-07-31', changes: [
       'Court houses with qualifying Crown or Mercantile commitments now keep those allegiances ahead of broader Magnate affinities.'
     ] },
@@ -2386,7 +2389,8 @@ window.FB = window.FB || {};
         ? s.realms.player.ruler.generation : 1;
       s.realms.player.ruler = {
         name: heir.name, sex: heir.sex, culture: heir.culture,
-        age: FB.ageOf(heir, s.date.year), mar: FB.skillOf(heir, 'mar'),
+        age: FB.ageOf(heir, s.date.year),
+        mar: FB.skillSnapshot(s, heir, 'mar'),
         generation: oldGeneration + 1
       };
       s.realms.player.succession = s.realms.player.succession || { playerDynasty: true };

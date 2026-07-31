@@ -5,7 +5,10 @@ realm's ruler, adult consort, and displayed heirs exist as full
 `state.chars` records from world creation, so opening a realm shows a face and a
 complete card instead of a stub line. A child ruler's same-age future-consort
 reservation remains compact, unmaterialized, and unlinked until majority; the elective
-Papacy has no dynastic household. A court record is a *complete* record -
+Papacy has no dynastic household. If `COURT_EAGERNESS` is retuned from the default
+`'court'` to `'ruler'`, opening the realm sheet materializes that same bounded consort
+and heir set on demand through `FB.ensureRealmCourtForDisplay`; the lower startup policy
+therefore changes timing rather than visible behavior. A court record is a *complete* record -
 `sex`, `culture`, `religion`, `born`,
 `station`, `health`, `traits`, `skills`, and a resolvable loadout - because a record
 missing a field one of those readers consults produces a card or a face that disagrees
