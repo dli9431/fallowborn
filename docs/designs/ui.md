@@ -424,6 +424,24 @@ cheapest-first, or a preferred domain and fills open slots as soon as an automat
 is chosen; the general Automation sheet exposes the same linked setting. Eligible tier-3+
 vassals receive advocacy controls. Foreign ruler sheets show the same nation's
 completed/exposed totals and active projects read-only.
+
+Help opens the offline **Guide**, a `fullsheet-modal` whose native search field,
+category selector, result buttons, sticky footer, and normal modal history remain
+usable by keyboard, touch, and `file://`. Entries cover basics, skills, resources,
+roles, careers, family and inheritance scope, settlements, technology, travel, and
+government. Search indexes titles, aliases, key terms, and generated technology
+effects/unlocks. Career and technology entries read live definitions; current
+resource and settlement entries read live state. Self/character skills, Work,
+Technology, settlement, travel, inheritance, and Governance surfaces deep-link to
+the relevant entry.
+
+`player.roleOrientationsSeen` records one-time, per-save orientations for the current
+social tier and religious vocation/office. On first entry, the dismissible role sheet
+names new resources, recurring duties, and three suggested actions, then links to its
+Guide entry. Replaying an orientation from the Guide does not clear the record.
+Orientation checks run only when the game is visible and neither generic nor event
+modal is active, so they never replace a pending choice.
+
 Overland movement and sea-crossing speed use distinct effect labels, and a transport-tier
 technology states its concrete men-per-crossing-cycle capacity. A manual host order uses
 the same weighted route assigned to the army to report destination ETA, water-crossing

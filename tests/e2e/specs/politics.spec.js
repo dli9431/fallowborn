@@ -154,6 +154,8 @@ async function configurePolitics(page) {
     FB.invalidateRealmCache();
     s.politics = null;
     FB.ensurePolitics(s);
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     return {
       polityId:polityId,

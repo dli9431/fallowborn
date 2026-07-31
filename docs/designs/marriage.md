@@ -143,6 +143,13 @@ above the player's station gate on prestige (20 per step). Marriage removes that
 from the managed household, clears work and equipment assignments, and leaves their outfit
 in the shared armory.
 
+Marriage candidate rows preview child identity through `FB.childIdentityPreview`, the
+same two paths used by birth simulation. A protagonist-line child takes culture, faith,
+and house from the recorded playable-line parent. A collateral child takes culture and
+faith from the managed family parent while house follows the father (the family son or
+the daughter’s spouse). The preview names the source parent for each field; it does not
+change the recorded mother/father links.
+
 The optional **Descendant Match Assistant** stores household limits for minimum station,
 maximum dowry, maximum immediate gold expense, and maximum prestige requirement. It
 reviews the same three persistent `matchIds`, applies their ordinary current-resource,

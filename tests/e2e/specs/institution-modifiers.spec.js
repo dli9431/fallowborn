@@ -99,6 +99,8 @@ async function configureCrownedRealm(page) {
     s.modifiers = { county:{} };
     if (externalId && s.realms[externalId]) s.realms[externalId].war = null;
     FB.invalidateRealmCache();
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     return {
       homeId:homeId,

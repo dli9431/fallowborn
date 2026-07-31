@@ -122,6 +122,15 @@ concrete effects and unlocks, allegiance-based access rule, and permanent
 completion. Historical dates, exposure, progress, and clickable prerequisites
 remain separate supporting rows.
 
+Catalogue discovery is generated from the same definitions as the detail sheet.
+The text index includes localized names and descriptions, domain names, concrete
+scalar-effect labels, reverse `requiresTech` consumers, and typed unlock labels.
+Thus a content search such as **Orchard** resolves to **Seed Selection** without a
+second hand-authored lookup table. Catalogue rows expose the matching effects and
+unlocks and label `req` as **Requires all** and `reqAny` as **Requires any one**.
+Locked enterprises and deeds remain visible in their contextual pickers and open
+the missing technology directly.
+
 ## Research slots, reserve, and completion
 
 A sovereign begins with one slot. `scholarly_networks` unlocks the second and
@@ -208,7 +217,9 @@ Guild Charters is a consumed `rule:*` exception with a concrete deed surface: it
 Craft/Trade guildmaster petitions and the baron+ local-monopoly grant picker. Eligibility
 always follows the effective sovereign nation's completed record, so a vassal gains or
 loses access with the sovereign technology relationship; an already issued charter keeps
-its frozen numeric terms until expiry or scope invalidation.
+its frozen numeric terms until expiry or scope invalidation. Both deeds declare
+`requiresTech:'guild_charters'`; the generic deed-status and UI paths therefore enforce
+and explain the same gate before their more specific eligibility checks.
 
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI

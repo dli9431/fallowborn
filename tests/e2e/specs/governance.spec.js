@@ -132,6 +132,8 @@ async function configureGovernance(page, kind) {
     }
     FB.invalidateRealmCache();
     FB.ensureEconomy(s);
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     return {
       homeId:homeId,

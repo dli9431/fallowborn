@@ -23,6 +23,8 @@ async function openLandMarket(page, plotCount, gold) {
     const requirement = FBDATA.balance.manorPlotRequirement;
     const remaining = requirement - setup.plotCount;
     const totalCost = remaining * FB.landPlotCost();
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     FB.ui.showLandMarket();
     return {

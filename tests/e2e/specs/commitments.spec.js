@@ -159,6 +159,8 @@ test('conditional commitments expose travel, finance, and political management',
       s.player.liege = null;
       s.player.provs = [s.player.provinceId];
       FB.foundPlayerRealm(s);
+      s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+      s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
 
       let journey = null;
       for (const purposeId in FBDATA.travelPurposes) {

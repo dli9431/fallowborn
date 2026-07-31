@@ -915,6 +915,7 @@ window.FB = window.FB || {};
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
   { id: 'petition_monopoly', label: '📜 Petition for a guild monopoly', cd: 360,
+    requiresTech:'guild_charters',
     desc: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
       if (!status.ready) return status.reason;
@@ -1046,6 +1047,7 @@ window.FB = window.FB || {};
       FB.applyEffects(s, { gold: tax, popularOpinion: -6 });
     } },
   { id: 'grant_monopoly', label: '📜 Grant a guild monopoly…', noConsume: true,
+    requiresTech:'guild_charters',
     desc: function (s) {
       const status = FB.guildMonopolyIssueStatus(s);
       if (!status.ready) return status.reason;
@@ -4453,6 +4455,11 @@ window.FB = window.FB || {};
           days:action.cd - (state.turn - last)
         });
       }
+    }
+    if (can && action.requiresTech &&
+        !FB.techRequirementMet(state, action.requiresTech)) {
+      can = false;
+      reason = FB.T('A required national technology has not been completed.');
     }
     if (can && action.can) {
       const result = action.can(state);

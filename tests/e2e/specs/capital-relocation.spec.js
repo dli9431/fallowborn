@@ -134,6 +134,8 @@ async function startCapitalRealm(page, testInfo, options) {
     FB.invalidateRealmCache();
     FB.map.playerProv = p.provinceId;
     FB.ui.mapDirty();
+    p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+    p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     return {
       fromId:'london',

@@ -43,6 +43,9 @@ async function startDeterministicGame(page) {
   await expect(page.getByRole('heading', { name: 'Your Story Begins', exact: true }))
     .toBeVisible();
   await page.getByRole('button', { name: 'Begin', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'New role: Serf', exact: true }))
+    .toBeVisible();
+  await page.getByRole('button', { name: 'Got it', exact: true }).click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   await expect.poll(function () {
     return page.evaluate(function () {
