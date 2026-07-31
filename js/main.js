@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.98.0';
+  FB.VERSION = '1.98.1';
   FB.CHANGELOG = [
+    { v: '1.98.1', date: '2026-07-31', changes: [
+      'The Guide now explains wars, claims, aggression, and sieges, with a direct link from the conquest picker.'
+    ] },
     { v: '1.98.0', date: '2026-07-31', changes: [
       'Independent rulers can now declare Wars of Aggression without a claim after reviewing the political costs and unrest their conquest will cause.'
     ] },

@@ -438,11 +438,13 @@ Help opens the offline **Guide**, a `fullsheet-modal` whose native search field,
 category selector, result buttons, sticky footer, and normal modal history remain
 usable by keyboard, touch, and `file://`. Entries cover basics, skills, resources,
 roles, careers, family and inheritance scope, settlements, technology, travel, and
-government. Search indexes titles, aliases, key terms, and generated technology
+war and government. Search indexes titles, aliases, key terms, and generated technology
 effects/unlocks. Career and technology entries read live definitions; current
 resource and settlement entries read live state. Self/character skills, Work,
-Technology, settlement, travel, inheritance, and Governance surfaces deep-link to
-the relevant entry.
+Technology, settlement, travel, inheritance, Governance, and the conquest picker
+deep-link to the relevant entry. The War entry explains recognized claims, explicit
+aggression costs, siege requirements, and the difference between field victory and
+territorial conquest.
 
 `player.roleOrientationsSeen` records one-time, per-save orientations for the current
 social tier and religious vocation/office. On first entry, the dismissible role sheet

@@ -50120,6 +50120,16 @@
         "text": "Norwich"
       }
     },
+    "src.222b91d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Guide: war"
+      }
+    },
     "src.2234c7a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77251,6 +77261,16 @@
         "text": "Become known as someone who arrives with the right words."
       }
     },
+    "src.71d2d05a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "war warfare aggression aggressive casus belli claim fabricated de jure conquest siege host peace breakaway conquered without right"
+      }
+    },
     "src.71d6ffea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80264,6 +80284,16 @@
       ],
       "source": {
         "text": "Irrigation Channels"
+      }
+    },
+    "src.7a6eee25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "War"
       }
     },
     "src.7a7a9dad": {
@@ -83559,6 +83589,16 @@
       ],
       "source": {
         "text": "🕸 The plot ends: {target} is no longer a valid target."
+      }
+    },
+    "src.836718c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
     "src.8369d134": {
@@ -93373,6 +93413,16 @@
       ],
       "source": {
         "text": "A stranger of real accomplishment."
+      }
+    },
+    "src.9fc6f814": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed."
       }
     },
     "src.9fe2405e": {
@@ -105341,6 +105391,16 @@
         "text": "The Tithe Barn"
       }
     },
+    "src.c2e605c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Recognized rights avoid aggression penalties; land changes hands only through siege."
+      }
+    },
     "src.c2ee8294": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109390,6 +109450,16 @@
       ],
       "source": {
         "text": "Browse arms and useful goods."
+      }
+    },
+    "src.ce9fc6d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration."
       }
     },
     "src.ceb0be00": {
@@ -118620,6 +118690,16 @@
         "text": "No maintained improvement"
       }
     },
+    "src.e97354ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "War, claims, and conquest"
+      }
+    },
     "src.e9815432": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123321,6 +123401,16 @@
       ],
       "source": {
         "text": "Sergeant"
+      }
+    },
+    "src.f7cf07ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration."
       }
     },
     "src.f7dbc96c": {
@@ -131071,6 +131161,14 @@
         "text": "A county and its settlements now anchor your territorial house."
       }
     },
+    "ui:A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves."
+      }
+    },
     "ui:A defensive alliance may be offered only to an adjacent sovereign.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -132907,6 +133005,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Baron"
+      }
+    },
+    "ui:Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration."
       }
     },
     "ui:Barony at {county}": {
@@ -137061,6 +137167,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Guide: travel"
+      }
+    },
+    "ui:Guide: war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Guide: war"
       }
     },
     "ui:Guide: work and family scope": {
@@ -142618,6 +142732,14 @@
         "text": "Receive {money:principal} · {money:due} due {date} · pledge {asset}"
       }
     },
+    "ui:Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration."
+      }
+    },
     "ui:Recipient cooldown: {days} days remain.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -142710,6 +142832,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier."
+      }
+    },
+    "ui:Recognized rights avoid aggression penalties; land changes hands only through siege.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Recognized rights avoid aggression penalties; land changes hands only through siege."
       }
     },
     "ui:Recommend descendant matches": {
@@ -147672,6 +147802,14 @@
         "text": "Waqf Patron"
       }
     },
+    "ui:War": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "War"
+      }
+    },
     "ui:War & independence": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147702,6 +147840,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "War of Aggression"
+      }
+    },
+    "ui:War, claims, and conquest": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "War, claims, and conquest"
       }
     },
     "ui:Warfare and fortification": {
@@ -147821,6 +147967,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "What does {skill} affect?"
+      }
+    },
+    "ui:When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed."
       }
     },
     "ui:When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.": {

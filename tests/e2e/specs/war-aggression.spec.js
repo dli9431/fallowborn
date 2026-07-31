@@ -374,6 +374,44 @@ test('aggressive conquest grants no victory prestige and burdens the county',
     expect(result.expired).toBe(true);
   });
 
+test('the Guide exposes aggression through search and the conquest picker',
+  async function ({ page }, testInfo) {
+    await startWarGame(page, testInfo);
+    var ids = await configureAggressionWar(page);
+    await page.evaluate(function () {
+      FB.ui.showGuide({ query:'aggression' });
+    });
+
+    var result = page.locator('[data-guide-entry="war"]');
+    await expect(result).toBeVisible();
+    await expect(result).toContainText('War, claims, and conquest');
+    await result.click();
+    await expect(page.getByRole('heading', {
+      name:'War, claims, and conquest',
+      exact:true
+    })).toBeVisible();
+    await expect(page.locator('#genmodal')).toContainText(
+      'War of Aggression');
+    await expect(page.locator('#genmodal')).toContainText(
+      'Conquered Without Right');
+    await expect(page.locator('#genmodal')).toContainText(
+      'three siege steps');
+
+    await page.evaluate(function (enemyId) {
+      FB.ui.showWarTargets(enemyId);
+    }, ids.enemyId);
+    var guideButton = page.getByRole('button', {
+      name:'Guide: war',
+      exact:true
+    });
+    await expect(guideButton).toBeVisible();
+    await guideButton.click();
+    await expect(page.getByRole('heading', {
+      name:'War, claims, and conquest',
+      exact:true
+    })).toBeVisible();
+  });
+
 test('war picker names aggression and requires its consequence sheet',
   async function ({ page }, testInfo) {
     await startWarGame(page, testInfo);

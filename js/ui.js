@@ -7668,8 +7668,10 @@ window.FB = window.FB || {};
               '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
             : '') + '</button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Think better of it')) + '</button>';
+    h += '</div><div class="gm-footer"><button class="btn" id="war-guide">' +
+      esc(FB.T('Guide: war')) +
+      '</button><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Think better of it')) + '</button></div>';
     openModal(FB.T('Choose Your Conquest'), h, {
       historyView:!!returnContext,
       historyBackRender:function () {
@@ -7695,6 +7697,9 @@ window.FB = window.FB || {};
           UI.refresh();
         }
       });
+    });
+    $('war-guide').addEventListener('click', function () {
+      UI.showGuideEntry('war');
     });
     $('gm-cancel').addEventListener('click', function () {
       if (returnContext) {
@@ -19192,6 +19197,14 @@ window.FB = window.FB || {};
         FB.T('Travel uses settled county adjacency and authored straits. Purpose, destination, route length, cost, and current eligibility are shown before departure.'),
         FB.T('A journey has outbound, stay, and return phases. The Deeds commitment row shows its current state, and some purposes add decisions while away.')
       ]), 'journey road destination purpose pilgrimage trade court marriage route');
+    add('war', 'war', FB.T('War, claims, and conquest'),
+      FB.T('Recognized rights avoid aggression penalties; land changes hands only through siege.'),
+      guideBody([
+        FB.T('Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration.'),
+        FB.T('When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.'),
+        FB.T('Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration.'),
+        FB.T('A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves.')
+      ]), 'war warfare aggression aggressive casus belli claim fabricated de jure conquest siege host peace breakaway conquered without right');
     add('government', 'government', FB.T('Government systems'),
       FB.T('Territorial rank opens Governance; institutions vary by relationship to the crown.'),
       guideBody([
@@ -19205,7 +19218,7 @@ window.FB = window.FB || {};
   const guideView = { query:'', category:'all' };
   const GUIDE_CATEGORIES = [
     'all', 'basics', 'skills', 'resources', 'roles', 'careers',
-    'family', 'settlements', 'technology', 'travel', 'government'
+    'family', 'settlements', 'technology', 'travel', 'war', 'government'
   ];
   function guideCategoryName(id) {
     const names = {
@@ -19219,6 +19232,7 @@ window.FB = window.FB || {};
       settlements:FB.T('Settlements'),
       technology:FB.T('Technology'),
       travel:FB.T('Travel'),
+      war:FB.T('War'),
       government:FB.T('Government')
     };
     return names[id] || id;
