@@ -3611,6 +3611,106 @@ window.FB = window.FB || {};
     }
   };
 
+  function aggressionBalance(key, fallback) {
+    const raw = FBDATA.balance && FBDATA.balance[key];
+    const value = Number(raw);
+    return isFinite(value) ? value : fallback;
+  }
+
+  /* Recent unjustified declarations belong to the current protagonist. The
+     projection is read-only so opening a war or ruler sheet cannot repair a
+     save, prune history, or consume RNG. The next declaration is the only
+     writer and compacts the bounded window before appending its semantic
+     record. */
+  FB.aggressiveWarHistory = function (state) {
+    const p = state && state.player;
+    const rows = p && p.aggressiveWars;
+    if (!Array.isArray(rows)) return [];
+    const memory = Math.max(0,
+      aggressionBalance('warAggressionMemoryDays', 2880));
+    const earliest = (Number(state.turn) || 0) - memory;
+    const out = [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || typeof row !== 'object' || Array.isArray(row) ||
+          !isFinite(Number(row.turn)) || Number(row.turn) > state.turn ||
+          Number(row.turn) <= earliest ||
+          typeof row.charId !== 'string' || row.charId !== p.charId ||
+          typeof row.enemy !== 'string' || !row.enemy ||
+          typeof row.target !== 'string' || !row.target) continue;
+      out.push({
+        turn:Number(row.turn),
+        charId:row.charId,
+        enemy:row.enemy,
+        target:row.target
+      });
+    }
+    out.sort(function (a, b) {
+      const ae = String(a.enemy || ''), be = String(b.enemy || '');
+      const at = String(a.target || ''), bt = String(b.target || '');
+      return a.turn - b.turn ||
+        (ae < be ? -1 : (ae > be ? 1 : 0)) ||
+        (at < bt ? -1 : (at > bt ? 1 : 0));
+    });
+    return out;
+  };
+
+  FB.recordAggressiveWar = function (state, cause) {
+    if (!state || !state.player || !cause ||
+        cause.type !== 'aggression') return null;
+    const rows = FB.aggressiveWarHistory(state);
+    const record = {
+      turn:state.turn,
+      charId:state.player.charId,
+      enemy:cause.enemy || state.owner[cause.target] || null,
+      target:cause.target || null
+    };
+    rows.push(record);
+    state.player.aggressiveWars = rows;
+    return record;
+  };
+
+  FB.aggressiveWarBreakawayMultiplier = function (state, additionalWars) {
+    const recent = FB.aggressiveWarHistory(state).length +
+      Math.max(0, Math.floor(Number(additionalWars) || 0));
+    const perRecent = Math.max(0,
+      aggressionBalance('warAggressionBreakawayPerRecent', 0.5));
+    return 1 + recent * perRecent;
+  };
+
+  /* This remains the existing seeded yearly breakaway check. Aggression only
+     raises its chance for vassals beneath the player's crown; poor personal
+     Standing compounds that pressure instead of creating an automatic
+     rebellion or a second civil-war system. */
+  FB.vassalBreakawayChance = function (state, rid) {
+    const base = FB.clamp(
+      aggressionBalance('breakawayChance', 0.015), 0, 1);
+    const realm = state && state.realms && state.realms[rid];
+    if (!realm || !realm.alive || !realm.liege ||
+        FB.topRealm(state, rid) !== 'player') return base;
+    const aggression = FB.aggressiveWarBreakawayMultiplier(state);
+    if (aggression <= 1) return base;
+    const standing = FB.standingOf
+      ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
+    const discontent = 1 + Math.min(1,
+      Math.max(0, -(Number(standing) || 0)) / 100);
+    return FB.clamp(base * aggression * discontent, 0, 1);
+  };
+
+  /* Automatic war prestige is cause-aware in every settlement path. Event
+     choices and field deeds may still earn their authored personal renown,
+     but an unjustified declaration, conquest, or tribute grants no ordinary
+     offensive-war reward. */
+  FB.warPrestigeReward = function (source, stage) {
+    const casus = source && source.casus ? source.casus : source;
+    if (casus && casus.type === 'aggression') return 0;
+    if (stage === 'declaration') return 5;
+    if (stage === 'tribute') return 20;
+    if (stage === 'conquest') return 50;
+    if (stage === 'slipped') return 20;
+    return 0;
+  };
+
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
@@ -3832,7 +3932,7 @@ window.FB = window.FB || {};
       if (top === id || FB.isRealmAtWar(state, top)) continue;
       // the 1.5% gate first: realmTerritory walks the whole realm table, and
       // ~98.5% of that work was thrown away when the roll failed
-      if (!FB.chance(B.breakawayChance)) continue;
+      if (!FB.chance(FB.vassalBreakawayChance(state, id))) continue;
       const terr = FB.realmTerritory(state, id);
       if (terr.length < 3) continue;
       if (FB.realmStrength(state, top) < 8) continue;
@@ -4267,13 +4367,16 @@ window.FB = window.FB || {};
         const claim = p.fabricatedClaim;
         if (claim && (claim.pid || claim) === pid) p.fabricatedClaim = null;
       }
+      if (w.casus && w.casus.type === 'aggression' && FB.addModifier) {
+        FB.addModifier(state, 'conquered_without_right', pid);
+      }
       FB.news(state, FB.msg('news.war.conquest',
         '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
-      p.prestige += 50;
+      p.prestige += FB.warPrestigeReward(w, 'conquest');
       FB.endPlayerWar(state);
       FB.checkTierPromotions(state);
     } else {
-      p.prestige += 20;
+      p.prestige += FB.warPrestigeReward(w, 'slipped');
       p.gold += 25;
       FB.news(state, FB.msg('news.war.tribute_without_prize',
         '🕊 The prize has slipped away, but tribute is paid. The war ends in your favor.', {}));
@@ -4630,7 +4733,7 @@ window.FB = window.FB || {};
   FB.fns.war_accept_tribute = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
-    p.prestige += 20;
+    p.prestige += FB.warPrestigeReward(w, 'tribute');
     p.gold += 25;
     FB.news(state, FB.msg('news.war.tribute',
       '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));

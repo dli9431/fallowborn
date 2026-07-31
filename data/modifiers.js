@@ -54,6 +54,12 @@ FBDATA.modifiers = {
     scope:'county', days:900,
     fx:{ commonVoice:-7, unrest:0.25 }
   },
+  conquered_without_right: {
+    name:'Conquered Without Right', icon:'⚔',
+    desc:'The county was taken without claim or de jure right. Its people resist the new rule and its obligations.',
+    scope:'county', days:2160,
+    fx:{ tax:-0.15, levy:-0.20, commonVoice:-8, unrest:0.40 }
+  },
   oathbound_host: {
     name:'Oathbound Host', icon:'🕊',
     desc:'The host marches under a public vow.',

@@ -2,11 +2,11 @@
 
 Date: 2026-07-30
 
-Status: **in progress; step 1 implemented**. This plan organizes player feedback
+Status: **in progress; steps 1–2 implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
-expansions. Steps 2–11 remain proposed.
+expansions. Steps 3–11 remain proposed.
 
 Related design:
 [realms](../designs/realms.md),
@@ -176,7 +176,7 @@ waiting for a large law catalog.
 
 Classification: **QoL first, then Balance**.
 
-Status: **proposed**.
+Status: **complete (2026-07-31)**.
 
 Add `War of Aggression` as an explicit player choice when no recognized claim or de
 jure cause applies.
@@ -209,6 +209,13 @@ answer political demands.
 The later bloc/civil-war integration may add inheritable house notoriety. Do not use
 ordinary Standing for intergenerational disgrace because protagonist succession
 intentionally resets personal and realm Standing.
+
+The implemented slice adds the semantic `aggression` cause only where no recognized
+cause applies, uses the existing active-war, peace-pact, alliance, adjacency, and route
+gates, and requires a dedicated consequence confirmation. One read-only preview drives
+both the picker and the mutation. Recent declarations by the current ruler escalate the
+political costs and vassal breakaway pressure; conquest grants no automatic offensive-war
+prestige and applies the timed county modifier described above.
 
 ### 3. Military feedback and loss-aware campaign events
 

@@ -1315,7 +1315,7 @@ window.FB = window.FB || {};
       FB.fns.war_mercs(s);
     } },
   { id: 'declare_war', label: '⚔ Declare war…', noConsume: true,
-    desc: function () { return 'Press a de jure right, a fabricated county claim, or a crown-restoration right.'; },
+    desc: function () { return 'Compare lawful causes or accept the political cost of a War of Aggression.'; },
     show: function (s) {
       const me = s.chars[s.player.charId];
       return !(FB.playerBishopricOnly && FB.playerBishopricOnly(s)) &&
@@ -3940,6 +3940,197 @@ window.FB = window.FB || {};
     return cause;
   }
 
+  function aggressionScaled(value, multiplier) {
+    value = Number(value) || 0;
+    const scaled = Math.round(Math.abs(value) * multiplier);
+    return value < 0 ? -scaled : scaled;
+  }
+
+  function aggressionStandingEntries(state, ids, intended) {
+    const out = [];
+    for (let i = 0; i < ids.length; i++) {
+      const rid = ids[i];
+      const realm = state.realms[rid];
+      if (!realm || !realm.alive) continue;
+      const before = FB.standingOf(state, { kind:'realm', id:rid });
+      const after = FB.clamp(before + intended, -100, 100);
+      out.push({
+        realmId:rid,
+        realmName:realm.name || rid,
+        before:before,
+        after:after,
+        change:after - before
+      });
+    }
+    return out;
+  }
+
+  function aggressionForeignRealms(state) {
+    const out = [];
+    const ownSovereign = FB.playerRealmId(state);
+    for (const rid in state.realms) {
+      const realm = state.realms[rid];
+      if (rid === 'player' || rid === ownSovereign || !realm ||
+          !realm.alive || realm.liege) continue;
+      out.push(rid);
+    }
+    out.sort();
+    return out;
+  }
+
+  function aggressionOpposition(state, commonVoiceChange, vassals, foreign) {
+    const out = [];
+    if (commonVoiceChange < 0) {
+      out.push({ kind:'commons', projectedChange:commonVoiceChange });
+    }
+    const affected = {};
+    for (let i = 0; i < vassals.length; i++) {
+      affected[vassals[i].realmId] = vassals[i];
+    }
+    const politics = FB.politicalSummary ? FB.politicalSummary(state) : null;
+    const blocRows = [];
+    if (politics && politics.polityId === 'player') {
+      for (let bi = 0; bi < politics.blocs.length; bi++) {
+        const bloc = politics.blocs[bi];
+        let standingTotal = 0, memberCount = 0;
+        for (let mi = 0; mi < bloc.members.length; mi++) {
+          const entry = affected[bloc.members[mi].id];
+          if (!entry) continue;
+          standingTotal += entry.after;
+          memberCount++;
+        }
+        if (memberCount) {
+          blocRows.push({
+            kind:'bloc',
+            bloc:bloc,
+            projectedStanding:standingTotal / memberCount
+          });
+        }
+      }
+      blocRows.sort(function (a, b) {
+        return a.projectedStanding - b.projectedStanding ||
+          b.bloc.influence - a.bloc.influence ||
+          (a.bloc.id < b.bloc.id ? -1 : (a.bloc.id > b.bloc.id ? 1 : 0));
+      });
+    }
+    for (let j = 0; j < Math.min(2, blocRows.length); j++) {
+      out.push(blocRows[j]);
+    }
+    if (vassals.length && !blocRows.length) {
+      out.push({ kind:'vassals', count:vassals.length });
+    }
+    if (foreign.length) out.push({ kind:'foreign', count:foreign.length });
+    return out;
+  }
+
+  /* One read-only cause adapter powers the picker, the explicit aggression
+     confirmation, and the mutation below. Clamps are included in the
+     projection so a ruler already at a resource or Standing floor sees the
+     exact change that declaration will apply. */
+  FB.warCausePreview = function (state, cause) {
+    if (!state || !state.player || !cause || !cause.target) return null;
+    const out = {
+      type:cause.type,
+      target:cause.target,
+      enemy:cause.enemy || state.owner[cause.target] || null,
+      declarationPrestige:FB.warPrestigeReward
+        ? FB.warPrestigeReward(cause, 'declaration') : 5,
+      victoryPrestige:FB.warPrestigeReward
+        ? FB.warPrestigeReward(cause, 'conquest') : 50,
+      aggression:null
+    };
+    if (cause.type !== 'aggression') {
+      if (cause.type === 'restoration') out.victoryPrestige = 100;
+      else if (cause.type === 'caliphate') {
+        out.victoryPrestige = FB.religiousHeadBalance
+          ? FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100)
+          : 100;
+      }
+      return out;
+    }
+    const B = FBDATA.balance;
+    const recent = FB.aggressiveWarHistory
+      ? FB.aggressiveWarHistory(state) : [];
+    const escalation = Math.max(0,
+      Number(B.warAggressionEscalationPerRecent) || 0);
+    const multiplier = 1 + recent.length * escalation;
+    const intendedPrestige = aggressionScaled(
+      B.warAggressionPrestige === undefined ? -20 :
+        B.warAggressionPrestige, multiplier);
+    const intendedVoice = aggressionScaled(
+      B.warAggressionCommonVoice === undefined ? -8 :
+        B.warAggressionCommonVoice, multiplier);
+    const intendedVassal = aggressionScaled(
+      B.warAggressionVassalStanding === undefined ? -10 :
+        B.warAggressionVassalStanding, multiplier);
+    const intendedForeign = aggressionScaled(
+      B.warAggressionForeignStanding === undefined ? -5 :
+        B.warAggressionForeignStanding, multiplier);
+    const prestigeAfter = Math.max(0,
+      (Number(state.player.prestige) || 0) + intendedPrestige);
+    const voiceAfter = FB.clamp(
+      (Number(state.player.pop) || 0) + intendedVoice, -100, 100);
+    const vassalIds = FB.playerVassals(state).slice().sort();
+    const vassals = aggressionStandingEntries(
+      state, vassalIds, intendedVassal);
+    const foreign = aggressionStandingEntries(
+      state, aggressionForeignRealms(state), intendedForeign);
+    const modifier = FBDATA.modifiers &&
+      FBDATA.modifiers.conquered_without_right;
+    out.declarationPrestige = 0;
+    out.victoryPrestige = 0;
+    out.aggression = {
+      recentCount:recent.length,
+      escalationMultiplier:multiplier,
+      prestigeChange:prestigeAfter -
+        (Number(state.player.prestige) || 0),
+      commonVoiceChange:voiceAfter -
+        (Number(state.player.pop) || 0),
+      intendedVassalStanding:intendedVassal,
+      intendedForeignStanding:intendedForeign,
+      vassals:vassals,
+      foreign:foreign,
+      opposition:aggressionOpposition(
+        state, voiceAfter - (Number(state.player.pop) || 0),
+        vassals, foreign),
+      breakawayMultiplier:FB.aggressiveWarBreakawayMultiplier
+        ? FB.aggressiveWarBreakawayMultiplier(state, 1) : 1,
+      modifier:modifier ? {
+        id:'conquered_without_right',
+        days:modifier.days,
+        fx:modifier.fx || {}
+      } : null
+    };
+    return out;
+  };
+
+  FB.applyWarOfAggressionConsequences = function (state, cause) {
+    const preview = FB.warCausePreview(state, cause);
+    const consequence = preview && preview.aggression;
+    if (!consequence) return false;
+    const p = state.player;
+    p.prestige += consequence.prestigeChange;
+    p.pop = FB.clamp((Number(p.pop) || 0) +
+      consequence.commonVoiceChange, -100, 100);
+    for (let i = 0; i < consequence.vassals.length; i++) {
+      const entry = consequence.vassals[i];
+      FB.adjustStanding(state, { kind:'realm', id:entry.realmId },
+        entry.change, 'war:aggression');
+    }
+    for (let j = 0; j < consequence.foreign.length; j++) {
+      const entry = consequence.foreign[j];
+      FB.adjustStanding(state, { kind:'realm', id:entry.realmId },
+        entry.change, 'war:aggression');
+    }
+    if (FB.recordAggressiveWar) FB.recordAggressiveWar(state, cause);
+    FB.news(state, FB.msg('news.action.war_aggression_cost',
+      '⚔ The War of Aggression stains your rule: prestige {prestige}, Common Voice {voice}, and condemnation from direct vassals and foreign courts.', {
+        prestige:consequence.prestigeChange,
+        voice:consequence.commonVoiceChange
+      }));
+    return preview;
+  };
+
   /* Semantic causes are the authoritative declaration surface. Passing true
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
   FB.warCauses = function (state, includeBlocked, readOnly) {
@@ -3986,7 +4177,7 @@ window.FB = window.FB || {};
         if (!pr || pr.wasteland || !enemy || enemy === mySovereign || enemy === 'player') continue;
         let cause = deJureCause(state, nb, titles);
         if (!cause && claim && claim.pid === nb) cause = { type: 'fabricated', target: nb };
-        if (!cause) continue;
+        if (!cause) cause = { type: 'aggression', target: nb };
         cause.enemy = enemy;
         cause.blocked = diplomacyBlocksWar(state, enemy, readOnly);
         annotateReligiousWarCause(state, cause, readOnly);
@@ -4032,10 +4223,20 @@ window.FB = window.FB || {};
       return FB.T('At war with another realm');
     }
     const all = FB.warCauses(state, true);
+    let allianceBlocked = false, pactBlocked = false;
     for (const cause of all) {
       if (cause.blocked === 'war') return FB.T('At war with another realm');
-      if (cause.blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the only realm you have cause against.');
-      if (cause.blocked === 'pact') return FB.T('A sworn peace pact protects the only realm you have cause against.');
+      if (cause.blocked === 'alliance') allianceBlocked = true;
+      if (cause.blocked === 'pact') pactBlocked = true;
+    }
+    if (allianceBlocked && pactBlocked) {
+      return FB.T('Peace pacts or your defensive alliance protect every reachable neighboring target.');
+    }
+    if (allianceBlocked) {
+      return FB.T('Your defensive alliance protects every reachable neighboring target.');
+    }
+    if (pactBlocked) {
+      return FB.T('Sworn peace pacts protect every reachable neighboring target.');
     }
     const me = state.chars[state.player.charId];
     if (state.player.tier < 4 && !(me && me.restorationRight)) {
@@ -4047,7 +4248,7 @@ window.FB = window.FB || {};
     if (FB.fabricatedClaimOf(state)) {
       return FB.T('Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again.');
     }
-    return FB.T('No bordering county lies within a title you hold, and you have no fabricated claim.');
+    return FB.T('No neighboring hostile realm can be reached from your border.');
   };
 
   FB.claimCandidates = function (state) {
@@ -4383,6 +4584,20 @@ window.FB = window.FB || {};
       for (const c of FB.warCauses(state)) if (c.target === target) { cause = c; break; }
     }
     if (!cause || !cause.target || cause.blocked) return false;
+    if (cause.type === 'aggression') {
+      if (!opts.confirmAggression) return false;
+      let liveAggression = null;
+      for (const current of FB.warCauses(state)) {
+        if (current.type === 'aggression' &&
+            current.target === cause.target &&
+            current.enemy === cause.enemy) {
+          liveAggression = current;
+          break;
+        }
+      }
+      if (!liveAggression) return false;
+      cause = liveAggression;
+    }
     if (cause.type === 'caliphate') {
       const liveCaliphate = FB.caliphateWarCause(state);
       if (!liveCaliphate || liveCaliphate.enemy !== cause.enemy ||
@@ -4407,15 +4622,27 @@ window.FB = window.FB || {};
         sacrilegious:sameFaithPolicy === 'sacrilege'
       }
     };
+    if (cause.type === 'aggression') {
+      FB.applyWarOfAggressionConsequences(state, cause);
+    }
     if (sameFaithPolicy === 'sacrilege') {
       FB.applySacrilegiousWarConsequences(state, c.religion);
     }
-    FB.news(state, FB.msg('news.action.war_declared',
-      '⚔ You declare war upon {enemy} for {province}!', {
-        enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
-        province: FB.world.byId[cause.target].name
-      }));
-    state.player.prestige += 5;
+    if (cause.type === 'aggression') {
+      FB.news(state, FB.msg('news.action.war_aggression_declared',
+        '⚔ You declare a War of Aggression upon {enemy} for {province}!', {
+          enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
+          province: FB.world.byId[cause.target].name
+        }));
+    } else {
+      FB.news(state, FB.msg('news.action.war_declared',
+        '⚔ You declare war upon {enemy} for {province}!', {
+          enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
+          province: FB.world.byId[cause.target].name
+        }));
+      state.player.prestige += FB.warPrestigeReward
+        ? FB.warPrestigeReward(cause, 'declaration') : 5;
+    }
     FB.warFooting(state);
     FB.queueEvent(state, 'war_muster', {});
     return true;

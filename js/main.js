@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.97.0';
+  FB.VERSION = '1.98.0';
   FB.CHANGELOG = [
+    { v: '1.98.0', date: '2026-07-31', changes: [
+      'Independent rulers can now declare Wars of Aggression without a claim after reviewing the political costs and unrest their conquest will cause.'
+    ] },
     { v: '1.97.0', date: '2026-07-31', changes: [
       'A new searchable Guide explains skills, roles, family and inheritance, settlements, and technology from the screens where those rules matter.',
       'One-time role orientations now introduce newly unlocked responsibilities and useful first steps.'
@@ -1067,6 +1070,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        aggressiveWars: [],
         focus: null, dead: false,
         capitalRelocation: null,
         holdings: [], enterprises: [], householdStandards: {},
@@ -1256,6 +1260,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        aggressiveWars: [],
         focus: null, dead: false, holdings: [],
         capitalRelocation: null,
         householdStandards: {},
@@ -2417,6 +2422,7 @@ window.FB = window.FB || {};
     p.piety = Math.round(p.piety * 0.5);
     p.foreignPolicy = {};
     p.vassalLevyFavors = {};
+    p.aggressiveWars = [];
     p.warService = 0; p.liegeGrants = 0;
     p.professionBack = null;
     p.travelHistory = [];

@@ -64,6 +64,13 @@ a border response, and a foreign merchant compact provide cross-system sources.
 `parliament_local_redress` can end Contested Tolls or Settlement Grudge and replace the
 dispute with a positive charter; natural expiry remains the fallback.
 
+Ordinary aggressive conquest supplies one additional core county definition:
+`conquered_without_right` lasts 2,160 days and applies −15% county tax, −20% county
+levy, −8 effective Common Voice, and +40% harmful `unrest` exposure. It is granted only
+when the player captures the objective of a saved `aggression` war cause. Like every
+county record, it remains attached to the county after a transfer and expires through
+the normal daily modifier tick.
+
 ## Public APIs
 
 - `FB.addModifier(state,id,pid?,options?)` and

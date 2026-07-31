@@ -3,13 +3,44 @@
 ## Causes and defensive alliances
 
 Player offensive wars require a semantic cause. `FB.warCauses(state)` returns cause
-records rather than unrestricted adjacent county ids. A new county war needs a bordering
-county inside a de jure duchy, kingdom, or empire the player actually holds (the most
-specific title wins), or the player's one fabricated county claim. Pacts and alliances
-remain hard declaration blocks. `FB.warTargets` and string calls to
+records rather than unrestricted adjacent county ids. A new county war prefers a
+bordering county inside a de jure duchy, kingdom, or empire the player actually holds
+(the most specific title wins), or the player's one fabricated county claim. When
+neither right applies, that same reachable neighboring county is offered explicitly as
+an `aggression` cause. It is never labeled or saved as a fabricated or de jure right.
+Active wars, peace pacts, and alliances remain hard declaration blocks.
+`FB.warTargets` and string calls to
 `FB.startPlayerWar` remain compatibility surfaces, while a new war stores the selected
 record in `player.war.casus`. Old in-progress wars without that field keep their legacy
 capture behavior.
+
+`FB.warCausePreview` is the shared read-only declaration projection. The target picker
+compares recognized rights with War of Aggression and shows the objective and automatic
+prestige rewards. Aggression opens a second confirmation which repeats its exact clamped
+prestige and Common Voice changes, the per-court direct-vassal and foreign-sovereign
+Standing changes, the recent-war escalation, current breakaway multiplier, likely
+political opposition, and the county burden victory will apply. Opening, canceling, or
+navigating that review neither writes state nor consumes RNG; the final action
+revalidates the live cause and diplomacy gates.
+
+The core first-declaration costs are 20 prestige, 8 Common Voice, 10 Standing with every
+direct vassal, and 5 Standing with every foreign sovereign. Each earlier aggressive
+declaration by the current ruler within 2,880 days adds 50% to all four costs. The values
+and window use the `warAggression*` balance keys. `player.aggressiveWars` stores only
+semantic `{turn,charId,enemy,target}` records; read-only history filtering ignores
+malformed, expired, future, and previous-ruler rows, while the next declaration compacts
+the list. Protagonist succession clears it because this is personal recent conduct, not
+the later inheritable house-notoriety concept.
+
+Aggression earns none of the ordinary automatic offensive-war prestige at declaration,
+county capture, a slipped-prize settlement, or accepted tribute. A captured objective
+instead receives **Conquered Without Right** for 2,160 days: −15% county tax, −20% county
+levy, −8 effective Common Voice while it counts as the player's modifier county, and
++40% harmful `unrest` exposure. The record belongs to the county and survives later
+ownership changes. Recent aggression also multiplies the existing yearly breakaway chance
+for vassals under the player's crown; negative personal Standing compounds that multiplier.
+With no recent aggression the old `breakawayChance` is unchanged, and even one declaration
+only raises pressure rather than forcing a revolt.
 
 The exceptional `restoration` cause belongs to one displaced rightful crowned
 protagonist. It ignores adjacency, follows the usurper realm's current capital through

@@ -27886,6 +27886,22 @@
         "text": "Corrected priests on doctrine; has presumably gone to check."
       }
     },
+    "modifier.conquered_without_right.desc.default": {
+      "context": "modifier conquered_without_right, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "The county was taken without claim or de jure right. Its people resist the new rule and its obligations."
+      }
+    },
+    "modifier.conquered_without_right.name.default": {
+      "context": "modifier conquered_without_right, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Conquered Without Right"
+      }
+    },
     "modifier.contested_tolls.desc.default": {
       "context": "modifier contested_tolls, desc, faith branch default.",
       "glossary": [],
@@ -28385,6 +28401,28 @@
           "param": "skill",
           "select": "value"
         }
+      }
+    },
+    "news.action.war_aggression_cost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "prestige",
+        "voice"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "⚔ The War of Aggression stains your rule: prestige {prestige}, Common Voice {voice}, and condemnation from direct vassals and foreign courts."
+      }
+    },
+    "news.action.war_aggression_declared": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "enemy",
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "⚔ You declare a War of Aggression upon {enemy} for {province}!"
       }
     },
     "news.action.war_declared": {
@@ -38773,6 +38811,16 @@
         "text": "Unknown profession"
       }
     },
+    "src.021bef69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
+      }
+    },
     "src.022d5ade": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42422,6 +42470,16 @@
         "text": "Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days."
       }
     },
+    "src.0cb8fee0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} foreign sovereign courts"
+      }
+    },
     "src.0cbc662b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43693,6 +43751,16 @@
       ],
       "source": {
         "text": "Ignore the summons."
+      }
+    },
+    "src.104c29f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Sworn peace pacts protect every reachable neighboring target."
       }
     },
     "src.104df13e": {
@@ -46215,6 +46283,16 @@
         "text": "Dean"
       }
     },
+    "src.16c1178b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Continuing consequences"
+      }
+    },
     "src.16c639bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47849,6 +47927,16 @@
         "text": "Assistant on · current recommendations: {count}"
       }
     },
+    "src.1b3b6a55": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The commons in your demesne ({change} Common Voice)"
+      }
+    },
     "src.1b3ea333": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49402,6 +49490,16 @@
         "text": "Maintained service furnishings that improve a priest’s paid and religious work, but are not saleable property."
       }
     },
+    "src.2087c670": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "(made through a plot)."
+      }
+    },
     "src.208876a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49772,6 +49870,16 @@
         "text": "Kabul"
       }
     },
+    "src.2174d058": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "While this declaration remains recent, player-realm vassal breakaway pressure is ×{multiplier}; poor Standing raises it further."
+      }
+    },
     "src.217d177d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49960,6 +50068,16 @@
       ],
       "source": {
         "text": "Incendiary Weapons"
+      }
+    },
+    "src.22101988": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The War of Aggression can no longer be declared."
       }
     },
     "src.2215bd20": {
@@ -50690,6 +50808,16 @@
       ],
       "source": {
         "text": "Secured the ancient rights of common."
+      }
+    },
+    "src.2403c921": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Accept the consequences and declare war"
       }
     },
     "src.2407fbaa": {
@@ -51974,6 +52102,16 @@
       ],
       "source": {
         "text": "Requires 40 Standing; currently {standing}."
+      }
+    },
+    "src.274454b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming."
       }
     },
     "src.276368dd": {
@@ -54690,6 +54828,16 @@
         "text": "Waiting for a focus"
       }
     },
+    "src.2ffd8c3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Peace pacts or your defensive alliance protect every reachable neighboring target."
+      }
+    },
     "src.30002c26": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55601,16 +55749,6 @@
         "text": "🎁 Your courier delivers {item} to {recipient}. (Standing {regard})"
       }
     },
-    "src.3303c96c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "(made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering."
-      }
-    },
     "src.33050a93": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56291,6 +56429,16 @@
       ],
       "source": {
         "text": "{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering Catholic great holy war."
+      }
+    },
+    "src.34ddd160": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
       }
     },
     "src.34f16340": {
@@ -59773,6 +59921,16 @@
         "text": "🪙 Two seasons without pay drive {name} from the household."
       }
     },
+    "src.3fb2cf43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
+      }
+    },
     "src.3fc440f6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60714,6 +60872,16 @@
       ],
       "source": {
         "text": "Swear the peace."
+      }
+    },
+    "src.42e0c928": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Compare lawful causes or accept the political cost of a War of Aggression."
       }
     },
     "src.42e4b0b4": {
@@ -62703,6 +62871,16 @@
       ],
       "source": {
         "text": "Eligible: same-house cousin; closer branches have no living candidate."
+      }
+    },
+    "src.47ce0304": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}."
       }
     },
     "src.47d165d6": {
@@ -68427,6 +68605,16 @@
         "text": "🐞 Report a bug"
       }
     },
+    "src.5864c00c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{voice} Common Voice."
+      }
+    },
     "src.588247fe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69347,16 +69535,6 @@
       ],
       "source": {
         "text": "Costly honesty carries across the sea; their factors answer with a market compact."
-      }
-    },
-    "src.5b77f5fa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
       }
     },
     "src.5b81778b": {
@@ -72628,6 +72806,16 @@
         "text": "Insist upon every stone."
       }
     },
+    "src.64e8d48c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Declare a War of Aggression?"
+      }
+    },
     "src.64eaa0e3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72978,6 +73166,16 @@
       ],
       "source": {
         "text": "ready"
+      }
+    },
+    "src.66216c8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{bloc} ({influence} influence; affected members project to Standing {standing})"
       }
     },
     "src.662b1710": {
@@ -79628,6 +79826,16 @@
         "text": "Strathclyde"
       }
     },
+    "src.794a8398": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Immediate consequences"
+      }
+    },
     "src.795a8a10": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79806,16 +80014,6 @@
       ],
       "source": {
         "text": "A free merit petition weighs Learning, permanent lay standing, investiture policy, and the appointing authority’s support."
-      }
-    },
-    "src.79b07462": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Your defensive alliance forbids an attack on the only realm you have cause against."
       }
     },
     "src.79bb35cb": {
@@ -80578,16 +80776,6 @@
       ],
       "source": {
         "text": "A Door Half-Shut"
-      }
-    },
-    "src.7be902c4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "A sworn peace pact protects the only realm you have cause against."
       }
     },
     "src.7be9d87a": {
@@ -81408,6 +81596,16 @@
       ],
       "source": {
         "text": "Keep the road, whatever the sky says."
+      }
+    },
+    "src.7e3c4a2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Target {realm}; conquer {province} by holding it and completing three war-council siege steps."
       }
     },
     "src.7e3faa66": {
@@ -87068,6 +87266,16 @@
         "text": "Hedge Knight"
       }
     },
+    "src.8dbd8ec7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your defensive alliance protects every reachable neighboring target."
+      }
+    },
     "src.8dc763c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87820,6 +88028,17 @@
       ],
       "source": {
         "text": "Large Bell Casting"
+      }
+    },
+    "src.8fc0e01d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js",
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Conquered Without Right"
       }
     },
     "src.8fc417d4": {
@@ -91854,6 +92073,16 @@
         "text": "No career choice is currently available under the existing age, station, faith, and household rules."
       }
     },
+    "src.9c0c1e5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "⚔ You declare a War of Aggression upon {enemy} for {province}!"
+      }
+    },
     "src.9c0c9441": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92112,6 +92341,16 @@
       ],
       "source": {
         "text": "College of Cardinals"
+      }
+    },
+    "src.9ccb9401": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No neighboring hostile realm can be reached from your border."
       }
     },
     "src.9cd242f5": {
@@ -92483,6 +92722,16 @@
       ],
       "source": {
         "text": "Vacant."
+      }
+    },
+    "src.9e046097": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This target is also the active Papacy. Declaring forfeits all piety, gives −{standing} Standing with every Catholic ruler, and excommunicates the current ruler."
       }
     },
     "src.9e055e75": {
@@ -94636,6 +94885,16 @@
       ],
       "source": {
         "text": "Vacant obedience"
+      }
+    },
+    "src.a414c390": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "⚔ The War of Aggression stains your rule: prestige {prestige}, Common Voice {voice}, and condemnation from direct vassals and foreign courts."
       }
     },
     "src.a4158509": {
@@ -97798,6 +98057,16 @@
         "text": "A thin host, but a willing one."
       }
     },
+    "src.ae061392": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Most likely opposition"
+      }
+    },
     "src.ae0bf27a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99002,16 +99271,6 @@
         "text": "Untroubled by thought; slipped away in the absence of one."
       }
     },
-    "src.b128635c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": ", with the exact reason when it is locked. A county war requires a bordering"
-      }
-    },
     "src.b13b8f84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100131,16 +100390,6 @@
       ],
       "source": {
         "text": "Brno"
-      }
-    },
-    "src.b45b00e3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No bordering county lies within a title you hold, and you have no fabricated claim."
       }
     },
     "src.b45d7341": {
@@ -101766,6 +102015,16 @@
         "text": "🕊 The rival obediences are reconciled; one College and one claimant remain."
       }
     },
+    "src.b8c175fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "The county was taken without claim or de jure right. Its people resist the new rule and its obligations."
+      }
+    },
     "src.b8c3d167": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102615,6 +102874,16 @@
       ],
       "source": {
         "text": "Zealous"
+      }
+    },
+    "src.bbe8ce37": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{count} direct vassal courts"
       }
     },
     "src.bbee6d70": {
@@ -103488,6 +103757,16 @@
       ],
       "source": {
         "text": "Sow little, hire out your back instead."
+      }
+    },
+    "src.be63848d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "You have no direct vassals, so no direct-vassal Standing changes now."
       }
     },
     "src.be639063": {
@@ -106964,6 +107243,16 @@
       ],
       "source": {
         "text": ": invalid confidence."
+      }
+    },
+    "src.c856e97b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{prestige} prestige."
       }
     },
     "src.c8573c64": {
@@ -111476,6 +111765,16 @@
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
       }
     },
+    "src.d652a49f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right."
+      }
+    },
     "src.d656fc2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111504,6 +111803,16 @@
       ],
       "source": {
         "text": "The work is accepted at half price. Loyalty cannot plane a warped board."
+      }
+    },
+    "src.d667ccaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier."
       }
     },
     "src.d6688bfe": {
@@ -113970,6 +114279,16 @@
         "text": "{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}."
       }
     },
+    "src.ddab7e05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No living foreign sovereign is currently affected."
+      }
+    },
     "src.ddb06ec6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116156,6 +116475,16 @@
         "text": "Take modest goodwill without adding a compact."
       }
     },
+    "src.e3902e4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The war itself grants no declaration or victory prestige; separate title promotions still apply. {province} receives {modifier} for {days} days: {effects}. The modifier remains with the county if ownership changes."
+      }
+    },
     "src.e3903dd0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116274,6 +116603,16 @@
       ],
       "source": {
         "text": "Harbor Works"
+      }
+    },
+    "src.e40e1674": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "No organized opposition group is currently visible, but the listed political costs still apply."
       }
     },
     "src.e40f4ead": {
@@ -117658,6 +117997,16 @@
       ],
       "source": {
         "text": "Deheubarth"
+      }
+    },
+    "src.e80bce92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This is the ruler’s first recent aggressive war; later declarations escalate every political cost."
       }
     },
     "src.e80c41fa": {
@@ -119104,16 +119453,6 @@
         "text": "Show all {count}"
       }
     },
-    "src.eca3651d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Succession war for the office of {title}"
-      }
-    },
     "src.eca53dcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119422,6 +119761,16 @@
       ],
       "source": {
         "text": "Alms, sermons, and burials."
+      }
+    },
+    "src.ed57941a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This war has no recognized right."
       }
     },
     "src.ed5aa91e": {
@@ -122643,16 +122992,6 @@
         "text": "A name in the right ledger opens doors."
       }
     },
-    "src.f6cad0a6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Press a de jure right, a fabricated county claim, or a crown-restoration right."
-      }
-    },
     "src.f6cf5741": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123072,6 +123411,16 @@
       ],
       "source": {
         "text": "Canonical investiture"
+      }
+    },
+    "src.f83a9af9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The war itself grants no declaration or victory prestige and applies the unjust-conquest county burden."
       }
     },
     "src.f83d06f2": {
@@ -124795,6 +125144,16 @@
         "text": "{name} (heir)"
       }
     },
+    "src.fd7467b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": ", with the exact reason when it is locked. A county war prefers a bordering"
+      }
+    },
     "src.fd7515b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124893,6 +125252,16 @@
       ],
       "source": {
         "text": "Already on the road."
+      }
+    },
+    "src.fdc780b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering."
       }
     },
     "src.fdd10f48": {
@@ -125574,6 +125943,16 @@
       ],
       "source": {
         "text": "Keeps accounts, directs servants, and makes the household’s work run more cleanly."
+      }
+    },
+    "src.ffd691b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "War of Aggression"
       }
     },
     "src.ffe13b49": {
@@ -131007,14 +131386,6 @@
         "text": "A sworn peace pact protects the Caliph’s realm."
       }
     },
-    "ui:A sworn peace pact protects the only realm you have cause against.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "A sworn peace pact protects the only realm you have cause against."
-      }
-    },
     "ui:A sworn peace pact protects this realm.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -131053,14 +131424,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals."
-      }
-    },
-    "ui:A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
       }
     },
     "ui:Abandon the journey and retrace the road. Nothing is refunded.": {
@@ -131206,6 +131569,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Accept the Pope’s absolution"
+      }
+    },
+    "ui:Accept the consequences and declare war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Accept the consequences and declare war"
       }
     },
     "ui:Accept the territorial grant": {
@@ -133924,6 +134295,14 @@
         "text": "Commoner household"
       }
     },
+    "ui:Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
+      }
+    },
     "ui:Completed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -133946,6 +134325,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Connections"
+      }
+    },
+    "ui:Conquered Without Right": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Conquered Without Right"
       }
     },
     "ui:Consider for household service…": {
@@ -134034,6 +134421,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Continue the vocation’s yearly work and meet the faith-specific rank requirements."
+      }
+    },
+    "ui:Continuing consequences": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Continuing consequences"
       }
     },
     "ui:Contribution {contribution} · vow {vow} · occupation {occupation} · right {right} · support {support} · office {office}": {
@@ -134531,6 +134926,14 @@
         "text": "Decide nothing today"
       }
     },
+    "ui:Declare a War of Aggression?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Declare a War of Aggression?"
+      }
+    },
     "ui:Declare rival": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -134958,6 +135361,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Direct vassals"
+      }
+    },
+    "ui:Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
       }
     },
     "ui:Directed by {realm}": {
@@ -136148,6 +136562,17 @@
         "text": "Foreign-policy direction"
       }
     },
+    "ui:Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
+      }
+    },
     "ui:Form your own venture": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -137135,6 +137560,27 @@
       "location": "js/economy.js",
       "source": {
         "text": "Imam"
+      }
+    },
+    "ui:Immediate consequences": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Immediate consequences"
+      }
+    },
+    "ui:Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "foreign",
+        "prestige",
+        "vassal",
+        "voice"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right."
       }
     },
     "ui:Imperial vassals, national institutions, diplomacy, and succession determine whether the realm endures.": {
@@ -138537,6 +138983,14 @@
         "text": "Mosque Servant"
       }
     },
+    "ui:Most likely opposition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Most likely opposition"
+      }
+    },
     "ui:Motion posture": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138968,14 +139422,6 @@
         "text": "No awards have yet been settled."
       }
     },
-    "ui:No bordering county lies within a title you hold, and you have no fabricated claim.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "No bordering county lies within a title you hold, and you have no fabricated claim."
-      }
-    },
     "ui:No buildings stand in {settlement} yet.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -139378,6 +139824,14 @@
         "text": "No living candidate."
       }
     },
+    "ui:No living foreign sovereign is currently affected.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No living foreign sovereign is currently affected."
+      }
+    },
     "ui:No living household relationships are recorded.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -139506,6 +139960,14 @@
         "text": "No named personal connections are recorded."
       }
     },
+    "ui:No neighboring hostile realm can be reached from your border.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "No neighboring hostile realm can be reached from your border."
+      }
+    },
     "ui:No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -139578,6 +140040,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No open settlement remains."
+      }
+    },
+    "ui:No organized opposition group is currently visible, but the listed political costs still apply.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "No organized opposition group is currently visible, but the listed political costs still apply."
       }
     },
     "ui:No pact or war": {
@@ -141170,6 +141640,14 @@
         "text": "Peace pact with {realm}"
       }
     },
+    "ui:Peace pacts or your defensive alliance protect every reachable neighboring target.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Peace pacts or your defensive alliance protect every reachable neighboring target."
+      }
+    },
     "ui:Peace-pact partner": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142221,6 +142699,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Recognized by you"
+      }
+    },
+    "ui:Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "declaration",
+        "victory"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier."
       }
     },
     "ui:Recommend descendant matches": {
@@ -144633,16 +145122,6 @@
         "text": "Succession claim to {title}"
       }
     },
-    "ui:Succession war for the office of {title}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "title"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Succession war for the office of {title}"
-      }
-    },
     "ui:Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144665,6 +145144,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Support or opposition is pledged for this vote."
+      }
+    },
+    "ui:Sworn peace pacts protect every reachable neighboring target.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Sworn peace pacts protect every reachable neighboring target."
       }
     },
     "ui:Sworn subject": {
@@ -144759,6 +145246,17 @@
       "location": "js/ui.js",
       "source": {
         "text": "Tap the 🚩 on the map to give march orders."
+      }
+    },
+    "ui:Target {realm}; conquer {province} by holding it and completing three war-council siege steps.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province",
+        "realm"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Target {realm}; conquer {province} by holding it and completing three war-council siege steps."
       }
     },
     "ui:Target: {province}. Opens the existing cause review and muster preview.": {
@@ -145103,6 +145601,14 @@
         "text": "The Royal Council"
       }
     },
+    "ui:The War of Aggression can no longer be declared.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The War of Aggression can no longer be declared."
+      }
+    },
     "ui:The active courtship holds this assignment.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -145221,6 +145727,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority."
+      }
+    },
+    "ui:The commons in your demesne ({change} Common Voice)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "change"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The commons in your demesne ({change} Common Voice)"
       }
     },
     "ui:The community elects another candidate.": {
@@ -145847,6 +146363,27 @@
         "text": "The vows of a Bishop, Cardinal, or Pope forbid marriage."
       }
     },
+    "ui:The war itself grants no declaration or victory prestige and applies the unjust-conquest county burden.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The war itself grants no declaration or victory prestige and applies the unjust-conquest county burden."
+      }
+    },
+    "ui:The war itself grants no declaration or victory prestige; separate title promotions still apply. {province} receives {modifier} for {days} days: {effects}. The modifier remains with the county if ownership changes.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "effects",
+        "modifier",
+        "province"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The war itself grants no declaration or victory prestige; separate title promotions still apply. {province} receives {modifier} for {days} days: {effects}. The modifier remains with the county if ownership changes."
+      }
+    },
     "ui:The wedding county can no longer receive the household.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146169,6 +146706,14 @@
         "text": "This is the highest religious office open to {name} on this path."
       }
     },
+    "ui:This is the ruler’s first recent aggressive war; later declarations escalate every political cost.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This is the ruler’s first recent aggressive war; later declarations escalate every political cost."
+      }
+    },
     "ui:This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146349,6 +146894,16 @@
         "text": "This standard is already at its highest level."
       }
     },
+    "ui:This target is also the active Papacy. Declaring forfeits all piety, gives −{standing} Standing with every Catholic ruler, and excommunicates the current ruler.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This target is also the active Papacy. Declaring forfeits all piety, gives −{standing} Standing with every Catholic ruler, and excommunicates the current ruler."
+      }
+    },
     "ui:This travel purpose is not open at your rank.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146363,6 +146918,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared."
+      }
+    },
+    "ui:This war has no recognized right.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "This war has no recognized right."
       }
     },
     "ui:This worker": {
@@ -147133,6 +147696,14 @@
         "text": "War enemy"
       }
     },
+    "ui:War of Aggression": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "War of Aggression"
+      }
+    },
     "ui:Warfare and fortification": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147262,12 +147833,30 @@
         "text": "When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests."
       }
     },
+    "ui:Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming."
+      }
+    },
     "ui:While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
         "text": "While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle."
+      }
+    },
+    "ui:While this declaration remains recent, player-realm vassal breakaway pressure is ×{multiplier}; poor Standing raises it further.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "multiplier"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "While this declaration remains recent, player-realm vassal breakaway pressure is ×{multiplier}; poor Standing raises it further."
       }
     },
     "ui:Who shall carry the name when you are gone? Naming changes priority among eligible successors; it does not make an ineligible relative eligible.": {
@@ -147556,6 +148145,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared."
+      }
+    },
+    "ui:You have no direct vassals, so no direct-vassal Standing changes now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "You have no direct vassals, so no direct-vassal Standing changes now."
       }
     },
     "ui:You have no direct vassals, so no vassal Standing will change.": {
@@ -147919,20 +148516,20 @@
         "text": "Your defensive alliance forbids an attack on the Caliph’s realm."
       }
     },
-    "ui:Your defensive alliance forbids an attack on the only realm you have cause against.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Your defensive alliance forbids an attack on the only realm you have cause against."
-      }
-    },
     "ui:Your defensive alliance forbids an attack on this realm.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Your defensive alliance forbids an attack on this realm."
+      }
+    },
+    "ui:Your defensive alliance protects every reachable neighboring target.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your defensive alliance protects every reachable neighboring target."
       }
     },
     "ui:Your demesne needs at least {needed} counties (now {current}).": {
@@ -150419,6 +151016,18 @@
         "text": "{beneficiary} · sponsored by {claimant} · with a {money:gold} settlement payment"
       }
     },
+    "ui:{bloc} ({influence} influence; affected members project to Standing {standing})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bloc",
+        "influence",
+        "standing"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{bloc} ({influence} influence; affected members project to Standing {standing})"
+      }
+    },
     "ui:{bloc} starting posture": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -150654,6 +151263,17 @@
         "text": "{count} active"
       }
     },
+    "ui:{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "multiplier"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}."
+      }
+    },
     "ui:{count} counties": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -150674,6 +151294,16 @@
         "text": "{count} destinations in reach."
       }
     },
+    "ui:{count} direct vassal courts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} direct vassal courts"
+      }
+    },
     "ui:{count} eligible household workers.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -150682,6 +151312,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{count} eligible household workers."
+      }
+    },
+    "ui:{count} foreign sovereign courts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{count} foreign sovereign courts"
       }
     },
     "ui:{count} household service slots are open. Service is paid each season.": {
@@ -152482,6 +153122,16 @@
         "text": "{prestige} prestige · {opinion} popular opinion · {standing} Standing for every direct vassal"
       }
     },
+    "ui:{prestige} prestige.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "prestige"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{prestige} prestige."
+      }
+    },
     "ui:{profession} Monopoly": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -153414,6 +154064,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{value} ({band})"
+      }
+    },
+    "ui:{voice} Common Voice.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "voice"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{voice} Common Voice."
       }
     },
     "ui:{wearer} · {slot}": {

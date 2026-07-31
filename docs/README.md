@@ -287,11 +287,21 @@ the late ruler’s personal Standing and diplomatic network.
 ### War
 
 From **baron** upward the *Deeds* tab always shows **⚔ Declare war**, with the exact lock
-reason when no lawful war is available. New county conquests require either a bordering
-**de jure** right through a duchy, kingdom, or empire you actually hold, or your single
-fabricated claim. Counts and higher fabricate one claim through a targeted plot; it survives
+reason when no neighboring hostile realm can be reached. New county conquests prefer
+either a bordering **de jure** right through a duchy, kingdom, or empire you actually
+hold, or your single fabricated claim. Counts and higher fabricate one claim through a
+targeted plot; it survives
 succession and defeat, follows the county when ownership changes, and is consumed only when
 that county is captured. Pacts and alliances remain absolute declaration blocks.
+
+Where neither recognized right applies, the picker names the alternative plainly as a
+**War of Aggression** and shows its target, siege objective, and political costs before
+opening a required confirmation. It costs prestige and Common Voice, lowers Standing
+with direct vassals and foreign sovereigns, and becomes harsher when the current ruler
+has declared other recent aggressive wars. It grants none of the normal automatic
+offensive-war prestige. Victory burdens the county for six years with **Conquered Without
+Right**, reducing tax and levy while worsening Common Voice and unrest; repeated aggression
+also makes poorly disposed vassals more likely to break away.
 
 A displaced king or emperor whose intact crowned realm was handed to a usurper keeps one
 narrow restoration right. It reaches the usurper’s current capital without adjacency and,

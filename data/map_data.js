@@ -942,6 +942,13 @@ FBDATA.balance = {
   itemSellRatio: 0.5, // what a buyer gives against an item's value
   wivesByGroup: { muslim: 4, pagan: 3 },
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
+  /* unjustified player wars: the current ruler's recent declarations make
+     each new political cost harsher and keep vassal breakaway pressure high */
+  warAggressionMemoryDays: 2880,
+  warAggressionPrestige: -20, warAggressionCommonVoice: -8,
+  warAggressionVassalStanding: -10, warAggressionForeignStanding: -5,
+  warAggressionEscalationPerRecent: 0.5,
+  warAggressionBreakawayPerRecent: 0.5,
   /* field armies (js/armies.js): hosts on the map */
   armyMarchDays: 6, // days for a host to cross one province
   armySeaTransportBase: 250, // men carried per crossing cycle before national technology
