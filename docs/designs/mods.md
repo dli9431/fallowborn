@@ -31,7 +31,13 @@ hierarchy, straits, crossing classes, scripted history, coastline, seas, or boun
 its own complete `1066` bookmark makes 1066 unavailable for new games. The picker
 explains the restriction; 867 still works. Non-world mods leave both bookmarks
 available. Hidden bookmarks are not deleted, so an existing matching mod-stamped save
-can still load its recorded bookmark.
+can still load its recorded bookmark. Decorative `rivers` are shared across bookmarks and
+do not trigger this restriction by themselves. Legacy top-level `straits` are append-only;
+removing or replacing crossings requires an atomic bookmark definition.
+
+`defaultBookmark` is an optional last-mod-wins scalar. It must name a complete bookmark
+present after the mod stack merges and controls the title-map/fallback world activated at
+boot. An invalid id is a boot error rather than a request to fall back silently to 867.
 
 **Bundled mods** (`mods/*.js`) register
 `{id, name, desc, data}` into `window.FBMODS` via a script tag after the data files; the
@@ -76,13 +82,19 @@ Standing (`opinion`) fields retain their old meaning, while numeric objects such
 `FB.traitBonus`. Acquisition guidance in `earned` is display text; `earn.threshold`
 is mechanical progress state.
 
-Technology definitions merge under the top-level `tech` key before validation. The graph
+Technology domain, tradition, and technology definitions merge by id under the top-level
+`techDomains`, `techTraditions`, and `tech` keys before validation. Domain display order
+comes from its numeric `order`, and domain/tradition names use the structured-data
+localization path so mod-authored labels fall back to their English source. `techCaps`
+merges scalar members and merges members of `costFloor`, `units`, and `aiUnits` one level
+deeper; this permits a focused cap override without erasing unrelated built-in caps. The graph
 engine normalizes legacy `branch` to `domain`, scalar `req` to an array, and `yearMin` to
 an inferred soft attestation/adoption window; legacy `cultures` and `notCultures`
 restrictions remain valid. New definitions should author `domain`, `cost`, `req`,
 optional `reqAny`, full `history`, localized `name`/`desc`, `unlocks`, and `fx`.
 Bookmark realms may add `techTraditions` and `techSeed` overrides. Cycles, unknown
-prerequisites/traditions/unlocks, and malformed historical ranges reject the bookmark.
+prerequisites/domains/traditions/unlocks, malformed historical ranges, invalid domain or
+tradition definitions, and invalid cap values reject the bookmark.
 Mod technologies may add capped fractional `fx.seaMovement`; `fx.seaTransport` must be a
 finite positive integer and competes by maximum value rather than summing. These effects
 automatically appear in Technology details and require no ship, port, or fleet objects.

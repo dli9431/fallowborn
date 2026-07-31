@@ -19,8 +19,14 @@ window.FB = window.FB || {};
     return bookmarks[id] || null;
   }
 
+  function defaultBookmarkId() {
+    return FBDATA.defaultBookmark === undefined
+      ? '867' : String(FBDATA.defaultBookmark);
+  }
+
   FB.bookmark = function (id) {
-    return bookmarkDefinition(String(id || FBDATA.defaultBookmark || '867'));
+    return bookmarkDefinition(id === undefined || id === null
+      ? defaultBookmarkId() : String(id));
   };
 
   FB.bookmarks = function (includeHidden) {
@@ -573,11 +579,13 @@ window.FB = window.FB || {};
      restoration. Raster results are cached per atomic bookmark for the rest of
      the page session; map input remains wired to the same visible canvas. */
   FB.activateBookmark = function (id, progress, done) {
-    var definition = bookmarkDefinition(String(id || FBDATA.defaultBookmark || '867'));
+    var requestedId = id === undefined || id === null
+      ? defaultBookmarkId() : String(id);
+    var definition = bookmarkDefinition(requestedId);
     progress = progress || function () {};
     done = done || function () {};
     if (!definition) {
-      setTimeout(function () { done(new Error('Unknown bookmark: ' + id)); }, 0);
+      setTimeout(function () { done(new Error('Unknown bookmark: ' + requestedId)); }, 0);
       return;
     }
     var errors = FB.validateBookmark(definition);
@@ -602,7 +610,7 @@ window.FB = window.FB || {};
   /* Compatibility for old callers and mods: generate the public/default 867
      world. New core code calls FB.activateBookmark directly. */
   FB.generateWorld = function (progress, done) {
-    FB.activateBookmark(FBDATA.defaultBookmark || '867', progress, function (error) {
+    FB.activateBookmark(defaultBookmarkId(), progress, function (error) {
       if (error) throw error;
       if (done) done();
     });

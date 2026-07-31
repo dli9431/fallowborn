@@ -712,7 +712,8 @@ window.FB = window.FB || {};
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
       refreshOfflineStatus();
-      FB.activateBookmark(FBDATA.defaultBookmark || '867',
+      FB.activateBookmark(FBDATA.defaultBookmark === undefined
+        ? '867' : FBDATA.defaultBookmark,
         function (frac, msg) {
           $('loadbar').style.width = Math.round(frac * 100) + '%';
           $('loadmsg').textContent = FB.T(msg);

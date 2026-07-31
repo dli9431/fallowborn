@@ -29,8 +29,8 @@ though the game still *runs*.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
   in the source (the renderer selects the branch, then localizes it). Technology `name`
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;
-  domain/tradition labels and cost explanations are UI chrome and use explicit `FB.T`
-  keys.
+  domain and tradition labels are id-keyed structured data too; cost explanations remain
+  UI chrome and use explicit `FB.T` keys.
 - **Durable / shared messages (chronicle, `FB.news`, `FB.fx`, anything stored in state):** emit an
   opaque descriptor, never rendered prose. From shared sim code: `FB.news(state,
   FB.msg('news.war.tribute', '🕊 English fallback.', params))`. The opaque key (`news.*`, `fx.*`)

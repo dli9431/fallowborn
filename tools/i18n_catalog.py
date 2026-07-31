@@ -54,6 +54,8 @@ STRUCTURED_DATA = {
     "politicalBlocs": "politicalBloc",
     "items": "item",
     "plots": "plot",
+    "techDomains": "techDomain",
+    "techTraditions": "techTradition",
     "tech": "tech",
 }
 DATA_FIELDS = ("name", "desc")
@@ -640,16 +642,19 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]),
                         )
             continue
-        path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
-                       "modifiers.js" if data_name == "modifiers" else
-                       "cultures.js" if data_name in ("cultures", "religions") else
-                       "economy.js" if data_name in (
-                           "careers", "positions", "schooling", "enterprises",
-                           "householdStandards"
-                       ) else
-                       "travel.js" if data_name == "travelPurposes" else
-                       "political_blocs.js" if data_name == "politicalBlocs" else
-                       "map_data.js")
+        if data_name in ("techDomains", "techTraditions"):
+            path = TECHNOLOGY_FILE
+        else:
+            path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
+                           "modifiers.js" if data_name == "modifiers" else
+                           "cultures.js" if data_name in ("cultures", "religions") else
+                           "economy.js" if data_name in (
+                               "careers", "positions", "schooling", "enterprises",
+                               "householdStandards"
+                           ) else
+                           "travel.js" if data_name == "travelPurposes" else
+                           "political_blocs.js" if data_name == "politicalBlocs" else
+                           "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
         for item_id, item_node in root.items():

@@ -131,6 +131,7 @@ A JSON mod is one object with any of these keys:
 {
   "name": "My Mod (cosmetic, optional)",
   "bookmarks": { "my_start": { ...complete bookmark... } },
+  "defaultBookmark": "my_start",
   "provinces": [ ... ],
   "realms":    [ ... ],
   "empires":   { "id": { ... } },
@@ -145,7 +146,10 @@ A JSON mod is one object with any of these keys:
   "traits":    { "id": { ... } },
   "ailments":  { "id": { ... } },
   "buildings": { "id": { ... } },
+  "techDomains": { "id": { "name": "...", "icon": "...", "order": 7 } },
+  "techTraditions": { "id": { "name": "...", "cultures": [], "religions": [] } },
   "tech":      { "id": { ... } },
+  "techCaps":  { "seaMovement": 0.5, "units": { "arch": 250 } },
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
   "positions": { "id": { ... } },
@@ -180,6 +184,9 @@ second one.
 `bookmarks` is an atomic replacement table. Each keyed value replaces that complete
 start world; bookmark definitions do not merge by province or realm. The older
 top-level world keys remain the merge API for the built-in 867 definition.
+`defaultBookmark` may name any complete bookmark present after all mods merge. The last
+enabled mod that supplies it wins; an unknown id stops boot at the bookmark validation
+screen instead of silently falling back to another start.
 
 > Saves store only province/realm **ids**, so changing map data can orphan old saves. To keep
 > a life from waking up on the wrong map, every save is stamped with a fingerprint of the
@@ -340,6 +347,10 @@ bookmark activation. The classification affects field-army time and routing only
 personal travel, political adjacency, and `FB.findPath` continue to use ordinary strait
 adjacency.
 
+Top-level `straits` are append-only: each supplied pair is added after the existing
+pairs. To remove or replace crossings, provide an atomic bookmark with its complete
+`straits` array. `crossingClasses`, by contrast, merges by canonical pair key.
+
 ### The de jure hierarchy
 
 Counties → duchies → kingdoms → empires, all plain reference data:
@@ -432,7 +443,9 @@ A legacy mod that changes `provinces`, `realms`, `empires`, `kingdoms`, `duchies
 `bookmarks.1066` definition hides 1066 from the new-game picker and explains why.
 Its 867 games still work. Ordinary non-world mods expose both built-in dates, and
 matching stamped saves retain access to their recorded bookmark even when it is hidden
-from new-game selection.
+from new-game selection. A `rivers`-only mod does not hide 1066 because rivers are
+decorative and shared by every bookmark; replacing rivers together with any listed
+world-shaping key still follows that key's restriction.
 
 ### Scripted history
 
@@ -499,6 +512,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `seasons` | array of 0 spring … 3 winter |
 | `yearMin` / `yearMax` | calendar gate |
 | `married`, `hasChildren`, `hasYoungChild` | booleans |
+| `maxSeasonsSinceMarriage` | requires a recorded marriage no more than this many 90-day seasons ago |
 | `goldMin/Max`, `prestigeMin`, `pietyMin`, `leaMin` | resource gates |
 | `healthMax` | player health at or below (0–10) |
 | `flags` / `notFlags` | player flags set by other events |
@@ -646,14 +660,21 @@ rid of a spouse the darker way — its resolution is `plot_spouse_end`.
 
 ### Effects
 
-`gold prestige piety health warService` (numbers — warService is the lifetime tally of
-service in the liege's wars and feeds any core trait progress attached to that service) ·
+`gold prestige piety health warService` (numbers — `gold` also accepts the special
+`"harvest_good"` value: seeded 4–8 plus one per three effective Stewardship, +6 for
+risky crops, +2 for an ox, then up to five farm plots add 12% each; `warService` is the
+lifetime tally of service in the liege's wars and feeds any core trait progress attached
+to that service) ·
 `skills: {dip|mar|ste|int|lea: n}` (positive gains
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
-`addTrait / removeTrait` · `traitProgress: {id, amount?}` (default amount 1; progress is
+`addTrait / addTraitOnce / removeTrait` (`addTraitOnce` is the explicit idempotent spelling;
+trait grants already do nothing when the character has that trait) ·
+`traitProgress: {id, amount?}` (default amount 1; progress is
 clamped at the trait's `earn.threshold`, then the trait is awarded) ·
 `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
+`clearHarvestFlags: true` (clears `crop_safe`, `crop_risky`, `crop_ruined`, and the
+spent `blessed_crops` blessing) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
 (`opinion` and `opinionLiege` retain their compatibility names but adjust personal or
 realm Standing; `popularOpinion` remains the distinct Common Voice population score) ·
@@ -674,7 +695,9 @@ rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
 `killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
 the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
-`convertToProvince` · `declareIndependence` · `devUp` · `research: n` (points added to
+`convertToProvince` · `declareIndependence` · `devUp` ·
+`pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
+either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
 banked as reserve) ·
 `travelReturn: true` (begin the saved route home once the minimum stay is complete) ·
@@ -1498,41 +1521,76 @@ attack the player and cannot be declared on.
 
 ## Technology
 
-`FBDATA.tech` (in `data/technology.js`, mod key `tech`) defines the national prerequisite
+`FBDATA.techDomains`, `FBDATA.techTraditions`, `FBDATA.tech`, and `FBDATA.techCaps`
+(in `data/technology.js`, with matching mod keys) define the national prerequisite
 graph. Each sovereign owns one saved `state.realmTech[realmId]` record; vassals use and
 contribute to the effective top independent realm's completed knowledge, exposures, and
 one-to-three active projects. Only a sovereign player chooses projects, while AI
 sovereigns fill slots with saved RNG.
 
+The definition tables merge by id: a same-id domain, tradition, or technology replaces
+that complete definition, while a new id is added. A domain requires a localized `name`;
+`icon` is display metadata and finite numeric `order` controls catalogue grouping. A
+tradition requires a localized `name` plus `cultures` and `religions` arrays; realms whose
+capital/ruler matches either array derive that tradition automatically. A technology may
+refer to any domain present after the full mod stack merges, and adoption windows may
+refer to any resulting tradition. Mod-authored labels without a core catalog entry fall
+back to their authored English.
+
+`techCaps` merges supplied scalar cap keys. Its nested `costFloor`, `units`, and `aiUnits`
+maps merge one member at a time, so `{ "techCaps": { "units": { "arch": 250 } } }`
+leaves every other built-in cap intact. Caps must be finite non-negative numbers. Scalar
+cap keys are the scalar `fx` keys below; `costFloor` accepts `build`, `enterprise`, and
+`training`; `units` accepts `levy`, `arch`, `cav`, and `ret`; and `aiUnits` accepts
+`arch`, `cav`, and `ret`.
+
 ```json
-{ "tech": { "windmills": {
-  "name": "Windmills", "icon": "🌬",
-  "domain": "crafts",
-  "cost": 50,
-  "req": ["water_power"],
-  "reqAny": ["overshot_waterwheel", "trip_hammer"],
-  "history": {
-    "attested": [850, 1200],
-    "adoption": {
-      "default": [1030, 1240],
-      "latin": [980, 1170],
-      "islamic": [980, 1170]
+{
+  "techDomains": {
+    "mechanics": { "name": "Mechanics", "icon": "⚙", "order": 7 }
+  },
+  "techTraditions": {
+    "workshop_exchange": {
+      "name": "Workshop exchange",
+      "cultures": ["italian"],
+      "religions": []
     }
   },
-  "desc": "Grinding grain wherever the wind blows.",
-  "confidence": "medium",
-  "sources": ["GIES", "HILL"],
-  "unlocks": ["rule:wind_power"],
-  "fx": {
-    "costs": { "build": -0.04, "enterprise": -0.04 },
-    "movement": 0.02
+  "techCaps": {
+    "movement": 0.3,
+    "units": { "arch": 250 }
+  },
+  "tech": {
+    "windmills": {
+      "name": "Windmills", "icon": "🌬",
+      "domain": "mechanics",
+      "cost": 50,
+      "req": ["water_power"],
+      "reqAny": ["overshot_waterwheel", "trip_hammer"],
+      "history": {
+        "attested": [850, 1200],
+        "adoption": {
+          "default": [1030, 1240],
+          "latin": [980, 1170],
+          "workshop_exchange": [980, 1170]
+        }
+      },
+      "desc": "Grinding grain wherever the wind blows.",
+      "confidence": "medium",
+      "sources": ["GIES", "HILL"],
+      "unlocks": ["rule:wind_power"],
+      "fx": {
+        "costs": { "build": -0.04, "enterprise": -0.04 },
+        "movement": 0.02
+      }
+    }
   }
-} } }
+}
 ```
 
-- Core domains are `agriculture`, `crafts`, `commerce`, `learning`, `governance`,
-  `warfare`, and `seafaring`. `req` is an all-of id or array; `reqAny` is an optional
-  any-of array. Technologies are never repeatable.
+- Built-in domains are `agriculture`, `crafts`, `commerce`, `learning`, `governance`,
+  `warfare`, and `seafaring`; mods may replace them or add more. `req` is an all-of id
+  or array; `reqAny` is an optional any-of array. Technologies are never repeatable.
 - `history.attested:[from,to]` is the evidence range.
   `history.adoption.default:[emergence,widespread]` is required; named technology
   traditions may override it. Dates affect cost rather than availability, so a project

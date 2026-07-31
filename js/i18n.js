@@ -440,7 +440,9 @@ window.FBDATA = window.FBDATA || {};
       } else if (value && typeof value === 'object' && value.$data && value.id) {
         const tables = {
           item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
-          plot: FBDATA.plots, tech: FBDATA.tech, trait: FBDATA.traits,
+          plot: FBDATA.plots, tech: FBDATA.tech,
+          techDomain:FBDATA.techDomains, techTradition:FBDATA.techTraditions,
+          trait: FBDATA.traits,
           modifier: FBDATA.modifiers,
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
           career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
