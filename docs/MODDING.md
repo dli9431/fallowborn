@@ -925,6 +925,12 @@ County records remain with the county when ownership changes. Unknown saved ids 
 malformed records are removed by additive save repair. Core definitions and the full
 lifecycle are documented in `docs/designs/modifiers.md`.
 
+Core ordinary-war content includes `conquered_without_right`, a timed county modifier
+granted when the player captures the objective of a saved `aggression` cause. Mods may
+replace its complete definition like any other modifier, but should preserve county
+scope because capture passes the conquered province id and the declaration preview reads
+its duration and effects directly.
+
 ## Buildings
 
 `FBDATA.buildings` (in `data/map_data.js`) defines what tier-3+ rulers can raise in any
@@ -1900,6 +1906,16 @@ Player-capital relocation uses three signed/core numeric keys:
 `capitalRelocationVassalFavor` (-15, applied to each direct vassal). The first is
 clamped to a non-negative price; the two signed standing changes are clamped to the
 ordinary -100…100 range before application.
+War-of-Aggression tuning uses `warAggressionMemoryDays` (2,880),
+`warAggressionPrestige` (-20), `warAggressionCommonVoice` (-8),
+`warAggressionVassalStanding` (-10), `warAggressionForeignStanding` (-5),
+`warAggressionEscalationPerRecent` (0.5), and
+`warAggressionBreakawayPerRecent` (0.5). Signed political changes scale by
+`1 + recent declarations × warAggressionEscalationPerRecent` and clamp at their normal
+resource or Standing bounds. Recent declarations also multiply player-crown vassal
+breakaway pressure; negative Standing compounds that pressure. Non-negative window and
+multiplier values are enforced at runtime, and zero recent declarations preserve the
+ordinary `breakawayChance`.
 Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
 
 | Grantor tier | `years` | `enterpriseBonus` | `rulerFee` | `taxBonus` | `popularOpinion` |

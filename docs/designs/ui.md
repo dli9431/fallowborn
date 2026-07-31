@@ -352,6 +352,15 @@ confirmation sheets. The occupied Caliphate deed remains visible but disabled wh
 the player realm is already at war or committed to a great holy war, and its final
 confirmation revalidates the live succession cause. A Catholic Papal conquest is marked as sacrilege in the war list
 and uses its own second confirmation; no penalty is applied until that final button.
+A county with no recognized right is instead labeled **War of Aggression**, never as a
+claim. Its war-picker row contrasts the political and victory consequences with lawful
+causes. Selecting it opens a dedicated confirmation naming the target and siege
+objective, exact immediate prestige/Common Voice/Standing costs, recent-war escalation,
+continuing vassal breakaway pressure, the full Conquered Without Right duration/effects,
+and the most likely commons, bloc, vassal, and foreign opposition. The final button
+revalidates the cause; cancel and browser/modal Back return without mutation or RNG use.
+An aggressive attack on the active Papacy combines both sets of warnings and accepts
+both consequences through that one explicit final action.
 A separate personal-attention summary names the assigned character, current Standing, fixed
 daily rate, estimated active days to the relationship threshold, and whether progress is
 active, paused while on the road, or paused because the target is in another county; attention

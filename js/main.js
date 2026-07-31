@@ -1051,6 +1051,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        aggressiveWars: [],
         focus: null, dead: false,
         capitalRelocation: null,
         holdings: [], enterprises: [], householdStandards: {},
@@ -1237,6 +1238,7 @@ window.FB = window.FB || {};
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        aggressiveWars: [],
         focus: null, dead: false, holdings: [],
         capitalRelocation: null,
         householdStandards: {},
@@ -2322,6 +2324,7 @@ window.FB = window.FB || {};
     p.piety = Math.round(p.piety * 0.5);
     p.foreignPolicy = {};
     p.vassalLevyFavors = {};
+    p.aggressiveWars = [];
     p.warService = 0; p.liegeGrants = 0;
     p.professionBack = null;
     p.travelHistory = [];

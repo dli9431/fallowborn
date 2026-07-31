@@ -247,7 +247,11 @@ promotions (`FB.checkTierPromotions` = majority of a duchy/kingdom/empire), real
 naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
 `FB.realmTerritory`, `FB.realmHeldCounties`, `FB.dejureOf`; owner/holder-derived lists
 are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no foreign
-policy; strong vassals occasionally break away (`balance.breakawayChance`). A
+policy; strong vassals occasionally break away (`balance.breakawayChance`). That base
+chance is unchanged for a player crown with no recent War of Aggression. Each such
+declaration still remembered for the current ruler multiplies breakaway pressure, and
+negative Standing with the exact vassal compounds it, without creating an automatic
+revolt or a second civil-war system. A
 sovereign’s Standing and non-aggression pacts now modulate whether an adjacent AI realm attacks the
 independent player — see [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md). The player
 interacts with the whole chain (petition / `pay_homage` / `appeal_lord` /

@@ -7427,6 +7427,69 @@ window.FB = window.FB || {};
   };
 
   /* ================= war target picker ================= */
+  function standingChangeRange(entries) {
+    const values = [];
+    for (let i = 0; i < entries.length; i++) {
+      const value = entries[i].change;
+      if (values.indexOf(value) < 0) values.push(value);
+    }
+    values.sort(function (a, b) { return a - b; });
+    if (!values.length) return signedNumber(0);
+    if (values.length === 1) return signedNumber(values[0]);
+    return signedNumber(values[0]) + '…' +
+      signedNumber(values[values.length - 1]);
+  }
+
+  function warCausePickerConsequenceText(s, preview) {
+    if (!preview) return '';
+    if (preview.aggression) {
+      const consequence = preview.aggression;
+      return FB.T(
+        'Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.', {
+          prestige:signedNumber(consequence.prestigeChange),
+          voice:signedNumber(consequence.commonVoiceChange),
+          vassal:standingChangeRange(consequence.vassals),
+          foreign:standingChangeRange(consequence.foreign)
+        });
+    }
+    return FB.T(
+      'Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier.', {
+        declaration:signedNumber(preview.declarationPrestige),
+        victory:signedNumber(preview.victoryPrestige)
+      });
+  }
+
+  function aggressionOppositionText(s, preview) {
+    const parts = [];
+    for (const item of preview.opposition) {
+      if (item.kind === 'commons') {
+        parts.push(FB.T(
+          'The commons in your demesne ({change} Common Voice)', {
+            change:signedNumber(item.projectedChange)
+          }));
+      } else if (item.kind === 'bloc') {
+        parts.push(FB.T(
+          '{bloc} ({influence} influence; affected members project to Standing {standing})', {
+            bloc:politicalBlocName(s, {
+              houses:item.bloc.members
+            }, item.bloc),
+            influence:item.bloc.influence,
+            standing:signedNumber(item.projectedStanding)
+          }));
+      } else if (item.kind === 'vassals') {
+        parts.push(FB.T('{count} direct vassal courts', {
+          count:item.count
+        }));
+      } else if (item.kind === 'foreign') {
+        parts.push(FB.T('{count} foreign sovereign courts', {
+          count:item.count
+        }));
+      }
+    }
+    return parts.join(' · ') || FB.T(
+      'No organized opposition group is currently visible, but the listed political costs still apply.');
+  }
+
   UI.showWarTargets = function (focusRealmId, returnContext) {
     const s = FB.state;
     const causes = focusRealmId && FB.realmWarCauses
@@ -7435,7 +7498,7 @@ window.FB = window.FB || {};
     const musterUpkeep = FB.playerMusterUpkeepParts
       ? FB.playerMusterUpkeepParts(s) : { total:0 };
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'A war needs a lawful cause. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
+      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
@@ -7447,22 +7510,13 @@ window.FB = window.FB || {};
       const rid = cause.enemy || s.owner[pid];
       const realm = s.realms[rid];
       const enMen = FB.realmDefensiveStrength(s, rid);
-      let causeText = '';
-      if (cause.type === 'fabricated') causeText = FB.T('Fabricated county claim');
-      else if (cause.type === 'restoration') {
-        causeText = FB.T('Restore the crown of {title}', { title: cause.titleName || (realm ? realm.name : '') });
-      } else if (cause.type === 'caliphate') {
-        causeText = FB.T('Succession war for the office of {title}', {
-          title: FB.religiousHeadTitle(s, 'sunni')
-        });
-      } else {
-        const def = cause.titleKind === 'duchy' ? FBDATA.duchies[cause.titleId]
-          : cause.titleKind === 'kingdom' ? FBDATA.kingdoms[cause.titleId]
-          : FBDATA.empires[cause.titleId];
-        causeText = FB.T('De jure right through {title}', { title: def ? def.name : cause.titleId });
-      }
+      const causeText = warCauseName(s, cause);
+      const preview = FB.warCausePreview
+        ? FB.warCausePreview(s, cause) : null;
       const support = FB.alliedReinforcement(s, rid);
-      h += '<button class="actionbtn" data-war-cause="' + ci + '">⚔ ' + esc(pr.name) +
+      h += '<button class="actionbtn" data-war-cause="' + ci +
+        '" data-war-cause-type="' + esc(cause.type) +
+        '" data-war-cause-target="' + esc(cause.target) + '">⚔ ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T(
           '{cause} · held by {realm} ({counties}) · defense ~{theirs} against your ~{yours}{support}', {
             cause: causeText,
@@ -7474,7 +7528,10 @@ window.FB = window.FB || {};
               ? FB.T(' (including ~{men} from {ally})', {
                 men: menText(s, support.men), ally: s.realms[support.ally].name
               }) : ''
-          })) + '</span>' + (cause.sacrilegious
+          })) + '</span><span class="adesc' +
+          (cause.type === 'aggression' ? ' warnote' : '') + '">' +
+          esc(warCausePickerConsequenceText(s, preview)) +
+          '</span>' + (cause.sacrilegious
             ? '<span class="adesc warnote">' + esc(FB.T(
               '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
             : '') + '</button>';
@@ -7490,7 +7547,12 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
         const cause = causes[Number(b.dataset.warCause)];
-        if (cause.sacrilegious) {
+        if (cause.type === 'aggression') {
+          UI.showAggressiveWarConfirmation(cause, {
+            focusRealmId:focusRealmId,
+            returnContext:returnContext
+          });
+        } else if (cause.sacrilegious) {
           UI.showSacrilegiousWarConfirmation(cause, {
             focusRealmId:focusRealmId,
             returnContext:returnContext
@@ -7506,6 +7568,121 @@ window.FB = window.FB || {};
       if (returnContext) {
         modalHistoryBack(function () {
           interactionReturn(returnContext);
+        });
+      } else {
+        UI.closeModal();
+      }
+    });
+  };
+
+  /* Aggression is never inferred from a generic county click. This second
+     sheet repeats every immediate and continuing consequence from the same
+     preview object the declaration writer applies, then revalidates all
+     cause and diplomacy gates on the final button. */
+  UI.showAggressiveWarConfirmation = function (cause, returnContext) {
+    const s = FB.state;
+    const preview = cause && FB.warCausePreview
+      ? FB.warCausePreview(s, cause) : null;
+    const consequence = preview && preview.aggression;
+    const realm = cause && s.realms[cause.enemy];
+    const province = cause && FB.world.byId[cause.target];
+    if (!consequence || !realm || !province) return;
+    const modifier = consequence.modifier;
+    const modifierDef = modifier && FBDATA.modifiers[modifier.id];
+    const modifierName = modifierDef
+      ? dt(s, 'modifier', modifier.id, modifierDef, 'name')
+      : FB.T('Conquered Without Right');
+    const modifierEffects = modifier
+      ? modifierEffectText(s, modifier.id) : '';
+    const sacrilegeStanding = Math.abs(
+      FBDATA.balance.religiousHeadWarOpinion !== undefined
+        ? FBDATA.balance.religiousHeadWarOpinion : -40);
+    const vassalText = consequence.vassals.length
+      ? FB.T(
+        'Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.', {
+          standing:standingChangeRange(consequence.vassals),
+          count:consequence.vassals.length
+        })
+      : FB.T('You have no direct vassals, so no direct-vassal Standing changes now.');
+    const foreignText = consequence.foreign.length
+      ? FB.T(
+        'Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.', {
+          standing:standingChangeRange(consequence.foreign),
+          count:consequence.foreign.length
+        })
+      : FB.T('No living foreign sovereign is currently affected.');
+    const recentText = consequence.recentCount
+      ? FB.T(
+        '{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}.', {
+          count:consequence.recentCount,
+          multiplier:Math.round(
+            consequence.escalationMultiplier * 100) / 100
+        })
+      : FB.T(
+        'This is the ruler’s first recent aggressive war; later declarations escalate every political cost.');
+    let h = '<div class="gm-body-text"><p class="warnote"><b>' +
+      esc(FB.T('This war has no recognized right.')) + '</b></p><p>' +
+      esc(FB.T(
+        'Target {realm}; conquer {province} by holding it and completing three war-council siege steps.', {
+          realm:realm.name,
+          province:province.name
+        })) + '</p><h4>' + esc(FB.T('Immediate consequences')) +
+      '</h4><ul><li>' + esc(FB.T('{prestige} prestige.', {
+        prestige:signedNumber(consequence.prestigeChange)
+      })) + '</li><li>' + esc(FB.T('{voice} Common Voice.', {
+        voice:signedNumber(consequence.commonVoiceChange)
+      })) + '</li><li>' + esc(vassalText) + '</li><li>' +
+      esc(foreignText) + '</li></ul><p>' + esc(recentText) +
+      '</p><h4>' + esc(FB.T('Continuing consequences')) +
+      '</h4><p>' + esc(FB.T(
+        'While this declaration remains recent, player-realm vassal breakaway pressure is ×{multiplier}; poor Standing raises it further.', {
+          multiplier:Math.round(
+            consequence.breakawayMultiplier * 100) / 100
+        })) + '</p><p>' + esc(modifier
+          ? FB.T(
+            'The war itself grants no declaration or victory prestige; separate title promotions still apply. {province} receives {modifier} for {days} days: {effects}. The modifier remains with the county if ownership changes.', {
+              province:province.name,
+              modifier:modifierName,
+              days:modifier.days,
+              effects:modifierEffects
+            })
+          : FB.T(
+            'The war itself grants no declaration or victory prestige and applies the unjust-conquest county burden.')) +
+      '</p><h4>' + esc(FB.T('Most likely opposition')) +
+      '</h4><p>' + esc(aggressionOppositionText(s, consequence)) +
+      '</p>' + (cause.sacrilegious
+        ? '<p class="warnote">' + esc(FB.T(
+          'This target is also the active Papacy. Declaring forfeits all piety, gives −{standing} Standing with every Catholic ruler, and excommunicates the current ruler.', {
+            standing:sacrilegeStanding
+          })) + '</p>'
+        : '') + '</div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="aggression-confirm">⚔ ' +
+      esc(FB.T('Accept the consequences and declare war')) + '</button>' +
+      '<button type="button" class="actionbtn" id="aggression-cancel">' +
+      esc(FB.T('Think better of it')) + '</button></div>';
+    openModal(FB.T('Declare a War of Aggression?'), h, {
+      historyView:!!returnContext,
+      historyBackRender:function () {
+        UI.showWarTargets(returnContext.focusRealmId,
+          returnContext.returnContext);
+      }
+    });
+    $('aggression-confirm').addEventListener('click', function () {
+      if (!FB.startPlayerWar(s, cause, {
+        confirmAggression:true,
+        confirmSacrilege:!!cause.sacrilegious
+      })) {
+        UI.toast(FB.T(
+          'The War of Aggression can no longer be declared.'));
+      }
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('aggression-cancel').addEventListener('click', function () {
+      if (returnContext) {
+        modalHistoryBack(function () {
+          UI.showWarTargets(returnContext.focusRealmId,
+            returnContext.returnContext);
         });
       } else {
         UI.closeModal();
@@ -8913,6 +9090,7 @@ window.FB = window.FB || {};
   }
 
   function warCauseName(s, cause) {
+    if (cause.type === 'aggression') return FB.T('War of Aggression');
     if (cause.type === 'fabricated') return FB.T('Fabricated county claim');
     if (cause.type === 'restoration') {
       return FB.T('Restore the crown of {title}', {
@@ -18400,7 +18578,9 @@ window.FB = window.FB || {};
       '<h4>Map filters</h4>' +
       '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
       '<h4>War</h4>' +
-      '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war requires a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
+      '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). ' +
+      esc(FB.T('Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.')) +
+      ' A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
       '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +

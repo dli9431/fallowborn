@@ -88,6 +88,16 @@ rightful character may carry one `restorationRight`. `FB.ensureDynasticState`,
 `FB.fabricatedClaimOf`, and the normal load repairs lazily initialize and validate all
 of these fields, so older version-3 saves require no migration.
 
+`player.aggressiveWars` is another additive current-ruler field. It contains compact
+semantic `{turn,charId,enemy,target}` declaration records, never localized prose or
+derived costs. `FB.aggressiveWarHistory` is a non-mutating filtered projection over the
+configured recent-war window; the next confirmed declaration is the sole compaction
+writer. A missing or malformed collection reads as empty, so old version-3 saves remain
+valid. Protagonist succession clears the collection alongside personal diplomacy and
+Standing. The resulting county consequence uses the existing
+`state.modifiers.county[provinceId]` save contract and therefore needs no war-specific
+storage or migration.
+
 Targeted plots persist their selection in `player.plot.context` (for claim fabrication,
 `{pid}`). Discovery and final resolution both receive this stored context, so
 save/export/import cannot silently retarget a plot in progress.
