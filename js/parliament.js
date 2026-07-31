@@ -383,7 +383,17 @@ window.FB = window.FB || {};
     if (!FB.chance(B.parliamentSessionChance || 0.5)) return;
     FB.parliamentEnsure(state);
     const candidates = FB.parliamentSessionCandidates(state);
-    if (candidates.length) FB.queueEvent(state, FB.pick(candidates), {});
+    /* Name the county explicitly. The agenda above is chosen by reading the
+       modifiers on the player's home seat, but an unstamped context takes its
+       locationId from FB.travelLocation, which is the visited county while a
+       journey is under way. A New Year session begun on the road would then
+       check, add, or remove home-county modifiers somewhere else entirely.
+       The motion and pending-motion paths already stamp this. */
+    if (candidates.length) {
+      FB.queueEvent(state, FB.pick(candidates), {
+        locationId:state.player.provinceId
+      });
+    }
   };
 
   /* ---------- event helpers (FB.fns.parliament_* — triggers & effects) ---------- */

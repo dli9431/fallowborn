@@ -3528,7 +3528,24 @@ window.FB = window.FB || {};
       }
     } else if (p.tier >= 3 &&
         !(FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId]))) {
-      add('ret', 'barony_retinue', B.baronyRetinue || 120);
+      const retinue = B.baronyRetinue || 120;
+      add('ret', 'barony_retinue', retinue);
+      /* A baron holds no county, so the county-levy loop above never ran and
+         a levy concession on their seat went unapplied. Itemize it against
+         the household the baron actually raises, by the same ownership rule
+         that charges them upkeep for that record. See FB.modifierCounties. */
+      const seat = FB.modifierSeat ? FB.modifierSeat(state) : null;
+      if (seat && FB.countyModifierRecords) {
+        for (const record of FB.countyModifierRecords(state, seat)) {
+          const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+          const rate = def && def.fx && Number(def.fx.levy);
+          if (isFinite(rate) && rate) {
+            add('ret', 'modifier', retinue * rate, {
+              modifierId:record.id, pid:seat, rate:rate
+            });
+          }
+        }
+      }
     }
     if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
       add('ret', 'episcopal_household',

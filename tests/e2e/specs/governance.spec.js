@@ -678,3 +678,173 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     })).toBeVisible();
     await expect(page.locator('#governance-institution')).toBeFocused();
   });
+
+test('a baron pays for, receives, and can see the modifiers on their seat',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'baron');
+
+    /* A baron holds no county directly: their seat belongs to their liege.
+       Every modifier consumer has to agree on that one ownership rule, or the
+       player pays upkeep for a record that grants nothing and appears
+       nowhere. */
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const seat = p.provinceId;
+
+      const before = {
+        tax:FB.playerTaxParts(s).total,
+        levy:FB.playerLevy(s),
+        pop:FB.popEffective(s),
+        upkeep:FB.modifierUpkeep(s, 'gold')
+      };
+
+      FB.addModifier(s, 'market_charter', seat, {});
+      FB.addModifier(s, 'levy_exemption', seat, {});
+
+      const after = {
+        tax:FB.playerTaxParts(s).total,
+        levy:FB.playerLevy(s),
+        pop:FB.popEffective(s),
+        upkeep:FB.modifierUpkeep(s, 'gold')
+      };
+      const summary = FB.governanceSummary(s);
+      const listed = (summary && summary.modifierCounties || [])
+        .filter(function (item) { return item.provinceId === seat; });
+      const ids = listed.length
+        ? listed[0].records.map(function (r) { return r.id; }).sort() : [];
+
+      return {
+        holdsNothing:!(p.provs && p.provs.length),
+        estatesActive:FB.parliamentActive(s),
+        ruleIsSeatOnly:FB.modifierCounties(s).join(',') === seat,
+        seatIsRule:FB.modifierSeat(s) === seat,
+        /* Market Charter is +8% tax and 1 gold upkeep; Levy Exemption is
+           -12% levy and +6 Common Voice. Each must land, not just the ones
+           that happened to read the seat before. */
+        chargedUpkeep:after.upkeep > before.upkeep,
+        taxRose:after.tax > before.tax,
+        levyFell:after.levy < before.levy,
+        voiceRose:after.pop > before.pop,
+        governanceShows:ids.join(',')
+      };
+    })).toEqual({
+      holdsNothing:true,
+      estatesActive:true,
+      ruleIsSeatOnly:true,
+      seatIsRule:true,
+      chargedUpkeep:true,
+      taxRose:true,
+      levyFell:true,
+      voiceRose:true,
+      governanceShows:'levy_exemption,market_charter'
+    });
+  });
+
+test('a landed ruler reads modifiers from held counties, never from a seat',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'count');
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      /* A count holds counties, so the substitution must not apply: a
+         modifier on some county they do not hold stays invisible to them. */
+      const foreign = FB.world.provs.filter(function (province) {
+        return !province.wasteland && p.provs.indexOf(province.id) < 0;
+      })[0];
+      FB.addModifier(s, 'market_charter', foreign.id, {});
+      const summary = FB.governanceSummary(s);
+      const shown = (summary && summary.modifierCounties || [])
+        .map(function (item) { return item.provinceId; });
+      return {
+        seatIsNull:FB.modifierSeat(s) === null,
+        ruleMatchesHeld:FB.modifierCounties(s).slice().sort().join(',') ===
+          p.provs.slice().sort().join(','),
+        foreignNotShown:shown.indexOf(foreign.id) < 0,
+        foreignNotCharged:FB.modifierUpkeepEntries(s, 'gold')
+          .every(function (entry) { return entry.pid !== foreign.id; })
+      };
+    })).toEqual({
+      seatIsNull:true,
+      ruleMatchesHeld:true,
+      foreignNotShown:true,
+      foreignNotCharged:true
+    });
+  });
+
+test('a New Year session begun on the road still targets the home county',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'baron');
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const home = p.provinceId;
+      const away = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== home;
+      })[0].id;
+
+      /* Away from home at New Year. The agenda is chosen by reading the
+         modifiers on the home seat, so the event it queues must carry the
+         home county: an unstamped context takes the visited one. */
+      FB.addModifier(s, 'contested_tolls', home, {});
+      p.travel = {
+        purpose:'relationship',
+        homeId:home,
+        destinationId:away,
+        destinationRealm:null,
+        currentId:away,
+        phase:'arrived',
+        remainingRoute:[],
+        outboundRoute:[away],
+        visited:[home, away],
+        legDays:3,
+        legDaysLeft:0,
+        startTurn:s.turn,
+        cost:0,
+        overhead:0,
+        encounters:{ culture:0, road:0 },
+        seenCultures:{},
+        seenEvents:{},
+        completed:true
+      };
+
+      const travelReads = FB.travelLocation(s);
+      s.eventQueue = [];
+      const candidates = FB.parliamentSessionCandidates(s);
+      /* Drive the queue directly rather than waiting on the session roll. */
+      FB.queueEvent(s, 'parliament_local_redress', {
+        locationId:s.player.provinceId
+      });
+      const stamped = s.eventQueue[0] && s.eventQueue[0].ctx.locationId;
+
+      /* The session roll is a coin flip, so retry within a bound rather than
+         assert nothing half the time. Forty declines is not a real outcome. */
+      s.eventQueue = [];
+      let yearly = null;
+      for (let i = 0; i < 40 && yearly === null; i++) {
+        FB.parliamentYearly(s);
+        if (s.eventQueue.length) yearly = s.eventQueue[0].ctx.locationId;
+      }
+
+      return {
+        travelWouldRead:travelReads && travelReads.id === away,
+        agendaSawHome:candidates.indexOf('parliament_local_redress') >= 0,
+        motionPathStamps:stamped === home,
+        sessionQueued:yearly !== null,
+        yearlyStampsHome:yearly === home,
+        yearlyNeverAway:yearly !== away
+      };
+    })).toEqual({
+      travelWouldRead:true,
+      agendaSawHome:true,
+      motionPathStamps:true,
+      sessionQueued:true,
+      yearlyStampsHome:true,
+      yearlyNeverAway:true
+    });
+  });

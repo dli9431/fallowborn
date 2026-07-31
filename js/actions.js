@@ -1462,7 +1462,17 @@ window.FB = window.FB || {};
       rents += countyTaxBase(state, pid, B.taxPerDev);
     }
     const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
-    if (p.tier === 3 && !bishopric) rents = Math.max(rents, 6);
+    if (p.tier === 3 && !bishopric) {
+      /* A baron's seat is their liege's county, so no rent line above covers
+         it and the loop applied no county tax modifier. The estate records
+         sitting on that seat still act on the baron's own revenues, by the
+         same ownership rule that already charges them upkeep for those
+         records. Without this a Market Charter costs a baron gold every
+         season and returns nothing. See FB.modifierCounties. */
+      const seat = FB.modifierSeat ? FB.modifierSeat(state) : null;
+      const local = seat && FB.modBonus ? FB.modBonus(state, 'tax', seat) : 0;
+      rents = Math.max(rents, 6 * Math.max(0, 1 + local));
+    }
     rents *= FB.domainPenalty(state);
     const rentBase = rents;
     const rentTraits = [];
@@ -1682,7 +1692,12 @@ window.FB = window.FB || {};
     });
     const modifierCounties = [];
     if (FB.countyModifierSnapshot) {
-      for (const pid of directCounties) {
+      /* The same ownership rule the modifier consumers use, not the directly
+         held list. A baron holds no county and would otherwise pay upkeep on
+         a record with nowhere in the game to see it. */
+      const scoped = (FB.modifierCounties
+        ? FB.modifierCounties(state) : directCounties).slice().sort();
+      for (const pid of scoped) {
         const records = FB.countyModifierSnapshot(state, pid).map(
           function (record) {
             const out = { id:record.id };

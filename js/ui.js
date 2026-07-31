@@ -10284,7 +10284,7 @@ window.FB = window.FB || {};
         '</div></div>';
     }
     h += '<div class="hint">' + esc(FB.T(
-      'These are the same county records shown in Land. County effects survive transfer; Common Voice and upkeep count for you only while the county remains directly held.')) +
+      'These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.')) +
       '</div>';
     return h;
   }
