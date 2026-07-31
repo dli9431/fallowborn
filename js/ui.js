@@ -19662,6 +19662,16 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
+  function roleOrientationBody(def) {
+    let h = '<div class="role-orientation">' +
+      kv('New resources', esc(def.resources)) +
+      kv('Recurring duties', esc(def.duties)) +
+      '<div class="panelh">' + esc(FB.T('Good first actions')) +
+      '</div><ol>';
+    for (const action of def.actions) h += '<li>' + esc(action) + '</li>';
+    return h + '</ol></div>';
+  }
+
   function skillGuideDefinition(id) {
     const defs = {
       dip:{
@@ -19839,25 +19849,7 @@ window.FB = window.FB || {};
     if (!s || !def) return false;
     if (!s.player.roleOrientationsSeen) s.player.roleOrientationsSeen = {};
     s.player.roleOrientationsSeen[id] = 1;
-    let h = '<div class="role-orientation">' +
-      '<p class="role-orientation-summary">' + esc(def.summary) + '</p>' +
-      kv('New resources', esc(def.resources)) +
-      kv('Recurring duties', esc(def.duties)) +
-      '<div class="panelh">' + esc(FB.T('Good first actions')) +
-      '</div><ol>';
-    for (const action of def.actions) h += '<li>' + esc(action) + '</li>';
-    h += '</ol></div><div class="gm-footer">' +
-      '<button class="btn" id="orientation-guide">' +
-      esc(FB.T('Open deeper guide')) +
-      '</button><button class="btn primary" id="orientation-close">' +
-      esc(FB.T('Got it')) + '</button></div>';
-    openModal(FB.T('New role: {role}', { role:def.title }), h, {
-      modalClass:'fullsheet-modal role-orientation-modal'
-    });
-    $('orientation-guide').addEventListener('click', function () {
-      UI.showGuideEntry(def.guideId);
-    });
-    $('orientation-close').addEventListener('click', UI.closeModal);
+    UI.showGuide({ entry:def.guideId, closeToGame:true });
     return true;
   };
 
@@ -19918,16 +19910,14 @@ window.FB = window.FB || {};
       FB.T('Rank changes authority and duties; vocations and offices can sit beside it.'),
       guideBody([
         FB.T('The social ladder runs Serf, Freeholder, Gentry, Baron, Count, Duke, King, and Emperor. Rank controls authority and access; it does not erase a livelihood or religious vocation.'),
-        FB.T('Religious ranks and offices can coexist with the dynasty’s social station. Open a role entry below to replay its orientation.')
+        FB.T('Religious ranks and offices can coexist with the dynasty’s social station. Select a role entry below to see its orientation.')
       ]), 'rank station promotion vocation office noble church');
     const orientations = roleOrientationDefinitions(s);
     for (const id in orientations) {
       const def = orientations[id];
       add(id, 'roles', def.title, def.summary,
-        guideBody([def.summary, def.resources, def.duties], def.actions),
-        'orientation onboarding promotion duties resources first actions', {
-          kind:'orientation', id:id
-        });
+        roleOrientationBody(def),
+        'orientation onboarding promotion duties resources first actions');
     }
 
     add('careers', 'careers', FB.T('Careers, training, and work'),
@@ -20046,7 +20036,7 @@ window.FB = window.FB || {};
     return entries;
   }
 
-  const guideView = { query:'', category:'all' };
+  const guideView = { query:'', category:'all', entry:'' };
   const GUIDE_CATEGORIES = [
     'all', 'basics', 'skills', 'resources', 'roles', 'careers',
     'family', 'settlements', 'technology', 'travel', 'war', 'government'
@@ -20076,26 +20066,49 @@ window.FB = window.FB || {};
     if (options.category) guideView.category = options.category;
     if (options.query !== undefined) guideView.query = options.query;
     const entries = guideEntries(s);
+    let activeCategory = guideView.category;
+    let activeQuery = guideView.query;
+    guideView.entry = '';
+    if (options.entry) {
+      const requested = entries.filter(function (entry) {
+        return entry.id === options.entry;
+      })[0];
+      if (requested) {
+        guideView.entry = requested.id;
+        activeCategory = requested.category;
+        activeQuery = '';
+      }
+    }
     let h = '<div class="guide-controls">' +
       '<label><span>' + esc(FB.T('Search guide')) +
       '</span><input id="guide-search" type="search" value="' +
-      esc(guideView.query) + '" placeholder="' +
+      esc(activeQuery) + '" placeholder="' +
       esc(FB.T('Topic, alias, unlock, or term')) + '"></label>' +
       '<label><span>' + esc(FB.T('Category')) +
       '</span><select id="guide-category">';
     for (const category of GUIDE_CATEGORIES) {
       h += '<option value="' + esc(category) + '"' +
-        (guideView.category === category ? ' selected' : '') + '>' +
+        (activeCategory === category ? ' selected' : '') + '>' +
         esc(guideCategoryName(category)) + '</option>';
     }
     h += '</select></label></div><div class="guide-results" id="guide-results">';
     for (const entry of entries) {
       const search = (entry.title + ' ' + entry.summary + ' ' +
         entry.aliases + ' ' + entry.category).toLowerCase();
-      h += '<button type="button" class="guide-result" data-guide-entry="' +
+      const detailId = 'guide-entry-detail-' + entry.id;
+      h += '<div class="guide-card"><button type="button" class="guide-result" data-guide-entry="' +
         esc(entry.id) + '" data-guide-category="' + esc(entry.category) +
-        '" data-search="' + esc(search) + '"><b>' + esc(entry.title) +
-        '</b><span>' + esc(entry.summary) + '</span></button>';
+        '" data-search="' + esc(search) + '" aria-expanded="false" ' +
+        'aria-controls="' + esc(detailId) + '"><b>' + esc(entry.title) +
+        '</b><span>' + esc(entry.summary) + '</span></button>' +
+        '<div class="guide-entry-detail hidden" id="' + esc(detailId) + '">' +
+        entry.body;
+      if (entry.route && entry.route.kind === 'tech') {
+        h += '<div class="guide-entry-actions"><button class="btn" ' +
+          'data-guide-tech="' + esc(entry.route.id) + '">' +
+          esc(FB.T('Open technology detail')) + '</button></div>';
+      }
+      h += '</div></div>';
     }
     h += '</div><div class="tech-empty hidden" id="guide-empty">' +
       esc(FB.T('No guide entries match this search.')) +
@@ -20104,34 +20117,70 @@ window.FB = window.FB || {};
     openModal(FB.T('Guide'), h, {
       modalClass:'fullsheet-modal guide-modal', historyView:true
     });
-    $('guide-category').value = guideView.category;
-    function applyGuideFilters() {
-      guideView.query = $('guide-search').value.trim();
-      guideView.category = $('guide-category').value;
-      const query = guideView.query.toLowerCase();
+    $('guide-category').value = activeCategory;
+    function applyGuideFilters(saveView) {
+      const queryValue = $('guide-search').value.trim();
+      const categoryValue = $('guide-category').value;
+      if (saveView !== false) {
+        guideView.query = queryValue;
+        guideView.category = categoryValue;
+      }
+      const query = queryValue.toLowerCase();
       let visible = 0;
       document.querySelectorAll('[data-guide-entry]').forEach(function (button) {
-        const categoryMatch = guideView.category === 'all' ||
-          button.dataset.guideCategory === guideView.category;
+        const categoryMatch = categoryValue === 'all' ||
+          button.dataset.guideCategory === categoryValue;
         const queryMatch = !query || button.dataset.search.indexOf(query) >= 0;
-        button.classList.toggle('hidden', !(categoryMatch && queryMatch));
+        button.parentNode.classList.toggle(
+          'hidden', !(categoryMatch && queryMatch));
         if (categoryMatch && queryMatch) visible++;
       });
       $('guide-empty').classList.toggle('hidden', visible > 0);
+    }
+    function expandGuideEntry(id) {
+      document.querySelectorAll('[data-guide-entry]').forEach(function (button) {
+        const expanded = button.dataset.guideEntry === id;
+        button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        button.parentNode.classList.toggle('expanded', expanded);
+        $(button.getAttribute('aria-controls')).classList.toggle(
+          'hidden', !expanded);
+      });
+      guideView.entry = id;
     }
     $('guide-search').addEventListener('input', applyGuideFilters);
     $('guide-category').addEventListener('change', applyGuideFilters);
     document.querySelectorAll('[data-guide-entry]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showGuideEntry(button.dataset.guideEntry);
+        expandGuideEntry(button.getAttribute('aria-expanded') === 'true'
+          ? '' : button.dataset.guideEntry);
+      });
+    });
+    document.querySelectorAll('[data-guide-tech]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showTechDetail(button.dataset.guideTech);
       });
     });
     $('guide-close').addEventListener('click', function () {
+      if (options.closeToGame) {
+        UI.closeModal();
+        return;
+      }
       modalHistoryBack(function () {
         if (FB.state) UI.showMenu(); else UI.closeModal();
       });
     });
-    applyGuideFilters();
+    applyGuideFilters(!guideView.entry);
+    if (guideView.entry) {
+      const selected = document.querySelector(
+        '[data-guide-entry="' + guideView.entry + '"]');
+      expandGuideEntry(guideView.entry);
+      setTimeout(function () {
+        if (!selected || !document.documentElement.contains(selected)) return;
+        selected.focus({ preventScroll:true });
+        $('gm-body').scrollTop = Math.max(0, selected.parentNode.offsetTop -
+          $('guide-controls').offsetHeight - 8);
+      }, 0);
+    }
   };
 
   UI.showGuideEntry = function (id) {
@@ -20139,34 +20188,7 @@ window.FB = window.FB || {};
       return candidate.id === id;
     })[0];
     if (!entry) return UI.showGuide();
-    let h = '<div class="guide-entry-summary">' + esc(entry.summary) +
-      '</div>' + entry.body + '<div class="gm-footer">';
-    if (entry.route && entry.route.kind === 'tech') {
-      h += '<button class="btn primary" id="guide-related">' +
-        esc(FB.T('Open technology detail')) + '</button>';
-    } else if (entry.route && entry.route.kind === 'orientation') {
-      h += '<button class="btn primary" id="guide-related">' +
-        esc(FB.T('Replay this orientation')) + '</button>';
-    }
-    h += '<button class="btn" id="guide-back">' +
-      esc(FB.T('Back to Guide')) + '</button></div>';
-    openModal(entry.title, h, {
-      modalClass:'fullsheet-modal guide-modal',
-      historyView:true,
-      historyBackRender:function () {
-        UI.showGuide({ category:entry.category });
-      }
-    });
-    const related = $('guide-related');
-    if (related) related.addEventListener('click', function () {
-      if (entry.route.kind === 'tech') UI.showTechDetail(entry.route.id);
-      else UI.showRoleOrientation(entry.route.id);
-    });
-    $('guide-back').addEventListener('click', function () {
-      modalHistoryBack(function () {
-        UI.showGuide({ category:entry.category });
-      });
-    });
+    UI.showGuide({ entry:entry.id });
   };
 
   UI.showLegacyHelp = function () {

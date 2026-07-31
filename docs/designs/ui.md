@@ -455,9 +455,11 @@ is chosen; the general Automation sheet exposes the same linked setting. Eligibl
 vassals receive advocacy controls. Foreign ruler sheets show the same nation's
 completed/exposed totals and active projects read-only.
 
-Help opens the offline **Guide**, a `fullsheet-modal` whose native search field,
-category selector, result buttons, sticky footer, and normal modal history remain
-usable by keyboard, touch, and `file://`. Entries cover basics, skills, resources,
+Help opens the offline **Guide**, a single `fullsheet-modal` whose native search field,
+category selector, inline expandable entries, sticky footer, and normal modal history
+remain usable by keyboard, touch, and `file://`. Expanding an entry reveals its complete
+guidance in place without replacing the search and result screen. Entries cover basics,
+skills, resources,
 roles, careers, family and inheritance scope, settlements, technology, travel, and
 war and government. Search indexes titles, aliases, key terms, and generated technology
 effects/unlocks. Career and technology entries read live definitions; current
@@ -468,9 +470,9 @@ aggression costs, siege requirements, and the difference between field victory a
 territorial conquest.
 
 `player.roleOrientationsSeen` records one-time, per-save orientations for the current
-social tier and religious vocation/office. On first entry, the dismissible role sheet
-names new resources, recurring duties, and three suggested actions, then links to its
-Guide entry. Replaying an orientation from the Guide does not clear the record.
+social tier and religious vocation/office. On first entry, the Guide opens with that role
+filtered and expanded in the same sheet, naming new resources, recurring duties, and three
+suggested actions. The same complete orientation remains available as an inline Guide entry.
 Orientation checks run only when the game is visible and neither generic nor event
 modal is active, so they never replace a pending choice.
 

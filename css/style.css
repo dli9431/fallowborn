@@ -1779,23 +1779,35 @@ textarea.modjson, textarea.savetext {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px; align-content: start;
 }
+.guide-card { min-width: 0; }
+.guide-card.expanded { grid-column: 1 / -1; }
 .guide-result {
-  min-width: 0; min-height: 66px; padding: 9px 10px;
+  position: relative; width: 100%; min-width: 0; min-height: 66px;
+  padding: 9px 36px 9px 10px;
   border: 1px solid #4f422d; border-radius: 8px;
   background: #241d15; color: #e8d7ac; cursor: pointer; text-align: left;
 }
 .guide-result:hover, .guide-result:focus-visible {
   border-color: #b28a35; background: #2e2518;
 }
+.guide-result::after {
+  content: '+'; position: absolute; top: 50%; right: 12px;
+  color: #bda768; font-size: 20px; line-height: 1;
+  transform: translateY(-50%);
+}
+.guide-result[aria-expanded="true"] {
+  border-color: #b28a35; border-radius: 8px 8px 0 0;
+  background: #302719;
+}
+.guide-result[aria-expanded="true"]::after { content: '\2212'; }
 .guide-result b { display: block; color: #ecd9a0; font-size: 14px; }
 .guide-result span {
   display: block; margin-top: 3px; color: #a99875;
   font-size: 12px; line-height: 1.4;
 }
-.guide-entry-summary, .role-orientation-summary {
-  margin: 0 0 10px; padding: 10px 12px;
-  border-left: 3px solid #b28a35; background: #2b2217;
-  color: #dfc985; line-height: 1.5;
+.guide-entry-detail {
+  padding: 12px 12px 4px; border: 1px solid #6a552f; border-top: 0;
+  border-radius: 0 0 8px 8px; background: #211a13;
 }
 .guide-entry-body {
   color: #d4c6a4; font-size: 14px; line-height: 1.55;
@@ -1803,6 +1815,7 @@ textarea.modjson, textarea.savetext {
 .guide-entry-body p { margin: 0 0 10px; }
 .guide-entry-body ul, .role-orientation ol { padding-left: 22px; }
 .guide-entry-body li, .role-orientation li { margin-bottom: 7px; }
+.guide-entry-actions { display: flex; justify-content: center; padding: 4px 0 10px; }
 .role-orientation .kv { align-items: flex-start; }
 .role-orientation .kv b { max-width: 68%; text-align: right; }
 .succession-review { margin: 5px 0 10px; }

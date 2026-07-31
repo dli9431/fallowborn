@@ -64918,16 +64918,6 @@
         "text": "The liege’s aid"
       }
     },
-    "src.48d8d0ec": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Replay this orientation"
-      }
-    },
     "src.48e00230": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66109,16 +66099,6 @@
       ],
       "source": {
         "text": "📯 A courier leaves {home} carrying {item} for {recipient} in {destination}; the road should take {days} days."
-      }
-    },
-    "src.4c891c6a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Got it"
       }
     },
     "src.4c8ab2de": {
@@ -70207,16 +70187,6 @@
       ],
       "source": {
         "text": "Regnal name"
-      }
-    },
-    "src.57b3406e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Religious ranks and offices can coexist with the dynasty’s social station. Open a role entry below to replay its orientation."
       }
     },
     "src.57b55206": {
@@ -82850,16 +82820,6 @@
         "text": "Let him wonder to his grave who that soldier was. Keep the tale for yourself."
       }
     },
-    "src.7ad8257f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Back to Guide"
-      }
-    },
     "src.7ad8ea50": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87637,6 +87597,16 @@
         "text": "Negotiate the custom."
       }
     },
+    "src.87a37b48": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Religious ranks and offices can coexist with the dynasty’s social station. Select a role entry below to see its orientation."
+      }
+    },
     "src.87a9e2af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87845,16 +87815,6 @@
       ],
       "source": {
         "text": "Reconsider abdication and residence in the wedding county before this journey ends."
-      }
-    },
-    "src.8820c5c5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "New role: {role}"
       }
     },
     "src.88285884": {
@@ -109832,16 +109792,6 @@
         "text": "Extend the existing pact through its authoritative expiry record."
       }
     },
-    "src.c6dbf1a2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "fullsheet-modal role-orientation-modal"
-      }
-    },
     "src.c6dfbb70": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127114,16 +127064,6 @@
         "text": "✨ Out of the earth: {item}."
       }
     },
-    "src.f86a6bd2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Open deeper guide"
-      }
-    },
     "src.f86ab027": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136694,14 +136634,6 @@
         "text": "Back another merchant’s venture"
       }
     },
-    "ui:Back to Guide": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Back to Guide"
-      }
-    },
     "ui:Back to Household Plan": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140884,14 +140816,6 @@
         "text": "Good first actions"
       }
     },
-    "ui:Got it": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Got it"
-      }
-    },
     "ui:Govern institutions, manage great vassals, defend the crown, and secure succession.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -143444,16 +143368,6 @@
         "text": "New policy choice"
       }
     },
-    "ui:New role: {role}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "role"
-      ],
-      "location": "js/ui.js",
-      "source": {
-        "text": "New role: {role}"
-      }
-    },
     "ui:New to the household": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -145225,14 +145139,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Open an enterprise in {settlement}…"
-      }
-    },
-    "ui:Open deeper guide": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Open deeper guide"
       }
     },
     "ui:Open election": {
@@ -147077,12 +146983,12 @@
         "text": "Releases personal attention and lowers Standing by 20."
       }
     },
-    "ui:Religious ranks and offices can coexist with the dynasty’s social station. Open a role entry below to replay its orientation.": {
+    "ui:Religious ranks and offices can coexist with the dynasty’s social station. Select a role entry below to see its orientation.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Religious ranks and offices can coexist with the dynasty’s social station. Open a role entry below to replay its orientation."
+        "text": "Religious ranks and offices can coexist with the dynasty’s social station. Select a role entry below to see its orientation."
       }
     },
     "ui:Religious standing: not applicable": {
@@ -147305,14 +147211,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Replaces {name}; the former officer loses 8 Standing and the appointee gains 10 Standing."
-      }
-    },
-    "ui:Replay this orientation": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Replay this orientation"
       }
     },
     "ui:Required for legitimacy": {

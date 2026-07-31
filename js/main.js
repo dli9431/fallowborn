@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.101.0';
+  FB.VERSION = '1.101.1';
   FB.CHANGELOG = [
+    { v: '1.101.1', date: '2026-07-31', changes: [
+      'The Guide now keeps search results, full topic explanations, and role orientations together in one expandable screen.'
+    ] },
     { v: '1.101.0', date: '2026-07-31', changes: [
       'Wars now track recent battles, troop losses, campaign effects, and live logistics, with new personal, host, and whole-war events.'
     ] },

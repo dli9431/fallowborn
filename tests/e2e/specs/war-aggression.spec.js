@@ -386,10 +386,9 @@ test('the Guide exposes aggression through search and the conquest picker',
     await expect(result).toBeVisible();
     await expect(result).toContainText('War, claims, and conquest');
     await result.click();
-    await expect(page.getByRole('heading', {
-      name:'War, claims, and conquest',
-      exact:true
-    })).toBeVisible();
+    await expect(result).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('heading', { name:'Guide', exact:true }))
+      .toBeVisible();
     await expect(page.locator('#genmodal')).toContainText(
       'War of Aggression');
     await expect(page.locator('#genmodal')).toContainText(
@@ -406,10 +405,10 @@ test('the Guide exposes aggression through search and the conquest picker',
     });
     await expect(guideButton).toBeVisible();
     await guideButton.click();
-    await expect(page.getByRole('heading', {
-      name:'War, claims, and conquest',
-      exact:true
-    })).toBeVisible();
+    result = page.locator('[data-guide-entry="war"]');
+    await expect(result).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('heading', { name:'Guide', exact:true }))
+      .toBeVisible();
   });
 
 test('war picker names aggression and requires its consequence sheet',

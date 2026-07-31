@@ -47,7 +47,7 @@ test('technology search discovers authored unlocks and locked enterprises link b
       .toBeVisible();
   });
 
-test('the Guide searches skills and live technology unlock terms',
+test('the Guide keeps orientations and topic details in one searchable sheet',
   async function ({ page }) {
     const onboarding = await page.evaluate(function () {
       return {
@@ -63,9 +63,20 @@ test('the Guide searches skills and live technology unlock terms',
       FB.ui.maybeShowRoleOrientation();
     });
     await expect(page.getByRole('heading', {
-      name:'New role: Freeholder', exact:true
+      name:'Guide', exact:true
     })).toBeVisible();
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    const freeholder = page.locator('[data-guide-entry="role-tier-1"]');
+    await expect(freeholder).toHaveAttribute('aria-expanded', 'true');
+    const freeholderDetail = page.locator('#guide-entry-detail-role-tier-1');
+    await expect(freeholderDetail).toBeVisible();
+    await expect(freeholderDetail).toContainText('New resources');
+    await expect(freeholderDetail).toContainText('Recurring duties');
+    await expect(freeholderDetail).toContainText('Good first actions');
+    await expect(page.getByRole('button', { name:'Open deeper guide' }))
+      .toHaveCount(0);
+    await expect(page.getByRole('button', { name:'Replay this orientation' }))
+      .toHaveCount(0);
+    await page.getByRole('button', { name:'Close', exact:true }).click();
     expect(await page.evaluate(function () {
       return {
         seen:!!FB.state.player.roleOrientationsSeen['role-tier-1'],
@@ -82,11 +93,14 @@ test('the Guide searches skills and live technology unlock terms',
     const learning = page.locator('[data-guide-entry="skill-lea"]');
     await expect(learning).toBeVisible();
     await learning.click();
-    await expect(page.locator('#gm-body')).toContainText('national research');
-    await expect(page.locator('#gm-body')).toContainText('education and tutoring');
-    await expect(page.locator('#gm-body')).toContainText('Papal systems');
+    await expect(learning).toHaveAttribute('aria-expanded', 'true');
+    const learningDetail = page.locator('#guide-entry-detail-skill-lea');
+    await expect(learningDetail).toBeVisible();
+    await expect(learningDetail).toContainText('national research');
+    await expect(learningDetail).toContainText('education and tutoring');
+    await expect(learningDetail).toContainText('Papal systems');
+    await expect(page.locator('#guide-search')).toBeVisible();
 
-    await page.getByRole('button', { name:'Back to Guide', exact:true }).click();
     await page.locator('#guide-search').fill('Orchard');
     const technology = page.locator('[data-guide-entry="tech-seed_selection"]');
     await expect(technology).toBeVisible();
