@@ -4755,7 +4755,18 @@ window.FB = window.FB || {};
           h += '<div class="cmeta">' + esc(FB.T(
             'Campaign supply adjustment: {money:amount}', {
               amount:financeAmount(selectedHostUpkeep.campaignModifier)
-            })) + '</div>';
+          })) + '</div>';
+        }
+      }
+      if (selA.realm === 'player' && s.player.war && FB.warFeedback) {
+        const fieldFeedback = FB.warFeedback(s);
+        h += '<div class="cmeta">' + esc(FB.warBattleRecordText(
+          s, fieldFeedback)) + '</div>';
+        h += '<div class="cmeta">' + esc(FB.warLossesText(
+          s, fieldFeedback)) + '</div>';
+        const fieldEffects = FB.warEffectsText(s, fieldFeedback);
+        if (fieldEffects) {
+          h += '<div class="cmeta">' + esc(fieldEffects) + '</div>';
         }
       }
     }
@@ -5125,6 +5136,9 @@ window.FB = window.FB || {};
      every season and an automated war could never take land */
   const CUSTOM_FX_SCORE = {
     war_siege:12, war_win:8, war_hunt:6, war_loss:-8,
+    war_supply:5, war_thin:-5, war_discipline:4, war_disorder:-5,
+    war_discipline_deserters:4, war_pay_deserters:7, war_desert:-12,
+    war_allied_withdrawal:-12, war_negotiated_withdrawal:-3,
     ghw_recruit_volunteers:8, ghw_recruit_mercenaries:22,
     ghw_recruit_knights:20, ghw_recruit_adventurers:21,
     academy_introduction:3, academy_student_focus:1.5,

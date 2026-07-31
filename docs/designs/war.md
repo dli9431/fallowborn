@@ -165,7 +165,7 @@ without introducing additional unit classes. Each class fights at its own qualit
 (`balance.qualityLevy`/`qualityArcher`/`qualityCavalry`/`qualityRetinue`/`qualityMerc`,
 read through `FB.compQuality`): cavalry has quality 2.0, men-at-arms punch far above their
 numbers, and levy below. Battle casualties fall in the fixed order levy → archers →
-mercenaries → cavalry → men-at-arms (`applyLosses` in armies.js), and a
+mercenaries → cavalry → men-at-arms (`FB.applyHostLosses` in armies.js), and a
 resting host refills with fresh levy only — slain professionals are not replaced
 mid-war, so a long campaign grinds a host down toward its peasant mass. Hosts from older
 saves migrate in place (`FB.hostUnits`): their men count as levy but the hired companies.
@@ -183,6 +183,28 @@ it is raised again. The season boundary charges the same bill for ordinary and s
 great holy-war hosts and clamps an underfunded purse to zero without disbanding the host.
 `campaignModifier` is zero for ordinary-war-only hosts and records the signed supply
 adjustment for a player host serving in a great holy war.
+
+**Ordinary player wars retain a compact campaign-feedback ledger.** The active
+`player.war` object stores at most eight battle records (outcome, field/abstract mode,
+place, before/after headcounts, and losses by class), cumulative live-host losses by
+class, and at most ten recent campaign effects. Each effect names its source and
+condition and records whether it changed abstract campaign strength, live troops, or
+both. `FB.warFeedback` derives the current streak, live composition, loss total, recent
+effects, and the same authoritative `FB.playerHostUpkeepParts` result used by seasonal
+charging. These additive, JSON-safe fields self-initialize on old active wars and do not
+constitute a second battle or casualty simulation.
+
+Campaign condition and live troops remain deliberately separate. Supply, thin ranks,
+discipline, and disorder normally move the bounded abstract `war.strength` used by war
+council odds. A handler changes headcount only when its option says so, and all such
+losses use `FB.applyHostLosses`; the feedback UI labels the affected ledger explicitly.
+The loss-aware **Empty Bedrolls** event requires a surviving raised host, meaningful
+recorded casualties, a recent defeat or defeat streak, and a per-war interval. Its
+arrears option costs a configurable number of current seasonal upkeep bills, subject to
+a minimum. Desertion instead rolls a seeded configurable percentage of the live roster
+through `FB.rf` and the deterministic shared loss allocator. The event is eligible after
+the first qualifying defeat, before the third-loss campaign termination, and resolving
+any of its options stamps the interval.
 
 **Movement is daily, weighted, and adjacency-based.** `FB.findPath` remains the plain BFS
 compatibility surface over `FB.world.adj`; field hosts use deterministic

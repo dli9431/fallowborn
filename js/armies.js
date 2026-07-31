@@ -56,6 +56,51 @@ window.FB = window.FB || {};
     return army.units;
   };
 
+  function emptyUnitCounts() {
+    return { levy:0, arch:0, cav:0, ret:0, mercs:0 };
+  }
+
+  function copyUnitCounts(units) {
+    const out = emptyUnitCounts();
+    units = units || {};
+    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+      out[key] = Math.max(0, Math.round(Number(units[key]) || 0));
+    }
+    return out;
+  }
+
+  function unitCountTotal(units) {
+    let total = 0;
+    units = units || {};
+    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+      total += Math.max(0, Number(units[key]) || 0);
+    }
+    return total;
+  }
+
+  /* One casualty allocator owns battle and event losses. The number to lose
+     may be seeded elsewhere, but class allocation is always deterministic:
+     levy, archers, mercenaries, cavalry, then men-at-arms. */
+  FB.applyHostLosses = function (army, lost) {
+    const result = emptyUnitCounts();
+    result.total = 0;
+    if (!army || army.men <= 0) return result;
+    const units = FB.hostUnits(army);
+    let remaining = Math.min(army.men,
+      Math.max(0, Math.round(Number(lost) || 0)));
+    const actual = remaining;
+    for (const key of ['levy', 'arch', 'mercs', 'cav', 'ret']) {
+      if (remaining <= 0) break;
+      const amount = Math.min(units[key] || 0, remaining);
+      units[key] -= amount;
+      result[key] += amount;
+      remaining -= amount;
+    }
+    army.men = Math.max(0, army.men - actual);
+    result.total = actual;
+    return result;
+  };
+
   /* weighted battle quality of a composition: the average punch of one man */
   FB.compQuality = function (units, men) {
     if (!units || !men) return 1;
@@ -143,6 +188,188 @@ window.FB = window.FB || {};
     parts.campaignModifier = parts.total * rate;
     parts.total = Math.max(0, parts.total + parts.campaignModifier);
     return parts;
+  };
+
+  /* ---------- ordinary campaign feedback ----------
+     The war object owns only compact, JSON-safe facts. UI text is derived,
+     and old active wars acquire empty ledgers without a save-version bump. */
+  FB.ensurePlayerWarFeedback = function (state) {
+    const war = state && state.player && state.player.war;
+    if (!war) return null;
+    if (!Array.isArray(war.battles)) war.battles = [];
+    if (!Array.isArray(war.effects)) war.effects = [];
+    if (!war.lossesByClass || typeof war.lossesByClass !== 'object') {
+      war.lossesByClass = emptyUnitCounts();
+    } else {
+      war.lossesByClass = copyUnitCounts(war.lossesByClass);
+    }
+    const host = FB.playerHost(state);
+    if (!war.initialUnits && host) {
+      war.initialUnits = copyUnitCounts(FB.hostUnits(host));
+      war.initialMen = host.men;
+    }
+    return war;
+  };
+
+  FB.notePlayerWarTroopLosses = function (state, losses) {
+    const war = FB.ensurePlayerWarFeedback(state);
+    if (!war || !losses) return;
+    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+      war.lossesByClass[key] += Math.max(0,
+        Math.round(Number(losses[key]) || 0));
+    }
+  };
+
+  FB.recordPlayerBattle = function (state, record) {
+    const war = FB.ensurePlayerWarFeedback(state);
+    if (!war || !record) return null;
+    const saved = {
+      turn:record.turn === undefined ? state.turn : record.turn,
+      outcome:record.outcome === 'win' ? 'win' : 'loss',
+      mode:record.mode === 'field' ? 'field' : 'abstract',
+      pid:record.pid || null,
+      playerBefore:Math.max(0, Math.round(Number(record.playerBefore) || 0)),
+      playerAfter:Math.max(0, Math.round(Number(record.playerAfter) || 0)),
+      enemyBefore:Math.max(0, Math.round(Number(record.enemyBefore) || 0)),
+      enemyAfter:Math.max(0, Math.round(Number(record.enemyAfter) || 0)),
+      playerLosses:copyUnitCounts(record.playerLosses),
+      enemyLosses:copyUnitCounts(record.enemyLosses)
+    };
+    war.battles.push(saved);
+    if (war.battles.length > 8) war.battles.splice(0, war.battles.length - 8);
+    FB.notePlayerWarTroopLosses(state, saved.playerLosses);
+    if (saved.outcome === 'loss') war.lastDefeatTurn = saved.turn;
+    return saved;
+  };
+
+  FB.recordWarEffect = function (state, spec) {
+    const war = FB.ensurePlayerWarFeedback(state);
+    if (!war || !spec) return null;
+    const losses = copyUnitCounts(spec.troopLosses);
+    const troopTotal = unitCountTotal(losses);
+    const strengthDelta = Number(spec.strengthDelta) || 0;
+    const target = strengthDelta && troopTotal ? 'both'
+      : (troopTotal ? 'troops' : 'strength');
+    const record = {
+      turn:state.turn,
+      source:spec.source || 'campaign',
+      condition:spec.condition || 'campaign',
+      target:target,
+      strengthDelta:strengthDelta,
+      troopLosses:losses,
+      troopTotal:troopTotal
+    };
+    if (spec.rate !== undefined) record.rate = Number(spec.rate) || 0;
+    war.effects.push(record);
+    if (war.effects.length > 10) war.effects.splice(0, war.effects.length - 10);
+    return record;
+  };
+
+  FB.adjustWarStrength = function (state, delta, spec) {
+    const war = FB.ensurePlayerWarFeedback(state);
+    if (!war) return 0;
+    const before = war.strength || 1;
+    const min = spec && spec.min !== undefined ? spec.min : 0.5;
+    const max = spec && spec.max !== undefined ? spec.max : 1.1;
+    war.strength = FB.clamp(before + delta, min, max);
+    const actual = war.strength - before;
+    spec = spec || {};
+    spec.strengthDelta = actual;
+    if (actual || unitCountTotal(spec.troopLosses)) {
+      FB.recordWarEffect(state, spec);
+    }
+    return actual;
+  };
+
+  FB.playerWarHostLoss = function (state, lost, spec) {
+    const host = FB.playerHost(state);
+    if (!host) return null;
+    const losses = FB.applyHostLosses(host, lost);
+    FB.notePlayerWarTroopLosses(state, losses);
+    spec = spec || {};
+    spec.troopLosses = losses;
+    FB.recordWarEffect(state, spec);
+    requestMap();
+    return losses;
+  };
+
+  FB.warBattleStreak = function (state) {
+    const war = state && state.player && state.player.war;
+    const battles = war && Array.isArray(war.battles) ? war.battles : [];
+    if (!battles.length) return { outcome:null, count:0 };
+    const outcome = battles[battles.length - 1].outcome;
+    let count = 0;
+    for (let i = battles.length - 1; i >= 0; i--) {
+      if (battles[i].outcome !== outcome) break;
+      count++;
+    }
+    return { outcome:outcome, count:count };
+  };
+
+  FB.warFeedback = function (state) {
+    const war = state && state.player && state.player.war;
+    if (!war) return null;
+    const host = FB.playerHost(state);
+    const losses = copyUnitCounts(war.lossesByClass);
+    return {
+      battles:Array.isArray(war.battles) ? war.battles.slice() : [],
+      streak:FB.warBattleStreak(state),
+      losses:losses,
+      lossTotal:unitCountTotal(losses),
+      effects:Array.isArray(war.effects) ? war.effects.slice() : [],
+      upkeep:FB.playerHostUpkeepParts(state),
+      host:host,
+      units:host ? copyUnitCounts(FB.hostUnits(host)) : emptyUnitCounts(),
+      strength:war.strength || 1
+    };
+  };
+
+  FB.warDeserterPayment = function (state) {
+    const bal = B();
+    const upkeep = FB.playerHostUpkeepParts(state).total;
+    const seasons = bal.warDeserterPayUpkeepSeasons === undefined
+      ? 2 : bal.warDeserterPayUpkeepSeasons;
+    const minimum = bal.warDeserterPayMin === undefined
+      ? 6 : bal.warDeserterPayMin;
+    return Math.max(minimum, Math.ceil(upkeep * seasons));
+  };
+
+  FB.warDeserterStatus = function (state) {
+    const war = state && state.player && state.player.war;
+    const host = war && FB.playerHost(state);
+    const payment = FB.warDeserterPayment(state);
+    const result = {
+      eligible:false, payment:payment, hostMen:host ? host.men : 0,
+      lossTotal:0, threshold:0, recentDefeat:false, intervalReady:false
+    };
+    if (!war || !host || host.men < (B().armyMinMen || 40)) return result;
+    const losses = copyUnitCounts(war.lossesByClass);
+    result.lossTotal = unitCountTotal(losses);
+    if (!result.lossTotal && host.size !== undefined) {
+      result.lossTotal = Math.max(0, host.size - host.men);
+    }
+    const initial = Math.max(1, Number(war.initialMen) || Number(host.size) || host.men);
+    const minimumLosses = B().warDeserterMinCasualties === undefined
+      ? 60 : B().warDeserterMinCasualties;
+    const minimumRate = B().warDeserterMinCasualtyRate === undefined
+      ? 0.08 : B().warDeserterMinCasualtyRate;
+    result.threshold = Math.max(minimumLosses,
+      Math.round(initial * minimumRate));
+    const streak = FB.warBattleStreak(state);
+    const windowDays = B().warDeserterDefeatWindowDays === undefined
+      ? 180 : B().warDeserterDefeatWindowDays;
+    result.recentDefeat = war.lastDefeatTurn !== undefined &&
+      state.turn - war.lastDefeatTurn <= windowDays;
+    if (!result.recentDefeat && streak.outcome === 'loss' && streak.count >= 2) {
+      result.recentDefeat = true;
+    }
+    const interval = B().warDeserterIntervalDays === undefined
+      ? 180 : B().warDeserterIntervalDays;
+    result.intervalReady = war.lastDeserterTurn === undefined ||
+      state.turn - war.lastDeserterTurn >= interval;
+    result.eligible = result.recentDefeat && result.intervalReady &&
+      result.lossTotal >= result.threshold;
+    return result;
   };
 
   /* Declaration preview: the present peacetime composition at an ordinary
@@ -255,7 +482,7 @@ window.FB = window.FB || {};
     /* a voluntary de-muster sent only part of the standing host home: the
        war's next muster fields no more of each own class than returned
        after campaign levy modifiers; hired companies and allied
-       reinforcements are raised fresh */
+       reinforcements are raised fresh unless that ally already withdrew */
     const limited = !!(w && w.musterPool);
     if (limited) {
       const pool = w.musterPool;
@@ -264,7 +491,7 @@ window.FB = window.FB || {};
       units.cav = Math.min(units.cav, pool.cav || 0);
       units.ret = Math.min(units.ret, pool.ret || 0);
     }
-    const allied = w && w.defending && FB.alliedReinforcement
+    const allied = w && w.defending && !w.alliedWithdrew && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
     let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
@@ -301,6 +528,7 @@ window.FB = window.FB || {};
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
     state.armies.push(host);
+    if (w && FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
     if (plan.greatHost && FB.greatHolyWarMarkMuster) {
       FB.greatHolyWarMarkMuster(state, 'player');
     }
@@ -360,6 +588,7 @@ window.FB = window.FB || {};
     if (selId === army.id) selId = null;
     requestMap();
   }
+  FB.disbandArmy = function (state, army) { disband(state, army); };
 
   /* ---------- voluntary de-muster ----------
      The player may send a standing host home mid-war. Only part of it
@@ -805,20 +1034,6 @@ window.FB = window.FB || {};
     return pw;
   }
 
-  /* Battle losses fall through the ordered classes: levy, archers,
-     mercenaries, cavalry, then men-at-arms. */
-  function applyLosses(army, lost) {
-    army.men = Math.max(0, army.men - lost);
-    if (!army.units) return;
-    let rem = lost;
-    const order = ['levy', 'arch', 'mercs', 'cav', 'ret'];
-    for (const k of order) {
-      if (rem <= 0) break;
-      const d = Math.min(army.units[k] || 0, rem);
-      army.units[k] -= d; rem -= d;
-    }
-  }
-
   /* a field win/loss in an AI-vs-AI war tilts that war's yearly resolution */
   function trackAIWar(state, winnerSov, loserSov) {
     const rw = state.realms[winnerSov];
@@ -831,13 +1046,14 @@ window.FB = window.FB || {};
     const sa = battlePower(state, a) * FB.rf(0.75, 1.25);
     const sb = battlePower(state, b) * FB.rf(0.75, 1.25);
     const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
+    const winnerBefore = winner.men, loserBefore = loser.men;
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const ratio = FB.clamp(sl / sw, 0.3, 1); // a close fight costs the winner too
     const winnerLoss = Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio);
-    applyLosses(winner, winnerLoss);
+    const winnerLosses = FB.applyHostLosses(winner, winnerLoss);
     if (winner.men < 1) winner.men = 1;
     const loserLoss = Math.round(loser.men * (B().battleLoseLoss || 0.62));
-    applyLosses(loser, loserLoss);
+    const loserLosses = FB.applyHostLosses(loser, loserLoss);
     const pInvolved = winner.realm === 'player' || loser.realm === 'player';
     // the beaten host routs for home — or disperses entirely
     if (loser.men < (B().armyMinMen || 40)) {
@@ -863,7 +1079,21 @@ window.FB = window.FB || {};
       FB.queueEvent(state,
         (won ? 'field_battle_won' : 'field_battle_lost') + (steel ? '_steel' : ''),
         { pid:pid, enemyId:enemyId });
-      if (won) FB.fns.war_win(state); else FB.fns.war_loss(state);
+      const playerArmy = won ? winner : loser;
+      const enemyArmy = won ? loser : winner;
+      const playerLosses = won ? winnerLosses : loserLosses;
+      const enemyLosses = won ? loserLosses : winnerLosses;
+      const battleContext = { battleRecord:{
+        turn:state.turn, outcome:won ? 'win' : 'loss', mode:'field', pid:pid,
+        playerBefore:won ? winnerBefore : loserBefore,
+        playerAfter:playerArmy.men,
+        enemyBefore:won ? loserBefore : winnerBefore,
+        enemyAfter:enemyArmy.men,
+        playerLosses:playerLosses,
+        enemyLosses:enemyLosses
+      }};
+      if (won) FB.fns.war_win(state, battleContext);
+      else FB.fns.war_loss(state, battleContext);
     } else {
       trackAIWar(state, winner.realm, loser.realm);
       const p = state.player;
@@ -973,7 +1203,7 @@ window.FB = window.FB || {};
       const fraction = expected - lost;
       if (fraction > 0 && FB.rng() < fraction) lost++;
       if (lost > 0) {
-        applyLosses(playerHost, Math.min(playerHost.men, lost));
+        FB.applyHostLosses(playerHost, Math.min(playerHost.men, lost));
         requestMap();
       }
     }

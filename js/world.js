@@ -3504,6 +3504,7 @@ window.FB = window.FB || {};
         used.player = activeHosts.player = 1;
         used[enemyRealm] = activeHosts[enemyRealm] = 1;
         if (playerRealm) used[playerRealm] = 1;
+        if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
       }
     }
 
@@ -4201,6 +4202,7 @@ window.FB = window.FB || {};
     const p = state.player;
     if (p.focus !== 'lead_host') { p.focusBack = p.focus; p.focus = 'lead_host'; }
     if (FB.raisePlayerHost) FB.raisePlayerHost(state);
+    if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
   };
 
   FB.endPlayerWar = function (state) {
@@ -4577,10 +4579,30 @@ window.FB = window.FB || {};
      read by the 'war_battle' named chance and spent when a battle is fought. */
   FB.fns = FB.fns || {};
   function afterBattle(w) { w.led = 0; w.harried = 0; w.rested = 0; }
-  FB.fns.war_win = function (state) {
+  function warEffectSource(ev, fallback) {
+    return ev && ev.id ? ev.id : fallback;
+  }
+  function abstractBattleRecord(state, outcome) {
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    return {
+      turn:state.turn, outcome:outcome, mode:'abstract', pid:host && host.at,
+      playerBefore:host ? host.men : 0, playerAfter:host ? host.men : 0,
+      enemyBefore:0, enemyAfter:0
+    };
+  }
+  FB.fns.war_win = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
     w.wins++; afterBattle(w);
-    w.strength = Math.max(0.5, (w.strength || 1) - 0.05); // victory also bleeds
+    const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'win');
+    if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, -0.05, {
+        source:warEffectSource(ev, battle.mode === 'field' ? 'field_battle' : 'war_council'),
+        condition:'battle', troopLosses:battle.playerLosses
+      });
+    } else {
+      w.strength = Math.max(0.5, (w.strength || 1) - 0.05);
+    }
     if (w.defending && w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1);
     FB.news(state, FB.msg('news.war.field_victory',
       '⚔ Victory in the field! ({wins}/{needed})',
@@ -4588,10 +4610,20 @@ window.FB = window.FB || {};
     if (FB.chance(0.3)) FB.lootItem(state, null, 'spoils');
     FB.warOutcome(state);
   };
-  FB.fns.war_loss = function (state) {
+  FB.fns.war_loss = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
     w.losses++; afterBattle(w);
-    w.strength = Math.max(0.5, (w.strength || 1) - 0.2);
+    const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'loss');
+    if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
+    w.lastDefeatTurn = state.turn;
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, -0.2, {
+        source:warEffectSource(ev, battle.mode === 'field' ? 'field_battle' : 'war_council'),
+        condition:'battle', troopLosses:battle.playerLosses
+      });
+    } else {
+      w.strength = Math.max(0.5, (w.strength || 1) - 0.2);
+    }
     FB.news(state, FB.msg('news.war.field_defeat', {
       forms: {
         select: 'plural', param: 'losses', cases: {
@@ -4607,10 +4639,16 @@ window.FB = window.FB || {};
     w.harried = Math.min(2, (w.harried || 0) + 1);
     if (FB.chance(0.15)) FB.lootItem(state, null, 'raid');
   };
-  FB.fns.war_hold = function (state) {
+  FB.fns.war_hold = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
     w.rested = 1;
-    w.strength = Math.min(1.1, (w.strength || 1) + 0.15); // the host mends
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, 0.15, {
+        source:warEffectSource(ev, 'war_hold'), condition:'supply'
+      });
+    } else {
+      w.strength = Math.min(1.1, (w.strength || 1) + 0.15);
+    }
     if (w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1); // borders relieved
   };
   /* press the siege of the war's target (attacking wars only): your host
@@ -4631,7 +4669,13 @@ window.FB = window.FB || {};
           '⚔ A sortie from {target} is thrown back. The siege holds.', { target: tname }));
       } else {
         w.siege = Math.max(0, w.siege - 1);
-        w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
+        if (FB.adjustWarStrength) {
+          FB.adjustWarStrength(state, -0.1, {
+            source:'war_siege_sortie', condition:'thin_ranks'
+          });
+        } else {
+          w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
+        }
         state.player.gold = Math.max(0, state.player.gold - 2);
         FB.news(state, FB.msg('news.war.sortie_succeeds',
           '⚔ A night sortie burns your siege-works — the ring is set back.', {}));
@@ -4720,13 +4764,170 @@ window.FB = window.FB || {};
     }
   };
   /* small condition shifts for wartime flavor events */
-  FB.fns.war_supply = function (state) {
+  FB.fns.war_supply = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
-    w.strength = Math.min(1.1, (w.strength || 1) + 0.1);
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, 0.1, {
+        source:warEffectSource(ev, 'war_supply'), condition:'supply'
+      });
+    } else {
+      w.strength = Math.min(1.1, (w.strength || 1) + 0.1);
+    }
   };
-  FB.fns.war_thin = function (state) {
+  FB.fns.war_thin = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
-    w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, -0.1, {
+        source:warEffectSource(ev, 'war_thin'), condition:'thin_ranks'
+      });
+    } else {
+      w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
+    }
+  };
+  FB.fns.war_live_host = function (state) {
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    return !!(state.player.war && host && host.men > 0);
+  };
+  FB.fns.war_host_under_pressure = function (state) {
+    const w = state.player.war;
+    return FB.fns.war_live_host(state) &&
+      ((w.strength || 1) < 0.95 || (w.losses || 0) > 0);
+  };
+  FB.fns.war_deserters_due = function (state) {
+    return !!(FB.warDeserterStatus && FB.warDeserterStatus(state).eligible);
+  };
+  FB.fns.war_can_pay_deserters = function (state) {
+    return !!(FB.warDeserterPayment &&
+      state.player.gold >= FB.warDeserterPayment(state));
+  };
+  function markDeserterInterval(state) {
+    const w = state.player.war;
+    if (w) w.lastDeserterTurn = state.turn;
+  }
+  FB.fns.war_discipline_deserters = function (state, ctx, ev) {
+    if (!state.player.war) return;
+    markDeserterInterval(state);
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, 0.04, {
+        source:warEffectSource(ev, 'war_deserters'), condition:'discipline'
+      });
+    }
+  };
+  FB.fns.war_pay_deserters = function (state, ctx, ev) {
+    if (!state.player.war || !FB.warDeserterPayment) return;
+    const payment = FB.warDeserterPayment(state);
+    if (state.player.gold < payment) return;
+    state.player.gold -= payment;
+    markDeserterInterval(state);
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, 0.08, {
+        source:warEffectSource(ev, 'war_deserters'), condition:'supply'
+      });
+    }
+    FB.news(state, FB.msg('news.war.deserters_paid',
+      '💰 {money:amount} clears the host’s arrears; the wavering ranks steady.', {
+        amount:payment
+      }));
+  };
+  FB.fns.war_desert = function (state, ctx, ev) {
+    const w = state.player.war;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    if (!w || !host || !FB.playerWarHostLoss) return;
+    const min = FBDATA.balance.warDeserterLossMin === undefined
+      ? 0.10 : FBDATA.balance.warDeserterLossMin;
+    const max = FBDATA.balance.warDeserterLossMax === undefined
+      ? 0.18 : FBDATA.balance.warDeserterLossMax;
+    const rate = FB.rf(Math.min(min, max), Math.max(min, max));
+    const lost = Math.max(1, Math.round(host.men * rate));
+    markDeserterInterval(state);
+    const losses = FB.playerWarHostLoss(state, lost, {
+      source:warEffectSource(ev, 'war_deserters'),
+      condition:'desertion', rate:rate
+    });
+    FB.news(state, FB.msg('news.war.deserters_leave',
+      '🏳 {men} soldiers leave the live host ({percent}% of those who stood in the morning).', {
+        men:losses ? losses.total : 0,
+        percent:Math.round(rate * 100)
+      }));
+  };
+  FB.fns.war_discipline = function (state, ctx, ev) {
+    if (!state.player.war || !FB.adjustWarStrength) return;
+    FB.adjustWarStrength(state, 0.06, {
+      source:warEffectSource(ev, 'war_discipline'), condition:'discipline'
+    });
+  };
+  FB.fns.war_disorder = function (state, ctx, ev) {
+    if (!state.player.war || !FB.adjustWarStrength) return;
+    FB.adjustWarStrength(state, -0.08, {
+      source:warEffectSource(ev, 'war_disorder'), condition:'disorder'
+    });
+  };
+  FB.fns.war_campaign_deep = function (state) {
+    return !!(FB.fns.war_live_host(state) && state.player.war.seasons >= 2);
+  };
+  FB.fns.war_campaign_exhausted = function (state) {
+    return !!(state.player.war && state.player.war.seasons >= 4);
+  };
+  FB.fns.war_objective_under_debate = function (state) {
+    const w = state.player.war;
+    return !!(w && !w.defending && w.target && w.seasons >= 2);
+  };
+  FB.fns.war_has_allied_host = function (state) {
+    const w = state.player.war;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    return !!(w && !w.alliedWithdrew && host && host.allied && host.allied.men > 0);
+  };
+  FB.fns.war_allied_withdrawal = function (state, ctx, ev) {
+    const w = state.player.war;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    if (!w || !host || !host.allied || !host.allied.men) return;
+    const contribution = host.allied.men;
+    const leaving = Math.min(contribution, host.men);
+    const losses = FB.applyHostLosses ? FB.applyHostLosses(host, leaving) : null;
+    if (losses && FB.notePlayerWarTroopLosses) {
+      FB.notePlayerWarTroopLosses(state, losses);
+    }
+    host.size = Math.max(host.men, (host.size || host.men) - contribution);
+    host.allied = null;
+    w.alliedWithdrew = 1;
+    if (FB.adjustWarStrength) {
+      FB.adjustWarStrength(state, -0.06, {
+        source:warEffectSource(ev, 'war_allied_withdrawal'),
+        condition:'thin_ranks', troopLosses:losses
+      });
+    }
+    if (host.men < (FBDATA.balance.armyMinMen || 40) && FB.disbandArmy) {
+      state.armyDown.player = state.turn;
+      FB.disbandArmy(state, host);
+    }
+    if (FB.map) FB.map.request();
+  };
+  FB.fns.war_host_abroad = function (state) {
+    const w = state.player.war;
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    return !!(w && host && host.at && state.owner[host.at] === w.enemy);
+  };
+  FB.fns.war_enemy_offer_possible = function (state) {
+    const w = state.player.war;
+    return !!(w && w.seasons >= 2 &&
+      (w.wins || 0) + (w.losses || 0) > 0);
+  };
+  FB.fns.war_active_occupation = function (state) {
+    const w = state.player.war;
+    return !!(w && !w.defending && w.target && (w.siege || 0) > 0);
+  };
+  FB.fns.war_negotiation_possible = function (state) {
+    const w = state.player.war;
+    return !!(w && w.seasons >= 3 &&
+      ((w.losses || 0) > (w.wins || 0) || (w.strength || 1) < 0.85));
+  };
+  FB.fns.war_negotiated_withdrawal = function (state) {
+    const w = state.player.war;
+    if (!w) return;
+    state.player.prestige = Math.max(0, state.player.prestige - 4);
+    FB.news(state, FB.msg('news.war.negotiated_withdrawal',
+      '🕊 Safe conduct is agreed; the surviving host withdraws and the war ends.', {}));
+    FB.endPlayerWar(state);
   };
   /* the beaten defender's gold, taken: ends the war with tribute instead of
      pressing on to the siege (the war_tribute_offer event's other choice) */
