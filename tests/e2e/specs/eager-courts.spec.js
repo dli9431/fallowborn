@@ -395,7 +395,33 @@ test('an actively cultivated or visited court member survives their death',
          state.chars. Each must keep the record through the death. */
       s.player.socialAttention = s.player.socialAttention || {};
       s.player.socialAttention[found[0].c.id] = { startedTurn:s.turn, lastTurn:s.turn };
-      s.player.travel = { purpose:'relationship', targetCharId:found[1].c.id };
+      /* A whole journey record, not just a target id: the death path runs
+         FB.invalidateSocialVisit, which turns the traveller toward home and
+         reads homeId and currentId. A half-built stub would take the
+         at-home branch on undefined === undefined and throw there, testing
+         the fixture rather than the retention rule. */
+      const home = s.player.provinceId;
+      s.player.travel = {
+        purpose:'relationship',
+        homeId:home,
+        destinationId:home,
+        destinationRealm:null,
+        currentId:home,
+        phase:'outbound',
+        remainingRoute:[],
+        outboundRoute:[],
+        visited:[home],
+        legDays:3,
+        legDaysLeft:0,
+        startTurn:s.turn,
+        cost:0,
+        overhead:0,
+        encounters:{ culture:0, road:0 },
+        seenCultures:{},
+        seenEvents:{},
+        completed:false,
+        targetCharId:found[1].c.id
+      };
       s.player.rivalContacts = s.player.rivalContacts || {};
       s.player.rivalContacts[found[2].c.id] = { score:5, lastTurn:s.turn };
 
@@ -408,13 +434,18 @@ test('an actively cultivated or visited court member survives their death',
         skipped:false,
         cultivatedKept:!!s.chars[ids[0]],
         visitedKept:!!s.chars[ids[1]],
-        rivalKept:!!s.chars[ids[2]]
+        rivalKept:!!s.chars[ids[2]],
+        /* The journey really was turned toward home, which is what proves
+           the death ran the travel cleanup rather than skipping past a
+           fixture the engine did not recognize. */
+        journeyEnded:!s.player.travel
       };
     })).toEqual({
       skipped:false,
       cultivatedKept:true,
       visitedKept:true,
-      rivalKept:true
+      rivalKept:true,
+      journeyEnded:true
     });
   });
 
@@ -563,6 +594,7 @@ test('a long run leaves the record count bound by the map, not by the years',
          without the day ticker or the player's own life in the way. */
       for (let year = 0; year < 60; year++) {
         s.date.year++;
+        s.turn += 360; // keep turn and date consistent for turn-derived clocks
         FB.worldTick(s);
       }
       const end = counts();
