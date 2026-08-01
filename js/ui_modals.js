@@ -14524,7 +14524,7 @@ window.FB = window.FB || {};
         FB.T('National research fills sovereign research slots. Knowledge follows sovereign allegiance, not the player’s dynasty or ownership of one county.'),
         FB.T('Catalogue search includes technology names, descriptions, effects, prerequisite labels, and every authored unlock. Details distinguish prerequisites that require all listed technologies from those that accept any one.'),
         FB.T('Locked enterprises and deeds link back to their prerequisite technology.')
-      ]), 'research national tech unlock prerequisite all any orchard seed selection');
+      ]), 'research national tech unlock prerequisite all any press house lever oil');
     if (s) {
       for (const id in (FBDATA.tech || {})) {
         const def = FBDATA.tech[id];

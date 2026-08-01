@@ -1,7 +1,28 @@
 # Player feedback: QoL and correctness plan
 
-Status: in progress — Milestones 1–4 implemented
+Status: Milestones 1–4 complete — the deferred balance and writing backlog is
+the active frontier
 Audit baseline: Fallowborn v1.93.3, 2026-07-30
+State verified against: Fallowborn v1.104.2, 2026-08-01
+
+## State since the audit
+
+Releases v1.93.4–v1.104.2 delivered all four milestones (v1.93.6, v1.97.0,
+v1.100.0, v1.104.0) plus adjacent work that touches this plan without
+implementing any deferred backlog item:
+
+- v1.94.0 — technology-dependent sea transport for field armies (army movement
+  only; travel routing is unchanged, see *Route quality* below).
+- v1.98.0 / v1.98.1 — Wars of Aggression without a claim, and Guide coverage of
+  wars, claims, and sieges linked from the conquest picker.
+- v1.101.0 — war campaign tracking, logistics, and new war events.
+- v1.101.3 — bounded kin wedding/birth records so saving keeps working.
+- v1.101.4 — female title forms for female AI rulers.
+- v1.102.0 / v1.103.0 — Court-style portraits; jousting tournaments.
+- v1.104.1 / v1.104.2 — Guide and list-view fixes; the `ui.js` split.
+
+Every deferred item below was re-checked against v1.104.2; per-item notes record
+where a stated precondition is now met.
 
 ## Purpose
 
@@ -258,6 +279,10 @@ Required outcome:
 - an unlock result explains whether every prerequisite or any one of several
   prerequisites is required;
 - results remain generated from technology data rather than duplicated prose.
+
+Note: the Orchard/Press House balance item below later ungated the Orchard, so
+the worked example is now a “Workshop” search finding Horizontal Loom. The
+search contract itself is unchanged.
 
 Relevant design: [tech.md](../designs/tech.md).
 
@@ -662,13 +687,25 @@ navigation work.
 ### Orchard and Press House progression
 
 Category: **Balance**  
-Validity: **Valid**
+Validity: **Resolved**
 
 Orchard is locked behind Seed Selection while Press House is commonly available
 earlier and does not require an orchard. Review cost, yield, input relationships,
 and technology order together. The eventual rule should give Orchard a clear
 economic purpose and make a Press House's early availability intelligible; simply
 swapping one gate without checking the production chain is insufficient.
+
+Implemented outcome: the Orchard is now the farmer's ungated early capital
+enterprise — fruit trees predate seed science — and the Press House keeps its
+Lever Oil Press gate, because press work for the neighbors' harvests neither
+postdates nor requires owning trees. A Press House earns
+`balance.enterpriseChainBonus` (+50%) more while a household Orchard produces in
+the same province (`chainFrom` in `data/economy.js`); costs and base yields are
+unchanged, and Seed Selection keeps its practice and tax effects as the
+prerequisite for Grafting Manuals and Improved Husbandry. This supersedes item
+7's "Orchard search finds Seed Selection" example: the search contract is
+unchanged, but the worked example in the tests and `tech.md` is now Workshop →
+Horizontal Loom.
 
 ### Route quality and geographic distance
 
@@ -679,6 +716,10 @@ Travel currently favors the fewest county-adjacency steps. It does not weight ro
 quality, terrain, sea travel, or geographic distance, so an implausible route can
 be mechanically shortest. A future path-cost model should use deterministic,
 player-visible weights and explain why the selected route is faster.
+
+State check (v1.104.2): still valid. v1.94.0's sea transport covers field armies
+only; journey pricing in `js/travel.js` is still derived from adjacency leg
+count (`ceil(2 + legs * 2 * 0.25)` plus the journey-type overhead).
 
 ### Peddler stock by market and customer
 
@@ -691,6 +732,10 @@ items can leave a wealthy house seeing mostly ordinary stock. Review stock bands
 regional availability, merchant quality, and a rare aspirational offer. Do not
 make every offer perfectly affordable; make extreme mismatches exceptional and
 legible.
+
+State check (v1.104.2): still valid. `FB.offerItem` in `js/items.js` builds its
+pool weighted by rarity only, excluding owned uniques; neither tier nor wealth
+influences the draw or the price.
 
 ### Value of house-wide investment
 
@@ -744,6 +789,10 @@ and later historical fragmentation. First expose the rules as described in
 milestone 2; then compare bookmark development and long-run economic outcomes with
 seeded simulations before retuning the map.
 
+State check (v1.104.2): precondition met — item 12 shipped in v1.97.0, so
+settlement thresholds and development contributions are visible in the UI and
+Guide. The bookmark/simulation comparison can now proceed.
+
 ### Downward social mobility
 
 Category: **Balance**  
@@ -781,6 +830,9 @@ spying for the former homeland. These are event and diplomacy expansions. Before
 adding them, child identity and residence rules must be visible as required by
 milestone 2.
 
+State check (v1.104.2): precondition met — item 11 shipped in v1.97.0, so child
+culture, faith, and dynasty previews state which parent supplies each identity.
+
 ### Downfall, captivity, retirement, and succession stories
 
 Category: **Writing**  
@@ -790,6 +842,10 @@ Some loss-of-land chains exist, but ordinary imprisonment producers, rival-heir
 rebellions, forced abdication, and rich retirement stories are not a complete
 system. Add these only after the underlying retirement and succession transition
 is safe.
+
+State check (v1.104.2): precondition met — the retirement deed and
+living-abdication succession path shipped in v1.104.0 (item 18). Rival-heir
+rebellion and forced-abdication stories can now build on that handover.
 
 ### Culture and religion after conquest
 
@@ -907,7 +963,7 @@ section that owns further work.
 | Female protagonist's children keep her dynasty name | Writing | Partial | Item 11 |
 | Spouse's prior children are missing and cannot be interacted with | Bug | Resolved | Item 3 |
 | Enterprise list lacks category, value, and settlement grouping | QoL | Partial | Item 16 |
-| Orchard is gated later than Press House | Balance | Valid | Deferred balance |
+| Orchard is gated later than Press House | Balance | Resolved | Deferred balance |
 
 ## Cross-cutting implementation requirements
 
@@ -928,17 +984,34 @@ For every milestone:
 
 The milestones need not ship as one large release. Prefer reviewable slices:
 
-1. novice address and patronym correctness;
-2. marriage transfer preview and direction;
-3. stepchildren in family views and interactions;
-4. relocation staffing validation;
-5. renewable Guild Standing;
-6. per-career history;
-7. unlock-aware technology search and skill explanations;
-8. role onboarding and searchable guide;
-9. enterprise sorting, tree navigation, and war-target filtering;
-10. semantic shortcut bindings;
-11. retirement and expanded household agency.
+1. novice address and patronym correctness; *(delivered in v1.93.6)*
+2. marriage transfer preview and direction; *(delivered in v1.93.6)*
+3. stepchildren in family views and interactions; *(delivered in v1.93.6)*
+4. relocation staffing validation; *(delivered in v1.93.6)*
+5. renewable Guild Standing; *(delivered in v1.93.6)*
+6. per-career history; *(delivered in v1.93.6)*
+7. unlock-aware technology search and skill explanations; *(delivered in v1.97.0)*
+8. role onboarding and searchable guide; *(delivered in v1.97.0)*
+9. enterprise sorting, tree navigation, and war-target filtering; *(delivered in v1.100.0)*
+10. semantic shortcut bindings; *(delivered in v1.100.0)*
+11. retirement and expanded household agency. *(delivered in v1.104.0)*
 
 Balance and content work should be proposed separately after the relevant rule is
 visible and measurable.
+
+With all eleven slices delivered and the milestone-2 visibility preconditions
+met, the proposed deferred-phase slices, in order:
+
+12. **Orchard and Press House production-chain review** — *(delivered; see the
+    resolved backlog item)*. Orchard ungated, Press House keeps its Lever Oil
+    Press gate, and a producing household Orchard now feeds same-province
+    presses through `chainFrom` + `balance.enterpriseChainBonus`.
+13. **Peddler stock bands** — the next slice. Condition the offer pool on
+    tier/wealth with a rare aspirational offer; still data-and-weight work in
+    `js/items.js`.
+14. **Route-cost model** — deterministic, player-visible travel weights (road
+    quality, terrain, sea) in `js/travel.js`; larger because it touches travel
+    UI and AI movement.
+15. **Abbasid bookmark/economy comparison** — seeded-simulation measurement
+    first, retune only on evidence; pairs with the *Pace of social ascent*
+    playtest item, which also requires collected evidence before tuning.

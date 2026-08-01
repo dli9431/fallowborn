@@ -226,3 +226,80 @@ test('clears remote enterprise staffing and previews relocation impact',
       eligible:0
     });
   });
+
+test('press house pays a chain bonus only while a household orchard produces',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const home = state.player.provinceId;
+      me.career = {
+        profession:'farmer',
+        rank:'journeyman',
+        experience:4,
+        startedYear:state.date.year - 4,
+        guildRank:'none',
+        guildStanding:0,
+        chosen:true
+      };
+      state.player.profession = 'farmer';
+
+      const record = FB.realmTechRecord(state, FB.techRealmId(state));
+      record.completed = record.completed.filter(function (id) {
+        return id !== 'seed_selection' && id !== 'olive_press';
+      });
+      record.active = record.active.filter(function (id) {
+        return id !== 'seed_selection' && id !== 'olive_press';
+      });
+      state.dev[home] = 5;
+      state.player.enterprises = [];
+      const available = FB.enterpriseAvailable(state, 0, true);
+      const orchardRow = available.filter(function (item) {
+        return item.id === 'orchard_business';
+      })[0];
+      const pressRow = available.filter(function (item) {
+        return item.id === 'press_business';
+      })[0];
+
+      const orchard = {
+        uid:'chain_orchard_fixture',
+        type:'orchard_business',
+        provinceId:home,
+        settlement:0,
+        workerId:me.id,
+        workerLocked:true
+      };
+      const press = {
+        uid:'chain_press_fixture',
+        type:'press_business',
+        provinceId:home,
+        settlement:0,
+        workerId:null
+      };
+      state.player.enterprises = [orchard, press];
+      const pressPreview = {
+        type:'press_business', provinceId:home, settlement:0, workerId:me.id
+      };
+      const orchardYield = FB.enterpriseYield(state, orchard);
+      const fed = FB.enterpriseYield(state, pressPreview);
+      orchard.workerId = null;
+      const unfed = FB.enterpriseYield(state, pressPreview);
+      orchard.workerId = me.id;
+      return {
+        orchardListed:!!orchardRow,
+        orchardTechLocked:orchardRow ? orchardRow.techLocked : null,
+        pressTechLocked:pressRow ? pressRow.techLocked : null,
+        orchardYield:orchardYield,
+        fed:fed,
+        unfed:unfed,
+        bonus:FBDATA.balance.enterpriseChainBonus
+      };
+    });
+
+    expect(result.orchardListed).toBe(true);
+    expect(result.orchardTechLocked).toBe(false);
+    expect(result.pressTechLocked).toBe(true);
+    expect(result.orchardYield).toBeGreaterThan(0);
+    expect(result.unfed).toBeGreaterThan(0);
+    expect(result.fed).toBeCloseTo(result.unfed * (1 + result.bonus), 5);
+  });

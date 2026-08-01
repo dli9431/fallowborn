@@ -1274,6 +1274,9 @@ productive property:
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `requiresTech` optionally requires a completed technology in the household's effective
   sovereign nation. Purchase costs honor national `fx.costs.enterprise` modifiers.
+- `chainFrom` optionally names another enterprise type that feeds this one: while at
+  least one household enterprise of that type produces in the same province, this
+  enterprise's yield grows by `balance.enterpriseChainBonus`.
 - `yield` is the base seasonal gold before worker skill, local development, guild
   rank, and any matching active guild-monopoly percentages modify it. Incoming and
   outgoing percentages add, capped at +50%.
