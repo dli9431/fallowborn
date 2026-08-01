@@ -168,7 +168,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','caucasian','islamic','northeast_african'], unlocks:['practice:terracing'] });
   add('seed_selection','Seed Selection','🌱','agriculture',[500,900],[600,850],['crop_rotation'],
     'Households reserve seed from the healthiest and most reliable plants.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['practice:seed_selection','enterprise:orchard_business'], fx:{ tax:0.01 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['practice:seed_selection'], fx:{ tax:0.01 } });
   add('haymaking','Stored Hay','🌿','agriculture',[550,900],[650,900],['iron_sickles'],
     'Cut and dried grass carries more animals through winter.',
     { leaders:['latin','slavic','nordic'], unlocks:['practice:haymaking'], fx:{ levy:0.01 } });

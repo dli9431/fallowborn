@@ -1467,7 +1467,7 @@
       "glossary": [],
       "location": "data/economy.js",
       "source": {
-        "text": "Fruit trees planted for sale as well as the household table."
+        "text": "Fruit trees planted for sale as well as the household table. A household press pays more when it works this harvest."
       }
     },
     "enterprise.orchard_business.name.default": {
@@ -1483,7 +1483,7 @@
       "glossary": [],
       "location": "data/economy.js",
       "source": {
-        "text": "A press worked for neighbors as well as the family’s own harvest."
+        "text": "Lever-press work for the neighbors’ harvests needs no trees of your own; a producing household orchard in the same county fattens the take."
       }
     },
     "enterprise.press_business.name.default": {
@@ -50915,6 +50915,16 @@
         "text": "One of your sworn men kneels at your gate: debts press him hard, and only your generosity stands between his family and ruin."
       }
     },
+    "src.1f2e2881": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Fruit trees planted for sale as well as the household table. A household press pays more when it works this harvest."
+      }
+    },
     "src.1f325e5b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61257,16 +61267,6 @@
         "text": "A Rope Across the Road"
       }
     },
-    "src.3cfc87dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/economy.js"
-      ],
-      "source": {
-        "text": "A press worked for neighbors as well as the family’s own harvest."
-      }
-    },
     "src.3d13f465": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67787,16 +67787,6 @@
         "text": "watch it get fixed"
       }
     },
-    "src.4f50d861": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "research national tech unlock prerequisite all any orchard seed selection"
-      }
-    },
     "src.4f51748a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72251,16 +72241,6 @@
       ],
       "source": {
         "text": "You are too close in blood."
-      }
-    },
-    "src.5b87a95e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/economy.js"
-      ],
-      "source": {
-        "text": "Fruit trees planted for sale as well as the household table."
       }
     },
     "src.5b8a9140": {
@@ -95565,6 +95545,16 @@
       ],
       "source": {
         "text": "Water delivered above the wheel uses its weight as well as its speed."
+      }
+    },
+    "src.9ba9c04e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "research national tech unlock prerequisite all any press house lever oil"
       }
     },
     "src.9bae77da": {
@@ -130262,6 +130252,16 @@
       ],
       "source": {
         "text": "Baseline"
+      }
+    },
+    "src.fda57e7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Lever-press work for the neighbors’ harvests needs no trees of your own; a producing household orchard in the same county fattens the take."
       }
     },
     "src.fda627ad": {

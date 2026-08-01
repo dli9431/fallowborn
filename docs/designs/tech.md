@@ -132,7 +132,7 @@ remain separate supporting rows.
 Catalogue discovery is generated from the same definitions as the detail sheet.
 The text index includes localized names and descriptions, domain names, concrete
 scalar-effect labels, reverse `requiresTech` consumers, and typed unlock labels.
-Thus a content search such as **Orchard** resolves to **Seed Selection** without a
+Thus a content search such as **Workshop** resolves to **Horizontal Loom** without a
 second hand-authored lookup table. Catalogue rows expose the matching effects and
 unlocks and label `req` as **Requires all** and `reqAny` as **Requires any one**.
 Locked enterprises and deeds remain visible in their contextual pickers and open

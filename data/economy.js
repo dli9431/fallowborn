@@ -138,14 +138,15 @@ FBDATA.enterprises = {
     desc:'Another strip under the plough. It pays only while someone works it.'
   },
   orchard_business: {
-    name:'Orchard', icon:'🌳', cost:30, profession:'farmer', yield:2, requiresTech:'seed_selection',
+    name:'Orchard', icon:'🌳', cost:30, profession:'farmer', yield:2,
     terrains:['farmland','forest','hills'],
-    desc:'Fruit trees planted for sale as well as the household table.'
+    desc:'Fruit trees planted for sale as well as the household table. A household press pays more when it works this harvest.'
   },
   press_business: {
     name:{ default:'Press House', muslim:'Oil Press' }, icon:'🏺', cost:60,
     profession:'farmer', yield:3, devMin:2, requiresTech:'olive_press',
-    desc:'A press worked for neighbors as well as the family’s own harvest.'
+    chainFrom:'orchard_business',
+    desc:'Lever-press work for the neighbors’ harvests needs no trees of your own; a producing household orchard in the same county fattens the take.'
   },
   workshop_business: {
     name:'Workshop', icon:'⚒', cost:80, profession:'craftsman', yield:4, devMin:2,

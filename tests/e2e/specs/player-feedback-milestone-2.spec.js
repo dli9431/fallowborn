@@ -17,33 +17,34 @@ test('technology search discovers authored unlocks and locked enterprises link b
       const s = FB.state;
       const record = FB.realmTechRecord(s, FB.techRealmId(s));
       record.completed = record.completed.filter(function (id) {
-        return id !== 'seed_selection';
+        return id !== 'horizontal_loom';
       });
       record.active = record.active.filter(function (id) {
-        return id !== 'seed_selection';
+        return id !== 'horizontal_loom';
       });
       FB.ui.showTech();
     });
 
-    await page.locator('#tech-search').fill('Orchard');
-    const seedSelection = page.locator(
-      '[data-tech-open="seed_selection"]:not(.hidden)');
-    await expect(seedSelection).toBeVisible();
-    await expect(seedSelection).toContainText('Seed Selection');
-    await expect(seedSelection).toContainText('Orchard');
-    await seedSelection.click();
+    await page.locator('#tech-search').fill('Workshop');
+    const horizontalLoom = page.locator(
+      '[data-tech-open="horizontal_loom"]:not(.hidden)');
+    await expect(horizontalLoom).toBeVisible();
+    await expect(horizontalLoom).toContainText('Horizontal Loom');
+    await expect(horizontalLoom).toContainText('Workshop');
+    await horizontalLoom.click();
     await expect(page.locator('#gm-body')).toContainText('Requires all');
 
     await page.evaluate(function () {
+      FB.state.dev[FB.state.player.provinceId] = 5;
       FB.ui.showEnterpriseMarket(0);
     });
-    const lockedOrchard = page.locator(
-      '[data-enterprise-tech="seed_selection"]');
-    await expect(lockedOrchard).toBeVisible();
-    await expect(lockedOrchard).toContainText('Orchard');
-    await expect(lockedOrchard).toContainText('Requires Seed Selection');
-    await lockedOrchard.click();
-    await expect(page.getByRole('heading', { name:/Seed Selection/ }))
+    const lockedWorkshop = page.locator(
+      '[data-enterprise-tech="horizontal_loom"]');
+    await expect(lockedWorkshop).toBeVisible();
+    await expect(lockedWorkshop).toContainText('Workshop');
+    await expect(lockedWorkshop).toContainText('Requires Horizontal Loom');
+    await lockedWorkshop.click();
+    await expect(page.getByRole('heading', { name:/Horizontal Loom/ }))
       .toBeVisible();
   });
 
@@ -101,10 +102,10 @@ test('the Guide keeps orientations and topic details in one searchable sheet',
     await expect(learningDetail).toContainText('Papal systems');
     await expect(page.locator('#guide-search')).toBeVisible();
 
-    await page.locator('#guide-search').fill('Orchard');
-    const technology = page.locator('[data-guide-entry="tech-seed_selection"]');
+    await page.locator('#guide-search').fill('Workshop');
+    const technology = page.locator('[data-guide-entry="tech-horizontal_loom"]');
     await expect(technology).toBeVisible();
-    await expect(technology).toContainText('Seed Selection');
+    await expect(technology).toContainText('Horizontal Loom');
   });
 
 test('succession and child identity explanations use the live family rules',

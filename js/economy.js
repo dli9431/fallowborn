@@ -2547,7 +2547,7 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.enterpriseYield = function (state, e) {
+  FB.enterpriseYield = function (state, e, chainSeen) {
     const def = FBDATA.enterprises[e.type];
     const worker = e.workerId && state.chars[e.workerId];
     if (!def || !worker || worker.dead) return 0;
@@ -2573,8 +2573,29 @@ window.FB = window.FB || {};
     if (career.profession === 'merchant' || career.profession === 'craftsman') {
       amount *= 1 + (FB.techBonus ? FB.techBonus(state, 'trade') : 0);
     }
+    amount *= 1 + enterpriseChainFactor(state, e, chainSeen || {});
     return amount;
   };
+
+  /* A chain consumer (def.chainFrom) earns balance.enterpriseChainBonus more
+     while at least one household enterprise of the input type is producing in
+     the same province. The seen map breaks modded chain cycles. */
+  function enterpriseChainFactor(state, e, seen) {
+    const def = FBDATA.enterprises[e.type];
+    if (!def || !def.chainFrom) return 0;
+    const bonus = (FBDATA.balance && FBDATA.balance.enterpriseChainBonus) || 0;
+    if (!bonus) return 0;
+    const key = e.uid || (e.type + '@' + e.provinceId);
+    if (seen[key]) return 0;
+    seen[key] = true;
+    for (const other of FB.enterpriseList(state)) {
+      if (other === e || (e.uid && other.uid === e.uid)) continue;
+      if (other.type !== def.chainFrom) continue;
+      if (other.provinceId !== e.provinceId) continue;
+      if (FB.enterpriseYield(state, other, seen) > 0) return bonus;
+    }
+    return 0;
+  }
 
   function staffingIdCompare(a, b) {
     const aa = String(a === undefined || a === null ? '' : a);

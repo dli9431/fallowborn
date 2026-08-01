@@ -141,6 +141,17 @@ the legacy guild-member work benefit, and position/retainer enterprise modifiers
 are not copied into enterprise instances, so a lost office, departed retainer, or changed
 guild rank affects the next calculation without migrating property state.
 
+A consumer enterprise may name an input type in `def.chainFrom`. While at least
+one household enterprise of the input type is producing (positive yield under the
+ordinary staffing and residence rules) in the same province, the consumer earns
+`balance.enterpriseChainBonus` more. The farming chain uses this: the Orchard is
+the farmer's ungated early capital enterprise — fruit trees predate seed
+science — while the Press House keeps its Lever Oil Press gate, because press
+work for the neighbors' harvests neither postdates nor requires owning trees.
+The staffing assistant evaluates chains against current assignments, so its
+preview can lag a plan that would newly staff an input enterprise; the seasonal
+settlement always uses live assignments.
+
 Active guild monopoly charters add another live multiplier only to staffed enterprises
 whose career matches the charter's Craft or Trade profession. One incoming and one
 outgoing charter may apply at once; their enterprise percentages add and are capped at
