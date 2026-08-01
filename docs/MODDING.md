@@ -885,11 +885,12 @@ Use the public projections rather than rebuilding this rule:
 
 - `FB.politicalCourt(state)` returns the locale-neutral court and house facts.
 - `FB.politicalSummary(state)` returns aggregated blocs, leaders, members,
-  interests, influence, strict-majority threshold, both ordinary Estates
-  motion forecasts when they apply, and an optional pending-motion forecast.
-- `FB.politicalMotionForecast(state,"redress"|"scutage")` returns bloc
-  scores, reason ids, locked/pledged/undecided postures, natural support
-  chances, and influence totals.
+  interests, influence, strict-majority threshold, a `forecasts` map keyed by
+  policy id for every catalog policy that applies, and an optional
+  pending-motion forecast.
+- `FB.politicalMotionForecast(state,policyId)` returns bloc scores, reason
+  ids, locked/pledged/undecided postures, natural support chances, and
+  influence totals for any id in the policy catalog.
 
 Those three functions are read-only and RNG-neutral. Do not call the mutating
 repair functions from rendering code. `FB.ensurePolitics` and
@@ -912,8 +913,80 @@ Do not write `state.politics` directly. It stores stable allegiances, semantic
 pledges/lobby/result state, ids, and turn stamps; influence, probability,
 localized prose, and rendered reasons are always derived. The existing
 `parliament_vote` and `parliament_redress_vote` named chances remain supported
-for non-motion Estates stories and older mods. Only the core player redress
-and scutage motions use the bloc tally.
+for non-motion Estates stories and older mods. Every catalog policy vote uses
+the bloc tally; there is no separate global success roll.
+
+## Policy catalog (Estates laws and reforms)
+
+`FBDATA.policies` lives in `data/policies.js`. Each entry is one law or reform
+a sworn lord (tiers 3–5) can campaign for before the liege's Estates. A runtime
+mod may replace a complete definition by the same top-level `policies` id;
+definitions are replaced atomically rather than deep-merged:
+
+```json
+{
+  "policies": {
+    "market_charter": {
+      "name": "Market Charter",
+      "icon": "⚖",
+      "desc": "If carried, your home county gains a chartered market.",
+      "family": "commerce",
+      "institution": "estates",
+      "proposer": "vassal",
+      "minTier": 3,
+      "maxTier": 5,
+      "states": "one-shot",
+      "cooldown": "year",
+      "repeal": "none",
+      "emergency": false,
+      "order": 4,
+      "gate": "parliament_gate_market_charter",
+      "posture": { "traits": { "greedy": 6, "generous": -4 } }
+    }
+  }
+}
+```
+
+Fields:
+
+- `name` and `desc` are structured display fields (localized like bloc names);
+  `icon` and `order` control presentation.
+- `family` groups policies for the cooldown: after a campaign begins, the
+  Estates hear no second matter of that family until the next calendar year.
+  The spent years are saved on the liege realm as `obl.motionYears`.
+- `institution`, `proposer`, `minTier`, and `maxTier` declare the eligible
+  proposer, electorate, and rank. The first catalog is `estates`-only.
+- `states` describes the target term: `level` (an ordered aid rate), `on` (a
+  durable law such as scutage or consent of the estates), or `one-shot` (a
+  timed grant). `repeal` documents how the term can be undone — `none` in the
+  first catalog. `emergency: true` waives the family cooldown (its gate still
+  applies; the core emergency subsidy requires a liege at war).
+- `cost` overrides `balance.parliamentMotionCost` for the proposal.
+- `gate` names an `FB.fns` fn that returns `true` when the policy may be
+  proposed, or a localized reason string shown wherever the proposal is
+  disabled. Home-county gates use `state.player.provinceId`.
+- `posture` tunes bloc scoring beyond the archetype's `politicalBlocs.motions`
+  base weight: `aidSlope` multiplies the current aid's deviation from custom,
+  `traits` maps member-ruler trait ids to score adjustments, and
+  `martialSlope` scales average member Martial (clamped ±12).
+- `resultEvent` names the queued result event; it defaults to
+  `parliament_<policyId>`. The event follows the predetermined-result pattern:
+  `contextValidator:'parliament_motion_context_valid'` with pass/fail options
+  gated by `require:{custom:'parliament_motion_passed'}` /
+  `'parliament_motion_failed'}` and no `chance`, so visible and autoresolved
+  outcomes are identical. Outcome effects (gold, Standing, prestige, county
+  modifiers, term changes) live in that event, not in the policy def.
+- `redressEvidence: true` feeds Bend the Feudal Obligation evidence into the
+  player's lobbying strength for that policy (redress only).
+
+`FB.policyList()` returns the ordered catalog for pickers;
+`FB.policyDef(id)` resolves one def (falling back to the two original motions
+when catalog data is absent); `FB.parliamentMotionStatus(state, policyId)` is
+the shared read-only gate used by Governance, Network, and the Estates sheet.
+The durable law `obl.revocationConsent` (consent of the estates) removes the
+liege's unilateral aid demand from the yearly session agenda. Forecasts and
+postures are always derived; only terms, cooldown years, consent, and the
+pending campaign are saved.
 
 ## Temporary modifiers
 

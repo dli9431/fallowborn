@@ -739,9 +739,12 @@ window.FB = window.FB || {};
   }
   function fullBodyFrame(f, spec, ground) {
     var headH=f.chinBottom-f.top,youth=.70+.30*spec.maturity;
-    /* 5.7 heads: the reference's own floor before a figure reads squat,
-       trading canon height for a fifth more face and torso in the card */
-    var k=youth*(5.7-1)/6.5;
+    /* 6.2 heads, the reference's own figure height: its knee between
+       canon 7.5 (whose head is too small to carry a face) and the squat
+       floor near 5.7. The port first sat at 5.7 and read stocky beside
+       the reference - every width below is stated in head units, so
+       height in heads IS the build. */
+    var k=youth*(6.2-1)/6.5;
     var limit=(((ground-headH*.52)/headH)-1)/6.5;
     if(limit>0&&limit<k)k=limit;
     function at(heads){return f.top+(1+(heads-1)*k)*headH;}
@@ -782,7 +785,7 @@ window.FB = window.FB || {};
     var pose=figure
       /* centred, standing slightly high: the hand-slot insets flank the
          head in the card's top corners */
-      /* base .90 at 5.7 heads against the .975 ground; the fit pass in
+      /* base .90 at 6.2 heads against the .975 ground; the fit pass in
          analyticScaffold retunes per figure, capped where the
          body-height veto would start squashing widths */
       ? {yaw:spec.lightSide*.12+spec.yaw*.4,pitch:.02,tilt:spec.yaw*.15,
@@ -851,13 +854,17 @@ window.FB = window.FB || {};
          starts squashing widths. */
       var fb=scaffold.body;
       var figTop=scaffold.face.top-10*scaffold.face.u;
-      var fitF=(468-14)/Math.max(120,fb.soleY-figTop);
+      /* the span target leaves a staged margin above the head - the
+         reference sits its figure inside an arch at ~84% of the card;
+         claiming the whole frame is what made the port read oversized
+         beside it. ~92% keeps gear readable on the equipment sheet. */
+      var fitF=(468-26)/Math.max(120,fb.soleY-figTop);
       /* children are never fit-zoomed: their widths are stated at
          adult ratios per head, so growing the head barrels the body -
          and standing small IS the child cue */
       fitF=Math.min(fitF,75/Math.max(40,fb.headH),
         descriptor.spec.child?1:1.15);
-      fitF=Math.max(fitF,.9);
+      fitF=Math.max(fitF,.86);
       if(fitF<.99||fitF>1.01)scaffold=buildScaffold(descriptor,fitF);
       return scaffold;
     }
@@ -1106,14 +1113,20 @@ window.FB = window.FB || {};
      card read as a frame and took space from the face. */
   function paintCourtBackdrop(ctx, descriptor, width, height) {
     if(descriptor.transparent)return;
-    var spec=descriptor.spec;
+    var spec=descriptor.spec,figure=descriptor.frame==='figure';
     var gradient=ctx.createLinearGradient(0,0,0,height);
-    gradient.addColorStop(0,spec.background.top);
-    gradient.addColorStop(1,spec.background.bottom);
+    /* the figure card stages darker (the reference's 22%/9% lightness
+       against the bust's 29%/12%): most wardrobes are dark cloth, and
+       on a midtone ground they read washed instead of rich */
+    gradient.addColorStop(0,figure?'hsl('+spec.bgHue+',24%,22%)':spec.background.top);
+    gradient.addColorStop(1,figure
+      ?'hsl('+((spec.bgHue+22)%360)+',27%,9%)':spec.background.bottom);
     ctx.fillStyle=gradient;ctx.fillRect(0,0,width,height);
-    var glow=ctx.createRadialGradient(width/2,height*.42,20,
-      width/2,height*.46,width*.72);
-    glow.addColorStop(0,'rgba(238,220,174,.10)');
+    /* the halo hangs behind the head: mid-card on a bust, near the top
+       on a standing figure - on the torso it reads as fog, not light */
+    var glow=ctx.createRadialGradient(width/2,height*(figure?.17:.42),20,
+      width/2,height*(figure?.19:.46),width*.72);
+    glow.addColorStop(0,'rgba(238,220,174,'+(figure?.14:.10)+')');
     glow.addColorStop(1,'rgba(238,220,174,0)');
     ctx.fillStyle=glow;ctx.fillRect(0,0,width,height);
   }
@@ -3866,7 +3879,9 @@ window.FB = window.FB || {};
     gownPath(ctx,b);
     ctx.clip();
     ctx.globalAlpha=.5;
-    ctx.fillStyle=cssV2(cl.dark);
+    /* deep, not dark: at half alpha a -12% shade vanishes on the dark
+       wardrobes, and the gown reads flat beside the reference */
+    ctx.fillStyle=cssV2(cl.deep);
     ctx.beginPath();
     ctx.moveTo(cx+sx*b.shoulderHalf*1.2,b.shoulderY-10);
     ctx.lineTo(cx+sx*b.hipHalf*1.8,b.hemY+20);

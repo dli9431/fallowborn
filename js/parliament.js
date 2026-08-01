@@ -11,7 +11,10 @@
    (FB.parliamentVoteChance, the `parliament_vote` chance fn). Sessions arrive
    as queued events once a year (FB.parliamentYearly); between sittings the
    player can begin a 90-day bloc campaign of their own via the 🏛 Estates
-   deed, lobby one undecided bloc, and call or withdraw the vote. The king-side
+   deed, lobby one undecided bloc, and call or withdraw the vote. The motions
+   themselves are not hard-coded here: they are entries in the policy catalog
+   (`data/policies.js`), each declaring its family (which sets the per-year
+   cooldown), cost, gate, bloc posture, and result event. The king-side
    mirror of all this is the royal council (js/council.js). See
    docs/designs/parliament.md. */
 window.FB = window.FB || {};
@@ -46,20 +49,55 @@ window.FB = window.FB || {};
     const liege = state.realms[state.player.liege];
     if (!liege.obl) liege.obl = { aid: FBDATA.balance.parliamentAidBase || 0.25, scutage: false };
     if (liege.obl.aid === undefined) liege.obl.aid = FBDATA.balance.parliamentAidBase || 0.25;
+    /* Per-family motion cooldowns (data/policies.js families). A legacy save
+       with only the single yearly `lastMotion` stamp is treated as having used
+       every family for the remainder of that year. */
+    if (!liege.obl.motionYears || typeof liege.obl.motionYears !== 'object' ||
+        Array.isArray(liege.obl.motionYears)) {
+      const used = liege.obl.lastMotion === state.date.year;
+      liege.obl.motionYears = {};
+      if (used) {
+        for (const entry of FB.policyList ? FB.policyList() : []) {
+          if (entry.def && entry.def.family) {
+            liege.obl.motionYears[entry.def.family] = state.date.year;
+          }
+        }
+      }
+    }
     return liege.obl;
   };
 
   /* Read the current terms without creating them. Simulation boundaries and
-     successful motions still use parliamentEnsure; overview sheets do not. */
+     successful motions still use parliamentEnsure; overview sheets do not.
+     The per-family cooldown map is projected read-only for legacy saves that
+     carry only the single yearly `lastMotion` stamp: every family reads as
+     used for the remainder of that year. */
   FB.parliamentTerms = function (state) {
     const liege = state.player.liege && state.realms[state.player.liege];
     const stored = liege && liege.obl;
+    let motionYears = null;
+    if (stored && stored.motionYears &&
+        typeof stored.motionYears === 'object' &&
+        !Array.isArray(stored.motionYears)) {
+      motionYears = Object.assign({}, stored.motionYears);
+    } else {
+      motionYears = {};
+      if (stored && stored.lastMotion === state.date.year) {
+        for (const entry of FB.policyList ? FB.policyList() : []) {
+          if (entry.def && entry.def.family) {
+            motionYears[entry.def.family] = state.date.year;
+          }
+        }
+      }
+    }
     return {
       aid:stored && stored.aid !== undefined
         ? stored.aid : (FBDATA.balance.parliamentAidBase || 0.25),
       scutage:!!(stored && stored.scutage),
       lastMotion:stored && stored.lastMotion !== undefined
         ? stored.lastMotion : null,
+      motionYears:motionYears,
+      revocationConsent:!!(stored && stored.revocationConsent),
       formed:!!stored
     };
   };
@@ -132,6 +170,17 @@ window.FB = window.FB || {};
     };
   };
 
+  function policyFamilyName(family) {
+    switch (family) {
+      case 'aid': return FB.T('aid');
+      case 'service': return FB.T('service');
+      case 'commerce': return FB.T('commerce');
+      case 'custom': return FB.T('custom');
+      case 'war': return FB.T('war');
+      default: return FB.T('policy');
+    }
+  }
+
   FB.parliamentMotionStatus = function (state, motionId) {
     if (!FB.parliamentActive(state)) {
       return {
@@ -139,7 +188,8 @@ window.FB = window.FB || {};
         reason:FB.T('The Estates do not apply to your current political position.')
       };
     }
-    if (motionId !== 'redress' && motionId !== 'scutage') {
+    const def = FB.policyDef ? FB.policyDef(motionId) : null;
+    if (!def) {
       return {
         ready:false,
         reason:FB.T('That motion is not recognized by the Estates.')
@@ -162,11 +212,30 @@ window.FB = window.FB || {};
       };
     }
     const terms = FB.parliamentTerms(state);
-    const cost = FBDATA.balance.parliamentMotionCost || 15;
-    if (terms.lastMotion === state.date.year) {
+    const cost = isFinite(Number(def.cost))
+      ? Number(def.cost) : (FBDATA.balance.parliamentMotionCost || 15);
+    /* A policy's own gate returns true, or the exact localized block reason.
+       Boolean gates from older data get a generic reason. The gate answers
+       before the cooldown: 'your county already holds the charter' is more
+       useful than 'the estates have heard commerce business'. */
+    if (def.gate) {
+      const fn = FB.fns[def.gate];
+      const verdict = fn ? fn(state) : false;
+      if (verdict !== true) {
+        return {
+          ready:false,
+          reason:typeof verdict === 'string' ? verdict :
+            FB.T('That policy cannot be brought before the Estates now.')
+        };
+      }
+    }
+    if (!def.emergency && def.family &&
+        terms.motionYears[def.family] === state.date.year) {
       return {
         ready:false,
-        reason:FB.T('The Estates have already heard your motion this year.')
+        reason:FB.T('The Estates have already heard {family} business this year.', {
+          family:policyFamilyName(def.family)
+        })
       };
     }
     if (state.player.gold < cost) {
@@ -177,36 +246,29 @@ window.FB = window.FB || {};
         })
       };
     }
-    if (motionId === 'redress' &&
-        terms.aid <= (FBDATA.balance.parliamentAidMin || 0.10) + 0.001) {
-      return {
-        ready:false,
-        reason:FB.T('The liege’s aid is already at its customary minimum.')
-      };
-    }
-    if (motionId === 'scutage' && terms.scutage) {
-      return {
-        ready:false,
-        reason:FB.T('Scutage is already part of the terms of service.')
-      };
-    }
     return { ready:true, reason:'' };
   };
 
   FB.parliamentBeginMotion = function (state, motionId) {
     const status = FB.parliamentMotionStatus(state, motionId);
     if (!status.ready) return false;
+    const def = FB.policyDef ? FB.policyDef(motionId) : null;
+    if (!def) return false;
     const politics = FB.ensurePolitics ? FB.ensurePolitics(state) : null;
     if (!politics || politics.polityId !== state.player.liege ||
         politics.pendingMotion) return false;
     const terms = FB.parliamentEnsure(state);
     if (!terms) return false;
-    state.player.gold -= FBDATA.balance.parliamentMotionCost || 15;
+    const cost = isFinite(Number(def.cost))
+      ? Number(def.cost) : (FBDATA.balance.parliamentMotionCost || 15);
+    state.player.gold -= cost;
     terms.lastMotion = state.date.year;
+    if (def.family) terms.motionYears[def.family] = state.date.year;
     politics.pendingMotion = {
       id:'motion:' + politics.polityId + ':' + state.date.year + ':' +
         state.turn + ':' + motionId,
       motionId:motionId,
+      family:def.family || null,
       polityId:politics.polityId,
       proposerHouseId:'player',
       startedTurn:state.turn,
@@ -315,7 +377,10 @@ window.FB = window.FB || {};
       state, pending.motionId);
     pending.result.passed =
       resultForecast.supportInfluence >= resultForecast.majority;
-    FB.queueEvent(state, 'parliament_' + pending.motionId, {
+    const def = FB.policyDef ? FB.policyDef(pending.motionId) : null;
+    const resultEvent = def && typeof def.resultEvent === 'string'
+      ? def.resultEvent : 'parliament_' + pending.motionId;
+    FB.queueEvent(state, resultEvent, {
       locationId:pending.locationId || state.player.provinceId,
       politicsPolityId:pending.polityId,
       politicsPendingId:pending.id,
@@ -366,7 +431,8 @@ window.FB = window.FB || {};
         out.push('parliament_sanctuary_relief');
       }
     }
-    if (terms.aid < (B.parliamentAidMax || 0.40) - 0.001) {
+    if (terms.aid < (B.parliamentAidMax || 0.40) - 0.001 &&
+        !terms.revocationConsent) {
       out.push('parliament_aid_hike');
     }
     if (has('contested_tolls') || has('settlement_grudge')) {
@@ -515,6 +581,107 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.parliament.subsidy',
       '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
       { liege: state.realms[state.player.liege].name, gold: gold }));
+  };
+
+  /* ---------- policy catalog gates ----------
+     A `gate` fn returns true when the policy may be proposed, or the exact
+     localized reason it cannot. Home-county checks use the player's seat
+     (state.player.provinceId), the same convention as the session agenda. */
+  FB.fns.parliament_gate_redress = function (state) {
+    return FB.fns.parliament_redress_possible(state) ? true :
+      FB.T('The liege’s aid is already at its customary minimum.');
+  };
+  FB.fns.parliament_gate_scutage = function (state) {
+    return FB.fns.parliament_scutage_possible(state) ? true :
+      FB.T('Scutage is already part of the terms of service.');
+  };
+  FB.fns.parliament_gate_emergency_subsidy = function (state) {
+    if (!FB.isRealmAtWar(state, state.player.liege)) {
+      return FB.T('An emergency subsidy can only be moved while the liege is at war.');
+    }
+    const gold = (FBDATA.balance.parliamentMotionCost || 15) +
+      (FBDATA.balance.parliamentSubsidyGold || 20);
+    if (state.player.gold < gold) {
+      return FB.T('Requires {money:cost} for the motion and the subsidy; you have {money:current}.', {
+        cost:gold, current:Math.floor(state.player.gold)
+      });
+    }
+    return true;
+  };
+  FB.fns.parliament_gate_levy_relief = function (state) {
+    const pid = state.player.provinceId;
+    if (pid && FB.hasModifier(state, 'levy_exemption', pid)) {
+      return FB.T('Your home county is already free of the levy.');
+    }
+    if (pid && FB.hasModifier(state, 'muster_burden', pid)) {
+      return FB.T('Your home county is under an extraordinary muster; relief cannot be moved now.');
+    }
+    if (!FB.fns.parliament_aid_can_rise(state)) {
+      return FB.T('The aid is already at its customary maximum; the estates will not trade relief for a rise that cannot be taken.');
+    }
+    return true;
+  };
+  FB.fns.parliament_gate_market_charter = function (state) {
+    const pid = state.player.provinceId;
+    if (pid && FB.hasModifier(state, 'market_charter', pid)) {
+      return FB.T('Your home county already holds a market charter.');
+    }
+    if (pid && FB.hasModifier(state, 'contested_tolls', pid)) {
+      return FB.T('The tolls of your home county are contested; settle that dispute first.');
+    }
+    return true;
+  };
+  FB.fns.parliament_gate_local_custom = function (state) {
+    const pid = state.player.provinceId;
+    if (pid && FB.hasModifier(state, 'custom_confirmed', pid)) {
+      return FB.T('Your home county’s custom is already confirmed.');
+    }
+    return true;
+  };
+  FB.fns.parliament_gate_revocation_consent = function (state) {
+    return FB.parliamentTerms(state).revocationConsent ?
+      FB.T('The liege is already sworn to seek the estates’ consent.') : true;
+  };
+  FB.fns.parliament_gate_war_authorization = function (state) {
+    return FB.isRealmAtWar(state, state.player.liege) ? true :
+      FB.T('There is no war for the estates to authorize.');
+  };
+  FB.fns.parliament_gate_war_condemnation = function (state) {
+    return FB.isRealmAtWar(state, state.player.liege) ? true :
+      FB.T('There is no war for the estates to condemn.');
+  };
+
+  /* ---------- policy catalog effects ----------
+     Every result-event option ends the pending campaign; declarative-only
+     options use the generic parliament_motion_done. */
+  FB.fns.parliament_motion_done = function (state, ctx) {
+    finishPendingMotion(state, ctx || {});
+  };
+  FB.fns.parliament_emergency_subsidy_won = function (state, ctx) {
+    FB.fns.parliament_subsidy_pay(state);
+    finishPendingMotion(state, ctx || {});
+  };
+  FB.fns.parliament_levy_relief_won = function (state, ctx, ev) {
+    const pid = ctx && ctx.locationId || state.player.provinceId;
+    if (pid) {
+      FB.addModifier(state, 'levy_exemption', pid,
+        { sourceEventId:ev && ev.id });
+    }
+    const aid = FB.parliamentAidAdjust(state, 1);
+    if (aid !== null) {
+      FB.news(state, FB.msg('news.parliament.levy_relief',
+        '🌾 The estates free your county from the levy — the aid rises to {pct}% in exchange.',
+        { pct:Math.round(aid * 100) }));
+    }
+    finishPendingMotion(state, ctx || {});
+  };
+  FB.fns.parliament_revocation_consent_pass = function (state, ctx) {
+    const obl = FB.parliamentEnsure(state);
+    if (obl) obl.revocationConsent = true;
+    FB.news(state, FB.msg('news.parliament.revocation_consent',
+      '🗳 The estates bind {liege} to seek their consent before any new aid.',
+      { liege:state.realms[state.player.liege].name }));
+    finishPendingMotion(state, ctx || {});
   };
 
   function obligationPlotValid(state, ctx) {

@@ -266,6 +266,9 @@ window.FBMODS = window.FBMODS || [];
         FBDATA.politicalBlocs[k] = mod.politicalBlocs[k];
       }
     }
+    if (mod.policies) {
+      for (const k in mod.policies) FBDATA.policies[k] = mod.policies[k];
+    }
     if (own(mod, 'papacy')) FBDATA.papacy = mod.papacy;
     if (own(mod, 'currency')) {
       FBDATA.currency = mod.currency;

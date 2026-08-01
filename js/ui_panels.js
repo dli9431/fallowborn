@@ -2341,12 +2341,21 @@ window.FB = window.FB || {};
             }));
           }
         } else if (politics.forecasts) {
-          meta.push(SH.politicalCompactForecast(
-            SH.politicalForecastBloc(
-              politics.forecasts.redress, bloc.id), 'redress'));
-          meta.push(SH.politicalCompactForecast(
-            SH.politicalForecastBloc(
-              politics.forecasts.scutage, bloc.id), 'scutage'));
+          let shown = 0;
+          const policies = FB.policyList ? FB.policyList() : [];
+          for (const entry of policies) {
+            if (shown >= 2) break;
+            const forecast = politics.forecasts[entry.id];
+            const status = FB.parliamentMotionStatus
+              ? FB.parliamentMotionStatus(s, entry.id) : null;
+            if (!forecast || !status || !status.ready) continue;
+            const compact = SH.politicalCompactForecast(
+              SH.politicalForecastBloc(forecast, bloc.id), entry.id);
+            if (compact) {
+              meta.push(compact);
+              shown++;
+            }
+          }
         }
         const attention = !!(politics.motion &&
           bloc.posture === 'undecided');

@@ -30,14 +30,24 @@ demand for greater aid. Peacetime adds a market-charter dispute and a sanctuary/
 bargain; wartime replaces those with the existing subsidy and a
 service-beyond-custom bargain. Active Contested Tolls or Settlement Grudge adds a
 focused redress hearing. The yearly cadence is unchanged; the broader pool prevents the
-new stories from occupying every event slot. Between sittings the
+new stories from occupying every event slot. Once the estates have sworn the
+liege to seek their consent (the `revocation_consent` policy below), the
+liege's unilateral aid demand leaves the agenda for good. Between sittings the
 🏛 **Estates** deed (`UI.showParliament`) shows the current terms and the
-player's political court, and begins a motion of the player's own — redress
-(`parliament_redress`, aid down a step) or scutage (`parliament_scutage`) —
-for `balance.parliamentMotionCost` gold, one motion per calendar year
-(`obl.lastMotion`). The payment opens a 90-day campaign rather than queueing
-the result immediately. The payment and yearly use remain spent if the motion
-is withdrawn or expires.
+player's political court, and begins a motion of the player's own for
+`balance.parliamentMotionCost` gold. The available motions are not hard-coded:
+they come from the **policy catalog** (`FBDATA.policies` in
+`data/policies.js`; see [MODDING](../MODDING.md) for the contract). Each policy
+declares its family, gate, cost, bloc posture, and result event; the catalog
+ships redress (`parliament_redress`, aid down a step), an emergency war
+subsidy, scutage (`parliament_scutage`), levy relief (a timed county exemption
+bought with an aid step), a market charter, confirmation of local custom,
+consent of the estates, and wartime authorization or condemnation. The payment
+opens a 90-day campaign rather than queueing the result immediately, and spends
+the year's hearing for that policy's **family** (`obl.motionYears`, healed from
+the legacy single `obl.lastMotion` stamp on old saves); `emergency` policies
+waive the family cooldown. The payment and yearly use remain spent if the
+motion is withdrawn or expires.
 
 For territorial players, **Governance** is now the authoritative overview and entry
 point. `FB.parliamentTerms` and `FB.parliamentSummary` expose the current saved terms,
@@ -51,11 +61,13 @@ therefore remains mechanically authoritative without mutating state when opened.
 visible and browser Back actions return to Governance's Institution section when it was
 opened there. The former `the_estates` deed id remains a direct-call compatibility alias.
 
-**Player redress and scutage motions are decided by political blocs.** The
+**Player policy motions are decided by political blocs.** The
 shared court, allegiances, influence, and forecast are described in
-[realms.md](realms.md). A bloc begins from its archetype's motion posture,
-then current aid, member-ruler traits, and (for scutage) martial inclination
-add visible reason-coded adjustments. Scores at +25 or above lock support;
+[realms.md](realms.md). A bloc begins from its archetype's per-policy weight
+(`politicalBlocs.motions.<policyId>`), then the policy's own `posture` adds
+visible reason-coded adjustments: the current aid (`aidSlope`), member-ruler
+traits (`traits`), and average member Martial (`martialSlope`, scutage uses
+this). Scores at +25 or above lock support;
 scores at −25 or below lock opposition. An undecided bloc's support chance is
 `clamp(50% + score, 15%, 85%)`.
 
@@ -69,10 +81,11 @@ bloc undecided.
 `FB.parliamentCallVote` resolves undecided blocs in stable bloc-id order with
 one saved-RNG roll each. Locked and pledged blocs consume no roll. The summed
 support influence must reach a strict majority; there is no final global
-success roll. The existing `parliament_redress` or `parliament_scutage` event
-is then queued with a semantic predetermined result. Its two gated, no-chance
-options make visible and automated event handling apply the same existing
-effects. A liege change or invalid court clears the campaign, and the queued
+success roll. The policy's result event (its `resultEvent`, defaulting to
+`parliament_<policyId>`) is then queued with a semantic predetermined result.
+Its two gated, no-chance options make visible and automated event handling
+apply the same effects. A liege change or invalid court clears the campaign,
+and the queued
 event's exact polity/motion id validator prevents it from applying in another
 realm. Expiry and withdrawal preserve unused redress evidence; a resolved
 redress vote consumes it as before.

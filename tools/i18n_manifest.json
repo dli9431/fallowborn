@@ -15361,6 +15361,64 @@
         "text": "The Liege Demands an Aid"
       }
     },
+    "event.parliament_emergency_subsidy.options.0.desc.default": {
+      "context": "Event parliament_emergency_subsidy, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The subsidy carries. You pay your share at the steward’s table before the ink is dry, and the liege’s gratitude is loud enough for the hall to hear."
+      }
+    },
+    "event.parliament_emergency_subsidy.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_emergency_subsidy, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Carried an emergency war subsidy in the estates."
+      }
+    },
+    "event.parliament_emergency_subsidy.options.0.label.default": {
+      "context": "Event parliament_emergency_subsidy, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_emergency_subsidy.options.1.desc.default": {
+      "context": "Event parliament_emergency_subsidy, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The purses stay shut. Your loyalty is noted — and so is your failure to deliver the hall."
+      }
+    },
+    "event.parliament_emergency_subsidy.options.1.label.default": {
+      "context": "Event parliament_emergency_subsidy, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_emergency_subsidy.text.default": {
+      "context": "Event parliament_emergency_subsidy, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "With the realm at war, your parchment asks the assembled lords to open their purses for {liege}: an emergency subsidy, voted here and now, to keep the campaign fed. The benches count the cost in their heads; every eye that turns to you is weighing your loyalty against your purse."
+      }
+    },
+    "event.parliament_emergency_subsidy.title.default": {
+      "context": "Event parliament_emergency_subsidy, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion for an Emergency Subsidy"
+      }
+    },
     "event.parliament_grievance.options.0.desc.default": {
       "context": "Event parliament_grievance, authored option 0, desc, branch default.",
       "glossary": [],
@@ -15491,6 +15549,120 @@
       "location": "data/events_parliament.js",
       "source": {
         "text": "Service Beyond Custom"
+      }
+    },
+    "event.parliament_levy_relief.options.0.desc.default": {
+      "context": "Event parliament_levy_relief, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "It carries. The tallymen will pass your county by, and the collectors will not — a bargain your people will bless and your rents will feel."
+      }
+    },
+    "event.parliament_levy_relief.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_levy_relief, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Won levy relief for the home county in the estates."
+      }
+    },
+    "event.parliament_levy_relief.options.0.label.default": {
+      "context": "Event parliament_levy_relief, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_levy_relief.options.1.desc.default": {
+      "context": "Event parliament_levy_relief, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The hall is not moved. The muster rolls will keep your county’s name where it is."
+      }
+    },
+    "event.parliament_levy_relief.options.1.label.default": {
+      "context": "Event parliament_levy_relief, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_levy_relief.text.default": {
+      "context": "Event parliament_levy_relief, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Your motion before the estates: that your home county, thinned by years of musters, be spared the levy for a season of seasons — and that the aid rise in exchange, so {liege}’s chest loses nothing. The lords with villages of their own to strip listen closely."
+      }
+    },
+    "event.parliament_levy_relief.title.default": {
+      "context": "Event parliament_levy_relief, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion for Levy Relief"
+      }
+    },
+    "event.parliament_local_custom.options.0.desc.default": {
+      "context": "Event parliament_local_custom, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The customs are read, witnessed, and sealed. In your county the news travels faster than the parchment."
+      }
+    },
+    "event.parliament_local_custom.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_local_custom, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Had the home county’s customs confirmed by the estates."
+      }
+    },
+    "event.parliament_local_custom.options.0.label.default": {
+      "context": "Event parliament_local_custom, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_local_custom.options.1.desc.default": {
+      "context": "Event parliament_local_custom, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The lords will not bind their own stewards. Your county’s customs remain exactly as strong as your arm."
+      }
+    },
+    "event.parliament_local_custom.options.1.label.default": {
+      "context": "Event parliament_local_custom, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_local_custom.text.default": {
+      "context": "Event parliament_local_custom, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Your motion is a quiet one: that the old customs of your home county — the gleaning rights, the mill tolls, the parish feasts — be written and confirmed, so no steward’s whim can tax them away. The commons will hear of whoever speaks for this, and of whoever does not."
+      }
+    },
+    "event.parliament_local_custom.title.default": {
+      "context": "Event parliament_local_custom, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion to Confirm Local Custom"
       }
     },
     "event.parliament_local_redress.options.0.desc.default": {
@@ -15663,6 +15835,64 @@
         "text": "The Market Charter"
       }
     },
+    "event.parliament_market_charter_grant.options.0.desc.default": {
+      "context": "Event parliament_market_charter_grant, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The charter is granted under the assembly’s seal. Within the month the first stalls go up by the church door."
+      }
+    },
+    "event.parliament_market_charter_grant.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_market_charter_grant, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Won a market charter for the home county in the estates."
+      }
+    },
+    "event.parliament_market_charter_grant.options.0.label.default": {
+      "context": "Event parliament_market_charter_grant, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_market_charter_grant.options.1.desc.default": {
+      "context": "Event parliament_market_charter_grant, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The toll-farmers have too many friends on the benches. The charter dies unsealed."
+      }
+    },
+    "event.parliament_market_charter_grant.options.1.label.default": {
+      "context": "Event parliament_market_charter_grant, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_market_charter_grant.text.default": {
+      "context": "Event parliament_market_charter_grant, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Your motion asks {liege}’s grace for a chartered market in your home county: stalls by the church door, tolls honestly taken, building timber bought without a week’s bargaining. The guild men smile; the lords who farm their own tolls do not."
+      }
+    },
+    "event.parliament_market_charter_grant.title.default": {
+      "context": "Event parliament_market_charter_grant, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion for a Market Charter"
+      }
+    },
     "event.parliament_redress.options.0.desc.default": {
       "context": "Event parliament_redress, authored option 0, desc, branch default.",
       "glossary": [],
@@ -15719,6 +15949,64 @@
       "location": "data/events_parliament.js",
       "source": {
         "text": "A Motion for Redress"
+      }
+    },
+    "event.parliament_revocation_consent.options.0.desc.default": {
+      "context": "Event parliament_revocation_consent, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Against every expectation, it carries. The liege’s steward writes the oath into the roll with a hand that does not shake. Much."
+      }
+    },
+    "event.parliament_revocation_consent.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_revocation_consent, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Bound the liege to seek the estates’ consent for new aids."
+      }
+    },
+    "event.parliament_revocation_consent.options.0.label.default": {
+      "context": "Event parliament_revocation_consent, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_revocation_consent.options.1.desc.default": {
+      "context": "Event parliament_revocation_consent, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Too many benches are owed, bought, or frightened. The motion fails — and the crown now knows exactly who reached for its purse."
+      }
+    },
+    "event.parliament_revocation_consent.options.1.label.default": {
+      "context": "Event parliament_revocation_consent, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_revocation_consent.text.default": {
+      "context": "Event parliament_revocation_consent, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "This is no small parchment. Your motion would bind {liege} by oath: no aid raised, no new exaction laid, without the consent of the assembled estates. The hall has gone very quiet. Every lord here has dreamed of such a law; few have dared to move it."
+      }
+    },
+    "event.parliament_revocation_consent.title.default": {
+      "context": "Event parliament_revocation_consent, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion for the Consent of the Estates"
       }
     },
     "event.parliament_sanctuary_relief.options.0.desc.default": {
@@ -15979,6 +16267,122 @@
       "location": "data/events_parliament.js",
       "source": {
         "text": "A Subsidy for the Liege’s War"
+      }
+    },
+    "event.parliament_war_authorization.options.0.desc.default": {
+      "context": "Event parliament_war_authorization, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The authorization carries, and your name leads it. The liege’s gratitude is real, and publicly given."
+      }
+    },
+    "event.parliament_war_authorization.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_war_authorization, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Carried the authorization of the liege’s war in the estates."
+      }
+    },
+    "event.parliament_war_authorization.options.0.label.default": {
+      "context": "Event parliament_war_authorization, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_war_authorization.options.1.desc.default": {
+      "context": "Event parliament_war_authorization, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The hall will not bless the war. You stood for the crown and the crown watched you fall."
+      }
+    },
+    "event.parliament_war_authorization.options.1.label.default": {
+      "context": "Event parliament_war_authorization, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_war_authorization.text.default": {
+      "context": "Event parliament_war_authorization, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Your motion asks the estates to say aloud what the crown wants heard: that {liege}’s war is just, necessary, and backed by the assembled lords of the realm. The hawks are already nodding. The older lords are counting their sons."
+      }
+    },
+    "event.parliament_war_authorization.title.default": {
+      "context": "Event parliament_war_authorization, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion to Authorize the War"
+      }
+    },
+    "event.parliament_war_condemnation.options.0.desc.default": {
+      "context": "Event parliament_war_condemnation, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The condemnation carries. In the county lanes your name is spoken with something like hope; in the liege’s hall, with something else."
+      }
+    },
+    "event.parliament_war_condemnation.options.0.effects.log.default": {
+      "context": "Durable event log for parliament_war_condemnation, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Carried a condemnation of the liege’s war in the estates."
+      }
+    },
+    "event.parliament_war_condemnation.options.0.label.default": {
+      "context": "Event parliament_war_condemnation, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Receive the carried vote."
+      }
+    },
+    "event.parliament_war_condemnation.options.1.desc.default": {
+      "context": "Event parliament_war_condemnation, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "The motion dies, and every lord who feared it now knows exactly who moved it."
+      }
+    },
+    "event.parliament_war_condemnation.options.1.label.default": {
+      "context": "Event parliament_war_condemnation, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Accept the failed vote."
+      }
+    },
+    "event.parliament_war_condemnation.text.default": {
+      "context": "Event parliament_war_condemnation, text, faith branch default.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "Your motion is the dangerous one: that the estates declare {liege}’s war a waste of the realm’s blood and silver, and call for its end. Some lords meet your eye and nod. Others are already composing their report to the crown."
+      }
+    },
+    "event.parliament_war_condemnation.title.default": {
+      "context": "Event parliament_war_condemnation, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_parliament.js",
+      "source": {
+        "text": "A Motion to Condemn the War"
       }
     },
     "event.partner_offer.options.0.desc.default": {
@@ -32004,6 +32408,16 @@
         "text": "⚖ The estates grant the aid — {liege}’s cut of your revenue rises to {pct}%."
       }
     },
+    "news.parliament.levy_relief": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "pct"
+      ],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "🌾 The estates free your county from the levy — the aid rises to {pct}% in exchange."
+      }
+    },
     "news.parliament.plot_evidence": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -32020,6 +32434,16 @@
       "location": "js/parliament.js",
       "source": {
         "text": "⚖ Altered service rolls reduce the aid to {pct}%, but the liege knows whose seal is missing."
+      }
+    },
+    "news.parliament.revocation_consent": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "🗳 The estates bind {liege} to seek their consent before any new aid."
       }
     },
     "news.parliament.scutage": {
@@ -33661,6 +34085,150 @@
       "location": "data/map_data.js",
       "source": {
         "text": "A Quiet Grave"
+      }
+    },
+    "policy.emergency_subsidy.desc.default": {
+      "context": "policy emergency_subsidy, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Wartime only, and never blocked by the year’s other business. If carried, you pay the liege’s war subsidy, and the hall remembers who moved it."
+      }
+    },
+    "policy.emergency_subsidy.name.default": {
+      "context": "policy emergency_subsidy, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Emergency Subsidy"
+      }
+    },
+    "policy.levy_relief.desc.default": {
+      "context": "policy levy_relief, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, your home county is freed from the levy for a time — and the aid rises one step to pay for it."
+      }
+    },
+    "policy.levy_relief.name.default": {
+      "context": "policy levy_relief, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Levy Relief"
+      }
+    },
+    "policy.local_custom.desc.default": {
+      "context": "policy local_custom, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, your home county’s old customs are confirmed in writing — the commons stand steadier, and the levy rests easier."
+      }
+    },
+    "policy.local_custom.name.default": {
+      "context": "policy local_custom, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Confirmation of Custom"
+      }
+    },
+    "policy.market_charter.desc.default": {
+      "context": "policy market_charter, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, your home county gains a chartered market: richer tolls and cheaper building, for a small seasonal upkeep."
+      }
+    },
+    "policy.market_charter.name.default": {
+      "context": "policy market_charter, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Market Charter"
+      }
+    },
+    "policy.redress.desc.default": {
+      "context": "policy redress, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, the liege’s aid falls one step, and your home county’s custom is confirmed."
+      }
+    },
+    "policy.redress.name.default": {
+      "context": "policy redress, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Redress of the Aid"
+      }
+    },
+    "policy.revocation_consent.desc.default": {
+      "context": "policy revocation_consent, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, the liege swears to raise no aid without the estates’ consent — the crown’s unilateral demands leave the yearly agenda for good."
+      }
+    },
+    "policy.revocation_consent.name.default": {
+      "context": "policy revocation_consent, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Consent of the Estates"
+      }
+    },
+    "policy.scutage.desc.default": {
+      "context": "policy scutage, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "If carried, the banner call can be answered with silver instead of service — and the aid creeps up to pay for the privilege."
+      }
+    },
+    "policy.scutage.name.default": {
+      "context": "policy scutage, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Scutage"
+      }
+    },
+    "policy.war_authorization.desc.default": {
+      "context": "policy war_authorization, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Wartime only. If carried, the estates formally back the liege’s war, and your name is attached to the authorization."
+      }
+    },
+    "policy.war_authorization.name.default": {
+      "context": "policy war_authorization, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "War Authorization"
+      }
+    },
+    "policy.war_condemnation.desc.default": {
+      "context": "policy war_condemnation, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "Wartime only. If carried, the estates formally condemn the liege’s war — a dangerous fame, and the liege will not forget its author."
+      }
+    },
+    "policy.war_condemnation.name.default": {
+      "context": "policy war_condemnation, name, faith branch default.",
+      "glossary": [],
+      "location": "data/policies.js",
+      "source": {
+        "text": "War Condemnation"
       }
     },
     "politicalBloc.crown.desc.default": {
@@ -40938,6 +41506,16 @@
         "text": "Representative Estates"
       }
     },
+    "src.042556df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "🌾 The estates free your county from the levy — the aid rises to {pct}% in exchange."
+      }
+    },
     "src.04263a9f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41066,16 +41644,6 @@
       ],
       "source": {
         "text": "Repay now ({money:amount})"
-      }
-    },
-    "src.0469cb9e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Scutage forecast"
       }
     },
     "src.046aa485": {
@@ -41336,6 +41904,16 @@
       ],
       "source": {
         "text": "Choose what to offer {title} {ruler} of {realm}."
+      }
+    },
+    "src.054c11ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Propose: {policy} ({money:cost})"
       }
     },
     "src.054d7e58": {
@@ -42138,6 +42716,16 @@
         "text": "Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home."
       }
     },
+    "src.07582b24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "It carries. The tallymen will pass your county by, and the collectors will not — a bargain your people will bless and your rents will feel."
+      }
+    },
     "src.075e184d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42301,6 +42889,16 @@
         "text": "+{gain} each active vocational year · maximum {maximum}"
       }
     },
+    "src.07b59d4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Emergency Subsidy"
+      }
+    },
     "src.07bb9220": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -42380,6 +42978,16 @@
       ],
       "source": {
         "text": "{position} — {name}"
+      }
+    },
+    "src.07d9abe2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Carried the authorization of the liege’s war in the estates."
       }
     },
     "src.07f980cb": {
@@ -42650,16 +43258,6 @@
       ],
       "source": {
         "text": "No valid political court is available for this motion."
-      }
-    },
-    "src.08b088c0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Already used"
       }
     },
     "src.08b39e62": {
@@ -43466,6 +44064,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/policies.js",
         "data/technology.js",
         "js/ui_modals.js"
       ],
@@ -44836,6 +45435,16 @@
         "text": "Pledged to a lender; clear the loan before gifting it."
       }
     },
+    "src.0e7446b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion to Authorize the War"
+      }
+    },
     "src.0e79119e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45599,6 +46208,16 @@
       ],
       "source": {
         "text": "A rock in the sky."
+      }
+    },
+    "src.10cacb0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The customs are read, witnessed, and sealed. In your county the news travels faster than the parchment."
       }
     },
     "src.10cb2a44": {
@@ -46722,6 +47341,16 @@
         "text": "{days} days remain."
       }
     },
+    "src.136a2db9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Won a market charter for the home county in the estates."
+      }
+    },
     "src.136f981b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47452,16 +48081,6 @@
         "text": "The Great Disputation"
       }
     },
-    "src.151b7af5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "If carried, the liege’s aid falls one step."
-      }
-    },
     "src.151ec801": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47613,6 +48232,16 @@
       ],
       "source": {
         "text": "Contribution {contribution} · vow {vow} · occupation {occupation} · right {right} · support {support} · office {office}"
+      }
+    },
+    "src.15a69648": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "War Authorization"
       }
     },
     "src.15aa9ef6": {
@@ -47783,6 +48412,16 @@
       ],
       "source": {
         "text": "A lance like a siege-beam lifts you clean from the saddle. You wake staring at the clouds, ribs singing, while the stands cheer the other man."
+      }
+    },
+    "src.1620398d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The subsidy carries. You pay your share at the steward’s table before the ink is dry, and the liege’s gratitude is loud enough for the hall to hear."
       }
     },
     "src.162c89a7": {
@@ -48288,6 +48927,16 @@
         "text": "Cut her way to her beloved’s shoulder and held."
       }
     },
+    "src.177457ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "War Condemnation"
+      }
+    },
     "src.17799bc7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48477,6 +49126,16 @@
       ],
       "source": {
         "text": "Makes {content} available."
+      }
+    },
+    "src.17e2c385": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "war"
       }
     },
     "src.17f312ce": {
@@ -50945,6 +51604,16 @@
         "text": "This court is joined to your dynasty through marriage."
       }
     },
+    "src.1f3a8cea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The charter is granted under the assembly’s seal. Within the month the first stalls go up by the church door."
+      }
+    },
     "src.1f3dd22f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51275,6 +51944,16 @@
       ],
       "source": {
         "text": "has invalid culture"
+      }
+    },
+    "src.2057306e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "custom"
       }
     },
     "src.205b6f43": {
@@ -52791,6 +53470,16 @@
         "text": "Fight him."
       }
     },
+    "src.24277ab6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Carried a condemnation of the liege’s war in the estates."
+      }
+    },
     "src.2429888b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53040,6 +53729,16 @@
       ],
       "source": {
         "text": "🎓 Upbringing — focus: {focus} · instruction: {instruction} · {chance}% yearly"
+      }
+    },
+    "src.24df8c47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Your home county already holds a market charter."
       }
     },
     "src.24e00473": {
@@ -53621,6 +54320,16 @@
       ],
       "source": {
         "text": "Seek terms."
+      }
+    },
+    "src.2647bbf8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "The Estates have already heard {family} business this year."
       }
     },
     "src.26526ae0": {
@@ -54517,6 +55226,16 @@
         "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
+    "src.28d93522": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, the liege swears to raise no aid without the estates’ consent — the crown’s unilateral demands leave the yearly agenda for good."
+      }
+    },
     "src.28e1ff5c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54606,6 +55325,16 @@
       ],
       "source": {
         "text": "Take it out of his hide."
+      }
+    },
+    "src.291b5205": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Against every expectation, it carries. The liege’s steward writes the oath into the roll with a hand that does not shake. Much."
       }
     },
     "src.29207e9a": {
@@ -55126,6 +55855,16 @@
       ],
       "source": {
         "text": "Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements."
+      }
+    },
+    "src.2aa0fec4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "There is no war for the estates to condemn."
       }
     },
     "src.2aaa88c8": {
@@ -56430,6 +57169,16 @@
         "text": "Admit the proof is uncertain and refer it upward."
       }
     },
+    "src.2e6b2f66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Bound the liege to seek the estates’ consent for new aids."
+      }
+    },
     "src.2e71fa09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56890,6 +57639,16 @@
       ],
       "source": {
         "text": "Resolve the current event before changing equipment."
+      }
+    },
+    "src.2fcd6e63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, your home county’s old customs are confirmed in writing — the commons stand steadier, and the levy rests easier."
       }
     },
     "src.2fd26bbb": {
@@ -57834,6 +58593,16 @@
         "text": "{days} days remaining"
       }
     },
+    "src.326ba96e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Requires {money:cost} for the motion and the subsidy; you have {money:current}."
+      }
+    },
     "src.32a1ab1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58736,6 +59505,16 @@
       ],
       "source": {
         "text": "Fire!"
+      }
+    },
+    "src.351d0886": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "🗳 The estates bind {liege} to seek their consent before any new aid."
       }
     },
     "src.351d3ca8": {
@@ -59764,6 +60543,16 @@
         "text": "Call on the honor of their oath."
       }
     },
+    "src.38c18bc7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, your home county is freed from the levy for a time — and the aid rises one step to pay for it."
+      }
+    },
     "src.38c2c018": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60353,16 +61142,6 @@
       ],
       "source": {
         "text": "The cup rules them."
-      }
-    },
-    "src.3a696c8f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/parliament.js"
-      ],
-      "source": {
-        "text": "The Estates have already heard your motion this year."
       }
     },
     "src.3a69ec84": {
@@ -61845,7 +62624,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/modifiers.js"
+        "data/modifiers.js",
+        "data/policies.js"
       ],
       "source": {
         "text": "Market Charter"
@@ -62703,6 +63483,16 @@
       ],
       "source": {
         "text": "The Royal Council"
+      }
+    },
+    "src.41326021": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "aid"
       }
     },
     "src.413436bb": {
@@ -63600,6 +64390,16 @@
         "text": "Ruler"
       }
     },
+    "src.43a33213": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Your motion asks {liege}’s grace for a chartered market in your home county: stalls by the church door, tolls honestly taken, building timber bought without a week’s bargaining. The guild men smile; the lords who farm their own tolls do not."
+      }
+    },
     "src.43a4db1e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64110,6 +64910,16 @@
       ],
       "source": {
         "text": "Fresh mounts and prepared stations carry official news rapidly."
+      }
+    },
+    "src.44c2d251": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Your home county’s custom is already confirmed."
       }
     },
     "src.44c653d5": {
@@ -64865,16 +65675,6 @@
       ],
       "source": {
         "text": "px Georgia"
-      }
-    },
-    "src.46a69f27": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Begin a redress campaign ({money:cost})"
       }
     },
     "src.46b697df": {
@@ -65797,6 +66597,16 @@
       ],
       "source": {
         "text": "Caught lingering behind the arras. The steward’s cuff rings your ear."
+      }
+    },
+    "src.49836972": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Your motion is a quiet one: that the old customs of your home county — the gleaning rights, the mill tolls, the parish feasts — be written and confirmed, so no steward’s whim can tax them away. The commons will hear of whoever speaks for this, and of whoever does not."
       }
     },
     "src.4996702a": {
@@ -66964,6 +67774,16 @@
         "text": "Judge the killers in public."
       }
     },
+    "src.4cf1bac2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The purses stay shut. Your loyalty is noted — and so is your failure to deliver the hall."
+      }
+    },
     "src.4cf7a9c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67292,6 +68112,16 @@
       ],
       "source": {
         "text": "Equipment for {name}"
+      }
+    },
+    "src.4dfd499c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "The aid is already at its customary maximum; the estates will not trade relief for a rise that cannot be taken."
       }
     },
     "src.4e05a3aa": {
@@ -67675,6 +68505,16 @@
       ],
       "source": {
         "text": "Poison for poison, and yours brewed better."
+      }
+    },
+    "src.4ef6c15a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion to Condemn the War"
       }
     },
     "src.4ef8b6d1": {
@@ -68298,6 +69138,16 @@
         "text": "Adds 0.75 prestige each season."
       }
     },
+    "src.50ac38d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Consent of the Estates"
+      }
+    },
     "src.50b15723": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68366,6 +69216,16 @@
       ],
       "source": {
         "text": "Share the day’s burdens."
+      }
+    },
+    "src.50dccb43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion for the Consent of the Estates"
       }
     },
     "src.50dd14af": {
@@ -69818,6 +70678,16 @@
         "text": "Turov"
       }
     },
+    "src.54d74ab2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The motion dies, and every lord who feared it now knows exactly who moved it."
+      }
+    },
     "src.54d8f19a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70600,6 +71470,16 @@
         "text": "Build Where?"
       }
     },
+    "src.56dfde64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "service"
+      }
+    },
     "src.56e0d11c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70849,6 +71729,16 @@
       ],
       "source": {
         "text": "Bought the chief judgeship."
+      }
+    },
+    "src.5786336c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included."
       }
     },
     "src.578894ce": {
@@ -71651,16 +72541,6 @@
         "text": "the town"
       }
     },
-    "src.59e28036": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Motion this year"
-      }
-    },
     "src.59e7cb17": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72061,16 +72941,6 @@
       ],
       "source": {
         "text": "The Conspiracy Ripens"
-      }
-    },
-    "src.5b1997d7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "If carried, silver may answer banner service and the aid rises slightly."
       }
     },
     "src.5b1fe0bc": {
@@ -74786,6 +75656,16 @@
         "text": "Sayyid"
       }
     },
+    "src.6263e8e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Redress of the Aid"
+      }
+    },
     "src.62674a03": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75985,16 +76865,6 @@
       ],
       "source": {
         "text": "🏛 Govern the demesne"
-      }
-    },
-    "src.660ec0f4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "ready"
       }
     },
     "src.66216c8e": {
@@ -77397,6 +78267,16 @@
       ],
       "source": {
         "text": "Their clothing and treasures remain managed through the shared family armory, so only cash can be given personally."
+      }
+    },
+    "src.69c646d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Confirmation of Custom"
       }
     },
     "src.69d31dc7": {
@@ -78989,6 +79869,16 @@
         "text": "Make the victory outlive those who won it."
       }
     },
+    "src.6df7b75c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Had the home county’s customs confirmed by the estates."
+      }
+    },
     "src.6df9936a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79511,6 +80401,16 @@
         "text": "Dung is gathered and spread where its fertility is most useful."
       }
     },
+    "src.6f7b1416": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The hall will not bless the war. You stood for the crown and the crown watched you fall."
+      }
+    },
     "src.6f8783e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79799,16 +80699,6 @@
       ],
       "source": {
         "text": "You win their coin and, better, their stories."
-      }
-    },
-    "src.707c6332": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Available motions: redress — {redress}; scutage — {scutage}."
       }
     },
     "src.7082295c": {
@@ -80181,6 +81071,16 @@
         "text": "Permanent national knowledge once completed"
       }
     },
+    "src.7186d462": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "commerce"
+      }
+    },
     "src.71911048": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80419,6 +81319,16 @@
       ],
       "source": {
         "text": "Flog them and repay the woman."
+      }
+    },
+    "src.72660922": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Review the terms and put an eligible motion to the hall."
       }
     },
     "src.72664533": {
@@ -85053,6 +85963,16 @@
         "text": "Open the Bishopric."
       }
     },
+    "src.7ed757aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Too many benches are owed, bought, or frightened. The motion fails — and the crown now knows exactly who reached for its purse."
+      }
+    },
     "src.7eeb2320": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87248,16 +88168,6 @@
         "text": "0/{capacity} assigned · no active directions"
       }
     },
-    "src.843e67b6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Review the terms and put an eligible yearly motion to the hall."
-      }
-    },
     "src.843fd5f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88161,6 +89071,16 @@
         "text": "👑 They say {realm} is the mightiest power of the age."
       }
     },
+    "src.86ad0354": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion for an Emergency Subsidy"
+      }
+    },
     "src.86aef8ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89051,6 +89971,16 @@
         "text": "Tutor a younger pupil."
       }
     },
+    "src.89223ca3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Wartime only, and never blocked by the year’s other business. If carried, you pay the liege’s war subsidy, and the hall remembers who moved it."
+      }
+    },
     "src.8922a21e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89907,6 +90837,16 @@
         "text": "button:not([disabled]), [href], input:not([disabled]),"
       }
     },
+    "src.8b7a3843": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion to Confirm Local Custom"
+      }
+    },
     "src.8b8812ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90087,6 +91027,16 @@
         "text": "Right may be on your side — the ledger is on his."
       }
     },
+    "src.8c0be006": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The lords will not bind their own stewards. Your county’s customs remain exactly as strong as your arm."
+      }
+    },
     "src.8c0c869b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90176,6 +91126,16 @@
       ],
       "source": {
         "text": "This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
+      }
+    },
+    "src.8c400180": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Your motion before the estates: that your home county, thinned by years of musters, be spared the levy for a season of seasons — and that the aid rise in exchange, so {liege}’s chest loses nothing. The lords with villages of their own to strip listen closely."
       }
     },
     "src.8c46d150": {
@@ -90507,6 +91467,16 @@
       ],
       "source": {
         "text": "A Place in the Household"
+      }
+    },
+    "src.8d164a24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, the liege’s aid falls one step, and your home county’s custom is confirmed."
       }
     },
     "src.8d28ca74": {
@@ -92625,6 +93595,16 @@
         "text": "This instruction is not available to this child."
       }
     },
+    "src.93670d0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The hall is not moved. The muster rolls will keep your county’s name where it is."
+      }
+    },
     "src.9376f2fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93428,16 +94408,6 @@
         "text": "Keep the roads open for the host without expanding the local muster."
       }
     },
-    "src.95f7a2d0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included."
-      }
-    },
     "src.96093d9f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93658,6 +94628,16 @@
       ],
       "source": {
         "text": "Seek appointment to a bishopric — {chance}% chance"
+      }
+    },
+    "src.96aef7dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Wartime only. If carried, the estates formally condemn the liege’s war — a dangerous fame, and the liege will not forget its author."
       }
     },
     "src.96bfdb3c": {
@@ -99208,6 +100188,16 @@
         "text": "Carry the grain to another mill."
       }
     },
+    "src.a59cddae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "That policy cannot be brought before the Estates now."
+      }
+    },
     "src.a5a17b4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99660,16 +100650,6 @@
         "text": "Available now · {distance}"
       }
     },
-    "src.a6bf721e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Redress blocs"
-      }
-    },
     "src.a6c05154": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99718,6 +100698,16 @@
       ],
       "source": {
         "text": "A lie that holds is as good as the truth."
+      }
+    },
+    "src.a709a23b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Your home county is under an extraordinary muster; relief cannot be moved now."
       }
     },
     "src.a7148a55": {
@@ -100462,6 +101452,16 @@
       ],
       "source": {
         "text": "Question how ancient it is."
+      }
+    },
+    "src.a909620e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "This is no small parchment. Your motion would bind {liege} by oath: no aid raised, no new exaction laid, without the consent of the assembled estates. The hall has gone very quiet. Every lord here has dreamed of such a law; few have dared to move it."
       }
     },
     "src.a9098a5a": {
@@ -102287,16 +103287,6 @@
       ],
       "source": {
         "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
-      }
-    },
-    "src.aec2bdcd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Begin a scutage campaign ({money:cost})"
       }
     },
     "src.aec4d444": {
@@ -104615,6 +105605,16 @@
         "text": "Empire of"
       }
     },
+    "src.b484227d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion for a Market Charter"
+      }
+    },
     "src.b48d5c13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106026,6 +107026,16 @@
       ],
       "source": {
         "text": "Bishopric"
+      }
+    },
+    "src.b850f730": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Levy Relief"
       }
     },
     "src.b8630818": {
@@ -108675,6 +109685,16 @@
         "text": "Appeal to the old custom."
       }
     },
+    "src.c0c643cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Your motion is the dangerous one: that the estates declare {liege}’s war a waste of the realm’s blood and silver, and call for its end. Some lords meet your eye and nod. Others are already composing their report to the crown."
+      }
+    },
     "src.c0c8acb8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109877,16 +110897,6 @@
         "text": "Arrange a match…"
       }
     },
-    "src.c391bcea": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The estates have heard your motion this year; they will take another come the new year."
-      }
-    },
     "src.c3abfada": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109895,6 +110905,16 @@
       ],
       "source": {
         "text": "Their house will provide {money:gold}."
+      }
+    },
+    "src.c3ad2060": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{motion} forecast"
       }
     },
     "src.c3bc8a35": {
@@ -110005,6 +111025,16 @@
       ],
       "source": {
         "text": "The high lord strokes his beard. “No good sword should rust under a small master.” He takes your oath himself."
+      }
+    },
+    "src.c3ff8b78": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The toll-farmers have too many friends on the benches. The charter dies unsealed."
       }
     },
     "src.c4116bcb": {
@@ -110205,6 +111235,16 @@
       ],
       "source": {
         "text": "Not recognized by you"
+      }
+    },
+    "src.c4b70c99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The condemnation carries. In the county lanes your name is spoken with something like hope; in the liege’s hall, with something else."
       }
     },
     "src.c4b853d1": {
@@ -110667,16 +111707,6 @@
       ],
       "source": {
         "text": "A crowd is a rope, if someone holds the end."
-      }
-    },
-    "src.c600a1cc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Redress forecast"
       }
     },
     "src.c6014545": {
@@ -113897,6 +114927,16 @@
         "text": "Mule and Cart"
       }
     },
+    "src.cec0fa7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "policy"
+      }
+    },
     "src.cec64fcd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114407,6 +115447,16 @@
         "text": "Santarém"
       }
     },
+    "src.d07b12b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "With the realm at war, your parchment asks the assembled lords to open their purses for {liege}: an emergency subsidy, voted here and now, to keep the campaign fed. The benches count the cost in their heads; every eye that turns to you is weighing your loyalty against your purse."
+      }
+    },
     "src.d07d14cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114737,6 +115787,16 @@
       ],
       "source": {
         "text": "🧭 Set out for {destination} with {money:stake} invested and {money:overhead} paid for the road."
+      }
+    },
+    "src.d19f85d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "An emergency subsidy can only be moved while the liege is at war."
       }
     },
     "src.d1aa3c6c": {
@@ -115358,6 +116418,16 @@
       ],
       "source": {
         "text": "You make him laugh, and the toll is forgotten."
+      }
+    },
+    "src.d34e0b12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Won levy relief for the home county in the estates."
       }
     },
     "src.d3545bb0": {
@@ -117161,6 +118231,16 @@
       ],
       "source": {
         "text": "Standing with every direct vassal"
+      }
+    },
+    "src.d852d679": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "The liege is already sworn to seek the estates’ consent."
       }
     },
     "src.d853a2bb": {
@@ -119360,6 +120440,16 @@
         "text": "{ruler} · dev {development} · {money:price}"
       }
     },
+    "src.de85a1b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "The authorization carries, and your name leads it. The liege’s gratitude is real, and publicly given."
+      }
+    },
     "src.de860909": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120191,6 +121281,16 @@
         "text": "(or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause."
       }
     },
+    "src.e0d094f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Not currently available: {list}."
+      }
+    },
     "src.e0d6785d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120351,6 +121451,16 @@
         "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
       }
     },
+    "src.e12972dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "There is no war for the estates to authorize."
+      }
+    },
     "src.e1341434": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120459,6 +121569,16 @@
       ],
       "source": {
         "text": "has an invalid new realm."
+      }
+    },
+    "src.e1904753": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "Your home county is already free of the levy."
       }
     },
     "src.e1967e44": {
@@ -121509,6 +122629,16 @@
         "text": "This saved action no longer exists. Edit or reset the binding in Settings."
       }
     },
+    "src.e479071f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Carried an emergency war subsidy in the estates."
+      }
+    },
     "src.e47c2319": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122231,6 +123361,16 @@
         "text": "Muster Burden"
       }
     },
+    "src.e658b81a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, your home county gains a chartered market: richer tolls and cheaper building, for a small seasonal upkeep."
+      }
+    },
     "src.e663df00": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122549,6 +123689,16 @@
       ],
       "source": {
         "text": "Winchester"
+      }
+    },
+    "src.e759b09f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "Wartime only. If carried, the estates formally back the liege’s war, and your name is attached to the authorization."
       }
     },
     "src.e75b53ed": {
@@ -126788,6 +127938,16 @@
         "text": "A little silver buys a little silence."
       }
     },
+    "src.f34ee7fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, the banner call can be answered with silver instead of service — and the aid creeps up to pay for the privilege."
+      }
+    },
     "src.f3617947": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128307,16 +129467,6 @@
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
       }
     },
-    "src.f7c55990": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Scutage blocs"
-      }
-    },
     "src.f7cb7982": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128938,6 +130088,16 @@
         "text": "Manage household education policy"
       }
     },
+    "src.f98b9366": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "A Motion for Levy Relief"
+      }
+    },
     "src.f9964642": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129356,6 +130516,16 @@
       ],
       "source": {
         "text": "Standing with the Pope +{needed} (now {current})"
+      }
+    },
+    "src.fad8b47d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/parliament.js"
+      ],
+      "source": {
+        "text": "The tolls of your home county are contested; settle that dispute first."
       }
     },
     "src.fad97def": {
@@ -130090,6 +131260,16 @@
       ],
       "source": {
         "text": "mountains"
+      }
+    },
+    "src.fcf89545": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_parliament.js"
+      ],
+      "source": {
+        "text": "Your motion asks the estates to say aloud what the crown wants heard: that {liege}’s war is just, necessary, and backed by the assembled lords of the realm. The hawks are already nodding. The older lords are counting their sons."
       }
     },
     "src.fcf99cf7": {
@@ -137372,14 +138552,6 @@
         "text": "Already spent"
       }
     },
-    "ui:Already used": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Already used"
-      }
-    },
     "ui:Already worn by {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -137417,6 +138589,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "An alliance envoy requires {money:cost}; you have {money:current}."
+      }
+    },
+    "ui:An emergency subsidy can only be moved while the liege is at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "An emergency subsidy can only be moved while the liege is at war."
       }
     },
     "ui:An envoy requires {money:cost} in gifts; you have {money:current}.": {
@@ -138098,17 +139278,6 @@
         "text": "Available enterprises: {enterprises}."
       }
     },
-    "ui:Available motions: redress — {redress}; scutage — {scutage}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "redress",
-        "scutage"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Available motions: redress — {redress}; scutage — {scutage}."
-      }
-    },
     "ui:Available now": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138371,26 +139540,6 @@
         "text": "Begin a courtship before making a proposal."
       }
     },
-    "ui:Begin a redress campaign ({money:cost})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Begin a redress campaign ({money:cost})"
-      }
-    },
-    "ui:Begin a scutage campaign ({money:cost})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Begin a scutage campaign ({money:cost})"
-      }
-    },
     "ui:Begin courtship": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -138407,14 +139556,14 @@
         "text": "Begin research"
       }
     },
-    "ui:Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included.": {
+    "ui:Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "money:cost"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included."
+        "text": "Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included."
       }
     },
     "ui:Beginning spends the day and assigns personal attention; a proposal requires +{threshold} Standing.": {
@@ -143124,22 +144273,6 @@
         "text": "Idle — eligible workers are available."
       }
     },
-    "ui:If carried, silver may answer banner service and the aid rises slightly.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "If carried, silver may answer banner service and the aid rises slightly."
-      }
-    },
-    "ui:If carried, the liege’s aid falls one step.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "If carried, the liege’s aid falls one step."
-      }
-    },
     "ui:If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146150,6 +147283,16 @@
         "text": "Not chosen"
       }
     },
+    "ui:Not currently available: {list}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "list"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Not currently available: {list}."
+      }
+    },
     "ui:Not currently serving": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148042,6 +149185,17 @@
         "text": "Propose marriage"
       }
     },
+    "ui:Propose: {policy} ({money:cost})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "policy"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Propose: {policy} ({money:cost})"
+      }
+    },
     "ui:Proposed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -149043,6 +150197,17 @@
         "text": "Requires the national technology {technology}."
       }
     },
+    "ui:Requires {money:cost} for the motion and the subsidy; you have {money:current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:current"
+      ],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Requires {money:cost} for the motion and the subsidy; you have {money:current}."
+      }
+    },
     "ui:Requires {money:cost}; you have {money:current}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -149623,12 +150788,12 @@
         "text": "Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day."
       }
     },
-    "ui:Review the terms and put an eligible yearly motion to the hall.": {
+    "ui:Review the terms and put an eligible motion to the hall.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Review the terms and put an eligible yearly motion to the hall."
+        "text": "Review the terms and put an eligible motion to the hall."
       }
     },
     "ui:Review this ruler for the Royal Council…": {
@@ -151399,6 +152564,14 @@
         "text": "That person is not available for courtship."
       }
     },
+    "ui:That policy cannot be brought before the Estates now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "That policy cannot be brought before the Estates now."
+      }
+    },
     "ui:That recipient cannot receive a gift.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -151495,12 +152668,14 @@
         "text": "The Estates do not apply to your current political position."
       }
     },
-    "ui:The Estates have already heard your motion this year.": {
+    "ui:The Estates have already heard {family} business this year.": {
       "context": "Explicit UI localization call.",
-      "glossary": [],
+      "glossary": [
+        "family"
+      ],
       "location": "js/parliament.js",
       "source": {
-        "text": "The Estates have already heard your motion this year."
+        "text": "The Estates have already heard {family} business this year."
       }
     },
     "ui:The Estates…": {
@@ -151593,6 +152768,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture."
+      }
+    },
+    "ui:The aid is already at its customary maximum; the estates will not trade relief for a rise that cannot be taken.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "The aid is already at its customary maximum; the estates will not trade relief for a rise that cannot be taken."
       }
     },
     "ui:The appointment is refused; another petition may be made in two years.": {
@@ -151829,14 +153012,6 @@
         "text": "The equipment plan can no longer be applied."
       }
     },
-    "ui:The estates have heard your motion this year; they will take another come the new year.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The estates have heard your motion this year; they will take another come the new year."
-      }
-    },
     "ui:The exceptional levy is already promised.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -152044,6 +153219,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The journey costs {money:cost}; you have {money:current}."
+      }
+    },
+    "ui:The liege is already sworn to seek the estates’ consent.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "The liege is already sworn to seek the estates’ consent."
       }
     },
     "ui:The liege strips only a man he already despises — and only for a vassal he loves. Your service in his wars: {service}.": {
@@ -152335,6 +153518,14 @@
         "text": "The terrain is unsuitable."
       }
     },
+    "ui:The tolls of your home county are contested; settle that dispute first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "The tolls of your home county are contested; settle that dispute first."
+      }
+    },
     "ui:The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -152460,6 +153651,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "There is no heir."
+      }
+    },
+    "ui:There is no war for the estates to authorize.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "There is no war for the estates to authorize."
+      }
+    },
+    "ui:There is no war for the estates to condemn.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "There is no war for the estates to condemn."
       }
     },
     "ui:These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.": {
@@ -154667,6 +155874,38 @@
         "text": "Your friend"
       }
     },
+    "ui:Your home county already holds a market charter.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Your home county already holds a market charter."
+      }
+    },
+    "ui:Your home county is already free of the levy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Your home county is already free of the levy."
+      }
+    },
+    "ui:Your home county is under an extraordinary muster; relief cannot be moved now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Your home county is under an extraordinary muster; relief cannot be moved now."
+      }
+    },
+    "ui:Your home county’s custom is already confirmed.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "Your home county’s custom is already confirmed."
+      }
+    },
     "ui:Your host": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155181,6 +156420,14 @@
         "text": "age {needed} (now {current})"
       }
     },
+    "ui:aid": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "aid"
+      }
+    },
     "ui:also above": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155406,6 +156653,14 @@
         "text": "coastal"
       }
     },
+    "ui:commerce": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "commerce"
+      }
+    },
     "ui:complete duchy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155460,6 +156715,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "custody of the sacred places"
+      }
+    },
+    "ui:custom": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "custom"
       }
     },
     "ui:defender": {
@@ -156112,20 +157375,20 @@
         "text": "pledged"
       }
     },
+    "ui:policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "policy"
+      }
+    },
     "ui:preparation": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "preparation"
-      }
-    },
-    "ui:ready": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "ready"
       }
     },
     "ui:ready at +{threshold}": {
@@ -156229,6 +157492,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "sea-crossing speed"
+      }
+    },
+    "ui:service": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "service"
       }
     },
     "ui:settlement": {
@@ -156601,6 +157872,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "venture settled: {money:payout} returned"
+      }
+    },
+    "ui:war": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/parliament.js",
+      "source": {
+        "text": "war"
       }
     },
     "ui:with no fixed end": {
@@ -158623,6 +159902,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{motion} campaign · {days} days remain."
+      }
+    },
+    "ui:{motion} forecast": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "motion"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{motion} forecast"
       }
     },
     "ui:{motion} posture": {

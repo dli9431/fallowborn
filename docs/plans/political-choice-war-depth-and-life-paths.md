@@ -2,11 +2,11 @@
 
 Date: 2026-07-30
 
-Status: **in progress; steps 1–4 implemented**. This plan organizes player feedback
+Status: **in progress; steps 1–5 implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
-expansions. Steps 5–11 remain proposed.
+expansions. Steps 6–11 remain proposed.
 
 Related design:
 [realms](../designs/realms.md),
@@ -332,7 +332,7 @@ calendars remain deferred.
 
 Classification: **Balance**.
 
-Status: **proposed**.
+Status: **complete (2026-08-01)**.
 
 Once bloc voting is visible and reliable, add a moddable policy catalog instead of
 hard-coding one handler per reform.
@@ -365,6 +365,20 @@ The proposal flow is:
 6. apply a cooldown before proposing the same family again.
 
 Do not retain a separate global success roll after the bloc votes are counted.
+
+The implemented slice adds `FBDATA.policies` (`data/policies.js`): nine Estates
+policies across five families — aid (redress, emergency subsidy), service
+(scutage, levy relief), commerce (market charter), custom (confirmation of local
+custom, consent of the estates), and war (authorization, condemnation). Each def
+declares its family, gate, cost, posture adjustments, and result event; bloc
+interest weights stay in `politicalBlocs.motions`. Proposal, the 90-day campaign,
+lobbying, and the recorded bloc vote are generic; outcomes stay in
+predetermined-result events so visible and autoresolved votes match. Cooldowns
+are per family per year (`obl.motionYears`, healed from the legacy `lastMotion`
+stamp), and emergency policies waive them. Redress and scutage behavior is
+unchanged; revocation consent removes the liege's unilateral aid demand from the
+session agenda. Religious tolerance and settlement policy remain with step 7;
+crown-side institutions and repeal flows are schema room, not yet content.
 
 ### 6. Elections, privileges, and collective demands
 

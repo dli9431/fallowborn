@@ -590,3 +590,45 @@ test('high-DPI contexts double portrait backing stores and cap at 2x',
     /* past 2x the cap holds the memory ceiling */
     expect((await probe(3)).dpr).toBe(2);
   });
+
+test('the figure card stages darker than the bust with its halo behind the head',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      var s=FB.state,me=s.chars[s.player.charId];
+      var bust=document.createElement('canvas');bust.width=96;bust.height=108;
+      FB.paintPortrait(bust,me,s.date.year,{state:s});
+      var fig=document.createElement('canvas');fig.width=192;fig.height=360;
+      FB.paintPaperDoll(fig,me,s,{loadout:{}});
+      function lum(canvas,x,y){
+        var p=canvas.getContext('2d').getImageData(x,y,1,1).data;
+        return p[0]+p[1]+p[2];
+      }
+      return {
+        /* corner probes sit in the headroom band both frames keep clear */
+        darkerTop:lum(fig,1,1)<lum(bust,1,1),
+        darkerBottom:lum(fig,1,358)<lum(bust,1,106),
+        /* same row, so the vertical gradient cancels: only the halo,
+           centred over the head, can make the middle brighter */
+        haloBehindHead:lum(fig,96,10)>lum(fig,4,10)
+      };
+    })).toEqual({darkerTop:true,darkerBottom:true,haloBehindHead:true});
+  });
+
+test('standing figures keep a staged margin inside the card',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      var s=FB.state,me=s.chars[s.player.charId];
+      var canvas=document.createElement('canvas');canvas.width=192;canvas.height=360;
+      FB.paintPaperDoll(canvas,me,s,{loadout:{},transparent:true});
+      var data=canvas.getContext('2d').getImageData(0,0,192,360).data;
+      var top=-1,bottom=-1,x,y;
+      for(y=0;y<360&&top<0;y++)for(x=0;x<192;x++)
+        if(data[(y*192+x)*4+3]>0){top=y;break;}
+      for(y=359;y>=0&&bottom<0;y--)for(x=0;x<192;x++)
+        if(data[(y*192+x)*4+3]>0){bottom=y;break;}
+      var frac=(bottom-top+1)/360;
+      /* the fit targets ~92% of the card: filled edge-to-edge reads
+         oversized beside the staged reference, under .85 reads lost */
+      return {spans:frac>=.85&&frac<=.94,plantedLow:bottom>=345,painted:top>=0};
+    })).toEqual({spans:true,plantedLow:true,painted:true});
+  });

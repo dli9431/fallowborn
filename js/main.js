@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.104.4';
+  FB.VERSION = '1.105.0';
   FB.CHANGELOG = [
+    { v: '1.105.0', date: '2026-08-01', changes: [
+      'The Estates now debate a whole catalog of policies — subsidies, scutage, levy relief, market charters, confirmations of custom, and wartime authorizations — with each political bloc lobbying and voting its own posture.'
+    ] },
     { v: '1.104.4', date: '2026-08-01', changes: [
       'Orchards no longer require Seed Selection, and a Press House now earns half again as much when your household also runs an Orchard in the same province.'
     ] },
