@@ -1112,7 +1112,7 @@ def add_core_records(inv: Inventory) -> None:
         inv.add(
             f"word.ui.{re.sub(r'[^a-z0-9]+', '_', word).strip('_')}.default",
             {"text": word},
-            "js/ui.js",
+            "js/ui_misc.js",
             "UI vocabulary selected dynamically at runtime.",
         )
 

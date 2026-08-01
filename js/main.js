@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.104.1';
+  FB.VERSION = '1.104.2';
   FB.CHANGELOG = [
+    { v: '1.104.2', date: '2026-08-01', changes: [
+      'Internal reorganization of the interface code into four files. Nothing changes in play.'
+    ] },
     { v: '1.104.1', date: '2026-08-01', changes: [
       'The Guide now opens on the selected topic reliably and its search also matches what each skill affects, war catalogue filters properly hide filtered targets, and collapsing a family tree branch hides that branch again.'
     ] },

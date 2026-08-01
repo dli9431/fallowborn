@@ -2,9 +2,16 @@
 
 Date: 2026-07-31
 
-Status: proposed. The `ui.js` split and the banner pass are decided in direction but not
-scheduled; nothing here blocks or changes any other in-flight work. The portrait release
-should land before any of this starts so the two do not tangle in one diff.
+Status: implemented (v1.104.2). The `ui.js` split landed as its own move-only release;
+the banner/TOC mitigation is folded into the four new files rather than a separate pass.
+Implementation notes against the original sketch: the generic modal engine and the mobile
+back-navigation layer live in `ui_misc.js` (not `ui_modals.js`) because every file calls
+them — placing them in the first-loaded file lets the other three bind them at load and
+keeps call sites verbatim. Internal load order is `ui_misc → ui_panels → ui_topbar →
+ui_modals`. Cross-file internals travel on `FB.ui._shared`: shared functions are exported
+by their owning file, and five cross-file mutable variables (`travelPicker`, `activeTab`,
+`logRenderedTail`, `logRenderedLen`, `portraitKey`) became `_shared` properties. The itch
+allowlist ships the whole `js/` directory, so no deploy-script change was needed.
 
 Related:
 [UI](../designs/ui.md),
@@ -121,11 +128,12 @@ Rules for the refactor:
 
 ## Completion checklist
 
-- [ ] Banner/TOC pass over `js/ui.js` landed.
-- [ ] AGENTS.md and `docs/designs/ui.md` maps verified against the banners.
-- [ ] `ui.js` split into the four files, move-only, one commit.
-- [ ] `index.html` load order, AGENTS.md, deploy allowlist, and design docs updated in
-  that same commit.
+- [x] Banner/TOC pass — folded into the four split files (each carries a contents
+  comment; the original section banners moved with their code).
+- [x] AGENTS.md and `docs/designs/ui.md` maps verified against the banners.
+- [x] `ui.js` split into the four files, move-only, one commit.
+- [x] `index.html` load order, AGENTS.md, and design docs updated in that same commit
+  (the deploy scripts ship `js/` wholesale, so the allowlist needed no change).
 - [ ] Owner-run test suite and manual smoke pass on `file://`, served origin, and the
   itch build (allowlist!).
-- [ ] Own `FB.VERSION` bump with an empty release around it.
+- [x] Own `FB.VERSION` bump with an empty release around it (v1.104.2).

@@ -1,5 +1,21 @@
 # UI: keyboard & mobile
 
+**Where the UI code lives.** The former `js/ui.js` is split into four files that load
+consecutively in this order and augment one `FB.ui` namespace:
+
+| File | Contents |
+| --- | --- |
+| `js/ui_misc.js` | Shared name/format/standing helpers, large-list surfaces, interaction cards, mobile back navigation, screens, toasts, the generic modal engine, boot wiring. Loads first and owns `FB.ui._shared`, the internal namespace the other three bind at load. |
+| `js/ui_panels.js` | The retained panels — Deeds, Self, Kin, Network, Land, Chronicle — plus tabs, drawers, and the family tree. |
+| `js/ui_topbar.js` | Top bar refresh: stats and per-season breakdowns, portrait, date, pause/skip controls. |
+| `js/ui_modals.js` | The event modal, autoresolve, and every dialog sheet: pickers, coin & credit, household, technology, character sheets, death, menu, settings, save/load, the Guide. |
+
+Cross-file module state (`travelPicker`, `activeTab`, `logRenderedTail`,
+`logRenderedLen`, `portraitKey`) lives as properties of `FB.ui._shared`; shared
+functions are exported onto that object by their owning file and bound by later
+files at load. Keep new cross-file internals on `FB.ui._shared` rather than
+inventing a second channel.
+
 The Papacy deed opens `fullsheet-modal papacy-modal`: a responsive two-column summary
 collapses to one column on narrow/short screens, and the College grid does the same.
 Every elector, obedience, election tactic, regnal name, policy, sanction, and governance
@@ -17,7 +33,7 @@ It shows the see, tenure, authority and investiture policy, Papal recognition an
 episcopal focus, temporalities, office piety, household retinue, non-hereditary succession,
 and the four church powers with their costs and cooldowns.
 
-**Keyboard support is a requirement** (`js/keys.js` + focus management in `ui.js`): the game
+**Keyboard support is a requirement** (`js/keys.js` + focus management in `ui_misc.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
@@ -674,7 +690,7 @@ marriage…** in Life & Family until the journey ends, so keyboard and touch use
 can reopen the same live-validated decision.
 
 Because the event modal opens as a bottom sheet under the thumb, its choice buttons ignore
-input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui.js`, touch only, via
+input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui_modals.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
 must not pick an outcome by accident, while a deliberate next tap should feel immediate. The
 guard rearms for each queued event and each outcome screen. Autoresolved events render no

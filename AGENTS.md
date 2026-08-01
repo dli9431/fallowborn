@@ -150,7 +150,10 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   (`events_common/peasant/paths/noble/world/war/council/parliament/travel/tournament.js`).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
   model → portrait → world → economy → armies → mapview → events → actions → council →
-  parliament → ui → keys → save → mods → main`.
+  parliament → ui (ui_misc → ui_panels → ui_topbar → ui_modals) → keys → save → mods →
+  main`. The four `ui_*.js` files are one system split for size: `ui_misc.js` loads first
+  and owns the shared internals (`FB.ui._shared`) the other three bind at load, so their
+  relative order matters too.
 
 ## Design decisions
 
@@ -223,7 +226,15 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/actions.js` — focuses and one-shot deeds (the Deeds tab).
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
 - `js/parliament.js` — the estates (vassal tiers 3–5): the liege's aid and scutage terms, yearly sessions, parliament event customs.
-- `js/ui.js` — panels, modals, toasts, topbar (largest file).
+- `js/ui_misc.js` — shared UI helpers, screens, toasts, the generic modal engine,
+  mobile back navigation, boot wiring; owns `FB.ui._shared`.
+- `js/ui_panels.js` — the retained panels: Deeds, Self, Kin, Network, Land, Chronicle;
+  tabs, drawers, the family tree.
+- `js/ui_topbar.js` — top bar refresh: stats and breakdowns, portrait, date,
+  pause/skip controls.
+- `js/ui_modals.js` — the event modal, autoresolve, and every dialog sheet
+  (pickers, coin & credit, household, technology, character sheets, menu,
+  settings, save/load, the Guide) — largest file.
 - `js/model.js` — characters, dynasties, traits, titles.
 - `js/portrait.js` — procedural portraits/heraldry.
 - `js/util.js` — RNG, projection, helpers.
