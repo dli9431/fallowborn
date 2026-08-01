@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.101.3';
+  FB.VERSION = '1.101.4';
   FB.CHANGELOG = [
+    { v: '1.101.4', date: '2026-07-31', changes: [
+      'Female rulers across the map now use proper female titles — Sultana, Emira, Duchess, Khatun, and the like — instead of male forms like Sultan or Emir.'
+    ] },
     { v: '1.101.3', date: '2026-07-31', changes: [
       'Families past a safe record size pause new kin weddings and births so saving keeps working, and extreme fertility can no longer make every kin birth a certainty.'
     ] },

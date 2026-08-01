@@ -1102,12 +1102,14 @@ window.FB = window.FB || {};
 
   /* an AI realm ruler's style: "Emir Yusuf", "High King Ragnarr" — rank
      titles come from the capital county's faith group (rank+3 indexes
-     FBDATA.titles: count→4 … emperor→7) */
+     FBDATA.titles: count→4 … emperor→7); a female ruler uses the group's
+     <group>_f array when one is defined */
   FB.realmRankTitle = function (state, realm) {
     const headed = FB.religionsHeadedBy(state, realm.id);
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     const pr = FB.world && FB.world.byId[realm.capital];
-    const group = pr ? FB.religionOf(pr.religion).group : 'christian';
+    let group = pr ? FB.religionOf(pr.religion).group : 'christian';
+    if (realm.ruler && realm.ruler.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
     const arr = FBDATA.titles[group] || FBDATA.titles.christian;
     const index = FB.clamp((realm.rank || 3) + 3, 4, arr.length - 1);
     return FB.dataText(state, state.player.charId, 'title', group + '.' + index, arr[index], '', {});

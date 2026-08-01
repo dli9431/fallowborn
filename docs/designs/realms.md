@@ -231,7 +231,9 @@ same-faith wars against the office. The active bookmark may override the initial
 through `bookmark.religiousHeads`: 867 assigns `papacy`/`abbasid`, while 1066 assigns
 `papacy_1066`/`abbasid_1066`. Faiths without `head` metadata, including Shia Islam,
 have no centralized head. Ordinary Muslim emperor-tier rulers use Great Sultan or
-Great Sultana instead.
+Great Sultana instead. At every rank, a female AI ruler is styled from the
+`FBDATA.titles.<group>_f` array when one is defined (Sultana, Emira, Duchess,
+Khatun, …), falling back to the base array otherwise.
 
 A Catholic Bishopric is also an office assignment, but local and personal rather than a
 centralized religious head. `character.bishopric` names an abstract see at the holder's

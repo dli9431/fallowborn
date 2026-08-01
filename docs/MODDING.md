@@ -169,7 +169,7 @@ A JSON mod is one object with any of these keys:
   },
   "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
-  "titles":    { "christian": ["Serf", "..."] },
+  "titles":    { "christian": ["Serf", "..."], "christian_f": ["Serf", "..."] },
   "papacy":    { ...complete Catholic Papacy definition... },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
   "balance":   { "freedomCost": 30, "coinageSymbol": "£" },
@@ -1788,8 +1788,10 @@ Core and custom systems should query `FB.religiousHeadOf(state, religionId)`,
 `FB.isReligiousHead(state, realmId, religionId?)`; use
 `FB.religiousHeadTitle(state, religionId)` for the localized title. These APIs match
 exact religion ids, not broad religion groups. Generic rank words remain in
-`FBDATA.titles`; in core data, Muslim tier 7 is Great Sultan/Great Sultana because
-Caliph is reserved for the Sunni office.
+`FBDATA.titles`; a `<group>_f` array (for example `muslim_f`) supplies the female
+forms of one group's list and is used by female players and female AI realm rulers
+when present, falling back to the base array otherwise. In core data, Muslim tier 7
+is Great Sultan/Great Sultana because Caliph is reserved for the Sunni office.
 Realm-death and recovery code should use `FB.markRealmDead`,
 `FB.vacateReligiousHeads`, `FB.assignReligiousHead`,
 `FB.canRestoreReligiousHead` / `FB.restoreReligiousHead`, and

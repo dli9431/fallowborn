@@ -70659,6 +70659,16 @@
         "text": "Stand in the line."
       }
     },
+    "src.5939cb47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Begum"
+      }
+    },
     "src.593c024b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92431,6 +92441,16 @@
         "text": "Learn how things are done here."
       }
     },
+    "src.95dbdf26": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Great Begum"
+      }
+    },
     "src.95eef3b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103689,6 +103709,16 @@
       ],
       "source": {
         "text": "You need at least {money:needed} (now {money:current})."
+      }
+    },
+    "src.b551e404": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Khatun"
       }
     },
     "src.b55256c9": {
@@ -133000,6 +133030,86 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Khagan"
+      }
+    },
+    "title.jewish_f.0.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
+    "title.jewish_f.1.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
+    "title.jewish_f.2.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Gentlewoman"
+      }
+    },
+    "title.jewish_f.3.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Elder"
+      }
+    },
+    "title.jewish_f.4.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Begum"
+      }
+    },
+    "title.jewish_f.5.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Great Begum"
+      }
+    },
+    "title.jewish_f.6.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Khatun"
+      }
+    },
+    "title.jewish_f.7.default": {
+      "context": "Standalone rank title, title set jewish_f, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Khatun"
       }
     },
     "title.muslim.0.default": {

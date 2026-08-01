@@ -653,7 +653,8 @@ FBDATA.titles = {
   muslim_f: ['Fellaha','Freewoman','Sayyida','Sheikha','Emira','Grand Emira','Sultana','Great Sultana'],
   pagan: ['Thrall','Karl','Huscarl','Hersir','Jarl','High Chief','King','High King'],
   pagan_f: ['Thrall','Karl','Shieldmaiden','Lady','Jarl','High Chief','Queen','High Queen'],
-  jewish: ['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan']
+  jewish: ['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan'],
+  jewish_f: ['Serf','Freeholder','Gentlewoman','Elder','Begum','Great Begum','Khatun','Khatun']
 };
 
 /* Demesne buildings (tier 3+; one of each PER SETTLEMENT of a province,
