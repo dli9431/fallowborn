@@ -1971,6 +1971,8 @@ window.FB = window.FB || {};
     $('tb-portrait').addEventListener('click', function () {
       if (FB.state) UI.showTab('char');
     });
+    // index.html's 30x34 attributes are the no-JS layout fallback
+    FB.sizeFaceCanvas($('tb-portrait'), 30, 34);
     $('btn-closeself').addEventListener('click', SH.closeSelfDrawer);
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {

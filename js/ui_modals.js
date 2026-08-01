@@ -13559,7 +13559,8 @@ window.FB = window.FB || {};
     }
     if (!list) list = '<div class="cmeta">' + esc(FB.T('Nothing was worn.')) + '</div>';
     return '<div class="death-paper"><canvas id="death-paperdoll" class="paperdoll" ' +
-      'width="192" height="360" role="img" aria-label="' +
+      'width="' + Math.round(192 * FB.portraitDpr) + '" height="' +
+      Math.round(360 * FB.portraitDpr) + '" role="img" aria-label="' +
       esc(FB.T('Final equipment worn by the deceased')) + '"></canvas>' +
       '<div class="death-worn"><h4>' + esc(FB.T('Worn at death')) + '</h4>' + list +
       '<p class="cmeta">' + esc(FB.T(

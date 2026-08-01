@@ -213,10 +213,20 @@ window.FB = window.FB || {};
      tools/portrait-reference uses hidden mesh geometry; this renderer
      intentionally resolves only the named anchors the illustration reads. */
   var TAU = Math.PI * 2;
-  var CELL_W = 96, CELL_H = 108, ATLAS_SLOTS = 64;
+  /* Portrait backing stores render at device resolution so HiDPI screens
+     never upscale them; layout keeps using CSS-pixel sizes (faceTag and
+     sizeFaceCanvas pin them inline, the paperdoll via its CSS rule). The
+     ratio is capped at 2 (memory grows with its square; past 2x nothing is
+     distinguishable at these sizes), floored at 1 (zoomed-out windows must
+     not drop below the tuned 96x108 cell), and read once at boot: canvases
+     and the atlas must share one scale, so a mid-monitor-move keeps the
+     boot resolution until reload. */
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  if (!(DPR >= 1)) DPR = 1;
+  var CELL_W = Math.round(96 * DPR), CELL_H = Math.round(108 * DPR), ATLAS_SLOTS = 64;
   var ATLAS_W = CELL_W * 8, ATLAS_H = CELL_H * 8;
   var ATLAS_BYTES = ATLAS_W * ATLAS_H * 4;
-  var FIGURE_W = 192, FIGURE_H = 360;
+  var FIGURE_W = Math.round(192 * DPR), FIGURE_H = Math.round(360 * DPR);
   /* Worn slots integrate into the drawing; hand objects show as inset
      panels beside the body inside the figure card, because a weapon
      glued to a hand never posed convincingly. */
@@ -4104,9 +4114,10 @@ window.FB = window.FB || {};
   }
   function renderAtlasEntry(descriptor) {
     ensureAtlas();var slot=atlasSlot(),x=(slot%8)*CELL_W,y=Math.floor(slot/8)*CELL_H;
-    /* the cell serves 30x36 through 72x82 targets: draw it bold enough
-       for the faces it will be shrunk into, but with fine marks kept
-       now that the head fills the cell */
+    /* the cell serves 30x34 through 88x100 CSS-pixel targets (cell and
+       targets scale by the same DPR, so shrink ratios are unchanged):
+       draw it bold enough for the faces it will be shrunk into, but with
+       fine marks kept now that the head fills the cell */
     paintIllustration(atlasContext,descriptor,CELL_W,CELL_H,x,y,{boldFloor:1.55});
     var entry={key:descriptor.key,slot:slot,used:++atlasUsed};
     atlasEntries[descriptor.key]=entry;cacheCounts.coldRenders++;return entry;
@@ -4293,7 +4304,16 @@ window.FB = window.FB || {};
     for(i=0;i<items.length;i++)FB.paintItem(items[i],state,items[i].getAttribute('data-item'));
     FB.paintCrests(root);
   };
+  FB.portraitDpr = DPR;
+  /* w/h are CSS pixels; the backing store scales by the shared portrait DPR. */
+  FB.sizeFaceCanvas = function (canvas, w, h) {
+    if (!canvas) return;
+    canvas.width = Math.round(w * DPR); canvas.height = Math.round(h * DPR);
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+  };
   FB.faceTag = function (c, w, h) {
-    return '<canvas class="pface" data-cid="' + c.id + '" width="' + w + '" height="' + h + '"></canvas>';
+    return '<canvas class="pface" data-cid="' + c.id + '" width="' + Math.round(w * DPR) +
+      '" height="' + Math.round(h * DPR) + '" style="width:' + w + 'px;height:' + h +
+      'px"></canvas>';
   };
 })();

@@ -530,3 +530,63 @@ test('long-headed busts keep their shoulders in frame',
       return {shoulders:count/96>=.5};
     })).toEqual({shoulders:true});
   });
+
+test('portrait backing stores scale by the capped device pixel ratio',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      var raw=Math.min(window.devicePixelRatio||1,2);if(!(raw>=1))raw=1;
+      var dpr=FB.portraitDpr;
+      var s=FB.state,me=s.chars[s.player.charId];
+      var host=document.createElement('div');
+      host.innerHTML=FB.faceTag(me,44,50);
+      var face=host.firstChild,tb=document.getElementById('tb-portrait');
+      var probe=document.createElement('canvas');
+      FB.sizeFaceCanvas(probe,72,82);
+      FB.clearPortraitCache();
+      FB.paintPortrait(probe,me,s.date.year,{state:s});
+      var stats=FB.portraitCacheStats();
+      var atlasW=Math.round(96*dpr)*8,atlasH=Math.round(108*dpr)*8;
+      return {
+        dprClamped:dpr===raw,
+        faceBacking:face.width===Math.round(44*dpr)&&face.height===Math.round(50*dpr),
+        faceCss:face.style.width==='44px'&&face.style.height==='50px',
+        probeBacking:probe.width===Math.round(72*dpr)&&probe.height===Math.round(82*dpr),
+        probeCss:probe.style.width==='72px'&&probe.style.height==='82px',
+        topbarBacking:tb.width===Math.round(30*dpr)&&tb.height===Math.round(34*dpr),
+        topbarCss:tb.style.width==='30px'&&tb.style.height==='34px',
+        probeCompact:stats.entries===1&&stats.coldRenders===1,
+        atlasBytes:stats.bytes===atlasW*atlasH*4
+      };
+    })).toEqual({
+      dprClamped:true,faceBacking:true,faceCss:true,probeBacking:true,probeCss:true,
+      topbarBacking:true,topbarCss:true,probeCompact:true,atlasBytes:true
+    });
+  });
+
+test('high-DPI contexts double portrait backing stores and cap at 2x',
+  async function ({ browser }, testInfo) {
+    async function probe(deviceScaleFactor) {
+      const context = await browser.newContext({ deviceScaleFactor });
+      try {
+        const hidpi = await context.newPage();
+        await openGame(hidpi, testInfo);
+        return await hidpi.evaluate(function () {
+          var host=document.createElement('div');
+          host.innerHTML=FB.faceTag({id:'hidpi-probe'},44,50);
+          var face=host.firstChild,tb=document.getElementById('tb-portrait');
+          return {
+            dpr:FB.portraitDpr,
+            face:[face.width,face.height,face.style.width,face.style.height],
+            topbar:[tb.width,tb.height,tb.style.width,tb.style.height]
+          };
+        });
+      } finally { await context.close(); }
+    }
+    expect(await probe(2)).toEqual({
+      dpr:2,
+      face:[88,100,'44px','50px'],
+      topbar:[60,68,'30px','34px']
+    });
+    /* past 2x the cap holds the memory ceiling */
+    expect((await probe(3)).dpr).toBe(2);
+  });

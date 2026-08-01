@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.104.2';
+  FB.VERSION = '1.104.3';
   FB.CHANGELOG = [
+    { v: '1.104.3', date: '2026-08-01', changes: [
+      'Portraits now paint at your screen’s full resolution, so faces and full-figure dolls look sharp on phones and high-DPI displays.'
+    ] },
     { v: '1.104.2', date: '2026-08-01', changes: [
       'Internal reorganization of the interface code into four files. Nothing changes in play.'
     ] },

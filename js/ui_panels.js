@@ -1016,7 +1016,8 @@ window.FB = window.FB || {};
     const blocked = FB.equipmentBlockedReason ? FB.equipmentBlockedReason(s) : null;
     let h = '<div class="paper-sheet"><div class="paper-figure">' +
       '<canvas class="paperdoll" data-cid="' + c.id +
-      '" width="192" height="360" role="img" aria-label="' +
+      '" width="' + Math.round(192 * FB.portraitDpr) + '" height="' +
+      Math.round(360 * FB.portraitDpr) + '" role="img" aria-label="' +
       esc(FB.T('Full figure of {name}', { name:FB.fullName(c) })) + '"></canvas>' +
       equipmentBonusHtml(s, c) + '</div>' +
       '<div class="equip-panel"><div class="equip-heading">' + esc(FB.T('Equipment')) +
@@ -1189,7 +1190,9 @@ window.FB = window.FB || {};
       '<button type="button" class="self-portrait-button" id="self-equipment-portrait" ' +
       'aria-label="' + esc(FB.T('Equip items…')) + '" title="' +
       esc(FB.T('Equip items…')) + '"><canvas id="selfportrait" class="pface" data-cid="' +
-      me.id + '" width="88" height="100" aria-hidden="true"></canvas></button>' +
+      me.id + '" width="' + Math.round(88 * FB.portraitDpr) + '" height="' +
+      Math.round(100 * FB.portraitDpr) +
+      '" style="width:88px;height:100px" aria-hidden="true"></canvas></button>' +
       '<button type="button" class="btn portrait-equip" id="self-equipment" ' +
       'data-action-id="self-equipment">' + esc(FB.T('Equip items…')) + '</button>' +
       '</div><div class="self-overview-skills">' + panelh('Skills') + skillBars(me) +

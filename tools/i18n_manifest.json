@@ -48087,6 +48087,16 @@
         "text": "Your spear takes the boar before the lord’s. Bold — perhaps too bold. But men saw it."
       }
     },
+    "src.16db8706": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "FBS2."
+      }
+    },
     "src.16f420bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59722,6 +59732,16 @@
       ],
       "source": {
         "text": "Daily focus — continues until changed"
+      }
+    },
+    "src.38a844b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "\" width=\""
       }
     },
     "src.38b35cc8": {
@@ -81110,6 +81130,17 @@
       ],
       "source": {
         "text": "the hardest — an adult heir from day one, but a short remaining runway"
+      }
+    },
+    "src.741b2fbf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "\" height=\""
       }
     },
     "src.741b9b2d": {
@@ -119299,6 +119330,16 @@
         "text": "Go the long way round."
       }
     },
+    "src.de6f6637": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+      }
+    },
     "src.de772185": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123901,6 +123942,16 @@
       ],
       "source": {
         "text": "The world is made."
+      }
+    },
+    "src.eb65c221": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "FBC1."
       }
     },
     "src.eb674831": {
