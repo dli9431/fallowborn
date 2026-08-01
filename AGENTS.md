@@ -146,8 +146,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`,
-  `data/traits.js`, `data/economy.js`, then eight event packs
-  (`events_common/peasant/paths/noble/world/war/council/parliament.js`).
+  `data/traits.js`, `data/economy.js`, then ten event packs
+  (`events_common/peasant/paths/noble/world/war/council/parliament/travel/tournament.js`).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
   model → portrait → world → economy → armies → mapview → events → actions → council →
   parliament → ui → keys → save → mods → main`.

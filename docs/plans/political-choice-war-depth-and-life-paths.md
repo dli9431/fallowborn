@@ -2,11 +2,11 @@
 
 Date: 2026-07-30
 
-Status: **in progress; steps 1–3 implemented**. This plan organizes player feedback
+Status: **in progress; steps 1–4 implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
-expansions. Steps 3–11 remain proposed.
+expansions. Steps 5–11 remain proposed.
 
 Related design:
 [realms](../designs/realms.md),
@@ -272,6 +272,8 @@ all resolved through the same event effects whether shown or autoresolved.
 
 Classification: **Writing, using existing combat and event rules**.
 
+Status: **complete (2026-08-01)**.
+
 Add jousting as a small tournament event family before considering a hosted
 tournament system. The existing gentry `melee_games` story is the mechanical
 precedent: it already offers martial competition, wagering, injury, gold, prestige,
@@ -312,6 +314,19 @@ If the event set proves enjoyable, a later hosted-tournament deed may queue a
 context-snapshotted chain with a named host, purse, guests, and participants. That
 later feature should build on ordinary travel and character residence instead of
 teleporting distant courtiers.
+
+The implemented slice lives in `data/events_tournament.js`: two rank-appropriate
+invitations — a gentry tourney (tier 2, noble vocation) and a great tourney for
+landed lords (tier 3+) — both gated to spring and summer with three-to-four-year
+cooldowns so they stay occasions. Each offers a paid joust entry and a free melee,
+both resolved through the existing `battle` named chance (Martial, Brave/Craven,
+holdings, worn battle equipment, blessings); a wager for Christian, pagan, and
+Jewish players with a host-gift or patronage counterpart in Muslim lands; a safe
+attendance choice; and a withdrawal. Victory, defeat, injury, prize, prestige, and
+host-Standing outcomes are ordinary declarative effects, so visible and autoresolved
+choices stay equivalent. Default, Muslim, and pagan text variants keep the ceremony
+out of one universal register. Hosting, brackets, rosters, and AI tournament
+calendars remain deferred.
 
 ### 5. Data-driven laws, reforms, and bloc voting
 

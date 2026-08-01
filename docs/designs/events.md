@@ -90,6 +90,20 @@ ordinary war, and write the affected ledger into the campaign-feedback record. B
 visible choices and non-`first` autoresolve both finish through `FB.applyEffects`, they
 produce the same mechanical outcome for a selected option.
 
+**Tournaments are bounded invitations, not a simulation.** `data/events_tournament.js`
+holds the jousting family: a gentry tourney (tier 2, noble vocation) and a great
+tourney for landed lords (tier 3+), each gated to spring/summer with a multi-year
+cooldown so the stories remain occasions. Every mounted contest resolves through the
+ordinary `battle` named chance, so Martial, Brave/Craven, holdings, worn battle
+equipment, and blessings apply with no jousting-specific formula. The joust charges
+an entry purse through ordinary option effects beside its chance branches; the melee
+is free with smaller stakes. The wager option is hidden in Muslim lands, where a
+host-gift or patronage counterpart keeps every faith at the same number of choices,
+and default/Muslim/pagan text variants keep the ceremony's form and idiom
+faith-appropriate. Attendance and withdrawal choices trade host Standing for safety.
+Participation only: hosting, brackets, entrant rosters, and AI tournament calendars
+are deliberately deferred.
+
 **Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
 to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
 `crowned`. Event triggers and option requirements may use `societalRoles`; vassal,
