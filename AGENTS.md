@@ -183,10 +183,23 @@ about to touch, and update it when you change that system.**
 
 ## Code style conventions
 
-- ES5-flavored style: `function(){}` expressions, no arrow functions/classes/template literals,
-  to keep old mobile browsers working. Match it (there is a stray arrow function in
-  `js/model.js:56` — an exception, not the rule). Each engine file is an IIFE that augments the
-  `window.FB` global.
+- Classic scripts in the house `function(){}` style; each engine file is an IIFE that
+  augments the `window.FB` global. The compatibility floor is 2016-era engines (roughly
+  Safari 10 / Chrome 49 and equivalent WebViews): `const`/`let` and `for...of` are already
+  load-bearing throughout shipped code, so genuinely ES5-only browsers cannot parse the
+  game anyway. Within that floor:
+  - `const`/`let`, `for...of`, and arrow functions are fine. Prefer `function(){}` for
+    named and top-level functions, and match the style of the surrounding file.
+  - **No template literals.** This is a tooling constraint, not a browser one: the i18n
+    extractor (`tools/i18n_catalog.py`) lexes only single- and double-quoted strings, so a
+    backtick string is invisible to extraction. Lift this only by teaching that lexer
+    template literals first.
+  - **No `class` syntax** (the codebase's namespace-object architecture does not use it)
+    and no Promises or `async`/`await` in game logic (the engine is synchronous and
+    deterministic by design).
+  - **No ES modules and no build step, ever.** Module scripts are CORS-blocked from
+    `file://`, and running from `file://` is a hard requirement. The `<script>` load order
+    in `index.html` is the dependency mechanism; authored source is shipped source.
 - Apostrophes inside single-quoted event strings use the typographic `’` character, not `\'`.
 - **All randomness must go through `FB.rng`/`FB.ri`/`FB.pick`** (seeded, saved with the game) —
   never `Math.random()` in game logic. The only legitimate `Math.random()` calls are the
