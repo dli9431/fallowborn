@@ -9,7 +9,48 @@ window.FB = window.FB || {};
 
   var MAGNATE_PREFIX = 'magnate:';
   var INDEPENDENT_PREFIX = 'independent:';
-  var MOTIONS = { redress:1, scutage:1 };
+
+  /* The Estates policy catalog (data/policies.js). The two original motions
+     remain the fallback when the catalog data is absent (stripped by a mod),
+     so a pending redress/scutage campaign in an old save still resolves. */
+  var FALLBACK_POLICIES = { redress:1, scutage:1 };
+
+  function policyCatalog() {
+    var defs = FBDATA.policies;
+    return defs && typeof defs === 'object' && !Array.isArray(defs) &&
+      Object.keys(defs).length ? defs : FALLBACK_POLICIES;
+  }
+
+  function policyDef(id) {
+    var defs = policyCatalog();
+    var def = defs[id];
+    return def && typeof def === 'object' ? def :
+      (defs === FALLBACK_POLICIES && def
+        ? { id:id, redressEvidence:id === 'redress' } : null);
+  }
+  FB.policyDef = policyDef;
+
+  function policyIds() {
+    return Object.keys(policyCatalog()).sort(compareId);
+  }
+
+  /* Ordered catalog entries ({ id, def }) for UI pickers. */
+  FB.policyList = function () {
+    var defs = policyCatalog();
+    var out = [];
+    for (var id in defs) {
+      if (!own(defs, id)) continue;
+      var def = defs[id];
+      if (!def || typeof def !== 'object') continue;
+      out.push({ id:id, def:def });
+    }
+    out.sort(function (a, b) {
+      var ao = isFinite(Number(a.def.order)) ? Number(a.def.order) : 99;
+      var bo = isFinite(Number(b.def.order)) ? Number(b.def.order) : 99;
+      return ao - bo || compareId(a.id, b.id);
+    });
+    return out;
+  };
 
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj || {}, key);
@@ -577,7 +618,7 @@ window.FB = window.FB || {};
   }
 
   function pendingValid(state, court, pending) {
-    return !!(pending && MOTIONS[pending.motionId] &&
+    return !!(pending && policyDef(pending.motionId) &&
       pending.id && pending.polityId === court.polityId &&
       isFinite(Number(pending.startedTurn)) &&
       isFinite(Number(pending.expiresTurn)) &&
@@ -791,15 +832,21 @@ window.FB = window.FB || {};
     };
   }
 
-  function traitMotionValue(traitId, motionId) {
-    if (motionId === 'redress') {
-      return {
-        ambitious:5, greedy:8, proud:5, content:-5, generous:-5
-      }[traitId] || 0;
-    }
-    return {
-      brave:-10, craven:12, greedy:5, patient:4, wrathful:-6
-    }[traitId] || 0;
+  /* No-catalog fallback postures for the two original motions. The shipped
+     catalog (data/policies.js) carries these same values in each def's
+     `posture`, so behavior is identical whether read from data or fallback. */
+  var FALLBACK_POSTURES = {
+    redress:{ aidSlope:100, traits:{
+      ambitious:5, greedy:8, proud:5, content:-5, generous:-5 } },
+    scutage:{ aidSlope:-60, martialSlope:2, traits:{
+      brave:-10, craven:12, greedy:5, patient:4, wrathful:-6 } }
+  };
+
+  function policyPosture(motionId) {
+    var def = policyDef(motionId);
+    if (def && def.posture && typeof def.posture === 'object' &&
+        !Array.isArray(def.posture)) return def.posture;
+    return FALLBACK_POSTURES[motionId] || {};
   }
 
   function weightedMemberAverage(bloc, getter) {
@@ -821,27 +868,32 @@ window.FB = window.FB || {};
     var reasons = [reason('bloc_posture', base, {
       archetypeId:bloc.archetypeId
     })];
+    var posture = policyPosture(motionId);
     var terms = FB.parliamentTerms ? FB.parliamentTerms(state) : {
       aid:(FBDATA.balance.parliamentAidBase || 0.25)
     };
     var customary = FBDATA.balance.parliamentAidBase || 0.25;
     var aid = terms.aid === undefined ? customary : terms.aid;
-    var aidValue = motionId === 'redress'
-      ? Math.round((aid - customary) * 100)
-      : Math.round((customary - aid) * 60);
+    var aidSlope = isFinite(Number(posture.aidSlope)) ?
+      Number(posture.aidSlope) : 0;
+    var aidValue = aidSlope ? Math.round((aid - customary) * aidSlope) : 0;
     if (aidValue) reasons.push(reason('current_aid', aidValue, {
       aid:aid
     }));
+    var traitValues = posture.traits || {};
     var traits = Math.round(weightedMemberAverage(bloc, function (house) {
-      return traitMotionValue(house.traitId, motionId);
+      return traitValues[house.traitId] || 0;
     }));
     if (traits) reasons.push(reason('ruler_traits', traits));
     var martial = 0;
-    if (motionId === 'scutage') {
+    var martialSlope = isFinite(Number(posture.martialSlope)) ?
+      Number(posture.martialSlope) : 0;
+    if (martialSlope) {
       var averageMartial = weightedMemberAverage(bloc, function (house) {
         return house.martial;
       });
-      martial = FB.clamp(Math.round((6 - averageMartial) * 2), -12, 12);
+      martial = FB.clamp(Math.round((6 - averageMartial) * martialSlope),
+        -12, 12);
       if (martial) reasons.push(reason('martial_inclination', martial, {
         martial:Math.round(averageMartial * 10) / 10
       }));
@@ -864,7 +916,8 @@ window.FB = window.FB || {};
   }
 
   FB.politicalMotionForecast = function (state, motionId) {
-    if (!MOTIONS[motionId]) return null;
+    var motionDef = policyDef(motionId);
+    if (!motionDef) return null;
     if (FB.parliamentActive && !FB.parliamentActive(state)) return null;
     var summary = buildSummary(state);
     if (!summary) return null;
@@ -898,7 +951,7 @@ window.FB = window.FB || {};
       blocs.push(copy);
     }
     var playerChance = FB.parliamentVoteChance
-      ? FB.parliamentVoteChance(state, motionId === 'redress') : 0.5;
+      ? FB.parliamentVoteChance(state, !!motionDef.redressEvidence) : 0.5;
     return {
       motionId:motionId,
       polityId:summary.polityId,
@@ -918,13 +971,16 @@ window.FB = window.FB || {};
   FB.politicalSummary = function (state) {
     var summary = buildSummary(state);
     if (!summary) return null;
-    var redress = FB.politicalMotionForecast(state, 'redress');
-    var scutage = FB.politicalMotionForecast(state, 'scutage');
-    summary.forecasts = redress && scutage
-      ? { redress:redress, scutage:scutage } : null;
+    var forecasts = {};
+    var ids = policyIds();
+    for (var i = 0; i < ids.length; i++) {
+      var forecast = FB.politicalMotionForecast(state, ids[i]);
+      if (forecast) forecasts[ids[i]] = forecast;
+    }
+    summary.forecasts = Object.keys(forecasts).length ? forecasts : null;
     summary.motion = summary.pendingMotion
       ? (summary.forecasts &&
-        summary.forecasts[summary.pendingMotion.motionId]) : null;
+        summary.forecasts[summary.pendingMotion.motionId] || null) : null;
     return summary;
   };
 })();

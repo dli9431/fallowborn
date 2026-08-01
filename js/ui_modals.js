@@ -4949,8 +4949,30 @@ window.FB = window.FB || {};
   }
 
   function politicalMotionName(motionId) {
-    return motionId === 'scutage'
-      ? FB.T('Scutage') : FB.T('Redress');
+    const s = FB.state;
+    const def = FB.policyDef ? FB.policyDef(motionId) : null;
+    if (def && def.name) {
+      return FB.dataText(s, s.player.charId, 'policy',
+        motionId, def, 'name', {});
+    }
+    if (motionId === 'scutage') return FB.T('Scutage');
+    if (motionId === 'redress') return FB.T('Redress');
+    return String(motionId);
+  }
+
+  function politicalPolicyDesc(motionId) {
+    const s = FB.state;
+    const def = FB.policyDef ? FB.policyDef(motionId) : null;
+    if (def && def.desc) {
+      return FB.dataText(s, s.player.charId, 'policy',
+        motionId, def, 'desc', {});
+    }
+    return '';
+  }
+
+  function politicalPolicyCost(def) {
+    return isFinite(Number(def && def.cost)) ? Number(def.cost) :
+      (FBDATA.balance.parliamentMotionCost || 15);
   }
 
   function politicalSigned(value) {
@@ -5129,6 +5151,18 @@ window.FB = window.FB || {};
         'No political court applies to the current position.')) + '</div>';
     }
     const forecast = politics.motion;
+    const policies = FB.policyList ? FB.policyList() : [];
+    const readyForecasts = [];
+    if (!forecast && politics.forecasts) {
+      for (const entry of policies) {
+        const policyForecast = politics.forecasts[entry.id];
+        const status = FB.parliamentMotionStatus
+          ? FB.parliamentMotionStatus(s, entry.id) : null;
+        if (policyForecast && status && status.ready) {
+          readyForecasts.push({ id:entry.id, forecast:policyForecast });
+        }
+      }
+    }
     let h = kv('Court influence', esc(String(
       politics.totalInfluence))) +
       kv('Strict majority', esc(String(politics.majority)));
@@ -5138,13 +5172,14 @@ window.FB = window.FB || {};
         '<div class="progressnote">' +
         esc(politicalTotalsText(forecast)) + '</div>';
     } else if (politics.forecasts) {
-      h += kv('Redress forecast', esc(politicalTotalsText(
-        politics.forecasts.redress))) +
-        kv('Scutage forecast', esc(politicalTotalsText(
-          politics.forecasts.scutage))) +
-        '<div class="hint">' + esc(FB.T(
-          'No motion is pending. Allegiances persist, while influence and interests follow the current court.')) +
-          '</div>';
+      for (const item of readyForecasts) {
+        h += kv(FB.T('{motion} forecast', {
+          motion:politicalMotionName(item.id)
+        }), esc(politicalTotalsText(item.forecast)));
+      }
+      h += '<div class="hint">' + esc(FB.T(
+        'No motion is pending. Allegiances persist, while influence and interests follow the current court.')) +
+        '</div>';
     } else {
       h += '<div class="hint">' + esc(FB.T(
         'These crown-side blocs are authoritative, but no Estates motion applies to this court.')) +
@@ -5185,13 +5220,11 @@ window.FB = window.FB || {};
       if (forecast) {
         h += governanceBlocMotionHtml(
           s, bloc, forecast.motionId, true);
-      } else if (politics.forecasts) {
-        h += governanceBlocMotionHtml(s, politicalForecastBloc(
-          politics.forecasts.redress,
-          bloc.id), 'redress', false);
-        h += governanceBlocMotionHtml(s, politicalForecastBloc(
-          politics.forecasts.scutage,
-          bloc.id), 'scutage', false);
+      } else {
+        for (const item of readyForecasts) {
+          h += governanceBlocMotionHtml(s, politicalForecastBloc(
+            item.forecast, bloc.id), item.id, false);
+        }
       }
       h += '</article>';
     }
@@ -5523,13 +5556,10 @@ window.FB = window.FB || {};
     const modifierConsequences = governanceModifierConsequencesHtml(s, summary);
     if (summary.institution === 'estates' && summary.estates) {
       const estates = summary.estates;
-      const redress = FB.parliamentMotionStatus(s, 'redress');
-      const scutage = FB.parliamentMotionStatus(s, 'scutage');
       const activeForecast = estates.motionForecast;
-      const redressForecast = activeForecast ||
-        FB.politicalMotionForecast(s, 'redress');
-      const scutageForecast = activeForecast ||
-        FB.politicalMotionForecast(s, 'scutage');
+      const forecasts = summary.politics && summary.politics.forecasts
+        ? summary.politics.forecasts : {};
+      const policies = FB.policyList ? FB.policyList() : [];
       let h = kv('The liege’s aid', esc(FB.T('{percent}%', {
         percent:Math.round(estates.aid * 100)
       }))) +
@@ -5539,8 +5569,6 @@ window.FB = window.FB || {};
           : FB.T('{chance}% yearly chance; no sitting is currently pending', {
             chance:Math.round(estates.sessionChance * 100)
           }))) +
-        kv('Motion this year', esc(estates.motionUsed
-          ? FB.T('Already used') : FB.T('Available'))) +
         kv('Lobbying strength', esc(FB.T('{chance}%', {
           chance:Math.round(estates.vote.total * 100)
         })));
@@ -5550,21 +5578,29 @@ window.FB = window.FB || {};
           '<div class="progressnote">' +
           esc(politicalTotalsText(activeForecast)) + '</div>';
       } else {
-        h += kv('Redress blocs', esc(politicalTotalsText(
-          redressForecast))) +
-          kv('Scutage blocs', esc(politicalTotalsText(
-            scutageForecast)));
+        const blocked = [];
+        for (const entry of policies) {
+          const status = FB.parliamentMotionStatus(s, entry.id);
+          const forecast = forecasts[entry.id];
+          if (status.ready && forecast) {
+            h += kv(politicalMotionName(entry.id),
+              esc(politicalTotalsText(forecast)));
+          } else if (!status.ready) {
+            blocked.push(politicalMotionName(entry.id));
+          }
+        }
+        if (blocked.length) {
+          h += '<div class="hint">' + esc(FB.T(
+            'Not currently available: {list}.', {
+              list:blocked.join(' · ')
+            })) + '</div>';
+        }
       }
-      h += '<div class="hint">' + esc(FB.T(
-          'Available motions: redress — {redress}; scutage — {scutage}.', {
-            redress:redress.ready ? FB.T('ready') : redress.reason,
-            scutage:scutage.ready ? FB.T('ready') : scutage.reason
-          })) + '</div>' +
-        '<button type="button" class="actionbtn" ' +
+      h += '<button type="button" class="actionbtn" ' +
         'data-governance-institution="estates">🏛 ' +
         esc(FB.T('Open Estates management…')) +
         '<span class="adesc">' + esc(FB.T(
-          'Review the terms and put an eligible yearly motion to the hall.')) +
+          'Review the terms and put an eligible motion to the hall.')) +
         '</span></button>';
       return h + modifierConsequences;
     }
@@ -6091,12 +6127,8 @@ window.FB = window.FB || {};
     const pending = projection.pendingMotion;
     const activeForecast = projection.motionForecast;
     const politics = FB.politicalSummary(s);
-    const redressForecast = pending
-      ? (pending.motionId === 'redress' ? activeForecast : null)
-      : FB.politicalMotionForecast(s, 'redress');
-    const scutageForecast = pending
-      ? (pending.motionId === 'scutage' ? activeForecast : null)
-      : FB.politicalMotionForecast(s, 'scutage');
+    const policies = FB.policyList ? FB.policyList() : [];
+    const forecasts = politics && politics.forecasts ? politics.forecasts : {};
     let h = '<p class="hint">' + esc(FB.T(
       'When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.',
       { liege: liege.name })) + '</p>';
@@ -6112,21 +6144,23 @@ window.FB = window.FB || {};
           ? activeForecast.playerVoteChance
           : projection.vote.total) * 100)
       })));
-    if (!pending && redressForecast &&
-        redressForecast.playerVoteChance !== projection.vote.total) {
-      h += kv('Lobbying strength with redress evidence',
-        esc(FB.T('{chance}%', {
-          chance:Math.round(redressForecast.playerVoteChance * 100)
-        })));
+    if (!pending) {
+      for (const entry of policies) {
+        if (!entry.def.redressEvidence) continue;
+        const evidenceForecast = forecasts[entry.id];
+        if (evidenceForecast &&
+            evidenceForecast.playerVoteChance !== projection.vote.total) {
+          h += kv('Lobbying strength with redress evidence',
+            esc(FB.T('{chance}%', {
+              chance:Math.round(
+                evidenceForecast.playerVoteChance * 100)
+            })));
+        }
+      }
     }
     h += '<p class="hint">' + esc(FB.T(
-      'Beginning a motion costs {money:cost} in gifts and promises, spends the year’s motion, and opens a 90-day campaign. One targeted lobbying attempt is included.',
+      'Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included.',
       { cost: cost })) + '</p>';
-    if (projection.motionUsed && !pending) {
-      h += '<p class="hint">' + esc(FB.T('The estates have heard your motion this year; they will take another come the new year.')) + '</p>';
-    }
-    const redress = FB.parliamentMotionStatus(s, 'redress');
-    const scutage = FB.parliamentMotionStatus(s, 'scutage');
     h += '<div class="gm-list">';
     h += '<button class="actionbtn" id="estates-liege-card">' +
       esc(FB.T('Open {liege}’s ruler card…', {
@@ -6135,24 +6169,20 @@ window.FB = window.FB || {};
         'Review Standing, gifts, cultivation, feudal actions, and the realm relationship.')) +
       '</span></button>';
     if (!pending) {
-      h += '<button class="actionbtn" data-motion="redress"' +
-        (redress.ready ? '' : ' disabled') + '>⚖ ' +
-        esc(FB.T('Begin a redress campaign ({money:cost})', {
-          cost:cost
-        })) + '<span class="adesc">' +
-        esc(redress.reason || (politicalTotalsText(redressForecast) +
-          '. ' + FB.T(
-            'If carried, the liege’s aid falls one step.'))) +
-        '</span></button>';
-      h += '<button class="actionbtn" data-motion="scutage"' +
-        (scutage.ready ? '' : ' disabled') + '>🛡 ' +
-        esc(FB.T('Begin a scutage campaign ({money:cost})', {
-          cost:cost
-        })) + '<span class="adesc">' +
-        esc(scutage.reason || (politicalTotalsText(scutageForecast) +
-          '. ' + FB.T(
-            'If carried, silver may answer banner service and the aid rises slightly.'))) +
-        '</span></button>';
+      for (const policy of policies) {
+        const status = FB.parliamentMotionStatus(s, policy.id);
+        const forecast = forecasts[policy.id] || null;
+        h += '<button class="actionbtn" data-motion="' + esc(policy.id) + '"' +
+          (status.ready ? '' : ' disabled') + '>' +
+          (policy.def.icon ? esc(policy.def.icon) + ' ' : '') +
+          esc(FB.T('Propose: {policy} ({money:cost})', {
+            policy:politicalMotionName(policy.id),
+            cost:politicalPolicyCost(policy.def)
+          })) + '<span class="adesc">' +
+          esc(status.reason || (politicalTotalsText(forecast) +
+            '. ' + politicalPolicyDesc(policy.id))) +
+          '</span></button>';
+      }
     } else if (activeForecast) {
       h += '<div class="progressnote">' + esc(FB.T(
         '{motion} campaign · {days} days remain.', {

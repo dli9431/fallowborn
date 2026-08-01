@@ -58,6 +58,84 @@ FBDATA.events.push(
       effects:{ custom:'parliament_scutage_lost', opinionLiege:-6, prestige:-3, removeTrait:'moot_speaker' } }
   ]},
 
+/* ---- policy catalog result events (data/policies.js) ---- */
+{ id:'parliament_emergency_subsidy', title:'A Motion for an Emergency Subsidy',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'With the realm at war, your parchment asks the assembled lords to open their purses for {liege}: an emergency subsidy, voted here and now, to keep the campaign fed. The benches count the cost in their heads; every eye that turns to you is weighing your loyalty against your purse.',
+  options:[
+    { label:'Receive the carried vote.', desc:'The subsidy carries. You pay your share at the steward’s table before the ink is dry, and the liege’s gratitude is loud enough for the hall to hear.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_emergency_subsidy_won', prestige:4, traitProgress:{id:'moot_speaker'}, log:'Carried an emergency war subsidy in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The purses stay shut. Your loyalty is noted — and so is your failure to deliver the hall.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:-4, prestige:-3, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_levy_relief', title:'A Motion for Levy Relief',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'Your motion before the estates: that your home county, thinned by years of musters, be spared the levy for a season of seasons — and that the aid rise in exchange, so {liege}’s chest loses nothing. The lords with villages of their own to strip listen closely.',
+  options:[
+    { label:'Receive the carried vote.', desc:'It carries. The tallymen will pass your county by, and the collectors will not — a bargain your people will bless and your rents will feel.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_levy_relief_won', prestige:3, traitProgress:{id:'moot_speaker'}, log:'Won levy relief for the home county in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The hall is not moved. The muster rolls will keep your county’s name where it is.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_market_charter_grant', title:'A Motion for a Market Charter',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'Your motion asks {liege}’s grace for a chartered market in your home county: stalls by the church door, tolls honestly taken, building timber bought without a week’s bargaining. The guild men smile; the lords who farm their own tolls do not.',
+  options:[
+    { label:'Receive the carried vote.', desc:'The charter is granted under the assembly’s seal. Within the month the first stalls go up by the church door.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_motion_done', addModifier:{id:'market_charter'}, prestige:4, traitProgress:{id:'moot_speaker'}, log:'Won a market charter for the home county in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The toll-farmers have too many friends on the benches. The charter dies unsealed.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_local_custom', title:'A Motion to Confirm Local Custom',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'Your motion is a quiet one: that the old customs of your home county — the gleaning rights, the mill tolls, the parish feasts — be written and confirmed, so no steward’s whim can tax them away. The commons will hear of whoever speaks for this, and of whoever does not.',
+  options:[
+    { label:'Receive the carried vote.', desc:'The customs are read, witnessed, and sealed. In your county the news travels faster than the parchment.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_motion_done', addModifier:{id:'custom_confirmed'}, prestige:4, traitProgress:{id:'moot_speaker'}, log:'Had the home county’s customs confirmed by the estates.' } },
+    { label:'Accept the failed vote.', desc:'The lords will not bind their own stewards. Your county’s customs remain exactly as strong as your arm.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_revocation_consent', title:'A Motion for the Consent of the Estates',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'This is no small parchment. Your motion would bind {liege} by oath: no aid raised, no new exaction laid, without the consent of the assembled estates. The hall has gone very quiet. Every lord here has dreamed of such a law; few have dared to move it.',
+  options:[
+    { label:'Receive the carried vote.', desc:'Against every expectation, it carries. The liege’s steward writes the oath into the roll with a hand that does not shake. Much.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_revocation_consent_pass', prestige:6, traitProgress:{id:'moot_speaker'}, log:'Bound the liege to seek the estates’ consent for new aids.' } },
+    { label:'Accept the failed vote.', desc:'Too many benches are owed, bought, or frightened. The motion fails — and the crown now knows exactly who reached for its purse.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:-8, prestige:-3, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_war_authorization', title:'A Motion to Authorize the War',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'Your motion asks the estates to say aloud what the crown wants heard: that {liege}’s war is just, necessary, and backed by the assembled lords of the realm. The hawks are already nodding. The older lords are counting their sons.',
+  options:[
+    { label:'Receive the carried vote.', desc:'The authorization carries, and your name leads it. The liege’s gratitude is real, and publicly given.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:10, prestige:6, traitProgress:{id:'moot_speaker'}, log:'Carried the authorization of the liege’s war in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The hall will not bless the war. You stood for the crown and the crown watched you fall.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:-4, prestige:-3, removeTrait:'moot_speaker' } }
+  ]},
+
+{ id:'parliament_war_condemnation', title:'A Motion to Condemn the War',
+  trigger:{ never:true }, /* queued from the Estates deed */
+  contextValidator:'parliament_motion_context_valid',
+  text:'Your motion is the dangerous one: that the estates declare {liege}’s war a waste of the realm’s blood and silver, and call for its end. Some lords meet your eye and nod. Others are already composing their report to the crown.',
+  options:[
+    { label:'Receive the carried vote.', desc:'The condemnation carries. In the county lanes your name is spoken with something like hope; in the liege’s hall, with something else.', require:{ custom:'parliament_motion_passed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:-10, prestige:8, popularOpinion:6, traitProgress:{id:'moot_speaker'}, log:'Carried a condemnation of the liege’s war in the estates.' } },
+    { label:'Accept the failed vote.', desc:'The motion dies, and every lord who feared it now knows exactly who moved it.', require:{ custom:'parliament_motion_failed' },
+      effects:{ custom:'parliament_motion_done', opinionLiege:-6, prestige:-2, removeTrait:'moot_speaker' } }
+  ]},
+
 /* ---- wartime: the subsidy vote ---- */
 { id:'parliament_subsidy', title:'A Subsidy for the Liege’s War',
   trigger:{ never:true }, /* queued by FB.parliamentYearly while the liege fights */

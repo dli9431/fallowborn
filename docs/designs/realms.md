@@ -174,8 +174,9 @@ only to a real great office in the player's crown. Bloc influence is the sum
 of member-house influence; a vote requires `floor(total/2) + 1`.
 
 `FBDATA.politicalBlocs` defines the localized Crown, Mercantile, Magnate, and
-Independent archetype presentation and their initial redress/scutage
-postures. `js/politics.js` assigns real court houses from current interests:
+Independent archetype presentation and their per-policy starting postures
+(`motions.<policyId>` for each `FBDATA.policies` entry). `js/politics.js`
+assigns real court houses from current interests:
 Crown uses Standing/favor, Council office, shared faith, and ruler
 temperament; Mercantile uses guild rank, monopolies, enterprises, active
 trade contracts, and commercial county modifiers. Up to two highest-influence
@@ -190,8 +191,8 @@ Only the allegiance is durable. An annual review retains an ordinary
 affiliation unless its basis disappears or another valid interest exceeds it
 by at least 25 points. Voluntary realignment waits while any motion is
 pending, then the overdue review occurs after the motion clears.
-For an Estates-eligible vassal, `FB.politicalSummary` includes ordinary
-redress and scutage forecasts plus the active pending-motion forecast.
+For an Estates-eligible vassal, `FB.politicalSummary` includes a forecast for
+every policy in the catalog plus the active pending-motion forecast.
 Crown-side blocs remain visible without implying those vassal motions apply
 to crown policy. The summary and `FB.politicalMotionForecast` derive all
 membership details, reasons, influence, postures, and probabilities without
