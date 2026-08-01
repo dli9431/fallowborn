@@ -51,20 +51,20 @@ test('the Guide keeps orientations and topic details in one searchable sheet',
   async function ({ page }) {
     const onboarding = await page.evaluate(function () {
       return {
-        seen:!!FB.state.player.roleOrientationsSeen['role-tier-0'],
+        seen:!!FB.state.player.roleOrientationsSeen['role-tier-1'],
         repeated:FB.ui.maybeShowRoleOrientation()
       };
     });
     expect(onboarding).toEqual({ seen:true, repeated:false });
 
     await page.evaluate(function () {
-      FB.state.player.tier = 1;
       delete FB.state.player.roleOrientationsSeen['role-tier-1'];
       FB.ui.maybeShowRoleOrientation();
     });
     await expect(page.getByRole('heading', {
       name:'Guide', exact:true
     })).toBeVisible();
+    await expect(page.locator('#guide-controls')).toBeVisible();
     const freeholder = page.locator('[data-guide-entry="role-tier-1"]');
     await expect(freeholder).toHaveAttribute('aria-expanded', 'true');
     const freeholderDetail = page.locator('#guide-entry-detail-role-tier-1');

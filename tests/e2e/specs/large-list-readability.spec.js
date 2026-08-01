@@ -19,6 +19,14 @@ async function makeLargeListFixture(page) {
     var home = FB.world.byId[p.provinceId];
     var workerIds = [];
 
+    /* The seeded start rolls 1-2 siblings; as manageable kin they would
+       join the Work roster. Send them away so the constructed counts
+       stay exact. */
+    var sibs = FB.siblingsOf(s, me);
+    for (var sb = 0; sb < sibs.length; sb++) {
+      sibs[sb].homeProvinceId = 'arhus';
+    }
+
     p.tier = 3;
     p.retainers = [];
     p.enterpriseMigration = 1;
@@ -271,7 +279,7 @@ test('Network combines same-section roles while retaining cross-section context'
     });
 
     await expect(page.locator('#network-list-search')).toBeVisible();
-    await expect(page.locator('[data-list-section]')).toHaveCount(4);
+    await expect(page.locator('[data-list-section]')).toHaveCount(5);
     await expect(page.locator(
       '[data-list-section="connections"] .large-list-section-count'))
       .toContainText('3 total');

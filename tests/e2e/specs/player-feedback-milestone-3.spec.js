@@ -43,6 +43,8 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
 
     await page.evaluate(function () {
       FB.ui.closeModal();
+      FB.state.player.tier = 0;
+      FB.state.player.roleOrientationsSeen['role-tier-0'] = 1;
       FB.state.player.focus = 'rest';
     });
     await page.keyboard.press('w');

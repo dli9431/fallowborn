@@ -505,7 +505,10 @@ test('diplomatic selectors bind the correct direction, pact, alliance, and gener
     expect(result.queued.ctx.rulerGeneration).toBe(result.oldGeneration + 1);
     expect(result.queued.ctx.formerAlliance).toBe('yes');
     expect(result.alliedAfterSuccession).toBe(false);
-    expect(result.standingAfterSuccession).toBe(0);
+    /* The predecessor's cultivated +55 does not survive succession; the heir
+       reigns with their own seeded court disposition, rolled in -5..20. */
+    expect(result.standingAfterSuccession).toBeGreaterThanOrEqual(-5);
+    expect(result.standingAfterSuccession).toBeLessThanOrEqual(20);
     expect(result.validBefore).toBe(true);
     expect(result.validAfter).toBe(false);
     expect(result.pendingPactBefore).toBe(true);

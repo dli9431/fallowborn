@@ -1061,6 +1061,8 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .war-target-toolbar label > span { color: #a9997b; font-size: 11px; }
 .war-target-toolbar input, .war-target-toolbar select { width: 100%; min-width: 0; }
 .war-target-row[disabled] { opacity: 0.72; cursor: not-allowed; }
+/* .actionbtn's display:block would defeat the hidden attribute the filter sets */
+.war-target-row[hidden] { display: none !important; }
 
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
@@ -1614,6 +1616,8 @@ textarea.modjson, textarea.savetext {
 }
 .ftstem { width: 0; height: 12px; border-left: 2px solid #6b5836; }
 .ftkids { display: flex; align-items: flex-start; }
+/* the flex display would defeat the hidden attribute branch collapse sets */
+.ftkids[hidden], .ftstem[hidden] { display: none !important; }
 .ftkids > .ftnode { position: relative; padding: 14px 4px 0; }
 /* drop line down to each child, and the rail joining siblings */
 .ftkids > .ftnode::before {

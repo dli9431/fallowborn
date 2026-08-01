@@ -18,6 +18,7 @@ async function startTournamentGame(page, testInfo) {
     s.player.profession = 'noble';
     s.player.gold = 100;
     s.date.season = 0;
+    s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
     FB.ui.refresh();
   });
 }

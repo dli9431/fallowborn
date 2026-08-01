@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.104.0';
+  FB.VERSION = '1.104.1';
   FB.CHANGELOG = [
+    { v: '1.104.1', date: '2026-08-01', changes: [
+      'The Guide now opens on the selected topic reliably and its search also matches what each skill affects, war catalogue filters properly hide filtered targets, and collapsing a family tree branch hides that branch again.'
+    ] },
     { v: '1.104.0', date: '2026-08-01', changes: [
       'An aging family head can now retire and hand the house to an adult heir, unwed siblings at home can be put to work in careers and enterprises, new games offer a choice of starting family ages, and the house can be renamed from the family screen.'
     ] },

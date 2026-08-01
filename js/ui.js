@@ -20102,7 +20102,7 @@ window.FB = window.FB || {};
         def.purpose,
         guideBody([def.purpose, def.consumers,
           FB.T('The displayed value is current even when one of these systems is unavailable to this character. Individual events may use the skill in additional checks.')]),
-        def.aliases + ' ' + id);
+        def.aliases + ' ' + def.consumers + ' ' + id);
     }
 
     add('resources', 'resources', FB.T('Resources and reputation'),
@@ -20295,7 +20295,7 @@ window.FB = window.FB || {};
         activeQuery = '';
       }
     }
-    let h = '<div class="guide-controls">' +
+    let h = '<div class="guide-controls" id="guide-controls">' +
       '<label><span>' + esc(FB.T('Search guide')) +
       '</span><input id="guide-search" type="search" value="' +
       esc(activeQuery) + '" placeholder="' +

@@ -1898,6 +1898,9 @@ window.FB = window.FB || {};
         group === 'jewish' ? 'synagogue' : 'church'));
   }
   FB.textParams = function (state, viewer, source, ctx, semantic) {
+    /* No running game (title-screen label lookups): only caller context is
+       available, and there is no state to materialize roles from. */
+    if (!state) return ctx || {};
     const me = viewCharacter(state, viewer) || state.chars[state.player.charId];
     const pr = FB.world.byId[state.player.provinceId];
     const realmId = state.owner[state.player.provinceId];

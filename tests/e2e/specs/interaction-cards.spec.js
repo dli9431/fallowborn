@@ -409,6 +409,30 @@ test('materialized rulers share Standing, keep one gift path, and render without
       FB.ui.showCharModal(ruler.id);
       var realm = FB.ui.realmInteractionCard(s, rid);
       var character = FB.ui.characterInteractionCard(s, ruler.id);
+      /* On mismatch, name the mutated top-level keys and show the first
+         divergence so the failure report identifies the writer directly. */
+      var after = JSON.stringify(s);
+      var stateChangedKeys = [];
+      var stateFirstDiff = null;
+      if (after !== before) {
+        var beforeObj = JSON.parse(before);
+        var keys = {};
+        Object.keys(beforeObj).concat(Object.keys(s)).forEach(function (k) {
+          keys[k] = 1;
+        });
+        Object.keys(keys).forEach(function (k) {
+          if (JSON.stringify(beforeObj[k]) !== JSON.stringify(s[k])) {
+            stateChangedKeys.push(k);
+          }
+        });
+        var at = 0;
+        while (at < before.length && before[at] === after[at]) at++;
+        stateFirstDiff = {
+          at:at,
+          before:before.slice(Math.max(0, at - 60), at + 120),
+          after:after.slice(Math.max(0, at - 60), at + 120)
+        };
+      }
       return {
         rid:rid,
         cid:ruler.id,
@@ -427,7 +451,9 @@ test('materialized rulers share Standing, keep one gift path, and render without
           return action.id === 'management.personal-character';
         }),
         portraitStateSame:portraitStateSame,
-        stateSame:before === JSON.stringify(s),
+        stateChangedKeys:stateChangedKeys,
+        stateFirstDiff:stateFirstDiff,
+        stateSame:before === after,
         rngSame:rng === FB.getRngState(),
         uidSame:uid === FB.getUidCounter()
       };
@@ -440,6 +466,8 @@ test('materialized rulers share Standing, keep one gift path, and render without
     expect(result.realmLink).toBe(true);
     expect(result.personalLink).toBe(true);
     expect(result.portraitStateSame).toBe(true);
+    expect(result.stateChangedKeys).toEqual([]);
+    expect(result.stateFirstDiff).toBeNull();
     expect(result.stateSame).toBe(true);
     expect(result.rngSame).toBe(true);
     expect(result.uidSame).toBe(true);

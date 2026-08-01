@@ -45,9 +45,10 @@ async function startDeterministicGame(page) {
   await page.getByRole('button', { name: 'Begin', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Guide', exact: true }))
     .toBeVisible();
-  const serfOrientation = page.locator('[data-guide-entry="role-tier-0"]');
-  await expect(serfOrientation).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('#guide-entry-detail-role-tier-0'))
+  // The CADENCE seed starts the Free Farmer scenario, tier 1.
+  const freeholderOrientation = page.locator('[data-guide-entry="role-tier-1"]');
+  await expect(freeholderOrientation).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#guide-entry-detail-role-tier-1'))
     .toContainText('Good first actions');
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
