@@ -329,6 +329,15 @@ spouse receive `homeProvinceId` in the destination; their marriage and family
 links remain ordinary character state, while household enumeration follows the
 new protagonist.
 
+Voluntary retirement rides the same living-abdication transition and is likewise
+additive at save format 3. `character.retired` is an optional marker on the
+former head only: old saves simply lack it, no migration runs, and the JSON
+snapshot/export round trip preserves it unchanged. The retiring head gains a
+`homeProvinceId` at the household home when none was recorded, and
+`balance.retirementAge` holds the one new tunable. Nothing else about the save
+shape changes; the retired elder is an ordinary living character for kin,
+residence, and mortality purposes.
+
 Personal family-display state is additive at save format 3. A character may
 carry `byname`, distinct from the stable house key `dyn`; restore derives a
 missing patronymic only from an existing recorded father and does not consume

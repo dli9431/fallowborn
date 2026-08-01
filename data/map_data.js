@@ -924,6 +924,7 @@ FBDATA.balance = {
      gives a yearly chance the child grows hardier (health +1, up to 8) */
   richChildMortalityBonus: 0.07, richChildHealthChance: 0.1,
   kinMarryChance: 0.22, kinChildChance: 0.10,
+  retirementAge: 50, // a head this old may hand the house to an adult successor without dying
   /* age → conception multiplier, [age, mult] points read by FB.ageFert:
      flat before the first point, linear between, flat past the last.
      Women past 45 cannot conceive at all regardless of this curve. */

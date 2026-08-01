@@ -727,8 +727,11 @@ window.FB = window.FB || {};
   };
 
   /* Household membership can change wholesale at succession. Keep only the
-     new head, their spouses, retainers, and resident unmarried descendants
-     assigned; every removed reference already remains in the shared armory. */
+     new head, their spouses, retainers, resident unmarried descendants, and
+     manageable kin assigned; every removed reference already remains in the
+     shared armory. A manageable sibling's own wedding path clears their
+     loadout explicitly, so keeping them here only preserves gear while they
+     remain manageable. */
   FB.reconcileHouseholdLoadouts = function (state) {
     FB.ensureItems(state);
     const household = directHouseholdIds(state);
@@ -738,6 +741,7 @@ window.FB = window.FB || {};
     }
     for (const cid in state.player.loadouts) {
       if (household.indexOf(cid) >= 0) continue;
+      if (FB.manageableKinKind && FB.manageableKinKind(state, cid)) continue;
       const refs = FB.equippedItemRefs(state, cid);
       for (let i = 0; i < refs.length; i++) {
         if (cleared.indexOf(refs[i]) < 0) cleared.push(refs[i]);

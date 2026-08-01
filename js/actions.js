@@ -547,6 +547,23 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showTravelSettlement) FB.ui.showTravelSettlement();
     } },
+  { id: 'retire', label: '👴 Hand over the house…', noConsume: true,
+    desc: function (s) {
+      return FB.T('Retire in favor of an adult successor. {name} remains in the family at home as a retired elder.', {
+        name: FB.fullName(me(s))
+      });
+    },
+    show: function (s) { return adult(s); },
+    can: function (s) {
+      if (!FB.game || !FB.game.retirePreview) {
+        return FB.T('Retirement is not possible.');
+      }
+      const preview = FB.game.retirePreview();
+      return preview.eligible ? true : preview.blockers[0];
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showRetirement) FB.ui.showRetirement();
+    } },
 
   { id: 'seek_blessing', label: '🕊 Seek a blessing', cd: 90,
     desc: function (s) {

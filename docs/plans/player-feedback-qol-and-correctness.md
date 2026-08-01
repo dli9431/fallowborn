@@ -1,6 +1,6 @@
 # Player feedback: QoL and correctness plan
 
-Status: in progress — Milestones 1–3 implemented
+Status: in progress — Milestones 1–4 implemented
 Audit baseline: Fallowborn v1.93.3, 2026-07-30
 
 ## Purpose
@@ -522,10 +522,18 @@ Relevant design: [ui.md](../designs/ui.md).
 
 ### Milestone 4 — succession and household agency
 
+**Implementation status: complete.** An aging head can hand the house to an eligible
+adult heir through a previewed retirement deed; resident unwed siblings join the
+manageable labor pool with clear independence rules; new games offer three authored
+starting-family presets encoded in the shareable start code; and the player can rename
+the house within safe limits while personal names stay separate.
+
 #### 18. Add voluntary retirement
 
 Category: **QoL**  
 Validity: **Partial**
+
+Status: **Implemented**
 
 Succession normally requires death. A destination-wedding path can already hand
 over control, but there is no general retirement action for an aging family head.
@@ -545,6 +553,14 @@ Required outcome:
 Rival heirs, rebellion, and forced abdication are later content layers. The first
 version should establish a clean, predictable handover.
 
+Implemented outcome: a retirement deed opens a preview naming the new protagonist,
+what passes in full (no death dues), which personal offices and standings lapse, and
+the old head's retired-elder role. Retirement requires the balance-age threshold and
+an adult heir from the existing heir review, is blocked with stated reasons by
+imprisonment, war, campaign, travel, and great-holy-war hosting, and hands over
+through the living-abdication succession path. The retired head keeps a `retired`
+marker, stays in the family at home, and dies normally.
+
 Relevant design: [characters.md](../designs/characters.md),
 [state-and-saves.md](../designs/state-and-saves.md).
 
@@ -552,6 +568,8 @@ Relevant design: [characters.md](../designs/characters.md),
 
 Category: **QoL**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 Siblings can inherit, but the player cannot manage their work to the same extent as
 resident descendants. This makes collateral investment feel disconnected from the
@@ -567,6 +585,14 @@ Required outcome:
 - show which house investments affect all members and which affect only the
   protagonist or resident household.
 
+Implemented outcome: `FB.manageableKinKind` defines the rule — a living same-dynasty
+sibling who is unmarried, not reigning, not landed, not vowed, and resident. Such kin
+join the labor pool for careers, enterprise staffing, and equipment (labor only, never
+household membership), while education, instruction, and match cells explain why they
+stay descent-line only. Marriage, vows, land, or departure end manageability and strip
+assignments; Kin and Work surfaces state each sibling's scope, and house-wide
+purchases label their beneficiary.
+
 Relevant design: [characters.md](../designs/characters.md),
 [holdings.md](../designs/holdings.md).
 
@@ -574,6 +600,8 @@ Relevant design: [characters.md](../designs/characters.md),
 
 Category: **QoL**  
 Validity: **Valid**
+
+Status: **Implemented**
 
 Starting age and family situation are fixed by the selected scenario.
 
@@ -583,6 +611,13 @@ rather than unconstrained age and kin editing. Every preset must produce a valid
 successor state, disclose its difficulty, and remain deterministic under the
 shareable start seed.
 
+Implemented outcome: three authored presets — the historical youth of sixteen, an
+established householder of thirty with a spouse and young children, and an elder of
+forty-eight with an adult heir — are picked on the character screen with difficulty
+disclosed, generate deterministically on the shared seed without shifting the default
+start's draws, always leave a valid heir, and encode as an optional seventh part of
+the start code (existing codes round-trip unchanged).
+
 Relevant design: [seeds.md](../designs/seeds.md),
 [characters.md](../designs/characters.md).
 
@@ -590,6 +625,8 @@ Relevant design: [seeds.md](../designs/seeds.md),
 
 Category: **QoL**  
 Validity: **Partial**
+
+Status: **Implemented** (first increment)
 
 Some rulers now receive territorial names, but generic NPCs often lack family
 names, the player cannot rename the house, and title acquisition does not support
@@ -605,6 +642,14 @@ Required outcome for the first increment:
 Cadet branches, title-derived surname changes, heraldic splits, and close-kin
 marriage checks should be designed as a later coherent genealogy feature rather
 than separate string substitutions.
+
+Implemented outcome: the Self tab offers a house rename validated for length and
+character set (letters of any script, spaces, hyphens, apostrophes; 2–20 chars).
+`FB.renameHouse` rewrites the shared dynasty string on every house member, updates
+the player realm's dynastic identity, reseeds heraldry, and records a chronicle
+news entry; personal names and patronymic bynames are untouched, and historical
+chronicle text keeps the old name. Generic NPC family names remain a noted gap for
+the later genealogy feature.
 
 Relevant design: [characters.md](../designs/characters.md),
 [marriage.md](../designs/marriage.md).

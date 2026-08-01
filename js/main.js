@@ -654,34 +654,68 @@ window.FB = window.FB || {};
       intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
   ];
 
+  /* Starting-family presets: a small authored set of age/household shapes,
+     picked on the character screen and carried in the start code's optional
+     seventh part. 'standard' must stay exactly the historical start, so every
+     extra RNG draw a richer preset needs runs only for that preset, in a
+     fixed order after the shared parents/siblings. Ages are authored fields,
+     never player-edited; every preset keeps the protagonist an adult (>= 16)
+     and leaves siblings and/or children behind as heirs. */
+  G.FAMILY_PRESETS = [
+    { id: 'standard', name: 'A Youth of Sixteen',
+      diff: 'the scenario’s own difficulty',
+      desc: 'Unmarried, your parents and siblings beside you — the whole road ahead.',
+      situation: 'unmarried, your parents and siblings beside you',
+      age: 0 }, // 0 = FBDATA.balance.startAge
+    { id: 'established', name: 'An Established Household',
+      diff: 'a head start — the succession is secured early, fewer years remain',
+      desc: 'Thirty years old and married, with young children already in the cradle.',
+      situation: 'with a spouse and young children',
+      age: 30, spouseAge: [-4, 4], children: [1, 2], eldestMin: 1 },
+    { id: 'elder', name: 'An Elder of the Family',
+      diff: 'the hardest — an adult heir from day one, but a short remaining runway',
+      desc: 'Forty-eight years old and married, with grown children ready to inherit.',
+      situation: 'with a spouse and grown children',
+      age: 48, spouseAge: [-4, 4], children: [2, 3], eldestMin: 16 }
+  ];
+
+  function familyPresetById(id) {
+    return G.FAMILY_PRESETS.filter(function (p) { return p.id === id; })[0] || null;
+  }
+
   /* ================= seeds =================
      A start is reproducible because G.start re-seeds the RNG from the seed
      string before initPolitics and character generation draw on it — see
      docs/designs/seeds.md. Two shareable forms:
      - world seed: any text normalized to A-Z0-9 (fresh ones are base36)
-     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME
-       (legacy five-part codes imply bookmark 867) */
+     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET]
+       (legacy five-part codes imply bookmark 867; the family preset part is
+       omitted for the standard start) */
 
   // a fresh seed is one-time seed initialization — the legitimate Math.random use
   function freshSeed() {
     return ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0).toString(36).toUpperCase();
   }
 
-  function seedCode(seed, bookmarkId, scenId, provId, sex, name) {
+  function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId) {
     const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
-    return seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
+    const code = seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
+    /* the standard family start takes no seventh part, so old five/six-part
+       codes keep spelling — and reproducing — the exact same start */
+    return presetId && presetId !== 'standard' ? code + '-' + presetId : code;
   }
 
   /* parse what a player pasted: a full start code, a bare world seed, or an
-     error to show inline. Five- and six-part shapes must validate as codes —
-     silently falling back to a bare seed would hand them another world. */
+     error to show inline. Five-, six-, and seven-part shapes must validate as
+     codes — silently falling back to a bare seed would hand them another
+     world. */
   function parseSeedInput(raw) {
     const txt = (raw || '').trim();
     if (!txt) return { error: 'Paste a start code or world seed first.' };
     const parts = txt.split('-');
     if (parts.length >= 5) {
       const bad = 'That start code doesn’t parse — check it was copied whole.';
-      if (parts.length !== 5 && parts.length !== 6) return { error: bad };
+      if (parts.length < 5 || parts.length > 7) return { error: bad };
       const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
       const legacy = parts.length === 5;
       const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
@@ -707,9 +741,15 @@ window.FB = window.FB || {};
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
       }
+      /* an optional seventh part names a starting-family preset */
+      let familyPreset = 'standard';
+      if (!legacy && parts.length === 7) {
+        familyPreset = parts[6].toLowerCase();
+        if (!familyPresetById(familyPreset)) return { error: bad };
+      }
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
-        provinceId:prov.id, sex:sex, name:name
+        provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset
       };
     }
     const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -834,7 +874,8 @@ window.FB = window.FB || {};
       if (r.scenario) { // a full start code: straight to the pre-filled details
         G.pending = {
           seed:r.seed, bookmarkId:r.bookmarkId, scenario:r.scenario,
-          provinceId:r.provinceId, sex:r.sex, name:r.name
+          provinceId:r.provinceId, sex:r.sex, name:r.name,
+          familyPreset:r.familyPreset
         };
         activatePendingBookmark(r.bookmarkId, function () {
           const pr = FB.world.byId[r.provinceId];
@@ -1014,12 +1055,44 @@ window.FB = window.FB || {};
     }
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     $('cg-name').value = G.pending.name || FB.randomName(G.pending.culture, sex);
-    const pr = FB.world.byId[G.pending.provinceId];
-    const culture = FB.cultureOf(pr.culture);
-    const religion = FB.religionOf(pr.religion);
+    /* the starting-family preset picker, rebuilt per visit so a shared start
+       code's preset (or a pick made before stepping Back) survives */
+    const famBox = $('cg-family');
+    famBox.innerHTML = '';
+    for (const fp of G.FAMILY_PRESETS) {
+      const label = document.createElement('label');
+      label.className = 'radio cgfamily-card';
+      label.innerHTML = '<input type="radio" name="cg-family" value="' + fp.id + '">' +
+        '<span><b>' + FB.esc(FB.L(fp.name)) + '</b> — ' + FB.esc(FB.L(fp.diff)) +
+        '<br><span class="hint">' + FB.esc(FB.L(fp.desc)) + '</span></span>';
+      famBox.appendChild(label);
+    }
+    const wantedPreset = familyPresetById(G.pending.familyPreset) ? G.pending.familyPreset : 'standard';
+    document.querySelector('input[name=cg-family][value="' + wantedPreset + '"]').checked = true;
+    famBox.querySelectorAll('input[name=cg-family]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        G.pending.familyPreset = r.value;
+        updateCgSummary();
+      });
+    });
     $('cg-era-hint').textContent = FB.T(
       'Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance.',
       { year:bookmark.date.year });
+    updateCgSummary();
+    FB.ui.showScreen('chargen');
+  }
+
+  function selectedFamilyPreset() {
+    const r = document.querySelector('input[name=cg-family]:checked');
+    return (r && familyPresetById(r.value)) || G.FAMILY_PRESETS[0];
+  }
+
+  function updateCgSummary() {
+    const bookmark = FB.activeBookmark;
+    const preset = selectedFamilyPreset();
+    const pr = FB.world.byId[G.pending.provinceId];
+    const culture = FB.cultureOf(pr.culture);
+    const religion = FB.religionOf(pr.religion);
     $('cg-summary').innerHTML = '<b>' + FB.esc(FB.T('{scenario} in {province}', {
       scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
     })) + '</b><br>' +
@@ -1027,12 +1100,13 @@ window.FB = window.FB || {};
         { text: culture.name }, {})) + ' · ' +
       FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
         { text: religion.name }, {})) + ' · ' +
-      FB.esc(FB.T('beginning in {year} AD, aged {age}.', {
-        year: bookmark.date.year, age: FBDATA.balance.startAge
+      FB.esc(FB.T('beginning in {year} AD, aged {age}, {situation}.', {
+        year: bookmark.date.year,
+        age: preset.age || FBDATA.balance.startAge,
+        situation: FB.L(preset.situation)
       })) + '<br>' + FB.esc(FB.T('🔑 World seed:')) + ' <b>' +
       FB.esc(G.pending.seed || '') + '</b> — ' +
       FB.esc(FB.T('once your story begins, the ☰ menu holds the full start code to share.'));
-    FB.ui.showScreen('chargen');
   }
 
   /* ================= new game ================= */
@@ -1053,11 +1127,13 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[provId];
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
+    const preset = selectedFamilyPreset();
     G.pending.name = null; G.pending.sex = null; // a shared code's pre-fill is spent
+    G.pending.familyPreset = null;
 
     const state = {
       v: 2,
-      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name),
+      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id),
       start: start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
@@ -1115,7 +1191,7 @@ window.FB = window.FB || {};
 
     const me = FB.makeCharacter(state, {
       name: name, sex: sex, culture: pr.culture, religion: pr.religion,
-      born: start.year - FBDATA.balance.startAge,
+      born: start.year - (preset.age || FBDATA.balance.startAge),
       quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
     });
     me.health = 8;
@@ -1185,6 +1261,37 @@ window.FB = window.FB || {};
       sib.health = 8;
       sib.fatherId = dad.id; sib.motherId = mom.id;
       dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
+    }
+
+    /* Family presets beyond 'standard' add a spouse and children here, in a
+       fixed draw order after the shared kin, so the default start's stream —
+       and every old start code — reproduces bit-for-bit. */
+    if (preset.id !== 'standard') {
+      const spouse = FB.makeCharacter(state, {
+        sex: me.sex === 'm' ? 'f' : 'm',
+        culture: pr.culture, religion: pr.religion,
+        born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
+        role: 'spouse'
+      });
+      spouse.health = 8;
+      me.spouseId = spouse.id; spouse.spouseId = me.id;
+      state.roles.spouse = spouse.id;
+      /* no child predates either parent turning sixteen */
+      const oldestChild = Math.max(1,
+        Math.min(preset.age, start.year - spouse.born) - 16);
+      const nKids = FB.ri(preset.children[0], preset.children[1]);
+      for (let k = 0; k < nKids; k++) {
+        const minChildAge = k === 0 ? Math.min(preset.eldestMin, oldestChild) : 1;
+        const child = FB.makeCharacter(state, {
+          culture: pr.culture, religion: pr.religion,
+          born: start.year - FB.ri(minChildAge, oldestChild),
+          dyn: me.dyn, // children of the playable line carry the house name
+          fatherId: me.sex === 'm' ? me.id : spouse.id,
+          motherId: me.sex === 'm' ? spouse.id : me.id
+        });
+        child.health = 8;
+        me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
+      }
     }
 
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
@@ -1945,9 +2052,10 @@ window.FB = window.FB || {};
           role: 'kinspouse'
         });
         sp.health = 8;
-        /* A managed descendant establishing a household through the
-           unscripted yearly match leaves work and equipment assignments
-           behind, just as a pledged wedding does through FB.doKinWedding. */
+        /* A managed kinsman (descendant or resident unwed sibling)
+           establishing a household through the unscripted yearly match
+           leaves work and equipment assignments behind, just as a pledged
+           wedding does through FB.doKinWedding. */
         if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
@@ -2527,14 +2635,24 @@ window.FB = window.FB || {};
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(s);
     if (livingAbdication) {
       const destination = opts.destinationId && FB.world.byId[opts.destinationId];
-      FB.news(s, FB.msg('news.life.living_abdication',
-        '👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}.',
-        {
-          heir:FB.fullName(heir),
-          former:opts.formerName || FB.fullName(old),
-          destination:destination ? destination.name : '',
-          generation:s.generation
-        }));
+      if (opts.retirement && !destination) {
+        FB.news(s, FB.msg('news.life.retirement',
+          '👤 {heir} takes up the family’s story while {former} retires from the headship. Generation {generation}.',
+          {
+            heir:FB.fullName(heir),
+            former:opts.formerName || FB.fullName(old),
+            generation:s.generation
+          }));
+      } else {
+        FB.news(s, FB.msg('news.life.living_abdication',
+          '👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}.',
+          {
+            heir:FB.fullName(heir),
+            former:opts.formerName || FB.fullName(old),
+            destination:destination ? destination.name : '',
+            generation:s.generation
+          }));
+      }
     } else {
       FB.news(s, FB.msg('news.life.succession',
         '👤 {name} takes up the family’s story. Generation {generation}.',
@@ -2544,6 +2662,92 @@ window.FB = window.FB || {};
     FB.ui.refresh();
     FB.save.autosave();
     return true;
+  };
+
+  /* ---------- voluntary retirement ----------
+     An aging head hands the house to an adult successor without dying. The
+     transition reuses the living-abdication succession; the gates below are
+     the single source the deed and the modal both quote, and retireTo
+     re-checks them before changing any state. */
+  G.retirementAge = function () {
+    return FBDATA.balance.retirementAge !== undefined ?
+      FBDATA.balance.retirementAge : 50;
+  };
+
+  G.retirementHeirs = function (s) {
+    const year = s.date.year;
+    return FB.heirsOf(s).filter(function (c) {
+      return FB.ageOf(c, year) >= 16;
+    });
+  };
+
+  G.retirementBlockers = function (s) {
+    const blockers = [];
+    const p = s && s.player;
+    const me = p && s.chars[p.charId];
+    if (!me || me.dead) {
+      blockers.push(FB.T('Only a living head of the house can retire.'));
+      return blockers;
+    }
+    if (FB.ageOf(me, s.date.year) < G.retirementAge()) {
+      blockers.push(FB.T('Retirement waits until age {age}.',
+        { age: G.retirementAge() }));
+    }
+    if (p.flags.in_prison) {
+      blockers.push(FB.T('A prisoner cannot hand over the house.'));
+    }
+    if (p.war) {
+      blockers.push(FB.T('Make peace before retiring; a war cannot be handed over.'));
+    } else if (p.flags.on_campaign) {
+      blockers.push(FB.T('Return from campaign before retiring.'));
+    } else if (FB.playerGreatHolyWarHostActive &&
+        FB.playerGreatHolyWarHostActive(s)) {
+      blockers.push(FB.T('The great holy war must be resolved before retiring.'));
+    } else if (FB.atWarPersonally && FB.atWarPersonally(s)) {
+      blockers.push(FB.T('Resolve the current wartime duty before retiring.'));
+    }
+    if (p.travel) {
+      blockers.push(FB.T('Finish the current journey before retiring.'));
+    }
+    if (!G.retirementHeirs(s).length) {
+      blockers.push(FB.T('No adult successor can take over the house.'));
+    }
+    return blockers;
+  };
+
+  G.retirePreview = function () {
+    const s = FB.state;
+    const blockers = G.retirementBlockers(s);
+    return {
+      eligible: !blockers.length,
+      blockers: blockers,
+      minAge: G.retirementAge(),
+      review: FB.heirReview(s),
+      heirs: G.retirementHeirs(s)
+    };
+  };
+
+  G.retireTo = function (heirId) {
+    const s = FB.state;
+    const p = s.player;
+    const old = s.chars[p.charId];
+    if (!old || old.dead || G.retirementBlockers(s).length) return false;
+    const heir = s.chars[heirId];
+    const eligible = G.retirementHeirs(s).some(function (c) {
+      return c.id === heirId;
+    });
+    if (!heir || !eligible) return false;
+    /* Additive marker (no save-version change): the retired elder stays
+       ordinary family. Retirement grants no benefits, so there is nothing a
+       repeat could duplicate; the marker is for display and clarity. */
+    old.retired = true;
+    // the old head stays at the family home rather than following the roster
+    if (!old.homeProvinceId) old.homeProvinceId = p.provinceId;
+    return G.succeedTo(heirId, {
+      livingAbdication: true,
+      retirement: true,
+      formerName: FB.fullName(old)
+    });
   };
 
   /* ================= save/load/title ================= */

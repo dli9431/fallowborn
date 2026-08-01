@@ -95,9 +95,17 @@ staffing; a missing field means unlocked, so the addition remains compatible wit
 save format 3. One copy of a type may stand in each derived settlement, so a family may
 own several workshops or stalls; further copies grow dearer by
 `balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing while idle.
-`FB.enterpriseWorkersFor` limits staffing to resident family or a paid retainer
-in the matching career (and, where required, guild rank) whose
-`FB.characterResidence` is the enterprise's province. A retained factor or
+`FB.enterpriseWorkersFor` limits staffing to resident family, a paid retainer,
+or a manageable resident unwed sibling (`FB.manageableKinKind`; see
+[characters.md](characters.md)) in the matching career (and, where required,
+guild rank) whose `FB.characterResidence` is the enterprise's province. A
+manageable sibling contributes labor only — never household membership, upkeep,
+or wages — and a sibling who weds, takes vows, gains land or a crown, or moves
+away drops out of the pool; the shared wedding paths strip their enterprise
+assignment and loadout, and lazy normalization clears any assignment whose
+worker is no longer eligible. A resident sibling has no saved residence and
+follows the household home by fallback, so a permanent household move carries
+their labor along instead of orphaning assignments. A retained factor or
 steward is still paid through the household contract ledger; staffing an
 enterprise does not turn that person into family or grant a second wage. A
 permanent household move preserves remote enterprise ownership but immediately

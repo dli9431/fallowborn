@@ -19,19 +19,35 @@ first.
 - **World seed** — any text normalized to `A-Z0-9` (`FB.hashSeed` in `js/util.js` hashes
   it to a uint32). Same political world; scenario/province/name stay the player's own
   picks. Fresh starts get a random 7-char base36 one.
-- **Start code** — `SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME` (for example,
+- **Start code** — `SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET]`
+  (for example,
   `K7F29QZ-1066-serf-kent-m-aelfric`). Names encode spaces as `_` and drop dashes so
-  the six-part split stays unambiguous. This
+  the six-part split stays unambiguous. The optional seventh part names a
+  starting-family preset (`G.FAMILY_PRESETS` in `js/main.js` — see
+  [characters.md](characters.md)); it is omitted for the `standard` preset, so a
+  pre-presets six-part code still spells — and reproduces — the exact same start.
+  This
   is what `state.seed` stores (built in `G.start` from the picks actually taken, name
   edits included) and what the ☰ menu shows; pasting one into New Game lands on a
   pre-filled character screen.
 
-Parsing (`parseSeedInput` in `js/main.js`): a six-part shape must fully validate
-(known bookmark, scenario, settled province in that bookmark, `m`/`f`, 1–20-char
-name) or it is rejected with an inline error—a mistyped code must never silently
+Parsing (`parseSeedInput` in `js/main.js`): a six- or seven-part shape must fully
+validate (known bookmark, scenario, settled province in that bookmark, `m`/`f`,
+1–20-char name, and for seven parts a known family-preset id) or it is rejected
+with an inline error—a mistyped code must never silently
 become a different world. The old five-part format is still accepted and explicitly
 means bookmark 867. Anything else is treated as a bare world seed and proceeds to
 the bookmark picker.
+
+## Determinism across presets
+
+A non-`standard` family preset changes the protagonist's birth year (a pure
+parameter, no draw) and then draws its spouse and children on the shared stream in
+a fixed order *after* the parents and siblings every start shares. The `standard`
+preset performs no draw the historical start did not, so a six-part code's stream
+is bit-for-bit what it always was, and the seventh part alone decides whether the
+extra draws happen. Identical seed + identical picks — preset included — remains
+an identical start.
 
 ## Scoped sub-streams
 

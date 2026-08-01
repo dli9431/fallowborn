@@ -257,6 +257,64 @@ window.FB = window.FB || {};
     }
   };
 
+  /* House names allow letters of any script, spaces, hyphens, and
+     apostrophes. The blacklist rejects digits, ASCII punctuation and
+     symbols, control characters, and non-BMP code units (emoji) without a
+     regex u-flag, so old mobile browsers parse it. */
+  const HOUSE_NAME_FORBIDDEN =
+    /[\x00-\x1F\x7F0-9!"#$%&()*+,./:;<=>?@\[\\\]^_`{|}~]/;
+
+  function houseNameCharsOk(nm) {
+    if (HOUSE_NAME_FORBIDDEN.test(nm)) return false;
+    for (let i = 0; i < nm.length; i++) {
+      const code = nm.charCodeAt(i);
+      /* a surrogate half means an astral character (emoji and friends) */
+      if (code >= 0xD800 && code <= 0xDFFF) return false;
+    }
+    return true;
+  }
+
+  /* Validation only; reason keys map to player-facing text at the UI layer. */
+  FB.validateHouseName = function (name, currentDyn) {
+    const nm = String(name === undefined || name === null ? '' : name).trim();
+    if (!nm) return { ok:false, reason:'empty' };
+    if (currentDyn && nm === currentDyn) return { ok:false, reason:'unchanged' };
+    if (nm.length < 2) return { ok:false, reason:'short' };
+    if (nm.length > 20) return { ok:false, reason:'long' };
+    if (!houseNameCharsOk(nm)) return { ok:false, reason:'chars' };
+    return { ok:true, name:nm };
+  };
+
+  /* A house is just the c.dyn string its members share, so a rename rewrites
+     every character carrying the old string — the same membership rule
+     FB.dynastyNameSet uses — plus the player realm identity when it was
+     derived from the house. Personal names and bynames are untouched, and
+     chronicle or legend text already written keeps the old name. Heraldry is
+     seeded from the dyn string, so the coat of arms is redrawn. */
+  FB.renameHouse = function (state, newName) {
+    const me = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    if (!me || !me.dyn) return { ok:false, reason:'nohouse' };
+    const oldDyn = me.dyn;
+    const check = FB.validateHouseName(newName, oldDyn);
+    if (!check.ok) return check;
+    const nm = check.name;
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (c && c.dyn === oldDyn) c.dyn = nm;
+    }
+    const realm = state.realms && state.realms.player;
+    if (realm) {
+      if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm;
+      if (realm.dynasty === oldDyn) realm.dynasty = nm;
+    }
+    FB.touchFamily();
+    FB.news(state, FB.msg('news.house.renamed',
+      '👑 The house of {old} is henceforth known as {dynasty}.',
+      { old:oldDyn, dynasty:nm }));
+    return { ok:true, name:nm, old:oldDyn };
+  };
+
   /* ---------- character factory ----------
      opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN}
      opts.id installs a caller-derived identity instead of drawing the next
@@ -873,6 +931,81 @@ window.FB = window.FB || {};
       if (directChildOf(me, parent) && directChildOf(parent, c)) return 'grandchild';
     }
     return null;
+  };
+
+  /* Sibling of the protagonist by recorded parentage, with the same fallback
+     siblingsOf uses for first-generation kin of old saves (no recorded
+     parents, only role + house). House membership follows the dynasty: a
+     maternal half-sibling of another house is kin, not manageable kin. */
+  function siblingOfPlayer(state, me, c) {
+    if (!me || !c || c.id === me.id) return false;
+    if (me.dyn && c.dyn !== me.dyn) return false;
+    const ps = parentsOf(state, me);
+    if (ps.length) {
+      for (const p of ps) {
+        if ((p.childrenIds || []).indexOf(c.id) >= 0) return true;
+        if (c.fatherId === p.id || c.motherId === p.id) return true;
+      }
+      return false;
+    }
+    return !!(c.role === 'sibling' && c.dyn && c.dyn === me.dyn);
+  }
+
+  /* The explicit manageable-kin rule. A relative the player may put to work
+     is a LIVING sibling of the protagonist who
+       - shares the protagonist's dynasty (house membership, not mere kinship),
+       - is NOT a reigning realm ruler,
+       - is NOT landed: no station of their own (FB.stationOf >= 1 covers an
+         explicit station and the lord/notable roles) and no royal-line
+         identity of their own,
+       - is NOT vowed to the faith: no monastic or priestly career
+         (the vow IS the monk/priest profession record),
+       - has NO living spouse (checked in both link directions, as in
+         FB.isHouseholdCharacter, because polygynous wives point to the
+         husband while only his first wife is stored on him), and
+       - is RESIDENT: FB.characterResidence places them at the household home.
+     Married-away, landed, vowed, ruling, or absent siblings stay visible kin
+     but manage their own affairs. kinManageability returns 'manageable' when
+     every test passes, otherwise a blocker key; FB.manageableKinKind maps
+     that to the 'sibling'/null shape playerDescendantKind callers expect.
+     Manageable kin join the labor pool and career/equipment agency WITHOUT
+     becoming household members, so upkeep and succession semantics are
+     untouched. */
+  function kinManageability(state, cid) {
+    if (!state || !state.player || !state.chars) return 'not-sibling';
+    const me = state.chars[state.player.charId];
+    const c = state.chars[cid];
+    if (!me || !c || !siblingOfPlayer(state, me, c)) return 'not-sibling';
+    if (c.dead) return 'dead';
+    const spouse = c.spouseId && state.chars[c.spouseId];
+    if (spouse && !spouse.dead) return 'married';
+    for (const id in state.chars) {
+      const other = state.chars[id];
+      if (other && !other.dead && other.spouseId === c.id) return 'married';
+    }
+    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+      return 'reigning';
+    }
+    if (FB.stationOf(c) >= 1 || c.royalLine) return 'landed';
+    if (c.career && (c.career.profession === 'monk' ||
+        c.career.profession === 'priest')) return 'vowed';
+    if (FB.characterResidence(state, c) !== state.player.provinceId) {
+      return 'away';
+    }
+    return 'manageable';
+  }
+
+  FB.manageableKinKind = function (state, cid) {
+    return kinManageability(state, cid) === 'manageable' ? 'sibling' : null;
+  };
+
+  /* Why a sibling stays independent: 'married' | 'reigning' | 'landed' |
+     'vowed' | 'away'. Null when the sibling is manageable, dead, or not a
+     sibling at all — callers only ask about known living siblings. */
+  FB.manageableKinBlocker = function (state, cid) {
+    const result = kinManageability(state, cid);
+    return (result === 'manageable' || result === 'not-sibling' ||
+      result === 'dead') ? null : result;
   };
 
   /* The player's living and dead kin, grouped by closeness. Each group is a
