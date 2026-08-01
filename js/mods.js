@@ -277,6 +277,8 @@ window.FBMODS = window.FBMODS || [];
     if (mod.seas) FBDATA.seas = mod.seas;
     if (mod.rivers) FBDATA.rivers = mod.rivers;
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
+    if ((mod.items || mod.cultures || mod.religions || mod.traits || mod.ailments) &&
+        FB.clearPortraitCache) FB.clearPortraitCache();
   };
 
   M.applyStored = function () {

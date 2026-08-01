@@ -148,6 +148,14 @@ character's procedural portrait. AI entries open the realm-ruler sheet; a protag
 entry opens the character sheet. Each row states realm, political relationship, age,
 Martial, and the player-relative Standing. Generated local characters appear only as a
 defensive fallback when no political ruler can be resolved.
+
+**Portrait-heavy panels retain unchanged markup.** Self, Kin, Network, and Land keep a
+module-local record of the state reference, locale, and unlocalized HTML used for their
+last insertion. An identical refresh preserves the existing nodes and listeners, skips
+localization and large-list setup, and still calls `FB.paintFaces`; the portrait target
+stamp then decides whether a retained canvas needs new pixels. A state replacement or
+locale transition resets these records. This optimization is deliberately limited to
+the four named panels and does not cover active forms, event choices, or modal history.
 For a count or higher, the selected current seat is marked **capital and home**.
 Every other directly held demesne county shows **Move capital here…**; the native
 button remains visible but disabled with the exact prestige, journey, campaign, or
@@ -214,8 +222,12 @@ unrecorded casualties.
 **Managed household sheets keep compact bust portraits and open equipment separately.**
 The Self sheet and the sheets for living spouses, resident unmarried children and
 grandchildren, and paid retainers each offer an **Equip items…** button. It opens a
-dedicated modal with one deterministic full-body
-figure and eight native slot buttons in a two-column grid. The modal is centered on desktop
+dedicated modal with one deterministic 192×360 full-body
+figure and eight native slot buttons in a two-column grid. Bust and figure are two frames
+of the same normalized identity and one-pass Canvas painter; the figure does not compose a
+second temporary face canvas. Only the most recently rendered opaque figure is retained,
+so reopening an unchanged sheet is one MRU blit rather than another cold illustration.
+The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
 Its centered title stacks the character's full name above **Equipment**, keeping the heading
 readable on narrow screens.
@@ -256,7 +268,8 @@ quality-adjusted effects, value, current wearer, pledge state, and valid equip/u
 gift, and sale actions. Family/event/topbar cards retain compact bust portraits, with only
 readable equipment cues such as a helmet, pendant, crown, or armor edge. The succession
 modal is the other full-body surface: it paints the frozen final loadout beside the
-“Worn at death” list before any heir may be selected.
+“Worn at death” list before any heir may be selected. That render passes the explicit
+snapshot map to the descriptor and never consults the successor's live loadout.
 
 Managed minor character sheets — the protagonist, children, and resident unmarried
 grandchildren — separate the education-focus picker from the instruction picker.

@@ -6,6 +6,19 @@ window.FB = window.FB || {};
 
   const UI = {};
   FB.ui = UI;
+  let panelMarkup = Object.create(null);
+
+  function resetPanelMarkup() {
+    panelMarkup = Object.create(null);
+  }
+  function replacePanelMarkup(key, box, html) {
+    const previous = panelMarkup[key];
+    if (previous && previous.state === FB.state &&
+        previous.locale === FB.locale && previous.html === html) return false;
+    panelMarkup[key] = { state:FB.state, locale:FB.locale, html:html };
+    box.innerHTML = html;
+    return true;
+  }
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return FB.esc(s); }
@@ -1091,7 +1104,7 @@ window.FB = window.FB || {};
     }
     if (opts.id) attrs += ' id="' + esc(opts.id) + '"';
     let art = opts.art || '';
-    if (!art && person) art = FB.faceTag(person, 34, 40);
+    if (!art && person) art = FB.faceTag(person, 40, 46);
     if (!art && opts.icon) {
       art = '<span class="person-assignment-icon" aria-hidden="true">' +
         esc(opts.icon) + '</span>';
@@ -1550,6 +1563,8 @@ window.FB = window.FB || {};
     document.body.classList.remove('showself');
     mobileNavStart();
     portraitKey = ''; // a new life or loaded save must never keep the old face
+    resetPanelMarkup();
+    if (FB.clearPortraitCache) FB.clearPortraitCache();
     logRenderedTail = null; logRenderedLen = -1;
     FB.map.resize();
     FB.map.request();
@@ -1705,17 +1720,17 @@ window.FB = window.FB || {};
     const me = s.chars[s.player.charId];
     $('tb-name').textContent = FB.playerPope && FB.playerPope(s)
       ? me.papalName || me.name : FB.fullName(me);
-    // the topbar portrait and crest change rarely; repaint only when
-    // something they draw from has moved
+    // The portrait's target stamp makes this call a no-op while unchanged;
+    // the separate crest key avoids redrawing heraldry on ordinary refreshes.
     const pk = FB.characterVisualKey(s, me);
     if (pk !== portraitKey) {
       portraitKey = pk;
-      FB.paintPortrait($('tb-portrait'), me, s.date.year, {
-        state:s, profession:s.player.profession, tier:s.player.tier,
-        ill:!!s.player.flags.ill
-      });
       FB.drawCrest($('crest'), me.dyn || me.name);
     }
+    FB.paintPortrait($('tb-portrait'), me, s.date.year, {
+      state:s, profession:s.player.profession, tier:s.player.tier,
+      ill:!!s.player.flags.ill
+    });
     const pr = FB.world.byId[s.player.provinceId];
     $('tb-title').textContent = FB.styledTitle(s) + ' · ' + (pr ? FB.L(pr.name) : '?');
     const dateStr = FB.T('{season} {day} · {year} AD', {
@@ -2717,7 +2732,7 @@ window.FB = window.FB || {};
     const blocked = FB.equipmentBlockedReason ? FB.equipmentBlockedReason(s) : null;
     let h = '<div class="paper-sheet"><div class="paper-figure">' +
       '<canvas class="paperdoll" data-cid="' + c.id +
-      '" width="240" height="450" role="img" aria-label="' +
+      '" width="192" height="360" role="img" aria-label="' +
       esc(FB.T('Full figure of {name}', { name:FB.fullName(c) })) + '"></canvas>' +
       equipmentBonusHtml(s, c) + '</div>' +
       '<div class="equip-panel"><div class="equip-heading">' + esc(FB.T('Equipment')) +
@@ -2890,7 +2905,7 @@ window.FB = window.FB || {};
       '<button type="button" class="self-portrait-button" id="self-equipment-portrait" ' +
       'aria-label="' + esc(FB.T('Equip items…')) + '" title="' +
       esc(FB.T('Equip items…')) + '"><canvas id="selfportrait" class="pface" data-cid="' +
-      me.id + '" width="72" height="82" aria-hidden="true"></canvas></button>' +
+      me.id + '" width="88" height="100" aria-hidden="true"></canvas></button>' +
       '<button type="button" class="btn portrait-equip" id="self-equipment" ' +
       'data-action-id="self-equipment">' + esc(FB.T('Equip items…')) + '</button>' +
       '</div><div class="self-overview-skills">' + panelh('Skills') + skillBars(me) +
@@ -2947,10 +2962,14 @@ window.FB = window.FB || {};
         '<button class="actionbtn" id="self-tutor">🧑‍🏫 Choose schooling or a tutor…' +
         '<span class="adesc">Instruction raises your yearly learning chance; paid lessons charge each season.</span></button>';
     }
-    $('tab-char').innerHTML = h;
-    FB.localizeTree($('tab-char'));
-    FB.paintFaces($('tab-char'), s);
-    const equipmentTriggers = $('tab-char').querySelectorAll(
+    const box = $('tab-char');
+    if (!replacePanelMarkup('self', box, h)) {
+      FB.paintFaces(box, s);
+      return;
+    }
+    FB.localizeTree(box);
+    FB.paintFaces(box, s);
+    const equipmentTriggers = box.querySelectorAll(
       '#self-equipment-portrait, #self-equipment');
     for (let i = 0; i < equipmentTriggers.length; i++) {
       equipmentTriggers[i].addEventListener('click', function () {
@@ -2996,7 +3015,7 @@ window.FB = window.FB || {};
     }
     return '<div class="charrow" data-cid="' + c.id + '" title="' +
       esc(FB.T('See their sheet and your dealings with them')) + '">' +
-      FB.faceTag(c, 36, 42) +
+      FB.faceTag(c, 44, 50) +
       '<span>' + mid + '</span>' +
       '<span class="cop ' + standingClass(standing) + '">' +
       esc(standingValue(standing)) + '</span></div>';
@@ -3160,7 +3179,7 @@ window.FB = window.FB || {};
         FB.T('† {born}–{died} (aged {age})',
           { born: c.born, died: c.died, age: c.died - c.born }) :
         FB.T('† born {year}', { year: c.born });
-      return '<div class="charcard">' + FB.faceTag(c, 56, 64) +
+      return '<div class="charcard">' + FB.faceTag(c, 72, 82) +
         '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
         '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
         esc(FB.T(c.sex === 'f' ? 'Woman' : 'Man')) +
@@ -3202,7 +3221,7 @@ window.FB = window.FB || {};
       });
     return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="' +
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
-      FB.faceTag(c, 56, 64) +
+      FB.faceTag(c, 72, 82) +
       '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
       '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
       esc(FB.T('{sex} of {age}', {
@@ -3291,9 +3310,13 @@ window.FB = window.FB || {};
           ' · ' + FB.T('age {age}', { age: FB.ageOf(c, s.date.year) }), true);
       }
     }
-    $('tab-family').innerHTML = h;
-    FB.localizeTree($('tab-family'));
-    FB.paintFaces($('tab-family'), s);
+    const box = $('tab-family');
+    if (!replacePanelMarkup('kin', box, h)) {
+      FB.paintFaces(box, s);
+      return;
+    }
+    FB.localizeTree(box);
+    FB.paintFaces(box, s);
     $('btn-ftree').addEventListener('click', UI.showFamilyTree);
   }
 
@@ -3368,7 +3391,7 @@ window.FB = window.FB || {};
       '<button type="button" class="charrow large-list-target-button" data-cid="' +
       esc(c.id) + '" data-list-focus-key="' + esc(sectionId + '-person-' + c.id) +
       '" title="' + esc(FB.T('Open the authoritative character sheet')) + '">' +
-      FB.faceTag(c, 36, 42) +
+      FB.faceTag(c, 44, 50) +
       '<span class="large-list-row-copy"><span class="cname">' +
       esc(FB.fullName(c)) + '</span><span class="cmeta">' +
       esc(record.meta.join(' · ')) + '</span></span>' +
@@ -4195,7 +4218,7 @@ window.FB = window.FB || {};
     const intro = '<div class="hint">' + esc(FB.T(
       'The people and institutions tied to this household, and what each tie currently does.')) +
       '</div>';
-    box.innerHTML = intro + largeListSurfaceHtml('network', [
+    const markup = intro + largeListSurfaceHtml('network', [
       {
         id:'household',
         title:FB.T('Household'),
@@ -4238,6 +4261,10 @@ window.FB = window.FB || {};
       { id:'people', label:FB.T('People') },
       { id:'realms', label:FB.T('Realms') }
     ]);
+    if (!replacePanelMarkup('network', box, markup)) {
+      FB.paintFaces(box, s);
+      return;
+    }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     initLargeListSurface('network', { restoreFocus:true });
@@ -4332,7 +4359,7 @@ window.FB = window.FB || {};
       return '<button class="ftchip' + (cls || '') + (c.dead ? ' dead' : '') +
         '" data-cid="' + c.id + '" data-ft-name="' +
         esc(FB.fullName(c).toLocaleLowerCase()) + '" title="' + esc(FB.fullName(c)) +
-        (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 40, 46) +
+        (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 50, 57) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
         (again ? '<span class="frel">' + esc(FB.T('also above')) + '</span>' : '') + '</button>';
@@ -4866,7 +4893,7 @@ window.FB = window.FB || {};
     let art, heading, age, martial, action, standing;
     if (rid === 'player') {
       const me = s.chars[s.player.charId];
-      art = FB.faceTag(me, 36, 42);
+      art = FB.faceTag(me, 44, 50);
       heading = FB.T('{title} · {name}', {
         title:FB.styledTitle(s), name:FB.fullName(me)
       });
@@ -4879,7 +4906,7 @@ window.FB = window.FB || {};
       const r = landRulerRealm(s, rid);
       const ruler = FB.realmRulerCharacterSnapshot(s, rid);
       const value = FB.standingOf(s, { kind:'realm', id:rid });
-      art = FB.faceTag(ruler, 36, 42);
+      art = FB.faceTag(ruler, 44, 50);
       heading = FB.T('{title} {name}', {
         title:FB.realmRankTitle(s, r), name:ruler.name
       });
@@ -4995,7 +5022,8 @@ window.FB = window.FB || {};
     const s = FB.state;
     const pid = selectedProv || s.player.provinceId;
     const pr = FB.world.byId[pid];
-    if (!pr) { $('tab-prov').innerHTML = ''; return; }
+    const box = $('tab-prov');
+    if (!pr) { replacePanelMarkup('land', box, ''); return; }
     const playerRealm = s.realms && s.realms.player;
     const homeLabel = pid === s.player.provinceId
       ? (playerRealm && playerRealm.alive && playerRealm.capital === pid
@@ -5263,9 +5291,12 @@ window.FB = window.FB || {};
       }
     }
     h += '<div style="margin-top:10px"><button class="btn small" id="btn-center-home">⌂ Center on home</button></div>';
-    $('tab-prov').innerHTML = h;
-    FB.localizeTree($('tab-prov'));
-    FB.paintFaces($('tab-prov'), s);
+    if (!replacePanelMarkup('land', box, h)) {
+      FB.paintFaces(box, s);
+      return;
+    }
+    FB.localizeTree(box);
+    FB.paintFaces(box, s);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
     const relocate = $('btn-relocate-capital');
@@ -10175,7 +10206,7 @@ window.FB = window.FB || {};
     for (const row of rows) {
       h += '<button type="button" class="ftchip" role="listitem" data-cid="' +
         esc(row.c.id) + '" title="' + esc(FB.fullName(row.c)) + '">' +
-        FB.faceTag(row.c, 40, 46) +
+        FB.faceTag(row.c, 50, 57) +
         '<span class="fname">' + esc(row.c.name) + '</span>' +
         '<span class="frel">' + esc(FB.T('{relation} · age {age}', {
           relation:row.rel, age:FB.ageOf(row.c, s.date.year)
@@ -12982,7 +13013,7 @@ window.FB = window.FB || {};
       relationship = isSpouse ? FB.T('Your spouse') :
         (relationText(s, c) || relationship);
     }
-    return '<div class="household-plan-person">' + FB.faceTag(c, 32, 38) +
+    return '<div class="household-plan-person">' + FB.faceTag(c, 36, 42) +
       '<span>' + householdPlanLines(FB.fullName(c), relationship,
         FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) })) + '</span></div>';
   }
@@ -14349,7 +14380,7 @@ window.FB = window.FB || {};
       });
       const html = '<button type="button" class="actionbtn large-list-row ' +
         'large-list-person-row" data-career="' + esc(c.id) + '"' + attrs + '>' +
-        '<span class="large-list-row-main">' + FB.faceTag(c, 30, 36) +
+        '<span class="large-list-row-main">' + FB.faceTag(c, 34, 40) +
         '<span class="large-list-row-copy"><span class="large-list-row-title">' +
         esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
         '</span><span class="adesc">' + esc(metadata.join(' · ')) +
@@ -18839,7 +18870,7 @@ window.FB = window.FB || {};
         ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
         dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
       });
-      h += '<button class="actionbtn" data-namedheir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
+      h += '<button class="actionbtn" data-namedheir="' + c.id + '">' + FB.faceTag(c, 36, 42) + ' ' +
         (s.player.namedHeirId === c.id ? '★ ' : '') + esc(FB.fullName(c)) +
         '<span class="adesc">' + esc(details + ' · ' +
           heirEligibilityText(s, row)) + '</span></button>';
@@ -19034,7 +19065,7 @@ window.FB = window.FB || {};
     }
     if (!list) list = '<div class="cmeta">' + esc(FB.T('Nothing was worn.')) + '</div>';
     return '<div class="death-paper"><canvas id="death-paperdoll" class="paperdoll" ' +
-      'width="240" height="450" role="img" aria-label="' +
+      'width="192" height="360" role="img" aria-label="' +
       esc(FB.T('Final equipment worn by the deceased')) + '"></canvas>' +
       '<div class="death-worn"><h4>' + esc(FB.T('Worn at death')) + '</h4>' + list +
       '<p class="cmeta">' + esc(FB.T(
@@ -19075,7 +19106,7 @@ window.FB = window.FB || {};
           ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
           dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
         });
-        h += '<button class="actionbtn" data-heir="' + c.id + '">' + FB.faceTag(c, 32, 38) + ' ' +
+        h += '<button class="actionbtn" data-heir="' + c.id + '">' + FB.faceTag(c, 36, 42) + ' ' +
           esc(FB.fullName(c)) + '<span class="adesc">' +
           esc(details + ' · ' + heirEligibilityText(s, reviewRow)) +
           '</span></button>';
@@ -19138,7 +19169,7 @@ window.FB = window.FB || {};
         const title = legendTitleText(lg);
         const legendQuip = legendQuipText(lg, s);
         h += '<div class="row gap" style="align-items:center;margin:6px 0">' +
-          (lc ? FB.faceTag(lc, 32, 38) : '') +
+          (lc ? FB.faceTag(lc, 36, 42) : '') +
           '<div style="flex:1"><b>' + esc(lg.name) + '</b> <span class="hint">' + esc(title) +
           ' · ' + lg.born + '–' + lg.died + '</span><br>' +
           '<span class="hint"><i>' + esc(legendQuip) + '</i></span></div></div>';
@@ -19483,6 +19514,7 @@ window.FB = window.FB || {};
     const langSel = $('set-lang');
     if (langSel) {
       langSel.addEventListener('change', function () {
+        resetPanelMarkup();
         FB.setLocale(langSel.value);
       });
     }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fallowborn portrait v2 comparison</title>
+  <style>
+    body{margin:0;background:#171411;color:#eee4cf;font:14px system-ui,sans-serif}
+    header{position:sticky;top:0;z-index:2;padding:12px 18px;background:#211c18;border-bottom:1px solid #715d3f}
+    h1{margin:0 0 4px;font-size:20px}p{margin:3px 0;color:#cdbfaa}
+    #matrix{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:12px}
+    article{padding:10px;background:#241f1a;border:1px solid #5a4935;border-radius:5px}
+    h2{margin:0 0 8px;font-size:14px}.pair{display:flex;gap:8px;align-items:flex-start}
+    figure{margin:0;flex:1}canvas{display:block;width:100%;height:auto;background:#111}
+    figcaption{text-align:center;margin-top:3px;color:#b9aa94;font-size:12px}
+    .figure-pair{margin-top:8px}.figure-pair canvas{max-height:360px;object-fit:contain}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Court Illustration v2 comparison matrix</h1>
+    <p id="summary">Building deterministic cases…</p>
+  </header>
+  <main id="matrix"></main>
+  <script src="../portrait-reference/js/core.js"></script>
+  <script src="../portrait-reference/js/mesh.js"></script>
+  <script src="../portrait-reference/js/costume.js"></script>
+  <script src="../portrait-reference/js/court-stage.js"></script>
+  <script src="../portrait-reference/js/court-illustration-v2.js"></script>
+  <script src="../portrait-reference/js/reference.js"></script>
+  <script src="mock-game.js"></script>
+  <script src="../../js/portrait.js"></script>
+  <script src="comparison.js"></script>
+</body>
+</html>
+

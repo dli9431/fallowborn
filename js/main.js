@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.101.4';
+  FB.VERSION = '1.102.0';
   FB.CHANGELOG = [
+    { v: '1.102.0', date: '2026-07-31', changes: [
+      'Portraits are redrawn in the illustrated Court style: every character is a unique painted face with real hair, beards, headwear, and marks of age and health, and the equipment screen shows gear worn on the full figure with hand weapons in side panels.'
+    ] },
     { v: '1.101.4', date: '2026-07-31', changes: [
       'Female rulers across the map now use proper female titles — Sultana, Emira, Duchess, Khatun, and the like — instead of male forms like Sultan or Emir.'
     ] },

@@ -15,10 +15,15 @@ missing a field one of those readers consults produces a card or a face that dis
 with the sheet printed beside it. `FB.makeCharacter` fills all of it; the court paths do
 not bypass it.
 
-Portrait invalidation follows that same complete-record rule. The shared
-`FB.characterVisualKey` reads the named ailment list from `c.ails`, matching the
-renderer, and includes the legacy player illness flag passed to the top-bar painter.
-Adding or curing a wound or sickness therefore repaints every cached face immediately.
+Portrait invalidation is narrower than the character record. One normalized descriptor
+resolves the exact visual outputs: identity DNA, age, sex, culture palette, faith group,
+station, profession, three health classes, visible expression traits, permanent marks,
+marked ailments, and frame-visible equipment. `FB.characterVisualKey` returns that
+descriptor's key. Unrelated traits and exact health changes inside one visual class do
+not evict a face; adding or curing a visible wound or sickness does. Bust keys include
+only Head and Body — nothing hangs at the neck in the bust crop, so Neck items neither
+paint nor invalidate compact faces — while figure keys include every displayed slot and
+frozen snapshot identity.
 
 Eagerness is also a throne invariant, not just a display choice. Accession materializes
 the exact successor on the court's scoped stream before reading their ruler fields, and
@@ -56,11 +61,22 @@ dates in the family tree, but no posthumous character sheet. Records are spent o
 the player can see and touch. See [realms.md](realms.md) for the court's structure and
 the consort.
 
-**A portrait is derived state and is never persisted.** `FB.characterVisualKey(state, c)`
-is the single registration point for every field a face is drawn from; callers that skip
-a repaint compare that key rather than hand-building their own list. Court UI paints
-faces through `FB.faceTag` plus `FB.paintFaces`, never through a direct
-`FB.paintPortrait` call, and no view paints an unbounded list of court faces - the realm
+**A portrait is derived state and is never persisted.** The Court Illustration v2
+renderer constructs a direct analytic scaffold of named face/body anchors and paints it
+with raw Canvas 2D; it has no mesh vertices, faces, contour cache, external art, or game
+RNG calls. Identity variations use separately salted hashes, so adding a wardrobe detail
+does not reshuffle wounds or facial DNA. Unknown mod cultures resolve through
+`FB.cultureOf` to a deterministic nearby palette.
+
+Compact opaque busts share one state-local 8×8 atlas of 96×108 cells. Its 64 entries use
+LRU replacement and fixed 2,654,208-byte raw pixel storage. Persistent target canvases
+carry a key-and-backing-size expando stamp, so an unchanged retained face does not even
+acquire a context. `FB.paintFaces` paints one cold key synchronously, groups later
+targets by key, and advances the bounded 128-key queue in animation frames with a
+six-millisecond budget and at least one key per frame. State replacement or
+portrait-affecting mod changes clear the atlas metadata, queue, and one-entry figure MRU.
+`FB.paintPortrait` remains synchronous for direct callers. Court UI uses `FB.faceTag`
+plus `FB.paintFaces`, and no view paints an unbounded list of court faces—the realm
 sheet's court strip inherits the same six-member cap as `FB.realmFamily`.
 
 **Bishops, Cardinals, and Popes are personal Catholic offices.** Both Catholic vocation

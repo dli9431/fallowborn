@@ -40,9 +40,25 @@ procedural art.
 health protection. Battle, gold, prestige, and piety effects count only when worn by the
 current head. Unequipped wealth is mechanically inert. Base clothing shown by the paper
 doll is rank/profession/culture dress and never occupies an armory slot.
-Equipped footwear replaces the cosmetic shoes and follows the leg centers. Weapon poses
-align the palms with their grips: one-handed blades are held at the character's sides,
-while a two-handed weapon brings both arms onto its shared shaft.
+Equipped footwear replaces the cosmetic shoes: the shoe construction takes the item's
+leather palette and rises over the ankle as a boot shaft. Hand objects are not glued to
+the hands: the card shows weapons, shields, tools, and books as framed inset panels in
+the bottom corners below the figure — the right hand's object in the viewer-left box,
+the left hand's in the viewer-right box, and a single viewer-left panel for a two-handed
+object shared by both hands. Drawn last, the panels overlay a wide hem rather than
+reserving space from the figure.
+
+The Court Illustration v2 figure is a single 192×360 render shared by the equipment and
+death surfaces. Head and body are drawn from the same normalized descriptor as compact
+busts. Worn gear integrates into the drawing rather than pasting an icon over it: crown
+and helm art renders through the wardrobe constructions with the item's metal, gems,
+quality, and visual seed (a helm also hides covered hair); jack and chest body art
+recolors the garment and quilts it; a belt recolors the belt construction and its
+buckle; pendants and relics hang at the throat, and an unequipped figure of rank or of
+the Christian clergy wears its generated chain or cross there (busts carry nothing at
+the neck - the crop has no chest); a ring is a band and stone on the ring finger. A one-entry figure MRU is keyed by all visible slots, including
+reference/snapshot id, art kind and palette, quality, `visualSeed`, motif, and grip. It
+never grows with the household.
 
 Ordinary gear can recur through town/city markets, peddlers, raids, plots, and war
 spoils. `offer_gear` guarantees an ordinary market offer; `offer_item` uses the full
@@ -90,7 +106,9 @@ delivery retains the same reference through its return journey and restores it t
 armory only when the courier reaches the household’s then-current permanent home.
 
 At death, the legend freezes the head's loadout and optional battle/event provenance.
-The succession dialog shows that final paper doll and “Worn at death” list. This release
+The succession dialog resolves those explicit snapshots through `FB.resolveItemSnapshot`
+for both its final figure and “Worn at death” list; it never falls back to the dead head's
+cleared loadout or the successor's live equipment. This release
 does not remove, damage, loot, or steal any object: succession clears the dead wearer and
 any former-household assignments that do not belong to the new head's household, whose
 membership is recomputed through children and grandchildren without double-counting. The

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Court Illustration v2 reference</title>
+  <link rel="stylesheet" href="reference.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Developer reference</p>
+      <h1>Court Illustration v2</h1>
+      <p>This page renders one deterministic character as both a portrait and a full figure.</p>
+      <form onsubmit="return false">
+        <label for="seed">Character seed</label>
+        <input id="seed" value="fallowborn-reference" autocomplete="off">
+        <button id="render" type="button">Render pair</button>
+      </form>
+      <p id="summary" class="summary" aria-live="polite"></p>
+    </header>
+    <section class="renders" aria-label="Reference renders">
+      <figure>
+        <canvas id="portrait" width="256" height="288"></canvas>
+        <figcaption>Portrait, 256 x 288</figcaption>
+      </figure>
+      <figure>
+        <canvas id="figure" width="256" height="480"></canvas>
+        <figcaption>Full figure, 256 x 480</figcaption>
+      </figure>
+    </section>
+  </main>
+  <script src="js/core.js"></script>
+  <script src="js/mesh.js"></script>
+  <script src="js/costume.js"></script>
+  <script src="js/court-stage.js"></script>
+  <script src="js/court-illustration-v2.js"></script>
+  <script src="js/reference.js"></script>
+  <script src="js/demo.js"></script>
+</body>
+</html>
