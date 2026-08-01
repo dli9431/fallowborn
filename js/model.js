@@ -932,6 +932,33 @@ window.FB = window.FB || {};
       unclesAunts: unclesAunts, cousins: cousins, byId: byId };
   }
 
+  /* Total tracked player-family records, living and dead — the number that
+     must stay inside the localStorage quota. Iterative walk from the player
+     character over parent/spouse/child links; dead records accumulate in the
+     tree, so they count. Runs once a year from kinLifeTick. */
+  FB.familySize = function (state) {
+    const chars = state.chars || {};
+    const me = chars[state.player.charId];
+    if (!me) return 0;
+    const seen = {};
+    const stack = [me];
+    let n = 0;
+    while (stack.length) {
+      const c = stack.pop();
+      if (!c || seen[c.id]) continue;
+      seen[c.id] = 1;
+      n++;
+      const links = [c.fatherId, c.motherId, c.spouseId];
+      for (const id of links) {
+        if (id && chars[id] && !seen[id]) stack.push(chars[id]);
+      }
+      for (const cid of (c.childrenIds || [])) {
+        if (chars[cid] && !seen[cid]) stack.push(chars[cid]);
+      }
+    }
+    return n;
+  };
+
   /* ---------- titles ---------- */
   /* the bare rank word for any tier ("Count", "Emira"…) from the player's
      faith group and sex — without profession/clergy overrides */

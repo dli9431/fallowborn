@@ -135,7 +135,11 @@ grandchild's sheet offers three sounded-out families
 (`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in events.js, picker in
 ui.js; the candidates persist on the descendant as `matchIds`). A pledge
 sets `betrothedId` and the yearly `kinLifeTick` weds the pair once both are 16 —
-unpledged kin still auto-wed at `balance.kinMarryChance`. A daughter's dowry is paid at
+unpledged kin still auto-wed at `balance.kinMarryChance`. Past
+`balance.familyMaxChars` tracked family records the unscripted weddings and kin
+births pause — the localStorage-quota backstop (see
+[state-and-saves.md](state-and-saves.md)) — while sealed betrothals still wed,
+since a pledge is a player promise that joins two existing records. A daughter's dowry is paid at
 the pledge, and the same rule applies to a granddaughter; death before the wedding refunds
 it through `FB.killChar`. A son's or grandson's bride brings hers to the wedding. All four
 relationships swing prestige at half the player's own `marryUpPrestige` rates, and matches

@@ -145,6 +145,17 @@ as base64 text (`FBS1.` prefix, same v3 payload) that wakes through the same
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
 and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
 
+**The save must fit one localStorage entry** (~5 MB origin quota; a serialized character
+record is ~400 bytes). Court records are map-bound by the eager-court compaction; the
+player's wider family is bounded at creation instead, because dead kin are never pruned
+(the family tree is the product). Two balance knobs do the bounding (see
+[../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility multipliers a
+probability rather than a certainty, and `familyMaxChars` caps total tracked family
+records — past it, unscripted kin weddings and kin births pause, so an over-cap save
+stops growing instead of failing. If a save still hits the quota, `S.toSlot` recognizes
+the quota-shaped error and points the player at 📤 Export, which preserves the life as
+text when storage no longer can.
+
 Political-bloc state is additive and keeps save format 3.
 `state.politics = {polityId,allegiances,pendingMotion}` is created
 and repaired by `FB.ensurePolitics` / `FB.repairPolitics`. Allegiance entries

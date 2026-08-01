@@ -120318,6 +120318,16 @@
         "text": "A stranger of real accomplishment in intrigue."
       }
     },
+    "src.e4e15f70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "⚠ This life’s records have outgrown the browser’s save storage — 📤 Export (Menu → 💾 Save game) still keeps the life as text."
+      }
+    },
     "src.e4ed0ec1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],

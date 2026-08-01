@@ -209,3 +209,30 @@ test('save compaction rehydrates court links and technology exposure',
       exposure:true
     });
   });
+
+test('a quota-shaped storage failure advises export, not a generic error',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function () {
+        throw new DOMException('storage is full', 'QuotaExceededError');
+      };
+      try {
+        const stored = FB.save.toSlot(1);
+        const texts = [];
+        const nodes = document.querySelectorAll('#toasts .toast');
+        for (const el of nodes) texts.push(el.textContent);
+        return { stored:stored, texts:texts };
+      } finally {
+        Storage.prototype.setItem = original;
+      }
+    });
+
+    expect(result.stored).toBe(false);
+    expect(result.texts.some(function (t) {
+      return t.indexOf('outgrown') >= 0 && t.indexOf('Export') >= 0;
+    })).toBe(true);
+  });

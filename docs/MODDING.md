@@ -2039,6 +2039,11 @@ and `richChildHealthChance` the yearly chance per station that such a child
 gains a point of health, up to 8.
 That includes the wider-family simulation: `kinMarryChance` and `kinChildChance` are the
 per-year chances that an adult kinsman weds, and that a wed kinswoman bears a child.
+`kinConceiveCap` (core 0.75) upper-bounds the effective yearly kin conception chance, so
+stacked fertility multipliers stay a probability instead of a certainty. `familyMaxChars`
+(core 4000) bounds the player family's tracked character records, living and dead: past
+it, unscripted kin weddings and kin births pause (sealed betrothals still wed), keeping
+the save inside the browser's localStorage quota and the kin scan's per-day cost flat.
 `fertilityByAge` shapes how age wears on conception: per sex (`f`/`m`), a list of
 `[age, multiplier]` points read by `FB.ageFert` — flat before the first point, linear
 between points, flat past the last. The default curve holds women at full fecundity

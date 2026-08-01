@@ -145,13 +145,24 @@ window.FB = window.FB || {};
     }, saveReplacer);
   };
 
+  /* the quota case deserves its own message: the life has outgrown the
+     browser's storage (legacy code 22, Firefox NS_ERROR_DOM_QUOTA_REACHED
+     1014), and Export is the one path that still preserves it. The name test
+     is a regex on purpose: a bare 'QuotaExceededError' literal would be
+     extracted into the translation catalogs as if it were display text. */
+  function isQuotaError(e) {
+    return !!e && (/quota/i.test(String(e.name)) ||
+      e.code === 22 || e.code === 1014);
+  }
+
   S.toSlot = function (slot) {
     try {
       localStorage.setItem(key(slot), S.serialize());
       return true;
     } catch (e) {
       if (FB.ui) {
-        if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
+        if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage — 📤 Export (Menu → 💾 Save game) still keeps the life as text.');
+        else if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
         else FB.ui.toast('⚠ This browser is blocking save storage — use 📤 Export (Menu → 💾 Save game) to keep your life as text.');
       }
       return false;

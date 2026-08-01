@@ -924,6 +924,13 @@ FBDATA.balance = {
      gives a yearly chance the child grows hardier (health +1, up to 8) */
   richChildMortalityBonus: 0.07, richChildHealthChance: 0.1,
   kinMarryChance: 0.22, kinChildChance: 0.10,
+  /* upper bound on the effective yearly kin conception chance, so stacked
+     fertility multipliers stay a probability instead of a certainty */
+  kinConceiveCap: 0.75,
+  /* max tracked player-family character records (living and dead, ~400 B each
+     in the save): bounds the save inside the localStorage quota and keeps the
+     kinOf day-tick cost flat; kin weddings/births pause past this */
+  familyMaxChars: 4000,
   /* age → conception multiplier, [age, mult] points read by FB.ageFert:
      flat before the first point, linear between, flat past the last.
      Women past 45 cannot conceive at all regardless of this curve. */

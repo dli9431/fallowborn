@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.101.2';
+  FB.VERSION = '1.101.3';
   FB.CHANGELOG = [
+    { v: '1.101.3', date: '2026-07-31', changes: [
+      'Families past a safe record size pause new kin weddings and births so saving keeps working, and extreme fertility can no longer make every kin birth a certainty.'
+    ] },
     { v: '1.101.2', date: '2026-07-31', changes: [
       'Character, technology, enterprise, building, and item details now list their terms as compact rows instead of boxed tables.'
     ] },
@@ -1913,6 +1916,12 @@ window.FB = window.FB || {};
   function kinLifeTick(s) {
     const me = s.chars[s.player.charId];
     const year = s.date.year;
+    /* Fail-closed backstop for the localStorage quota: family records are never
+       deleted (the tree is the product), so past familyMaxChars the wider
+       family stops growing — no new kinspouses, no new babies. The automatic
+       counterpart of p.flags.noChildren's "the house is full enough". Sealed
+       betrothals below still wed: they join two existing records. */
+    const familyFull = FB.familySize(s) >= (FBDATA.balance.familyMaxChars || 4000);
     const kin = FB.kinOf(s);
     const all = [];
     for (const g of ['parents', 'grandparents', 'siblings', 'children', 'grandchildren',
@@ -1939,7 +1948,7 @@ window.FB = window.FB || {};
           // this bond — a stale pledge must not bar remarriage forever
           k.betrothedId = null;
         }
-      } else if (!sp && age <= 40 && FB.chance(FBDATA.balance.kinMarryChance)) {
+      } else if (!sp && !familyFull && age <= 40 && FB.chance(FBDATA.balance.kinMarryChance)) {
         FB.discardMatches(s, k, null); // the sounded-out families are passed over
         sp = FB.makeCharacter(s, {
           sex: k.sex === 'm' ? 'f' : 'm',
@@ -1989,7 +1998,9 @@ window.FB = window.FB || {};
       const fert = FBDATA.balance.kinChildChance * FB.traitAgg(mother).fert *
         FB.traitAgg(father).fert * mother.fertility * (father.fertility || 1) *
         FB.ageFert('f', mAge) * FB.ageFert('m', FB.ageOf(father, year));
-      if (FB.chance(fert)) {
+      /* clamp: stacked fertility multipliers must stay a probability, never a
+         certainty — an extreme trait means very fertile, not 29 births per couple */
+      if (!familyFull && FB.chance(Math.min(fert, FBDATA.balance.kinConceiveCap || 0.75))) {
         const baby = FB.makeCharacter(s, {
           culture: k.culture, religion: k.religion, born: year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
