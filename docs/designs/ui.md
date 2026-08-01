@@ -293,9 +293,11 @@ self-evident fields and keep rule differences inline; Better Household does so
 to keep standards and permanent property scannable. Callers supply live values
 from their own APIs; renderers escape and label them, apply the shared
 not-affordable cue, and point seasonal money to the existing resource ledger.
-Wide full sheets use a compact comparison grid, ordinary dialogs use two
-columns, and narrow layouts stack every labeled field. Shared presentation
-does not create a common asset record or mutation path.
+Every surface presents the terms as compact single-line label/value rows
+(the same rhythm as the `kv` stat rows), not a boxed cell grid: ordinary
+dialogs use one row per field, wide full sheets flow the same rows into two
+columns, and narrow layouts stack each label above its value. Shared
+presentation does not create a common asset record or mutation path.
 
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. Its title is an accessible

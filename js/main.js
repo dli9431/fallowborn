@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.101.1';
+  FB.VERSION = '1.101.2';
   FB.CHANGELOG = [
+    { v: '1.101.2', date: '2026-07-31', changes: [
+      'Character, technology, enterprise, building, and item details now list their terms as compact rows instead of boxed tables.'
+    ] },
     { v: '1.101.1', date: '2026-07-31', changes: [
       'The Guide now keeps search results, full topic explanations, and role orientations together in one expandable screen.'
     ] },
