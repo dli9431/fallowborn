@@ -1646,6 +1646,51 @@ test('named ailments and legacy illness both invalidate the portrait key',
     });
   });
 
+test('the display fill writes nothing on a settled court and leaves save damage to the tick',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      let rid = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        if (!r || !r.alive || id === 'player') continue;
+        if (FB.realmConsortCharacter(s, id)) { rid = id; break; }
+      }
+      if (!rid) return { skipped:true };
+      const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+      const consort = FB.realmConsortCharacter(s, rid);
+      /* Forge the damage a legacy save could carry: the ruler's marriage
+         link dangles while the consort still points back, and the saved
+         religious-office map is missing outright. Opening the sheet must
+         render around both without repairing either. */
+      ruler.spouseId = 'missing-spouse';
+      delete s.religiousHeads;
+      const before = JSON.stringify(s);
+      const rng = FB.getRngState();
+      const uid = FB.getUidCounter();
+      FB.ensureRealmCourtForDisplay(s, rid);
+      const displayPure = before === JSON.stringify(s);
+      const displayRngSame = rng === FB.getRngState();
+      const displayUidSame = uid === FB.getUidCounter();
+      /* The world-tick coordinator keeps full repair authority. */
+      FB.ensureDynasticState(s);
+      return {
+        skipped:false,
+        displayPure:displayPure,
+        displayRngSame:displayRngSame,
+        displayUidSame:displayUidSame,
+        tickRepaired:ruler.spouseId === consort.id &&
+          consort.spouseId === ruler.id
+      };
+    })).toEqual({
+      skipped:false,
+      displayPure:true,
+      displayRngSame:true,
+      displayUidSame:true,
+      tickRepaired:true
+    });
+  });
+
 test.describe('with the start code held fixed', function () {
   test('the start code still reproduces the same protagonist',
     async function ({ page }) {

@@ -1718,6 +1718,10 @@ window.FB = window.FB || {};
        both advance to a living, eagerly materialized successor. */
     if (rulerMember && (rulerMember.alive === false ||
         (rulerMember.charId && (!rulerChar || rulerChar.dead)))) {
+      /* Rendering never repairs a save: a display fill leaves a dead root
+         for the tick's ensureDynasticState pass and shows the compact
+         ruler record instead. */
+      if (opts && opts.displayOnly) return made;
       rulerMember.alive = false;
       if (!FB.advanceRealmSuccession(state, rid, { repair:true })) return made;
       made = true;
@@ -1735,9 +1739,14 @@ window.FB = window.FB || {};
     if (consort && consort.alive !== false) {
       const before = consort.charId && state.chars[consort.charId];
       const sitting = FB.realmRulerCharacterSnapshot(state, rid);
-      if (!before || !consortCommitmentSettled(state, r, sitting, before) ||
-          committedToOther(state, sitting, before, opts) ||
-          committedToOther(state, before, sitting, opts)) {
+      /* A display fill creates a missing consort record but never rewrites
+         links on records that already exist: an unsettled or dangling
+         marriage link is save damage, and repairs belong to the load and
+         world-tick passes, not to opening a sheet. */
+      if (!before || (!(opts && opts.displayOnly) &&
+          (!consortCommitmentSettled(state, r, sitting, before) ||
+           committedToOther(state, sitting, before, opts) ||
+           committedToOther(state, before, sitting, opts)))) {
         const linked = FB.materializeRealmConsort(state, rid, opts);
         if (!before && linked) made = true;
         if (!s.members[consort.id]) made = true;
@@ -1783,13 +1792,17 @@ window.FB = window.FB || {};
      startup policy is tuned down to 'ruler'. It still uses the ordinary
      ruler, consort, and child materializers; the override only asks the
      coordinator to fill the same bounded household that 'court' fills at
-     world creation. Under the default policy this is an idempotent no-op. */
+     world creation. It creates missing records only — displayOnly keeps
+     every repair (dead-root advance, marriage relinks) for the load and
+     world-tick passes, so under the default policy opening a sheet writes
+     nothing at all. */
   FB.ensureRealmCourtForDisplay = function (state, rid) {
     const r = state && state.realms && state.realms[rid];
     if (!r || !r.alive || rid === 'player' ||
         isPapalTerritorialRealm(state, rid)) return null;
     if (!FB.ensureRealmSuccession(state, rid)) return null;
-    const made = ensureCourtMaterialized(state, rid, null, 'court');
+    const made = ensureCourtMaterialized(state, rid,
+      { displayOnly:true }, 'court');
     if (made && FB.ensureCharacterBynames) FB.ensureCharacterBynames(state);
     return FB.realmRulerCharacterSnapshot(state, rid);
   };

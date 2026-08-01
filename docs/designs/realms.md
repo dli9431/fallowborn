@@ -20,6 +20,11 @@ much of a court exists up front is the single `COURT_EAGERNESS` constant at the 
 be re-tuned from one line after profiling. Under `'ruler'`, the first realm-sheet open
 calls `FB.ensureRealmCourtForDisplay`, which invokes those same materializers for the
 bounded consort and heir set; the modal never silently degrades to a ruler-only court.
+The display fill creates missing records only - it never advances a dead root, rewrites
+marriage links on records that already exist, or ensures the religious-office map
+(`FB.papacyTerritorialRealm` is a snapshot read for this reason). Those repairs belong
+to load and to the yearly `FB.ensureDynasticState` pass, so under the default policy
+opening a sheet writes nothing at all - rendering never repairs a save.
 The record count stays bound by the map rather than by campaign length: see the compaction rule in
 [characters.md](characters.md). Eager loading and the realm UI both take their bounded
 six-member set from `FB.realmFamilySnapshot`; the mutating `FB.realmFamily` ensure path

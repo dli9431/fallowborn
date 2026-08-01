@@ -2565,8 +2565,15 @@ window.FB = window.FB || {};
     return obedience && obedience.claimantId || null;
   };
 
+  /* Read-only: realm sheets and court-display paths ask this while
+     rendering, so it must not ensure or repair the saved office. The
+     snapshot resolves the same assignment ensureReligiousHeads would;
+     creation, load, and the recovery tick keep the office repaired. */
   FB.papacyTerritorialRealm = function (state, rid) {
-    return !!(state && rid && rid === romanRealmId(state));
+    if (!state || !rid) return false;
+    var head = FB.religiousHeadSnapshot
+      ? FB.religiousHeadSnapshot(state, 'catholic') : null;
+    return !!(head && head.id === rid);
   };
 
   FB.papacyDay = function (state) {

@@ -72,6 +72,14 @@ test('runtime mods merge definitions and the complete technology configuration',
       });
 
       const errors = FB.validateTechnologyData();
+      /* Judge the merge before the invalid-cap apply below overwrites
+         movement: mods.apply merges verbatim and validation only reports,
+         so the bad value must land for validate to flag it. */
+      const capsMerged = FBDATA.techCaps.movement === 0.5 &&
+        FBDATA.techCaps.costFloor.build === 0.45 &&
+        FBDATA.techCaps.costFloor.enterprise === oldEnterpriseFloor &&
+        FBDATA.techCaps.units.arch === 333 &&
+        FBDATA.techCaps.units.levy === oldLevyCap;
       FB.mods.apply({ techCaps:{ movement:'fast' } });
       const invalidCapErrors = FB.validateTechnologyData();
       return {
@@ -87,11 +95,7 @@ test('runtime mods merge definitions and the complete technology configuration',
           customDomain, 'name', {}),
         traditionLabel:FB.dataText(null, null, 'techTradition',
           'workshop_exchange', customTradition, 'name', {}),
-        capsMerged:FBDATA.techCaps.movement === 0.5 &&
-          FBDATA.techCaps.costFloor.build === 0.45 &&
-          FBDATA.techCaps.costFloor.enterprise === oldEnterpriseFloor &&
-          FBDATA.techCaps.units.arch === 333 &&
-          FBDATA.techCaps.units.levy === oldLevyCap,
+        capsMerged:capsMerged,
         defaultBookmark:FBDATA.defaultBookmark,
         validationErrors:errors,
         invalidCapRejected:invalidCapErrors.indexOf(

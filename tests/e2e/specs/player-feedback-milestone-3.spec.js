@@ -47,6 +47,9 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
       FB.state.player.roleOrientationsSeen['role-tier-0'] = 1;
       FB.state.player.focus = 'rest';
     });
+    /* keys.js swallows shortcuts while #genmodal is open, and closeModal can
+       flip the class a frame later (history-driven close on WebKit). */
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await page.keyboard.press('w');
     expect(await page.evaluate(function () { return FB.state.player.focus; }))
       .toBe('toil');
