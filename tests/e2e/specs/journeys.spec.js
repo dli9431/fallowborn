@@ -80,7 +80,7 @@ test('a player can export a life and import it from the title screen',
     await page.getByRole('button', { name: /Export this life/ }).click();
     await expect(page.getByRole('heading', { name: 'Export Save', exact: true })).toBeVisible();
     const exported = await page.locator('#sl-xtext').inputValue();
-    expect(exported).toMatch(/^FBS1\./);
+    expect(exported).toMatch(/^FBS2\./);
 
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Save Game', exact: true })).toBeVisible();

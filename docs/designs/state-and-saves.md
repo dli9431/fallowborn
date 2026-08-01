@@ -139,22 +139,31 @@ discipline throughout this doc is what lets new state land without touching it. 
 that refuse localStorage outright (iOS in-app webviews, blocked cookies) so the UI can
 warn instead of failing silently; ephemeral storage (private mode, third-party-iframe
 eviction) passes the probe — for those, `S.exportState` / `S.parseExport` carry a life
-as base64 text (`FBS1.` prefix, same v3 payload) that wakes through the same
-`G.loadData` path as a slot load and is planted back into the autosave slot. The ☰ menu's
+as compressed base64 text (`FBS2.` prefix, same v3 payload) that wakes through the same
+`G.loadData` path as a slot load and is planted back into the autosave slot; the legacy
+uncompressed `FBS1.` form remains importable forever. The ☰ menu's
 🐞 Report-a-bug dialog (`UI.showReport`) reuses that export: the copied report bundles the
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
-and the current life as `FBS1.` text, so a reported moment can be reopened exactly via Import.
+and the current life as `FBS2.` text, so a reported moment can be reopened exactly via Import.
 
-**The save must fit one localStorage entry** (~5 MB origin quota; a serialized character
-record is ~400 bytes). Court records are map-bound by the eager-court compaction; the
-player's wider family is bounded at creation instead, because dead kin are never pruned
-(the family tree is the product). Two balance knobs do the bounding (see
-[../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility multipliers a
-probability rather than a certainty, and `familyMaxChars` caps total tracked family
-records — past it, unscripted kin weddings and kin births pause, so an over-cap save
-stops growing instead of failing. If a save still hits the quota, `S.toSlot` recognizes
-the quota-shaped error and points the player at 📤 Export, which preserves the life as
-text when storage no longer can.
+**The save must fit the localStorage quota beside its siblings** (~5 MB per origin on
+WebKit/iOS, ~10 MB elsewhere — shared by the autosave and all three slots; a serialized
+character record is ~400 bytes). Court records are map-bound by the eager-court
+compaction; the player's wider family is bounded at creation instead, because dead kin
+are never pruned (the family tree is the product). Two balance knobs do the bounding
+(see [../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility
+multipliers a probability rather than a certainty, and `familyMaxChars` caps total
+tracked family records — past it, unscripted kin weddings and kin births pause, so an
+over-cap save stops growing instead of failing. On top of that bounding, slots are
+stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe UTF-16;
+an lz-string port private to `js/save.js`), which shrinks the ~1.5 MB serialized life
+several-fold so autosave plus every slot fits even the WebKit quota. `S.serialize`
+still returns plain JSON — compression happens only at the storage and export
+boundaries, each write verifies its own round trip and falls back to plain JSON rather
+than store an unproven encoding, and `S.read` accepts legacy uncompressed slots
+forever. If a save still hits the quota, `S.toSlot` recognizes the quota-shaped error
+and points the player at 📤 Export, which preserves the life as text when storage no
+longer can.
 
 Political-bloc state is additive and keeps save format 3.
 `state.politics = {polityId,allegiances,pendingMotion}` is created

@@ -210,6 +210,73 @@ test('save compaction rehydrates court links and technology exposure',
     });
   });
 
+test('slots store compressed, verify their round trip, and read back the same life',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage encoding contract belongs to the served origin.');
+
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      /* Hostile codec input on purpose: high-BMP glyphs, a typographic
+         apostrophe, and an astral emoji (a surrogate pair). */
+      FB.state.player.e2eUnicodeProbe = '⚔ Æthelflæd’s café — 👑';
+      const payload = FB.save.serialize();
+      const stored = FB.save.toSlot(1);
+      const raw = localStorage.getItem('fb_slot1');
+      const reread = FB.save.read(1);
+      return {
+        stored:stored,
+        compressed:!!raw && raw.indexOf('FBC1.') === 0,
+        /* localStorage counts UTF-16 units; halving the character count is a
+           conservative floor for the observed several-fold LZ ratio. */
+        smaller:!!raw && raw.length * 2 < payload.length,
+        identical:!!reread && JSON.stringify(reread) === payload,
+        probe:reread && reread.state.player.e2eUnicodeProbe
+      };
+    })).toEqual({
+      stored:true,
+      compressed:true,
+      smaller:true,
+      identical:true,
+      probe:'⚔ Æthelflæd’s café — 👑'
+    });
+  });
+
+test('legacy plain slots and FBS1 exports still load; fresh exports are FBS2',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage encoding contract belongs to the served origin.');
+
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function (startCode) {
+      const payload = FB.save.serialize();
+      localStorage.setItem('fb_slot2', payload);
+      const legacySlot = FB.save.read(2);
+      const legacyExport = 'FBS1.' +
+        btoa(unescape(encodeURIComponent(payload)));
+      const legacyParsed = FB.save.parseExport(legacyExport);
+      const fresh = FB.save.exportState();
+      const freshParsed = FB.save.parseExport(fresh);
+      return {
+        legacySlotSeed:legacySlot && legacySlot.state.seed === startCode,
+        legacyImportSeed:legacyParsed && legacyParsed.state.seed === startCode,
+        freshPrefix:fresh.slice(0, 5),
+        freshImportSeed:freshParsed && freshParsed.state.seed === startCode,
+        freshSmaller:fresh.length * 2 < legacyExport.length
+      };
+    }, START_CODE)).toEqual({
+      legacySlotSeed:true,
+      legacyImportSeed:true,
+      freshPrefix:'FBS2.',
+      freshImportSeed:true,
+      freshSmaller:true
+    });
+  });
+
 test('a quota-shaped storage failure advises export, not a generic error',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

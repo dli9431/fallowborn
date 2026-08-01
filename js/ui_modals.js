@@ -14090,7 +14090,7 @@ window.FB = window.FB || {};
   UI.showImport = function () {
     openModal('Import Save',
       '<div class="gm-body-text"><p>Paste an exported save text below, then load it. The life wakes where it left off — and lands in the autosave slot too.</p></div>' +
-      '<textarea id="sl-itext" class="savetext" rows="6" placeholder="FBS1.…"></textarea>' +
+      '<textarea id="sl-itext" class="savetext" rows="6" placeholder="FBS2.…"></textarea>' +
       '<div class="gm-list"><button class="actionbtn" id="sl-iload">📥 Load this life</button></div>' +
       '<button class="btn" id="gm-back">Back</button>', { historyView:true });
     $('sl-iload').addEventListener('click', function () {
@@ -14109,7 +14109,7 @@ window.FB = window.FB || {};
 
   /* a bug or idea as copyable text — the player’s words bundled with everything
      needed to reproduce it: game version, start seed, mod set, and the current
-     life as save text (the same FBS1. blob Import wakes). There is no server to
+     life as save text (the same FBS2. blob Import wakes). There is no server to
      send it to; the player pastes it on Discord, in an email, or as a GitHub
      issue. A watcher has no life to attach, so observe mode skips the save. */
   UI.showReport = function () {

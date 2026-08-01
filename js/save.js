@@ -106,6 +106,226 @@ window.FB = window.FB || {};
     return state;
   }
 
+  /* ---------- storage compression ----------
+     A serialized life is ~1.5 MB of JSON; localStorage quotas are ~5 MB on
+     WebKit and ~10 MB elsewhere, and the quota is shared by the autosave and
+     every slot - so uncompressed, a life effectively fits once on the
+     browsers mobile players actually use. Slots and exports are therefore
+     compressed at this boundary with an LZW variant (a port of lz-string by
+     pieroxy, MIT), packing the bit stream into storage-safe UTF-16
+     characters or base64 text. S.serialize keeps returning plain JSON; only
+     the at-rest and exported encodings change, and both decoders still
+     accept the uncompressed legacy forms. */
+
+  function lzCompress(input, bitsPerChar, charFromInt) {
+    const dictionary = {};
+    const fresh = {};
+    const data = [];
+    let w = '';
+    let enlargeIn = 2;
+    let dictSize = 3;
+    let numBits = 2;
+    let dataVal = 0;
+    let dataPosition = 0;
+
+    function writeBits(count, value) {
+      for (let i = 0; i < count; i++) {
+        dataVal = (dataVal << 1) | (value & 1);
+        if (dataPosition === bitsPerChar - 1) {
+          dataPosition = 0;
+          data.push(charFromInt(dataVal));
+          dataVal = 0;
+        } else {
+          dataPosition++;
+        }
+        value = value >> 1;
+      }
+    }
+
+    /* First sighting of a character emits it literally (marker 0 for 8-bit,
+       1 for 16-bit); afterwards phrases emit their dictionary code. Each
+       emission narrows the headroom until the code width grows one bit. */
+    function writeSymbol(symbol) {
+      if (own(fresh, symbol)) {
+        const code = symbol.charCodeAt(0);
+        if (code < 256) {
+          writeBits(numBits, 0);
+          writeBits(8, code);
+        } else {
+          writeBits(numBits, 1);
+          writeBits(16, code);
+        }
+        enlargeIn--;
+        if (enlargeIn === 0) {
+          enlargeIn = Math.pow(2, numBits);
+          numBits++;
+        }
+        delete fresh[symbol];
+      } else {
+        writeBits(numBits, dictionary[symbol]);
+      }
+      enlargeIn--;
+      if (enlargeIn === 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+    }
+
+    for (let ii = 0; ii < input.length; ii++) {
+      const c = input.charAt(ii);
+      if (!own(dictionary, c)) {
+        dictionary[c] = dictSize++;
+        fresh[c] = true;
+      }
+      const wc = w + c;
+      if (own(dictionary, wc)) {
+        w = wc;
+      } else {
+        writeSymbol(w);
+        dictionary[wc] = dictSize++;
+        w = String(c);
+      }
+    }
+    if (w !== '') writeSymbol(w);
+    writeBits(numBits, 2);
+    for (;;) {
+      dataVal = dataVal << 1;
+      if (dataPosition === bitsPerChar - 1) {
+        data.push(charFromInt(dataVal));
+        break;
+      }
+      dataPosition++;
+    }
+    return data.join('');
+  }
+
+  function lzDecompress(length, resetValue, nextValue) {
+    if (!length) return '';
+    const dictionary = [0, 1, 2];
+    const result = [];
+    let enlargeIn = 4;
+    let dictSize = 4;
+    let numBits = 3;
+    let val = nextValue(0);
+    let position = resetValue;
+    let index = 1;
+
+    function readBits(count) {
+      let bits = 0;
+      let power = 1;
+      for (let i = 0; i < count; i++) {
+        const resb = val & position;
+        position >>= 1;
+        if (position === 0) {
+          position = resetValue;
+          val = nextValue(index++);
+        }
+        if (resb > 0) bits |= power;
+        power <<= 1;
+      }
+      return bits;
+    }
+
+    const first = readBits(2);
+    if (first === 2) return '';
+    const c = String.fromCharCode(readBits(first === 0 ? 8 : 16));
+    dictionary[3] = c;
+    let w = c;
+    result.push(c);
+    for (;;) {
+      if (index > length) return '';
+      let code = readBits(numBits);
+      if (code === 0) {
+        dictionary[dictSize++] = String.fromCharCode(readBits(8));
+        code = dictSize - 1;
+        enlargeIn--;
+      } else if (code === 1) {
+        dictionary[dictSize++] = String.fromCharCode(readBits(16));
+        code = dictSize - 1;
+        enlargeIn--;
+      } else if (code === 2) {
+        return result.join('');
+      }
+      if (enlargeIn === 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+      let entry;
+      if (typeof dictionary[code] === 'string') {
+        entry = dictionary[code];
+      } else if (code === dictSize) {
+        entry = w + w.charAt(0);
+      } else {
+        return null;
+      }
+      result.push(entry);
+      dictionary[dictSize++] = w + entry.charAt(0);
+      enlargeIn--;
+      w = entry;
+      if (enlargeIn === 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+    }
+  }
+
+  /* 15 bits per character keeps every stored code unit a valid, unpaired
+     BMP character (32..32799), which localStorage holds intact. The
+     trailing space is part of the lz-string format. */
+  function compressToStored(input) {
+    return lzCompress(input, 15, function (a) {
+      return String.fromCharCode(a + 32);
+    }) + ' ';
+  }
+  function decompressFromStored(input) {
+    if (!input) return null;
+    return lzDecompress(input.length, 16384, function (i) {
+      return input.charCodeAt(i) - 32;
+    });
+  }
+
+  const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let b64Reverse = null;
+  function b64Value(ch) {
+    if (!b64Reverse) {
+      b64Reverse = {};
+      for (let i = 0; i < B64.length; i++) b64Reverse[B64.charAt(i)] = i;
+    }
+    return b64Reverse[ch];
+  }
+  function compressToBase64(input) {
+    const res = lzCompress(input, 6, function (a) { return B64.charAt(a); });
+    switch (res.length % 4) {
+      case 1: return res + '===';
+      case 2: return res + '==';
+      case 3: return res + '=';
+      default: return res;
+    }
+  }
+  function decompressFromBase64(input) {
+    if (!input) return null;
+    return lzDecompress(input.length, 32, function (i) {
+      return b64Value(input.charAt(i));
+    });
+  }
+
+  const CPRE = 'FBC1.';
+  /* A compressed payload must prove it decompresses back to the exact JSON
+     before it may replace the plain form: a save is the one artifact where a
+     codec fault must degrade to "bigger", never to "lost". Legacy plain
+     slots start with '{' and pass through decodeStored untouched. */
+  function encodeStored(json) {
+    const packed = CPRE + compressToStored(json);
+    return decodeStored(packed) === json ? packed : json;
+  }
+  function decodeStored(raw) {
+    if (raw == null) return null;
+    if (raw.indexOf(CPRE) === 0) {
+      return decompressFromStored(raw.slice(CPRE.length));
+    }
+    return raw;
+  }
+
   function key(slot) { return PREFIX + (slot === 'auto' ? 'auto' : 'slot' + slot); }
 
   /* storage probe — some browsers refuse localStorage outright (iOS in-app
@@ -157,7 +377,7 @@ window.FB = window.FB || {};
 
   S.toSlot = function (slot) {
     try {
-      localStorage.setItem(key(slot), S.serialize());
+      localStorage.setItem(key(slot), encodeStored(S.serialize()));
       return true;
     } catch (e) {
       if (FB.ui) {
@@ -177,24 +397,36 @@ window.FB = window.FB || {};
   /* export/import — a life as portable text. localStorage is a hostage on
      some mobile browsers (evicted in third-party iframes and in-app webviews,
      dropped in private mode); a copied string outlives all of that and moves
-     a life between devices. btoa/atob take binary strings, so the JSON is
-     UTF-8 wrapped; the FBS1. tag marks the format and catches stray pastes. */
+     a life between devices. FBS2 is compressed base64 (about a quarter of
+     the old text, which matters for mobile copy-paste); FBS1 is the legacy
+     uncompressed UTF-8/base64 wrap and remains importable forever. The tag
+     marks the format and catches stray pastes. */
   const XPRE = 'FBS1.';
+  const XPRE2 = 'FBS2.';
   S.exportState = function () {
-    return XPRE + btoa(unescape(encodeURIComponent(S.serialize())));
+    const json = S.serialize();
+    const body = compressToBase64(json);
+    // same rule as slots: an unverified codec result never carries the life
+    if (decompressFromBase64(body) === json) return XPRE2 + body;
+    return XPRE + btoa(unescape(encodeURIComponent(json)));
   };
   S.parseExport = function (text) {
     try {
       const t = String(text || '').replace(/\s+/g, '');
-      if (t.indexOf(XPRE) !== 0) return null;
-      const d = JSON.parse(decodeURIComponent(escape(atob(t.slice(XPRE.length)))));
+      let json = null;
+      if (t.indexOf(XPRE2) === 0) {
+        json = decompressFromBase64(t.slice(XPRE2.length));
+      } else if (t.indexOf(XPRE) === 0) {
+        json = decodeURIComponent(escape(atob(t.slice(XPRE.length))));
+      }
+      const d = json ? JSON.parse(json) : null;
       return d && d.v === 3 ? d : null;
     } catch (e) { return null; }
   };
 
   S.read = function (slot) {
     try {
-      const raw = localStorage.getItem(key(slot));
+      const raw = decodeStored(localStorage.getItem(key(slot)));
       const d = raw ? JSON.parse(raw) : null;
       // saves from before the county-map & liege-hierarchy rework are unreadable
       return d && d.v === 3 ? d : null;
