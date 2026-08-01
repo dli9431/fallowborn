@@ -21245,6 +21245,412 @@
         "text": "A Word With the Liege"
       }
     },
+    "event.tournament_invitation.options.0.desc.default": {
+      "context": "Event tournament_invitation, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "The entry gift buys your place in the lists. The champion’s purse is {money:20}; the price of defeat is a hard fall."
+      }
+    },
+    "event.tournament_invitation.options.0.failure.text.default": {
+      "context": "Event tournament_invitation, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A lance like a siege-beam lifts you clean from the saddle. You wake staring at the clouds, ribs singing, while the stands cheer the other man."
+      }
+    },
+    "event.tournament_invitation.options.0.label.default": {
+      "context": "Event tournament_invitation, authored option 0, label, branch default.",
+      "glossary": [
+        "money:10"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Ride in the joust. ({money:10} for harness and heralds)"
+      }
+    },
+    "event.tournament_invitation.options.0.success.effects.log.default": {
+      "context": "Durable event log for tournament_invitation, authored option 0, success.effects.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Won the joust at a tourney."
+      }
+    },
+    "event.tournament_invitation.options.0.success.text.default": {
+      "context": "Event tournament_invitation, authored option 0, success text, branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Three courses, three splintered lances, and the herald cries your name. {lord} hangs the champion’s purse on your lance-tip with his own hands."
+      }
+    },
+    "event.tournament_invitation.options.1.desc.default": {
+      "context": "Event tournament_invitation, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Blunted steel in the press — a smaller prize, and softer falls."
+      }
+    },
+    "event.tournament_invitation.options.1.failure.text.default": {
+      "context": "Event tournament_invitation, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A mace you never saw ends your day early. The surgeon calls the bruises instructive."
+      }
+    },
+    "event.tournament_invitation.options.1.label.default": {
+      "context": "Event tournament_invitation, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Fight in the melee."
+      }
+    },
+    "event.tournament_invitation.options.1.success.text.default": {
+      "context": "Event tournament_invitation, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "You keep your feet while better-known men lose theirs. The melee’s captains will remember your name."
+      }
+    },
+    "event.tournament_invitation.options.2.desc.default": {
+      "context": "Event tournament_invitation, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Coin says another man bleeds for you."
+      }
+    },
+    "event.tournament_invitation.options.2.failure.text.default": {
+      "context": "Event tournament_invitation, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your man eats mud in the first pass. The stands find it hilarious."
+      }
+    },
+    "event.tournament_invitation.options.2.label.default": {
+      "context": "Event tournament_invitation, authored option 2, label, branch default.",
+      "glossary": [
+        "money:5"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Wager {money:5} on the champion."
+      }
+    },
+    "event.tournament_invitation.options.2.success.text.default": {
+      "context": "Event tournament_invitation, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your man carries the field, and your purse comes home heavier."
+      }
+    },
+    "event.tournament_invitation.options.3.desc.default": {
+      "context": "Event tournament_invitation, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A gift in place of a wager — here, generosity is its own bet."
+      }
+    },
+    "event.tournament_invitation.options.3.label.default": {
+      "context": "Event tournament_invitation, authored option 3, label, branch default.",
+      "glossary": [
+        "money:5"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Make a gift to the host’s stable. ({money:5})"
+      }
+    },
+    "event.tournament_invitation.options.4.desc.default": {
+      "context": "Event tournament_invitation, authored option 4, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "No lance, no risk — good company and better talk."
+      }
+    },
+    "event.tournament_invitation.options.4.label.default": {
+      "context": "Event tournament_invitation, authored option 4, label, branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Watch from the stands as {lord}’s guest."
+      }
+    },
+    "event.tournament_invitation.options.5.desc.default": {
+      "context": "Event tournament_invitation, authored option 5, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A quiet day at home, and a faintly cooler hall."
+      }
+    },
+    "event.tournament_invitation.options.5.label.default": {
+      "context": "Event tournament_invitation, authored option 5, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Send your regrets."
+      }
+    },
+    "event.tournament_invitation.text.default": {
+      "context": "Event tournament_invitation, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims a tourney for the dry roads — bright harness, blunted lances, a melee for the young swords, and a champion’s purse. Every ambitious blade in the province means to be there. Will you ride in the lists?"
+      }
+    },
+    "event.tournament_invitation.text.muslim": {
+      "context": "Event tournament_invitation, text, faith branch muslim.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims a furusiyya contest for the dry roads — fine horses, lance and sword from the saddle, and rich prizes for the finest rider. Every bold young blade in the province means to show his horsemanship. Will you ride?"
+      }
+    },
+    "event.tournament_invitation.text.pagan": {
+      "context": "Event tournament_invitation, text, faith branch pagan.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims great games for the dry roads — horse-combats, blunted spears, and an honor-price for the boldest rider. Every young spear in the province means to make a name. Will you ride?"
+      }
+    },
+    "event.tournament_invitation.title.default": {
+      "context": "Event tournament_invitation, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "An Invitation to the Lists"
+      }
+    },
+    "event.tournament_invitation_lord.options.0.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 0, desc, branch default.",
+      "glossary": [
+        "money:25",
+        "money:40"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your entry gift and fees stake {money:25} against the {money:40} purse — and against a very public fall."
+      }
+    },
+    "event.tournament_invitation_lord.options.0.failure.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "The crowd’s roar turns to a gasp as you go over the crupper, helm ringing. They carry you from the lists with honor — and with a headache for the ages."
+      }
+    },
+    "event.tournament_invitation_lord.options.0.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 0, label, branch default.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Enter the joust. ({money:25} in harness and herald’s fees)"
+      }
+    },
+    "event.tournament_invitation_lord.options.0.success.effects.log.default": {
+      "context": "Durable event log for tournament_invitation_lord, authored option 0, success.effects.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Carried the lists at a great tourney."
+      }
+    },
+    "event.tournament_invitation_lord.options.0.success.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 0, success text, branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Course after course your lance strikes true, and the field yields to you. {lord} names you champion before the assembled houses, and even the beaten men cheer."
+      }
+    },
+    "event.tournament_invitation_lord.options.1.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Lead your sworn swords into the press — glory shared is glory still."
+      }
+    },
+    "event.tournament_invitation_lord.options.1.failure.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "The press swallows your banner in the first charge. You are ransomed back your own dented helm with as much grace as you can muster."
+      }
+    },
+    "event.tournament_invitation_lord.options.1.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Ride in the melee."
+      }
+    },
+    "event.tournament_invitation_lord.options.1.success.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your knot of riders holds the center of the field until the horns call it done. The captains salute you as one of their own."
+      }
+    },
+    "event.tournament_invitation_lord.options.2.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A lord’s wager, loudly made — the stands will remember either way."
+      }
+    },
+    "event.tournament_invitation_lord.options.2.failure.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your champion folds in the second course. You pay out while the stands pretend not to watch."
+      }
+    },
+    "event.tournament_invitation_lord.options.2.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 2, label, branch default.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Wager {money:20} on the champion."
+      }
+    },
+    "event.tournament_invitation_lord.options.2.success.text.default": {
+      "context": "Event tournament_invitation_lord, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Your eye for horseflesh proves sound. The losers pay up with pinched smiles."
+      }
+    },
+    "event.tournament_invitation_lord.options.3.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Stake a young blade’s harness and entry — patronage outlasts any wager."
+      }
+    },
+    "event.tournament_invitation_lord.options.3.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 3, label, branch default.",
+      "glossary": [
+        "money:20"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Patronize a promising rider. ({money:20})"
+      }
+    },
+    "event.tournament_invitation_lord.options.4.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 4, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Be seen, be gracious, and let younger backs take the blows."
+      }
+    },
+    "event.tournament_invitation_lord.options.4.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 4, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Grace the stands and the feast."
+      }
+    },
+    "event.tournament_invitation_lord.options.5.desc.default": {
+      "context": "Event tournament_invitation_lord, authored option 5, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Duty keeps you home; the hall will understand."
+      }
+    },
+    "event.tournament_invitation_lord.options.5.label.default": {
+      "context": "Event tournament_invitation_lord, authored option 5, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "Send your regrets."
+      }
+    },
+    "event.tournament_invitation_lord.text.default": {
+      "context": "Event tournament_invitation_lord, text, faith branch default.",
+      "glossary": [
+        "lord",
+        "money:40"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "{lord} proclaims a great tourney and begs the honor of your presence: two days of lances when the spring roads dry, a melee for the young swords, and a champion’s purse of {money:40}. Landless knights and lords’ heirs will ride from three provinces away. Will you enter the lists?"
+      }
+    },
+    "event.tournament_invitation_lord.text.muslim": {
+      "context": "Event tournament_invitation_lord, text, faith branch muslim.",
+      "glossary": [
+        "lord",
+        "money:40"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "{lord} proclaims a great furusiyya contest and begs the honor of your presence: two days of mounted lance and sword when the spring roads dry, and a champion’s prize of {money:40}. Riders of name will come from three provinces away. Will you enter the maydan?"
+      }
+    },
+    "event.tournament_invitation_lord.text.pagan": {
+      "context": "Event tournament_invitation_lord, text, faith branch pagan.",
+      "glossary": [
+        "lord",
+        "money:40"
+      ],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "{lord} proclaims great games and begs the honor of your presence: two days of horse-combat when the spring roads dry, a spear-press for the young warriors, and an honor-price of {money:40}. Famous riders will come from three provinces away. Will you ride?"
+      }
+    },
+    "event.tournament_invitation_lord.title.default": {
+      "context": "Event tournament_invitation_lord, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tournament.js",
+      "source": {
+        "text": "A Great Tourney"
+      }
+    },
     "event.town_elder.options.0.desc.default": {
       "context": "Event town_elder, authored option 0, desc, branch default.",
       "glossary": [],
@@ -39992,6 +40398,16 @@
         "text": "Lost-Wax Casting"
       }
     },
+    "src.0261c23a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Blunted steel in the press — a smaller prize, and softer falls."
+      }
+    },
     "src.0267c935": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43531,6 +43947,16 @@
         "text": ": missing prerequisite"
       }
     },
+    "src.0be6d326": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Carried the lists at a great tourney."
+      }
+    },
     "src.0bec2574": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43919,6 +44345,16 @@
       ],
       "source": {
         "text": "Back another merchant’s four-season venture for a share of its profit or loss."
+      }
+    },
+    "src.0d2187ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "The press swallows your banner in the first charge. You are ransomed back your own dented helm with as much grace as you can muster."
       }
     },
     "src.0d22068e": {
@@ -44401,6 +44837,16 @@
       ],
       "source": {
         "text": "A good word from the pulpit weighs with the great."
+      }
+    },
+    "src.0e87e589": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Make a gift to the host’s stable. ({money:5})"
       }
     },
     "src.0e902ce6": {
@@ -47312,6 +47758,16 @@
         "text": "less fertile"
       }
     },
+    "src.161e7573": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A lance like a siege-beam lifts you clean from the saddle. You wake staring at the clouds, ribs singing, while the stands cheer the other man."
+      }
+    },
     "src.162c89a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49239,6 +49695,16 @@
         "text": "Assign a worker before locking this enterprise."
       }
     },
+    "src.1b4a8d52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your man eats mud in the first pass. The stands find it hilarious."
+      }
+    },
     "src.1b5dd9de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49807,6 +50273,16 @@
       ],
       "source": {
         "text": "your line"
+      }
+    },
+    "src.1d94bd2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "The entry gift buys your place in the lists. The champion’s purse is {money:20}; the price of defeat is a hard fall."
       }
     },
     "src.1d95a3d1": {
@@ -50971,6 +51447,16 @@
       ],
       "source": {
         "text": "Trade crosses where the ford once drowned it."
+      }
+    },
+    "src.20c83c90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "An Invitation to the Lists"
       }
     },
     "src.20c9a9a9": {
@@ -52272,6 +52758,16 @@
       ],
       "source": {
         "text": "Return it to the armory"
+      }
+    },
+    "src.24323597": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your man carries the field, and your purse comes home heavier."
       }
     },
     "src.24358a49": {
@@ -53778,6 +54274,16 @@
         "text": "Roads waste time better spent governing."
       }
     },
+    "src.28217c7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "{lord} proclaims a great furusiyya contest and begs the honor of your presence: two days of mounted lance and sword when the spring roads dry, and a champion’s prize of {money:40}. Riders of name will come from three provinces away. Will you enter the maydan?"
+      }
+    },
     "src.283a9233": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54957,6 +55463,16 @@
       ],
       "source": {
         "text": "Captured roll adjustment"
+      }
+    },
+    "src.2bcbd1ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Send your regrets."
       }
     },
     "src.2bd01f48": {
@@ -56279,6 +56795,16 @@
       ],
       "source": {
         "text": "Dismiss him without spectacle."
+      }
+    },
+    "src.2fc85dbd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A mace you never saw ends your day early. The surgeon calls the bruises instructive."
       }
     },
     "src.2fc85f62": {
@@ -59456,6 +59982,16 @@
       ],
       "source": {
         "text": "Cast out by the church."
+      }
+    },
+    "src.397ff58b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your eye for horseflesh proves sound. The losers pay up with pinched smiles."
       }
     },
     "src.3990beb9": {
@@ -62719,6 +63255,16 @@
         "text": "Hear the grievance and confirm the old custom. ({money:10})"
       }
     },
+    "src.430d23b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A lord’s wager, loudly made — the stands will remember either way."
+      }
+    },
     "src.4318715c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63159,6 +63705,16 @@
       ],
       "source": {
         "text": "👶 Your brother {parent} has a son, {baby}."
+      }
+    },
+    "src.44294553": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Be seen, be gracious, and let younger backs take the blows."
       }
     },
     "src.442e493e": {
@@ -64113,6 +64669,16 @@
       ],
       "source": {
         "text": "{cost} research · about {seasons} season"
+      }
+    },
+    "src.4698a869": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Wager {money:5} on the champion."
       }
     },
     "src.469911bb": {
@@ -67383,6 +67949,16 @@
         "text": "Professional Bailiffs"
       }
     },
+    "src.5010b230": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "You keep your feet while better-known men lose theirs. The melee’s captains will remember your name."
+      }
+    },
     "src.50196ec2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67821,6 +68397,16 @@
       ],
       "source": {
         "text": "Gold-spend cap: {money:amount}"
+      }
+    },
+    "src.514b318b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "{lord} proclaims great games and begs the honor of your presence: two days of horse-combat when the spring roads dry, a spear-press for the young warriors, and an honor-price of {money:40}. Famous riders will come from three provinces away. Will you ride?"
       }
     },
     "src.514ffe90": {
@@ -70227,6 +70813,16 @@
       ],
       "source": {
         "text": "Köln"
+      }
+    },
+    "src.57d0df4c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Wager {money:20} on the champion."
       }
     },
     "src.57d1f6eb": {
@@ -76484,6 +77080,16 @@
         "text": "Leans: {name}"
       }
     },
+    "src.697fe442": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims a tourney for the dry roads — bright harness, blunted lances, a melee for the young swords, and a champion’s purse. Every ambitious blade in the province means to be there. Will you ride in the lists?"
+      }
+    },
     "src.69811ea2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77674,6 +78280,16 @@
         "text": "Abkhazia-Kartli"
       }
     },
+    "src.6cb99e9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Coin says another man bleeds for you."
+      }
+    },
     "src.6cc2b458": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77682,6 +78298,16 @@
       ],
       "source": {
         "text": "Maintained writing equipment that improves a monk’s paid and religious work, but is not saleable property."
+      }
+    },
+    "src.6cc484b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "{lord} proclaims a great tourney and begs the honor of your presence: two days of lances when the spring roads dry, a melee for the young swords, and a champion’s purse of {money:40}. Landless knights and lords’ heirs will ride from three provinces away. Will you enter the lists?"
       }
     },
     "src.6cc802ec": {
@@ -79135,6 +79761,16 @@
         "text": "No enterprise yet. Open one in a settlement below."
       }
     },
+    "src.70ce273e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Enter the joust. ({money:25} in harness and herald’s fees)"
+      }
+    },
     "src.70d8ebd0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79403,6 +80039,16 @@
       ],
       "source": {
         "text": "Seek the next guild rank — {rank} ({money:gold})"
+      }
+    },
+    "src.71b2fa6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Patronize a promising rider. ({money:20})"
       }
     },
     "src.71b35039": {
@@ -80115,6 +80761,16 @@
       ],
       "source": {
         "text": "A suitable gift affirms both houses."
+      }
+    },
+    "src.73a9b143": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A Great Tourney"
       }
     },
     "src.73aa76ec": {
@@ -85273,6 +85929,16 @@
         "text": "Affected direct vassals ({count}): {vassals}."
       }
     },
+    "src.815e1a8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Grace the stands and the feast."
+      }
+    },
     "src.817c050f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88357,6 +89023,16 @@
         "text": "the first village becomes a town"
       }
     },
+    "src.899cf04a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A quiet day at home, and a faintly cooler hall."
+      }
+    },
     "src.89acccc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89047,6 +89723,16 @@
       ],
       "source": {
         "text": "Take the landless champions into service. ({money:20})"
+      }
+    },
+    "src.8bac0edd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Ride in the joust. ({money:10} for harness and heralds)"
       }
     },
     "src.8bb1c4a3": {
@@ -91727,6 +92413,16 @@
         "text": "Beyond {location}, armed shapes step into the road and ask for your purse with studied politeness."
       }
     },
+    "src.938d5824": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims great games for the dry roads — horse-combats, blunted spears, and an honor-price for the boldest rider. Every young spear in the province means to make a name. Will you ride?"
+      }
+    },
     "src.93a61dc1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93666,6 +94362,16 @@
         "text": "Pronounce the divorce"
       }
     },
+    "src.99272177": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Won the joust at a tourney."
+      }
+    },
     "src.992f6f39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94736,6 +95442,16 @@
       ],
       "source": {
         "text": "Withdraw from the {campaign}?"
+      }
+    },
+    "src.9c154426": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Duty keeps you home; the hall will understand."
       }
     },
     "src.9c1e68d5": {
@@ -95960,6 +96676,16 @@
         "text": "Pomerania"
       }
     },
+    "src.9f976bb1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Ride in the melee."
+      }
+    },
     "src.9fa3a9d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96298,6 +97024,16 @@
       ],
       "source": {
         "text": "No active war or banner service."
+      }
+    },
+    "src.a0b44304": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "A gift in place of a wager — here, generosity is its own bet."
       }
     },
     "src.a0b53269": {
@@ -98076,6 +98812,16 @@
         "text": "📜 The Magyar horde crosses the Carpathians! Pannonia burns beneath their hooves."
       }
     },
+    "src.a55b8403": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Stake a young blade’s harness and entry — patronage outlasts any wager."
+      }
+    },
     "src.a56acb34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98478,6 +99224,16 @@
         "text": "Road dust, parish bells, crowded porches: the diocese waits to see what kind of bishop has come among it."
       }
     },
+    "src.a67d108f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your entry gift and fees stake {money:25} against the {money:40} purse — and against a very public fall."
+      }
+    },
     "src.a67dd3bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98486,6 +99242,16 @@
       ],
       "source": {
         "text": "The potter’s wheel makes vessels quickly and to regular shapes."
+      }
+    },
+    "src.a68a7f59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your champion folds in the second course. You pay out while the stands pretend not to watch."
       }
     },
     "src.a692156a": {
@@ -101205,6 +101971,16 @@
         "text": "Water-powered bellows sustain temperatures that produce liquid iron."
       }
     },
+    "src.aeccc01c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Your knot of riders holds the center of the field until the horns call it done. The captains salute you as one of their own."
+      }
+    },
     "src.aed42db2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103016,6 +103792,16 @@
       ],
       "source": {
         "text": "Await the answer."
+      }
+    },
+    "src.b3639bd2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "No lance, no risk — good company and better talk."
       }
     },
     "src.b3704cdc": {
@@ -109902,6 +110688,16 @@
         "text": "This ruler is not your direct vassal."
       }
     },
+    "src.c7130bba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Lead your sworn swords into the press — glory shared is glory still."
+      }
+    },
     "src.c7177c01": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111528,6 +112324,16 @@
         "text": "Dynasty"
       }
     },
+    "src.cbd2bf82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Word rides ahead of the heralds: {lord} proclaims a furusiyya contest for the dry roads — fine horses, lance and sword from the saddle, and rich prizes for the finest rider. Every bold young blade in the province means to show his horsemanship. Will you ride?"
+      }
+    },
     "src.cbd7de3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111536,6 +112342,16 @@
       ],
       "source": {
         "text": "Restored supply raises condition, but public resolve suffers."
+      }
+    },
+    "src.cbd9d02d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Watch from the stands as {lord}’s guest."
       }
     },
     "src.cbe1c376": {
@@ -111552,7 +112368,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/events_paths.js"
+        "data/events_paths.js",
+        "data/events_tournament.js"
       ],
       "source": {
         "text": "Fight in the melee."
@@ -118339,6 +119156,16 @@
         "text": "An hour of good words costs nothing."
       }
     },
+    "src.df27dd17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Three courses, three splintered lances, and the herald cries your name. {lord} hangs the champion’s purse on your lance-tip with his own hands."
+      }
+    },
     "src.df2dd6b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119288,6 +120115,16 @@
       ],
       "source": {
         "text": "March on their army in the field — battle joins when you catch it."
+      }
+    },
+    "src.e1e25f5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "Course after course your lance strikes true, and the field yields to you. {lord} names you champion before the assembled houses, and even the beaten men cheer."
       }
     },
     "src.e1e7b894": {
@@ -125055,6 +125892,16 @@
       ],
       "source": {
         "text": "Collect the full tithe."
+      }
+    },
+    "src.f25fb90a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tournament.js"
+      ],
+      "source": {
+        "text": "The crowd’s roar turns to a gasp as you go over the crupper, helm ringing. They carry you from the lists with honor — and with a headache for the ages."
       }
     },
     "src.f266224b": {

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.102.0';
+  FB.VERSION = '1.103.0';
   FB.CHANGELOG = [
+    { v: '1.103.0', date: '2026-08-01', changes: [
+      'Gentry and landed lords now receive invitations to jousting tournaments in the dry seasons — ride in the joust or melee, wager on the champion, or simply attend as the host’s guest.'
+    ] },
     { v: '1.102.0', date: '2026-07-31', changes: [
       'Portraits are redrawn in the illustrated Court style: every character is a unique painted face with real hair, beards, headwear, and marks of age and health, and the equipment screen shows gear worn on the full figure with hand weapons in side panels.'
     ] },
