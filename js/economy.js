@@ -87,8 +87,13 @@ window.FB = window.FB || {};
       FB.playerDescendantKind(state, c.id)));
   }
   function managedCareerCharacter(state, c) {
-    return !!(state && c && !c.dead && FB.isHouseholdCharacter &&
-      FB.isHouseholdCharacter(state, c.id));
+    if (!state || !c || c.dead) return false;
+    if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) {
+      return true;
+    }
+    /* Resident unwed siblings accept career direction without joining the
+       household (see FB.manageableKinKind for the exact rule). */
+    return !!(FB.manageableKinKind && FB.manageableKinKind(state, c.id));
   }
   function workerBusy(state, cid) {
     const list = state.player.enterprises || [];
@@ -1308,6 +1313,15 @@ window.FB = window.FB || {};
     }
     for (const c of FB.householdMembers(state)) add(c);
     for (const c of FB.retainerCharacters(state)) add(c);
+    /* Manageable kin work alongside the household without becoming members:
+       no upkeep, no household semantics — labor only. Age and profession
+       filters stay at the call sites. */
+    if (FB.manageableKinKind) {
+      for (const id in state.chars) {
+        const c = state.chars[id];
+        if (c && FB.manageableKinKind(state, c.id)) add(c);
+      }
+    }
     return out;
   };
 

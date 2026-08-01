@@ -1801,8 +1801,9 @@ window.FB = window.FB || {};
         FB.spousesOf(state, sp).length) return false;
     const B = FBDATA.balance, p = state.player;
     const descendantKind = FB.playerDescendantKind(state, k.id);
-    /* A descendant establishing another household leaves work and equipment
-       assignments behind. The current head's own pledged wedding is exempt. */
+    /* A managed kinsman (descendant or resident unwed sibling) establishing
+       another household leaves work and equipment assignments behind. The
+       current head's own pledged wedding is exempt. */
     if (k.id !== p.charId && FB.unassignEnterpriseWorker) {
       FB.unassignEnterpriseWorker(state, k.id);
     }

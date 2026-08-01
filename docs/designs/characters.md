@@ -117,12 +117,28 @@ character's household loadout, not from every object the dynasty owns. Equipped 
 protection likewise lowers that wearer's yearly mortality, including spouses and resident
 children and grandchildren. Battle odds and seasonal gold/prestige/piety remain
 head-of-household effects and count only the current protagonist's outfit. AI rulers,
-strangers, siblings, and married-away descendants do not simulate equipment. See
+strangers, independent siblings, and married-away descendants do not simulate
+equipment; manageable resident unwed siblings share the family armory like household
+members (see the manageable-kin rule below). See
 [items.md](items.md).
 
 **Children are players too.** When a minor heir succeeds (age < 16), the daily picker
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.
+
+**Starting families are authored presets, not an editor.** The character screen offers
+`G.FAMILY_PRESETS` (`js/main.js`): `standard` (sixteen, unmarried, parents and
+siblings — the historical start), `established` (thirty, spouse and young children),
+and `elder` (forty-eight, spouse and grown children). Ages and family shapes are
+fixed fields on each preset; the player picks a preset, never an age or a headcount.
+Every preset keeps the protagonist an adult — the childhood regime above is a
+succession mode, not a start — and every preset leaves a plausible heir behind
+(`elder` guarantees an adult one). A preset's spouse and children are generated on
+the shared seeded stream in a fixed order after the kin every start shares, so the
+choice is deterministic under the start code, which carries it as an optional
+seventh part (see [seeds.md](seeds.md)); the parents' usual 20–40/20–34 year
+seniority still applies, so an elder start can have quite elderly living parents.
+Each preset discloses its difficulty right on its card.
 
 **Unmarried grandchildren share the managed household.** `FB.playerDescendantKind`
 is the common relationship test for a current protagonist's children and grandchildren.
@@ -341,6 +357,25 @@ copying one founder label onto every generation. Restore deterministically fills
 missing bynames only where a recorded father makes the relationship unambiguous;
 non-patronymic house naming is unchanged.
 
+**The player can rename the house.** The Self tab's Dynasty panel offers
+*Rename house*, which runs `FB.renameHouse(state, name)`. A house has no record
+of its own — membership is exactly the set of characters whose `c.dyn` equals
+the string — so a rename rewrites `c.dyn` on every character carrying the old
+string (the same rule `FB.dynastyNameSet` uses), and additionally rewrites
+`state.realms.player.name` when it still equals the derived `'Realm of ' + dyn`
+form and `state.realms.player.dynasty` when it matches. Validation
+(`FB.validateHouseName`) trims, then requires 2–20 characters of letters,
+spaces, hyphens, and apostrophes; digits, symbols, and emoji are rejected and
+renaming to the current name is a no-op refusal. Personal names and bynames are
+untouched — a patronym still shadows the dyn in `FB.fullName` while the renamed
+house remains the identity underneath. Two consequences are accepted as
+realistic: heraldry seeds from the dyn string, so a rename redraws the coat of
+arms, and chronicle/legend entries already written keep the old name — history
+is not rewritten. Generic NPC commoners still carry no family name at all
+(`dyn: null`); closing that gap is left to the later genealogy feature that will
+also design cadet branches and title-derived surnames, rather than bolting a
+general NPC-naming pass onto this increment.
+
 **Careers belong to characters.** Every managed household member lazily receives
 `c.career = {profession,rank,experience,startedYear,guildRank,guildStanding,chosen}` through
 `FB.careerOf` (`js/economy.js`). `player.profession` remains a compatibility mirror for
@@ -431,11 +466,41 @@ sheets and Work & Enterprises. No-day changes return to a freshly derived plan; 
 that already spend a day keep their ordinary close-and-advance behavior.
 
 **Family visibility is not household control.** Work & Enterprises names its scope:
-the playable head, resident spouses and descendants, and hired retainers appear when
-old enough for work or training. A visible relative outside the managed household is
-not assignable. Each present but unavailable row states the applicable age, station,
-faith, career, or landed-head rule. The Guide separately defines playable line, house,
-managed household, visible kin, and royal branch.
+the playable head, resident spouses and descendants, unwed siblings living with the
+household, and hired retainers appear when old enough for work or training. A visible
+relative outside the managed household is not assignable. Each present but unavailable
+row states the applicable age, station, faith, career, or landed-head rule. The Guide
+separately defines playable line, house, managed household, visible kin, and royal
+branch.
+
+**Manageable kin are resident unwed siblings, never household members.**
+`FB.manageableKinKind(state, cid)` (model.js) is the single explicit rule for which
+resident relatives the player may put to work: a living sibling of the protagonist by
+recorded parentage (with the same role-plus-dynasty fallback `siblingsOf` uses for
+first-generation kin of old saves) who shares the protagonist's dynasty, is not a
+reigning realm ruler, is not landed — no station of their own (`FB.stationOf` ≥ 1
+covers an explicit station and the lord/notable roles) and no `royalLine` identity —
+is not vowed to the faith (the vow *is* a monk or priest career record), has no living
+spouse (checked in both link directions, exactly as `FB.isHouseholdCharacter`), and is
+resident, meaning `FB.characterResidence` places them at the household home.
+`FB.manageableKinBlocker` reports which test a sibling fails, so the Kin panel can
+state each living sibling's scope in one line: "Lives with the household — can be put
+to work", or married, reigning, landed, vowed, or away. Sharing a dynasty is never by
+itself a license to redirect a married-away, landed, vowed, or ruling relative.
+
+Manageable siblings join `FB.householdWorkers` and pass the `managedCareerCharacter`
+gate, so Work & Enterprises, the career picker, enterprise staffing, the Household
+Plan work/assignment/equipment cells, and the shared armory treat them like household
+members — but they are never added to `FB.householdMembers`, so upkeep, family wages,
+education, instruction, and match management keep their existing descent-line
+semantics; the Household Plan shows those cells disabled with their existing
+explanations. Manageability ends cleanly: both wedding paths (`FB.doKinWedding` and
+the yearly `kinLifeTick` match) strip enterprise assignments and loadouts for any
+non-head kin, and lazy enterprise normalization clears the assignment of a worker who
+has left the labor pool. A resident sibling has no saved residence of their own, so
+`FB.characterResidence` resolves them to the household home by fallback — they follow
+the household on a permanent move and keep working, while enterprises left behind keep
+the existing remote-ownership idle behavior.
 
 **The family tree is a bounded navigator, not an unbounded genealogy dump.** New
 campaigns record `player.houseFounderId` as the first playable head; old saves derive a
@@ -453,6 +518,24 @@ heir, children-first, then same-house grandchildren/siblings/nieces-nephews/
 uncles-aunts/cousins order and attaches a stable eligibility code for UI prose.
 Spouses, dead relatives, different-house branches, and branches behind living
 children remain visible with an explicit reason rather than silently disappearing.
+
+**Voluntary retirement is a living handover, not a second succession system.** A
+living head aged `balance.retirementAge` (50) or older may use the Hand over the
+house deed to yield to any already-eligible adult successor from the same review.
+`FB.game.retirementBlockers` is the single gate the deed, modal, and
+`FB.game.retireTo` all quote: imprisonment, a personal war or campaign, leading a
+great holy war host, any other wartime duty, an active journey, and the absence
+of an adult successor each block with their own reason. The transition reuses
+`FB.game.succeedTo` with `livingAbdication`, so money passes in full (no death
+dues) while personal prestige, piety, and Common Voice shrink by the ordinary
+succession rule, a personal bishopric returns to the Church, and courtship,
+plots, and personal standings end. The predecessor stays alive as family:
+`character.retired` marks them as a retired elder, their residence pins to the
+household home, they remain visible in Kin, and they age and die through the
+ordinary character mortality roll. They are no longer the playable head and
+grant no benefits, so there is nothing a repeated retirement could duplicate.
+Rival heirs, rebellion, and forced abdication are deliberately out of scope for
+this first version.
 
 **Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
 career's `apprenticeAge` may be placed with that trade from their sheet. It costs the

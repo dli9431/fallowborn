@@ -376,6 +376,14 @@
         "text": "✝ Restore the Papacy…"
       }
     },
+    "action.retire.label.default": {
+      "context": "action retire, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "👴 Hand over the house…"
+      }
+    },
     "action.revoke_county.label.default": {
       "context": "action revoke_county, visible label.",
       "glossary": [],
@@ -31711,6 +31719,18 @@
         "text": "💒 You wed {name}, as your late parent pledged."
       }
     },
+    "news.life.retirement": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "former",
+        "generation",
+        "heir"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "👤 {heir} takes up the family’s story while {former} retires from the headship. Generation {generation}."
+      }
+    },
     "news.life.spouse_died": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -31740,17 +31760,6 @@
       "location": "js/main.js",
       "source": {
         "text": "👤 {name} takes up the family’s story. Generation {generation}."
-      }
-    },
-    "news.life.trait_earned": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "name",
-        "trait"
-      ],
-      "location": "js/model.js",
-      "source": {
-        "text": "🏅 {name} earns {trait}."
       }
     },
     "news.life.tutor_died": {
@@ -40653,7 +40662,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -41080,6 +41088,16 @@
         "text": "Great {temple}"
       }
     },
+    "src.046f3216": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "👴 Hand over the house"
+      }
+    },
     "src.047eccb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41480,6 +41498,16 @@
         "text": "Kingdom of Pamplona"
       }
     },
+    "src.05b5bae9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "beginning in {year} AD, aged {age}, {situation}."
+      }
+    },
     "src.05b68ba5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -41808,16 +41836,6 @@
       ],
       "source": {
         "text": "A child points directly at the hidden sack. The fine is immediate."
-      }
-    },
-    "src.069fb2d0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Uncle"
       }
     },
     "src.06a307c4": {
@@ -42196,8 +42214,7 @@
       "location": [
         "data/map_data.js",
         "js/economy.js",
-        "js/ui.js",
-        "js/model.js"
+        "js/ui.js"
       ],
       "source": {
         "text": "Freeholder"
@@ -42232,6 +42249,16 @@
       ],
       "source": {
         "text": "0/{capacity} assigned · +{rate} Standing/day when assigned"
+      }
+    },
+    "src.07a5595f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "radio cgfamily-card"
       }
     },
     "src.07a60f0e": {
@@ -43737,16 +43764,6 @@
         "text": "At last you reach {destination}, where {visitname} receives you in person. The miles no longer stand between conversation and intent."
       }
     },
-    "src.0b42b0f1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Descendant matching only"
-      }
-    },
     "src.0b43e802": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44237,6 +44254,16 @@
         "text": "Used for {claimant}"
       }
     },
+    "src.0cfd14a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "20) return { ok:false, reason:'long' }; if (!houseNameCharsOk(nm)) return { ok:false, reason:'chars' }; return { ok:true, name:nm }; }; /* A house is just the c.dyn string its members share, so a rename rewrites every character carrying the old string — the same membership rule FB.dynastyNameSet uses — plus the player realm identity when it was derived from the house. Personal names and bynames are untouched, and chronicle or legend text already written keeps the old name. Heraldry is seeded from the dyn string, so the coat of arms is redrawn. */ FB.renameHouse = function (state, newName) { const me = state && state.player && state.chars && state.chars[state.player.charId]; if (!me || !me.dyn) return { ok:false, reason:'nohouse' }; const oldDyn = me.dyn; const check = FB.validateHouseName(newName, oldDyn); if (!check.ok) return check; const nm = check.name; for (const id in state.chars) { const c = state.chars[id]; if (c && c.dyn === oldDyn) c.dyn = nm; } const realm = state.realms && state.realms.player; if (realm) { if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm; if (realm.dynasty === oldDyn) realm.dynasty = nm; } FB.touchFamily(); FB.news(state, FB.msg('news.house.renamed', '👑 The house of {old} is henceforth known as {dynasty}.', { old:oldDyn, dynasty:nm })); return { ok:true, name:nm, old:oldDyn }; }; /* ---------- character factory ---------- opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN} opts.id installs a caller-derived identity instead of drawing the next sequential uid. Court records use it so the same succession member always resolves to the same character id, whether it was created at world creation or at the moment a player first opened the realm. */ FB.makeCharacter = function (state, opts) { const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f'); const c = { id: opts.id || FB.uid(), name: opts.name || FB.randomName(opts.culture, sex, opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null), sex: sex, culture: opts.culture, religion: opts.religion, born: opts.born, dead: false, dyn: opts.dyn || null, role: opts.role || null, traits: opts.traits || [], skills: {}, opinion: opts.opinion !== undefined ? opts.opinion : 0, fertility: FB.rf(0.7, 1.3), station: opts.station !== undefined ? opts.station : null, spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null, childrenIds: [] }; if (Object.prototype.hasOwnProperty.call(opts, 'byname')) { c.byname = opts.byname; } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' && c.fatherId && state.chars[c.fatherId]) { c.byname = FB.patronym(state.chars[c.fatherId].name, c.sex); } const q = opts.quality || 0; for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q); if (!opts.traits) { const pool = Object.keys(FBDATA.traits).filter(function (t) { return !FBDATA.traits[t].noRandom; }); const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3); for (let i = 0; i"
+      }
+    },
     "src.0cff5b48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44505,16 +44532,6 @@
       ],
       "source": {
         "text": "After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime."
-      }
-    },
-    "src.0d7af261": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Aunt"
       }
     },
     "src.0d821b5f": {
@@ -44927,16 +44944,6 @@
       ],
       "source": {
         "text": "Survey Rolls and Seal Press"
-      }
-    },
-    "src.0eb9c8a1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Scholar"
       }
     },
     "src.0ebdf636": {
@@ -45903,6 +45910,16 @@
         "text": "The crown grants when the crown chooses."
       }
     },
+    "src.11aa7508": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "0;) { const a = FBDATA.ailments[c.ails[i]]; if (a && a.kind === kind) { c.ails.splice(i, 1); left--; } else i++; } if (!c.ails.length) delete c.ails; }; FB.randomWound = function (sev) { const pool = []; for (const id in FBDATA.ailments) { const a = FBDATA.ailments[id]; if (a.kind === 'wound' && (a.sev || 1) === sev) pool.push(id); } return pool.length ? FB.pick(pool) : null; }; FB.randomSickness = function () { const pool = []; for (const id in FBDATA.ailments) { if (FBDATA.ailments[id].kind === 'sickness') pool.push(id); } return pool.length ? FB.pick(pool) : null; }; FB.traitAgg = function (c) { const agg = { dip: 0, mar: 0, ste: 0, int: 0, lea: 0, health: 0, fert: 1, opinion: 0 }; for (const id of c.traits) { const t = FBDATA.traits[id]; if (!t) continue; for (const s of SKILLS) if (t[s]) agg[s] += t[s]; if (t.health) agg.health += t.health; if (t.fert) agg.fert *= t.fert; if (t.opinion) agg.opinion += t.opinion; } return agg; }; function baseSkill(c, key) { if (!c) return 0; const skills = c.skills || {}; return (skills[key] || 0) + (FB.traitAgg(c)[key] || 0); } FB.skillOf = function (c, key) { let v = baseSkill(c, key); // Equipped household gear sharpens its wearer (FB.itemBonus loads later). if (c && FB.state && FB.itemBonus && FB.state.chars && FB.state.chars[c.id] === c) v += FB.itemBonus(FB.state, key, c.id); return Math.max(0, v); }; FB.skillSnapshot = function (state, c, key) { let v = baseSkill(c, key); if (state && c && FB.itemBonusReadOnly && state.chars && state.chars[c.id] === c) { v += FB.itemBonusReadOnly(state, key, c.id); } return Math.max(0, v); }; /* Skill growth is uncapped. Below balance.skillSoftCap every gain lands; past it each point must beat a (softCap/current)^2 roll. At and beyond balance.skillMasteryThreshold that chance is further multiplied by (masteryThreshold/current)^skillMasteryPower. Only the raw trained skill sets these odds; traits and equipment do not make training harder. Returns points actually gained. */ FB.gainSkill = function (c, key, n) { const B = FBDATA.balance; const soft = B.skillSoftCap || 20; const mastery = B.skillMasteryThreshold || 40; const power = B.skillMasteryPower !== undefined ? B.skillMasteryPower : 8; let gained = 0; for (let i = 0; i"
+      }
+    },
     "src.11aa883f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46338,7 +46355,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -46883,16 +46899,6 @@
       ],
       "source": {
         "text": "Miracles are soon reported. Pilgrims flood in, and the house prospers — as do you."
-      }
-    },
-    "src.13b97d3a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Mother"
       }
     },
     "src.13c36c49": {
@@ -47475,6 +47481,16 @@
         "text": "“I crossed a war to find you — and found I like myself better.”"
       }
     },
+    "src.1538e186": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Use only letters, spaces, hyphens, and apostrophes."
+      }
+    },
     "src.15601488": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47823,7 +47839,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -47938,6 +47953,16 @@
       ],
       "source": {
         "text": "Offer amends before witnesses. ({money:5})"
+      }
+    },
+    "src.1683c6dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rules a realm of their own"
       }
     },
     "src.1689bd95": {
@@ -48265,7 +48290,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -48282,6 +48306,16 @@
         "text": "Left for dead; the house was cast down in the night."
       }
     },
+    "src.177c3fe7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "the scenario’s own difficulty"
+      }
+    },
     "src.177dfb5a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48290,16 +48324,6 @@
       ],
       "source": {
         "text": "Passes to heirs; cannot secure credit"
-      }
-    },
-    "src.177f6305": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "heir successor named heir children grandchildren siblings house death"
       }
     },
     "src.17824c64": {
@@ -48326,7 +48350,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -49155,6 +49178,16 @@
         "text": "Correction need not become humiliation."
       }
     },
+    "src.19cb1ace": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Matches are arranged for the descent line only"
+      }
+    },
     "src.19d3e7cc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49403,6 +49436,16 @@
       ],
       "source": {
         "text": "Beja"
+      }
+    },
+    "src.1a4f3490": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your sibling · lives with the household"
       }
     },
     "src.1a644d33": {
@@ -50185,6 +50228,16 @@
         "text": "Carlisle"
       }
     },
+    "src.1d27b380": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "An Elder of the Family"
+      }
+    },
     "src.1d381259": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50513,16 +50566,6 @@
       ],
       "source": {
         "text": "⚔ {attacker} wars against {defender}."
-      }
-    },
-    "src.1e308e3a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Lowborn"
       }
     },
     "src.1e3441cd": {
@@ -50855,16 +50898,6 @@
       ],
       "source": {
         "text": "One of your sworn men kneels at your gate: debts press him hard, and only your generosity stands between his family and ruin."
-      }
-    },
-    "src.1f25c8af": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Royalty"
       }
     },
     "src.1f325e5b": {
@@ -52409,16 +52442,6 @@
         "text": ": unlock target is empty."
       }
     },
-    "src.23516d83": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Father"
-      }
-    },
     "src.236780fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52928,16 +52951,6 @@
       ],
       "source": {
         "text": "Path: hold the majority of two kingdoms of one empire to be crowned emperor."
-      }
-    },
-    "src.24b77c1d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "beginning in {year} AD, aged {age}."
       }
     },
     "src.24b9be10": {
@@ -55025,6 +55038,16 @@
         "text": "Independence & foreign contact"
       }
     },
+    "src.2a8d9657": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "with a spouse and young children"
+      }
+    },
     "src.2a90ace1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55183,6 +55206,16 @@
       ],
       "source": {
         "text": "75 seasoned cavalry join the current host, adding about {money:1.5} to seasonal logistics."
+      }
+    },
+    "src.2ad9a190": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "👴 Hand over the house…"
       }
     },
     "src.2ae02fc0": {
@@ -57231,7 +57264,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -57706,6 +57738,16 @@
       ],
       "source": {
         "text": "Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount."
+      }
+    },
+    "src.323fed34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "— rank titles come from the capital county's faith group (rank+3 indexes FBDATA.titles: count→4 … emperor→7); a female ruler uses the group's"
       }
     },
     "src.324699c8": {
@@ -60024,14 +60066,14 @@
         "text": "{pope} · {standing}"
       }
     },
-    "src.399fad0b": {
+    "src.399dc382": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js"
+        "js/ui.js"
       ],
       "source": {
-        "text": "Noble"
+        "text": "A house name can be at most twenty letters long."
       }
     },
     "src.39a902e8": {
@@ -60372,6 +60414,16 @@
       ],
       "source": {
         "text": "Bailiff"
+      }
+    },
+    "src.3aacee3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Resolve the current wartime duty before retiring."
       }
     },
     "src.3aad9590": {
@@ -61306,6 +61358,16 @@
       ],
       "source": {
         "text": "Claim it for yourself"
+      }
+    },
+    "src.3d7c73bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "— falls back to the bare rank when unlanded */ FB.styledTitle = function (state) { return FB.renderTitleSnapshot(FB.titleSnapshot(state)); }; FB.titleSnapshot = function (state) { const p = state.player; const me = state.chars[p.charId]; const rel = FB.religionOf(me.religion); let group = rel.group === 'muslim' ? 'muslim' : rel.group === 'pagan' ? 'pagan' : rel.group === 'jewish' ? 'jewish' : 'christian'; if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f'; const arr = FBDATA.titles[group] || FBDATA.titles.christian; const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) }; if (FB.playerPope && FB.playerPope(state)) { snap.special = 'pope'; return snap; } if (FB.playerCardinal && FB.playerCardinal(state)) { snap.special = 'cardinal'; return snap; } const headed = FB.religionsHeadedBy(state, 'player'); if (headed.length) { const headReligion = headed[0]; snap.headReligion = headReligion; snap.headTitle = FBDATA.religions[headReligion].head.title; return snap; } if (p.tier"
       }
     },
     "src.3d866c03": {
@@ -64072,8 +64134,7 @@
       "glossary": [],
       "location": [
         "js/economy.js",
-        "js/events.js",
-        "js/model.js"
+        "js/events.js"
       ],
       "source": {
         "text": "Imam"
@@ -64408,6 +64469,16 @@
       ],
       "source": {
         "text": "Patience, whispers, and a long knife. Occupies your focus until sprung."
+      }
+    },
+    "src.45b5ec70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "A Youth of Sixteen"
       }
     },
     "src.45d0c4a2": {
@@ -64836,8 +64907,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js",
-        "js/model.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "Abbess"
@@ -65321,6 +65391,16 @@
       ],
       "source": {
         "text": "Death, surely, will make an exception."
+      }
+    },
+    "src.48131765": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "= 0xD800 && code"
       }
     },
     "src.4816b4b5": {
@@ -67068,6 +67148,16 @@
         "text": "The Envoy at the Lower Bench"
       }
     },
+    "src.4dca6cc9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "unmarried, your parents and siblings beside you"
+      }
+    },
     "src.4dcf1668": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68459,16 +68549,6 @@
         "text": "A forgotten precedent ends the quarrel cleanly."
       }
     },
-    "src.515cb682": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Grandmother"
-      }
-    },
     "src.5160ef13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69452,6 +69532,26 @@
         "text": "Requires a coastal county."
       }
     },
+    "src.5406fd25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "?@[\\]^_`{|}~]/; function houseNameCharsOk(nm) { if (HOUSE_NAME_FORBIDDEN.test(nm)) return false; for (let i = 0; i"
+      }
+    },
+    "src.541ccddd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Finish the current journey before retiring."
+      }
+    },
     "src.542cc7a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69851,16 +69951,6 @@
       ],
       "source": {
         "text": "Choose work or training…"
-      }
-    },
-    "src.55667f3e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Monk"
       }
     },
     "src.5567075a": {
@@ -71255,6 +71345,16 @@
         "text": "Stand in the line."
       }
     },
+    "src.59175b2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Married — runs their own household"
+      }
+    },
     "src.5939cb47": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71303,6 +71403,16 @@
       ],
       "source": {
         "text": "Incoming monopoly"
+      }
+    },
+    "src.5968ea9d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A house name needs at least two letters."
       }
     },
     "src.596a9922": {
@@ -71820,8 +71930,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js",
-        "js/model.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "Qadi"
@@ -72367,6 +72476,16 @@
         "text": "the realms play out on their own"
       }
     },
+    "src.5c39a482": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Vowed to the faith — independent"
+      }
+    },
     "src.5c401510": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72784,7 +72903,6 @@
       "glossary": [],
       "location": [
         "js/main.js",
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -72842,16 +72960,6 @@
         "text": "One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there."
       }
     },
-    "src.5d78106f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls."
-      }
-    },
     "src.5d8640b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72860,6 +72968,16 @@
       ],
       "source": {
         "text": "Carmarthen"
+      }
+    },
+    "src.5d881fdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person."
       }
     },
     "src.5d9c0b53": {
@@ -75085,6 +75203,16 @@
         "text": "Zaragoza"
       }
     },
+    "src.63dae8ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Handing the house over while you live is not yet possible:"
+      }
+    },
     "src.63dc714a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75259,8 +75387,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js",
-        "js/model.js"
+        "js/events.js"
       ],
       "source": {
         "text": "Cousin"
@@ -75541,7 +75668,6 @@
       "glossary": [],
       "location": [
         "js/economy.js",
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -76438,6 +76564,16 @@
         "text": "Nothing. So enjoy the wine."
       }
     },
+    "src.67d179f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The great holy war must be resolved before retiring."
+      }
+    },
     "src.67db940e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76952,8 +77088,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/economy.js",
-        "js/model.js"
+        "data/economy.js"
       ],
       "source": {
         "text": "Merchant"
@@ -77338,16 +77473,6 @@
       ],
       "source": {
         "text": "Dorylaion"
-      }
-    },
-    "src.6a40b1c0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "🏅 {name} earns {trait}."
       }
     },
     "src.6a5766f6": {
@@ -78018,6 +78143,16 @@
       ],
       "source": {
         "text": "Bureaucratic Offices"
+      }
+    },
+    "src.6c2eaf2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Thirty years old and married, with young children already in the cradle."
       }
     },
     "src.6c3a3c9b": {
@@ -79734,8 +79869,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js",
-        "js/model.js"
+        "js/main.js"
       ],
       "source": {
         "text": "Sister"
@@ -80149,16 +80283,6 @@
       ],
       "source": {
         "text": "Stewards and secretaries, all day. The great remain unseen."
-      }
-    },
-    "src.71fcf6e6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Nun"
       }
     },
     "src.720f11cd": {
@@ -80646,7 +80770,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -80933,6 +81056,16 @@
         "text": "👑 Invested, you answer now to {realm}."
       }
     },
+    "src.74185486": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "the hardest — an adult heir from day one, but a short remaining runway"
+      }
+    },
     "src.741b9b2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81061,16 +81194,6 @@
       ],
       "source": {
         "text": "Raised-host base logistics"
-      }
-    },
-    "src.746db2ca": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Grand Qadi"
       }
     },
     "src.747b2619": {
@@ -82475,6 +82598,16 @@
         "text": "A merchant train needs spears for the road. Easy duty, fair pay."
       }
     },
+    "src.78702e89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end."
+      }
+    },
     "src.78707def": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82569,7 +82702,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -82644,6 +82776,16 @@
       ],
       "source": {
         "text": "imperial title"
+      }
+    },
+    "src.78cce0a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control."
       }
     },
     "src.78cddd47": {
@@ -83986,16 +84128,6 @@
       ],
       "source": {
         "text": "Vidin"
-      }
-    },
-    "src.7c6724aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Craftsman"
       }
     },
     "src.7c8d0614": {
@@ -86391,6 +86523,16 @@
         "text": "The caravan master pays late and short."
       }
     },
+    "src.82b4d2e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Return from campaign before retiring."
+      }
+    },
     "src.82b6001d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87383,6 +87525,16 @@
         "text": "Kingdom of Georgia"
       }
     },
+    "src.84f99c1f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rename house"
+      }
+    },
     "src.84fda532": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87441,6 +87593,16 @@
       ],
       "source": {
         "text": "A clear conscience, at market price."
+      }
+    },
+    "src.851d7e78": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that."
       }
     },
     "src.85211b3f": {
@@ -88743,6 +88905,16 @@
         "text": "The Rent-Day Tally"
       }
     },
+    "src.88e47aa1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "A prisoner cannot hand over the house."
+      }
+    },
     "src.88e733fd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89926,6 +90098,16 @@
         "text": "Mariner’s Compass"
       }
     },
+    "src.8c3524b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
+      }
+    },
     "src.8c46d150": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90626,6 +90808,16 @@
         "text": "Your standing and your silver are on the scales now."
       }
     },
+    "src.8e234dbb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rename house…"
+      }
+    },
     "src.8e2b4639": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90971,8 +91163,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js",
-        "js/model.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "Abbot"
@@ -91449,16 +91640,6 @@
       ],
       "source": {
         "text": "The shaping is done; the world awaits."
-      }
-    },
-    "src.903cb32b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Grandfather"
       }
     },
     "src.903e9f28": {
@@ -93060,7 +93241,6 @@
       "location": [
         "js/economy.js",
         "js/events.js",
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -93372,7 +93552,6 @@
       "glossary": [],
       "location": [
         "js/economy.js",
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -93803,8 +93982,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js",
-        "js/model.js"
+        "js/events.js"
       ],
       "source": {
         "text": "Godi"
@@ -95024,6 +95202,16 @@
         "text": "The wolf leaves you a scar to remember it by."
       }
     },
+    "src.9afedb3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Retire in favor of an adult successor. {name} remains in the family at home as a retired elder."
+      }
+    },
     "src.9b1077d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95152,6 +95340,16 @@
       ],
       "source": {
         "text": "Deeds — done at once unless noted"
+      }
+    },
+    "src.9b5cc5a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control."
       }
     },
     "src.9b67e0de": {
@@ -96304,6 +96502,16 @@
       ],
       "source": {
         "text": "An honest ambition, honestly confessed."
+      }
+    },
+    "src.9e8cdc2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "0 ? Math.min(value, threshold) : value; } return progress; }; /* Progress is current-protagonist state. It stops at the catalog threshold; crossing that threshold grants once and writes a locale-neutral Chronicle descriptor. A later event-driven removal may reset the counter. */ FB.noteTraitProgress = function (state, traitId, amount) { if (!state || !state.player) return false; const def = FBDATA.traits[traitId]; const threshold = def && def.earn && Number(def.earn.threshold); if (!isFinite(threshold) || threshold"
       }
     },
     "src.9e8fc480": {
@@ -97798,6 +98006,16 @@
         "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
       }
     },
+    "src.a298193d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Retire and continue as {name}"
+      }
+    },
     "src.a29cbc52": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98822,6 +99040,16 @@
         "text": "Stake a young blade’s harness and entry — patronage outlasts any wager."
       }
     },
+    "src.a5612e10": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "No adult successor can take over the house."
+      }
+    },
     "src.a56acb34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98966,7 +99194,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -99866,6 +100093,16 @@
         "text": "Banu"
       }
     },
+    "src.a8754ac0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "👤 {heir} takes up the family’s story while {former} retires from the headship. Generation {generation}."
+      }
+    },
     "src.a87b8bd0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100642,7 +100879,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -101438,6 +101674,16 @@
       ],
       "source": {
         "text": "They stammer and withdraw the words. The witnesses laugh at them."
+      }
+    },
+    "src.ad1e2974": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Retirement is not possible."
       }
     },
     "src.ad1eac1a": {
@@ -102463,6 +102709,16 @@
         "text": "Greedy"
       }
     },
+    "src.b0010036": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lives with the household — can be put to work"
+      }
+    },
     "src.b0066fd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103214,6 +103470,16 @@
         "text": "Mosul"
       }
     },
+    "src.b1e28066": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Unmarried, your parents and siblings beside you — the whole road ahead."
+      }
+    },
     "src.b1f16c57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103332,6 +103598,16 @@
       ],
       "source": {
         "text": "Nubian"
+      }
+    },
+    "src.b23f6668": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Lives away from the household"
       }
     },
     "src.b2506c42": {
@@ -104005,6 +104281,16 @@
         "text": "Accept condemnation and declare war"
       }
     },
+    "src.b3e07ae9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story."
+      }
+    },
     "src.b3e48a33": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104229,7 +104515,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/world.js"
       ],
       "source": {
@@ -104480,8 +104765,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js",
-        "js/model.js"
+        "js/main.js"
       ],
       "source": {
         "text": "Grandson"
@@ -105225,6 +105509,16 @@
       ],
       "source": {
         "text": "Your riders return laden, leaving mirrored smoke on their horizon."
+      }
+    },
+    "src.b720b0aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "with a spouse and grown children"
       }
     },
     "src.b73c1483": {
@@ -106142,7 +106436,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -106884,8 +107177,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js",
-        "js/model.js"
+        "js/main.js"
       ],
       "source": {
         "text": "Brother"
@@ -107039,6 +107331,16 @@
       ],
       "source": {
         "text": "{name} dies in {year} AD, aged {age} — before their time."
+      }
+    },
+    "src.bcc07fe2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "heir successor named heir children grandchildren siblings house death retirement abdication"
       }
     },
     "src.bcc8d916": {
@@ -107682,16 +107984,6 @@
       ],
       "source": {
         "text": "👁 Observe"
-      }
-    },
-    "src.be785a9b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Niece"
       }
     },
     "src.be7c9c6d": {
@@ -108796,7 +109088,6 @@
       "glossary": [],
       "location": [
         "js/holywar.js",
-        "js/model.js",
         "js/world.js"
       ],
       "source": {
@@ -109536,16 +109827,6 @@
         "text": "{have} of {total} county"
       }
     },
-    "src.c3c62acc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Nephew"
-      }
-    },
     "src.c3c69cee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109860,7 +110141,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -110688,6 +110968,16 @@
         "text": "This ruler is not your direct vassal."
       }
     },
+    "src.c70ff75a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Retirement waits until age {age}."
+      }
+    },
     "src.c7130bba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111019,6 +111309,16 @@
         "text": "Order and supplies raise abstract campaign condition."
       }
     },
+    "src.c7cc2c91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory."
+      }
+    },
     "src.c7e38268": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111088,6 +111388,16 @@
       ],
       "source": {
         "text": "Burgos"
+      }
+    },
+    "src.c80631f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Rename"
       }
     },
     "src.c8089645": {
@@ -111626,7 +111936,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/events.js"
       ],
       "source": {
@@ -112916,6 +113225,16 @@
         "text": "Carving provinces…"
       }
     },
+    "src.cd239d95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "a head start — the succession is secured early, fewer years remain"
+      }
+    },
     "src.cd245f10": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113037,16 +113356,6 @@
         "text": "Weight-driven mechanisms divide motion into regular measured beats."
       }
     },
-    "src.cd778e55": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "Soldier"
-      }
-    },
     "src.cd86acc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113057,6 +113366,26 @@
       ],
       "source": {
         "text": "Close"
+      }
+    },
+    "src.cd89543a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "House name"
+      }
+    },
+    "src.cd8f436c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Forty-eight years old and married, with grown children ready to inherit."
       }
     },
     "src.cd9e5138": {
@@ -114079,6 +114408,16 @@
         "text": "🎁 You give {item} to {ruler} of {realm}. (Standing {opinion})"
       }
     },
+    "src.d0d09cd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "An Established Household"
+      }
+    },
     "src.d0dc9f17": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114569,6 +114908,16 @@
       ],
       "source": {
         "text": "Review vassals and institutions."
+      }
+    },
+    "src.d2662f59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls."
       }
     },
     "src.d26e0084": {
@@ -116913,6 +117262,16 @@
         "text": "The raiders, laden elsewhere, pass the church by. A miracle, plainly."
       }
     },
+    "src.d8ed209c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Only a living head of the house can retire."
+      }
+    },
     "src.d8f41a6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117112,16 +117471,6 @@
       ],
       "source": {
         "text": "{amount}% construction cost"
-      }
-    },
-    "src.d980c354": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow."
       }
     },
     "src.d98ac675": {
@@ -120255,8 +120604,7 @@
       "location": [
         "data/map_data.js",
         "js/economy.js",
-        "js/ui.js",
-        "js/model.js"
+        "js/ui.js"
       ],
       "source": {
         "text": "Gentry"
@@ -120572,6 +120920,16 @@
         "text": "{season} {year} — {name}"
       }
     },
+    "src.e30bd8ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Holds their own station — independent"
+      }
+    },
     "src.e312c205": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120620,6 +120978,16 @@
       ],
       "source": {
         "text": "Organize burial crews. ({money:10})"
+      }
+    },
+    "src.e3514001": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Your house name follows every member of your dynasty. Personal names and patronymics are unchanged."
       }
     },
     "src.e353dbe3": {
@@ -121586,6 +121954,16 @@
         "text": "Compensate the rival claimants, end the toll dispute, and replace it with a measured charter."
       }
     },
+    "src.e5eca60c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Make peace before retiring; a war cannot be handed over."
+      }
+    },
     "src.e5f125ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122450,7 +122828,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -123001,8 +123378,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/main.js",
-        "js/model.js"
+        "js/main.js"
       ],
       "source": {
         "text": "Granddaughter"
@@ -124391,6 +124767,16 @@
         "text": "Requires {piety} piety; you have {current}."
       }
     },
+    "src.ee62a718": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "That is already the name of your house."
+      }
+    },
     "src.ee6af7d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124741,6 +125127,16 @@
         "text": "Only an undecided bloc can be targeted for lobbying."
       }
     },
+    "src.ef50ec65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Enter a house name."
+      }
+    },
     "src.ef530a48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124947,7 +125343,6 @@
       "location": [
         "data/cultures.js",
         "js/economy.js",
-        "js/model.js",
         "js/ui.js"
       ],
       "source": {
@@ -125174,16 +125569,6 @@
         "text": "Italian"
       }
     },
-    "src.f03bd0a1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui.js"
-      ],
-      "source": {
-        "text": "This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
-      }
-    },
     "src.f056ec11": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125232,6 +125617,16 @@
       ],
       "source": {
         "text": "Raised to the gentry for valor!"
+      }
+    },
+    "src.f06ef16d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui.js"
+      ],
+      "source": {
+        "text": "Retirement is no longer possible."
       }
     },
     "src.f070144b": {
@@ -127518,16 +127913,6 @@
       ],
       "source": {
         "text": "A witnessed concession shelters this county from the full muster."
-      }
-    },
-    "src.f6fc5f5b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "{title} of {place}"
       }
     },
     "src.f7171bea": {
@@ -135869,6 +136254,32 @@
         "text": "A gift courier is already traveling for this ruler."
       }
     },
+    "ui:A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control."
+      }
+    },
+    "ui:A house name can be at most twenty letters long.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A house name can be at most twenty letters long."
+      }
+    },
+    "ui:A house name needs at least two letters.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "A house name needs at least two letters."
+      }
+    },
     "ui:A journey has outbound, stay, and return phases. The Deeds commitment row shows its current state, and some purposes add decisions while away.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136046,6 +136457,14 @@
         "text": "A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain."
       }
     },
+    "ui:A prisoner cannot hand over the house.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "A prisoner cannot hand over the house."
+      }
+    },
     "ui:A prisoner cannot leave.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -136187,7 +136606,7 @@
     "ui:Abbess": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/model.js",
+      "location": "js/economy.js",
       "source": {
         "text": "Abbess"
       }
@@ -136195,7 +136614,7 @@
     "ui:Abbot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/model.js",
+      "location": "js/economy.js",
       "source": {
         "text": "Abbot"
       }
@@ -136724,14 +137143,6 @@
       "location": "js/actions.js",
       "source": {
         "text": "All {capacity} political-attention assignments are in use. Set another court to Neutral first."
-      }
-    },
-    "ui:Allah": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "Allah"
       }
     },
     "ui:Allows construction of {content}.": {
@@ -140187,14 +140598,6 @@
         "text": "Descendant Match Assistant"
       }
     },
-    "ui:Descendant matching only": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui.js",
-      "source": {
-        "text": "Descendant matching only"
-      }
-    },
     "ui:Desertion": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -140919,6 +141322,14 @@
         "text": "Enemy rank"
       }
     },
+    "ui:Enter a house name.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Enter a house name."
+      }
+    },
     "ui:Enterprise in {settlement}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -141117,12 +141528,12 @@
         "text": "Every eligible worker is locked to another enterprise."
       }
     },
-    "ui:Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls.": {
+    "ui:Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls."
+        "text": "Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls."
       }
     },
     "ui:Every offer fixes its face value and deadline when signed. Review collateral and default terms before accepting.": {
@@ -141454,6 +141865,14 @@
         "text": "Finish the current journey before moving the capital."
       }
     },
+    "ui:Finish the current journey before retiring.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Finish the current journey before retiring."
+      }
+    },
     "ui:First copy in this county: {money:cost}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -141741,14 +142160,6 @@
         "text": "Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds."
       }
     },
-    "ui:God": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "God"
-      }
-    },
     "ui:Gold spent now": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -141853,14 +142264,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "Government systems"
-      }
-    },
-    "ui:Grand Qadi": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "Grand Qadi"
       }
     },
     "ui:Grant Land": {
@@ -142163,6 +142566,14 @@
         "text": "Hajji"
       }
     },
+    "ui:Handing the house over while you live is not yet possible:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Handing the house over while you live is not yet possible:"
+      }
+    },
     "ui:Head": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142322,6 +142733,14 @@
         "text": "Holding complete"
       }
     },
+    "ui:Holds their own station — independent": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Holds their own station — independent"
+      }
+    },
     "ui:Holds this county": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -142376,6 +142795,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "House founder"
+      }
+    },
+    "ui:House name": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "House name"
       }
     },
     "ui:House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident.": {
@@ -143412,6 +143839,22 @@
         "text": "Limits the dowry written into a recommended pledge. Leave blank for no limit."
       }
     },
+    "ui:Lives away from the household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lives away from the household"
+      }
+    },
+    "ui:Lives with the household — can be put to work": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Lives with the household — can be put to work"
+      }
+    },
     "ui:Living children lead; without them the succession walks outward through same-house branches.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -143434,6 +143877,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Living standards"
+      }
+    },
+    "ui:Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person."
       }
     },
     "ui:Loan against revenues": {
@@ -143588,6 +144039,14 @@
         "text": "Make appointments"
       }
     },
+    "ui:Make peace before retiring; a war cannot be handed over.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Make peace before retiring; a war cannot be handed over."
+      }
+    },
     "ui:Make {destination} our permanent home": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -143707,12 +144166,12 @@
         "text": "Manage this ruler’s Council office…"
       }
     },
-    "ui:Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow.": {
+    "ui:Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow."
+        "text": "Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that."
       }
     },
     "ui:Manage…": {
@@ -143819,6 +144278,14 @@
         "text": "Married"
       }
     },
+    "ui:Married — runs their own household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Married — runs their own household"
+      }
+    },
     "ui:Martial inclination: {martial}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -143861,6 +144328,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Match"
+      }
+    },
+    "ui:Matches are arranged for the descent line only": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Matches are arranged for the descent line only"
       }
     },
     "ui:Matching household work and enterprises": {
@@ -144422,6 +144897,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "No active war or banner service."
+      }
+    },
+    "ui:No adult successor can take over the house.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "No adult successor can take over the house."
       }
     },
     "ui:No age-valid, unpledged equipment is available for this character.": {
@@ -145672,14 +146155,6 @@
         "text": "Novice"
       }
     },
-    "ui:Nun": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "Nun"
-      }
-    },
     "ui:Object · spend 1 settlement standing · {odds}% chance for the runner-up · {leader} loses 10 Standing": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -145924,6 +146399,14 @@
       "location": "js/world.js",
       "source": {
         "text": "Only a living count or higher ruler may move a capital."
+      }
+    },
+    "ui:Only a living head of the house can retire.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Only a living head of the house can retire."
       }
     },
     "ui:Only a neighboring sovereign court lies within envoy reach.": {
@@ -146794,6 +147277,14 @@
         "text": "Personal character…"
       }
     },
+    "ui:Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end."
+      }
+    },
     "ui:Personal service or the ordinary buy-out": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147453,7 +147944,7 @@
     "ui:Qadi": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/model.js",
+      "location": "js/economy.js",
       "source": {
         "text": "Qadi"
       }
@@ -148010,6 +148501,30 @@
       "location": "js/ui.js",
       "source": {
         "text": "Remove shortcut"
+      }
+    },
+    "ui:Rename": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rename"
+      }
+    },
+    "ui:Rename house": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rename house"
+      }
+    },
+    "ui:Rename house…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rename house…"
       }
     },
     "ui:Renew the vow": {
@@ -148569,6 +149084,14 @@
         "text": "Resolve the current event before changing equipment."
       }
     },
+    "ui:Resolve the current wartime duty before retiring.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Resolve the current wartime duty before retiring."
+      }
+    },
     "ui:Resources": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148647,6 +149170,52 @@
         "text": "Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service."
       }
     },
+    "ui:Retire and continue as {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Retire and continue as {name}"
+      }
+    },
+    "ui:Retire in favor of an adult successor. {name} remains in the family at home as a retired elder.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Retire in favor of an adult successor. {name} remains in the family at home as a retired elder."
+      }
+    },
+    "ui:Retirement is no longer possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Retirement is no longer possible."
+      }
+    },
+    "ui:Retirement is not possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Retirement is not possible."
+      }
+    },
+    "ui:Retirement waits until age {age}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "Retirement waits until age {age}."
+      }
+    },
     "ui:Return along the saved route after the required residence. You may remain as a guest as long as you like.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148669,6 +149238,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Return along the saved route after the required visit. You may remain together as long as you like."
+      }
+    },
+    "ui:Return from campaign before retiring.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Return from campaign before retiring."
       }
     },
     "ui:Return it to the armory": {
@@ -149123,6 +149700,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Ruler’s Martial"
+      }
+    },
+    "ui:Rules a realm of their own": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Rules a realm of their own"
       }
     },
     "ui:Sacred custody · {sites}": {
@@ -149714,6 +150299,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Show all {count}"
+      }
+    },
+    "ui:Siblings": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Siblings"
       }
     },
     "ui:Sickness has taken hold.": {
@@ -150601,6 +151194,14 @@
         "text": "That household standard is unavailable."
       }
     },
+    "ui:That is already the name of your house.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "That is already the name of your house."
+      }
+    },
     "ui:That motion is not recognized by the Estates.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -151161,6 +151762,14 @@
         "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
       }
     },
+    "ui:The great holy war must be resolved before retiring.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "The great holy war must be resolved before retiring."
+      }
+    },
     "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -151320,6 +151929,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "The motion has already been called to a vote."
+      }
+    },
+    "ui:The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory."
       }
     },
     "ui:The new worker": {
@@ -151992,12 +152609,12 @@
         "text": "This journey is open to freeholders and gentry."
       }
     },
-    "ui:This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.": {
+    "ui:This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui.js",
       "source": {
-        "text": "This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
+        "text": "This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
       }
     },
     "ui:This obedience has already excommunicated the target.": {
@@ -152686,6 +153303,14 @@
         "text": "Use local service, guilds, or faith to establish the family."
       }
     },
+    "ui:Use only letters, spaces, hyphens, and apostrophes.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Use only letters, spaces, hyphens, and apostrophes."
+      }
+    },
     "ui:Use study, pilgrimage, teaching, or patronage when available.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -152908,6 +153533,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Voted: {name}"
+      }
+    },
+    "ui:Vowed to the faith — independent": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Vowed to the faith — independent"
       }
     },
     "ui:Waist": {
@@ -153920,6 +154553,14 @@
         "text": "Your house must provide {money:cost}; you have {money:current}."
       }
     },
+    "ui:Your house name follows every member of your dynasty. Personal names and patronymics are unchanged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your house name follows every member of your dynasty. Personal names and patronymics are unchanged."
+      }
+    },
     "ui:Your house will provide {money:gold}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -154151,6 +154792,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "Your sibling"
+      }
+    },
+    "ui:Your sibling · lives with the household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "Your sibling · lives with the household"
       }
     },
     "ui:Your sovereign": {
@@ -154473,15 +155122,16 @@
         "text": "battle odds"
       }
     },
-    "ui:beginning in {year} AD, aged {age}.": {
+    "ui:beginning in {year} AD, aged {age}, {situation}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "age",
+        "situation",
         "year"
       ],
       "location": "js/main.js",
       "source": {
-        "text": "beginning in {year} AD, aged {age}."
+        "text": "beginning in {year} AD, aged {age}, {situation}."
       }
     },
     "ui:best: {skill} {value}": {
@@ -154589,14 +155239,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "cavalry"
-      }
-    },
-    "ui:church": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "church"
       }
     },
     "ui:coastal": {
@@ -154822,14 +155464,6 @@
         "text": "friend"
       }
     },
-    "ui:godi": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "godi"
-      }
-    },
     "ui:great holy war": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154876,14 +155510,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "household servant"
-      }
-    },
-    "ui:imam": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "imam"
       }
     },
     "ui:imperial title": {
@@ -155020,14 +155646,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "merchant and craft income"
-      }
-    },
-    "ui:mosque": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "mosque"
       }
     },
     "ui:needs {prestige} prestige": {
@@ -155345,22 +155963,6 @@
         "text": "preparation"
       }
     },
-    "ui:priest": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "priest"
-      }
-    },
-    "ui:rabbi": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "rabbi"
-      }
-    },
     "ui:ready": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155498,14 +156100,6 @@
         "text": "she would bring a dowry of {money:gold}"
       }
     },
-    "ui:shrine": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "shrine"
-      }
-    },
     "ui:siege progress": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155546,14 +156140,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "sworn to {realm}"
-      }
-    },
-    "ui:synagogue": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "synagogue"
       }
     },
     "ui:taught by you": {
@@ -155602,14 +156188,6 @@
         "text": "the Duchy of {name}"
       }
     },
-    "ui:the Lord": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "the Lord"
-      }
-    },
     "ui:the county": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155656,14 +156234,6 @@
       "location": "js/ui.js",
       "source": {
         "text": "the first village becomes a town"
-      }
-    },
-    "ui:the gods": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/model.js",
-      "source": {
-        "text": "the gods"
       }
     },
     "ui:the lord": {
@@ -158124,6 +158694,16 @@
         "text": "{name} is no longer eligible; no replacement is available."
       }
     },
+    "ui:{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story."
+      }
+    },
     "ui:{name} moves here from {enterprise}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -158154,6 +158734,16 @@
       "location": "js/ui.js",
       "source": {
         "text": "{name} relinquishes the barony to the local count and becomes landless gentry in {destination}."
+      }
+    },
+    "ui:{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui.js",
+      "source": {
+        "text": "{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control."
       }
     },
     "ui:{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way.": {
@@ -159237,17 +159827,6 @@
         "text": "{tier} terms"
       }
     },
-    "ui:{title} of {place}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "place",
-        "title"
-      ],
-      "location": "js/model.js",
-      "source": {
-        "text": "{title} of {place}"
-      }
-    },
     "ui:{title} of {realm}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -159985,6 +160564,14 @@
       "location": "js/ui.js",
       "source": {
         "text": "👑 {name}: you hold {held} — {need} and independence make the king."
+      }
+    },
+    "ui:👴 Hand over the house": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui.js",
+      "source": {
+        "text": "👴 Hand over the house"
       }
     },
     "ui:💍 Descendant Match Assistant": {

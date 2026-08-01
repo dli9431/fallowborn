@@ -2932,7 +2932,11 @@ window.FB = window.FB || {};
       selfSectionHtml('possessions', 'Possessions', items.length, itemChips(s, items)) +
       panelh('Dynasty') +
       kv('House', esc(me.dyn || '—')) +
-      kv('Generation', (s.generation || 1));
+      kv('Generation', (s.generation || 1)) +
+      (me.dyn
+        ? '<button class="btn small" id="self-rename-house">✏ ' +
+          esc(FB.T('Rename house…')) + '</button>'
+        : '');
     h += panelh('Livelihood') + livelihoodNote(s, me);
     if (FB.hasBishopric && FB.hasBishopric(s, me)) {
       h += '<button class="actionbtn" id="self-bishopric">⛪ ' +
@@ -3000,7 +3004,67 @@ window.FB = window.FB || {};
     if (sw) sw.addEventListener('click', UI.showLivelihoods);
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
+    const srh = $('self-rename-house');
+    if (srh) srh.addEventListener('click', UI.showRenameHouse);
   }
+
+  /* Self-tab Dynasty panel: rename the player's house. A validation failure
+     keeps the dialog open and shows the reason; on success the news entry
+     toasts itself and every surface re-renders from the rewritten dyn
+     strings (crests included — they seed from the dyn). */
+  UI.showRenameHouse = function () {
+    const s = FB.state;
+    const me = s && s.player && s.chars[s.player.charId];
+    if (!me || !me.dyn) return;
+    const reasons = {
+      empty: FB.T('Enter a house name.'),
+      unchanged: FB.T('That is already the name of your house.'),
+      short: FB.T('A house name needs at least two letters.'),
+      long: FB.T('A house name can be at most twenty letters long.'),
+      chars: FB.T('Use only letters, spaces, hyphens, and apostrophes.')
+    };
+    openModal(FB.T('Rename house'),
+      '<p class="adesc">' + esc(FB.T(
+        'Your house name follows every member of your dynasty. Personal names and patronymics are unchanged.')) +
+      '</p>' +
+      '<div class="evname"><label>' + esc(FB.T('House name')) + ' ' +
+      '<input id="rename-house-name" type="text" maxlength="20"></label></div>' +
+      '<p class="adesc" id="rename-house-err" role="alert"></p>' +
+      '<div class="modal-actions">' +
+      '<button class="btn primary" data-rename-house="confirm">' +
+      esc(FB.T('Rename')) + '</button>' +
+      '<button class="btn" data-rename-house="cancel">' +
+      esc(FB.T('Cancel')) + '</button></div>');
+    const inp = $('rename-house-name');
+    inp.value = me.dyn;
+    function confirmRename() {
+      const res = FB.renameHouse(s, inp.value);
+      if (!res.ok) {
+        $('rename-house-err').textContent = reasons[res.reason] || reasons.chars;
+        inp.focus();
+        inp.select();
+        return;
+      }
+      UI.closeModal();
+      if (UI.mapDirty) UI.mapDirty();
+      UI.refresh();
+    }
+    const gmBody = $('gm-body');
+    gmBody.querySelector('[data-rename-house="confirm"]')
+      .addEventListener('click', confirmRename);
+    gmBody.querySelector('[data-rename-house="cancel"]')
+      .addEventListener('click', UI.closeModal);
+    inp.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        confirmRename();
+      }
+    });
+    if (!FB.isTouch) {
+      inp.focus();
+      inp.select();
+    }
+  };
 
   function charRow(s, c, meta, stats) {
     const standing = FB.standingOf(s, { kind:'character', id:c.id });
@@ -3298,7 +3362,31 @@ window.FB = window.FB || {};
     kinSection('Stepchildren', kin.stepchildren);
     kinSection('Parents', kin.parents);
     kinSection('Grandparents', kin.grandparents);
-    kinSection('Siblings', kin.siblings);
+    /* Siblings carry an explicit scope line: a resident unwed sibling can be
+       put to work; every other sibling stays independent, and the line says
+       why. Visibility is not control. */
+    if (kin.siblings.length) {
+      h += '<div class="panelh">' + esc(FB.T('Siblings')) + '</div>';
+      for (const e of kin.siblings) {
+        let meta = FB.T(e.rel) + (e.c.dead ? ' · †' : ' · ' +
+          FB.T('age {age}', { age: FB.ageOf(e.c, s.date.year) }));
+        if (!e.c.dead && FB.manageableKinBlocker) {
+          const blocker = FB.manageableKinBlocker(s, e.c.id);
+          meta += ' · ' + (blocker === 'married'
+            ? FB.T('Married — runs their own household')
+            : blocker === 'reigning'
+              ? FB.T('Rules a realm of their own')
+              : blocker === 'landed'
+                ? FB.T('Holds their own station — independent')
+                : blocker === 'vowed'
+                  ? FB.T('Vowed to the faith — independent')
+                  : blocker === 'away'
+                    ? FB.T('Lives away from the household')
+                    : FB.T('Lives with the household — can be put to work'));
+        }
+        h += charRow(s, e.c, meta);
+      }
+    }
     kinSection('Nieces & nephews', kin.niecesNephews);
     kinSection('Uncles & aunts', kin.unclesAunts);
     kinSection('Cousins', kin.cousins);
@@ -12575,7 +12663,9 @@ window.FB = window.FB || {};
     h += '<section class="household-catalogue-section" id="household-living" ' +
       'aria-labelledby="household-living-title"><h4 id="household-living-title">' +
       esc(FB.T('Living standards')) +
-      '</h4><div class="household-catalogue-list">';
+      '</h4><p class="household-section-hint">' + esc(FB.T(
+        'Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person.')) +
+      '</p><div class="household-catalogue-list">';
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
       if (def.kind === 'work') continue;
@@ -13001,7 +13091,9 @@ window.FB = window.FB || {};
   function householdPlanPerson(s, c, kind, retainer) {
     let relationship = FB.T('Resident family');
     if (kind === 'head') relationship = FB.T('Household head');
-    else if (kind === 'retainer') {
+    else if (kind === 'kin') {
+      relationship = FB.T('Your sibling · lives with the household');
+    } else if (kind === 'retainer') {
       relationship = FB.T('Paid retainer · {office}', {
         office:positionName(s, retainer.office)
       });
@@ -13250,7 +13342,7 @@ window.FB = window.FB || {};
     if (!FB.playerDescendantKind(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
-          FB.T('Descendant matching only')),
+          FB.T('Matches are arranged for the descent line only')),
         action:null
       };
     }
@@ -13343,6 +13435,16 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(s)) {
       if (c.id !== head.id) add(c, 'family');
     }
+    /* Manageable kin (resident unwed siblings) get work, assignment, and
+       equipment cells like household members; education, instruction, and
+       match cells stay disabled with their existing explanations — those
+       are managed for the descent line only. */
+    if (FB.manageableKinKind) {
+      for (const id in s.chars) {
+        const c = s.chars[id];
+        if (c && FB.manageableKinKind(s, c.id)) add(c, 'kin');
+      }
+    }
     for (const record of FB.retainerRecords(s)) {
       add(s.chars[record.charId], 'retainer', record);
     }
@@ -13404,7 +13506,7 @@ window.FB = window.FB || {};
       matchDowrySummary, matchGoldSummary, matchPrestigeSummary
     ].join(' · ');
     let h = '<div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
-      'Every living person managed by the household is shown here. Select an available cell to open its existing detailed controls.')) +
+      'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.')) +
       '</p></div><div class="household-policy-summary education-policy-summary"><div><strong>' +
       esc(FB.T('Education Policy')) + '</strong><span>' +
       esc(educationFocusSummary) + '</span><span>' +
@@ -14287,7 +14389,7 @@ window.FB = window.FB || {};
         ? 'Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season.'
         : 'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
       '</p><p class="hint">' + esc(FB.T(
-        'This list covers the playable head, resident spouses and descendants, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.')) +
+        'This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.')) +
       '</p></div>';
     const enterprises = sortedEnterpriseRecords(s, FB.enterpriseList(s).slice());
     const assignments = {};
@@ -14599,8 +14701,9 @@ window.FB = window.FB || {};
   UI.showCareerPicker = function (cid, returnContext) {
     const s = FB.state;
     const c = s.chars[cid];
-    if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
-        FB.ageOf(c, s.date.year) < 10) return;
+    if (!c || c.dead || FB.ageOf(c, s.date.year) < 10) return;
+    if (!FB.isHouseholdCharacter(s, cid) &&
+        !(FB.manageableKinKind && FB.manageableKinKind(s, cid))) return;
     const age = FB.ageOf(c, s.date.year);
     const career = FB.careerOf(s, c);
     const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
@@ -17596,7 +17699,11 @@ window.FB = window.FB || {};
   UI.showEquipmentModal = function (cid, exitMode, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
-    if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
+    if (!s || !c || c.dead) return;
+    /* The armory is shared with household members and manageable kin;
+       FB.clearLoadout strips a managed sibling's gear when they wed. */
+    if (!FB.isHouseholdCharacter(s, cid) &&
+        !(FB.manageableKinKind && FB.manageableKinKind(s, cid))) return;
     exitMode = exitMode === 'character' ? 'character' : 'close';
     const householdPlan = returnsToHouseholdPlan(returnContext);
     const returnMode = {
@@ -18910,6 +19017,79 @@ window.FB = window.FB || {};
     $('hp-close').addEventListener('click', UI.closeModal);
   };
 
+  /* ---------- voluntary retirement ---------- */
+  UI.showRetirement = function () {
+    const s = FB.state;
+    if (!s || !FB.game || !FB.game.retirePreview) return false;
+    const me = s.chars[s.player.charId];
+    const preview = FB.game.retirePreview();
+    const footer = '<div class="gm-footer"><button class="btn" id="retire-guide">' +
+      esc(FB.T('Guide: inheritance')) +
+      '</button><button class="btn" id="retire-close">' +
+      esc(FB.T('Decide later')) + '</button></div>';
+
+    if (!preview.eligible) {
+      let blocked = '<div class="gm-body-text"><p>' + esc(FB.T(
+        'Handing the house over while you live is not yet possible:')) + '</p>';
+      for (const reason of preview.blockers) {
+        blocked += '<p>• ' + esc(reason) + '</p>';
+      }
+      blocked += '</div>';
+      openModal(FB.T('👴 Hand over the house'), blocked + footer);
+      $('retire-guide').addEventListener('click', function () {
+        UI.showGuideEntry('inheritance');
+      });
+      $('retire-close').addEventListener('click', UI.closeModal);
+      return true;
+    }
+
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      '{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story.', {
+        name: FB.fullName(me)
+      })) + '</p><p>' + esc(FB.T(
+      'The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.')) +
+      '</p><p>' + esc(FB.T(
+      'Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.')) +
+      '</p><p>' + esc(FB.T(
+      '{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control.', {
+        name: FB.fullName(me)
+      })) + '</p></div><div class="gm-list">';
+    const reviewById = {};
+    for (const row of preview.review) reviewById[row.character.id] = row;
+    for (const c of preview.heirs) {
+      const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
+        age: FB.ageOf(c, s.date.year),
+        mar: FB.skillName('mar'), marValue: FB.skillOf(c, 'mar'),
+        ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
+        dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
+      });
+      h += '<button type="button" class="actionbtn" data-retire-heir="' + c.id + '">' +
+        FB.faceTag(c, 32, 38) + ' ' +
+        (s.player.namedHeirId === c.id ? '★ ' : '') + esc(FB.T(
+          'Retire and continue as {name}', { name: FB.fullName(c) })) +
+        '<span class="adesc">' + esc(details + ' · ' +
+          heirEligibilityText(s, reviewById[c.id])) + '</span></button>';
+    }
+    h += '</div>';
+    openModal(FB.T('👴 Hand over the house'), h + footer);
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-retire-heir]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (FB.game.retireTo(b.getAttribute('data-retire-heir'))) {
+          UI.closeModal();
+        } else {
+          UI.toast(FB.T('Retirement is no longer possible.'));
+          UI.showRetirement();
+        }
+      });
+    });
+    $('retire-guide').addEventListener('click', function () {
+      UI.showGuideEntry('inheritance');
+    });
+    $('retire-close').addEventListener('click', UI.closeModal);
+    return true;
+  };
+
   UI.showTraitModal = function (tid) {
     const t = FBDATA.traits[tid];
     if (!t) return;
@@ -19988,7 +20168,7 @@ window.FB = window.FB || {};
       guideBody([], [
         FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
         FB.T('House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident.'),
-        FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow.'),
+        FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.'),
         FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
         FB.T('Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line.')
       ]), 'dynasty house kin relatives resident controllable assignable work royal branch');
@@ -19997,8 +20177,12 @@ window.FB = window.FB || {};
       guideBody([
         FB.T('A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible.'),
         FB.T('Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins.'),
-        FB.T('The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules.')
-      ]), 'heir successor named heir children grandchildren siblings house death');
+        FB.T('The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules.'),
+        FB.T('A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control.', {
+          age: FBDATA.balance.retirementAge !== undefined ?
+            FBDATA.balance.retirementAge : 50
+        })
+      ]), 'heir successor named heir children grandchildren siblings house death retirement abdication');
     add('child-identity', 'family', FB.T('Child culture, faith, and house'),
       FB.T('Marriage previews show which parent supplies each identity.'),
       guideBody([

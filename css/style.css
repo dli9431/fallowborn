@@ -160,6 +160,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .radio { font-size: 15px; }
 
+/* chargen starting-family presets: one stacked, tappable card per preset */
+.cgfamily { display: flex; flex-direction: column; gap: 6px; width: min(100%, 420px); }
+.cgfamily-card { align-items: flex-start !important; text-align: left; }
+.cgfamily-card input { margin-top: 3px; }
+
 /* shareable start seeds: the New Game paste box and the menu's tap-to-copy row */
 #ng-seed {
   background: #241d15; border: 1px solid #66522f; color: #f0e0b8; border-radius: 6px;

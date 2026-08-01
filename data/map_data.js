@@ -932,6 +932,7 @@ FBDATA.balance = {
      in the save): bounds the save inside the localStorage quota and keeps the
      kinOf day-tick cost flat; kin weddings/births pause past this */
   familyMaxChars: 4000,
+  retirementAge: 50, // a head this old may hand the house to an adult successor without dying
   /* age → conception multiplier, [age, mult] points read by FB.ageFert:
      flat before the first point, linear between, flat past the last.
      Women past 45 cannot conceive at all regardless of this curve. */
