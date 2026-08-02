@@ -657,7 +657,10 @@ FBDATA.events.push(
     { label:'Send him on his way.', desc:'Curiosity is cheap; its prizes are not.', effects:{ } }
   ]},
 { id:'item_offer', title:'An Unusual Offer', trigger:{ never:true },
-  text:'From wrappings of oiled cloth comes {item}. The price is {money:itemprice} — and worth it twice over, says the seller, to the right person.',
+  text:{ forms:{ select:'value', param:'offerClass', cases:{
+    aspirational:'From wrappings of oiled cloth comes {item}. The seller unwraps it slowly — such a thing is not shown to every household, and at {money:itemprice} it was plainly not made for your station.',
+    other:'From wrappings of oiled cloth comes {item}. The price is {money:itemprice} — and worth it twice over, says the seller, to the right person.'
+  }}},
   options:[
     { label:'Buy it. ({money:itemprice})', require:{ custom:'can_afford_item' }, desc:'Heavy coin for a thing that may outlast you.', effects:{ custom:'buy_item' } },
     { label:'Too rich for you.', desc:'Let some other purse be lightened.', effects:{ custom:'clear_item_offer' } }

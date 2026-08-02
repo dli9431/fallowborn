@@ -1432,8 +1432,9 @@ unmarried children:
 } } }
 ```
 
-- `rarity` — `common` / `fine` / `famed` weights random draws (famed pieces mostly arrive
-  as war spoils and finds); `value` is the purchase price.
+- `rarity` — `common` / `fine` / `famed` is the stock class a definition draws in (famed
+  pieces mostly arrive as war spoils and finds); definitions without a recognized rarity
+  sell as `common`. `value` is the purchase price.
 - `slot` is `head`, `neck`, `body`, `waist`, `feet`, `hand`, or `ring`. `grip:2` on a
   hand item reserves both hands. `ageMin` is the minimum equip age.
 - Definitions are unique by default. `unique:false` makes a repeatable template: each
@@ -1461,13 +1462,20 @@ unmarried children:
   above. A ruler has no inventory: `FB.giveRulerItemGift` removes the object from family
   ownership while retaining the semantic item record used by Chronicle messages. An
   equipped item must be removed before gift, sale, or pledge.
-- Event hooks (`custom` effects): `offer_item` (the full eligible table) and
+- Event hooks (`custom` effects): `offer_item` (the full eligible table, banded by the
+  customer's station) and
   `offer_gear` (ordinary gear only) put an exact object on sale through `item_offer`;
   `buy_item` / `clear_item_offer` / `can_afford_item` (trigger),
   `loot_item` (random spoils), `find_artifact` (famed only), `plot_loot` (spoils + ends the
   plot). Owned unique objects are excluded while repeatable templates may recur. War
   victories and raids also issue exact spoils. To grant one **specific definition**, use
   the `giveItem: "id"` effect; it creates a new instance when that definition is repeatable.
+- `offer_item` stock is banded by `balance.peddlerStockBands` (societal role →
+  `common`/`fine`/`famed` class weights): the roll picks a rarity class first, then a
+  definition inside it, so collecting uniques never shrinks a class until it is empty.
+  Each `balance.peddlerWealthShift` purse threshold crossed shops one band higher. An
+  offer above the band's home class queues `item_offer` with `offerClass:'aspirational'`
+  (otherwise `'other'`), a forms selector the event text may branch on.
 
 ## Plots, blessings, and pacts
 

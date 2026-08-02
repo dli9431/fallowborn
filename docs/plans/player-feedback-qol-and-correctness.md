@@ -584,14 +584,17 @@ player-visible weights and explain why the selected route is faster.
 ### Peddler stock by market and customer
 
 Category: **Balance**  
-Validity: **Valid**
+Validity: **Partial**
 
-The offer pool is not meaningfully conditioned on social tier or wealth. Famed,
-very expensive goods can be offered to a serf, while depletion of owned unique
-items can leave a wealthy house seeing mostly ordinary stock. Review stock bands,
-regional availability, merchant quality, and a rare aspirational offer. Do not
-make every offer perfectly affordable; make extreme mismatches exceptional and
-legible.
+Stock bands are implemented: the peddler's full-table offer rolls a rarity class from
+`balance.peddlerStockBands` keyed by the customer's societal role, each
+`balance.peddlerWealthShift` purse threshold crossed shops one band higher, and class
+odds no longer shrink as unique definitions are collected, so depletion stops pushing a
+wealthy house toward ordinary stock until a class is exhausted. The rare offer above the
+band's home class is flagged `offerClass:'aspirational'` and its `item_offer` text says
+so plainly, keeping the extreme mismatch exceptional and legible. Regional availability
+and merchant quality (town vs city vs peddler stock depth and ordinary-quality odds)
+remain unreviewed; revisit them together rather than as separate knobs.
 
 ### Value of house-wide investment
 
@@ -779,7 +782,7 @@ section that owns further work.
 | Travel chooses implausible routes | Balance | Valid | Deferred balance |
 | Child culture, religion, and house after foreign marriage | Writing | Partial | Item 11 |
 | Foreign conversion, suspicion, and homeland spying | Writing | Partial | Deferred writing |
-| Peddlers offer luxury goods to serfs and mundane goods to the rich | Balance | Valid | Deferred balance |
+| Peddlers offer luxury goods to serfs and mundane goods to the rich | Balance | Partial | Deferred balance |
 | Unclear house versus direct-family succession | Writing | Partial | Item 11 |
 | Siblings can inherit but cannot be managed | QoL | Valid | Item 19 |
 | House investment has unclear value for collateral relatives | Balance | Partial | Deferred balance |
