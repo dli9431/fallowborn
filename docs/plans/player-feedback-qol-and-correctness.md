@@ -1,6 +1,6 @@
 # Player feedback: QoL and correctness plan
 
-Status: in progress — Milestone 1 implemented
+Status: in progress — Milestone 1 and peddler stock bands (deferred balance) implemented
 Audit baseline: Fallowborn v1.93.3, 2026-07-30
 
 ## Purpose
@@ -586,15 +586,22 @@ player-visible weights and explain why the selected route is faster.
 Category: **Balance**  
 Validity: **Partial**
 
-Stock bands are implemented: the peddler's full-table offer rolls a rarity class from
-`balance.peddlerStockBands` keyed by the customer's societal role, each
-`balance.peddlerWealthShift` purse threshold crossed shops one band higher, and class
-odds no longer shrink as unique definitions are collected, so depletion stops pushing a
-wealthy house toward ordinary stock until a class is exhausted. The rare offer above the
-band's home class is flagged `offerClass:'aspirational'` and its `item_offer` text says
-so plainly, keeping the extreme mismatch exceptional and legible. Regional availability
-and merchant quality (town vs city vs peddler stock depth and ordinary-quality odds)
-remain unreviewed; revisit them together rather than as separate knobs.
+The offer pool was not meaningfully conditioned on social tier or wealth. Famed,
+very expensive goods could be offered to a serf, while depletion of owned unique
+items could leave a wealthy house seeing mostly ordinary stock. Stock bands,
+regional availability, merchant quality, and a rare aspirational offer were up
+for review, without making every offer perfectly affordable.
+
+Implemented outcome: the peddler's full-table offer rolls a rarity class from
+`balance.peddlerStockBands` keyed by the customer's societal role, then picks
+inside the class; each `balance.peddlerWealthShift` purse threshold crossed
+shops one band higher. Class odds ignore how many unique definitions remain
+uncollected, so depletion no longer collapses a wealthy house's stock into
+ordinary gear until a class is truly exhausted. The rare offer above the band's
+home class queues `item_offer` with `offerClass:'aspirational'`, whose text says
+plainly the thing was not made for your station — the extreme mismatch stays
+exceptional and legible. Regional availability and merchant quality (town vs
+city vs peddler stock depth and ordinary-quality odds) remain unreviewed.
 
 ### Value of house-wide investment
 
@@ -845,4 +852,5 @@ The milestones need not ship as one large release. Prefer reviewable slices:
 11. retirement and expanded household agency.
 
 Balance and content work should be proposed separately after the relevant rule is
-visible and measurable.
+visible and measurable. The first such slice has since shipped from the deferred
+balance backlog: peddler stock bands (see *Peddler stock by market and customer*).
