@@ -13,6 +13,8 @@ window.FB = window.FB || {};
   const QUALITY_STEP = { plain:0, well:1, masterwork:2 };
   const QUALITY_VALUE = { plain:1, well:2, masterwork:4 };
   const RARITY_WEIGHT = { common:6, fine:3, famed:1 };
+  const RARITY_RANK = { common:0, fine:1, famed:2 };
+  const PEDDLER_ROLES = ['serf', 'commoner', 'gentry', 'lord', 'crowned'];
   let ensuredState = null;
   let ensuringState = null;
 
@@ -1244,18 +1246,81 @@ window.FB = window.FB || {};
     return ref;
   };
 
+  /* Peddler stock bands: the full-table offer is conditioned on the customer.
+     The band comes from the player's station; each peddlerWealthShift purse
+     threshold crossed shops one band higher, so a rich house is shown richer
+     stock. The offer first rolls a rarity class from the band, then picks
+     uniformly inside the class — class odds do not shrink as unique
+     definitions are collected, so depletion of owned uniques no longer leaves
+     a wealthy house seeing mostly ordinary stock until a class is truly
+     exhausted. An offer above the band's home class is the rare aspirational
+     piece and is labeled so the mismatch reads in the offer text. */
+  function peddlerBandRole(state) {
+    let idx = PEDDLER_ROLES.indexOf(FB.societalRole(state));
+    if (idx < 0) idx = 0;
+    const shifts = (FBDATA.balance && FBDATA.balance.peddlerWealthShift) || [];
+    const gold = state.player.gold || 0;
+    for (let i = 0; i < shifts.length; i++) {
+      if (gold >= shifts[i]) idx++;
+    }
+    return PEDDLER_ROLES[Math.min(idx, PEDDLER_ROLES.length - 1)];
+  }
+
+  function peddlerOfferPick(state) {
+    const bands = FBDATA.balance && FBDATA.balance.peddlerStockBands;
+    const band = (bands && bands[peddlerBandRole(state)]) ||
+      { common:24, fine:5, famed:1 };
+    const order = ['common', 'fine', 'famed'];
+    const byClass = { common:[], fine:[], famed:[] };
+    for (const id in FBDATA.items) {
+      const info = definitionOf(id);
+      if (!info) continue;
+      if (info.unique && FB.itemOwner(state, id)) continue;
+      const rarity = own(RARITY_RANK, info.def.rarity) ? info.def.rarity : 'common';
+      byClass[rarity].push(id);
+    }
+    let home = 'common';
+    for (let i = 0; i < order.length; i++) {
+      if ((band[order[i]] || 0) > (band[home] || 0)) home = order[i];
+    }
+    let total = 0;
+    for (let i = 0; i < order.length; i++) {
+      if (byClass[order[i]].length) total += Math.max(0, band[order[i]] || 0);
+    }
+    if (!total) return null;
+    let roll = FB.rng() * total;
+    for (let i = 0; i < order.length; i++) {
+      const rarity = order[i];
+      const w = byClass[rarity].length ? Math.max(0, band[rarity] || 0) : 0;
+      if (roll < w) return { id:FB.pick(byClass[rarity]), rarity:rarity, home:home };
+      roll -= w;
+    }
+    return null;
+  }
+
   FB.offerItem = function (state, ordinary) {
     FB.ensureItems(state);
-    const pool = weightedItemPool(state, {
-      ordinary:!!ordinary,
-      includeOwned:false
-    });
-    if (!pool.length) {
+    let defId = null;
+    let offerClass = null;
+    if (ordinary) {
+      const pool = weightedItemPool(state, {
+        ordinary:true,
+        includeOwned:false
+      });
+      if (pool.length) defId = FB.pick(pool);
+    } else {
+      const pick = peddlerOfferPick(state);
+      if (pick) {
+        defId = pick.id;
+        offerClass = RARITY_RANK[pick.rarity] > RARITY_RANK[pick.home]
+          ? 'aspirational' : 'other';
+      }
+    }
+    if (!defId) {
       FB.news(state, FB.msg('news.item.nothing_new',
         '🎒 Nothing is offered that you do not already own.', {}));
       return null;
     }
-    const defId = FB.pick(pool);
     const info = definitionOf(defId);
     const ref = info.ordinary ? FB.createItemInstance(state, defId) : defId;
     const item = rawResolved(state, ref);
@@ -1264,7 +1329,7 @@ window.FB = window.FB || {};
       id:defId,
       price:item.value
     };
-    FB.queueEvent(state, 'item_offer', {});
+    FB.queueEvent(state, 'item_offer', offerClass ? { offerClass:offerClass } : {});
     return ref;
   };
 

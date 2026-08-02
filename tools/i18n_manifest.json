@@ -12115,17 +12115,6 @@
         "text": "Too rich for you."
       }
     },
-    "event.item_offer.text.default": {
-      "context": "Event item_offer, text, faith branch default.",
-      "glossary": [
-        "item",
-        "money:itemprice"
-      ],
-      "location": "data/events_common.js",
-      "source": {
-        "text": "From wrappings of oiled cloth comes {item}. The price is {money:itemprice} — and worth it twice over, says the seller, to the right person."
-      }
-    },
     "event.item_offer.title.default": {
       "context": "Event item_offer, title, faith branch default.",
       "glossary": [],
@@ -42014,16 +42003,6 @@
       ],
       "source": {
         "text": "The great mortality walks, and it stopped here."
-      }
-    },
-    "src.059624f5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "From wrappings of oiled cloth comes {item}. The price is {money:itemprice} — and worth it twice over, says the seller, to the right person."
       }
     },
     "src.05a292c2": {

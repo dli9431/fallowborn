@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.105.1';
+  FB.VERSION = '1.105.2';
   FB.CHANGELOG = [
+    { v: '1.105.2', date: '2026-08-02', changes: [
+      'A peddler’s stock now matches your station and your purse — a serf is shown mostly common gear and a wealthy house finer wares, with the rare glimpse of a piece plainly not made for your station.'
+    ] },
     { v: '1.105.1', date: '2026-08-01', changes: [
       'Standing figures on the equipment and death screens stand taller with truer proportions, staged against a darker backdrop that lets faces and cloth stand out.'
     ] },

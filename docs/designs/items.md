@@ -62,7 +62,16 @@ never grows with the household.
 
 Ordinary gear can recur through town/city markets, peddlers, raids, plots, and war
 spoils. `offer_gear` guarantees an ordinary market offer; `offer_item` uses the full
-eligible table. `loot_item`, `find_artifact`, `plot_loot`, and `giveItem` all issue exact
+eligible table, conditioned on the customer by peddler stock bands
+(`balance.peddlerStockBands`, keyed by societal role): the offer first rolls a rarity
+class from the band, then picks inside the class, so a serf sees mostly common gear and
+a crowned house mostly heirlooms. Each `balance.peddlerWealthShift` purse threshold
+crossed shops one band higher. Class odds ignore how many unique definitions remain
+uncollected, so a nearly complete collection does not collapse the stock into ordinary
+gear until the class is truly exhausted. The rare offer above the band's home class is
+the aspirational piece, labeled `offerClass:'aspirational'` in the queued `item_offer`
+context so its text can say the thing was not made for your station. `loot_item`,
+`find_artifact`, `plot_loot`, and `giveItem` all issue exact
 references. Unique objects already owned are removed from random pools rather than
 duplicated. The Man-at-Arms starts in a Plain Ash Spear and Padded Jack; the Hedge Knight
 starts with a Well-made Broad Sword and Plain Round Shield.

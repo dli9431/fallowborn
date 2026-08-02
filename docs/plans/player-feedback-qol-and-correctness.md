@@ -724,18 +724,28 @@ count (`ceil(2 + legs * 2 * 0.25)` plus the journey-type overhead).
 ### Peddler stock by market and customer
 
 Category: **Balance**  
-Validity: **Valid**
+Validity: **Partial**
 
-The offer pool is not meaningfully conditioned on social tier or wealth. Famed,
-very expensive goods can be offered to a serf, while depletion of owned unique
-items can leave a wealthy house seeing mostly ordinary stock. Review stock bands,
-regional availability, merchant quality, and a rare aspirational offer. Do not
-make every offer perfectly affordable; make extreme mismatches exceptional and
-legible.
+The offer pool was not meaningfully conditioned on social tier or wealth. Famed,
+very expensive goods could be offered to a serf, while depletion of owned unique
+items could leave a wealthy house seeing mostly ordinary stock. Stock bands,
+regional availability, merchant quality, and a rare aspirational offer were up
+for review, without making every offer perfectly affordable.
 
-State check (v1.104.2): still valid. `FB.offerItem` in `js/items.js` builds its
-pool weighted by rarity only, excluding owned uniques; neither tier nor wealth
-influences the draw or the price.
+Implemented outcome: the peddler's full-table offer rolls a rarity class from
+`balance.peddlerStockBands` keyed by the customer's societal role, then picks
+inside the class; each `balance.peddlerWealthShift` purse threshold crossed
+shops one band higher. Class odds ignore how many unique definitions remain
+uncollected, so depletion no longer collapses a wealthy house's stock into
+ordinary gear until a class is truly exhausted. The rare offer above the band's
+home class queues `item_offer` with `offerClass:'aspirational'`, whose text says
+plainly the thing was not made for your station — the extreme mismatch stays
+exceptional and legible. Regional availability and merchant quality (town vs
+city vs peddler stock depth and ordinary-quality odds) remain unreviewed.
+
+State check (v1.104.2): stock bands were delivered after this recheck — see
+*Implemented outcome* above. Regional availability and merchant quality remain
+unreviewed.
 
 ### Value of house-wide investment
 
@@ -934,7 +944,7 @@ section that owns further work.
 | Travel chooses implausible routes | Balance | Valid | Deferred balance |
 | Child culture, religion, and house after foreign marriage | Writing | Partial | Item 11 |
 | Foreign conversion, suspicion, and homeland spying | Writing | Partial | Deferred writing |
-| Peddlers offer luxury goods to serfs and mundane goods to the rich | Balance | Valid | Deferred balance |
+| Peddlers offer luxury goods to serfs and mundane goods to the rich | Balance | Partial | Deferred balance |
 | Unclear house versus direct-family succession | Writing | Partial | Item 11 |
 | Siblings can inherit but cannot be managed | QoL | Valid | Item 19 |
 | House investment has unclear value for collateral relatives | Balance | Partial | Deferred balance |
@@ -1006,9 +1016,11 @@ met, the proposed deferred-phase slices, in order:
     resolved backlog item)*. Orchard ungated, Press House keeps its Lever Oil
     Press gate, and a producing household Orchard now feeds same-province
     presses through `chainFrom` + `balance.enterpriseChainBonus`.
-13. **Peddler stock bands** — the next slice. Condition the offer pool on
-    tier/wealth with a rare aspirational offer; still data-and-weight work in
-    `js/items.js`.
+13. **Peddler stock bands** — *(delivered; see the backlog item)*. The
+    full-table offer rolls a rarity class from `balance.peddlerStockBands`
+    keyed by the customer's societal role, each `balance.peddlerWealthShift`
+    purse threshold crossed shops one band higher, and a rare offer above the
+    band's home class is the aspirational piece.
 14. **Route-cost model** — deterministic, player-visible travel weights (road
     quality, terrain, sea) in `js/travel.js`; larger because it touches travel
     UI and AI movement.

@@ -949,6 +949,22 @@ FBDATA.balance = {
   rivalHeatOldSave: 35, rivalContactHeat: 8, rivalHeatDecayDelay: 720, rivalHeatDecay: 3,
   rivalPeaceDays: 1440,
   itemSellRatio: 0.5, // what a buyer gives against an item's value
+  /* peddler stock bands (js/items.js FB.offerItem): the full-table offer first
+     rolls a rarity class from the customer's station band, then picks inside
+     the class — a serf sees mostly common gear with a rare aspirational
+     glimpse of famed stock, a crowned house mostly heirlooms. Each
+     peddlerWealthShift threshold the purse crosses shops one band higher.
+     Class odds ignore how many definitions remain eligible, so a nearly
+     complete unique collection does not collapse the offer into ordinary
+     stock until the class is truly exhausted. */
+  peddlerStockBands: {
+    serf:     { common:48, fine:4,  famed:1 },
+    commoner: { common:30, fine:8,  famed:1 },
+    gentry:   { common:10, fine:12, famed:2 },
+    lord:     { common:5,  fine:10, famed:4 },
+    crowned:  { common:2,  fine:7,  famed:6 }
+  },
+  peddlerWealthShift: [150, 600], // each purse threshold crossed shops one band higher
   wivesByGroup: { muslim: 4, pagan: 3 },
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
   /* unjustified player wars: the current ruler's recent declarations make
