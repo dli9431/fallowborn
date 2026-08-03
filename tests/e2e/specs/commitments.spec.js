@@ -25,8 +25,8 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await expect(summary.locator(
       '[data-commitment="personal-attention"]')).toContainText(
       'Personal attention');
-    await expect(summary.locator('[data-commitment="research"]')).toContainText(
-      'National research');
+    // a commoner has no say over national research, so the row stays out
+    await expect(summary.locator('[data-commitment="research"]')).toHaveCount(0);
 
     await page.setViewportSize({ width:360, height:740 });
     await expect(focusCommitment).toBeVisible();
@@ -41,17 +41,33 @@ test('ongoing commitments adapt by layout and route to existing controls',
 
     await page.setViewportSize({ width:1280, height:720 });
     await expect(focusCommitment).toBeHidden();
+
+    await summary.locator('[data-commitment="personal-attention"]').click();
+    await expect(page.locator('#sidetabs [data-tab="network"]')).toHaveClass(
+      /active/);
+    await expect(page.locator('#network-connections')).toBeFocused();
+
+    // landed ranks get the research row and its route to the Technology sheet
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 4;
+      s.player.liege = null;
+      s.player.provs = [s.player.provinceId];
+      FB.foundPlayerRealm(s);
+      s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+      s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await page.locator('#sidetabs [data-tab="actions"]').click();
+    await expect(summary.locator('[data-commitment="research"]')).toContainText(
+      'National research');
     await summary.locator('[data-commitment="research"]').click();
     await expect(page.getByRole('heading', {
       name:'Technology',
       exact:true
     })).toBeVisible();
     await page.getByRole('button', { name:'Close', exact:true }).click();
-
-    await summary.locator('[data-commitment="personal-attention"]').click();
-    await expect(page.locator('#sidetabs [data-tab="network"]')).toHaveClass(
-      /active/);
-    await expect(page.locator('#network-connections')).toBeFocused();
   });
 
 test('the commitments title collapses and restores its ledger',
@@ -237,4 +253,61 @@ test('ongoing commitments remain within a narrow mobile panel',
     expect(geometry.left).toBeGreaterThanOrEqual(0);
     expect(geometry.right).toBeLessThanOrEqual(geometry.viewport);
     expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
+  });
+
+test('serfs see neither the commitments ledger nor deeds they cannot use',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 0;
+      s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+      s.player.roleOrientationsSeen['role-tier-0'] = 1;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+
+    // the whole commitments ledger stays out of a serf's way
+    await expect(page.locator('#ongoing-commitments')).toHaveCount(0);
+
+    // unusable deeds are hidden, but work and training stays: serfs can
+    // hold the farming career, apprentice children, and run field enterprises
+    const deedIds = await page.evaluate(function () {
+      return FB.listInstants(FB.state).map(function (item) { return item.a.id; });
+    });
+    expect(deedIds).toContain('livelihoods');
+    expect(deedIds).toContain('buy_freedom');
+    expect(deedIds).not.toContain('coin_credit');
+    expect(deedIds).not.toContain('adopt_tech');
+    await expect(page.locator('[data-action-id="coin_credit"]')).toHaveCount(0);
+    await expect(page.locator('[data-action-id="livelihoods"]')).toBeVisible();
+    await page.locator('[data-action-group="realm"]').click();
+    await expect(page.locator('[data-action-id="buy_freedom"]')).toBeVisible();
+    await expect(page.locator('[data-action-id="adopt_tech"]')).toHaveCount(0);
+
+    // the Network tab drops the Finance shortcut on the same rule
+    await page.locator('#sidetabs [data-tab="network"]').click();
+    await expect(page.locator('#network-work')).toBeVisible();
+    await expect(page.locator('#network-finance')).toHaveCount(0);
+
+    // obligations on the book make Coin & Credit worth surfacing again
+    await page.evaluate(function () {
+      const s = FB.state;
+      const economy = FB.ensureEconomy(s);
+      economy.loans.push({
+        id:economy.nextId++,
+        kind:'household',
+        face:5,
+        denomination:'nominal',
+        dueTurn:s.turn + 180,
+        dueSeason:(s.date.season + 2) % 4,
+        dueYear:s.date.year,
+        status:'active',
+        defaultKind:'revenue'
+      });
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await expect(page.locator('#network-finance')).toBeVisible();
+    await page.locator('#sidetabs [data-tab="actions"]').click();
+    await expect(page.locator('[data-action-id="coin_credit"]')).toBeVisible();
   });

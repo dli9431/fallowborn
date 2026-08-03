@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.106.0';
+  FB.VERSION = '1.106.1';
   FB.CHANGELOG = [
+    { v: '1.106.1', date: '2026-08-03', changes: [
+      'The Deeds tab now hides what your station cannot use: serfs no longer see Coin & Credit (unless the family holds debts or pawnable goods) or the ongoing-commitments ledger, and Technology appears only at landed rank.'
+    ] },
     { v: '1.106.0', date: '2026-08-03', changes: [
       'Rank can now be lost as well as won: a dignity that outlives its lands slowly lapses, a beaten ruler may kneel to the victor or be captured for ransom, and a defiant vassal can be attainted and lose his fief.',
       'Debt now has teeth: a common family that cannot pay can be distrained of its goods and bound back to the land, and raiders burning your home parish may drive you to trade freedom for a lord’s protection.'

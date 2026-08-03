@@ -417,6 +417,9 @@ window.FB = window.FB || {};
   }
 
   function ongoingCommitmentsHtml(s) {
+    /* Serfs keep almost none of these levers (no travel, no research say,
+       no political attention), so the whole section stays out of their way. */
+    if (s.player.tier === 0) return '';
     const focus = currentFocusDef(s);
     const travel = s.player.travel;
     const attentionTarget = FB.socialAttentionTarget(s);
@@ -470,14 +473,16 @@ window.FB = window.FB || {};
         action:FB.T('Manage…')
       });
     }
-    h += ongoingCommitmentRow({
-      id:'research',
-      icon:'💡',
-      label:FB.T('National research'),
-      status:researchCommitmentText(s),
-      action:FB.techRealmId(s) === 'player' && FB.isPlayerSovereign(s)
-        ? FB.T('Manage…') : FB.T('Review…')
-    });
+    if (s.player.tier >= 3) {
+      h += ongoingCommitmentRow({
+        id:'research',
+        icon:'💡',
+        label:FB.T('National research'),
+        status:researchCommitmentText(s),
+        action:FB.techRealmId(s) === 'player' && FB.isPlayerSovereign(s)
+          ? FB.T('Manage…') : FB.T('Review…')
+      });
+    }
     if (travel) {
       h += ongoingCommitmentRow({
         id:'travel',
@@ -2275,11 +2280,14 @@ window.FB = window.FB || {};
       esc(FB.T('Work & Enterprises…')) + '<span class="adesc">' +
       esc(FB.T(
         'Open the authoritative career, office, enterprise, and staffing controls.')) +
-      '</span></button><button class="actionbtn" id="network-finance">📜 ' +
-      esc(FB.T('Finance…')) + '<span class="adesc">' +
-      esc(FB.T(
-        'Review loans, trade partnerships, dispatched ventures, and coinage.')) +
       '</span></button>';
+    if (FB.financeUiRelevant(s)) {
+      tradeSummary += '<button class="actionbtn" id="network-finance">📜 ' +
+        esc(FB.T('Finance…')) + '<span class="adesc">' +
+        esc(FB.T(
+          'Review loans, trade partnerships, dispatched ventures, and coinage.')) +
+        '</span></button>';
+    }
     if (incomingMonopoly || outgoingMonopoly) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
         'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +

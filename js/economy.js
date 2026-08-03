@@ -3987,6 +3987,16 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Whether the Coin & Credit sheet holds anything actionable for the player.
+     Free stations always have a reason to look (credit, ventures, prices); a
+     serf can neither borrow on income nor trade — the sheet matters only once
+     obligations are on the book or collateral secures an actual pledge offer. */
+  FB.financeUiRelevant = function (state) {
+    if (state.player.tier >= 1) return true;
+    return FB.financeActiveLoans(state).length > 0 ||
+      FB.financeLoanOffers(state).length > 0;
+  };
+
   function financeTermDate(state, seasons) {
     const n = state.date.season + seasons;
     return { season:n % 4, year:state.date.year + Math.floor(n / 4) };

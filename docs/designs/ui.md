@@ -331,10 +331,14 @@ presentation does not create a common asset record or mutation path.
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. Its title is an accessible
 collapse/expand button, and the browser-local collapsed state (`fb_ui`) changes
-only its presentation. On full desktop layouts the ledger omits the redundant
+only its presentation. Serfs hold almost none of these levers — no travel, no
+research say, no political attention — so the ledger is omitted entirely at
+that station. On full desktop layouts the ledger omits the redundant
 daily-focus row; on compact layouts that row appears first and routes to the
 top of the combined focus list. When expanded it shows the personal-attention
-assignment and national research projects/policy;
+assignment; national research projects/policy appear only at landed rank
+(vassals review, sovereigns manage), since commoners have no voice in the
+sovereign's research;
 political attention appears only when the independent ruler has that capacity,
 while travel and financial-contract rows appear only while active. Each native
 row routes to the authoritative existing control: the compact focus-list
@@ -375,7 +379,11 @@ affects personal, feudal, or diplomatic consequences. A materialized ruler resol
 through the realm target, so the character sheet, realm sheet, Council, Estates, and
 gift interfaces cannot display different values.
 
-The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. Active
+The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. It is
+listed for every free station; a serf sees it only once the sheet holds
+something actionable for that station — obligations on the book, or collateral
+that secures an actual pledge offer (`FB.financeUiRelevant`) — and the Network
+panel's **Finance…** shortcut follows the same rule. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
 a narrow phone. The sheet shows purse, price index, last movement and purse adjustment,
 reliable net income, credit capacity and defaults, exact loan faces/current values/dates,
@@ -466,7 +474,9 @@ Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank &
 keyboard-focusable profession picker previews Craft and Trade with the current
 tier-scaled fee, tax, enterprise, duration, and Common Voice terms, then repeats all effects
 in a confirmation sheet before spending the day.
-Rank & Realm keeps the no-day-cost **Technology…** deed at every social tier. Its
+Rank & Realm keeps the no-day-cost **Technology…** deed at landed rank and above; commoners
+have no research controls (sovereigns direct projects, vassals may advocate
+them), so the deed stays hidden below tier 3. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
 rate, reserve, occupied slots, and active projects. The catalogue supports domain,
 status, and text filters; Active/Available/Exposed/Completed/All views; and stable domain
