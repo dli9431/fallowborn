@@ -33941,6 +33941,14 @@
         "text": "🧭 Turned back toward {home}."
       }
     },
+    "news.tutorial.first_steps": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "🌱 The first steps are behind you — the chronicle is yours to write."
+      }
+    },
     "news.war.abandoned": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -41281,6 +41289,16 @@
         "text": "Your questions turn welcome into insult."
       }
     },
+    "src.00652d85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "First steps {done}/{total}: {label}"
+      }
+    },
     "src.006602d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47567,6 +47585,16 @@
       ],
       "source": {
         "text": "{house} shares the ruler’s faith."
+      }
+    },
+    "src.11b6bfe6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "First steps"
       }
     },
     "src.11be99be": {
@@ -55465,7 +55493,8 @@
       "glossary": [],
       "location": [
         "js/ui_misc.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Dismiss"
@@ -61589,16 +61618,6 @@
         "text": "Tend the wounded, and count the spoils."
       }
     },
-    "src.382e6d9f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
-      }
-    },
     "src.382eb477": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64601,6 +64620,16 @@
         "text": "Eligible: living child of the current playable head."
       }
     },
+    "src.40a81bc5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🌱 The first steps are behind you — the chronicle is yours to write."
+      }
+    },
     "src.40b25032": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65737,6 +65766,16 @@
       ],
       "source": {
         "text": "How to Play"
+      }
+    },
+    "src.43d24512": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Read more in the Guide"
       }
     },
     "src.43d25c7d": {
@@ -68588,6 +68627,16 @@
       ],
       "source": {
         "text": "Raises farming output by 10%."
+      }
+    },
+    "src.4bc1c9c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The days now flow on their own — Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening."
       }
     },
     "src.4bc76e18": {
@@ -73968,6 +74017,16 @@
       ],
       "source": {
         "text": "Call up every able man."
+      }
+    },
+    "src.5a186331": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Earn your first coin"
       }
     },
     "src.5a27e5ca": {
@@ -80537,6 +80596,16 @@
         "text": "greatHolyWar has invalid firstByYear."
       }
     },
+    "src.6c48c0d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Answer an event"
+      }
+    },
     "src.6c49d984": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82898,6 +82967,16 @@
       ],
       "source": {
         "text": "You renounce {liege} and raise your own banner over {province}, seized as your own county. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}."
+      }
+    },
+    "src.72b6f3fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Set a daily focus"
       }
     },
     "src.72b7bbed": {
@@ -88732,6 +88811,16 @@
       ],
       "source": {
         "text": "The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season."
+      }
+    },
+    "src.8209c0ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The Deeds tab lists your daily focus and one-shot deeds."
       }
     },
     "src.8214ab97": {
@@ -95421,6 +95510,16 @@
       ],
       "source": {
         "text": "By dawn, three vital words have three possible meanings."
+      }
+    },
+    "src.942bb613": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Events pause the days until you choose an answer."
       }
     },
     "src.946cef71": {
@@ -109667,6 +109766,16 @@
         "text": "Exchange prisoners and take the wagons."
       }
     },
+    "src.bb04975d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Complete a deed"
+      }
+    },
     "src.bb053bae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115756,6 +115865,16 @@
       ],
       "source": {
         "text": "Croatia"
+      }
+    },
+    "src.cc1cdf20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Let the days flow"
       }
     },
     "src.cc200e59": {
@@ -126598,6 +126717,16 @@
       ],
       "source": {
         "text": "No war target matches the current search and filters."
+      }
+    },
+    "src.e93d313e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Watch the Deeds tab — your First steps are listed there."
       }
     },
     "src.e941dd67": {
@@ -140858,6 +140987,14 @@
         "text": "Another sentence may be issued in {days} days."
       }
     },
+    "ui:Answer an event": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Answer an event"
+      }
+    },
     "ui:Answer the {campaign}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -143092,6 +143229,14 @@
         "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
       }
     },
+    "ui:Complete a deed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Complete a deed"
+      }
+    },
     "ui:Completed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -144240,7 +144385,7 @@
     "ui:Dismiss": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "Dismiss"
       }
@@ -144496,6 +144641,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Earlier household"
+      }
+    },
+    "ui:Earn your first coin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Earn your first coin"
       }
     },
     "ui:Earned: {guidance}": {
@@ -145014,6 +145167,14 @@
         "text": "Events and oaths will use this exact person."
       }
     },
+    "ui:Events pause the days until you choose an answer.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Events pause the days until you choose an answer."
+      }
+    },
     "ui:Every eligible worker is locked to another enterprise.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -145393,6 +145554,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "First missed payment:"
+      }
+    },
+    "ui:First steps": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "First steps"
       }
     },
     "ui:Focus": {
@@ -147228,6 +147397,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Lessons end at age 16."
+      }
+    },
+    "ui:Let the days flow": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Let the days flow"
       }
     },
     "ui:Letters & Faith": {
@@ -151591,6 +151768,14 @@
         "text": "Reach the wedding county before deciding where to live."
       }
     },
+    "ui:Read more in the Guide": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Read more in the Guide"
+      }
+    },
     "ui:Ready in {days} days.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -153685,12 +153870,12 @@
         "text": "Serving in the direct liege’s host."
       }
     },
-    "ui:Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.": {
+    "ui:Set a daily focus": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward."
+        "text": "Set a daily focus"
       }
     },
     "ui:Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged.": {
@@ -154838,6 +155023,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The Cardinals will conduct the next ballot as the calendar advances."
+      }
+    },
+    "ui:The Deeds tab lists your daily focus and one-shot deeds.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "The Deeds tab lists your daily focus and one-shot deeds."
       }
     },
     "ui:The Estates": {
@@ -157213,6 +157406,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Wartime scarcity for household necessities"
+      }
+    },
+    "ui:Watch the Deeds tab — your First steps are listed there.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Watch the Deeds tab — your First steps are listed there."
       }
     },
     "ui:Watches for schemes against you; your own plots weave faster": {

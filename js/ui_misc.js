@@ -1595,6 +1595,25 @@ window.FB = window.FB || {};
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
   };
 
+  /* ================= beginner hints (each fires once per save) =================
+     One-line, just-in-time lessons delivered at the moment they first matter.
+     The whole layer goes quiet when Settings hides beginner hints, and every
+     hint is a per-save flag so a life teaches each lesson exactly once. */
+  UI.hintDue = function (id) {
+    const s = FB.state;
+    if (!s || !s.player || FB.game.observe) return false;
+    if (FB.game.uiPrefs && FB.game.uiPrefs.hideBeginnerHints) return false;
+    if (!s.player.flags) s.player.flags = {};
+    if (s.player.flags['hint_' + id]) return false;
+    s.player.flags['hint_' + id] = 1;
+    return true;
+  };
+  UI.maybeHint = function (id, text, params) {
+    if (!UI.hintDue(id)) return false;
+    UI.toast(text, params);
+    return true;
+  };
+
   /* ================= map politics hookup ================= */
   /* Rebuilding the map base image is the priciest paint in the game, and one
      world tick can transfer several provinces — coalesce to a single rebuild

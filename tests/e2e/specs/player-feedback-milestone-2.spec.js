@@ -48,7 +48,7 @@ test('technology search discovers authored unlocks and locked enterprises link b
       .toBeVisible();
   });
 
-test('the Guide keeps orientations and topic details in one searchable sheet',
+test('the role orientation is a focused sheet with a Guide deep link',
   async function ({ page }) {
     const onboarding = await page.evaluate(function () {
       return {
@@ -62,28 +62,41 @@ test('the Guide keeps orientations and topic details in one searchable sheet',
       delete FB.state.player.roleOrientationsSeen['role-tier-1'];
       FB.ui.maybeShowRoleOrientation();
     });
+    // a focused sheet for the role just entered — never the whole Guide
     await expect(page.getByRole('heading', {
-      name:'Guide', exact:true
+      name:'Freeholder', exact:true
     })).toBeVisible();
-    await expect(page.locator('#guide-controls')).toBeVisible();
-    const freeholder = page.locator('[data-guide-entry="role-tier-1"]');
-    await expect(freeholder).toHaveAttribute('aria-expanded', 'true');
-    const freeholderDetail = page.locator('#guide-entry-detail-role-tier-1');
-    await expect(freeholderDetail).toBeVisible();
-    await expect(freeholderDetail).toContainText('New resources');
-    await expect(freeholderDetail).toContainText('Recurring duties');
-    await expect(freeholderDetail).toContainText('Good first actions');
-    await expect(page.getByRole('button', { name:'Open deeper guide' }))
-      .toHaveCount(0);
-    await expect(page.getByRole('button', { name:'Replay this orientation' }))
-      .toHaveCount(0);
-    await page.getByRole('button', { name:'Close', exact:true }).click();
+    const orientationBody = page.locator('#gm-body');
+    await expect(orientationBody).toContainText('New resources');
+    await expect(orientationBody).toContainText('Recurring duties');
+    await expect(orientationBody).toContainText('Good first actions');
+    await expect(page.locator('#guide-controls')).toHaveCount(0);
+    await expect(page.locator('[data-guide-entry]')).toHaveCount(0);
+    await page.locator('#orientation-continue').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     expect(await page.evaluate(function () {
       return {
         seen:!!FB.state.player.roleOrientationsSeen['role-tier-1'],
         repeated:FB.ui.maybeShowRoleOrientation()
       };
     })).toEqual({ seen:true, repeated:false });
+
+    // the complete orientation stays one tap away as an inline Guide entry
+    await page.evaluate(function () {
+      FB.ui.showRoleOrientation('role-tier-1');
+    });
+    await page.locator('#orientation-guide').click();
+    await expect(page.getByRole('heading', {
+      name:'Guide', exact:true
+    })).toBeVisible();
+    const freeholder = page.locator('[data-guide-entry="role-tier-1"]');
+    await expect(freeholder).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#guide-entry-detail-role-tier-1'))
+      .toContainText('Good first actions');
+    await page.getByRole('button', { name:'Close', exact:true }).click();
+    // desktop Guide close falls back to the menu; Resume clears the modal
+    await page.getByRole('button', { name:'▶ Resume', exact:true }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     await page.evaluate(function () {
       FB.ui.showGuide();

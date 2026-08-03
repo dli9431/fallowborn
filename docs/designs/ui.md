@@ -402,8 +402,26 @@ activate an invisible deed. Every available daily focus appears together in one 
 above the category accordions; the accordions split and count only deeds by category.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Hide beginner hints** preference (`fb_ui`) so experienced players can
-remove it without changing progression or available deeds. The preference deliberately
-covers future beginner guidance as that layer grows.
+remove it without changing progression or available deeds. The preference covers the
+whole beginner-guidance layer: the path note, the First-steps checklist, and the
+contextual one-line hints below.
+
+New lives created from this version on carry `player.flags.tutorial` and a
+`startGold` baseline, which put a dismissible **First steps** checklist at the top of
+the Deeds panel: set a daily focus, let the days flow, complete a deed, answer an
+event, and earn your first coin. Step state comes from `FB.tutorialStatus` (live
+state plus one-time flags written at each action's single choke point: `G.setPaused`,
+`FB.runInstant`, the event-option handler). `FB.tutorialCheck` runs from the
+coalesced `UI.refresh` — pure state reads, no RNG — toasts each completion once
+(`tut_seen_*` flags survive a hints-off phase), and retires the checklist with a
+chronicle line when all five are done. Dismiss deletes the flag per save; old saves
+without the flag never see the card.
+
+Contextual hints (`UI.hintDue` / `UI.maybeHint` in `ui_misc.js`) deliver a single
+one-line lesson the first time its moment arrives — time controls on the first
+unpause, "events pause time" inside the first event modal — each recorded as a
+per-save `hint_*` flag so a life teaches it exactly once. The new-game intro modal
+keeps only the scenario flavor and a one-line pointer to the Deeds tab.
 The Self sheet's faith block names the live religious head or the number of days its
 office has been vacant, and states excommunication separately from the trait chip.
 Faith & Community contains the contextual absolution, Papal-restoration, and
@@ -511,9 +529,10 @@ aggression costs, siege requirements, and the difference between field victory a
 territorial conquest.
 
 `player.roleOrientationsSeen` records one-time, per-save orientations for the current
-social tier and religious vocation/office. On first entry, the Guide opens with that role
-filtered and expanded in the same sheet, naming new resources, recurring duties, and three
-suggested actions. The same complete orientation remains available as an inline Guide entry.
+social tier and religious vocation/office. On first entry, a small focused sheet opens
+with that role's summary, new resources, recurring duties, and three suggested
+actions — never the whole Guide. Its **Read more in the Guide** button deep-links to
+the same complete orientation, which remains available as an inline Guide entry.
 Orientation checks run only when the game is visible and neither generic nor event
 modal is active, so they never replace a pending choice.
 

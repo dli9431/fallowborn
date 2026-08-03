@@ -23,6 +23,7 @@ window.FB = window.FB || {};
     requestAnimationFrame(function () {
       refreshQueued = false;
       refreshNow();
+      if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
       if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
     });
   };

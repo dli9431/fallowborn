@@ -525,7 +525,12 @@ window.FB = window.FB || {};
 
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
-    let h = ongoingCommitmentsHtml(s);
+    let h = '';
+    if (FB.tutorialActive && FB.tutorialActive(s) &&
+        (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
+      h += tutorialCardHtml(s);
+    }
+    h += ongoingCommitmentsHtml(s);
     if (s.player.war) {
       const w = s.player.war;
       const en = s.realms[w.enemy];
@@ -623,6 +628,12 @@ window.FB = window.FB || {};
       h += nextStepHint(s);
     }
     box.innerHTML = h;
+    if ($('tutorial-dismiss')) {
+      $('tutorial-dismiss').addEventListener('click', function () {
+        delete s.player.flags.tutorial; // per-save opt-out; the card never returns
+        renderActions();
+      });
+    }
     let n = 0; // hotkey numbering covers only actions visible in open groups
     const focuses = FB.listFocuses(s);
     const instants = FB.listInstants(s);
@@ -761,6 +772,22 @@ window.FB = window.FB || {};
         });
       });
     FB.localizeTree(box);
+  }
+
+  /* the First-steps checklist: five core-loop lessons for a brand-new life.
+     Step state lives in FB.tutorialStatus (main.js); completion toasts fire
+     from FB.tutorialCheck on the coalesced refresh, so this render stays pure. */
+  function tutorialCardHtml(s) {
+    const status = FB.tutorialStatus(s);
+    let h = '<div class="progressnote tutorial-card"><div class="tutorial-head">' +
+      '<b>🌱 ' + esc(FB.T('First steps')) + '</b>' +
+      '<button type="button" class="btn small" id="tutorial-dismiss">' +
+      esc(FB.T('Dismiss')) + '</button></div><ul>';
+    for (const step of status.steps) {
+      h += '<li' + (step.done ? ' class="done"' : '') + '>' +
+        (step.done ? '✓ ' : '○ ') + esc(step.label) + '</li>';
+    }
+    return h + '</ul></div>';
   }
 
   function nextStepHint(s) {

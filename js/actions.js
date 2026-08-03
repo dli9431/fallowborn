@@ -4832,6 +4832,9 @@ window.FB = window.FB || {};
         state.player.cooldowns[id] = state.turn;
       }
       a.run(state);
+      if (!a.noConsume && state.player.flags) {
+        state.player.flags.tut_deed = 1; // First steps: complete a deed
+      }
       if (a.noConsume) { if (FB.ui && FB.ui.refresh) FB.ui.refresh(); }
       else if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus: true });
     }

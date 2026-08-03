@@ -22,11 +22,8 @@ async function startWithCode(page, code, name) {
 
 async function dismissRoleOrientations(page, count) {
   for (let i = 0; i < count; i++) {
-    await expect(page.getByRole('heading', { name:'Guide', exact:true }))
-      .toBeVisible();
-    await expect(page.locator('.guide-result[aria-expanded="true"]'))
-      .toBeVisible();
-    await page.getByRole('button', { name:'Close', exact:true }).click();
+    await expect(page.locator('#orientation-continue')).toBeVisible();
+    await page.locator('#orientation-continue').click();
   }
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }

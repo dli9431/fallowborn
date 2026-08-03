@@ -553,6 +553,10 @@ window.FB = window.FB || {};
       if (cc) { bodyHtml += UI.charCardHtml(s, cc); carded[cc.id] = 1; }
     }
     bodyHtml += eventCharCards(s, ev, ctx, carded);
+    if (UI.hintDue && UI.hintDue('event-pauses')) {
+      bodyHtml = '<p class="hint">' + esc(FB.T(
+        'Events pause the days until you choose an answer.')) + '</p>' + bodyHtml;
+    }
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
     const box = $('ev-options');
@@ -610,6 +614,8 @@ window.FB = window.FB || {};
 
   function chooseOption(ev, opt, ctx) {
     const s = FB.state;
+    if (!s.player.flags) s.player.flags = {};
+    s.player.flags.tut_event = 1; // First-steps checklist: answered an event
     if (ev.nameChild && ctx.childId) {
       const nc = s.chars[ctx.childId];
       const inp = $('ev-name');
@@ -14409,13 +14415,30 @@ window.FB = window.FB || {};
     return ids;
   }
 
+  /* A role orientation is a small focused sheet — new resources, duties, and
+     first actions for the role just entered — never the whole Guide. The
+     Guide stays one tap away for the player who wants the full manual. */
   UI.showRoleOrientation = function (id) {
     const s = FB.state;
     const def = roleOrientationDefinitions(s)[id];
     if (!s || !def) return false;
     if (!s.player.roleOrientationsSeen) s.player.roleOrientationsSeen = {};
     s.player.roleOrientationsSeen[id] = 1;
-    UI.showGuide({ entry:def.guideId, closeToGame:true });
+    openModal(def.title,
+      '<div class="gm-body-text"><p>' + esc(def.summary) + '</p></div>' +
+      roleOrientationBody(def) +
+      '<div class="gm-footer">' +
+      '<button class="btn primary" id="orientation-continue">' +
+      esc(FB.T('Continue')) + '</button>' +
+      '<button class="btn" id="orientation-guide">' +
+      esc(FB.T('Read more in the Guide')) + '</button></div>',
+      { historyView:true });
+    $('orientation-continue').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.closeModal(); });
+    });
+    $('orientation-guide').addEventListener('click', function () {
+      UI.showGuideEntry(def.guideId);
+    });
     return true;
   };
 

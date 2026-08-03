@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.106.1';
+  FB.VERSION = '1.107.0';
   FB.CHANGELOG = [
+    { v: '1.107.0', date: '2026-08-03', changes: [
+      'A new life now opens with a dismissible First steps checklist atop the Deeds tab that walks through the daily loop once, plus one-line hints the first time their moment arrives.',
+      'Reaching a new rank or vocation now briefs you on a small focused sheet with a link into the Guide, instead of opening the whole Guide.'
+    ] },
     { v: '1.106.1', date: '2026-08-03', changes: [
       'The Deeds tab now hides what your station cannot use: serfs no longer see Coin & Credit (unless the family holds debts or pawnable goods) or the ongoing-commitments ledger, and Technology appears only at landed rank.'
     ] },
@@ -1348,6 +1352,8 @@ window.FB = window.FB || {};
     }
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     state.player.focus = sc.focus || FB.defaultFocus(state);
+    state.player.startGold = state.player.gold; // First steps: earn-your-first-coin baseline
+    state.player.flags.tutorial = 1; // offer the First-steps checklist this life
     state.peakTitleData = FB.titleSnapshot(state);
     G.paused = true;
 
@@ -1371,10 +1377,13 @@ window.FB = window.FB || {};
     } else if (introGroup !== 'christian' && sc.intro_other) {
       introPath = 'intro_other';
     }
+    const introHint = (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
+      ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
+      : FB.T('Watch the Deeds tab — your First steps are listed there.');
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
       FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
       '</p><p class="hint">' +
-      FB.esc(FB.T('Set a daily focus (it continues until you change it) and act on deeds when the moment is right. Press Space to let the days flow — and again to pause. F skips to the next happening. Watch the Deeds tab for your path upward.')) +
+      FB.esc(introHint) +
       '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () {
       FB.ui.closeModal();
@@ -1683,8 +1692,76 @@ window.FB = window.FB || {};
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
+
+  /* ---------- First steps: a five-item checklist that teaches the core loop ----------
+     Offered to lives created from this version on (player.flags.tutorial is
+     stamped at game start, so old saves never see it). Steps flip from
+     ordinary play — some read live state, some read one-time flags written at
+     the action's choke point. FB.tutorialCheck runs from the coalesced UI
+     refresh: pure state reads, no RNG, and each completion toasts once. */
+  const TUTORIAL_STEPS = [
+    { id:'focus',   label:function () { return FB.T('Set a daily focus'); } },
+    { id:'unpause', label:function () { return FB.T('Let the days flow'); } },
+    { id:'deed',    label:function () { return FB.T('Complete a deed'); } },
+    { id:'event',   label:function () { return FB.T('Answer an event'); } },
+    { id:'gold',    label:function () { return FB.T('Earn your first coin'); } }
+  ];
+  function tutorialStepDone(s, id) {
+    const p = s.player, flags = p.flags || {};
+    if (id === 'focus') return !!p.focus;
+    if (id === 'unpause') return !!flags.tut_unpause;
+    if (id === 'deed') return !!flags.tut_deed;
+    if (id === 'event') return !!flags.tut_event;
+    if (id === 'gold') return p.startGold !== undefined && p.gold > p.startGold;
+    return false;
+  }
+  FB.tutorialActive = function (s) {
+    return !!(s && s.player && s.player.flags && s.player.flags.tutorial &&
+      !s.player.flags.tutorial_done);
+  };
+  FB.tutorialStatus = function (s) {
+    const steps = [];
+    let done = 0;
+    for (const step of TUTORIAL_STEPS) {
+      const isDone = tutorialStepDone(s, step.id);
+      if (isDone) done++;
+      steps.push({ id:step.id, label:step.label(), done:isDone });
+    }
+    return { steps:steps, done:done, total:TUTORIAL_STEPS.length };
+  };
+  FB.tutorialCheck = function (s) {
+    if (!FB.tutorialActive(s)) return;
+    const hidden = !!(G.uiPrefs && G.uiPrefs.hideBeginnerHints);
+    const flags = s.player.flags;
+    const status = FB.tutorialStatus(s);
+    for (const step of status.steps) {
+      if (!step.done || flags['tut_seen_' + step.id]) continue;
+      flags['tut_seen_' + step.id] = 1; // seen marks survive a hints-off phase
+      if (!hidden && FB.ui && FB.ui.toast) {
+        FB.ui.toast('First steps {done}/{total}: {label}', {
+          done:status.done, total:status.total, label:step.label
+        });
+      }
+    }
+    if (status.done < status.total) return;
+    flags.tutorial_done = 1;
+    delete flags.tutorial;
+    if (hidden) return;
+    // the news line both toasts (via FB.fx) and lands in the chronicle
+    FB.news(s, FB.msg('news.tutorial.first_steps',
+      '🌱 The first steps are behind you — the chronicle is yours to write.', {}));
+  };
+
   G.setPaused = function (v) {
     G.paused = !!v;
+    if (!v && FB.state && FB.state.player && FB.state.player.flags &&
+        !G.observe) {
+      FB.state.player.flags.tut_unpause = 1; // First steps: let the days flow
+      if (FB.ui && FB.ui.maybeHint) {
+        FB.ui.maybeHint('time-flow',
+          'The days now flow on their own — Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening.');
+      }
+    }
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
   G.togglePause = function () { G.setPaused(!G.paused); };
