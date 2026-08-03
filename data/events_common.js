@@ -890,5 +890,42 @@ FBDATA.events.push(
     { label:'My soul, made ready.', desc:'Set your accounts with {god} in order.', effects:{ piety:10 } },
     { label:'Nothing. So enjoy the wine.', require:{ religionGroups:['christian','pagan','jewish'] }, desc:'Eat, drink; the rest is smoke.', effects:{ health:1, piety:-5 } },
     { label:'Nothing. So savor the days that remain.', require:{ religionGroups:['muslim'] }, desc:'Each morning is a gift unearned.', effects:{ health:1, piety:-5 } }
+  ]},
+
+/* ---------- distraint & debt bondage (docs/designs/descent.md) ----------
+   A defaulted loan outliving its grace becomes a writ of distraint: pay,
+   yield goods, or stall and face the bailiffs. A family with nothing left
+   to take is bound to the land for the debt — the old road into serfdom. */
+{ id:'distraint_writ', title:'A Writ of Distraint',
+  trigger:{ tierMax:2, minAge:16, notFlags:['debt_distraint'], custom:'finance_in_default', chance:0.3 }, weight:10, cooldown:2,
+  text:'The creditor has been to the lord’s court, and the court has listened. Two men with a writ wait by your door, patient as stones: the debt is called, every penny of it, and the law of the manor is on their side of it.',
+  options:[
+    { label:'Pay off the debt.', require:{ custom:'distraint_can_settle' }, desc:'Every penny, here and now — and the writ burns.',
+      effects:{ custom:'distraint_settle', log:'Paid off a called debt.' } },
+    { label:'Yield goods toward the debt.', require:{ custom:'distraint_can_yield' }, desc:'Hand over what will quiet them — a holding, a plot — and keep the rest.',
+      effects:{ custom:'distraint_yield_one', log:'Yielded goods toward a called debt.' } },
+    { label:'Stall them.', desc:'“Come back after the harvest.” They will — with more men.',
+      effects:{ setFlag:'debt_distraint', prestige:-2 } }
+  ]},
+{ id:'distraint_seizure', title:'The Bailiffs Come',
+  trigger:{ tierMax:2, minAge:16, flags:['debt_distraint'], custom:'finance_in_default', chance:0.4 }, weight:14, cooldown:1,
+  text:'They came at first light with the writ and a cart: the bailiff, two porters, and the reeve to see it done lawfully. What the debt is owed, the household holds — and they mean to carry it away piece by piece.',
+  options:[
+    { label:'Open the doors.', desc:'Let them take what the law says is owed. Hiding goods from a writ costs more than goods.',
+      effects:{ custom:'distraint_seize', log:'Distrained for debt.' } },
+    { label:'Pay them off on the doorstep.', require:{ custom:'distraint_can_settle' }, desc:'Coin, counted out in the mud — and the cart goes home empty.',
+      effects:{ custom:'distraint_settle', log:'Paid off a called debt on the doorstep.' } },
+    { label:'Bar the door and dare the writ.', desc:'The law has long arms, but today it has only two porters.', chance:0.4,
+      success:{ text:'Shouting, shoving, a slammed door — and they withdraw, vowing to return. You have won a season, no more.', effects:{ prestige:-3, popularOpinion:-3 } },
+      failure:{ text:'The door gives. So does your lip. They take what the writ allows, and a little dignity besides.', effects:{ health:-1, custom:'distraint_seize' } } }
+  ]},
+{ id:'bondage_sentence', title:'Bound to the Land', trigger:{ never:true },
+  contextValidator:'finance_in_default',
+  text:'The bailiffs’ cart is full and the debt still stands. There is only one thing left to give: yourselves. The lord’s steward reads the sentence without pleasure — the family is bound to the land for the debt, to work it out in the lord’s own fields. The free days are over.',
+  options:[
+    { label:'Bend your neck to the land.', desc:'The debt dies here. So does something else.',
+      effects:{ custom:'bondage_submit', log:'Bound to the land for debt.' } },
+    { label:'Flee in the night.', desc:'A cart, a dark road, a new parish where no one knows your name — or your debts. Both follow you anyway.',
+      effects:{ custom:'bondage_flee', log:'Fled a debt-bondage sentence.' } }
   ]}
 );

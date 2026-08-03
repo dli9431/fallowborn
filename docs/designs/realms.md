@@ -536,7 +536,15 @@ fallen house's vassals reattach to it), a vassal's fiefs escheat to his liege, a
 family drops to landless gentry (tier 2) keeping gold, items, and holdings. Succession
 wipes the slide flags with the rest of `player.flags`, so a stalled plot never outlives
 its generation. Province-by-province loss in a lost defensive war (`FB.warLoseProvince`)
-remains the other way down, landing at the same tier 2.
+remains the other way down, landing at the same tier 2. Beyond these catastrophes, the
+ladder also descends **one rung at a time**: the **hollow crown** lapses a tier-5+
+dignity that has rested below its de jure substance (or its independence) past a grace
+window — `FB.checkTierPromotions` stamps `player.titleLapse`, warns by event, then steps
+the style down a rung; a beaten defender may **kneel to the victor** and keep his land
+as a vassal; a defiant vassal faces **attainder** and forfeiture; a beaten leader may be
+**captured and ransomed**; and commoners slide the old road into serfdom through
+**distraint, debt bondage, and wartime devastation**. See
+[descent.md](descent.md) for the full system.
 
 Related: [provinces.md](provinces.md) for the land itself.
 

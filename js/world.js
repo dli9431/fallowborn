@@ -4227,6 +4227,12 @@ window.FB = window.FB || {};
   };
 
   FB.endPlayerWar = function (state) {
+    const p = state.player;
+    if (p.flags && p.flags.in_prison) {
+      delete p.flags.in_prison;
+      FB.news(state, FB.msg('news.war.prison_released',
+        '🕊 The peace opens your cell — you come home thinner, but free.', {}));
+    }
     state.player.war = null;
     FB.validateFocus(state);
   };
@@ -4315,6 +4321,27 @@ window.FB = window.FB || {};
             { enemy: enemy.name }));
         }
       }
+      FB.maybeOfferSubmission(state);
+    }
+    /* a prisoner leads from a cell: no war council while the in_prison flag
+       stands — the war drifts without orders while health, authority, and
+       fortune decide how long the captivity lasts (docs/designs/descent.md) */
+    if (p.flags && p.flags.in_prison) {
+      const me = state.chars[p.charId];
+      if (me && !me.dead && FB.chance(0.3)) me.health = Math.max(1, me.health - 1);
+      if (state.council && state.council.authority !== undefined) {
+        state.council.authority = Math.max(0, state.council.authority - 2);
+      }
+      const relChance = Math.min(0.5,
+        (FBDATA.balance.ransomSeasonReleaseChance || 0.2) +
+        (me ? FB.skillOf(me, 'int') : 0) / 200);
+      if (FB.chance(relChance)) {
+        delete p.flags.in_prison;
+        FB.news(state, FB.msg('news.war.prison_escaped',
+          '⛓ A bribed gaoler, a moonless night, a swift horse — you are free of {enemy}.',
+          { enemy: enemy ? enemy.name : '' }));
+      }
+      return;
     }
     FB.queueEvent(state, 'war_council', {});
   };
@@ -4331,6 +4358,70 @@ window.FB = window.FB || {};
       if (state.holder && state.holder[a.at] === 'player') return true;
     }
     return false;
+  };
+
+  /* ---- devastation & the protection bargain (docs/designs/descent.md) ----
+     A hostile host standing in a commoner's HOME province burns the season's
+     peace; after two burnings the local lord offers the old bargain — his
+     wall and his men for the family's freedom. */
+  FB.hostileHostAtHome = function (state) {
+    const p = state.player;
+    if (!state.armies || !p.provinceId) return false;
+    const homeSovereign = state.owner[p.provinceId];
+    if (!homeSovereign || homeSovereign === 'player') return false;
+    const homeArmy = { realm: homeSovereign };
+    for (const a of state.armies) {
+      if (a.at !== p.provinceId) continue;
+      if (a.realm === homeSovereign || a.realm === 'player') continue;
+      if ((a.men || 0) < (FBDATA.balance.armyMinMen || 40)) continue;
+      if (FB.armiesHostile(state, a, homeArmy)) return true;
+    }
+    return false;
+  };
+  FB.devastationSeason = function (state) {
+    const p = state.player;
+    if (p.tier > 2 || p.travel || !p.flags) return;
+    if (p.flags.lord_protection) return;
+    if (!FB.hostileHostAtHome(state)) {
+      // the danger passes: the memory of burning fades one step at a time
+      if (p.flags.home_burned2) delete p.flags.home_burned2;
+      else if (p.flags.home_burned) delete p.flags.home_burned;
+      return;
+    }
+    if (!FB.chance(FBDATA.balance.devastationChance || 0.4)) return;
+    if (p.flags.home_burned) { delete p.flags.home_burned; p.flags.home_burned2 = 1; }
+    else p.flags.home_burned = 1;
+    FB.queueEvent(state, 'devastation_raiders', {});
+    /* after the second burning the lord's steward makes his offer — but only
+       a freeholder has a freedom left to sell */
+    if (p.flags.home_burned2 && p.tier === 1) {
+      FB.queueEvent(state, 'devastation_protection', {});
+    }
+  };
+  FB.fns = FB.fns || {};
+  FB.fns.devastation_lose_holding = function (state) {
+    const p = state.player;
+    const holdings = FB.holdingList ? FB.holdingList(state) : [];
+    if (!holdings.length) {
+      p.gold = Math.max(0, p.gold - 5); // nothing to burn but the crop and the door
+      return;
+    }
+    const id = FB.pick(holdings);
+    holdings.splice(holdings.indexOf(id), 1);
+    FB.news(state, FB.msg('news.world.devastation_holding',
+      '🔥 The raiders take {asset} and burn what they cannot carry.',
+      { asset: FB.dataParam('holding', id) }));
+  };
+  FB.fns.devastation_commend = function (state) {
+    const p = state.player;
+    delete p.flags.home_burned;
+    delete p.flags.home_burned2;
+    p.flags.lord_protection = 1;
+    if (p.tier === 1) {
+      FB.setPlayerTier(state, 0);
+      FB.news(state, FB.msg('news.world.commended',
+        '🛡 The household goes inside the lord’s wall — his people now, protected and bound.', {}));
+    }
   };
 
   /* Attacking victory: the besieged target falls to you. */
@@ -4541,6 +4632,112 @@ window.FB = window.FB || {};
     }
   };
 
+  /* ---- the loser's homage (docs/designs/descent.md) ----------------------
+     A defender outmatched by a greater lord may be offered submission once
+     per war: kneel and keep every acre under a new banner, buy the peace at
+     a conqueror's price, or fight on and lose the land province by province. */
+  function playerWarStrength(state) {
+    const p = state.player;
+    if (state.realms.player && state.realms.player.alive) {
+      return FB.realmStrength(state, 'player');
+    }
+    let s = 0;
+    for (const pid of (p.provs || [])) s += state.dev[pid] || 1;
+    return s;
+  }
+  FB.submissionOfferEligible = function (state) {
+    const p = state.player, w = p.war;
+    if (!w || !w.defending || w.submissionOffered) return false;
+    if (p.tier < 4 || (p.flags && p.flags.in_prison)) return false;
+    const enemy = state.realms[w.enemy];
+    if (!enemy || !enemy.alive) return false;
+    if ((enemy.rank || 1) <= Math.max(1, p.tier - 3)) return false; // only a greater lord
+    return FB.realmStrength(state, w.enemy) >=
+      playerWarStrength(state) * (FBDATA.balance.submissionStrengthRatio || 1.5);
+  };
+  FB.maybeOfferSubmission = function (state) {
+    const w = state.player.war;
+    if (!FB.submissionOfferEligible(state)) return;
+    const need = FBDATA.balance.warWinsToTakeProvince;
+    if ((w.enemySiege || 0) < 2 && (w.losses || 0) < need - 1) return;
+    w.submissionOffered = 1;
+    FB.queueEvent(state, 'war_submission_offer', {});
+  };
+
+  /* ---- capture & ransom (docs/designs/descent.md) ------------------------
+     A beaten tier-3+ leader may be taken in the rout: martial cuts a way
+     out, intrigue slips the noose. The captor's price arrives by event; the
+     war's end (or a dark night) opens the cell. */
+  FB.maybeCapturePlayer = function (state) {
+    const p = state.player, w = p.war;
+    if (!w || p.tier < 3 || !p.flags || p.flags.in_prison) return;
+    const me = state.chars[p.charId];
+    const base = FBDATA.balance.captureChanceBase === undefined ? 0.35 : FBDATA.balance.captureChanceBase;
+    const escape = Math.min(0.3,
+      ((me ? FB.skillOf(me, 'mar') : 0) + (me ? FB.skillOf(me, 'int') : 0)) / 200);
+    if (!FB.chance(Math.max(0.05, base - escape))) return;
+    p.flags.in_prison = 1;
+    FB.news(state, FB.msg('news.war.captured',
+      '⛓ Taken in the rout! You are a prisoner of {enemy}.',
+      { enemy: state.realms[w.enemy] ? state.realms[w.enemy].name : '' }));
+    FB.queueEvent(state, 'prison_ransom', {});
+  };
+  function prisonRansom(state) {
+    const table = FBDATA.balance.ransomByTier || [];
+    return table[state.player.tier] || 30;
+  }
+  FB.fns.prison_still = function (state) {
+    const p = state.player;
+    return !!(p.flags && p.flags.in_prison && p.war &&
+      state.realms[p.war.enemy] && state.realms[p.war.enemy].alive);
+  };
+  FB.fns.prison_can_pay = function (state) {
+    return FB.fns.prison_still(state) && state.player.gold >= prisonRansom(state);
+  };
+  FB.fns.prison_pay = function (state) {
+    const p = state.player;
+    if (!FB.fns.prison_still(state)) return;
+    p.gold = Math.max(0, p.gold - prisonRansom(state));
+    delete p.flags.in_prison;
+    FB.news(state, FB.msg('news.war.prison_ransomed',
+      '⛓ The ransom is counted out — you ride home poorer, and free.', {}));
+  };
+  FB.fns.prison_can_cede = function (state) {
+    const p = state.player;
+    return FB.fns.prison_still(state) && !!(p.provs && p.provs.length);
+  };
+  FB.fns.prison_cede_land = function (state) {
+    const p = state.player, w = p.war;
+    if (!FB.fns.prison_still(state)) return;
+    /* a border county signs the ransom roll — the captor takes what his
+       host can already touch; an enclaved prisoner loses his first county */
+    let ceded = null;
+    const opts = [];
+    for (const pid of (p.provs || [])) {
+      const adj = FB.world.adj[pid] || {};
+      for (const nb in adj) {
+        if (state.owner[nb] === w.enemy) { opts.push(pid); break; }
+      }
+    }
+    if (opts.length) ceded = FB.pick(opts);
+    else if (p.provs && p.provs.length) ceded = p.provs[0];
+    if (!ceded) return;
+    const cname = FB.world.byId[ceded] ? FB.world.byId[ceded].name : '';
+    FB.transferProvince(state, ceded, w.enemy);
+    delete p.flags.in_prison;
+    FB.news(state, FB.msg('news.war.prison_ceded',
+      '⛓ {province} signs the ransom roll — you ride home a county poorer, and free.',
+      { province: cname }));
+    if (!p.provs.length) {
+      FB.setPlayerTier(state, 2);
+      FB.changePlayerLiege(state, null, 'war:landless');
+      if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+      if (state.realms.player) FB.markRealmDead(state, 'player');
+      FB.news(state, FB.msg('news.war.landless',
+        '⬇ Landless once more. The banners are folded away.', {}));
+    }
+  };
+
   /* Check whether accumulated victories or defeats settle the war.
      Attackers take the target only by SIEGE (war_siege below); enough field
      wins make the enemy sue for peace — the war_tribute_offer event then lets
@@ -4593,6 +4790,7 @@ window.FB = window.FB || {};
         }
       }
     }
+    FB.maybeOfferSubmission(state);
   };
 
   /* ---- war-council handlers (called by event effects {custom:'war_*'}).
@@ -4654,6 +4852,7 @@ window.FB = window.FB || {};
       }
     }, { losses: w.losses }));
     FB.warOutcome(state);
+    FB.maybeCapturePlayer(state);
   };
   FB.fns.war_harry = function (state) {
     const w = state.player.war; if (!w) return;
@@ -4993,9 +5192,116 @@ window.FB = window.FB || {};
     FB.endPlayerWar(state);
   };
 
+  /* submission resolutions: the war_submission_offer event ends here. The
+     queued offer is valid only while the same defensive war still runs. */
+  FB.fns.war_submission_valid = function (state) {
+    const w = state.player.war;
+    const enemy = w && state.realms[w.enemy];
+    return !!(w && w.defending && enemy && enemy.alive);
+  };
+  function submissionTributePrice(state) {
+    const w = state.player.war;
+    const enemy = w && state.realms[w.enemy];
+    return (FBDATA.balance.submissionTributePerRank || 25) * ((enemy && enemy.rank) || 1);
+  }
+  FB.fns.war_submission_tribute_affordable = function (state) {
+    return FB.fns.war_submission_valid(state) &&
+      state.player.gold >= submissionTributePrice(state);
+  };
+  /* kneel: the war dies here, the land stays in hand, the banner changes.
+     A crowned head that kneels fails the independence its style rests on —
+     the title-lapse machinery (checkTierPromotions) takes it from there. */
+  FB.fns.war_submit = function (state) {
+    const p = state.player, w = p.war; if (!w) return;
+    const enemy = state.realms[w.enemy]; if (!enemy || !enemy.alive) return;
+    const rid = w.enemy;
+    FB.endPlayerWar(state);
+    FB.changePlayerLiege(state, rid, 'war:submission');
+    if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
+    state.realms.player.liege = rid;
+    const newTop = FB.topRealm(state, rid);
+    for (const pid of (p.provs || [])) { state.owner[pid] = newTop; state.holder[pid] = 'player'; }
+    for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = newTop;
+    FB.invalidateRealmCache();
+    if (FB.adjustStanding) FB.adjustStanding(state, { kind:'realm', id:rid }, 10, 'war:submission');
+    p.prestige = Math.max(0, p.prestige - 15);
+    FB.news(state, FB.msg('news.war.submission',
+      '🛡 You kneel to {enemy} and swear the oaths. The war is over; your lands remain — under a new banner.',
+      { enemy: enemy.name }));
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.checkTierPromotions(state);
+  };
+  FB.fns.war_submission_tribute = function (state) {
+    const p = state.player, w = p.war; if (!w) return;
+    const enemy = state.realms[w.enemy];
+    const price = submissionTributePrice(state);
+    p.gold = Math.max(0, p.gold - price);
+    FB.news(state, FB.msg('news.war.submission_tribute',
+      '🕊 A conqueror’s tribute buys the peace — {money:price} to {enemy}.',
+      { price: price, enemy: enemy ? enemy.name : '' }));
+    FB.endPlayerWar(state);
+  };
+
   /* downfall resolutions: the df_* event chains end here */
   FB.fns.df_fall = function (state) { FB.loseAllLand(state, {}); };
   FB.fns.df_fall_flee = function (state) { FB.loseAllLand(state, { flee: true }); };
+
+  /* attainder resolutions (docs/designs/descent.md): the felony chains end
+     here — mercy bought, the fief yielded, or the judgment denied by arms */
+  FB.fns.attainder_risk = function (state) {
+    const p = state.player;
+    if (!p.liege || !state.realms[p.liege] || !state.realms[p.liege].alive) return false;
+    return FB.standingOf(state, { kind:'realm', id:p.liege }) <=
+      (FBDATA.balance.attainderStandingGate === undefined ? -30 : FBDATA.balance.attainderStandingGate);
+  };
+  function attainderFine(state) {
+    const table = FBDATA.balance.attainderFineByTier || [];
+    return table[state.player.tier] || 20;
+  }
+  FB.fns.attainder_can_pay = function (state) {
+    return state.player.gold >= attainderFine(state);
+  };
+  FB.fns.attainder_pay = function (state) {
+    const p = state.player;
+    p.gold = Math.max(0, p.gold - attainderFine(state));
+    delete p.flags.felony_mark;
+    delete p.flags.felony_doom;
+    if (FB.adjustStanding) FB.adjustStanding(state, { kind:'realm', id:p.liege }, 15, 'event:attainder_pay');
+    FB.news(state, FB.msg('news.world.attainder_paid',
+      '⚖ The fine is paid, the oaths renewed. The matter is buried.', {}));
+  };
+  FB.fns.attainder_yield = function (state) {
+    const p = state.player;
+    delete p.flags.felony_mark;
+    delete p.flags.felony_doom;
+    /* a vassal's fiefs escheat to his liege, a baron simply loses his place —
+       loseAllLand's vassal branch is exactly the sentence of forfeiture */
+    FB.loseAllLand(state, {});
+  };
+  FB.fns.attainder_resist = function (state) {
+    const p = state.player;
+    const oldTop = p.liege ? FB.topRealm(state, p.liege) : null;
+    delete p.flags.felony_mark;
+    delete p.flags.felony_doom;
+    if (!oldTop || !state.realms[oldTop] || !state.realms[oldTop].alive || p.war) return;
+    if (p.tier === 3 && (!p.provs || !p.provs.length)) {
+      // a baron holds his tower against the lord: the home county is the stake
+      p.provs = [p.provinceId];
+      FB.setPlayerTier(state, 4, { attachLiege:false });
+      FB.transferProvince(state, p.provinceId, 'player');
+    }
+    FB.changePlayerLiege(state, null, 'realm:attainder_resist');
+    if (state.realms.player) state.realms.player.liege = null;
+    FB.foundPlayerRealm(state);
+    p.war = { enemy: oldTop, target: null, wins: 0, losses: 0, seasons: 0,
+      defending: true, casus: { type: 'independence' } };
+    FB.news(state, FB.msg('news.world.attainder_resist',
+      '⚔ You deny the judgment and raise your banner — felony is answered with rebellion.', {}));
+    FB.warFooting(state);
+    FB.queueEvent(state, 'war_defense_muster', {});
+    FB.checkTierPromotions(state);
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+  };
 
   FB.foundPlayerRealm = function (state) {
     const me = state.chars[state.player.charId];
@@ -5425,7 +5731,70 @@ window.FB = window.FB || {};
       FB.foundPlayerRealm(state); // restyle the landed realm at its new dignity
       if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
     }
+    /* ---- the hollow crown: a dignity above count rests on substance ------
+       A duke without his duchy's majority, a king without his kingdom's (or
+       his independence), an emperor likewise: chanceries keep styling him
+       for a while, then stop. Below the requirement we stamp a lapse; after
+       titleLapseWarnDays a warning event (with escapes); after
+       titleLapseDemoteDays the style falls ONE rung. Substance restored at
+       any point clears the slide. Lower falls have their own paths
+       (war, attainder, debt) — see docs/designs/descent.md. */
+    if (p.tier >= 5) {
+      const B = FBDATA.balance;
+      let holds = true;
+      if (p.tier === 7) holds = !!(indep && FB.playerEmpire(state));
+      else if (p.tier === 6) holds = !!(indep && FB.playerKingdom(state));
+      else holds = !!FB.playerDuchy(state);
+      if (holds) {
+        if (p.titleLapse) delete p.titleLapse;
+      } else {
+        if (!p.titleLapse || p.titleLapse.tier !== p.tier) {
+          p.titleLapse = { tier: p.tier, since: state.turn };
+        } else {
+          const lapsedDays = state.turn - p.titleLapse.since;
+          if (lapsedDays >= (B.titleLapseDemoteDays || 540)) {
+            const oldTitle = FB.titleSnapshot(state);
+            const fallenTo = p.tier - 1;
+            delete p.titleLapse;
+            FB.setPlayerTier(state, fallenTo, { attachLiege:false });
+            p.prestige = Math.max(0, p.prestige - (B.titleLapsePrestigeCost || 40));
+            /* vassals of equal or greater rank cannot kneel to a peer:
+               reattach them to the player's own liege, or loose them
+               independent when the player bows to no one */
+            const newRank = Math.max(1, fallenTo - 3);
+            for (const vid of FB.playerVassals(state)) {
+              const v = state.realms[vid];
+              if (!v || !v.alive || v.rank < newRank) continue;
+              v.liege = p.liege || null;
+              FB.news(state, FB.msg('news.world.vassal_loosed',
+                '🕊 {realm} no longer kneels to a house of equal dignity.',
+                { realm: v.name }));
+            }
+            FB.foundPlayerRealm(state); // restyle at the lower dignity
+            FB.news(state, FB.msg('news.world.title_lapsed',
+              '⬇ The style of {title} rings hollow — the world now names you one rung lower.',
+              { title: { $title: oldTitle } }));
+            FB.invalidateRealmCache();
+          } else if (lapsedDays >= (B.titleLapseWarnDays || 180) && !p.titleLapse.warned) {
+            p.titleLapse.warned = 1;
+            FB.queueEvent(state, 'hc_hollow_crown', {});
+          }
+        }
+      }
+    } else if (p.titleLapse) {
+      delete p.titleLapse;
+    }
     if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+  };
+
+  /* the hollow crown's escapes: a show of silver or splendor buys the style
+     a fresh window (the lapse stamp starts over) */
+  FB.fns.hc_defy = function (state) {
+    const p = state.player;
+    if (p.titleLapse) {
+      p.titleLapse.since = state.turn;
+      delete p.titleLapse.warned;
+    }
   };
 
 })();

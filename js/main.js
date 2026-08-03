@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.105.2';
+  FB.VERSION = '1.106.0';
   FB.CHANGELOG = [
+    { v: '1.106.0', date: '2026-08-03', changes: [
+      'Rank can now be lost as well as won: a dignity that outlives its lands slowly lapses, a beaten ruler may kneel to the victor or be captured for ransom, and a defiant vassal can be attainted and lose his fief.',
+      'Debt now has teeth: a common family that cannot pay can be distrained of its goods and bound back to the land, and raiders burning your home parish may drive you to trade freedom for a lord’s protection.'
+    ] },
     { v: '1.105.2', date: '2026-08-02', changes: [
       'A peddler’s stock now matches your station and your purse — a serf is shown mostly common gear and a wealthy house finer wares, with the rare glimpse of a piece plainly not made for your station.'
     ] },
@@ -1576,6 +1580,7 @@ window.FB = window.FB || {};
       }
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
+      if (FB.devastationSeason) FB.devastationSeason(s);
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
       if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);

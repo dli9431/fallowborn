@@ -176,4 +176,12 @@ the named asset in settlement, while every future obligation and pledge passes t
 Productive enterprises are not seized by the generic pledge contract. Trading Houses
 instead open larger active trade-partnership stakes in the Finance sheet.
 
+Holdings and land plots are not indestructible. A defaulted loan left past
+`balance.distraintGraceDays` exposes them to the lord's writ of distraint (see
+[finance.md](finance.md) and [descent.md](descent.md)): bailiffs take holdings at
+cost, then plots at `FB.landPlotCost`, until the debt is covered; a wartime host
+standing in the home province can also burn a holding in the `devastation_raiders`
+event. Items remain sacred in both paths — only `loseAllLand`'s rule applies to them
+everywhere: the family always keeps its treasures.
+
 Related: [finance.md](finance.md) for credit, default, and trade partnerships.

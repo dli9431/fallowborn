@@ -318,6 +318,23 @@ share of `armyRearmDays` elapsed, floored at 0.15); a fielded enemy is hunted on
 instead (`war_can_hunt`/`war_hunt`, which sets `huntPrey` so the host re-paths onto its
 prey each day rather than marching to where it stood).
 
+**Defeat has a price beyond provinces.** A defender outranked and outweighed
+(`submissionStrengthRatio`) whose war is all but lost is offered the loser's homage
+once per war (`war_submission_offer` via `FB.maybeOfferSubmission`): kneel and keep
+every acre as the victor's vassal (`war_submit` — a crowned head that kneels begins
+its title lapse, see [descent.md](descent.md)), buy the peace at a conqueror's price,
+or fight on. A beaten tier-3+ leader may be **taken in the rout**
+(`FB.maybeCapturePlayer` on `war_loss`, skill-softened odds): the `in_prison` flag
+blocks travel, retirement, and ventures; the ransom event prices freedom by dignity
+(`ransomByTier`), payable in silver or in a border county; and while the flag stands
+no war council is queued — the war drifts leaderless while health and crown authority
+bleed and each season offers a release chance. `FB.endPlayerWar` always frees the
+prisoner. For commoners the war's cruelty lands differently: a hostile host standing
+in the home province (`FB.hostileHostAtHome`, checked through `FB.armiesHostile`)
+burns holdings season by season (`FB.devastationSeason` → `devastation_raiders`),
+and after two burnings the local lord offers his wall in exchange for the family's
+freedom (`devastation_protection` → commendation to serfdom, by choice).
+
 **Riding with the liege's host builds a service record.** Vassal players who answer
 the banner call (`with_liege_host`) fight through the `host_*` events; those and the
 war's end pay into the lifetime `player.warService` tally, which gates the

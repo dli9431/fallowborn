@@ -390,5 +390,27 @@ FBDATA.events.push(
       effects:{ custom:'papal_grant_absolution' } },
     { label:'Refuse the petition.', desc:'The sentence remains in force.',
       effects:{ custom:'papal_refuse_absolution' } }
+  ]},
+
+/* ---------- devastation & the protection bargain (docs/designs/descent.md)
+   Queued by FB.devastationSeason while a hostile host lives off a commoner’s
+   home province. Hide the goods or trust to luck; after a second burning
+   the local lord offers his wall in exchange for the family’s freedom. */
+{ id:'devastation_raiders', title:'Fire on the Home Road', trigger:{ never:true },
+  text:'Smoke on the home road, and the church bell ringing backwards from the next village: a hostile host is living off this land, and your holding lies in its path. They take what burns slowest — grain, beasts, tools — and leave the rest to the crows.',
+  options:[
+    { label:'Cart the goods into the woods. ({money:10})', require:{ goldMin:10 }, desc:'A night’s work and a bribe for the guide — the household’s wealth waits out the raid in the greenwood.',
+      effects:{ gold:-10, log:'Hid the household goods from raiders.' } },
+    { label:'Trust to luck and locked doors.', desc:'Perhaps they pass by. Perhaps.', chance:0.5,
+      success:{ text:'They pass down the valley — close enough to smell the smoke, not close enough to stop. This time.', effects:{ popularOpinion:-2 } },
+      failure:{ text:'They do not pass. What cannot be carried is burned; what cannot be burned is broken.', effects:{ custom:'devastation_lose_holding', health:-1 } } }
+  ]},
+{ id:'devastation_protection', title:'The Lord’s Bargain', trigger:{ never:true },
+  text:'The lord’s steward finds you among the ashes and is almost kind: “This will keep happening while the wars last. My lord’s wall is high and his men are many. Bring your household inside it, and no host will touch what is his. All he asks is what every protected man owes: service.” Freedom or safety — the old bargain.',
+  options:[
+    { label:'Commend the family to the lord.', desc:'His wall, his men, his protection — his serfs. The free days end; the burnings end with them.',
+      effects:{ custom:'devastation_commend', log:'Commended the family to the lord for protection.' } },
+    { label:'Stay free and exposed.', desc:'Better a freehold in ashes than a warm cot in bondage.',
+      effects:{ prestige:3, log:'Refused the lord’s protection.' } }
   ]}
 );

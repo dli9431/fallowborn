@@ -747,7 +747,19 @@ academy_withdraw` target the queued `ctx.studentId` and also live in `js/events.
 the episcopal-simony handlers `bishop_simony_accept bishop_simony_clear` target the queued
 `ctx.candidateId` and also live in `js/events.js`;
 the downfall handlers `df_fall df_fall_flee` (lose every title and acre, back to landless
-gentry — the second flees abroad) live in `js/world.js`; the finance trade-investment
+gentry — the second flees abroad) live in `js/world.js`; the descent handlers
+(docs/designs/descent.md) `hc_defy` (restart the title-lapse window),
+`war_submit war_submission_tribute` (the loser's homage; the
+`war_submission_valid` validator and the `war_submission_tribute_affordable` require),
+`attainder_pay attainder_yield attainder_resist` (felony outcomes; the
+`attainder_risk` trigger and `attainder_can_pay` require), and
+`prison_pay prison_cede_land` (ransom; the `prison_still` validator and
+`prison_can_pay prison_can_cede` requires) also live in `js/world.js`; the
+distraint handlers `distraint_settle distraint_yield_one distraint_seize
+bondage_submit bondage_flee` (and the `finance_in_default` trigger/validator and the
+`distraint_can_settle distraint_can_yield` requires) live in `js/economy.js`; the
+devastation handlers `devastation_lose_holding devastation_commend` live in
+`js/world.js`; the finance trade-investment
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
 partnership at the given base stake) and guild-monopoly petition handlers
 `guild_monopoly_paid guild_monopoly_persuade_success

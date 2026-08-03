@@ -133,7 +133,7 @@ FBDATA.events.push(
     { label:'Claim episcopal immunity.', require:{ flags:['bishop'] },
       desc:'Appeal to the church’s liberties; gain piety and Standing with the Pope, but deeply offend the liege.',
       effects:{ piety:6, papalOpinion:5, opinionLiege:-15 } },
-    { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8 } }
+    { label:'Ignore the summons.', desc:'A lord forgives many things — absence is not one.', effects:{ opinionLiege:-30, prestige:-8, setFlag:'felony_mark' } }
   ]},
 { id:'title_request', title:'A Word With the Liege',
   trigger:{ never:true }, /* fired from action */
@@ -307,6 +307,46 @@ FBDATA.events.push(
     { label:'Let him go in peace.', desc:'Lose a vassal quietly, keep the rest calm.', effects:{ custom:'vassal_release', prestige:-10 } },
     { label:'Answer rebellion with iron.', desc:'Broken oaths are answered at sword-point.', effects:{ custom:'vassal_crush' } }
   ]},
+/* ---- the hollow crown (docs/designs/descent.md): queued by the title-lapse
+   machinery in checkTierPromotions when a tier-5+ dignity has rested below
+   its de jure substance (or its independence) for titleLapseWarnDays. The
+   escapes buy a fresh window; ignoring it lets the lapse run to demotion. */
+{ id:'hc_hollow_crown', title:'A Style That Rings Hollow', trigger:{ never:true },
+  text:'Envoys bring it back from every court you once outshone: in their chanceries your scribes are corrected, in their halls your heralds are made to wait. The letters still style you as of old — but fewer mouths do, and the land no longer answers for it. A great style without its substance is only noise.',
+  options:[
+    { label:'Remind them with silver and steel. ({money:40})', require:{ goldMin:40 }, desc:'A progress, a feast, gifts to the wavering — recognition is bought anew.',
+      effects:{ gold:-40, prestige:6, custom:'hc_defy', log:'Bought recognition for the house’s style.' } },
+    { label:'Answer with a progress through the heartland.', desc:'Show the banners where the land is still yours — the wavering may remember themselves.', chance:0.6,
+      success:{ text:'Bells and bonfires at every ford. For a while longer, the world keeps your style.', effects:{ prestige:4, custom:'hc_defy' } },
+      failure:{ text:'Thin crowds and closed gates. The whispers only grow.', effects:{ prestige:-6 } } },
+    { label:'Let them whisper.', desc:'A style is a style — until the day it is not.', effects:{} }
+  ]},
+
+/* ---- felony & attainder (docs/designs/descent.md) ------------------------
+   Ignoring the banner call or flatly refusing the estates’ aid leaves a
+   felony_mark; while Standing with the liege runs cold his court prosecutes
+   it. Pay, plead the customs, or defy and face the sentence of forfeiture. */
+{ id:'attainder_summons', title:'Called to Answer for Felony',
+  trigger:{ tierMin:3, tierMax:5, minAge:16, isVassal:true, flags:['felony_mark'], notFlags:['felony_doom'], custom:'attainder_risk', chance:0.25 }, weight:10, cooldown:2,
+  text:'Two of your liege’s serjeants wait in the yard with a sealed writ: you are called to answer for felony — service refused, aid denied, the oath stretched past breaking. The escort’s patience is as short as the court’s: come willingly, or be brought.',
+  options:[
+    { label:'Submit and pay the mercy-price.', require:{ custom:'attainder_can_pay' }, desc:'Coin and renewed oaths bury the matter — the price scales with your dignity.',
+      effects:{ custom:'attainder_pay', log:'Paid the liege’s fine for refused service.' } },
+    { label:'Argue the ancient customs before the court.', desc:'The old charters say what a lord may ask — if the court can be made to hear them.', chance:0.5,
+      success:{ text:'Grey heads in the court nod at the old precedents. The writ is withdrawn, with as much grace as a court can manage.', effects:{ clearFlag:'felony_mark', opinionLiege:5, prestige:3, log:'Pled the customs and beat a felony writ.' } },
+      failure:{ text:'The court listens politely — and finds for its lord. Now there is a second writ, with a harder word on it.', effects:{ setFlag:'felony_doom', opinionLiege:-5, prestige:-4 } } },
+    { label:'Defy the summons.', desc:'Let the lord come and take what his writ claims.', effects:{ setFlag:'felony_doom', opinionLiege:-10, prestige:2, log:'Defied the liege’s court.' } }
+  ]},
+{ id:'attainder_sentence', title:'The Sentence of Forfeiture',
+  trigger:{ tierMin:3, tierMax:5, minAge:16, isVassal:true, flags:['felony_doom'], custom:'attainder_risk', chance:0.35 }, weight:12, cooldown:2, wartime:true,
+  text:'The judgment comes under seal and proclamation: for felony proven, your fief is forfeit to the lord who gave it. His officers are already riding to take seizin of the towers. What a court has taken with parchment, only iron can argue back.',
+  options:[
+    { label:'Yield the fief and beg mercy.', desc:'The lands return to the lord who gave them; the family keeps its coffers and its name.',
+      effects:{ custom:'attainder_yield', log:'Fief attainted and yielded to the liege.' } },
+    { label:'Resist with steel.', desc:'Deny the judgment, raise your banner, and let the field decide between you and your lord.',
+      effects:{ custom:'attainder_resist', log:'Answered attainder with rebellion.' } }
+  ]},
+
 /* ---- the downfall chains: how great houses fall -------------------------
    Three slow cascades (the commons rise, a rival’s claim, the knife), each
    three flag-marked stages deep. Every stage offers a paid or skill escape;

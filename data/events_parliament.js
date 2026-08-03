@@ -33,7 +33,7 @@ FBDATA.events.push(
     { label:'Put it to the estates.', desc:'The lords vote — your voice carries as far as your rank and name.', chance:'parliament_vote',
       success:{ text:'Lord by lord, the benches shake their heads. The steward folds his tally. The demand dies in the hall — and the liege marks who led the “no.”', effects:{ custom:'parliament_aid_hike_rebuff', prestige:3, traitProgress:{id:'moot_speaker'} } },
       failure:{ text:'Too many lords owe the crown favors, or fear it. The aid is voted through, and the liege’s cut of your revenue grows.', effects:{ custom:'parliament_aid_up', opinionLiege:-5, removeTrait:'moot_speaker' } } },
-    { label:'Refuse to your feet, alone if need be.', desc:'Defiance is remembered — in both directions.', effects:{ opinionLiege:-15, prestige:2 } }
+    { label:'Refuse to your feet, alone if need be.', desc:'Defiance is remembered — in both directions.', effects:{ opinionLiege:-15, prestige:2, setFlag:'felony_mark' } }
   ]},
 
 /* ---- the player's own motions (the 🏛 Estates deed) ---- */

@@ -4173,6 +4173,146 @@ window.FB = window.FB || {};
     }
   }
 
+  /* ---- distraint & debt bondage (docs/designs/descent.md) -----------------
+     A defaulted loan that outlives its grace becomes a writ of distraint:
+     the lord's bailiffs take holdings and land plots at cost value until
+     the book-debt is covered; a family with nothing left is bound to the
+     land — the historical slide from freeholder into serfdom. Items are
+     never distrained: personal treasures stay sacred, as in loseAllLand. */
+  FB.fns = FB.fns || {};
+  function defaultedLoans(state) {
+    const out = [];
+    const loans = FB.financeActiveLoans ? FB.financeActiveLoans(state) : [];
+    for (const loan of loans) {
+      if (loan.status === 'default') out.push(loan);
+    }
+    return out;
+  }
+  function totalDefaultDue(state) {
+    let due = 0;
+    for (const loan of defaultedLoans(state)) due += FB.financeDueNow(state, loan);
+    return due;
+  }
+  function reduceLoanFace(state, loan, goldValue) {
+    if (loan.denomination === 'real') loan.face = Math.max(0, loan.face - goldValue);
+    else loan.face = Math.max(0, loan.face - goldValue * FB.ensureEconomy(state).price);
+    if (FB.financeDueNow(state, loan) < 0.01) {
+      loan.status = 'settled';
+      loan.face = 0;
+    }
+  }
+  /* take one asset — the cheapest holding, else one land plot — against the
+     open defaults; returns the gold value applied, 0 when nothing is left */
+  function seizeOneAsset(state) {
+    const holdings = FB.holdingList(state);
+    const plots = FB.landPlots(state);
+    let value = 0;
+    if (holdings.length) {
+      let bestId = null, bestCost = Infinity;
+      for (const id of holdings) {
+        const def = FBDATA.holdings[id];
+        const cost = def && def.cost ? def.cost : 20;
+        if (cost < bestCost) { bestCost = cost; bestId = id; }
+      }
+      holdings.splice(holdings.indexOf(bestId), 1);
+      value = bestCost;
+      FB.news(state, FB.msg('news.finance.distraint_holding',
+        '⚖ The bailiffs take {asset} against the debt.',
+        { asset: FB.dataParam('holding', bestId) }));
+    } else if (plots.length) {
+      plots.splice(0, 1);
+      value = FB.landPlotCost ? FB.landPlotCost() : 120;
+      FB.news(state, FB.msg('news.finance.distraint_plot',
+        '⚖ The bailiffs mark off a family plot against the debt.', {}));
+    } else {
+      return 0;
+    }
+    let remaining = value;
+    for (const loan of defaultedLoans(state)) {
+      if (remaining <= 0) break;
+      const applied = Math.min(remaining, FB.financeDueNow(state, loan));
+      reduceLoanFace(state, loan, applied);
+      remaining -= applied;
+    }
+    return value;
+  }
+  FB.fns.finance_in_default = function (state) {
+    const p = state.player;
+    if (p.tier > 2) return false;
+    const grace = FBDATA.balance.distraintGraceDays || 90;
+    for (const loan of defaultedLoans(state)) {
+      if (loan.defaultTurn !== undefined && state.turn - loan.defaultTurn >= grace) return true;
+    }
+    return false;
+  };
+  FB.fns.distraint_can_settle = function (state) {
+    return FB.fns.finance_in_default(state) && state.player.gold >= totalDefaultDue(state);
+  };
+  FB.fns.distraint_settle = function (state) {
+    const p = state.player;
+    p.gold = Math.max(0, p.gold - totalDefaultDue(state));
+    for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
+    delete p.flags.debt_distraint;
+    FB.news(state, FB.msg('news.finance.distraint_settled',
+      '⚖ The debt is paid to the last penny; the writ is burned.', {}));
+  };
+  FB.fns.distraint_can_yield = function (state) {
+    return FB.holdingList(state).length > 0 || FB.landPlots(state).length > 0;
+  };
+  /* the voluntary version: one asset handed over quietly, no writ served */
+  FB.fns.distraint_yield_one = function (state) {
+    if (!FB.fns.distraint_can_yield(state)) return;
+    seizeOneAsset(state);
+    if (totalDefaultDue(state) <= 0.01) {
+      FB.news(state, FB.msg('news.finance.distraint_cleared',
+        '⚖ The distraint is satisfied; what is left is yours again.', {}));
+    }
+  };
+  /* the sentence served: bailiffs take what they find until the book-debt is
+     covered — and if nothing is left to take, the bondage court sits next */
+  FB.fns.distraint_seize = function (state) {
+    const p = state.player;
+    delete p.flags.debt_distraint;
+    let guard = 0;
+    while (totalDefaultDue(state) > 0.01 && guard++ < 50) {
+      if (!seizeOneAsset(state)) break;
+    }
+    if (totalDefaultDue(state) <= 0.01) {
+      FB.news(state, FB.msg('news.finance.distraint_cleared',
+        '⚖ The distraint is satisfied; what is left is yours again.', {}));
+    } else {
+      FB.queueEvent(state, 'bondage_sentence', {});
+    }
+  };
+  /* the debt is worked off in the lord's own fields */
+  FB.fns.bondage_submit = function (state) {
+    const p = state.player;
+    for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
+    delete p.flags.debt_distraint;
+    if (p.tier === 2) {
+      p.manor = null;
+      FB.setPlayerTier(state, 1);
+      FB.news(state, FB.msg('news.economy.bondage_gentry',
+        '⛓ The manor passes to the creditor. The family is gentle now in name only.', {}));
+    } else if (p.tier === 1) {
+      FB.setPlayerTier(state, 0);
+      FB.news(state, FB.msg('news.economy.bondage',
+        '⛓ The court binds your family to the land for the debt. You are the lord’s now, body and plow.', {}));
+    } else {
+      p.prestige = Math.max(0, p.prestige - 5);
+      FB.news(state, FB.msg('news.economy.bondage_serf',
+        '⛓ The debt is worked off in the lord’s own fields, season upon season.', {}));
+    }
+  };
+  /* flight preserves freedom and tier — but the debt and the default travel
+     with the family, and the lenders have long memories */
+  FB.fns.bondage_flee = function (state) {
+    const p = state.player;
+    delete p.flags.debt_distraint;
+    p.prestige = Math.max(0, p.prestige - 5);
+    FB.movePlayerRandom(state);
+  };
+
   FB.tradePartnershipName = function (state) {
     const c = state.chars[state.player.charId];
     const group = c ? FB.religionOf(c.religion).group : 'default';

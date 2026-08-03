@@ -1012,6 +1012,20 @@ FBDATA.balance = {
   warDeserterDefeatWindowDays: 180, warDeserterIntervalDays: 180,
   warDeserterLossMin: 0.10, warDeserterLossMax: 0.18,
   warDeserterPayUpkeepSeasons: 2, warDeserterPayMin: 6,
+  /* the way down (docs/designs/descent.md): title lapse, the loser's homage,
+     attainder, capture & ransom, distraint, devastation */
+  titleLapseWarnDays: 180, // a dignity below its de jure substance this long draws whispers
+  titleLapseDemoteDays: 540, // ...and this long uncontested costs the style itself (one rung)
+  titleLapsePrestigeCost: 40,
+  submissionStrengthRatio: 1.5, // a losing defender may be offered homage by a victor this much stronger
+  submissionTributePerRank: 25, // the conqueror's price for buying the peace instead of kneeling
+  attainderStandingGate: -30, // liege Standing at which flagged defiance is prosecuted as felony
+  attainderFineByTier: [0,0,0,15,30,50,80,0], // the price of the liege's mercy by the player's tier
+  captureChanceBase: 0.35, // odds a beaten tier-3+ leader is taken on the field
+  ransomByTier: [0,0,0,25,40,70,120,200], // the captor's demand by the prisoner's dignity
+  ransomSeasonReleaseChance: 0.2, // each season in the cell: parole, escape, or exchange
+  distraintGraceDays: 90, // a defaulted loan's writ of distraint arrives this long after default
+  devastationChance: 0.4, // seasonal odds a hostile host in a commoner's home province burns the place
   /* independent-ruler foreign policy (js/actions.js): capacity by rank,
      seasonal Standing pressure, and the two places foreign Standing matters */
   politicalAttentionCount: 2, politicalAttentionKing: 3, politicalAttentionEmperor: 4,

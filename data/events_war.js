@@ -62,6 +62,37 @@ FBDATA.events.push(
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
 
+/* the loser’s homage (docs/designs/descent.md): queued once per war by
+   FB.maybeOfferSubmission when a greater, much stronger victor has the war
+   all but won — kneel and keep the land, buy the peace dear, or fight on */
+{ id:'war_submission_offer', title:'Terms From the Victor’s Seat', trigger:{ never:true }, wartime:true, warStatus:true,
+  contextValidator:'war_submission_valid',
+  text:'The herald of {enemy} does not gloat — greatness need not. His master’s offer is plain: kneel, swear the oaths, and this war dies here. Keep every acre, every tower, every man still breathing — held from a new lord. Or refuse, and lose them one by one.',
+  options:[
+    { label:'Bend the knee.', desc:'The war ends at once. Your lands remain yours — held now from {enemy}.',
+      effects:{ custom:'war_submit', log:'Swore the oaths to end a losing war.' } },
+    { label:'Buy the peace with heavy tribute.', desc:'Silver where oaths would serve — {enemy} will name a conqueror’s price.',
+      require:{ custom:'war_submission_tribute_affordable' },
+      effects:{ custom:'war_submission_tribute', log:'Bought off a conqueror.' } },
+    { label:'Fight on.', desc:'Better a free fall than a kneeling survival.',
+      effects:{ prestige:3, log:'Refused the enemy’s terms; the war goes on.' } }
+  ]},
+
+/* capture & ransom (docs/designs/descent.md): queued by FB.maybeCapturePlayer
+   when the beaten player is taken in the rout. Pay, sign over a border
+   county, or endure and trust to gaolers, seasons, and the war’s end */
+{ id:'prison_ransom', title:'The Captor’s Price', trigger:{ never:true }, wartime:true, warStatus:true,
+  contextValidator:'prison_still',
+  text:'A courteous letter and a heavy chain: {enemy} names the price of your freedom, and will wait — comfortably — while your household counts its silver. A prisoner of rank is an asset, and an asset can wait for its market.',
+  options:[
+    { label:'Pay the ransom.', require:{ custom:'prison_can_pay' }, desc:'Silver buys the key — the price scales with your dignity.',
+      effects:{ custom:'prison_pay', log:'Paid a war ransom.' } },
+    { label:'Offer land instead.', require:{ custom:'prison_can_cede' }, desc:'A border county signs the ransom roll. The war, mark you, goes on.',
+      effects:{ custom:'prison_cede_land', log:'Ceded a county as ransom.' } },
+    { label:'Rot a while.', desc:'Let them wait. Gaolers can be bribed, wars end, and chains are mortal things.',
+      effects:{ prestige:-2, log:'Endured captivity.' } }
+  ]},
+
 /* ---------- riding with the liege’s host (vassals) ---------- */
 { id:'host_battle', title:'The Banners Meet',
   trigger:{ flags:['with_liege_host'], liegeAtWar:true, chance:0.6 }, wartime:true, weight:14, cooldown:2,

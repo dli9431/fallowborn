@@ -200,6 +200,15 @@ window.FB = window.FB || {};
     war_supply:5, war_thin:-5, war_discipline:4, war_disorder:-5,
     war_discipline_deserters:4, war_pay_deserters:7, war_desert:-12,
     war_allied_withdrawal:-12, war_negotiated_withdrawal:-3,
+    /* the way down (docs/designs/descent.md): every ruinous choice scores
+       deep below the safe ones, so automation endures, pays, or resists —
+       it never sells the family down the ladder */
+    hc_defy:6, war_submit:-15, war_submission_tribute:-3,
+    attainder_pay:4, attainder_yield:-25, attainder_resist:-10,
+    prison_pay:6, prison_cede_land:-10,
+    distraint_settle:4, distraint_yield_one:2, distraint_seize:-6,
+    bondage_submit:-20, bondage_flee:-8,
+    devastation_lose_holding:-8, devastation_commend:-15,
     ghw_recruit_volunteers:8, ghw_recruit_mercenaries:22,
     ghw_recruit_knights:20, ghw_recruit_adventurers:21,
     academy_introduction:3, academy_student_focus:1.5,

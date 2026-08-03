@@ -81,6 +81,17 @@ Every default also costs prestige. A crowned ruler loses council authority and
 Standing with each councillor; a sworn landed ruler loses Standing with the liege, giving
 the existing political institutions a visible hold over failed finance.
 
+**A default left to rot becomes a writ of distraint (tiers 0–2).** Once a defaulted
+loan is older than `balance.distraintGraceDays`, the creditor can bring the lord's
+writ (`distraint_writ` → `distraint_seizure`): the household may settle, yield an
+asset, or stall and be seized. Bailiffs take holdings at cost value, then land plots
+at `FB.landPlotCost`, cheapest first, until the book-debt is covered — items are never
+distrained, and the take reduces the defaulted loans' faces directly. If nothing
+remains and the debt still stands, the family is bound to the land for it
+(`bondage_sentence`): a freeholder falls to serf, a gentle family loses its manor and
+falls to freeholder, a serf works the debt out in the lord's fields; flight preserves
+freedom but carries the debt to a new parish. See [descent.md](descent.md).
+
 **Trade partnerships are real investments, not deposits.** A merchant or
 craft household can commit coin for four seasons; established trade houses and
 guild rank open larger stakes. At maturity a single stored seeded roll produces

@@ -165,6 +165,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
 - `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
+- `docs/designs/descent.md` — the way down: title lapse, submission, attainder, capture & ransom, distraint & bondage, devastation.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
 - `docs/designs/war.md` — field armies on the map, battles, sieges, mercs, wartime event flow.
 - `docs/designs/development.md` — buildings as development.
