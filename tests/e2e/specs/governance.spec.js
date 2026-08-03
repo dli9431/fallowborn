@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 async function startGovernanceGame(page, testInfo) {
@@ -12,7 +13,7 @@ async function startGovernanceGame(page, testInfo) {
 }
 
 async function configureGovernance(page, kind) {
-  return page.evaluate(function (setupKind) {
+  const configured = await page.evaluate(function (setupKind) {
     var s = FB.state;
     var p = s.player;
     var me = s.chars[p.charId];
@@ -142,6 +143,10 @@ async function configureGovernance(page, kind) {
         ? 'governance_vassal' : null
     };
   }, kind);
+  // Settle onboarding writes caused by the synthetic rank and resource changes
+  // before callers take read-only Governance baselines.
+  await waitForUiRefresh(page);
+  return configured;
 }
 
 test('Governance eligibility and roles follow territorial politics',

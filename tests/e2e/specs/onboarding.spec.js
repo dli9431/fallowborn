@@ -63,7 +63,9 @@ test('First steps flip from ordinary play and the checklist retires itself',
       return FB.tutorialStatus(FB.state);
     });
     expect(status.done).toBe(2); // focus + days flow
-    await expect(page.locator('.toast', { hasText: 'First steps' }))
+    await expect(page.locator('.toast', {
+      hasText: 'First steps 2/5: Let the days flow'
+    }))
       .toBeVisible();
 
     // a real day-spending deed flips its step through the runInstant choke point

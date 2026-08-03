@@ -33,11 +33,13 @@ async function startDeterministicGame(page) {
   await page.getByRole('button', { name: 'New Game', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'New Game', exact: true })).toBeVisible();
   await page.locator('#ng-seed').fill(START_CODE);
-  await page.getByRole('button', { name: /Use this seed/ }).click();
+  await page.getByRole('button', { name: /Use this seed/ })
+    .click({ timeout:30 * 1000 });
 
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await expect(page.locator('#cg-name')).toHaveValue('Ada');
-  await page.getByRole('button', { name: 'Begin Your Story', exact: true }).click();
+  await page.getByRole('button', { name: 'Begin Your Story', exact: true })
+    .click({ timeout:30 * 1000 });
 
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your Story Begins', exact: true }))

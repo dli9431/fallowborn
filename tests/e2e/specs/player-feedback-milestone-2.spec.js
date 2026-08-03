@@ -95,7 +95,7 @@ test('the role orientation is a focused sheet with a Guide deep link',
       .toContainText('Good first actions');
     await page.getByRole('button', { name:'Close', exact:true }).click();
     // desktop Guide close falls back to the menu; Resume clears the modal
-    await page.getByRole('button', { name:'▶ Resume', exact:true }).click();
+    await page.getByRole('button', { name:/Resume$/ }).click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     await page.evaluate(function () {

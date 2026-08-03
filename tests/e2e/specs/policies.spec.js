@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 async function startPoliciesGame(page, testInfo) {
@@ -14,7 +15,7 @@ async function startPoliciesGame(page, testInfo) {
 /* Same synthetic-court pattern as politics.spec.js: a liege crown with three
    direct vassal houses and the player sworn in as a tier-4 lord. */
 async function configurePolicies(page) {
-  return page.evaluate(function () {
+  const configured = await page.evaluate(function () {
     var s = FB.state;
     var p = s.player;
     var me = s.chars[p.charId];
@@ -135,6 +136,10 @@ async function configurePolicies(page) {
       countyIds:countyIds
     };
   });
+  // Settle onboarding writes caused by the synthetic rank and resource changes
+  // before callers take read-only Estates baselines.
+  await waitForUiRefresh(page);
+  return configured;
 }
 
 test('the catalog drives availability, wartime gates, and per-family cooldowns',
