@@ -5644,19 +5644,21 @@ window.FB = window.FB || {};
       high:bishopEntry ? [bishopEntry] : out,
       counties:[]
     };
-    for (const eid of FB.playerEmpires(state)) {
+    /* list only styles actually held: a vassal can hold a dignity's substance
+       without its style (a duke's man with a duchy majority stays a count) */
+    if (p.tier >= 7) for (const eid of FB.playerEmpires(state)) {
       out.push({
         d: 'Empire',
         titleData: FB.rankTitleSnapshot(state, 7, FBDATA.empires[eid].name)
       });
     }
-    for (const kid of FB.playerKingdoms(state)) {
+    if (p.tier >= 6) for (const kid of FB.playerKingdoms(state)) {
       out.push({
         d: 'Kingdom',
         titleData: FB.rankTitleSnapshot(state, 6, FBDATA.kingdoms[kid].name)
       });
     }
-    for (const did of FB.playerDuchies(state)) {
+    if (p.tier >= 5) for (const did of FB.playerDuchies(state)) {
       out.push({
         d: 'Duchy',
         titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name)
@@ -5713,9 +5715,14 @@ window.FB = window.FB || {};
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (!n) return; // landless: playerShare is 0 everywhere, nothing can promote
+    /* Only the crown can make a duke: a sworn vassal whose living liege is
+       not at least a king keeps the land but waits for the style — the duchy
+       stays a claim until he answers to a king, an emperor, or no one. */
+    const duchyBlocked = !!(p.liege && state.realms[p.liege] &&
+      state.realms[p.liege].alive && state.realms[p.liege].rank < 3);
     let newTier = p.tier;
     if (p.tier < 4) newTier = 4;
-    if (FB.playerDuchy(state) && p.tier < 5) newTier = 5;
+    if (FB.playerDuchy(state) && p.tier < 5 && !duchyBlocked) newTier = 5;
     if (indep && FB.playerKingdom(state) && p.tier < 6) newTier = 6;
     if (indep && FB.playerEmpire(state) && p.tier < 7) newTier = 7;
     if (newTier > p.tier) {
@@ -5731,6 +5738,18 @@ window.FB = window.FB || {};
       FB.foundPlayerRealm(state); // restyle the landed realm at its new dignity
       if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
     }
+    /* the claim, spoken aloud once per generation: the substance of a duchy
+       without the style, while a mere duke sits above him */
+    if (duchyBlocked && p.tier === 4 && !(p.flags && p.flags.duchy_claim_hint)) {
+      const claimDid = FB.playerDuchy(state);
+      if (claimDid) {
+        p.flags = p.flags || {};
+        p.flags.duchy_claim_hint = 1;
+        FB.news(state, FB.msg('news.world.duchy_claim',
+          '🏰 You hold the substance of {duchy}, but only the crown may style you duke.',
+          { duchy: FBDATA.duchies[claimDid].name }));
+      }
+    }
     /* ---- the hollow crown: a dignity above count rests on substance ------
        A duke without his duchy's majority, a king without his kingdom's (or
        his independence), an emperor likewise: chanceries keep styling him
@@ -5744,7 +5763,8 @@ window.FB = window.FB || {};
       let holds = true;
       if (p.tier === 7) holds = !!(indep && FB.playerEmpire(state));
       else if (p.tier === 6) holds = !!(indep && FB.playerKingdom(state));
-      else holds = !!FB.playerDuchy(state);
+      /* a duke kneeling to a mere duke keeps the land but not the style */
+      else holds = !!FB.playerDuchy(state) && !duchyBlocked;
       if (holds) {
         if (p.titleLapse) delete p.titleLapse;
       } else {

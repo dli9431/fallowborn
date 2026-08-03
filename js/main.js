@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.107.1';
+  FB.VERSION = '1.107.2';
   FB.CHANGELOG = [
+    { v: '1.107.2', date: '2026-08-03', changes: [
+      'Petitioning your liege for title now grants land inside the realm — never your liege’s seat or his last county — and only a king or emperor can raise you to duke: a duke’s man who gathers a duchy’s lands keeps them as a claim until he answers to the crown or stands alone.'
+    ] },
     { v: '1.107.1', date: '2026-08-03', changes: [
       'The First steps checklist now disappears as soon as its final task is completed.'
     ] },

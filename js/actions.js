@@ -1174,7 +1174,13 @@ window.FB = window.FB || {};
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
     run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
   { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1440,
-    desc: function () { return 'Ask for greater lands and higher style.'; },
+    desc: function (s) {
+      const liege = s.player.liege && s.realms[s.player.liege];
+      if (s.player.tier >= 4 && liege && liege.alive && liege.rank < 3) {
+        return FB.T('Ask for greater lands. Only the crown can raise you to duke.');
+      }
+      return FB.T('Ask for greater lands and higher style.');
+    },
     show: function (s) {
       return s.player.tier >= 3 && s.player.tier <= 5 && !!s.player.liege &&
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
@@ -1189,6 +1195,9 @@ window.FB = window.FB || {};
       if (s.player.prestige < 400) return FB.T(
         'You need at least 400 prestige (now {current}).',
         { current: Math.round(s.player.prestige) });
+      if (s.player.tier >= 4 && !FB.liegeGrantCandidates(s).length) {
+        return FB.T('Your liege holds no adjoining land in his gift.');
+      }
       return true;
     },
     run: function (s) { FB.queueEvent(s, 'title_request', {}); } },

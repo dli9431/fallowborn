@@ -22345,7 +22345,7 @@
       "glossary": [],
       "location": "data/events_noble.js",
       "source": {
-        "text": "Granted a higher title by the liege!"
+        "text": "Won new lands from the liege."
       }
     },
     "event.title_request.options.0.success.text.default": {
@@ -34425,6 +34425,16 @@
       "location": "js/world.js",
       "source": {
         "text": "🔥 The raiders take {asset} and burn what they cannot carry."
+      }
+    },
+    "news.world.duchy_claim": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "duchy"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏰 You hold the substance of {duchy}, but only the crown may style you duke."
       }
     },
     "news.world.escheat_granted": {
@@ -47254,6 +47264,16 @@
       ],
       "source": {
         "text": "Married {spouse}."
+      }
+    },
+    "src.10d4d80b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏰 You hold the substance of {duchy}, but only the crown may style you duke."
       }
     },
     "src.10d66135": {
@@ -65292,6 +65312,16 @@
       ],
       "source": {
         "text": "targets missing province"
+      }
+    },
+    "src.42add68a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Won new lands from the liege."
       }
     },
     "src.42ba673f": {
@@ -85984,16 +86014,6 @@
         "text": "Some questions keep until morning."
       }
     },
-    "src.7a9cee3f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_noble.js"
-      ],
-      "source": {
-        "text": "Granted a higher title by the liege!"
-      }
-    },
     "src.7aa176e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104484,6 +104504,16 @@
         "text": "Opens the focused work and training sheet."
       }
     },
+    "src.acd2bbae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your liege holds no adjoining land in his gift."
+      }
+    },
     "src.acdcb19d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111260,6 +111290,16 @@
       ],
       "source": {
         "text": "No songs are sung about the one who leaves early."
+      }
+    },
+    "src.bf874c5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Ask for greater lands. Only the crown can raise you to duke."
       }
     },
     "src.bf99362d": {
@@ -141189,6 +141229,22 @@
         "text": "Ask for exceptional levy"
       }
     },
+    "ui:Ask for greater lands and higher style.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Ask for greater lands and higher style."
+      }
+    },
+    "ui:Ask for greater lands. Only the crown can raise you to duke.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Ask for greater lands. Only the crown can raise you to duke."
+      }
+    },
     "ui:Ask the Pope to appoint {name} to the College of Cardinals.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -158413,6 +158469,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "Your landed realm cannot pass through a living abdication."
+      }
+    },
+    "ui:Your liege holds no adjoining land in his gift.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your liege holds no adjoining land in his gift."
       }
     },
     "ui:Your liege must at least tolerate you (Standing 20+, now {current}).": {

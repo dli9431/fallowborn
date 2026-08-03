@@ -140,7 +140,7 @@ FBDATA.events.push(
   text:'You stand before your liege’s seat and ask, with every courtesy, for greater lands and title.',
   options:[
     { label:'Make your case.', desc:'The liege’s ear is open; his hand is another matter.', chance:'liege_grant',
-      success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the investiture.', effects:{ tierUp:1, prestige:25, opinionLiege:-15, gold:-50, log:'Granted a higher title by the liege!' } },
+      success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the investiture.', effects:{ tierUp:1, prestige:25, opinionLiege:-15, gold:-50, log:'Won new lands from the liege.' } },
       failure:{ text:'“In time,” says the liege, meaning never. Courtiers hide their smiles.', effects:{ prestige:-5, opinionLiege:-8 } } }
   ]},
 { id:'county_petition', title:'A Suit Against a Neighbor',

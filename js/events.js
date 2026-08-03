@@ -3947,13 +3947,19 @@ window.FB = window.FB || {};
   };
 
   /* counties the liege could hand the player: adjacent to the player's lands,
-     held directly by the liege, not already the player's */
+     held directly by the liege, not already the player's. A lord rewards from
+     his own hand, but never his seat, and never his last directly held
+     county — he would be giving his power base away. */
   FB.liegeGrantCandidates = function (state) {
     const p = state.player, cands = [];
     if (!p.liege || !p.provs) return cands;
+    const liege = state.realms[p.liege];
+    if (!liege || !liege.alive) return cands;
+    if (FB.realmHeldCounties(state, p.liege).length < 2) return cands;
     for (const pid of p.provs) {
       for (const nb in (FB.world.adj[pid] || {})) {
-        if (state.holder[nb] === p.liege && p.provs.indexOf(nb) < 0 && !FB.world.byId[nb].wasteland) cands.push(nb);
+        if (state.holder[nb] === p.liege && nb !== liege.capital &&
+            p.provs.indexOf(nb) < 0 && !FB.world.byId[nb].wasteland) cands.push(nb);
       }
     }
     return cands;
@@ -4000,12 +4006,16 @@ window.FB = window.FB || {};
       const cands = FB.liegeGrantCandidates(state);
       if (cands.length) {
         const got = FB.pick(cands);
+        const liegeId = p.liege;
         p.provs.push(got);
         state.holder[got] = 'player';
         FB.recordLiegeGrant(state);
         FB.invalidateRealmCache();
+        // insurance only: the candidate filter never takes his last county
+        FB.realmBuryIfEmpty(state, liegeId);
         FB.news(state, FB.msg('news.event.liege_grants_county',
           '🏰 The liege grants you {province}.', { province: FB.world.byId[got].name }));
+        if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
       }
       FB.checkTierPromotions(state);
     }

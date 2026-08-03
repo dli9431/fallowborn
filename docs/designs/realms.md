@@ -371,7 +371,15 @@ do not turn the whole family tree into fixed history.
 Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
 with his home county: the granting count yields it (dissolving if left landless) and
 the player answers to the granter's own liege — a liege must outrank his man, and
-`FB.checkTierPromotions` walks broken chains back up. Independence comes two ways:
+`FB.checkTierPromotions` walks broken chains back up. For a count or higher the same
+petition instead grants a county out of the liege's own hand
+(`FB.liegeGrantCandidates`): adjacent to the player's lands, never the liege's seat,
+and never his last directly held county — a lord rewards service, but he does not
+give his power base away. The grant changes no liege and no sovereign: the player
+stays inside the realm. And only the crown can make a duke — if the player's living
+liege is not at least a king, a completed duchy majority stays a *claim* without the
+style (announced once per generation) until he answers to a king, an emperor, or no
+one. Independence comes two ways:
 the random `independence_offer` event or the explicit `declare_independence` deed
 (200+ prestige, any sworn tier) — both run `FB.doIndependence`, which founds the
 player realm and starts a defensive war against the old sovereign; a baron doing
@@ -485,7 +493,9 @@ without becoming the landed player. The unsolicited
 graciously. Short of "Autoresolve everything", automation leaves every
 title-changing or independence decision to the player. Promotions above count happen
 in `FB.checkTierPromotions` from de jure majorities:
-a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7.
+a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7 —
+with one vassal exception: the duchy promotion fires only when the player's living
+liege (if any) is a king or greater, since a mere duke cannot raise a peer of his own.
 The exact rules live in `FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress`
 (`js/world.js`), shared by the tier check and the UI readouts: a duchy must span ≥2 de
 jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an empire two kingdom
@@ -539,7 +549,9 @@ its generation. Province-by-province loss in a lost defensive war (`FB.warLosePr
 remains the other way down, landing at the same tier 2. Beyond these catastrophes, the
 ladder also descends **one rung at a time**: the **hollow crown** lapses a tier-5+
 dignity that has rested below its de jure substance (or its independence) past a grace
-window — `FB.checkTierPromotions` stamps `player.titleLapse`, warns by event, then steps
+window — a duke whose living liege is not at least a king counts as lacking substance,
+so the impossible duke-under-a-duke style lapses the same way —
+`FB.checkTierPromotions` stamps `player.titleLapse`, warns by event, then steps
 the style down a rung; a beaten defender may **kneel to the victor** and keep his land
 as a vassal; a defiant vassal faces **attainder** and forfeiture; a beaten leader may be
 **captured and ransomed**; and commoners slide the old road into serfdom through

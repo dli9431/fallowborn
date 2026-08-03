@@ -697,7 +697,11 @@ contact with the active rival also adds `score × balance.rivalContactHeat` heat
 `rivalHeat: n` (adjust the active feud, clamped 0–100) · `endRivalry: true` (clear the
 rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `tierSet` (raise rank), `tierUp`
-(liege grants land) · `profession`, `restoreProfession` · `queue: "event_id"` (chain events) ·
+(liege grants land from his own hand — a baron is invested as count of his home county;
+a count-or-higher vassal receives an adjacent county the liege holds directly, never the
+liege's seat or his last county, and stays inside the realm; a resulting duchy majority
+raises him to duke only when his living liege is a king or greater) · `profession`,
+`restoreProfession` · `queue: "event_id"` (chain events) ·
 `marry` (`true` settles the current suitor's saved formal courtship transfer;
 `"informal"` uses the same wedding and family-link mechanics without a dowry),
 `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
