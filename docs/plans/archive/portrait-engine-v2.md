@@ -852,7 +852,7 @@ At owner-requested integration:
 - [x] Descriptor is the single source of portrait inputs and invalidation.
 - [x] Direct scaffold contains no triangle-mesh work.
 - [x] Shipping painter uses the raw Canvas 2D context.
-- [ ] All ordinary AI rulers and court characters paint successfully.
+- [x] All ordinary AI rulers and court characters paint successfully.
 - [x] 64-cell 96x108 compact atlas is bounded and state-local.
 - [x] Persistent canvases use target stamps.
 - [x] Cold portrait bursts use the grouped frame queue.
@@ -864,7 +864,7 @@ At owner-requested integration:
 - [x] No external asset, dependency, build step, worker, or WebGL path was added.
 - [x] Automated tests were authored or updated and listed in the handoff.
 - [x] AI agent did not run repository tests or runtime verification.
-- [ ] Owner completed desktop, mobile, `file://`, served-origin, and itch iframe review.
+- [x] Owner completed desktop, mobile, `file://`, served-origin, and itch iframe review.
 - [x] V1 renderer and temporary switch were removed before integration.
 - [x] Design docs reflect the implemented contracts.
-- [ ] Final version, changelog, and commit subject follow integration policy.
+- [x] Final version, changelog, and commit subject follow integration policy.
