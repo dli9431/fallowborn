@@ -412,7 +412,9 @@ the Deeds panel: set a daily focus, let the days flow, complete a deed, answer a
 event, and earn your first coin. Step state comes from `FB.tutorialStatus` (live
 state plus one-time flags written at each action's single choke point: `G.setPaused`,
 `FB.runInstant`, the event-option handler). `FB.tutorialCheck` runs from the
-coalesced `UI.refresh` — pure state reads, no RNG — toasts each completion once
+coalesced `UI.refresh` before the repaint, so a completed checklist disappears in
+that same frame. Completion detection uses only state reads and no RNG; it toasts
+each completion once
 (`tut_seen_*` flags survive a hints-off phase), and retires the checklist with a
 chronicle line when all five are done. Dismiss deletes the flag per save; old saves
 without the flag never see the card.

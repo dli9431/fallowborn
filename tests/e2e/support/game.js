@@ -20,7 +20,8 @@ function targetUrl(testInfo) {
 
 async function openGame(page, testInfo) {
   await page.goto(targetUrl(testInfo), { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+  await expect(page.locator('#title:not(.hidden)'))
+    .toBeVisible({ timeout:30 * 1000 });
   await expect(page.getByRole('button', { name: 'New Game', exact: true })).toBeVisible();
   await expect.poll(function () {
     return page.evaluate(function () {

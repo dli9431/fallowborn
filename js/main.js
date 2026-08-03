@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.107.0';
+  FB.VERSION = '1.107.1';
   FB.CHANGELOG = [
+    { v: '1.107.1', date: '2026-08-03', changes: [
+      'The First steps checklist now disappears as soon as its final task is completed.'
+    ] },
     { v: '1.107.0', date: '2026-08-03', changes: [
       'A new life now opens with a dismissible First steps checklist atop the Deeds tab that walks through the daily loop once, plus one-line hints the first time their moment arrives.',
       'Reaching a new rank or vocation now briefs you on a small focused sheet with a link into the Guide, instead of opening the whole Guide.'

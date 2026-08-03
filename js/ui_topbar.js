@@ -22,8 +22,8 @@ window.FB = window.FB || {};
     refreshQueued = true;
     requestAnimationFrame(function () {
       refreshQueued = false;
-      refreshNow();
       if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
+      refreshNow();
       if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
     });
   };

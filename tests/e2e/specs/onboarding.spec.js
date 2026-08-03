@@ -83,8 +83,9 @@ test('First steps flip from ordinary play and the checklist retires itself',
       const s = FB.state;
       s.player.flags.tut_event = 1; // written by the event-option handler
       s.player.gold = s.player.startGold + 1;
-      FB.tutorialCheck(s);
+      FB.ui.refresh();
     });
+    await waitForUiRefresh(page);
     status = await page.evaluate(function () {
       return FB.tutorialStatus(FB.state);
     });
@@ -101,7 +102,6 @@ test('First steps flip from ordinary play and the checklist retires itself',
       };
     });
     expect(retired).toEqual({ tutorial:false, done:true, news:1 });
-    await waitForUiRefresh(page);
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
   });
 
