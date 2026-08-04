@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.108.0';
+  FB.VERSION = '1.109.0';
   FB.CHANGELOG = [
+    { v: '1.109.0', date: '2026-08-04', changes: [
+      'Management screens now keep their place after nested actions, with reservations that protect land, people, items, and projects from automatic or batch choices. Governance also offers a reviewed domain-cleanup proposal when holdings exceed the limit.'
+    ] },
     { v: '1.108.0', date: '2026-08-03', changes: [
       'The First steps checklist grows into a full tutorial for a new life: staged tracks now walk through the daily loop, making a living, and starting a family, joined by short scripted story events, tab nudges, and first-look intro sheets on the Land, Network, and Kin tabs.'
     ] },
@@ -1225,6 +1228,7 @@ window.FB = window.FB || {};
         aggressiveWars: [],
         focus: null, dead: false,
         capitalRelocation: null,
+        protections: {},
         holdings: [], enterprises: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
@@ -1452,6 +1456,7 @@ window.FB = window.FB || {};
         aggressiveWars: [],
         focus: null, dead: false, holdings: [],
         capitalRelocation: null,
+        protections: {},
         householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {

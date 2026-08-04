@@ -169,6 +169,10 @@ older saves are treated as manual choices; later manual choices, including No di
 study and explicit home instruction, are overrides. A policy edit affects only future
 empty slots. The per-child Follow household policy actions clear and reconsider only the
 chosen dimension, preserving the other dimension, `lessonBoost`, and `schoolTerms`.
+Placing a student in the `educationCharacter` protection scope omits that person from policy
+previews and applications, including seasonal refill, while leaving every manual focus and
+instruction control available. Choosing **Follow household policy** is an explicit opt-in:
+it removes that whole-person protection and reapplies only the selected dimension.
 
 Instruction selection is deterministic and uses the same discovery rules as the manual
 picker: eligible schools in data order, already-known eligible tutors in relationship
@@ -462,8 +466,10 @@ opens one row for the living household head, each resident family member, and ea
 retainer, in that order. The row reads the existing education, instruction, career, guild,
 religious-standing, enterprise, office, marriage, and loadout records without introducing a
 policy or assignment record. Applicable cells open the same detailed pickers as character
-sheets and Work & Enterprises. No-day changes return to a freshly derived plan; choices
-that already spend a day keep their ordinary close-and-advance behavior.
+sheets and Work & Enterprises. No-day changes return to a freshly derived plan. Day-spending
+career, retainer, enterprise-purchase, religious-office, and match choices advance normally
+and then rebuild the originating Household Plan or person manager beneath any event that was
+queued.
 
 **Family visibility is not household control.** Work & Enterprises names its scope:
 the playable head, resident spouses and descendants, unwed siblings living with the

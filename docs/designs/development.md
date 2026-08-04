@@ -29,7 +29,11 @@ building-first county ledger. A sticky native county selector remains visible wh
 ledger scrolls, so touch and keyboard players can move directly between every held county.
 **Raise Next** places the work in the next open settlement, keeps the ledger open, and
 refreshes the exact next price; the ledger warns that each further county copy costs 50%
-more. The Land-tab settlement path remains the exact-placement route.
+more. Each directly held county can also be placed in the `autoBuildCounty` protection
+scope from Governance or its building ledger. `FB.autoBuild` omits protected counties
+without changing the global automation setting; manual **Raise Next** and exact settlement
+construction remain available. The Land-tab settlement path remains the exact-placement
+route.
 
 Build choices and standing settlement buildings use the shared asset/effect row.
 It identifies the county owner and exact settlement scope, separates the live

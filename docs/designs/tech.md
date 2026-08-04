@@ -163,6 +163,11 @@ eligible technologies or prioritize one domain. A domain preference fills from t
 domain first and falls back to the cheapest eligible projects elsewhere, so cross-domain
 prerequisites cannot leave slots idle. It fills open slots immediately and after each
 completion, deterministically and without consuming random rolls.
+An incomplete inactive technology may be placed in the `researchTech` protection scope
+from its detail sheet. Player automation omits protected entries in either selection mode;
+AI selection and vassal advocacy do not consult the player household preference. The
+technology remains visible and manually selectable, and an explicit manual start clears its
+protection before the project is added to a slot.
 
 AI sovereigns fill every slot and use saved RNG to choose from a weighted score. Exposure,
 affordability, historical currency, ruler traits, contextual military/economic needs,

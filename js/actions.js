@@ -1230,7 +1230,11 @@ window.FB = window.FB || {};
       }
       return true;
     },
-    run: function (s) { if (FB.ui && FB.ui.showPetitionCounty) FB.ui.showPetitionCounty(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showPetitionCounty) {
+        FB.ui.showPetitionCounty(options && options.returnContext);
+      }
+    } },
   { id: 'buy_county', label: '💰 Buy out a weak neighbor…', cd: 720, noConsume: true,
     desc: function () { return 'Money talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
@@ -1249,7 +1253,11 @@ window.FB = window.FB || {};
         { needed: c[0].price, current: Math.floor(s.player.gold) });
       return true;
     },
-    run: function (s) { if (FB.ui && FB.ui.showBuyCounty) FB.ui.showBuyCounty(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showBuyCounty) {
+        FB.ui.showBuyCounty(options && options.returnContext);
+      }
+    } },
   { id: 'settle_waste', label: '🌱 Settle the wasteland…', cd: 360, noConsume: true,
     desc: function () { return 'Found a new holding on empty land bordering your demesne.'; },
     show: function (s) { return s.player.tier >= 4; },
@@ -1264,7 +1272,11 @@ window.FB = window.FB || {};
         { needed: B.settlePrestige, current: Math.round(s.player.prestige) });
       return true;
     },
-    run: function (s) { if (FB.ui && FB.ui.showSettleWaste) FB.ui.showSettleWaste(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showSettleWaste) {
+        FB.ui.showSettleWaste(options && options.returnContext);
+      }
+    } },
   { id: 'muster_host', label: '🚩 Muster the host',
     desc: function (s) {
       const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
@@ -1353,7 +1365,11 @@ window.FB = window.FB || {};
     can: function (s) {
       return FB.warCauses(s).length ? true : FB.warLockedReason(s);
     },
-    run: function (s) { if (FB.ui && FB.ui.showWarTargets) FB.ui.showWarTargets(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showWarTargets) {
+        FB.ui.showWarTargets(null, options && options.returnContext);
+      }
+    } },
   { id: 'abandon_claim', label: '📜 Abandon fabricated claim', noConsume: true,
     desc: function (s) {
       const claim = FB.fabricatedClaimOf(s);
@@ -1381,27 +1397,47 @@ window.FB = window.FB || {};
         : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
           { current: Math.round(s.player.prestige) });
     },
-    run: function (s) { if (FB.ui && FB.ui.showIndependence) FB.ui.showIndependence(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showIndependence) {
+        FB.ui.showIndependence(options && options.returnContext);
+      }
+    } },
   { id: 'pay_homage', label: '🙇 Pay homage…', noConsume: true, cd: 180,
     desc: function () { return 'Bend the knee at your liege’s court — or a court above his. (+Standing)'; },
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
-    run: function (s) { if (FB.ui && FB.ui.showHomage) FB.ui.showHomage(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showHomage) {
+        FB.ui.showHomage(options && options.returnContext);
+      }
+    } },
   { id: 'appeal_lord', label: '⚖ Appeal over your liege’s head…', noConsume: true, cd: 360,
     desc: function () { return 'Carry your suit to a higher lord: escape a harsh liege, or rise under a greater one.'; },
     show: function (s) {
       return s.player.tier >= 4 && !!s.player.liege && !s.player.war &&
         FB.liegeChain(s, s.player.liege).length >= 2;
     },
-    run: function (s) { if (FB.ui && FB.ui.showAppeal) FB.ui.showAppeal(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showAppeal) {
+        FB.ui.showAppeal(options && options.returnContext);
+      }
+    } },
   { id: 'swear_fealty', label: '🤝 Swear fealty…', noConsume: true,
     desc: function () { return 'Offer your sword and your lands to a neighboring sovereign.'; },
     show: function (s) { return s.player.tier >= 4 && s.player.provs && s.player.provs.length && !s.player.war; },
     can: function (s) { return FB.fealtyTargets(s).length ? true : 'No neighboring sovereign would take your oath.'; },
-    run: function (s) { if (FB.ui && FB.ui.showFealty) FB.ui.showFealty(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showFealty) {
+        FB.ui.showFealty(options && options.returnContext);
+      }
+    } },
   { id: 'grant_land', label: '🎁 Grant land…', noConsume: true,
     desc: function () { return 'Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.'; },
     show: function (s) { return s.realms.player && s.realms.player.alive && s.player.provs && s.player.provs.length >= 2; },
-    run: function (s) { if (FB.ui && FB.ui.showGrantLand) FB.ui.showGrantLand(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showGrantLand) {
+        FB.ui.showGrantLand(options && options.returnContext);
+      }
+    } },
   { id: 'demand_taxes', label: '💰 Demand extraordinary taxes', cd: 90,
     desc: function () { return 'Squeeze your vassals for four seasons’ taxes at once. They will not love it.'; },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
@@ -1423,7 +1459,11 @@ window.FB = window.FB || {};
       }
       return true;
     },
-    run: function (s) { if (FB.ui && FB.ui.showRevoke) FB.ui.showRevoke(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showRevoke) {
+        FB.ui.showRevoke(options && options.returnContext);
+      }
+    } },
   { id: 'governance', label: '🏛 Governance…', noConsume: true,
     desc: function () {
       return FB.T('Your political position, domain, obligations, vassals, institution, and currently available realm actions.');
@@ -1456,7 +1496,11 @@ window.FB = window.FB || {};
       return FB.financeCanDebase(s) ? true :
         'The last debasement is still remembered. Five years must pass.';
     },
-    run: function () { if (FB.ui && FB.ui.showDebasement) FB.ui.showDebasement(); } },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showDebasement) {
+        FB.ui.showDebasement(options && options.returnContext);
+      }
+    } },
   { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
     compatibilityAlias:true,
     desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
@@ -1556,6 +1600,12 @@ window.FB = window.FB || {};
     return (B.domainBase || 4) + Math.floor(ste / (B.domainStewPer || 5)) +
       FB.techBonus(state, 'domain');
   };
+  FB.domainPenaltyForCount = function (state, held) {
+    const over = Math.max(0, Math.max(0, Number(held) || 0) -
+      FB.domainCap(state));
+    if (!over) return 1;
+    return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15), over);
+  };
   /* counties held directly over the cap (0 if within it) */
   FB.domainOver = function (state) {
     const p = state.player;
@@ -1564,9 +1614,148 @@ window.FB = window.FB || {};
   };
   /* multiplier applied to the player's OWN income and levy for overload */
   FB.domainPenalty = function (state) {
-    const over = FB.domainOver(state);
-    if (!over) return 1;
-    return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15), over);
+    return FB.domainPenaltyForCount(state,
+      state.player.provs && state.player.provs.length || 0);
+  };
+
+  function domainCountyLevyBase(state, pid) {
+    const modifier = FB.modBonus
+      ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
+    return (state.dev[pid] || 1) * FBDATA.balance.levyPerDev * modifier;
+  }
+
+  /* The cleanup preview compares base county tax and levy plus direct-vassal
+     land contributions. Character, household, item, building, office,
+     policy, and national multipliers or flat bonuses remain outside this
+     deliberately narrow estimate. */
+  function domainLandProjection(state, grantedIds) {
+    const held = (state.player.provs || []).slice();
+    const granted = {};
+    for (const pid of grantedIds) granted[pid] = 1;
+    const remaining = held.filter(function (pid) { return !granted[pid]; });
+    let existingTax = 0, existingLevy = 0;
+    for (const rid of FB.playerVassals(state)) {
+      existingTax += FB.vassalTaxContribution(state, rid);
+      existingLevy += FB.vassalLevyContribution
+        ? FB.vassalLevyContribution(state, rid) : 0;
+    }
+    let directTaxBefore = 0, directTaxAfter = 0, grantedTax = 0;
+    let directLevyBefore = 0, directLevyAfter = 0, grantedLevy = 0;
+    for (const pid of held) {
+      directTaxBefore += countyTaxBase(state, pid, FBDATA.balance.taxPerDev);
+      directLevyBefore += domainCountyLevyBase(state, pid);
+      if (granted[pid]) {
+        grantedTax += countyTaxBase(state, pid,
+          FBDATA.balance.vassalTaxRate);
+        grantedLevy += domainCountyLevyBase(state, pid) *
+          (FBDATA.balance.vassalLevyRate || 0);
+      } else {
+        directTaxAfter += countyTaxBase(state, pid,
+          FBDATA.balance.taxPerDev);
+        directLevyAfter += domainCountyLevyBase(state, pid);
+      }
+    }
+    directTaxBefore *= FB.domainPenaltyForCount(state, held.length);
+    directTaxAfter *= FB.domainPenaltyForCount(state, remaining.length);
+    directLevyBefore *= FB.domainPenaltyForCount(state, held.length);
+    directLevyAfter *= FB.domainPenaltyForCount(state, remaining.length);
+    return {
+      beforeTax:directTaxBefore + existingTax,
+      afterTax:directTaxAfter + existingTax + grantedTax,
+      beforeLevy:directLevyBefore + existingLevy,
+      afterLevy:directLevyAfter + existingLevy + grantedLevy
+    };
+  }
+
+  /* Deterministic, read-only cleanup proposal. Complete duchies are preferred
+     when they fit the exact excess; remaining slots use the least-developed
+     unprotected non-seat counties. Capital/home counties are never selected
+     by the assistant, though the manual grant screen remains authoritative. */
+  FB.domainCleanupPlan = function (state) {
+    const p = state.player;
+    const held = (p.provs || []).slice().sort();
+    const excess = Math.max(0, held.length - FB.domainCap(state));
+    const protectedIds = FB.protectionIds(state, 'grantCounty').slice().sort();
+    const seatIds = {};
+    if (p.provinceId) seatIds[p.provinceId] = 1;
+    if (state.realms.player && state.realms.player.capital) {
+      seatIds[state.realms.player.capital] = 1;
+    }
+    const selected = {}, grants = [];
+    let remaining = excess;
+    const duchies = FB.grantableDuchies(state).filter(function (item) {
+      if (item.counties.length > remaining) return false;
+      for (const pid of item.counties) {
+        if (seatIds[pid] || FB.isProtected(state, 'grantCounty', pid)) return false;
+      }
+      return true;
+    }).sort(function (a, b) {
+      if (a.counties.length !== b.counties.length) {
+        return b.counties.length - a.counties.length;
+      }
+      let ad = 0, bd = 0;
+      for (const pid of a.counties) ad += state.dev[pid] || 1;
+      for (const pid of b.counties) bd += state.dev[pid] || 1;
+      return ad - bd || (a.did < b.did ? -1 : 1);
+    });
+    for (const duchy of duchies) {
+      if (duchy.counties.length > remaining) continue;
+      let overlaps = false;
+      for (const pid of duchy.counties) if (selected[pid]) overlaps = true;
+      if (overlaps) continue;
+      grants.push({ kind:'duchy', id:duchy.did,
+        countyIds:duchy.counties.slice().sort() });
+      for (const pid of duchy.counties) selected[pid] = 1;
+      remaining -= duchy.counties.length;
+    }
+    const counties = held.filter(function (pid) {
+      return !selected[pid] && !seatIds[pid] &&
+        !FB.isProtected(state, 'grantCounty', pid);
+    }).sort(function (a, b) {
+      return (state.dev[a] || 1) - (state.dev[b] || 1) ||
+        (a < b ? -1 : 1);
+    });
+    for (let i = 0; i < counties.length && remaining > 0; i++) {
+      grants.push({ kind:'county', id:counties[i], countyIds:[counties[i]] });
+      selected[counties[i]] = 1;
+      remaining--;
+    }
+    const grantedIds = Object.keys(selected).sort();
+    const projection = domainLandProjection(state, grantedIds);
+    return {
+      excess:excess,
+      unresolved:remaining,
+      grants:grants,
+      countyIds:grantedIds,
+      protectedIds:protectedIds,
+      projection:projection,
+      key:[state.turn || 0, held.join(','), protectedIds.join(','),
+        FB.domainCap(state), p.provinceId || '',
+        state.realms.player && state.realms.player.capital || '',
+        grants.map(function (grant) {
+          return grant.kind + ':' + grant.id;
+        }).join(','), projection.beforeTax, projection.afterTax,
+        projection.beforeLevy, projection.afterLevy].join('|')
+    };
+  };
+
+  FB.applyDomainCleanupPlan = function (state, reviewedPlan) {
+    const current = FB.domainCleanupPlan(state);
+    if (!reviewedPlan || reviewedPlan.key !== current.key) {
+      return { ok:false, code:'stale', preview:current };
+    }
+    if (!current.grants.length || current.unresolved) {
+      return { ok:false, code:'protected', preview:current };
+    }
+    for (const grant of current.grants) {
+      const applied = grant.kind === 'duchy'
+        ? FB.grantDuchy(state, grant.id)
+        : FB.grantCounty(state, grant.id);
+      if (!applied) {
+        return { ok:false, code:'stale', preview:FB.domainCleanupPlan(state) };
+      }
+    }
+    return { ok:true, grants:current.grants.slice() };
   };
 
   function governancePromotion(state) {
@@ -2732,7 +2921,9 @@ window.FB = window.FB || {};
   FB.grantCounty = function (state, pid) {
     const p = state.player;
     const pr = FB.world.byId[pid];
-    if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) return;
+    if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) {
+      return false;
+    }
     p.provs.splice(p.provs.indexOf(pid), 1);
     const vid = 'pv_' + pid;
     let revivedCourt = false;
@@ -2755,6 +2946,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.action.county_granted',
       '🎁 {province} is granted to a loyal man — {name} holds it in your name.',
       { province: pr.name, name: state.realms[vid].ruler.name }));
+    return true;
   };
 
   /* every de jure duchy the player holds IN FULL (every de jure county in his
@@ -2780,12 +2972,13 @@ window.FB = window.FB || {};
      county in it at once. Keeps at least one county in the player's own hand. */
   FB.grantDuchy = function (state, did) {
     const p = state.player;
-    if (!p.provs) return;
+    if (!p.provs) return false;
     const cs = [];
     for (const pid of p.provs) if ((FB.world.byId[pid] || {}).duchy === did) cs.push(pid);
     const dej = FB.duchyCounties(did);
     // only a duchy held whole may be granted as a duchy — and always keep a seat
-    if (dej.length < 2 || cs.length !== dej.length || p.provs.length - cs.length < 1) return;
+    if (dej.length < 2 || cs.length !== dej.length ||
+        p.provs.length - cs.length < 1) return false;
     let seat = cs[0];
     for (const pid of cs) if ((state.dev[pid] || 1) > (state.dev[seat] || 1)) seat = pid; // richest = ducal seat
     const dname = (FBDATA.duchies[did] || {}).name || did;
@@ -2814,6 +3007,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.action.duchy_granted',
       '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
       { duchy: dname, name: state.realms[vid].ruler.name, count: cs.length }));
+    return true;
   };
 
   /* counties adjacent to the player's demesne held by another vassal of the
@@ -3682,6 +3876,7 @@ window.FB = window.FB || {};
     let best = null, bestPid = null, bestIdx = 0;
     const steadyGold = FB.reliableGoldIncome(state);
     for (const pid of FB.demesne(state)) {
+      if (FB.isProtected(state, 'autoBuildCounty', pid)) continue;
       const sts = FB.settlementsOf(state, pid);
       for (let idx = 0; idx < sts.length; idx++) {
         for (const b of FB.buildable(state, pid, idx)) {
@@ -4831,7 +5026,7 @@ window.FB = window.FB || {};
     }
   };
 
-  FB.runInstant = function (state, id) {
+  FB.runInstant = function (state, id, options) {
     const status = FB.instantStatus(state, id);
     if (!status.shown || !status.can) return;
     const a = status.action;
@@ -4840,7 +5035,7 @@ window.FB = window.FB || {};
         state.player.cooldowns = state.player.cooldowns || {};
         state.player.cooldowns[id] = state.turn;
       }
-      a.run(state);
+      a.run(state, options || {});
       if (!a.noConsume && state.player.flags) {
         state.player.flags.tut_deed = 1; // First steps: complete a deed
       }

@@ -522,6 +522,19 @@ hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuc
 `pd_<did>`, holding all its counties directly), who then renders `vassalTaxRate` of its
 counties' tax and `vassalLevyRate` of their levy back to you.
 
+Governance exposes a preview-first **Domain Cleanup** assistant while the player is over
+that limit. `FB.domainCleanupPlan` is read-only, deterministic, and never consumes RNG. It
+keeps the household home and realm capital, omits counties in the `grantCounty` protection
+scope, prefers complete grantable duchies that fit the exact excess, and then chooses the
+least-developed eligible counties. The preview names every grant and compares the
+base county tax and levy plus direct-vassal land contributions before and after; it
+intentionally excludes character, household, equipment, building, office, policy, and
+national multipliers or flat bonuses.
+`FB.applyDomainCleanupPlan` requires the exact reviewed signature, rejects an incomplete or
+stale proposal, and then uses the ordinary county/duchy grant mutations. Reservations are
+assistant and grant-picker constraints only: removing one restores the ordinary manual
+choice, and no other conquest or title-loss rule consults it.
+
 **Guild monopolies run in both feudal directions.** Guild Charters lets a landed vassal
 petition only the exact direct liege; changing or ending that relationship invalidates
 the incoming charter immediately. Tier 0–2 charters are scoped to the household's home

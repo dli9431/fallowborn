@@ -145,6 +145,9 @@ Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦*
 no-day static review of the maximum-yield result across all unlocked assignments. The
 review shows current/proposed totals, every kept or changed pairing, and every unresolved
 enterprise with its eligibility, lock-contention, or higher-yield-allocation reason.
+The enterprise and retainer managers also expose a person-level **Keep out of automatic
+staffing** reservation. Reserved workers are visibly marked in candidate cards; an assigned
+one stays where they are in the batch review, while an idle one is omitted.
 Apply is enabled only for a changed plan, revalidates stale reviews, and never spends
 time or money. Back remains available in the sticky footer; applying from Household Plan
 returns to its refreshed overview. When none is idle, the entry point is replaced by an
@@ -275,6 +278,10 @@ wearer for each selected object, and spells out every move and displaced object 
 explicit apply. If an assignment changes while the review is open, it shows a fresh plan
 and requires another confirmation. Applying returns to the selected character’s equipment
 sheet; manual slot buttons remain the primary fine-grained control.
+Each owned item card has a **Protect from automatic equipment changes** checkbox. Protected
+armory items are omitted from Equip Best and succession, protected worn items keep their
+assignment when possible, and the hand pair is preserved together if either hand is
+protected. Manual equipment controls remain available.
 The mechanically active totals from worn items appear beneath the figure, including an
 explicit empty state. On narrow phones the figure and bonus summary stack above the same
 two-column grid.
@@ -473,9 +480,11 @@ authoritative political presentation: Position, Domain, Liege & Obligations (or
 Independence), Vassals, Political Blocs, the rank-appropriate Institution, and grouped Political
 Actions. `FB.governanceSummary` supplies locale-neutral ids and exact numeric values;
 the UI localizes complete phrases and delegates every enabled or disabled action to
-`FB.instantStatus` and `FB.runInstant`. County buttons return to Land, realm buttons
-open the existing ruler sheet, and focused Estates/Council views preserve a Governance
-Back path. The section strip is a keyboard-navigable tab list that exposes one consistent
+`FB.instantStatus` and `FB.runInstant`. County buttons open a compact Governance county
+summary with an explicit **Open in Land** route; its visible and browser Back actions restore
+the exact originating section. Realm buttons, political actions, gifts, levy favors, and
+focused Estates/Council views likewise preserve their Governance section after cancellation
+or completion. The section strip is a keyboard-navigable tab list that exposes one consistent
 content surface at a time; its content viewport and exit footer remain fixed while only
 the active section scrolls. Direct vassals use a compact aligned ledger on desktop and
 two-column stat cards on narrow screens. Controls are native buttons, ordinary number
@@ -483,6 +492,11 @@ hints and shortcuts apply only to actions in the active section, and no layout h
 blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
+The Domain section exposes per-county **Reserve from grants** and **No autobuild** controls.
+When over the domain cap it also offers a review-first cleanup proposal that keeps the
+capital and household home, omits reserved counties, prefers whole duchies, shows the exact
+grants and land tax/levy estimate, and revalidates before applying. Vassal rows expose the
+equivalent reservation from automatic Council appointment.
 
 Political Blocs consumes `FB.politicalSummary` directly. Its full cards show
 each archetype, leader and member-ruler links, influence, interests, current
@@ -533,7 +547,9 @@ in the design/research documentation. Sovereigns receive start controls for free
 a successful start returns to the catalogue so its active-project strip and updated status
 are immediately visible. The catalogue's Automatic research button selects manual,
 cheapest-first, or a preferred domain and fills open slots as soon as an automatic mode
-is chosen; the general Automation sheet exposes the same linked setting. Eligible tier-3+
+is chosen; the general Automation sheet exposes the same linked setting. An incomplete
+inactive technology's detail sheet can reserve it from both automatic modes while retaining
+the manual start action; reserved entries are marked in the catalogue. Eligible tier-3+
 vassals receive advocacy controls. Foreign ruler sheets show the same nation's
 completed/exposed totals and active projects read-only.
 
@@ -659,8 +675,9 @@ localized column label. Education, instruction, work/standing, assignment, match
 equipment summaries are derived from their owning APIs; actionable cells are native
 buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touch sizes,
 and browser-history Back. Picker cancellation and no-day changes re-render the plan, while
-day-spending career, enterprise-purchase, and match choices keep their existing
-close-and-advance behavior. Its sticky footer also offers the enterprise-staffing preview
+day-spending career, retainer, enterprise-purchase, religious-office, and match choices
+advance the day and then rebuild the originating plan or person manager beneath any queued
+event. Its sticky footer also offers the enterprise-staffing preview
 whenever an enterprise is idle, and a successful no-day apply returns to this authoritative
 table rather than the intermediate Work & Enterprises sheet.
 
@@ -673,6 +690,9 @@ It explicitly states that existing choices stay unchanged, the cap is per child,
 coin is reserved. Education and instruction cells label policy choices, manual overrides,
 unrecorded choices, and instruction waiting for a focus. Both detailed pickers retain a
 Follow household policy action which clears and reapplies only that picker’s dimension.
+Both pickers also expose a whole-student manual-management reservation. Reserved students
+are omitted from education-policy previews and application until the reservation is removed;
+**Follow household policy** removes it and immediately reapplies that picker’s dimension.
 
 A separate **Descendant Match Assistant** summary and native management button sit above
 the same ledger. Its keyboard/mobile-safe policy form exposes an enable checkbox, station
@@ -683,6 +703,9 @@ age, dowry, immediate gold, and prestige requirement. It explicitly states that 
 resource spend, or day advance occurs. Recommended match cells name the candidate and
 terms; their ordinary match picker puts that candidate first with a visible marker while
 retaining every manual family choice.
+The match picker exposes a whole-descendant manual-management reservation. It removes an
+existing recommendation and omits that descendant from future assistant passes without
+removing their candidates or manual pledge choices.
 
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,
@@ -785,9 +808,10 @@ both. Reciprocal **Personal character** and **Realm and court** links preserve
 the distinction, and the personal sheet omits a duplicate gift action.
 
 Modal return context records only the originating view, not simulation state.
-Governance, Council, Estates, and card-to-card routes reconstruct the exact
-source on Back; Network, Land, and Deeds remain beneath an ordinary overlay
-and are revealed by Close. Focused gift, visit, foreign-policy, envoy,
+Governance, Council, Estates, Household Plan, and card-to-card routes reconstruct the exact
+source on visible/browser Back and after an in-scope completed management action; Network,
+Land, and Deeds remain beneath an ordinary overlay and are revealed by Close. Focused gift,
+visit, foreign-policy, envoy,
 alliance, and war sheets participate in that same history contract. Both card
 types use the full-sheet mobile layout, sticky footer, focus containment,
 number-key action behavior, and expansion-safe text wrapping.

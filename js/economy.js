@@ -1991,6 +1991,7 @@ window.FB = window.FB || {};
     const policy = educationPolicyDefaults(draft);
     const out = [];
     for (const c of FB.educationStudents(state)) {
+      if (FB.isProtected(state, 'educationCharacter', c.id)) continue;
       const record = normalizeEducationCharacter(c) || {};
       let focus = c.edu && c.edu.focus || null;
       const focusAffected = !record.focus && !focus && !!policy.focus;
@@ -2037,6 +2038,7 @@ window.FB = window.FB || {};
     const changed = [];
     for (const c of FB.educationStudents(state)) {
       if (ids && !ids[c.id]) continue;
+      if (FB.isProtected(state, 'educationCharacter', c.id)) continue;
       normalizeEducationCharacter(c);
       const record = educationPolicyRecord(c, true);
       if (dimensions.instruction && record.instruction === 'policy' &&
@@ -2102,6 +2104,7 @@ window.FB = window.FB || {};
 
   FB.followEducationPolicy = function (state, c, dimension) {
     if (!c || (dimension !== 'focus' && dimension !== 'instruction')) return false;
+    FB.setProtected(state, 'educationCharacter', c.id, false);
     FB.ensureEducationPolicy(state);
     const record = educationPolicyRecord(c, true);
     if (dimension === 'focus') {
@@ -2746,10 +2749,16 @@ window.FB = window.FB || {};
       return staffingIdCompare(a.uid, b.uid);
     });
     const lockedWorkers = {};
+    const protectedWorkers = {};
     const currentEnterprise = {};
     for (const enterprise of enterprises) {
       if (enterprise.workerId) currentEnterprise[enterprise.workerId] = enterprise.uid;
-      if (enterprise.workerLocked && enterprise.workerId) {
+      if (enterprise.workerId &&
+          FB.isProtected(state, 'staffingWorker', enterprise.workerId)) {
+        protectedWorkers[enterprise.workerId] = enterprise.uid;
+      }
+      if ((enterprise.workerLocked || protectedWorkers[enterprise.workerId]) &&
+          enterprise.workerId) {
         lockedWorkers[enterprise.workerId] = enterprise.uid;
       }
     }
@@ -2768,14 +2777,20 @@ window.FB = window.FB || {};
         const amount = staffingYield(state, enterprise, worker.id);
         eligibility[enterprise.uid].push(worker.id);
         signatureEligible.push([worker.id, amount]);
-        if (!lockedWorkers[worker.id]) workerSet[worker.id] = worker.id;
+        if (!lockedWorkers[worker.id] &&
+            !FB.isProtected(state, 'staffingWorker', worker.id)) {
+          workerSet[worker.id] = worker.id;
+        }
       }
       signatureRows.push([
         enterprise.uid, enterprise.type, enterprise.provinceId,
         enterprise.settlement, enterprise.workerId || null,
-        enterprise.workerLocked ? 1 : 0, signatureEligible
+        enterprise.workerLocked ? 1 : 0,
+        enterprise.workerId && protectedWorkers[enterprise.workerId] ? 1 : 0,
+        signatureEligible
       ]);
-      if (enterprise.workerLocked) continue;
+      if (enterprise.workerLocked ||
+          (enterprise.workerId && protectedWorkers[enterprise.workerId])) continue;
       const row = {
         uid:enterprise.uid,
         stableIndex:i,
@@ -2783,7 +2798,8 @@ window.FB = window.FB || {};
         eligible:[]
       };
       for (let j = 0; j < signatureEligible.length; j++) {
-        if (lockedWorkers[signatureEligible[j][0]]) continue;
+        if (lockedWorkers[signatureEligible[j][0]] ||
+            FB.isProtected(state, 'staffingWorker', signatureEligible[j][0])) continue;
         row.eligible.push({
           id:signatureEligible[j][0],
           yield:signatureEligible[j][1]
@@ -2806,7 +2822,9 @@ window.FB = window.FB || {};
     const rows = [];
     for (const enterprise of enterprises) {
       const currentWorkerId = enterprise.workerId || null;
-      const proposedWorkerId = enterprise.workerLocked
+      const workerProtected = !!(currentWorkerId &&
+        protectedWorkers[currentWorkerId]);
+      const proposedWorkerId = enterprise.workerLocked || workerProtected
         ? currentWorkerId : (matching[enterprise.uid] || null);
       const currentYield = staffingYield(state, enterprise, currentWorkerId);
       const proposedYield = staffingYield(state, enterprise, proposedWorkerId);
@@ -2815,8 +2833,8 @@ window.FB = window.FB || {};
         ? currentEnterprise[proposedWorkerId] || null : null;
       let status = 'unchanged';
       let unresolvedReason = null;
-      if (enterprise.workerLocked) {
-        status = 'locked';
+      if (enterprise.workerLocked || workerProtected) {
+        status = workerProtected ? 'reserved' : 'locked';
         lockedCount++;
       } else if (!proposedWorkerId) {
         status = 'unresolved';
@@ -2828,6 +2846,7 @@ window.FB = window.FB || {};
           let available = false;
           for (const workerId of eligibleIds) {
             if (!lockedWorkers[workerId]) {
+              if (FB.isProtected(state, 'staffingWorker', workerId)) continue;
               available = true;
               break;
             }
@@ -2854,12 +2873,17 @@ window.FB = window.FB || {};
         currentYield:currentYield / 1000,
         proposedYield:proposedYield / 1000,
         workerLocked:!!enterprise.workerLocked,
+        workerProtected:workerProtected,
         status:status,
         unresolvedReason:unresolvedReason
       });
     }
     return {
-      signature:JSON.stringify([state.turn, signatureRows]),
+      signature:JSON.stringify([
+        state.turn,
+        FB.protectionIds(state, 'staffingWorker').slice().sort(),
+        signatureRows
+      ]),
       currentTotal:currentTotal / 1000,
       proposedTotal:proposedTotal / 1000,
       idleCount:idleCount,
@@ -2878,7 +2902,8 @@ window.FB = window.FB || {};
       if (a.rows[i].uid !== b.rows[i].uid ||
           (a.rows[i].proposedWorkerId || null) !==
             (b.rows[i].proposedWorkerId || null) ||
-          !!a.rows[i].workerLocked !== !!b.rows[i].workerLocked) return false;
+          !!a.rows[i].workerLocked !== !!b.rows[i].workerLocked ||
+          !!a.rows[i].workerProtected !== !!b.rows[i].workerProtected) return false;
     }
     return true;
   }
@@ -2899,10 +2924,14 @@ window.FB = window.FB || {};
         workerId:enterprise.workerId || null,
         workerLocked:!!enterprise.workerLocked
       });
-      if (!enterprise.workerLocked) clearEnterpriseAssignment(enterprise);
+      if (!enterprise.workerLocked &&
+          !(enterprise.workerId &&
+            FB.isProtected(state, 'staffingWorker', enterprise.workerId))) {
+        clearEnterpriseAssignment(enterprise);
+      }
     }
     for (const row of fresh.rows) {
-      if (row.workerLocked || !row.proposedWorkerId) continue;
+      if (row.workerLocked || row.workerProtected || !row.proposedWorkerId) continue;
       if (!FB.assignEnterprise(state, row.uid, row.proposedWorkerId)) {
         for (const saved of snapshot) {
           saved.enterprise.workerId = saved.workerId;

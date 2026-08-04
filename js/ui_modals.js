@@ -2544,7 +2544,8 @@ window.FB = window.FB || {};
       '</div><div class="gm-footer"><button class="btn" id="war-guide">' +
       esc(FB.T('Guide: war')) +
       '</button><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Think better of it')) + '</button></div>';
+      esc(returnContext ? FB.T('Back') : FB.T('Think better of it')) +
+      '</button></div>';
     openModal(FB.T('Choose Your Conquest'), h, {
       historyView:!!returnContext,
       historyBackRender:function () {
@@ -2623,9 +2624,11 @@ window.FB = window.FB || {};
             returnContext:returnContext
           });
         } else {
-          FB.startPlayerWar(FB.state, cause);
-          UI.closeModal();
+          if (!FB.startPlayerWar(FB.state, cause)) return;
           UI.refresh();
+          if (returnContext) interactionReturn(returnContext);
+          else UI.closeModal();
+          mobileNavClosedAll('modal-view', true);
         }
       });
     });
@@ -2737,14 +2740,22 @@ window.FB = window.FB || {};
     });
     $('aggression-confirm').addEventListener('click', function () {
       if (!FB.startPlayerWar(s, cause, {
-        confirmAggression:true,
-        confirmSacrilege:!!cause.sacrilegious
+          confirmAggression:true,
+          confirmSacrilege:!!cause.sacrilegious
       })) {
         UI.toast(FB.T(
           'The War of Aggression can no longer be declared.'));
+        UI.showWarTargets(returnContext.focusRealmId,
+          returnContext.returnContext);
+        return;
       }
-      UI.closeModal();
       UI.refresh();
+      if (returnContext.returnContext) {
+        interactionReturn(returnContext.returnContext);
+      } else {
+        UI.closeModal();
+      }
+      mobileNavClosedAll('modal-view', true);
     });
     $('aggression-cancel').addEventListener('click', function () {
       if (returnContext) {
@@ -2786,9 +2797,19 @@ window.FB = window.FB || {};
       }
     });
     $('sacrilege-confirm').addEventListener('click', function () {
-      FB.startPlayerWar(s, cause, { confirmSacrilege:true });
-      UI.closeModal();
+      if (!FB.startPlayerWar(s, cause, { confirmSacrilege:true })) {
+        UI.toast(FB.T('This sacrilegious war can no longer be declared.'));
+        UI.showWarTargets(returnContext.focusRealmId,
+          returnContext.returnContext);
+        return;
+      }
       UI.refresh();
+      if (returnContext.returnContext) {
+        interactionReturn(returnContext.returnContext);
+      } else {
+        UI.closeModal();
+      }
+      mobileNavClosedAll('modal-view', true);
     });
     $('sacrilege-cancel').addEventListener('click', function () {
       if (returnContext) {
@@ -2804,7 +2825,7 @@ window.FB = window.FB || {};
 
   /* Renounce the liege and fight for it: confirmed here, then handled by
      FB.doIndependence (a baron seizes his home county in the bargain). */
-  UI.showIndependence = function () {
+  UI.showIndependence = function (returnContext) {
     const s = FB.state;
     const lg = s.realms[s.player.liege];
     const top = FB.topRealm(s, s.player.liege);
@@ -2823,14 +2844,19 @@ window.FB = window.FB || {};
         theirs: menText(s, enMen), yours: menText(s, FB.playerLevy(s))
       });
     const h = '<div class="gm-body-text"><p>' + esc(independenceText) + '</p></div>' +
-      '<button class="btn primary" id="gm-indep">Raise my banner</button> ' +
-      '<button class="btn" id="gm-cancel">Stay sworn</button>';
-    openModal('Declare Independence', h);
+      '<button class="btn primary" id="gm-indep">' +
+      esc(FB.T('Raise my banner')) + '</button> ' +
+      '<button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Stay sworn')) + '</button>';
+    openModal(FB.T('Declare Independence'), h,
+      managementModalOptions(returnContext));
     $('gm-indep').addEventListener('click', function () {
       FB.doIndependence(FB.state);
-      UI.closeModal(); UI.refresh();
+      managementFinish(returnContext, UI.closeModal);
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      managementBack(returnContext, UI.closeModal);
+    });
   };
 
   /* ================= building picker =================
@@ -2925,7 +2951,8 @@ window.FB = window.FB || {};
         (open || id === pid ? '' : ' disabled') + '>' +
         esc(FB.T('{province} ({count} possible)', {
           province:pr.name, count:open
-        })) + '</option>';
+        })) + (FB.isProtected(s, 'autoBuildCounty', id)
+          ? ' · ' + esc(FB.T('no autobuild')) : '') + '</option>';
     }
     return h + '</select></label>';
   }
@@ -2962,6 +2989,12 @@ window.FB = window.FB || {};
     if (idx === undefined || idx === null) {
       const growth = Math.round(((FBDATA.balance.buildingRepeatCostGrowth || 1.5) - 1) * 100);
       let h = buildingCountyPicker(s, provs, pid) +
+        '<label class="autorow building-auto-protection"><input type="checkbox" ' +
+        'id="building-auto-protection"' +
+        (FB.isProtected(s, 'autoBuildCounty', pid) ? ' checked' : '') + '> ' +
+        esc(FB.T('Keep automatic building out of this county')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Manual construction remains available here.')) + '</span></label>' +
         '<div class="gm-body-text"><p>' + esc(FB.T(
         'Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building.')) +
         '</p><p><b>' + esc(FB.T(
@@ -3015,6 +3048,11 @@ window.FB = window.FB || {};
       h += '</div><button class="btn" id="gm-cancel">' +
         esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
       openModal(FB.T('Building Works in {province}', { province: pr.name }), h);
+      $('building-auto-protection').addEventListener('change', function () {
+        FB.setProtected(s, 'autoBuildCounty', pid,
+          $('building-auto-protection').checked);
+        UI.refresh();
+      });
       document.querySelectorAll('[data-bquick]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const scrollTop = $('gm-body').scrollTop;
@@ -3491,7 +3529,7 @@ window.FB = window.FB || {};
   /* ================= liege-chain pickers ================= */
 
   /* bend the knee anywhere along your own chain */
-  UI.showHomage = function () {
+  UI.showHomage = function (returnContext) {
     const s = FB.state;
     const chain = FB.liegeChain(s, s.player.liege);
     let h = '<p class="hint">A journey, a gift of words, a knee on the floor. Standing grows — more for silver tongues.</p><div class="gm-list">';
@@ -3509,22 +3547,25 @@ window.FB = window.FB || {};
             }))
           })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Pay Homage', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Pay Homage'), h, managementModalOptions(returnContext));
     document.querySelectorAll('[data-rid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.payHomage(FB.state, btn.dataset.rid);
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.pay_homage; // no journey, no cooldown
-      UI.closeModal(); UI.refresh();
+      managementBack(returnContext, function () {
+        UI.closeModal(); UI.refresh();
+      });
     });
   };
 
   /* appeal to a lord ABOVE your direct liege */
-  UI.showAppeal = function () {
+  UI.showAppeal = function (returnContext) {
     const s = FB.state;
     const chain = FB.liegeChain(s, s.player.liege).slice(1);
     let h = '<p class="hint">Carry your suit past your own lord to a greater one. Success makes you HIS direct man — and an enemy of the man you passed over.</p><div class="gm-list">';
@@ -3542,24 +3583,28 @@ window.FB = window.FB || {};
             }))
           })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Appeal to a Higher Lord', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Appeal to a Higher Lord'), h,
+      managementModalOptions(returnContext));
     document.querySelectorAll('[data-rid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const rid = btn.dataset.rid;
         FB.state.player.appealRid = rid;
         FB.queueEvent(FB.state, 'liege_appeal', { rid:rid });
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.appeal_lord; // no suit carried, no cooldown
-      UI.closeModal(); UI.refresh();
+      managementBack(returnContext, function () {
+        UI.closeModal(); UI.refresh();
+      });
     });
   };
 
   /* sue the liege for a disgraced neighbor's fief */
-  UI.showPetitionCounty = function () {
+  UI.showPetitionCounty = function (returnContext) {
     const s = FB.state;
     const cands = FB.petitionCandidates(s);
     let h = '<p class="hint">' + esc(FB.T(
@@ -3583,23 +3628,27 @@ window.FB = window.FB || {};
         'No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it.',
         { favor:FBDATA.balance.petitionFavorMax })) + '</p>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Petition for a Fief', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Petition for a Fief'), h,
+      managementModalOptions(returnContext));
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         s.player.petitionPid = btn.dataset.pid;
         FB.queueEvent(s, 'county_petition', { pid:btn.dataset.pid });
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.petition_county; // no suit pressed, no cooldown
-      UI.closeModal(); UI.refresh();
+      managementBack(returnContext, function () {
+        UI.closeModal(); UI.refresh();
+      });
     });
   };
 
   /* a struggling neighbor sells his birthright */
-  UI.showBuyCounty = function () {
+  UI.showBuyCounty = function (returnContext) {
     const s = FB.state;
     const cands = FB.buyCountyCandidates(s);
     let h = '<p class="hint">A small lord with empty coffers will sell his birthright. The liege tolerates it — barely.</p><div class="gm-list">';
@@ -3613,22 +3662,26 @@ window.FB = window.FB || {};
           })) + '</span></button>';
     }
     if (!cands.length) h += '<p class="hint">No weak neighbor holds land beside yours.</p>';
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Buy Out a Neighbor', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Buy Out a Neighbor'), h,
+      managementModalOptions(returnContext));
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (!FB.buyCounty(FB.state, btn.dataset.pid)) { UI.toast('Not enough money.'); return; }
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.buy_county; // no bargain, no cooldown
-      UI.closeModal(); UI.refresh();
+      managementBack(returnContext, function () {
+        UI.closeModal(); UI.refresh();
+      });
     });
   };
 
   /* found a holding on empty land */
-  UI.showSettleWaste = function () {
+  UI.showSettleWaste = function (returnContext) {
     const s = FB.state;
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
@@ -3640,22 +3693,26 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T('empty {terrain}',
           { terrain: terrainName(pr.terrain) })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Settle the Wasteland', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Settle the Wasteland'), h,
+      managementModalOptions(returnContext));
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.settleWaste(FB.state, btn.dataset.pid);
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.settle_waste; // no ground broken, no cooldown
-      UI.closeModal(); UI.refresh();
+      managementBack(returnContext, function () {
+        UI.closeModal(); UI.refresh();
+      });
     });
   };
 
   /* offer your lands to a neighboring sovereign */
-  UI.showFealty = function () {
+  UI.showFealty = function (returnContext) {
     const s = FB.state;
     let h = '<p class="hint">Kneel to a neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
     for (const rid of FB.fealtyTargets(s)) {
@@ -3666,15 +3723,18 @@ window.FB = window.FB || {};
           title: FB.realmRankTitle(s, r), ruler: r.ruler.name, men: menText(s, men)
         })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Swear Fealty', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Swear Fealty'), h, managementModalOptions(returnContext));
     document.querySelectorAll('[data-rid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.swearFealty(FB.state, btn.dataset.rid);
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      managementBack(returnContext, UI.closeModal);
+    });
   };
 
   function giftArmoryRefs(s) {
@@ -3723,7 +3783,11 @@ window.FB = window.FB || {};
     const rulerId = FB.realmIdForRulerCharacter &&
       FB.realmIdForRulerCharacter(s, c);
     if (rulerId) {
-      UI.showRulerGiftModal(rulerId, 'character:' + c.id);
+      UI.showRulerGiftModal(rulerId, {
+        kind:'character-card',
+        characterId:c.id,
+        returnContext:returnContext || null
+      });
       return;
     }
     const household = FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, cid);
@@ -3817,14 +3881,18 @@ window.FB = window.FB || {};
     const cash = $('gift-character-cash');
     if (cash) cash.addEventListener('click', function () {
       if (!FB.giveSocialCashGift(s, cid)) return;
-      UI.closeModal();
       FB.game.passDay({ skipFocus:true });
+      UI.showCharModal(cid, returnContext);
+      mobileNavClosedAll('modal-view', true);
+      UI.refresh();
     });
     document.querySelectorAll('[data-character-gift-item]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.giveItem(s, button.dataset.characterGiftItem, cid)) return;
-        UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        UI.showCharModal(cid, returnContext);
+        mobileNavClosedAll('modal-view', true);
+        UI.refresh();
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -3841,11 +3909,15 @@ window.FB = window.FB || {};
     function returnToRulerGiftSource() {
       if (returnView && typeof returnView === 'object' &&
           returnView.kind === 'realm-card') {
-        UI.showLiegeModal(rid, returnView.returnContext);
+        UI.showLiegeModal(rid, returnView.returnContext, true);
       }
       else if (returnView && typeof returnView === 'object' &&
           returnView.kind === 'council') {
-        UI.showCouncil(returnView.returnView, returnView.returnContext);
+        UI.showCouncil(returnView.returnView, returnView.returnContext, true);
+      }
+      else if (returnView && typeof returnView === 'object' &&
+          returnView.kind === 'character-card') {
+        UI.showCharModal(returnView.characterId, returnView.returnContext);
       }
       else if (returnView === 'governance') UI.showGovernance('vassals');
       else if (returnView === 'council:governance') UI.showCouncil('governance');
@@ -3854,7 +3926,7 @@ window.FB = window.FB || {};
         UI.showLiegeModal(rid, {
           view:'governance',
           section:returnView.slice('realm:governance:'.length) || 'position'
-        });
+        }, true);
       }
       else if (returnView && returnView.indexOf('character:') === 0) {
         UI.showCharModal(returnView.slice('character:'.length));
@@ -3945,14 +4017,18 @@ window.FB = window.FB || {};
     const cash = $('gift-ruler-cash');
     if (cash) cash.addEventListener('click', function () {
       if (!FB.giveRulerCashGift(s, rid)) return;
-      UI.closeModal();
       FB.game.passDay({ skipFocus:true });
+      returnToRulerGiftSource();
+      mobileNavClosedAll('modal-view', true);
+      UI.refresh();
     });
     document.querySelectorAll('[data-ruler-gift-item]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.giveRulerItemGift(s, button.dataset.rulerGiftItem, rid)) return;
-        UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        returnToRulerGiftSource();
+        mobileNavClosedAll('modal-view', true);
+        UI.refresh();
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -4589,6 +4665,39 @@ window.FB = window.FB || {};
     }
   }
 
+  function managementModalOptions(returnContext, modalClass) {
+    if (!returnContext && !modalClass) return undefined;
+    const options = {};
+    if (modalClass) options.modalClass = modalClass;
+    if (returnContext) {
+      options.historyView = true;
+      options.historyBackRender = function () {
+        interactionReturn(returnContext);
+      };
+    }
+    return options;
+  }
+
+  function managementBack(returnContext, fallback) {
+    if (!returnContext) {
+      fallback();
+      return;
+    }
+    modalHistoryBack(function () {
+      interactionReturn(returnContext);
+    });
+  }
+
+  function managementFinish(returnContext, fallback) {
+    UI.refresh();
+    if (!returnContext) {
+      fallback();
+      return;
+    }
+    interactionReturn(returnContext);
+    mobileNavClosedAll('modal-view', true);
+  }
+
   function realmGiftReturnView(rid, returnContext) {
     if (returnContext && returnContext.view === 'governance') {
       return 'realm:governance:' + (returnContext.section || 'position');
@@ -4632,7 +4741,7 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
-  function showRealmInteractionSheet(rid, returnContext) {
+  function showRealmInteractionSheet(rid, returnContext, replaceView) {
     const s = FB.state;
     const realm = s && rid && s.realms[rid];
     if (!s || !realm) return;
@@ -4664,6 +4773,7 @@ window.FB = window.FB || {};
       ? FB.T('Your Liege') : FB.T('Realm Ruler'), h, {
         modalClass:'fullsheet-modal interaction-modal realm-interaction-modal',
         historyView:!!returnContext,
+        replaceView:!!replaceView,
         historyBackRender:function () {
           interactionReturn(returnContext);
         }
@@ -4679,7 +4789,7 @@ window.FB = window.FB || {};
         const presence = FB.socialAttentionPresence(s, c);
         if (presence.status === 'active') {
           if (!FB.socialAttentionAssign(s, c)) return;
-          UI.showLiegeModal(rid, returnContext);
+          UI.showLiegeModal(rid, returnContext, true);
           UI.refresh();
         } else {
           UI.showSocialVisit(c.id, {
@@ -4708,11 +4818,23 @@ window.FB = window.FB || {};
           returnContext:returnContext
         });
       } else if (action.route === 'instant') {
-        FB.runInstant(s, action.actionId);
+        const status = FB.instantStatus(s, action.actionId);
+        FB.runInstant(s, action.actionId, {
+          returnContext:{
+            view:'realm',
+            realmId:rid,
+            returnContext:returnContext
+          }
+        });
+        if (status.action && !status.action.noConsume && !UI.eventsBusy()) {
+          UI.showLiegeModal(rid, returnContext, true);
+        }
       } else if (action.route === 'vassal-levy') {
         if (!FB.callVassalLevyFavor(s, rid)) return;
-        UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        UI.showLiegeModal(rid, returnContext, true);
+        mobileNavClosedAll('modal-view', true);
+        UI.refresh();
       } else if (action.route === 'council') {
         UI.showCouncil(null, {
           view:'realm',
@@ -4761,8 +4883,8 @@ window.FB = window.FB || {};
 
   /* The realm sheet remains the primary view for an AI ruler. Cultivation
      can materialize that ruler into an ordinary character sheet as needed. */
-  UI.showLiegeModal = function (rid, returnContext) {
-    return showRealmInteractionSheet(rid, returnContext);
+  UI.showLiegeModal = function (rid, returnContext, replaceView) {
+    return showRealmInteractionSheet(rid, returnContext, replaceView);
   };
 
   /* Grant one abstract local Craft or Trade guild a monopoly. The first
@@ -4859,45 +4981,173 @@ window.FB = window.FB || {};
     });
   };
 
-  /* give a demesne county — or a whole duchy — to a sworn man */
-  UI.showGrantLand = function () {
+  function grantProtectionButton(pid) {
+    const reserved = FB.isProtected(FB.state, 'grantCounty', pid);
+    return '<button type="button" class="btn small protection-toggle" ' +
+      'data-grant-protection="' + esc(pid) + '" aria-pressed="' +
+      (reserved ? 'true' : 'false') + '">' +
+      (reserved ? '🔒 ' + esc(FB.T('Reserved')) :
+        '🔓 ' + esc(FB.T('Reserve'))) + '</button>';
+  }
+
+  /* Give a demesne county — or a whole duchy — to a sworn man. Grant
+     protections are visible here and are hard stops for this picker until
+     deliberately removed; other land-transfer mechanics remain independent. */
+  UI.showGrantLand = function (returnContext, replaceView) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
     const cap = FB.domainCap(s), held = (s.player.provs || []).length;
     h += '<p class="hint">' + esc(FB.T('Held directly: {held} of {cap}.', { held: held, cap: cap })) +
       (held > cap ? ' ⚠ ' + esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) : '') + '</p>';
+    if (held > cap) {
+      h += '<button type="button" class="actionbtn" id="grant-cleanup">⚖ ' +
+        esc(FB.T('Review domain cleanup…')) + '<span class="adesc">' +
+        esc(FB.T('Build a complete proposal that skips reserved counties and keeps your capital and home county.')) +
+        '</span></button>';
+    }
     const duchies = FB.grantableDuchies(s);
     if (duchies.length) {
       h += '<div class="panelh">' + esc(FB.T('Raise a duke over a duchy you hold in full')) + '</div><div class="gm-list">';
       for (const d of duchies) {
-        h += '<button class="actionbtn" data-did="' + esc(d.did) + '">👑 ' + esc(d.name) +
-          '<span class="adesc">' + esc(FB.T('{count} counties', { count: d.counties.length })) + '</span></button>';
+        const reserved = d.counties.filter(function (pid) {
+          return FB.isProtected(s, 'grantCounty', pid);
+        });
+        h += '<button class="actionbtn" data-did="' + esc(d.did) + '"' +
+          (reserved.length ? ' disabled' : '') + '>👑 ' + esc(d.name) +
+          '<span class="adesc">' + esc(reserved.length
+            ? FB.T('{count} counties · blocked by {reserved} reserved', {
+              count:d.counties.length, reserved:reserved.length
+            })
+            : FB.T('{count} counties', { count:d.counties.length })) +
+          '</span></button>';
       }
       h += '</div>';
     }
     h += '<div class="panelh">' + esc(FB.T('Grant a single county')) + '</div><div class="gm-list">';
     for (const pid of s.player.provs) {
       const pr = FB.world.byId[pid];
-      h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🏰 ' + esc(pr.name) +
+      const reserved = FB.isProtected(s, 'grantCounty', pid);
+      h += '<div class="protected-choice"><button class="actionbtn" data-pid="' +
+        esc(pid) + '"' + (reserved ? ' disabled' : '') + '>🏰 ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T('dev {development} · {terrain}', {
-          development: s.dev[pid] || 1, terrain: terrainName(pr.terrain)
-        })) + '</span></button>';
+          development:s.dev[pid] || 1, terrain:terrainName(pr.terrain)
+        })) + (reserved ? ' · ' + esc(FB.T('reserved from grants')) : '') +
+        '</span></button>' + grantProtectionButton(pid) + '</div>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('Grant Land'), h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    const options = managementModalOptions(returnContext) || {};
+    options.replaceView = !!replaceView;
+    openModal(FB.T('Grant Land'), h, options);
     document.querySelectorAll('[data-did]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.grantDuchy(FB.state, btn.dataset.did);
-        UI.closeModal(); UI.refresh();
+        if (!FB.grantDuchy(FB.state, btn.dataset.did)) return;
+        managementFinish(returnContext, UI.closeModal);
       });
     });
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        FB.grantCounty(FB.state, btn.dataset.pid);
-        UI.closeModal(); UI.refresh();
+        if (!FB.grantCounty(FB.state, btn.dataset.pid)) return;
+        managementFinish(returnContext, UI.closeModal);
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    document.querySelectorAll('[data-grant-protection]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const pid = btn.dataset.grantProtection;
+        FB.setProtected(s, 'grantCounty', pid,
+          !FB.isProtected(s, 'grantCounty', pid));
+        UI.showGrantLand(returnContext, true);
+      });
+    });
+    const cleanup = $('grant-cleanup');
+    if (cleanup) cleanup.addEventListener('click', function () {
+      UI.showDomainCleanup(returnContext, true);
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      managementBack(returnContext, UI.closeModal);
+    });
+  };
+
+  UI.showDomainCleanup = function (returnContext, fromGrantLand, notice) {
+    const s = FB.state;
+    const plan = FB.domainCleanupPlan(s);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review a deterministic grant proposal. It never selects reserved counties, your capital, or your home county, and nothing changes until you apply it.')) +
+      '</p><p>' + esc(FB.T(
+        'Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate.')) +
+      '</p></div>';
+    if (notice) h += '<div class="progressnote warnote">' + esc(notice) + '</div>';
+    if (!plan.excess) {
+      h += '<p class="hint">' + esc(FB.T('Your directly held domain is already within its limit.')) + '</p>';
+    } else if (!plan.grants.length) {
+      h += '<p class="progressnote warnote">' + esc(FB.T(
+        'No safe proposal is available. Unreserve enough non-seat counties or grant land manually.')) + '</p>';
+    } else {
+      h += '<div class="gm-list">';
+      for (const grant of plan.grants) {
+        const label = grant.kind === 'duchy'
+          ? ((FBDATA.duchies[grant.id] || {}).name || grant.id)
+          : ((FB.world.byId[grant.id] || {}).name || grant.id);
+        h += '<div class="actionbtn domain-cleanup-row">' +
+          (grant.kind === 'duchy' ? '👑 ' : '🏰 ') + esc(label) +
+          '<span class="adesc">' + esc(grant.kind === 'duchy'
+            ? FB.T('Grant as a complete duchy · {count} counties', {
+              count:grant.countyIds.length
+            })
+            : FB.T('Grant as a county vassal · development {development}', {
+              development:s.dev[grant.id] || 1
+            })) + '</span></div>';
+      }
+      h += '</div>' + kv('Land tax estimate', esc(FB.T('{before} before → {after} after', {
+        before:Math.round(plan.projection.beforeTax * 10) / 10,
+        after:Math.round(plan.projection.afterTax * 10) / 10
+      }))) + kv('Land levy estimate', esc(FB.T('{before} before → {after} after', {
+        before:Math.round(plan.projection.beforeLevy),
+        after:Math.round(plan.projection.afterLevy)
+      })));
+      if (plan.unresolved) {
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          '{count} excess counties remain because the other candidates are reserved or are your seats.', {
+            count:plan.unresolved
+          })) + '</div>';
+      }
+    }
+    h += '<div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="domain-cleanup-apply"' +
+      (!plan.excess || !plan.grants.length || plan.unresolved ? ' disabled' : '') + '>' +
+      esc(FB.T('Apply reviewed grants')) + '</button>' +
+      '<button type="button" class="btn" id="domain-cleanup-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Domain Cleanup'), h, {
+      historyView:true,
+      replaceView:!!notice,
+      modalClass:'fullsheet-modal domain-cleanup-modal',
+      historyBackRender:function () {
+        if (fromGrantLand) UI.showGrantLand(returnContext);
+        else interactionReturn(returnContext || { view:'governance', section:'domain' });
+      }
+    });
+    $('domain-cleanup-apply').addEventListener('click', function () {
+      const result = FB.applyDomainCleanupPlan(s, plan);
+      if (!result.ok) {
+        UI.showDomainCleanup(returnContext, fromGrantLand,
+          result.code === 'stale'
+            ? FB.T('The domain changed after this review. A fresh proposal is shown.')
+            : FB.T('The current protections do not permit a complete cleanup proposal.'));
+        return;
+      }
+      UI.refresh();
+      if (returnContext) interactionReturn(returnContext);
+      else UI.closeModal();
+      mobileNavClosedAll('modal-view', true);
+      UI.toast(FB.T('The reviewed domain grants have been applied.'));
+    });
+    $('domain-cleanup-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        if (fromGrantLand) UI.showGrantLand(returnContext);
+        else interactionReturn(returnContext || { view:'governance', section:'domain' });
+      });
+    });
   };
 
   function governanceRealmLink(s, rid, label, section) {
@@ -4915,6 +5165,69 @@ window.FB = window.FB || {};
       (markers ? ' <span class="governance-markers">' +
         esc(markers) + '</span>' : '');
   }
+
+  UI.showGovernanceCounty = function (pid, section, replaceView) {
+    const s = FB.state;
+    const province = s && FB.world.byId[pid];
+    if (!province) return UI.showGovernance(section || 'domain');
+    const holderId = s.holder[pid];
+    const holder = holderId && s.realms[holderId];
+    const settlements = FB.settlementsOf(s, pid);
+    const built = FB.builtIn(s, pid).filter(function (item) {
+      return !item.ruined;
+    });
+    let h = kv('Development', esc(String(s.dev[pid] || 1))) +
+      kv('Terrain', esc(terrainName(province.terrain))) +
+      kv('Holder', esc(holder
+        ? (holder.ruler ? holder.ruler.name : holder.name)
+        : FB.T('No settled holder'))) +
+      kv('Settlements', esc(settlements.map(function (settlement) {
+        return SETT_ICON[settlement.kind] + ' ' + settlement.name;
+      }).join(' · '))) +
+      kv('Standing buildings', esc(FB.T('{count}', { count:built.length })));
+    if ((s.player.provs || []).indexOf(pid) >= 0) {
+      h += '<div class="panelh">' + esc(FB.T('Automation protections')) +
+        '</div><div class="governance-county-protections">' +
+        grantProtectionButton(pid) +
+        '<button type="button" class="btn small protection-toggle" ' +
+        'data-autobuild-protection="' + esc(pid) + '" aria-pressed="' +
+        (FB.isProtected(s, 'autoBuildCounty', pid) ? 'true' : 'false') + '">' +
+        (FB.isProtected(s, 'autoBuildCounty', pid)
+          ? '🔒 ' + esc(FB.T('No autobuild'))
+          : '⚙ ' + esc(FB.T('Allow autobuild'))) + '</button></div>';
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="governance-county-land">' + esc(FB.T('Open in Land')) +
+      '</button><button type="button" class="btn" ' +
+      'id="governance-county-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('County of {province}', { province:province.name }), h, {
+      historyView:true,
+      replaceView:!!replaceView,
+      historyBackRender:function () { UI.showGovernance(section || 'domain'); }
+    });
+    document.querySelectorAll('[data-grant-protection]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        FB.setProtected(s, 'grantCounty', pid,
+          !FB.isProtected(s, 'grantCounty', pid));
+        UI.showGovernanceCounty(pid, section, true);
+      });
+    });
+    document.querySelectorAll('[data-autobuild-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          FB.setProtected(s, 'autoBuildCounty', pid,
+            !FB.isProtected(s, 'autoBuildCounty', pid));
+          UI.showGovernanceCounty(pid, section, true);
+        });
+      });
+    $('governance-county-land').addEventListener('click', function () {
+      UI.closeModal();
+      UI.selectProvince(pid);
+    });
+    $('governance-county-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showGovernance(section || 'domain'); });
+    });
+  };
 
   function politicalBlocDefinitionText(s, archetypeId, field) {
     const def = FBDATA.politicalBlocs &&
@@ -5394,7 +5707,11 @@ window.FB = window.FB || {};
       h += '<div class="progressnote warnote">' + esc(FB.T(
         'Counties over the limit: {count}. The multiplier applies to your own demesne tax and levy, not vassal contributions.', {
           count:summary.domainExcess
-        })) + '</div>';
+        })) + '</div><button type="button" class="actionbtn" ' +
+        'data-governance-cleanup="1">⚖ ' +
+        esc(FB.T('Review domain cleanup…')) + '<span class="adesc">' +
+        esc(FB.T('Recommend enough unreserved, non-seat grants to return to your limit.')) +
+        '</span></button>';
     }
     if (!summary.directCounties.length) {
       h += '<div class="hint">' + esc(FB.T(
@@ -5410,7 +5727,14 @@ window.FB = window.FB || {};
         governanceCountyLink(pid, province.name, markers.join(' · ')) +
         '<span>' + esc(FB.T('development {development}', {
           development:s.dev[pid] || 1
-        })) + '</span></div>';
+        })) + '</span><span class="governance-county-protections">' +
+        grantProtectionButton(pid) +
+        '<button type="button" class="btn small protection-toggle" ' +
+        'data-autobuild-protection="' + esc(pid) + '" aria-pressed="' +
+        (FB.isProtected(s, 'autoBuildCounty', pid) ? 'true' : 'false') + '">' +
+        (FB.isProtected(s, 'autoBuildCounty', pid)
+          ? '🔒 ' + esc(FB.T('No autobuild'))
+          : '⚙ ' + esc(FB.T('Allow autobuild'))) + '</button></span></div>';
     }
     const grantStatus = FB.instantStatus(s, 'grant_land');
     if (grantStatus.shown) {
@@ -5535,7 +5859,17 @@ window.FB = window.FB || {};
         esc(item.realmId) + '">' + esc(FB.T('Offer a gift…')) + '</button>' +
         '<button type="button" class="btn small" data-governance-vassal-levy="' +
         esc(item.realmId) + '"' + (favor.ready ? '' : ' disabled') + '>' +
-        esc(FB.T('Ask for exceptional levy')) + '</button></div>' +
+        esc(FB.T('Ask for exceptional levy')) + '</button>' +
+        (summary.council
+          ? '<button type="button" class="btn small" ' +
+            'data-governance-council-protection="' + esc(item.realmId) +
+            '" aria-pressed="' +
+            (FB.isProtected(s, 'councilRealm', item.realmId)
+              ? 'true' : 'false') + '">' +
+            esc(FB.isProtected(s, 'councilRealm', item.realmId)
+              ? FB.T('Allow automatic Council appointment')
+              : FB.T('Reserve from automatic Council appointment')) + '</button>'
+          : '') + '</div>' +
         '<div class="cmeta">' + esc(favor.ready
           ? FB.T('Adds {percent}% levy for one year and lowers Standing by 15. (spends the day)', {
             percent:Math.round(
@@ -5836,8 +6170,14 @@ window.FB = window.FB || {};
       function (button) {
         button.addEventListener('click', function () {
           const pid = button.dataset.governanceCounty;
-          UI.closeModal();
-          UI.selectProvince(pid);
+          let panel = button;
+          while (panel && (!panel.classList ||
+              !panel.classList.contains('governance-card'))) {
+            panel = panel.parentNode;
+          }
+          const returnSection = panel && panel.id.indexOf('governance-') === 0
+            ? panel.id.slice('governance-'.length) : selectedSection;
+          UI.showGovernanceCounty(pid, returnSection);
         });
       });
     document.querySelectorAll('[data-political-character]').forEach(
@@ -5852,7 +6192,54 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-governance-action]').forEach(
       function (button) {
         button.addEventListener('click', function () {
-          FB.runInstant(FB.state, button.dataset.governanceAction);
+          let panel = button;
+          while (panel && (!panel.classList ||
+              !panel.classList.contains('governance-card'))) {
+            panel = panel.parentNode;
+          }
+          const activeSection = panel && panel.id.indexOf('governance-') === 0
+            ? panel.id.slice('governance-'.length) : 'actions';
+          const actionId = button.dataset.governanceAction;
+          const status = FB.instantStatus(FB.state, actionId);
+          FB.runInstant(FB.state, actionId, {
+            returnContext:{ view:'governance', section:activeSection }
+          });
+          if (status.action && !status.action.noConsume && !UI.eventsBusy()) {
+            UI.showGovernance(activeSection);
+          }
+        });
+      });
+    document.querySelectorAll('[data-grant-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.dataset.grantProtection;
+          FB.setProtected(s, 'grantCounty', pid,
+            !FB.isProtected(s, 'grantCounty', pid));
+          UI.showGovernance('domain');
+        });
+      });
+    document.querySelectorAll('[data-autobuild-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.dataset.autobuildProtection;
+          FB.setProtected(s, 'autoBuildCounty', pid,
+            !FB.isProtected(s, 'autoBuildCounty', pid));
+          UI.showGovernance('domain');
+        });
+      });
+    document.querySelectorAll('[data-governance-council-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const rid = button.dataset.governanceCouncilProtection;
+          FB.setProtected(s, 'councilRealm', rid,
+            !FB.isProtected(s, 'councilRealm', rid));
+          UI.showGovernance('vassals');
+        });
+      });
+    document.querySelectorAll('[data-governance-cleanup]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showDomainCleanup({ view:'governance', section:'domain' }, false);
         });
       });
     document.querySelectorAll('[data-governance-gift]').forEach(
@@ -5866,8 +6253,8 @@ window.FB = window.FB || {};
         button.addEventListener('click', function () {
           if (!FB.callVassalLevyFavor(
               s, button.dataset.governanceVassalLevy)) return;
-          UI.closeModal();
           FB.game.passDay({ skipFocus:true });
+          UI.showGovernance('vassals');
         });
       });
     document.querySelectorAll('[data-governance-institution]').forEach(
@@ -5891,7 +6278,8 @@ window.FB = window.FB || {};
     }
   };
 
-  function councilAssignmentCard(s, seat, rid, oldRid, selected, data) {
+  function councilAssignmentCard(s, seat, rid, oldRid, selected, data,
+      recommended) {
     const realm = rid && s.realms[rid];
     if (!realm) return '';
     const oldRealm = oldRid && s.realms[oldRid];
@@ -5907,7 +6295,11 @@ window.FB = window.FB || {};
       art:FB.crestTag(rid, 34, 40),
       selected:selected,
       disabled:selected,
-      eligibility:selected ? FB.T('Current officer') : FB.T('Eligible unseated vassal'),
+      eligibility:selected ? FB.T('Current officer') :
+        (recommended ? FB.T('Recommended unseated vassal') :
+          (FB.isProtected(s, 'councilRealm', rid)
+            ? FB.T('Reserved from automatic appointment; manual choice remains available')
+            : FB.T('Eligible unseated vassal'))),
       data:data || {},
       rows:[
         { label:'Expected benefit', value:councilSeatDesc(seat.id) },
@@ -5928,7 +6320,7 @@ window.FB = window.FB || {};
   /* the Royal Council (tier 6+): the great officers of the crown — seats,
      holders, tempers, and crown authority. Gifts and dismissals act at once;
      appointment cards preview vacant seats and deliberate replacements. */
-  UI.showCouncil = function (returnView, returnContext) {
+  UI.showCouncil = function (returnView, returnContext, replaceView) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
     const projection = FB.councilSummary(s);
@@ -5959,6 +6351,22 @@ window.FB = window.FB || {};
       if (seats[seat.id]) seated[seats[seat.id]] = 1;
     }
     const unseated = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
+    h += '<div class="panelh">' + esc(FB.T('Automatic appointment reservations')) +
+      '</div><div class="cmeta">' + esc(FB.T(
+        'Reserved vassals are skipped when vacancies fill automatically and are not recommended first. You may still appoint them manually.')) +
+      '</div><div class="council-protection-list">';
+    for (const vid of FB.playerVassals(s)) {
+      const realm = s.realms[vid];
+      if (!realm) continue;
+      h += '<button type="button" class="btn small" data-council-protection="' +
+        esc(vid) + '" aria-pressed="' +
+        (FB.isProtected(s, 'councilRealm', vid) ? 'true' : 'false') + '">' +
+        (FB.isProtected(s, 'councilRealm', vid) ? '🔒 ' : '🔓 ') +
+        esc(realm.ruler ? realm.ruler.name : realm.name) + ' · ' +
+        esc(FB.isProtected(s, 'councilRealm', vid)
+          ? FB.T('Reserved') : FB.T('Automatic allowed')) + '</button>';
+    }
+    h += '</div>';
     for (const seat of FB.councilSeats()) {
       const rid = seats[seat.id];
       const r = rid ? s.realms[rid] : null;
@@ -5989,10 +6397,16 @@ window.FB = window.FB || {};
       } else {
         h += '<div class="cmeta">' + esc(FB.T('Vacant.')) + '</div>';
         if (unseated.length) {
-          for (const vid of unseated) {
+          const recommended = FB.councilRecommendation(s, seat.id);
+          const ordered = unseated.slice().sort(function (a, b) {
+            if (a === recommended) return -1;
+            if (b === recommended) return 1;
+            return a < b ? -1 : a > b ? 1 : 0;
+          });
+          for (const vid of ordered) {
             h += councilAssignmentCard(s, seat, vid, null, false, {
               appoint:seat.id + '|' + vid
-            });
+            }, vid === recommended);
           }
         } else {
           h += '<div class="cmeta">' + esc(FB.T('No unseated vassal remains to raise — grant land to loyal men, and offices will follow.')) + '</div>';
@@ -6003,14 +6417,15 @@ window.FB = window.FB || {};
       esc(returnView === 'governance' || returnContext
         ? FB.T('Back') : FB.T('Close')) +
       '</button>';
-    openModal(FB.T('The Royal Council'), h,
-      returnView === 'governance' || returnContext ? {
+    const councilOptions = returnView === 'governance' || returnContext ? {
         historyView:true,
         historyBackRender:function () {
           if (returnView === 'governance') UI.showGovernance('institution');
           else interactionReturn(returnContext);
         }
-      } : undefined);
+      } : {};
+    councilOptions.replaceView = !!replaceView;
+    openModal(FB.T('The Royal Council'), h, councilOptions);
     for (const seat of FB.councilSeats()) {
       const cv = $('crest_' + seat.id);
       if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
@@ -6041,17 +6456,25 @@ window.FB = window.FB || {};
           returnContext);
       });
     });
+    document.querySelectorAll('[data-council-protection]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const rid = btn.dataset.councilProtection;
+        FB.setProtected(s, 'councilRealm', rid,
+          !FB.isProtected(s, 'councilRealm', rid));
+        UI.showCouncil(returnView, returnContext, true);
+      });
+    });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         FB.councilDismiss(FB.state, btn.dataset.dismiss);
-        UI.showCouncil(returnView, returnContext);
+        UI.showCouncil(returnView, returnContext, true);
       });
     });
     document.querySelectorAll('[data-appoint]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const parts = btn.dataset.appoint.split('|');
         FB.councilAppoint(FB.state, parts[0], parts[1]);
-        UI.showCouncil(returnView, returnContext);
+        UI.showCouncil(returnView, returnContext, true);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -6085,6 +6508,12 @@ window.FB = window.FB || {};
     const candidates = FB.playerVassals(s).filter(function (rid) {
       return !seated[rid];
     });
+    const recommended = FB.councilRecommendation(s, seat.id);
+    candidates.sort(function (a, b) {
+      if (a === recommended) return -1;
+      if (b === recommended) return 1;
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
     let h = '<p class="hint">' + esc(FB.T(
       'Choose an unseated vassal for this office. Appointment changes Standing and crown authority immediately; it does not create a household pay contract.')) +
       '</p><div class="gm-list">';
@@ -6094,7 +6523,7 @@ window.FB = window.FB || {};
     for (const rid of candidates) {
       h += councilAssignmentCard(s, seat, rid, oldRid, false, {
         councilCandidate:rid
-      });
+      }, rid === recommended);
     }
     if (!candidates.length) {
       h += '<div class="hint">' + esc(FB.T(
@@ -6308,7 +6737,7 @@ window.FB = window.FB || {};
   };
 
   /* demand a fief back from a vassal */
-  UI.showRevoke = function () {
+  UI.showRevoke = function (returnContext) {
     const s = FB.state;
     let h = '<p class="hint">Demand a fief back into your own hand. A contented vassal yields; a bitter one answers with spears.</p><div class="gm-list">';
     for (const vid of FB.playerVassals(s)) {
@@ -6319,17 +6748,20 @@ window.FB = window.FB || {};
           standing:standingText(FB.standingOf(s, { kind:'realm', id:vid }))
         })) + '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Revoke a County', h);
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    openModal(FB.T('Revoke a County'), h, managementModalOptions(returnContext));
     document.querySelectorAll('[data-rid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const rid = btn.dataset.rid;
         FB.state.player.revokeRid = rid;
         FB.queueEvent(FB.state, 'vassal_revoke', { rid:rid });
-        UI.closeModal(); UI.refresh();
+        managementFinish(returnContext, UI.closeModal);
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', function () {
+      managementBack(returnContext, UI.closeModal);
+    });
   };
 
   /* ================= coin & credit ================= */
@@ -6719,9 +7151,13 @@ window.FB = window.FB || {};
     $('finance-cancel').addEventListener('click', UI.showFinance);
   };
 
-  UI.showDebasement = function () {
+  UI.showDebasement = function (returnContext) {
     const s = FB.state;
-    if (!FB.financeCanDebase(s)) { UI.showFinance(); return; }
+    if (!FB.financeCanDebase(s)) {
+      if (returnContext) interactionReturn(returnContext);
+      else UI.showFinance();
+      return;
+    }
     const preview = FB.financeDebasePreview(s);
     const h = '<div class="gm-body-text">' +
       kv('Immediate seigniorage', esc(FB.T('{money:amount}', { amount:preview.gold }))) +
@@ -6733,12 +7169,15 @@ window.FB = window.FB || {};
       '</p></div><div class="gm-list"><button class="actionbtn op-bad" id="finance-debase-confirm">💰 ' +
       esc(FB.T('Debase the coinage')) +
       '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Debase the coinage?'), h);
+    openModal(FB.T('Debase the coinage?'), h,
+      managementModalOptions(returnContext));
     $('finance-debase-confirm').addEventListener('click', function () {
       FB.debaseCoinage(s);
-      UI.showFinance();
+      managementFinish(returnContext, UI.showFinance);
     });
-    $('finance-cancel').addEventListener('click', UI.showFinance);
+    $('finance-cancel').addEventListener('click', function () {
+      managementBack(returnContext, UI.showFinance);
+    });
   };
 
   UI.showRecoinage = function () {
@@ -7383,6 +7822,23 @@ window.FB = window.FB || {};
       return;
     }
     finishHouseholdPlanReturn(returnContext, fallback);
+  }
+
+  /* A day-spending choice may queue an event, but the generic management
+     sheet can still be rebuilt underneath that event. When the event clears,
+     the player returns to the exact plan or person they were managing. */
+  function resumeManagementAfterDay(returnContext, fallback) {
+    if (returnsToHouseholdPlan(returnContext)) {
+      UI.showHouseholdPlan();
+      mobileNavClosedAll('modal-view', true);
+      return;
+    }
+    if (returnsToInteractionManagement(returnContext)) {
+      interactionReturn(returnContext);
+      mobileNavClosedAll('modal-view', true);
+      return;
+    }
+    if (fallback) fallback();
   }
 
   function householdPlanHistoryOptions(returnContext) {
@@ -8658,6 +9114,7 @@ window.FB = window.FB || {};
         if (!FB.hireRetainer(s, office, button.dataset.retainerCandidate || null)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -8677,7 +9134,13 @@ window.FB = window.FB || {};
       kv('Occupation', esc(FB.careerTitle(s, c))) +
       (positionEffectText(record.office)
         ? kv('Office effects', esc(positionEffectText(record.office))) : '') +
-      '<div class="gm-list"><button class="actionbtn" id="retainer-career">🧰 ' +
+      '<label class="automation-protection"><input type="checkbox" ' +
+      'id="staffing-worker-protection"' +
+      (FB.isProtected(s, 'staffingWorker', cid) ? ' checked' : '') + '> <span>' +
+      esc(FB.T('Reserve this person from the staffing assistant')) + '</span>' +
+      '<span class="adesc">' + esc(FB.T(
+        'Their current enterprise assignment will be preserved, or they will remain available only for manual assignment.')) +
+      '</span></label><div class="gm-list"><button class="actionbtn" id="retainer-career">🧰 ' +
       esc(FB.T('Change occupation or training…')) + '<span class="adesc">' +
       esc(FB.T('The household office remains an additive appointment.')) +
       '</span></button><button class="actionbtn danger" id="retainer-dismiss">' +
@@ -8693,6 +9156,9 @@ window.FB = window.FB || {};
         }
       } : undefined);
     FB.paintFaces($('gm-body'), s);
+    $('staffing-worker-protection').addEventListener('change', function (event) {
+      FB.setProtected(s, 'staffingWorker', cid, event.target.checked);
+    });
     $('retainer-career').addEventListener('click', function () {
       UI.showCareerPicker(cid, {
         view:'retainer',
@@ -9210,6 +9676,9 @@ window.FB = window.FB || {};
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showLivelihoods();
+        });
       });
     });
     const guild = $('career-guild');
@@ -9217,6 +9686,9 @@ window.FB = window.FB || {};
       if (!FB.takeGuildStep(s, c)) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
+      resumeManagementAfterDay(returnContext, function () {
+        UI.showCareerPicker(cid, returnContext);
+      });
     });
     const religious = $('career-religious');
     if (religious) religious.addEventListener('click', function () {
@@ -9232,6 +9704,9 @@ window.FB = window.FB || {};
       if (!FB.takeReligiousStep(s, c)) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
+      resumeManagementAfterDay(returnContext, function () {
+        UI.showCareerPicker(cid, returnContext);
+      });
     });
     const cardinal = $('career-cardinal');
     if (cardinal) cardinal.addEventListener('click', function () {
@@ -9281,6 +9756,9 @@ window.FB = window.FB || {};
         })
         : FB.T('The community elects another candidate.'));
       FB.game.passDay({ skipFocus:true });
+      resumeManagementAfterDay(returnContext, function () {
+        UI.showCareerPicker(cid, returnContext);
+      });
     });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, function () {
@@ -9351,6 +9829,9 @@ window.FB = window.FB || {};
         ? FB.T('{name} is invested as a Bishop.', { name:c.name })
         : FB.T('The appointment is refused; another petition may be made in two years.'));
       FB.game.passDay({ skipFocus:true });
+      resumeManagementAfterDay(returnContext, function () {
+        UI.showCareerPicker(cid, returnContext);
+      });
     }
     const merit = $('bishop-merit');
     if (merit) merit.addEventListener('click', function () { petition(false); });
@@ -10345,6 +10826,9 @@ window.FB = window.FB || {};
         if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showLivelihoods(returnContext);
+        });
       });
     });
     document.querySelectorAll('[data-enterprise-tech]').forEach(function (b) {
@@ -10357,7 +10841,7 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showEnterpriseManage = function (uid, returnContext) {
+  UI.showEnterpriseManage = function (uid, returnContext, replaceView) {
     const s = FB.state;
     largeListViews.work.focusKey = 'work-enterprise-' + uid;
     let e = null;
@@ -10432,7 +10916,12 @@ window.FB = window.FB || {};
         person:c,
         selected:e.workerId === c.id,
         eligibility:e.workerId === c.id
-          ? FB.T('Currently assigned') : FB.T('Eligible worker'),
+          ? (FB.isProtected(s, 'staffingWorker', c.id)
+            ? FB.T('Currently assigned and reserved from the staffing assistant')
+            : FB.T('Currently assigned'))
+          : (FB.isProtected(s, 'staffingWorker', c.id)
+            ? FB.T('Reserved from the staffing assistant; manual choice remains available')
+            : FB.T('Eligible worker')),
         data:{ enterpriseWorker:c.id },
         rows:[
           { label:'Expected yield', value:FB.T('About {money:amount} each season', {
@@ -10450,13 +10939,22 @@ window.FB = window.FB || {};
             value:assignmentConsequence(c, current) }
         ]
       });
+      h += '<button type="button" class="btn small staffing-worker-protection" ' +
+        'data-staffing-worker-protection="' + esc(c.id) +
+        '" aria-pressed="' +
+        (FB.isProtected(s, 'staffingWorker', c.id) ? 'true' : 'false') + '">' +
+        esc(FB.isProtected(s, 'staffingWorker', c.id)
+          ? FB.T('Allow staffing assistant')
+          : FB.T('Reserve from staffing assistant')) + '</button>';
     }
     h += '<button class="actionbtn" data-enterprise-worker="">' +
       (e.workerId ? '○ ' : '◉ ') + esc(FB.T('Leave it idle')) +
       '<span class="adesc">' + esc(FB.T('An idle enterprise produces no seasonal income.')) +
       '</span></button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    const managementOptions = livelihoodsHistoryOptions(returnContext);
+    managementOptions.replaceView = !!replaceView;
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
-      livelihoodsHistoryOptions(returnContext));
+      managementOptions);
     FB.paintFaces($('gm-body'), s);
     if ($('enterprise-worker-lock')) {
       $('enterprise-worker-lock').addEventListener('change', function () {
@@ -10467,6 +10965,15 @@ window.FB = window.FB || {};
         UI.refresh();
       });
     }
+    document.querySelectorAll('[data-staffing-worker-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const cid = button.dataset.staffingWorkerProtection;
+          FB.setProtected(s, 'staffingWorker', cid,
+            !FB.isProtected(s, 'staffingWorker', cid));
+          UI.showEnterpriseManage(uid, returnContext, true);
+        });
+      });
     document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
       b.addEventListener('click', function () {
         FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
@@ -10499,6 +11006,7 @@ window.FB = window.FB || {};
   function enterpriseStaffingStatus(row) {
     const labels = {
       locked:'🔒 ' + FB.T('Locked'),
+      reserved:'🔒 ' + FB.T('Reserved'),
       unchanged:FB.T('Unchanged'),
       assigned:FB.T('Assigned'),
       moved:FB.T('Moved'),
@@ -10526,6 +11034,9 @@ window.FB = window.FB || {};
   function enterpriseStaffingChange(s, row, rowByUid) {
     const current = row.currentWorkerId && s.chars[row.currentWorkerId];
     const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
+    if (row.status === 'reserved') {
+      return FB.T('Reserved worker; the assistant will preserve this assignment.');
+    }
     if (row.status === 'locked') {
       return FB.T('Locked assignment; the assistant will not move this worker.');
     }
@@ -10574,7 +11085,7 @@ window.FB = window.FB || {};
     const rowByUid = {};
     for (const row of plan.rows) rowByUid[row.uid] = row;
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Review the complete result before applying it. Locked pairings stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.')) +
+      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.')) +
       '</p></div>' +
       (notice ? '<div class="hint enterprise-staffing-notice">' +
         esc(notice) + '</div>' : '') +
@@ -10600,7 +11111,8 @@ window.FB = window.FB || {};
       const change = enterpriseStaffingChange(s, row, rowByUid);
       h += '<div class="enterprise-staffing-row ' +
         (row.status === 'unresolved' ? 'unresolved' :
-          (row.status === 'locked' ? 'locked' : '')) + '">' +
+          (row.status === 'locked' || row.status === 'reserved'
+            ? 'locked' : '')) + '">' +
         '<div class="enterprise-staffing-head"><span class="enterprise-staffing-name">' +
         esc(label.icon + ' ' + label.name) + '</span><span class="enterprise-staffing-status">' +
         esc(enterpriseStaffingStatus(row)) + '</span></div>' +
@@ -10628,6 +11140,7 @@ window.FB = window.FB || {};
       esc(FB.T('Back')) + '</button></div>';
     const options = livelihoodsHistoryOptions(returnContext);
     options.modalClass = 'enterprise-staffing-modal';
+    options.replaceView = !!notice;
     openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
     $('enterprise-staffing-apply').addEventListener('click', function () {
       const result = FB.applyEnterpriseStaffingPlan(s, plan);
@@ -11007,7 +11520,10 @@ window.FB = window.FB || {};
         '" data-status="' + esc(techItemStatus(item)) + '" data-search="' + esc(search) + '">' +
         '<span class="tech-entry-icon">' + esc(item.def.icon) + '</span>' +
         '<span class="tech-entry-copy"><b>' + esc(name) + '</b><small>' +
-        esc(techStatusText(item)) + '</small>' +
+        esc(techStatusText(item) +
+          (canControlResearch && !item.completed && !item.active &&
+            FB.isProtected(s, 'researchTech', item.id)
+            ? ' · ' + FB.T('reserved from automatic research') : '')) + '</small>' +
         (discovery ? '<small class="tech-entry-discovery">' +
           esc(discovery) + '</small>' : '') +
         '</span><span class="tech-entry-cost">' +
@@ -11113,6 +11629,7 @@ window.FB = window.FB || {};
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
     if (!item) return UI.showTech();
+    const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
     const cost = item.breakdown || FB.techCostBreakdown(s, id, rid);
     const tradition = techTraditionName(cost.tradition);
     const exposureDiscount = Math.round((1 - cost.exposureMultiplier) * 100);
@@ -11152,8 +11669,16 @@ window.FB = window.FB || {};
       }))) : '') +
       '<div class="panelh">' + esc(FB.T('Prerequisites')) + '</div>' +
       techPrerequisiteButtons(s, def);
+    if (canChoose && !item.completed && !item.active) {
+      h += '<label class="automation-protection"><input type="checkbox" ' +
+        'id="tech-auto-protection"' +
+        (FB.isProtected(s, 'researchTech', id) ? ' checked' : '') +
+        '> <span>' + esc(FB.T('Reserve from automatic research')) + '</span>' +
+        '<span class="adesc">' + esc(FB.T(
+          'Automation will skip this technology. You may still begin it manually.')) +
+        '</span></label>';
+    }
     h += '<div class="gm-footer">';
-    const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
     if (canChoose && item.available &&
         record.active.length < FB.techSlotCount(s, rid)) {
       h += '<button class="btn primary" id="tech-start">' +
@@ -11183,6 +11708,11 @@ window.FB = window.FB || {};
         UI.refresh();
         UI.showTech();
       }
+    });
+    const protection = $('tech-auto-protection');
+    if (protection) protection.addEventListener('change', function () {
+      FB.setProtected(s, 'researchTech', id, this.checked);
+      UI.showTechDetail(id);
     });
     const advocate = $('tech-advocate');
     if (advocate) advocate.addEventListener('click', function () {
@@ -12257,6 +12787,7 @@ window.FB = window.FB || {};
     }
     const recommendation = FB.matchRecommendationOf(s, c);
     const recommendedId = recommendation && recommendation.candidate.id;
+    const matchProtected = FB.isProtected(s, 'matchCharacter', c.id);
     cands = cands.map(function (candidate, order) {
       return { candidate:candidate, order:order };
     }).sort(function (a, b) {
@@ -12265,7 +12796,12 @@ window.FB = window.FB || {};
       return a.order - b.order;
     }).map(function (entry) { return entry.candidate; });
     const ps = FB.playerStation(s);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    let h = '<label class="automation-protection"><input type="checkbox" ' +
+      'id="match-policy-protection"' + (matchProtected ? ' checked' : '') +
+      '> <span>' + esc(FB.T('Manage this descendant’s matches manually')) +
+      '</span><span class="adesc">' + esc(FB.T(
+        'The match assistant will omit this person from future recommendations. Manual matching remains available.')) +
+      '</span></label><div class="gm-body-text"><p>' + esc(FB.T(
       'Families willing to hear an offer for {name}’s hand:', { name: c.name })) +
       '</p>' + (recommendedId ? '<p class="hint">' + esc(FB.T(
         'The assistant’s recommendation is listed first. Every family remains your decision.')) +
@@ -12315,7 +12851,8 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Decide nothing today')) + '</button>';
+      esc(returnContext ? FB.T('Back') : FB.T('Decide nothing today')) +
+      '</button>';
     const historyOptions = { historyView:true };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
@@ -12325,6 +12862,13 @@ window.FB = window.FB || {};
       };
     }
     openModal(FB.T('A Match for {name}', { name: c.name }), h, historyOptions);
+    $('match-policy-protection').addEventListener('change', function () {
+      FB.setProtected(s, 'matchCharacter', c.id, this.checked);
+      if (this.checked) delete c.matchRecommendation;
+      else if (matchPolicy.enabled) {
+        FB.recommendDescendantMatches(s, { notify:false });
+      }
+    });
     document.querySelectorAll('[data-match]').forEach(function (b) {
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
@@ -12332,6 +12876,7 @@ window.FB = window.FB || {};
         if (!FB.sealKinMatch(s, c, m)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus: true });
+        resumeManagementAfterDay(returnContext);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -12488,6 +13033,16 @@ window.FB = window.FB || {};
         'Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.')) +
         '</p>' : '') +
       '</div></div>';
+    if (owned) {
+      const protectedItem = FB.isProtected(s, 'equipmentItem', id);
+      h += '<label class="autorow item-auto-protection"><input type="checkbox" ' +
+        'id="item-auto-protection"' + (protectedItem ? ' checked' : '') + '> ' +
+        esc(FB.T('Protect from automatic equipment changes')) +
+        '<span class="adesc">' + esc(assigned
+          ? FB.T('Equip Best and succession preserve this assignment when possible; otherwise the item stays in the armory. Manual changes remain available.')
+          : FB.T('Equip Best and succession will keep it in the family armory. Manual changes remain available.')) +
+        '</span></label>';
+    }
     if (owned && !pledged) {
       h += '<div class="gm-list">' +
         '<button class="actionbtn" id="im-equip"' + (blocked ? ' disabled' : '') + '>🧍 ' +
@@ -12537,6 +13092,11 @@ window.FB = window.FB || {};
         UI.closeModal();
         FB.game.passDay({ skipFocus: true });
       }
+    });
+    const protection = $('item-auto-protection');
+    if (protection) protection.addEventListener('change', function () {
+      FB.setProtected(s, 'equipmentItem', id, protection.checked);
+      UI.refresh();
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
@@ -12880,6 +13440,22 @@ window.FB = window.FB || {};
     int: 'Secrets, shadows, and leverage.',
     lea: 'Letters, law, and lore. (grants literacy at 16)'
   };
+  function educationProtectionHtml(s, c) {
+    return '<label class="automation-protection"><input type="checkbox" ' +
+      'id="education-policy-protection"' +
+      (FB.isProtected(s, 'educationCharacter', c.id) ? ' checked' : '') +
+      '> <span>' + esc(FB.T('Manage this education manually')) + '</span>' +
+      '<span class="adesc">' + esc(FB.T(
+        'Household education policy will not fill or refill this person’s choices. Manual choices remain available.')) +
+      '</span></label>';
+  }
+
+  function bindEducationProtection(s, c) {
+    $('education-policy-protection').addEventListener('change', function () {
+      FB.setProtected(s, 'educationCharacter', c.id, this.checked);
+    });
+  }
+
   UI.showEduFocus = function (cid, returnContext) {
     const s = FB.state;
     const c = s.chars[cid];
@@ -12889,7 +13465,7 @@ window.FB = window.FB || {};
     const self = c.id === s.player.charId;
     const policy = FB.ensureEducationPolicy(s);
     const provenance = FB.educationPolicyProvenance(s, c, 'focus');
-    let h = '<div class="gm-list">';
+    let h = educationProtectionHtml(s, c) + '<div class="gm-list">';
     for (const k of FB.SKILLS) {
       const cur = c.edu && c.edu.focus === k;
       h += '<button class="actionbtn" data-edufocus="' + k + '">' + (cur ? '◉ ' : '○ ') +
@@ -12920,6 +13496,7 @@ window.FB = window.FB || {};
           } else UI.showCharModal(cid);
         }
       });
+    bindEducationProtection(s, c);
     document.querySelectorAll('[data-edufocus]').forEach(function (b) {
       b.addEventListener('click', function () {
         const k = b.getAttribute('data-edufocus');
@@ -13088,7 +13665,7 @@ window.FB = window.FB || {};
         ? FB.T('Teaching {students}', { students:students.join(', ') })
         : FB.T('No current teaching assignment');
     }
-    let h = '<div class="gm-list">';
+    let h = educationProtectionHtml(s, c) + '<div class="gm-list">';
     for (const option of schoolOptions) {
       const id = option.schoolId;
       const def = option.def;
@@ -13183,6 +13760,7 @@ window.FB = window.FB || {};
           } else UI.showCharModal(cid);
         }
       });
+    bindEducationProtection(s, c);
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-school]').forEach(function (b) {
       b.addEventListener('click', function () {

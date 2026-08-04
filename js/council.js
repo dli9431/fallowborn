@@ -65,11 +65,14 @@ window.FB = window.FB || {};
     // fill vacancies: the greatest vassals first (rank, then Standing)
     const seated = {};
     for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
-    const cand = FB.playerVassals(state).filter(function (vid) { return !seated[vid]; });
+    const cand = FB.playerVassals(state).filter(function (vid) {
+      return !seated[vid] && !FB.isProtected(state, 'councilRealm', vid);
+    });
     cand.sort(function (a, b) {
       const ra = state.realms[a], rb = state.realms[b];
       if ((rb.rank || 1) !== (ra.rank || 1)) return (rb.rank || 1) - (ra.rank || 1);
-      return standing(state, b) - standing(state, a);
+      return standing(state, b) - standing(state, a) ||
+        (a < b ? -1 : a > b ? 1 : 0);
     });
     for (const s of SEATS) {
       if (!c.seats[s.id] && cand.length) c.seats[s.id] = cand.shift();
@@ -156,6 +159,26 @@ window.FB = window.FB || {};
       schemerIds:schemers,
       sycophantIds:sycophants
     };
+  };
+
+  /* Read-only recommendation used by Council management. Reservations affect
+     automatic filling and this suggestion, but never prevent manual choice. */
+  FB.councilRecommendation = function (state, seatId) {
+    const summary = FB.councilSummary(state);
+    if (!summary || !FB.councilSeat(seatId)) return null;
+    const candidates = FB.playerVassals(state).filter(function (rid) {
+      return !summary.seated[rid] &&
+        !FB.isProtected(state, 'councilRealm', rid);
+    });
+    candidates.sort(function (a, b) {
+      const ra = state.realms[a], rb = state.realms[b];
+      const rank = (rb && rb.rank || 1) - (ra && ra.rank || 1);
+      if (rank) return rank;
+      const value = standing(state, b) - standing(state, a);
+      if (value) return value;
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+    return candidates.length ? candidates[0] : null;
   };
 
   /* sum of office bonuses of one key (tax/levy/build/piety/plot) */

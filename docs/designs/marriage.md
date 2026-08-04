@@ -166,6 +166,12 @@ it creates a Household Plan marker and one Chronicle notice, not a betrothal. Pr
 saving, and refreshing a recommendation spend no resources or days. The ordinary picker
 lists the recommendation first but preserves all manual choices, and only
 `FB.sealKinMatch` can make the consequential pledge.
+The household head may put an eligible descendant in the `matchCharacter` protection
+scope from that same picker. Protected descendants are omitted from immediate and New Year
+recommendation passes, and an existing recommendation marker is removed; their persistent
+candidate families and manual pledge controls are unchanged. A match sealed from Household
+Plan still spends its ordinary day, then returns to the refreshed plan instead of dismissing
+the whole management flow.
 
 Related: [characters.md](characters.md) for the rest of the character lifecycle,
 [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for the plot system.

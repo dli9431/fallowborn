@@ -135,6 +135,12 @@ rows record the current/proposed ids and yields, lock/status state, and one of
 unresolved enterprise. `FB.applyEnterpriseStaffingPlan` rejects a stale signature for
 another review, clears only unlocked assignments, and reapplies the reviewed mapping
 through `FB.assignEnterprise`.
+The separate `staffingWorker` protection scope reserves a person from the assistant rather
+than one enterprise pairing. A protected assigned worker and that current enterprise are
+fixed in the preview even when `workerLocked` is false; a protected idle worker is not a
+candidate. Protection is included in the review signature and status rows. Manual assign,
+replace, and unassign controls remain authoritative, and the reservation follows the person
+to a new manual assignment until removed.
 
 Enterprise yield consumes the shared computed benefits shown in Network: guild rank,
 the legacy guild-member work benefit, and position/retainer enterprise modifiers. These

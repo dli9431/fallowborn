@@ -806,6 +806,9 @@ window.FB = window.FB || {};
         !prerequisitesMetFromLookup(def, listLookup(record.completed))) return false;
     record.active.push(id);
     delete record.priorities[id];
+    if (!force && rid === 'player') {
+      FB.setProtected(state, 'researchTech', id, false);
+    }
     return true;
   };
 
@@ -992,7 +995,10 @@ window.FB = window.FB || {};
     var candidates = FB.techCandidates(state, rid, true);
     var available = [];
     for (var i = 0; i < candidates.length; i++) {
-      if (candidates[i].available) available.push(candidates[i]);
+      if (candidates[i].available &&
+          !FB.isProtected(state, 'researchTech', candidates[i].id)) {
+        available.push(candidates[i]);
+      }
     }
     available.sort(function (a, b) {
       var aPreferred = mode !== 'cheapest' && a.domain === mode ? 0 : 1;

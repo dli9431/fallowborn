@@ -467,6 +467,9 @@ window.FB = window.FB || {};
       c.items = c.items || [];
       c.items.push(ref);
     }
+    if (target !== 'armory') {
+      FB.setProtected(state, 'equipmentItem', ref, false);
+    }
     return true;
   };
 
@@ -822,6 +825,8 @@ window.FB = window.FB || {};
         ? at.cid + ':' + at.slots.slice().sort().join(',')
         : 'armory'));
     }
+    parts.push('protected:' +
+      FB.protectionIds(state, 'equipmentItem').slice().sort().join(','));
     return parts.join('|');
   }
 
@@ -842,10 +847,29 @@ window.FB = window.FB || {};
     const candidates = {};
     const hands = [];
     for (let i = 0; i < fixedSlots.length; i++) candidates[fixedSlots[i]] = [];
+    const currentLoadout = state.player.loadouts[cid] || {};
+    const next = {};
+    let protectedHands = false;
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+      const slot = SLOT_ORDER[i], currentRef = currentLoadout[slot];
+      if (!currentRef || !FB.isProtected(state, 'equipmentItem', currentRef)) {
+        continue;
+      }
+      next[slot] = currentRef;
+      if (slot === 'leftHand' || slot === 'rightHand') protectedHands = true;
+    }
+    /* Hand combinations interact through grip. If either currently held
+       object is protected, preserve the whole hand arrangement rather than
+       moving its unprotected companion as a side effect. */
+    if (protectedHands) {
+      if (currentLoadout.leftHand) next.leftHand = currentLoadout.leftHand;
+      if (currentLoadout.rightHand) next.rightHand = currentLoadout.rightHand;
+    }
     const refs = state.player.items.slice();
     for (let i = 0; i < refs.length; i++) {
       const item = rawResolved(state, refs[i]);
       if (!item) continue;
+      if (FB.isProtected(state, 'equipmentItem', refs[i])) continue;
       const checkSlot = item.slot === 'hand' ? 'rightHand' : item.slot;
       if (!basicEquipCheck(state, cid, checkSlot, refs[i], true).ok) continue;
       const candidate = {
@@ -858,9 +882,9 @@ window.FB = window.FB || {};
       else if (candidates[item.slot]) candidates[item.slot].push(candidate);
     }
 
-    const next = {};
     for (let i = 0; i < fixedSlots.length; i++) {
       const slot = fixedSlots[i];
+      if (next[slot]) continue;
       candidates[slot].sort(compareEquipmentCandidates);
       if (candidates[slot].length &&
         (candidates[slot][0].score > 0 ||
@@ -869,27 +893,29 @@ window.FB = window.FB || {};
       }
     }
 
-    const combinations = [equipmentCombination([])];
-    for (let i = 0; i < hands.length; i++) {
-      combinations.push(equipmentCombination([hands[i]]));
-      if (hands[i].item.grip === 2) continue;
-      for (let j = i + 1; j < hands.length; j++) {
-        if (hands[j].item.grip !== 2) {
-          combinations.push(equipmentCombination([hands[i], hands[j]]));
+    if (!protectedHands) {
+      const combinations = [equipmentCombination([])];
+      for (let i = 0; i < hands.length; i++) {
+        combinations.push(equipmentCombination([hands[i]]));
+        if (hands[i].item.grip === 2) continue;
+        for (let j = i + 1; j < hands.length; j++) {
+          if (hands[j].item.grip !== 2) {
+            combinations.push(equipmentCombination([hands[i], hands[j]]));
+          }
         }
       }
-    }
-    combinations.sort(compareEquipmentCombinations);
-    const handChoice = combinations[0].items.slice().sort(compareEquipmentCandidates);
-    if (handChoice.length === 1 && handChoice[0].item.grip === 2) {
-      next.leftHand = handChoice[0].ref;
-      next.rightHand = handChoice[0].ref;
-    } else {
-      if (handChoice[0]) {
+      combinations.sort(compareEquipmentCombinations);
+      const handChoice = combinations[0].items.slice().sort(compareEquipmentCandidates);
+      if (handChoice.length === 1 && handChoice[0].item.grip === 2) {
+        next.leftHand = handChoice[0].ref;
         next.rightHand = handChoice[0].ref;
-      }
-      if (handChoice[1]) {
-        next.leftHand = handChoice[1].ref;
+      } else {
+        if (handChoice[0]) {
+          next.rightHand = handChoice[0].ref;
+        }
+        if (handChoice[1]) {
+          next.leftHand = handChoice[1].ref;
+        }
       }
     }
 

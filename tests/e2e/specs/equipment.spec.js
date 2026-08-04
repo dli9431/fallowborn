@@ -137,3 +137,84 @@ test('previews and applies Equip Best for one managed character',
     await expect(page.locator('[data-equip-cid="' + setup.targetId + '"]'))
       .toHaveCount(8);
   });
+
+test('equipment reservations freeze coupled hands and remain manually removable',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const head = s.chars[s.player.charId];
+      const spouse = FB.makeCharacter(s, {
+        name:'Cecily',
+        sex:'f',
+        culture:head.culture,
+        religion:head.religion,
+        born:s.date.year - 24,
+        dyn:head.dyn,
+        role:'spouse',
+        traits:[]
+      });
+      spouse.health = 8;
+      head.spouseId = spouse.id;
+      spouse.spouseId = head.id;
+
+      const shield = FB.grantItem(s, 'round_shield', {
+        quality:'plain', visualSeed:311
+      });
+      const seax = FB.grantItem(s, 'keen_seax', {
+        quality:'plain', visualSeed:312
+      });
+      const sword = FB.grantItem(s, 'hero_sword');
+      const ring = FB.grantItem(s, 'silver_ring', {
+        quality:'plain', visualSeed:313
+      });
+      FB.equipItem(s, spouse.id, 'rightHand', shield);
+      FB.equipItem(s, spouse.id, 'leftHand', seax);
+      FB.setProtected(s, 'equipmentItem', shield, true);
+      FB.setProtected(s, 'equipmentItem', sword, true);
+      FB.setProtected(s, 'equipmentItem', ring, true);
+
+      const preview = FB.equipBestPreview(s, spouse.id);
+      const manualUnequip = FB.unequipItem(s, spouse.id, 'rightHand');
+      const stillProtected = FB.isProtected(
+        s, 'equipmentItem', shield);
+      const transferred = FB.transferItem(s, ring, spouse.id);
+      const transferCleared = !FB.isProtected(
+        s, 'equipmentItem', ring);
+      FB.ui.showItemModal(sword);
+      return {
+        spouseId:spouse.id,
+        shield:shield,
+        seax:seax,
+        sword:sword,
+        preview:preview,
+        manualUnequip:manualUnequip,
+        stillProtected:stillProtected,
+        transferred:transferred,
+        transferCleared:transferCleared
+      };
+    });
+
+    expect(setup.preview.ok).toBe(true);
+    expect(setup.preview.refs).toEqual(expect.arrayContaining([
+      setup.shield,
+      setup.seax
+    ]));
+    expect(setup.preview.refs).not.toContain(setup.sword);
+    expect(setup.preview.movements).toEqual([]);
+    expect(setup.manualUnequip).toBe(setup.shield);
+    expect(setup.stillProtected).toBe(true);
+    expect(setup.transferred).toBe(true);
+    expect(setup.transferCleared).toBe(true);
+
+    const protection = page.getByRole('checkbox', {
+      name:/Protect from automatic equipment changes/
+    });
+    await expect(protection).toBeChecked();
+    await protection.uncheck();
+    expect(await page.evaluate(function (ref) {
+      return FB.isProtected(FB.state, 'equipmentItem', ref);
+    }, setup.sword)).toBe(false);
+  });

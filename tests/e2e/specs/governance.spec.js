@@ -358,6 +358,173 @@ test('summary values match domain, tax, levy, Standing, and hierarchy sources',
       'Host levy contribution');
   });
 
+test('domain cleanup is preview-first, stale-safe, and respects county reservations',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    await page.evaluate(function () { FB.ui.showGovernance('domain'); });
+    await page.locator('[data-governance-cleanup]').click();
+    await expect(page.locator('#gm-title')).toContainText('Domain Cleanup');
+    await expect(page.locator('#gm-body')).toContainText('Land tax estimate');
+    await page.locator('#domain-cleanup-back').click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var seat = p.provinceId;
+      var reserved = p.provs[p.provs.length - 1];
+      FB.setProtected(s, 'grantCounty', reserved, true);
+      var saveBefore = FB.save.serialize();
+      var rngBefore = JSON.stringify(FB.getRngState());
+      var plan = FB.domainCleanupPlan(s);
+      var readOnly = saveBefore === FB.save.serialize() &&
+        rngBefore === JSON.stringify(FB.getRngState());
+      var staleTarget = plan.countyIds[0];
+      FB.setProtected(s, 'grantCounty', staleTarget, true);
+      var stale = FB.applyDomainCleanupPlan(s, plan);
+      var staleKeptCounty = p.provs.indexOf(staleTarget) >= 0;
+      FB.setProtected(s, 'grantCounty', staleTarget, false);
+      var fresh = FB.domainCleanupPlan(s);
+      var applied = FB.applyDomainCleanupPlan(s, fresh);
+      return {
+        readOnly:readOnly,
+        excess:plan.excess,
+        unresolved:plan.unresolved,
+        omittedReserved:plan.countyIds.indexOf(reserved) < 0,
+        omittedSeat:plan.countyIds.indexOf(seat) < 0,
+        projectionFinite:isFinite(plan.projection.beforeTax) &&
+          isFinite(plan.projection.afterTax) &&
+          isFinite(plan.projection.beforeLevy) &&
+          isFinite(plan.projection.afterLevy),
+        staleCode:stale.code,
+        staleDidNotGrant:staleKeptCounty,
+        applied:applied.ok,
+        held:p.provs.length,
+        cap:FB.domainCap(s),
+        keptReserved:p.provs.indexOf(reserved) >= 0,
+        keptSeat:p.provs.indexOf(seat) >= 0
+      };
+    });
+
+    expect(result.readOnly).toBe(true);
+    expect(result.excess).toBeGreaterThan(0);
+    expect(result.unresolved).toBe(0);
+    expect(result.omittedReserved).toBe(true);
+    expect(result.omittedSeat).toBe(true);
+    expect(result.projectionFinite).toBe(true);
+    expect(result.staleCode).toBe('stale');
+    expect(result.staleDidNotGrant).toBe(true);
+    expect(result.applied).toBe(true);
+    expect(result.held).toBe(result.cap);
+    expect(result.keptReserved).toBe(true);
+    expect(result.keptSeat).toBe(true);
+  });
+
+test('Governance county and grant flows return to Domain while Council reservations stay manual',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    const setup = await configureGovernance(page, 'king');
+    const result = await page.evaluate(function (ids) {
+      var s = FB.state;
+      var p = s.player;
+      var grantedCounty = p.provs[p.provs.length - 1];
+      FB.grantCounty(s, grantedCounty);
+      var reservedRealm = 'pv_' + grantedCounty;
+      FB.setProtected(s, 'councilRealm', reservedRealm, true);
+      s.council = {
+        authority:60,
+        seats:{
+          seneschal:null,
+          constable:null,
+          treasurer:null,
+          almoner:null,
+          chamberlain:null
+        }
+      };
+      FB.councilEnsure(s);
+      var automaticallySeated = Object.keys(s.council.seats).some(
+        function (seatId) {
+          return s.council.seats[seatId] === reservedRealm;
+        });
+      FB.councilAppoint(s, 'constable', reservedRealm);
+      FB.ui.showGovernance('domain');
+      return {
+        countyId:p.provinceId,
+        countyName:FB.world.byId[p.provinceId].name,
+        reservedRealm:reservedRealm,
+        automaticallySeated:automaticallySeated,
+        manualHolder:s.council.seats.constable,
+        originalVassal:ids.vassalId
+      };
+    }, setup);
+
+    expect(result.automaticallySeated).toBe(false);
+    expect(result.manualHolder).toBe(result.reservedRealm);
+
+    await page.locator('#governance-domain [data-governance-county="' +
+      result.countyId + '"]').click();
+    await expect(page.getByRole('heading', {
+      name:'County of ' + result.countyName,
+      exact:true
+    })).toBeVisible();
+    await expect(page.locator('#governance-county-back')).toHaveText('Back');
+    await expect(page.locator('[data-grant-protection="' +
+      result.countyId + '"]')).toBeVisible();
+    await page.locator('#governance-county-back').click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+    await expect(page.locator(
+      '[data-governance-section="domain"]')).toHaveAttribute(
+        'aria-selected', 'true');
+
+    await page.locator(
+      '#governance-domain [data-governance-action="grant_land"]')
+      .last().click();
+    await expect(page.getByRole('heading', {
+      name:'Grant Land', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#gm-cancel')).toHaveText('Back');
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+
+    const turnBeforeLevy = await page.evaluate(function (rid) {
+      delete FB.state.player.vassalLevyFavors[rid];
+      FB.ui.showGovernance('vassals');
+      return FB.state.turn;
+    }, result.originalVassal);
+    const levy = page.locator('[data-governance-vassal-levy="' +
+      result.originalVassal + '"]');
+    await expect(levy).toBeEnabled();
+    await levy.click();
+    await expect(page.locator('#gm-title')).toContainText('Governance');
+    await expect(page.locator('#governance-vassals')).toBeVisible();
+    expect(await page.evaluate(function () { return FB.state.turn; }))
+      .toBe(turnBeforeLevy + 1);
+
+    await page.locator('#governance-vassals [data-governance-realm="' +
+      result.originalVassal + '"]').first().click();
+    await expect(page.locator('#gm-title')).toContainText('Realm Ruler');
+    await expect(page.locator('#gm-cancel')).toHaveText('Back');
+    await page.locator('[data-interaction-action="gift.ruler"]').click();
+    await expect(page.locator('#gm-title')).toContainText('Offer a gift');
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#gm-title')).toContainText('Realm Ruler');
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#governance-vassals')).toBeVisible();
+
+    await page.evaluate(function () {
+      FB.ui.showCouncil('governance');
+    });
+    const councilProtection = page.locator('[data-council-protection="' +
+      result.reservedRealm + '"]');
+    await expect(councilProtection).toContainText('Reserved');
+    await councilProtection.click();
+    await expect(page.locator('[data-council-protection="' +
+      result.reservedRealm + '"]')).toContainText('Automatic allowed');
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#governance-institution')).toBeVisible();
+  });
+
 test('vassal Governance consolidates Deeds and returns through Estates without mutation',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);

@@ -78,6 +78,11 @@ An occupied seat may also deliberately replace its holder with an unseated vassa
 the same existing appointment mechanic. Council candidates use the shared
 person-assignment card to preview the office benefit, absence of household pay, current
 Standing and position, and the appointment or replacement consequences.
+Any direct vassal may be placed in the `councilRealm` protection scope from Governance or
+the Council manager. `FB.councilEnsure` leaves that vassal out when it fills a vacancy, and
+`FB.councilRecommendation` uses the same rank/Standing order while omitting protected and
+already seated realms. Protected candidates remain visible and manually appointable; a
+reservation never dismisses a holder already in office.
 
 The Network Realm section routes a qualified territorial ruler into Governance rather
 than maintaining another Council summary. Network keeps the exact host ledger; Governance

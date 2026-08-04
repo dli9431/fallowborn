@@ -261,3 +261,61 @@ test('previews, saves, and reviews a recommendation from Household Plan',
     await expect(page.locator('[data-match="' + family.highId + '"]'))
       .toBeEnabled();
   });
+
+test('reserved descendants stay manual and a sealed match returns to Household Plan',
+  async function ({ page }) {
+    const family = await addEligibleDescendant(page);
+    const protectedResult = await page.evaluate(function (ids) {
+      const state = FB.state;
+      const child = state.chars[ids.childId];
+      FB.setMatchPolicy(state, {
+        enabled:true,
+        minStation:2,
+        maxDowry:10,
+        maxGold:10,
+        maxPrestige:0
+      });
+      const hadRecommendation = !!child.matchRecommendation;
+      FB.setProtected(state, 'matchCharacter', child.id, true);
+      FB.recommendDescendantMatches(state, { notify:false });
+      FB.ui.showHouseholdPlan();
+      return {
+        hadRecommendation:hadRecommendation,
+        recommendationCleared:!child.matchRecommendation,
+        previewOmitted:FB.matchPolicyPreview(state).every(function (entry) {
+          return entry.child.id !== child.id;
+        })
+      };
+    }, family);
+
+    expect(protectedResult.hadRecommendation).toBe(true);
+    expect(protectedResult.recommendationCleared).toBe(true);
+    expect(protectedResult.previewOmitted).toBe(true);
+
+    const matchCell = page.locator(
+      '[data-household-plan-action="match"]' +
+      '[data-household-plan-cid="' + family.childId + '"]');
+    await matchCell.click();
+    const protection = page.getByRole('checkbox', {
+      name:/Manage this descendant.*matches manually/
+    });
+    await expect(protection).toBeChecked();
+    await expect(page.locator('#gm-cancel')).toHaveText('Back');
+    await expect(page.locator('[data-match]')).toHaveCount(3);
+
+    await protection.uncheck();
+    await page.locator('[data-match="' + family.peerId + '"]').click();
+    await expect(page.locator('#gm-title')).toContainText('Household Plan');
+    const sealed = await page.evaluate(function (ids) {
+      const child = FB.state.chars[ids.childId];
+      return {
+        protected:FB.isProtected(
+          FB.state, 'matchCharacter', ids.childId),
+        betrothedId:child.betrothedId,
+        turn:FB.state.turn
+      };
+    }, family);
+    expect(sealed.protected).toBe(false);
+    expect(sealed.betrothedId).toBe(family.peerId);
+    expect(sealed.turn).toBe(1);
+  });

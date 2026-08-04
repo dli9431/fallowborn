@@ -42,6 +42,43 @@ window.FB = window.FB || {};
 
   FB.clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
 
+  /* Scoped, additive player protections shared by management assistants.
+     A protection is advisory to automation and batch recommendations; the
+     corresponding manual screen may still let the player remove it and act.
+     Arrays keep arbitrary generated ids safe as JSON keys and make old saves
+     need no migration. Read paths never create or normalize save state. */
+  FB.protectionIds = function (state, scope) {
+    const protections = state && state.player && state.player.protections;
+    const ids = protections && protections[scope];
+    return Array.isArray(ids) ? ids : [];
+  };
+  FB.isProtected = function (state, scope, id) {
+    if (id === undefined || id === null) return false;
+    return FB.protectionIds(state, scope).indexOf(String(id)) >= 0;
+  };
+  FB.setProtected = function (state, scope, id, protectedValue) {
+    if (!state || !state.player || !scope || id === undefined || id === null) {
+      return false;
+    }
+    const key = String(id);
+    let protections = state.player.protections;
+    if (!protections || typeof protections !== 'object' ||
+        Array.isArray(protections)) {
+      if (!protectedValue) return false;
+      protections = state.player.protections = {};
+    }
+    let ids = protections[scope];
+    if (!Array.isArray(ids)) {
+      if (!protectedValue) return false;
+      ids = protections[scope] = [];
+    }
+    const at = ids.indexOf(key);
+    if (protectedValue && at < 0) ids.push(key);
+    else if (!protectedValue && at >= 0) ids.splice(at, 1);
+    if (!ids.length) delete protections[scope];
+    return FB.isProtected(state, scope, key);
+  };
+
   /* A title's broad social audience. Political position (vassal, sovereign,
      liege) stays orthogonal: two counts share a societal role even when only
      one answers to a king. */

@@ -1623,7 +1623,10 @@ window.FB = window.FB || {};
   function matchPolicyChildren(state) {
     const out = [];
     const members = FB.householdMembers ? FB.householdMembers(state) : [];
-    for (const c of members) if (managedMatchKind(state, c)) out.push(c);
+    for (const c of members) {
+      if (managedMatchKind(state, c) &&
+          !FB.isProtected(state, 'matchCharacter', c.id)) out.push(c);
+    }
     return out;
   }
 
@@ -1652,6 +1655,12 @@ window.FB = window.FB || {};
     const policy = FB.ensureMatchPolicy(state);
     const opts = options || {};
     if (!policy.enabled) return [];
+    for (const id in state.chars) {
+      const c = state.chars[id];
+      if (c && FB.isProtected(state, 'matchCharacter', id)) {
+        delete c.matchRecommendation;
+      }
+    }
     const key = matchPolicyKey(policy);
     const out = FB.matchPolicyPreview(state, policy);
     for (const entry of out) {
@@ -1685,6 +1694,7 @@ window.FB = window.FB || {};
     const policy = FB.ensureMatchPolicy(state);
     const record = child && child.matchRecommendation;
     if (!policy.enabled || !record ||
+        FB.isProtected(state, 'matchCharacter', child.id) ||
         record.policyKey !== matchPolicyKey(policy) ||
         !record.candidateId ||
         !child.matchIds ||

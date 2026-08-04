@@ -146,6 +146,19 @@ uncompressed `FBS1.` form remains importable forever. The ☰ menu's
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
 and the current life as `FBS2.` text, so a reported moment can be reopened exactly via Import.
 
+Management protections are additive player state at save format 3:
+`player.protections[scope]` is an array of stable string ids. The built-in scopes are
+`grantCounty` and `autoBuildCounty` (province ids), `equipmentItem` (exact item references),
+`educationCharacter`, `matchCharacter`, and `staffingWorker` (character ids),
+`researchTech` (technology ids), and `councilRealm` (realm ids). `FB.protectionIds` and
+`FB.isProtected` are read-only and return an empty view for missing or malformed old-save
+state; only `FB.setProtected` creates, adds, removes, or deletes an empty scope. The registry
+belongs to the continuing household and survives succession and every ordinary save/export
+round trip. It stores no labels, prose, derived plans, or object snapshots. Unknown scopes
+and stale ids are inert, preserving mod and old-save compatibility. Each consuming assistant
+defines the exact advisory effect; manual actions remain available unless that action's own
+ordinary rules block them.
+
 **The save must fit the localStorage quota beside its siblings** (~5 MB per origin on
 WebKit/iOS, ~10 MB elsewhere — shared by the autosave and all three slots; a serialized
 character record is ~400 bytes). Court records are map-bound by the eager-court

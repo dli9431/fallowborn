@@ -106,6 +106,16 @@ assignment makes the preview stale and requires another review. Applying costs n
 does not consume RNG, and affects only the selected character. Manual slot choices remain
 available, and acquiring loot never invokes the optimizer.
 
+An owned item may be placed in the `equipmentItem` protection scope from its item card.
+Both **Equip Best** and succession omit a protected armory item and preserve a protected
+assignment on the selected wearer when that wearer remains in the managed household. The
+two hand slots are one coupled choice: protecting either held object freezes the complete
+current hand arrangement so grip rules cannot displace its companion indirectly. If a
+protected wearer leaves the new household during succession, the object stays in the family
+armory instead of being reassigned. Manual equip and unequip remain authoritative. Selling,
+gifting, destroying, or otherwise transferring an object out of the armory clears its
+protection so exact generated references cannot leave stale reservations behind.
+
 Cross-sovereign gifts are not transferred at dispatch. The exact reference is removed from
 usable armory ownership and held by a `player.giftDeliveries` record; `FB.itemOwner`
 reports `{kind:'delivery'}` so the object cannot be sold, equipped, duplicated, or
