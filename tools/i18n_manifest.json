@@ -918,6 +918,14 @@
         "text": "Charters, accounts, judgments, and the written machinery of rule."
       }
     },
+    "career.administration.license.name.default": {
+      "context": "career administration, license name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Clerk’s examination"
+      }
+    },
     "career.administration.name.default": {
       "context": "career administration, name, faith branch default.",
       "glossary": [],
@@ -931,7 +939,7 @@
       "glossary": [],
       "location": "data/economy.js",
       "source": {
-        "text": "Apprentice Clerk"
+        "text": "Copyist"
       }
     },
     "career.administration.ranks.journeyman.default": {
@@ -947,7 +955,23 @@
       "glossary": [],
       "location": "data/economy.js",
       "source": {
+        "text": "Learned administrator"
+      }
+    },
+    "career.administration.specializations.bailiff.name.default": {
+      "context": "career administration, specialization bailiff, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
         "text": "Bailiff"
+      }
+    },
+    "career.administration.specializations.notary.name.default": {
+      "context": "career administration, specialization notary, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Notary"
       }
     },
     "career.craftsman.desc.default": {
@@ -1150,6 +1174,70 @@
         "text": "Steward"
       }
     },
+    "career.physician.desc.default": {
+      "context": "career physician, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Diagnosis, remedies, regimen, and the uncertain care of the sick."
+      }
+    },
+    "career.physician.license.name.default": {
+      "context": "career physician, license name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Practitioner’s examination"
+      }
+    },
+    "career.physician.name.default": {
+      "context": "career physician, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Medicine"
+      }
+    },
+    "career.physician.ranks.apprentice.default": {
+      "context": "career physician, rank apprentice, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Healer’s pupil"
+      }
+    },
+    "career.physician.ranks.journeyman.default": {
+      "context": "career physician, rank journeyman, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Practitioner"
+      }
+    },
+    "career.physician.ranks.master.default": {
+      "context": "career physician, rank master, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Medical master"
+      }
+    },
+    "career.physician.specializations.apothecary.name.default": {
+      "context": "career physician, specialization apothecary, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Apothecary"
+      }
+    },
+    "career.physician.specializations.physician.name.default": {
+      "context": "career physician, specialization physician, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Physician"
+      }
+    },
     "career.priest.desc.default": {
       "context": "career priest, desc, faith branch default.",
       "glossary": [],
@@ -1188,6 +1276,70 @@
       "location": "data/economy.js",
       "source": {
         "text": "Senior cleric"
+      }
+    },
+    "career.scholar.desc.default": {
+      "context": "career scholar, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Books, disputation, observation, and works meant to outlive their author."
+      }
+    },
+    "career.scholar.license.name.default": {
+      "context": "career scholar, license name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Scholarly disputation"
+      }
+    },
+    "career.scholar.name.default": {
+      "context": "career scholar, name, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Scholarship"
+      }
+    },
+    "career.scholar.ranks.apprentice.default": {
+      "context": "career scholar, rank apprentice, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Student"
+      }
+    },
+    "career.scholar.ranks.journeyman.default": {
+      "context": "career scholar, rank journeyman, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Scholar"
+      }
+    },
+    "career.scholar.ranks.master.default": {
+      "context": "career scholar, rank master, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Learned master"
+      }
+    },
+    "career.scholar.specializations.astronomer.name.default": {
+      "context": "career scholar, specialization astronomer, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Astronomer"
+      }
+    },
+    "career.scholar.specializations.author.name.default": {
+      "context": "career scholar, specialization author, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Author"
       }
     },
     "career.soldier.desc.default": {
@@ -27939,6 +28091,14 @@
         "text": "🧶 Keep the household"
       }
     },
+    "focus.keep_records.label.default": {
+      "context": "focus keep_records, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📜 Keep records"
+      }
+    },
     "focus.lead_host.label.default": {
       "context": "focus lead_host, visible label.",
       "glossary": [],
@@ -27987,6 +28147,14 @@
         "text": "🪁 Play"
       }
     },
+    "focus.practice_physic.label.default": {
+      "context": "focus practice_physic, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🌿 Practice physic"
+      }
+    },
     "focus.pray.label.default": {
       "context": "focus pray, visible label.",
       "glossary": [],
@@ -28009,6 +28177,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "🕸 Advance the plot"
+      }
+    },
+    "focus.scholarly_work.label.default": {
+      "context": "focus scholarly_work, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📚 Study and write"
       }
     },
     "focus.serve_church.label.default": {
@@ -29931,6 +30107,22 @@
         "text": "Ash Spear"
       }
     },
+    "item.book_of_laws.desc.default": {
+      "context": "item book_of_laws, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A family author’s ordered account of law, custom, and judgment."
+      }
+    },
+    "item.book_of_laws.name.default": {
+      "context": "item book_of_laws, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Book of Laws"
+      }
+    },
     "item.broad_sword.desc.default": {
       "context": "item broad_sword, desc, faith branch default.",
       "glossary": [],
@@ -29945,6 +30137,38 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Broad Sword"
+      }
+    },
+    "item.chronicle_of_princes.desc.default": {
+      "context": "item chronicle_of_princes, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A family author’s record of rulers, quarrels, and remembered deeds."
+      }
+    },
+    "item.chronicle_of_princes.name.default": {
+      "context": "item chronicle_of_princes, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Chronicle of Princes"
+      }
+    },
+    "item.compendium_of_nature.desc.default": {
+      "context": "item compendium_of_nature, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A family author’s collection of animals, plants, stones, and wonders."
+      }
+    },
+    "item.compendium_of_nature.name.default": {
+      "context": "item compendium_of_nature, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Compendium of Nature"
       }
     },
     "item.crown_of_old.desc.default": {
@@ -30217,6 +30441,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Silver Ring"
+      }
+    },
+    "item.treatise_on_virtue.desc.default": {
+      "context": "item treatise_on_virtue, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A family author’s argument about conduct, duty, and the good life."
+      }
+    },
+    "item.treatise_on_virtue.name.default": {
+      "context": "item treatise_on_virtue, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Treatise on Virtue"
       }
     },
     "item.turnshoe_boots.desc.default": {
@@ -31366,6 +31606,37 @@
         "text": "🧰 {name} completes their apprenticeship and becomes {rank}."
       }
     },
+    "news.career.exam_failed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📚 {name} does not satisfy the examiners and must wait before trying again."
+      }
+    },
+    "news.career.exam_passed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "rank"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📚 {name} passes the examination and is recognized as {rank}."
+      }
+    },
+    "news.career.lettered": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📜 {name} learns to read and write through sustained training."
+      }
+    },
     "news.career.resumes": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -31375,6 +31646,17 @@
       "location": "js/economy.js",
       "source": {
         "text": "🧰 {name} returns to their former standing in {career}."
+      }
+    },
+    "news.career.work_authored": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item",
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "📖 {name} completes {item}, a work for the family to preserve."
       }
     },
     "news.council.appointed": {
@@ -44675,6 +44957,16 @@
         "text": "A required national technology has not been completed."
       }
     },
+    "src.090b742f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌿 Practice physic"
+      }
+    },
     "src.0927ac58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44853,6 +45145,16 @@
       ],
       "source": {
         "text": "Purse"
+      }
+    },
+    "src.098e759c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{examination} — {chance}% ({money:gold})"
       }
     },
     "src.0991b443": {
@@ -45093,6 +45395,16 @@
       ],
       "source": {
         "text": "Adds this office; the current occupation remains unchanged."
+      }
+    },
+    "src.0a318422": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Learned master"
       }
     },
     "src.0a324c9a": {
@@ -45958,6 +46270,16 @@
         "text": "Vow to build something worth inheriting."
       }
     },
+    "src.0c7f8aac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Career specialization"
+      }
+    },
     "src.0c9e7216": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46640,6 +46962,16 @@
         "text": "Required for legitimacy"
       }
     },
+    "src.0e36721a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Qualify as {rank}"
+      }
+    },
     "src.0e3ae050": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46828,6 +47160,16 @@
       ],
       "source": {
         "text": "Survey Rolls and Seal Press"
+      }
+    },
+    "src.0eb9c8a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Scholar"
       }
     },
     "src.0ebdf636": {
@@ -48876,6 +49218,16 @@
         "text": "Miracles are soon reported. Pilgrims flood in, and the house prospers — as do you."
       }
     },
+    "src.13b325b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Learned career path"
+      }
+    },
     "src.13c36c49": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49928,6 +50280,16 @@
       ],
       "source": {
         "text": "A full table buys the captain’s goodwill."
+      }
+    },
+    "src.166fe13a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "examination cooldown ({days} days remain)"
       }
     },
     "src.1673ab74": {
@@ -51444,6 +51806,16 @@
       ],
       "source": {
         "text": "Garlands on the well, a lamb on the spit, and the musicians already flushed with cheer. {province} forgets its burdens for a day."
+      }
+    },
+    "src.1a07c0c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Student"
       }
     },
     "src.1a1c6624": {
@@ -53161,6 +53533,16 @@
         "text": "levy"
       }
     },
+    "src.1f7b66c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Physician"
+      }
+    },
     "src.1f7eb835": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53573,6 +53955,16 @@
         "text": "Sound Roof and Raised Bed"
       }
     },
+    "src.20943b87": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{years} trainee years grant Lettered. Licensing and permanent master specializations are shown with their exact experience, skill, technology, fee, chance, and retry requirements in Work & Enterprises."
+      }
+    },
     "src.2094b4be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53587,6 +53979,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -53861,6 +54254,16 @@
       ],
       "source": {
         "text": "education focus"
+      }
+    },
+    "src.213f65ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Copy, argue, observe, and write for patrons. (adds national research)"
       }
     },
     "src.2151f098": {
@@ -54332,6 +54735,17 @@
       ],
       "source": {
         "text": "Destroyed a pretender in open war."
+      }
+    },
+    "src.227373e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Learning {value}"
       }
     },
     "src.22a1f55a": {
@@ -57783,6 +58197,16 @@
         "text": "The Reeve’s Two Tallies"
       }
     },
+    "src.2b9773c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A family author’s ordered account of law, custom, and judgment."
+      }
+    },
     "src.2b99c2e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60973,6 +61397,16 @@
         "text": "Your mother"
       }
     },
+    "src.34817ed8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📜 {name} learns to read and write through sustained training."
+      }
+    },
     "src.348397be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61566,6 +62000,16 @@
         "text": "🎁 You offer {money:gold} to {ruler} of {realm}. (Standing {favor})"
       }
     },
+    "src.368c61ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Diagnose, prescribe, and tend the sick. (Learning pays; qualified care protects the household)"
+      }
+    },
     "src.36a37733": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61694,6 +62138,16 @@
       ],
       "source": {
         "text": "Sunday Woollens"
+      }
+    },
+    "src.36f618d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Apothecary"
       }
     },
     "src.36f7288c": {
@@ -63400,6 +63854,16 @@
         "text": "Muster count adjustment"
       }
     },
+    "src.3bcf87f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography."
+      }
+    },
     "src.3be09796": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63762,16 +64226,6 @@
         "text": "Won a rich bargain in {destination}."
       }
     },
-    "src.3cda5f03": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/economy.js"
-      ],
-      "source": {
-        "text": "Apprentice Clerk"
-      }
-    },
     "src.3cdcd938": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63861,6 +64315,16 @@
       ],
       "source": {
         "text": "Offensive — hunt their host when stronger, then besiege the prize"
+      }
+    },
+    "src.3d5a6200": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Compendium of Nature"
       }
     },
     "src.3d5da309": {
@@ -67873,6 +68337,16 @@
         "text": "🎓 Household policy assigns {name} instruction at home."
       }
     },
+    "src.47c58d05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Astronomer"
+      }
+    },
     "src.47c59181": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68566,6 +69040,16 @@
         "text": "Requires +{threshold} Standing; currently {standing}."
       }
     },
+    "src.4a0b8673": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{skill} {value}"
+      }
+    },
     "src.4a0e88f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68966,6 +69450,16 @@
       ],
       "source": {
         "text": "🏚 {building} was demolished."
+      }
+    },
+    "src.4b488239": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Learned administrator"
       }
     },
     "src.4b6163e5": {
@@ -69588,16 +70082,6 @@
       ],
       "source": {
         "text": "Buy the ringleaders, one by one. ({money:25})"
-      }
-    },
-    "src.4ce2159c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "It shapes national research, education and tutoring, religious advancement, Papal systems, and knowledge-oriented checks."
       }
     },
     "src.4ce2c851": {
@@ -71423,16 +71907,6 @@
       ],
       "source": {
         "text": "🕊 Exhaustion ends the war with nothing gained."
-      }
-    },
-    "src.519381b9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/traits.js"
-      ],
-      "source": {
-        "text": "Learn letters through education or sustained study."
       }
     },
     "src.5194b09b": {
@@ -74789,16 +75263,6 @@
         "text": "No resident worker in {place}; it remains owned but idle."
       }
     },
-    "src.5a903158": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Requires {skill} Stewardship."
-      }
-    },
     "src.5a9506a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77082,6 +77546,16 @@
         "text": "Proud"
       }
     },
+    "src.60cb4085": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📚 Study and write"
+      }
+    },
     "src.60d6b7d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78142,6 +78616,16 @@
         "text": "A chill takes hold after leaving {location}. By nightfall, the road sways even when you stand still."
       }
     },
+    "src.6388418d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Books, disputation, observation, and works meant to outlive their author."
+      }
+    },
     "src.638ae065": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78681,6 +79165,16 @@
       ],
       "source": {
         "text": "with no fixed end"
+      }
+    },
+    "src.65473059": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A family author’s record of rulers, quarrels, and remembered deeds."
       }
     },
     "src.654edbe9": {
@@ -80269,7 +80763,10 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/traits.js"
+        "data/traits.js",
+        "js/economy.js",
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Lettered"
@@ -80503,6 +81000,16 @@
       ],
       "source": {
         "text": "Maximum dowry"
+      }
+    },
+    "src.6a38d01b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Makes the {specialization} examination available in {career}."
       }
     },
     "src.6a3eedec": {
@@ -82476,6 +82983,16 @@
         "text": "Take the wage in coin."
       }
     },
+    "src.6f44282f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Diagnosis, remedies, regimen, and the uncertain care of the sick."
+      }
+    },
     "src.6f456f31": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83437,6 +83954,16 @@
         "text": "The honest work you know, and nothing more."
       }
     },
+    "src.7250d028": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Copyist"
+      }
+    },
     "src.7253f25f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83986,6 +84513,16 @@
       ],
       "source": {
         "text": "Declare rival"
+      }
+    },
+    "src.739fafe0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Notary"
       }
     },
     "src.73a277b9": {
@@ -85710,16 +86247,6 @@
       ],
       "source": {
         "text": "Manners hide as much as they reveal."
-      }
-    },
-    "src.782fa99f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Requires {skill} Stewardship and {prestige} prestige."
       }
     },
     "src.7858bd12": {
@@ -91296,6 +91823,16 @@
         "text": "Letters learned young are kept for life."
       }
     },
+    "src.863225af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📜 Keep records"
+      }
+    },
     "src.864601c3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92498,6 +93035,16 @@
         "text": "has invalid faith"
       }
     },
+    "src.8975e43e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill."
+      }
+    },
     "src.897b588f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92739,6 +93286,16 @@
       ],
       "source": {
         "text": "Go with the scouts."
+      }
+    },
+    "src.8a321b3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Scholarship"
       }
     },
     "src.8a3540f0": {
@@ -94888,16 +95445,6 @@
         "text": "Taifa of Valencia"
       }
     },
-    "src.8f8a0e3b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/traits.js"
-      ],
-      "source": {
-        "text": "Can read and write — rare gift."
-      }
-    },
     "src.8f8ed790": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96732,6 +97279,16 @@
         "text": "Libyan Desert"
       }
     },
+    "src.957fc422": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Medical master"
+      }
+    },
     "src.95815ae0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96762,6 +97319,16 @@
         "text": "dynasty house kin relatives resident controllable assignable work royal branch"
       }
     },
+    "src.958fc776": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Author"
+      }
+    },
     "src.959953bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96770,6 +97337,16 @@
       ],
       "source": {
         "text": "The Empty Chest"
+      }
+    },
+    "src.959c8326": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Book of Laws"
       }
     },
     "src.95a4f7e2": {
@@ -97092,6 +97669,16 @@
       ],
       "source": {
         "text": "Roman"
+      }
+    },
+    "src.966666a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Clerk’s examination"
       }
     },
     "src.9669d989": {
@@ -97855,6 +98442,16 @@
       ],
       "source": {
         "text": "{days} days remain"
+      }
+    },
+    "src.985d873d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Medicine"
       }
     },
     "src.985d8dac": {
@@ -100415,6 +101012,16 @@
         "text": "Lancaster"
       }
     },
+    "src.9f1bcda2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}."
+      }
+    },
     "src.9f1e8d7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100794,16 +101401,6 @@
       ],
       "source": {
         "text": "The lord’s stores are full, the nights are long, and hunger keeps no law."
-      }
-    },
-    "src.a03c5dec": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "research education tutoring religion papal medicine knowledge literacy"
       }
     },
     "src.a048c4d9": {
@@ -106326,6 +106923,16 @@
         "text": "Long shirts of linked iron rings protect the professional warrior."
       }
     },
+    "src.af6340d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Healer’s pupil"
+      }
+    },
     "src.af6489f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106504,6 +107111,16 @@
       ],
       "source": {
         "text": "Skara"
+      }
+    },
+    "src.afd29737": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires {requirements}."
       }
     },
     "src.afd4eccf": {
@@ -107300,6 +107917,16 @@
         "text": "Specialists calculate engines, earthworks, approaches, and bombardment."
       }
     },
+    "src.b1b84331": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Practitioner"
+      }
+    },
     "src.b1bb597d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107868,6 +108495,16 @@
       ],
       "source": {
         "text": "Had the rotten tooth pulled."
+      }
+    },
+    "src.b3021408": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Can read and write — a rare skill that opens learned examinations and advanced trade leadership."
       }
     },
     "src.b3074f16": {
@@ -112692,6 +113329,16 @@
         "text": "Diplomatic Correspondence"
       }
     },
+    "src.c0b4c2fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Scholarly disputation"
+      }
+    },
     "src.c0be18f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113248,6 +113895,16 @@
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding. The dowry returns to your coffers."
+      }
+    },
+    "src.c1e910b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📚 {name} does not satisfy the examiners and must wait before trying again."
       }
     },
     "src.c1ecd48e": {
@@ -116129,6 +116786,16 @@
         "text": "Profit for the mind, frost from the pulpit."
       }
     },
+    "src.c9a0f7a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Practitioner’s examination"
+      }
+    },
     "src.c9ab06aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117086,6 +117753,16 @@
       ],
       "source": {
         "text": "are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated."
+      }
+    },
+    "src.cc51970e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Draft accounts, instruments, and judgments. (Learning and Stewardship pay)"
       }
     },
     "src.cc526be6": {
@@ -118906,6 +119583,16 @@
         "text": "No Estates motion is currently being campaigned."
       }
     },
+    "src.d17cb678": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "It shapes national research, education and tutoring, learned career examinations and rewards, advanced Trade guild leadership, religious advancement, Papal systems, and knowledge-oriented checks."
+      }
+    },
     "src.d17ce893": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120609,6 +121296,16 @@
         "text": "Mufti"
       }
     },
+    "src.d64cb4ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A family author’s collection of animals, plants, stones, and wonders."
+      }
+    },
     "src.d64f80bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120627,6 +121324,16 @@
       ],
       "source": {
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
+      }
+    },
+    "src.d6511a6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{specialization}: {years} vocational years, {requirements}."
       }
     },
     "src.d652a49f": {
@@ -122022,6 +122729,16 @@
         "text": "📜 You abandon the claim to {province}."
       }
     },
+    "src.d9cd4154": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A family author’s argument about conduct, duty, and the good life."
+      }
+    },
     "src.d9d8f6b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122343,6 +123060,16 @@
       ],
       "source": {
         "text": "Rank price: {money:cost}; you have {money:current}. It grants +{amount} {standing}."
+      }
+    },
+    "src.daa4a00d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📚 {name} passes the examination and is recognized as {rank}."
       }
     },
     "src.daa5cf24": {
@@ -123656,16 +124383,6 @@
       ],
       "source": {
         "text": "Too many lords owe the crown favors, or fear it. The aid is voted through, and the liege’s cut of your revenue grows."
-      }
-    },
-    "src.de6b7f37": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Changing careers preserves the inactive record’s rank, experience, guild rank, Standing, and start year. Apprentices train until sixteen; landed rulers keep their former calling as biography."
       }
     },
     "src.de6b8885": {
@@ -125178,6 +125895,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -125452,6 +126170,16 @@
       ],
       "source": {
         "text": "Birka"
+      }
+    },
+    "src.e2e38654": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The fee is spent on the attempt. Failure requires waiting {days} days before another professional examination."
       }
     },
     "src.e2e5bc4d": {
@@ -125733,6 +126461,16 @@
       ],
       "source": {
         "text": "Active war"
+      }
+    },
+    "src.e3c9a244": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Treatise on Virtue"
       }
     },
     "src.e3cb4da1": {
@@ -127719,6 +128457,16 @@
         "text": "— it bundles your words with the game version"
       }
     },
+    "src.e87ee90b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "📖 {name} completes {item}, a work for the family to preserve."
+      }
+    },
     "src.e88554dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129363,6 +130111,16 @@
         "text": "Clinker Shipbuilding"
       }
     },
+    "src.edd63121": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{skill} {needed} (now {current})"
+      }
+    },
     "src.eddb5202": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129572,6 +130330,16 @@
       ],
       "source": {
         "text": "Merchant Guilds"
+      }
+    },
+    "src.ee82c73b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Attempt {examination}"
       }
     },
     "src.ee8e5814": {
@@ -129882,6 +130650,16 @@
       ],
       "source": {
         "text": "Enter a house name."
+      }
+    },
+    "src.ef530371": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Chronicle of Princes"
       }
     },
     "src.ef530a48": {
@@ -132362,6 +133140,16 @@
         "text": "charisma persuasion standing courtship marriage relations"
       }
     },
+    "src.f5c105d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Learn letters through education, religious study, or a learned apprenticeship."
+      }
+    },
     "src.f5c55563": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133946,6 +134734,16 @@
         "text": "The existing deed revalidates its gates and spends the day."
       }
     },
+    "src.fa49cdba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "research education tutoring careers examinations trade guild religion papal medicine knowledge literacy"
+      }
+    },
     "src.fa55888a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134571,6 +135369,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -140036,7 +140835,7 @@
       "glossary": [],
       "location": "data/traits.js",
       "source": {
-        "text": "Can read and write — rare gift."
+        "text": "Can read and write — a rare skill that opens learned examinations and advanced trade leadership."
       }
     },
     "trait.literate.earned.default": {
@@ -140044,7 +140843,7 @@
       "glossary": [],
       "location": "data/traits.js",
       "source": {
-        "text": "Learn letters through education or sustained study."
+        "text": "Learn letters through education, religious study, or a learned apprenticeship."
       }
     },
     "trait.literate.name.default": {
@@ -141950,6 +142749,14 @@
         "text": "Adjacency"
       }
     },
+    "ui:Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill."
+      }
+    },
     "ui:Advocate · {money:20} · Standing −15": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -142926,6 +143733,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Attackers"
+      }
+    },
+    "ui:Attempt {examination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "examination"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Attempt {examination}"
       }
     },
     "ui:Automatic allowed": {
@@ -144059,12 +144876,12 @@
         "text": "Change…"
       }
     },
-    "ui:Changing careers preserves the inactive record’s rank, experience, guild rank, Standing, and start year. Apprentices train until sixteen; landed rulers keep their former calling as biography.": {
+    "ui:Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Changing careers preserves the inactive record’s rank, experience, guild rank, Standing, and start year. Apprentices train until sixteen; landed rulers keep their former calling as biography."
+        "text": "Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography."
       }
     },
     "ui:Character name": {
@@ -148577,12 +149394,12 @@
         "text": "It shapes livelihood income, enterprises, construction, trade, and many economic event checks."
       }
     },
-    "ui:It shapes national research, education and tutoring, religious advancement, Papal systems, and knowledge-oriented checks.": {
+    "ui:It shapes national research, education and tutoring, learned career examinations and rewards, advanced Trade guild leadership, religious advancement, Papal systems, and knowledge-oriented checks.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "It shapes national research, education and tutoring, religious advancement, Papal systems, and knowledge-oriented checks."
+        "text": "It shapes national research, education and tutoring, learned career examinations and rewards, advanced Trade guild leadership, religious advancement, Papal systems, and knowledge-oriented checks."
       }
     },
     "ui:It shapes plots, rivalries, covert diplomacy, counter-schemes, and many deceptive event checks.": {
@@ -148883,6 +149700,14 @@
         "text": "Leans: {name}"
       }
     },
+    "ui:Learned career path": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Learned career path"
+      }
+    },
     "ui:Learning joins literacy, law, medicine, doctrine, and accumulated knowledge.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148900,6 +149725,16 @@
       "location": "js/papacy.js",
       "source": {
         "text": "Learning {needed} (now {current})"
+      }
+    },
+    "ui:Learning {value}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "value"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Learning {value}"
       }
     },
     "ui:Learning, piety, religious Standing, and vocation experience support advancement.": {
@@ -148972,6 +149807,14 @@
       "location": "js/main.js",
       "source": {
         "text": "Let the days flow"
+      }
+    },
+    "ui:Lettered": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Lettered"
       }
     },
     "ui:Letters & Faith": {
@@ -149297,6 +150140,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Makes the {content} household standard available."
+      }
+    },
+    "ui:Makes the {specialization} examination available in {career}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "career",
+        "specialization"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Makes the {specialization} examination available in {career}."
       }
     },
     "ui:Makes training and work in {content} available.": {
@@ -153312,6 +154166,16 @@
         "text": "Qirad partnership"
       }
     },
+    "ui:Qualify as {rank}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Qualify as {rank}"
+      }
+    },
     "ui:Queues the existing annulment plea.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154360,25 +155224,14 @@
         "text": "Requires {rank} rank."
       }
     },
-    "ui:Requires {skill} Stewardship and {prestige} prestige.": {
+    "ui:Requires {requirements}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "prestige",
-        "skill"
+        "requirements"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Requires {skill} Stewardship and {prestige} prestige."
-      }
-    },
-    "ui:Requires {skill} Stewardship.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "skill"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Requires {skill} Stewardship."
+        "text": "Requires {requirements}."
       }
     },
     "ui:Requires {standing} Standing, costs {money:cost}, and succeeds at about {chance}%.": {
@@ -157370,6 +158223,16 @@
         "text": "The fee cap applies separately to each child when an arrangement is selected. It does not reserve household funds; unaffordable seasonal fees still pause lessons and retry later."
       }
     },
+    "ui:The fee is spent on the attempt. Failure requires waiting {days} days before another professional examination.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The fee is spent on the attempt. Failure requires waiting {days} days before another professional examination."
+      }
+    },
     "ui:The first playable head is kept here even when later generations move beyond the bounded tree.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158573,6 +159436,19 @@
       "location": "js/economy.js",
       "source": {
         "text": "Trade partnership"
+      }
+    },
+    "ui:Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "license",
+        "requirements",
+        "years"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}."
       }
     },
     "ui:Transfer rule": {
@@ -161262,6 +162138,16 @@
         "text": "envoy compact"
       }
     },
+    "ui:examination cooldown ({days} days remain)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "examination cooldown ({days} days remain)"
+      }
+    },
     "ui:for {days} days": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -163575,6 +164461,18 @@
         "text": "{enterprise} — {worker} will be unassigned."
       }
     },
+    "ui:{examination} — {chance}% ({money:gold})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "examination",
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{examination} — {chance}% ({money:gold})"
+      }
+    },
     "ui:{expense} · {prestige}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -165573,6 +166471,29 @@
         "text": "{sign}{percent}% {effect}"
       }
     },
+    "ui:{skill} {needed} (now {current})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed",
+        "skill"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{skill} {needed} (now {current})"
+      }
+    },
+    "ui:{skill} {value}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "skill",
+        "value"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{skill} {value}"
+      }
+    },
     "ui:{skill} {value} · {chance}% yearly": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -165614,6 +166535,18 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{slot}: {item}"
+      }
+    },
+    "ui:{specialization}: {years} vocational years, {requirements}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "requirements",
+        "specialization",
+        "years"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{specialization}: {years} vocational years, {requirements}."
       }
     },
     "ui:{stance} · {used}/{capacity} political attention assigned": {
@@ -165988,6 +166921,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{worker} · {place} · base value {money:value} · about {money:amount}/season{lock}"
+      }
+    },
+    "ui:{years} trainee years grant Lettered. Licensing and permanent master specializations are shown with their exact experience, skill, technology, fee, chance, and retry requirements in Work & Enterprises.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "years"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{years} trainee years grant Lettered. Licensing and permanent master specializations are shown with their exact experience, skill, technology, fee, chance, and retry requirements in Work & Enterprises."
       }
     },
     "ui:{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion": {

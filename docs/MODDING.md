@@ -507,7 +507,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 |---|---|
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
 | `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
-| `professions` | any actively practiced vocation from `farmer craftsman merchant administration soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
+| `professions` | any actively practiced vocation from `farmer craftsman merchant administration physician scholar soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
 | `seasons` | array of 0 spring … 3 winter |
 | `yearMin` / `yearMax` | calendar gate |
@@ -1246,10 +1246,29 @@ character can learn and perform:
 - `piety` is a seasonal piety contribution from clerical careers (monk, priest).
 - `hiddenChoice: true` keeps a career out of the player's chooser — it is entered only
   through an event or a marriage/background — though the household still works it.
+- `learned:true` disables automatic age-sixteen and experience-based promotions.
+  `literacyYears` is the number of active trainee years after which an illiterate
+  character gains the core `literate` (Lettered) trait.
+- `license` defines the first examination as
+  `{id,name,toRank,age,years,skills,cost}`. The current engine expects
+  `toRank:'journeyman'`; `skills` maps `mar`/`dip`/`ste`/`int`/`lea` to effective-skill
+  minimums. Every learned examination also requires Lettered and the career's
+  `requiresTech`.
+- `specializations` maps permanent specialty ids to
+  `{name,requiresTech?,years,skills,cost,fx?,authoredWork?}`. Passing one stores its id
+  on the career and promotes the character to master. Core focus effects recognize
+  `focusGold`, `focusStanding`, `focusPrestige`, and `focusResearch`; the medical
+  household rule recognizes `mortality`. `authoredWork:true` invokes the core Author
+  treatise reward and should be used only with that intended content contract.
+- License and specialty `name` values are structured-data display fields. Specialty
+  `requiresTech` values are validated and appear in reverse technology discovery.
 - Owned character state lives in `character.career`; `player.profession` mirrors the
   current head's exact occupation for existing `professions` event triggers. Feudal station
   is separate: gaining land or a title does not erase a merchant, clerical, or military
-  occupation.
+  occupation. `FB.careerExamOptions` is the read-only status surface,
+  `FB.takeCareerExam` performs a live-revalidated attempt, `FB.careerSpecialization`
+  resolves the saved specialty, and `FB.householdMedicalProtection` returns the single
+  best locally present provider's yearly mortality reduction.
 
 Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
 career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
@@ -1593,6 +1612,9 @@ unmarried children:
 - `fx` is active only while equipped. `mar/dip/ste/int/lea` and `health` affect the
   wearer; `battle`, `gold`, `prestige`, and `piety` count only on the current head.
   Unequipped armory objects have no mechanical effect.
+- `eventOnly:true` excludes an item from ordinary peddler, gear, loot, plot, artifact,
+  raid, and war-spoil pools. A specific `giveItem` effect or direct `FB.grantItem` call
+  may still create it. This is distinct from the same-named holdings option.
 - `player.items` stores exact references, not necessarily definition ids.
   `state.itemInstances` resolves generated references and `player.loadouts` assigns them.
   Never push/splice those arrays from a mod custom function. Use `FB.grantItem`,
@@ -2135,6 +2157,14 @@ The top-level `currency` presentation schema is documented above. The deprecated
 definition is active; it never renames internal gold or alters amounts, costs, or contracts.
 `mortalityBase` scales the whole yearly mortality curve for player and kin alike
 (0.012 is the as-authored baseline; halve it for longer lives, raise it for a crueler age).
+Learned-career examinations use `careerExamBaseChance`,
+`careerExamLearningBonus`, `careerExamSkillBonus`, `careerExamMaxChance`, and
+`careerExamCooldownDays`. The chance begins at the base, adds the Learning bonus for
+each effective Learning point above its requirement and the skill bonus for each point
+above every other required skill, then caps at the maximum. Failed attempts wait the
+cooldown in game days. `learnedPractitionerMortality` is the default yearly mortality
+reduction for a licensed Medicine practitioner without a specialty; specialty
+`fx.mortality` replaces it, and only the household's single best local provider applies.
 `richChildMortalityBonus` is the fraction of childhood mortality removed per
 station above serf for the household's own children (and a child protagonist),
 and `richChildHealthChance` the yearly chance per station that such a child

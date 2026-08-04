@@ -8,6 +8,10 @@ window.FB = window.FB || {};
   const CAREER_RANK_ORDER = {
     unassigned:0, apprentice:1, journeyman:2, master:3
   };
+  const AUTHORED_WORKS = [
+    'book_of_laws', 'chronicle_of_princes',
+    'treatise_on_virtue', 'compendium_of_nature'
+  ];
   const RELIGIOUS_PATHS = {
     catholic_lay: [
       { id:'parishioner', pietyYield:0 },
@@ -112,7 +116,7 @@ window.FB = window.FB || {};
   }
 
   function careerSnapshot(career) {
-    return {
+    const snapshot = {
       profession:career.profession,
       rank:career.rank,
       experience:Math.max(0, Number(career.experience) || 0),
@@ -121,6 +125,10 @@ window.FB = window.FB || {};
       guildStanding:Math.max(0, Number(career.guildStanding) || 0),
       chosen:career.chosen !== false
     };
+    if (career.specialization) snapshot.specialization = career.specialization;
+    if (career.examLastTurn !== undefined) snapshot.examLastTurn = career.examLastTurn;
+    if (career.authoredWorkRef) snapshot.authoredWorkRef = career.authoredWorkRef;
+    return snapshot;
   }
 
   function careerHistory(c) {
@@ -138,6 +146,14 @@ window.FB = window.FB || {};
       record.experience = Math.max(0, Number(record.experience) || 0);
       record.guildStanding = Math.max(0, Number(record.guildStanding) || 0);
       if (record.chosen === undefined) record.chosen = true;
+      if (record.specialization !== undefined &&
+          typeof record.specialization !== 'string') delete record.specialization;
+      if (record.examLastTurn !== undefined &&
+          !isFinite(Number(record.examLastTurn))) delete record.examLastTurn;
+      if (record.authoredWorkRef !== undefined &&
+          typeof record.authoredWorkRef !== 'string') delete record.authoredWorkRef;
+      if (profession === 'administration' && record.rank === 'master' &&
+          !record.specialization) record.specialization = 'bailiff';
     }
     return c.careerHistory;
   }
@@ -172,6 +188,18 @@ window.FB = window.FB || {};
     if (c.career.experience === undefined) c.career.experience = 0;
     if (c.career.guildStanding === undefined) c.career.guildStanding = 0;
     if (c.career.chosen === undefined) c.career.chosen = c.career.rank !== 'unassigned';
+    if (c.career.specialization !== undefined &&
+        typeof c.career.specialization !== 'string') delete c.career.specialization;
+    if (c.career.examLastTurn !== undefined &&
+        !isFinite(Number(c.career.examLastTurn))) delete c.career.examLastTurn;
+    if (c.career.authoredWorkRef !== undefined &&
+        typeof c.career.authoredWorkRef !== 'string') delete c.career.authoredWorkRef;
+    /* Administration formerly ended at the Bailiff rank. Preserve that exact
+       accomplishment when the learned tree grows branches around it. */
+    if (c.career.profession === 'administration' &&
+        c.career.rank === 'master' && !c.career.specialization) {
+      c.career.specialization = 'bailiff';
+    }
     if (state.player && c.id === state.player.charId && state.player.flags.guild_member) {
       const careerDef = FBDATA.careers[c.career.profession];
       if (careerDef && careerDef.guild && c.career.guildRank === 'none') {
@@ -200,12 +228,13 @@ window.FB = window.FB || {};
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (def.maleOnly && c.sex !== 'm') return false;
+    const defaultRank = FB.ageOf(c, state.date.year) < 16 || def.learned
+      ? 'apprentice' : 'journeyman';
     let career = FB.careerOf(state, c);
     const changedProfession = career.profession !== profession;
     if (!changedProfession) {
       if (!career.chosen || career.rank === 'unassigned') {
-        career.rank = rank ||
-          (FB.ageOf(c, state.date.year) < 16 ? 'apprentice' : 'journeyman');
+        career.rank = rank || defaultRank;
         career.startedYear = state.date.year;
       } else if (rank && (CAREER_RANK_ORDER[career.rank] || 0) <
           (CAREER_RANK_ORDER[rank] || 0)) {
@@ -221,19 +250,19 @@ window.FB = window.FB || {};
       if (restored) {
         career = careerSnapshot(restored);
         delete history[profession];
-        const requested = rank ||
-          (FB.ageOf(c, state.date.year) < 16 ? 'apprentice' : 'journeyman');
+        const requested = rank || defaultRank;
         if ((CAREER_RANK_ORDER[career.rank] || 0) <
             (CAREER_RANK_ORDER[requested] || 0)) career.rank = requested;
         if (FB.ageOf(c, state.date.year) >= 16 &&
-            career.rank === 'apprentice') career.rank = 'journeyman';
+            career.rank === 'apprentice' && !def.learned) {
+          career.rank = 'journeyman';
+        }
         career.chosen = true;
         c.career = career;
       } else {
         c.career = career = {
           profession:profession,
-          rank:rank ||
-            (FB.ageOf(c, state.date.year) < 16 ? 'apprentice' : 'journeyman'),
+          rank:rank || defaultRank,
           experience:0,
           startedYear:state.date.year,
           guildRank:'none',
@@ -260,6 +289,12 @@ window.FB = window.FB || {};
     const def = career && FBDATA.careers[career.profession];
     if (!def) return FB.T('No occupation');
     if (career.rank === 'unassigned') return FB.T('No apprenticeship chosen');
+    const specialization = career.specialization && def.specializations &&
+      def.specializations[career.specialization];
+    if (specialization) {
+      return FB.dataText(state, state.player.charId, 'career', career.profession,
+        def, 'specializations.' + career.specialization + '.name', {});
+    }
     return FB.dataText(state, state.player.charId, 'career', career.profession, def,
       def.ranks && def.ranks[career.rank] ? 'ranks.' + career.rank : 'name', {});
   };
@@ -270,6 +305,173 @@ window.FB = window.FB || {};
       officer:'Guild officer', guildmaster:'Guildmaster'
     };
     return FB.T(names[(career && career.guildRank) || 'none']);
+  };
+
+  FB.careerSpecialization = function (state, c) {
+    const career = FB.careerOf(state, c);
+    const def = career && FBDATA.careers[career.profession];
+    return career && career.specialization && def && def.specializations
+      ? def.specializations[career.specialization] || null : null;
+  };
+
+  function hasTrait(c, id) {
+    return !!(c && c.traits && c.traits.indexOf(id) >= 0);
+  }
+
+  function careerExamModel(state, c, examId, definition, specializationId) {
+    const career = FB.careerOf(state, c);
+    const def = career && FBDATA.careers[career.profession];
+    if (!career || !def || !definition) return null;
+    const missing = [];
+    const age = FB.ageOf(c, state.date.year);
+    const years = Math.max(0, Number(definition.years) || 0);
+    const requiredAge = Math.max(16, Number(definition.age) || 0);
+    const skillRequirements = definition.skills || {};
+    if (age < requiredAge) missing.push(FB.T('age {needed} (now {current})', {
+      needed:requiredAge, current:age
+    }));
+    if (career.experience < years) {
+      missing.push(FB.T('{needed} vocational years (now {current})', {
+        needed:years, current:career.experience
+      }));
+    }
+    if (!hasTrait(c, 'literate')) missing.push(FB.T('Lettered'));
+    for (const skill in skillRequirements) {
+      const needed = Math.max(0, Number(skillRequirements[skill]) || 0);
+      const current = FB.skillOf(c, skill);
+      if (current < needed) {
+        missing.push(FB.T('{skill} {needed} (now {current})', {
+          skill:FB.T(FB.SKILL_NAMES[skill] || skill),
+          needed:needed, current:current
+        }));
+      }
+    }
+    const requiredTechs = [];
+    if (def.requiresTech) requiredTechs.push(def.requiresTech);
+    if (definition.requiresTech &&
+        requiredTechs.indexOf(definition.requiresTech) < 0) {
+      requiredTechs.push(definition.requiresTech);
+    }
+    for (const techId of requiredTechs) {
+      if (FB.techRequirementMet(state, techId)) continue;
+      const tech = FBDATA.tech && FBDATA.tech[techId];
+      missing.push(tech ? FB.dataText(state, state.player.charId, 'tech',
+        techId, tech, 'name', {}) : techId);
+    }
+    const rawCost = Math.max(0, Number(definition.cost) || 0);
+    const cost = Math.round(rawCost * FB.techCostFactor(state, 'training'));
+    if (state.player.gold < cost) missing.push(FB.T('{money:gold}', { gold:cost }));
+    const cooldown = Math.max(0,
+      Number(FBDATA.balance.careerExamCooldownDays) || 360);
+    const elapsed = career.examLastTurn === undefined ? Infinity :
+      state.turn - Number(career.examLastTurn);
+    const cooldownRemaining = Math.max(0, cooldown - elapsed);
+    if (cooldownRemaining) {
+      missing.push(FB.T('examination cooldown ({days} days remain)', {
+        days:cooldownRemaining
+      }));
+    }
+    let chance = Number(FBDATA.balance.careerExamBaseChance);
+    if (!isFinite(chance)) chance = 0.55;
+    const learningBonus = Number(FBDATA.balance.careerExamLearningBonus);
+    const otherBonus = Number(FBDATA.balance.careerExamSkillBonus);
+    for (const skill in skillRequirements) {
+      const extra = Math.max(0,
+        FB.skillOf(c, skill) - (Number(skillRequirements[skill]) || 0));
+      chance += extra * (skill === 'lea'
+        ? (isFinite(learningBonus) ? learningBonus : 0.04)
+        : (isFinite(otherBonus) ? otherBonus : 0.02));
+    }
+    const maxChance = Number(FBDATA.balance.careerExamMaxChance);
+    chance = FB.clamp(chance, 0,
+      isFinite(maxChance) ? maxChance : 0.90);
+    const namePath = specializationId
+      ? 'specializations.' + specializationId + '.name' : 'license.name';
+    return {
+      id:examId,
+      specialization:specializationId || null,
+      definition:definition,
+      name:FB.dataText(state, state.player.charId, 'career', career.profession,
+        def, namePath, {}),
+      cost:cost,
+      chance:chance,
+      cooldownRemaining:cooldownRemaining,
+      missing:missing,
+      ready:missing.length === 0
+    };
+  }
+
+  FB.careerExamOptions = function (state, c) {
+    if (!managedCareerCharacter(state, c)) return [];
+    if (c.id === state.player.charId && state.player.tier >= 3) return [];
+    const career = FB.careerOf(state, c);
+    const def = career && FBDATA.careers[career.profession];
+    if (!def || !def.learned || career.rank === 'unassigned' ||
+        career.rank === 'master') return [];
+    if (career.rank === 'apprentice') {
+      const license = careerExamModel(state, c, 'license', def.license, null);
+      return license ? [license] : [];
+    }
+    const out = [];
+    for (const id in (def.specializations || {})) {
+      const model = careerExamModel(state, c, 'specialization:' + id,
+        def.specializations[id], id);
+      if (model) out.push(model);
+    }
+    return out;
+  };
+
+  FB.takeCareerExam = function (state, c, examId) {
+    c = c || playerChar(state);
+    let status = null;
+    for (const option of FB.careerExamOptions(state, c)) {
+      if (option.id === examId) status = option;
+    }
+    if (!status || !status.ready) return false;
+    const career = FB.careerOf(state, c);
+    state.player.gold -= status.cost;
+    if (!FB.chance(status.chance)) {
+      career.examLastTurn = state.turn;
+      FB.news(state, FB.msg('news.career.exam_failed',
+        '📚 {name} does not satisfy the examiners and must wait before trying again.', {
+          name:c.name
+        }));
+      return { passed:false, chance:status.chance, cost:status.cost };
+    }
+    delete career.examLastTurn;
+    if (status.specialization) {
+      career.rank = 'master';
+      career.specialization = status.specialization;
+      state.player.prestige += 15;
+      if (status.definition.authoredWork && !career.authoredWorkRef &&
+          FB.grantItem) {
+        const ref = FB.grantItem(state, FB.pick(AUTHORED_WORKS));
+        if (ref) {
+          career.authoredWorkRef = ref;
+          FB.news(state, FB.msg('news.career.work_authored',
+            '📖 {name} completes {item}, a work for the family to preserve.', {
+              name:c.name,
+              item:FB.itemParam ? FB.itemParam(state, ref, true) : ref
+            }));
+        }
+      }
+    } else {
+      career.rank = status.definition.toRank || 'journeyman';
+      state.player.prestige += 5;
+    }
+    if (c.id === state.player.charId) {
+      FB.syncPlayerCareer(state);
+      if (FB.validateFocus) FB.validateFocus(state);
+    }
+    const rankPath = career.specialization
+      ? 'specializations.' + career.specialization + '.name'
+      : 'ranks.' + career.rank;
+    FB.news(state, FB.msg('news.career.exam_passed',
+      '📚 {name} passes the examination and is recognized as {rank}.', {
+        name:c.name,
+        rank:FB.dataParam('career', career.profession, rankPath)
+      }));
+    return { passed:true, chance:status.chance, cost:status.cost };
   };
 
   FB.positionDef = function (id) {
@@ -351,7 +553,7 @@ window.FB = window.FB || {};
       const archived = c.careerHistory && c.careerHistory[id];
       const resuming = !!(archived && id !== current.profession);
       const restoredRank = resuming && age >= 16 &&
-        archived.rank === 'apprentice' ? 'journeyman' :
+        archived.rank === 'apprentice' && !def.learned ? 'journeyman' :
         (resuming ? archived.rank : null);
       out.push({
         id:id, def:def,
@@ -361,6 +563,7 @@ window.FB = window.FB || {};
         resuming:resuming,
         restoredRank:restoredRank,
         restoredGuildRank:resuming ? archived.guildRank : null,
+        restoredSpecialization:resuming ? archived.specialization || null : null,
         restoredStanding:resuming
           ? Math.max(0, Number(archived.guildStanding) || 0) : 0
       });
@@ -950,7 +1153,7 @@ window.FB = window.FB || {};
     let choice = null;
     for (const item of choices) if (item.id === profession) choice = item;
     if (!choice) return false;
-    const apprentice = age < 16 && !choice.resuming;
+    const apprentice = !choice.resuming && (age < 16 || def.learned);
     const cost = choice.cost;
     if (state.player.gold < cost) return false;
     const targetRank = choice.resuming
@@ -3005,6 +3208,31 @@ window.FB = window.FB || {};
     return amount;
   };
 
+  /* A learned medical worker protects the people actually living at the
+     household home. Several practitioners do not stack: use the strongest
+     current qualification so a large dynasty cannot erase mortality. */
+  FB.householdMedicalProtection = function (state) {
+    let best = 0;
+    for (const c of FB.householdWorkers(state)) {
+      if (!c || c.dead || FB.ageOf(c, state.date.year) < 16) continue;
+      if (c.id === state.player.charId &&
+          (state.player.tier >= 3 || state.player.travel)) continue;
+      if (FB.characterResidence(state, c) !== state.player.provinceId) continue;
+      const career = FB.careerOf(state, c);
+      if (!career || !career.chosen || career.profession !== 'physician' ||
+          career.rank === 'apprentice' || career.rank === 'unassigned') continue;
+      const specialization = FB.careerSpecialization(state, c);
+      let protection = specialization && specialization.fx &&
+        Number(specialization.fx.mortality);
+      if (!isFinite(protection) || protection < 0) {
+        protection = Number(FBDATA.balance.learnedPractitionerMortality);
+      }
+      if (!isFinite(protection) || protection < 0) protection = 0.002;
+      best = Math.max(best, protection);
+    }
+    return best;
+  };
+
   FB.livelihoodSeason = function (state) {
     let gold = 0;
     for (const line of FB.livelihoodBreakdown(state)) gold += line.amount;
@@ -3050,7 +3278,16 @@ window.FB = window.FB || {};
       } else if (career.chosen && career.rank === 'apprentice' && age >= (def.apprenticeAge || 10)) {
         career.experience++;
         if (FB.chance(0.65)) FB.gainSkill(c, def.skill, 1);
-        if (age >= 16) {
+        if (def.learned) {
+          const literacyYears = Math.max(1, Number(def.literacyYears) || 2);
+          if (career.experience >= literacyYears && !hasTrait(c, 'literate')) {
+            FB.addTrait(c, 'literate');
+            FB.news(state, FB.msg('news.career.lettered',
+              '📜 {name} learns to read and write through sustained training.', {
+                name:c.name
+              }));
+          }
+        } else if (age >= 16) {
           career.rank = 'journeyman';
           FB.news(state, FB.msg('news.career.comes_of_age',
             '🧰 {name} completes their apprenticeship and becomes {rank}.', {
@@ -3062,6 +3299,7 @@ window.FB = window.FB || {};
         career.experience++;
         if (FB.chance(0.18)) FB.gainSkill(c, def.skill, 1);
         if (career.rank === 'journeyman' && career.experience >= 8 &&
+          !def.learned &&
           FB.skillOf(c, def.skill) >= 8 && !def.guild) {
           career.rank = 'master';
         }
@@ -3082,12 +3320,22 @@ window.FB = window.FB || {};
       return { to:'master', cost:40, prestige:0, need:8, blocked:ste < 8 };
     }
     if (career.guildRank === 'master') {
+      const merchantLearning = career.profession === 'merchant' ? 6 : 0;
+      const lettered = !merchantLearning || hasTrait(c, 'literate');
+      const learning = FB.skillOf(c, 'lea');
       return { to:'officer', cost:25, prestige:60, need:10,
-        blocked:ste < 10 || state.player.prestige < 60 };
+        learning:merchantLearning, lettered:lettered,
+        blocked:ste < 10 || state.player.prestige < 60 ||
+          !lettered || learning < merchantLearning };
     }
     if (career.guildRank === 'officer') {
+      const merchantLearning = career.profession === 'merchant' ? 8 : 0;
+      const lettered = !merchantLearning || hasTrait(c, 'literate');
+      const learning = FB.skillOf(c, 'lea');
       return { to:'guildmaster', cost:50, prestige:120, need:12,
-        blocked:ste < 12 || state.player.prestige < 120 };
+        learning:merchantLearning, lettered:lettered,
+        blocked:ste < 12 || state.player.prestige < 120 ||
+          !lettered || learning < merchantLearning };
     }
     return null;
   };

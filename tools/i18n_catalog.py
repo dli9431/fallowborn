@@ -701,6 +701,28 @@ def extract_structured(inv: Inventory) -> None:
                             f"{namespace} {item_id}, rank {rank_id}, faith branch {branch}.",
                             TOKEN_RE.findall(record["text"]),
                         )
+                license_node = node_object(item.get("license")) or {}
+                for branch, record, line in branch_records(license_node.get("name")):
+                    inv.add(
+                        f"{namespace}.{item_id}.license.name.{branch}",
+                        record,
+                        f"{rel}:{line}",
+                        f"{namespace} {item_id}, license name, faith branch {branch}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
+                specializations = node_object(item.get("specializations")) or {}
+                for specialization_id, specialization_node in specializations.items():
+                    specialization = node_object(specialization_node) or {}
+                    for branch, record, line in branch_records(specialization.get("name")):
+                        inv.add(
+                            f"{namespace}.{item_id}.specializations."
+                            f"{specialization_id}.name.{branch}",
+                            record,
+                            f"{rel}:{line}",
+                            f"{namespace} {item_id}, specialization "
+                            f"{specialization_id}, faith branch {branch}.",
+                            TOKEN_RE.findall(record["text"]),
+                        )
             if data_name == "householdStandards":
                 levels = node_array(item.get("levels")) or []
                 for level_index, level_node in enumerate(levels):

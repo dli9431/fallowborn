@@ -1546,6 +1546,17 @@ window.FB = window.FB || {};
         validateRequirement(tableName, itemId, table[itemId].requiresTech);
       }
     }
+    var careers = FBDATA.careers || {};
+    for (var careerId in careers) if (own(careers, careerId)) {
+      var career = careers[careerId] || {};
+      var specializations = career.specializations || {};
+      for (var specializationId in specializations) {
+        if (!own(specializations, specializationId)) continue;
+        validateRequirement('Career specialization',
+          careerId + '.' + specializationId,
+          specializations[specializationId].requiresTech);
+      }
+    }
     var standards = FBDATA.householdStandards || {};
     for (var standardId in standards) if (own(standards, standardId)) {
       validateRequirement('Household standard', standardId, standards[standardId].requiresTech);

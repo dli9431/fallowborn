@@ -26,6 +26,8 @@ though the game still *runs*.
   effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
   Trait acquisition guidance lives in the pure-display `earned` field and renders through
   the same `FB.dataText` path as `name` and `desc`.
+  Career rank names, learned-license names, and specialty names are nested structured
+  display fields and must also render through their exact `FB.dataText` paths.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
   in the source (the renderer selects the branch, then localizes it). Technology `name`
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;

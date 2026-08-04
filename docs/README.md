@@ -165,6 +165,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
    or Trade monopoly instead. Incoming and outgoing charters can coexist, matching enterprise
    bonuses add together up to +50%, and **Network → Trade & Guild** shows their terms and
    remaining days. A charter cannot be renewed or revoked early.
+   Reading and writing also open three scarce learned careers: Administration, Medicine,
+   and Scholarship. Trainees become Lettered through practice, then sit risky paid exams
+   for a license and one of two permanent specialties. Their work can produce income and
+   Standing, protect the resident household from mortality, contribute national research,
+   or create an inherited family treatise. Merchant Guild officers and guildmasters must
+   also be Lettered and meet Learning requirements, so literacy supports the wider career
+   ladder rather than acting only as a small skill bonus.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
    Its Household, Connections, Trade & Guild, and Realm sections show total and
    needs-attention counts and collapse independently. Large networks add literal local

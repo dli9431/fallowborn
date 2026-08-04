@@ -152,6 +152,14 @@ Apply is enabled only for a changed plan, revalidates stale reviews, and never s
 time or money. Back remains available in the sticky footer; applying from Household Plan
 returns to its refreshed overview. When none is idle, the entry point is replaced by an
 all-staffed hint.
+
+For an active learned career, the career sheet presents the whole path rather than hiding
+future branches: trainee and license, both permanent specialties, personal skill/year
+requirements, and their national technology gates. Currently attemptable examinations are
+native buttons showing the live pass chance and training-adjusted fee; unmet requirements
+and a failed-attempt cooldown remain visible as explanations. Passing or failing spends a
+day and returns to the originating person or Household Plan flow. Landed protagonists see
+the preserved path as biography but receive no examination actions.
 The building deed's county ledger stays open after **Raise Next**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its nine building rows
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that

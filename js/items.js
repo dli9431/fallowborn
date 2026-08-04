@@ -46,6 +46,7 @@ window.FB = window.FB || {};
       grip:slot === 'hand' && def.grip === 2 ? 2 : 1,
       unique:def.unique !== false,
       ordinary:def.unique === false,
+      eventOnly:!!def.eventOnly,
       ageMin:def.ageMin === undefined ? 0 : Math.max(0, def.ageMin),
       art:def.art || { kind:'generic' }
     };
@@ -183,6 +184,7 @@ window.FB = window.FB || {};
       grip:info.grip,
       unique:info.unique,
       ordinary:info.ordinary,
+      eventOnly:info.eventOnly,
       ageMin:info.ageMin,
       art:info.art,
       quality:quality,
@@ -534,6 +536,7 @@ window.FB = window.FB || {};
       grip:info.grip,
       unique:info.unique,
       ordinary:info.ordinary,
+      eventOnly:info.eventOnly,
       ageMin:info.ageMin,
       art:info.art,
       quality:quality,
@@ -1228,6 +1231,7 @@ window.FB = window.FB || {};
     for (const id in FBDATA.items) {
       const info = definitionOf(id);
       if (!info) continue;
+      if (info.eventOnly) continue;
       if (opts.ordinary && !info.ordinary) continue;
       if (opts.rarity && info.def.rarity !== opts.rarity) continue;
       if (!opts.includeOwned && info.unique && FB.itemOwner(state, id)) continue;
@@ -1301,6 +1305,7 @@ window.FB = window.FB || {};
     for (const id in FBDATA.items) {
       const info = definitionOf(id);
       if (!info) continue;
+      if (info.eventOnly) continue;
       if (info.unique && FB.itemOwner(state, id)) continue;
       const rarity = own(RARITY_RANK, info.def.rarity) ? info.def.rarity : 'common';
       byClass[rarity].push(id);

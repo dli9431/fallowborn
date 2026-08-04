@@ -408,7 +408,12 @@ compatibility path.
 Livelihood state is additive and does not raise the save-format version. Careers
 live on characters; `character.careerHistory` maps profession ids to complete
 inactive career snapshots and is absent/empty on old saves until the first
-calling is changed. Repeatable enterprises live in `player.enterprises` as
+calling is changed. Learned records optionally persist `specialization`,
+`examLastTurn`, and `authoredWorkRef`; the same fields survive career history,
+serialization, succession, and resumption. They need no migration because missing
+fields retain the ordinary career behavior. A legacy master Administration record is
+normalized to the Bailiff specialty on first read, while existing Merchant officers and
+guildmasters remain grandfathered through their already-saved rank. Repeatable enterprises live in `player.enterprises` as
 `{uid,type,provinceId,settlement,workerId,workerLocked?}`. Only `workerLocked:true` is
 stored; absence means the current assignment is available to batch staffing. Old
 characters gain a career deterministically from the current compatibility

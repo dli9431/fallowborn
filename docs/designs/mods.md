@@ -53,9 +53,13 @@ catalog source; translation packs for third-party mods are outside the core v1 c
 Livelihood and instruction definitions are moddable data too. Top-level `careers`,
 `schooling`, `enterprises`, and `householdStandards` tables
 merge into `FBDATA` by id before a new campaign begins. Their `name` and `desc` fields, plus
-career rank names and household-standard level names/descriptions, use the same
+career rank, license, and specialty names and household-standard level
+names/descriptions, use the same
 structured-data localization path as other core definitions;
 new mod-authored display text falls back to its English source.
+Learned career definitions may declare a literacy threshold, one license examination,
+and a table of permanent specialty examinations. Career and specialty technology
+requirements are validated and participate in reverse technology discovery.
 
 Political-bloc archetype definitions replace atomically by id under the
 top-level `politicalBlocs` key. Core behavior currently consumes the `crown`,

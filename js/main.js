@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.109.1';
+  FB.VERSION = '1.110.0';
   FB.CHANGELOG = [
+    { v: '1.110.0', date: '2026-08-04', changes: [
+      'Literacy now opens Administration, Medicine, and Scholarship career trees with professional examinations, specialist work, and family treatises. Advanced Trade guild leadership also requires letters.'
+    ] },
     { v: '1.109.1', date: '2026-08-04', changes: [
       'Governance vassal rows are more compact, and county autobuild now handles a fully reserved domain cleanly.'
     ] },
@@ -1996,6 +1999,8 @@ window.FB = window.FB || {};
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
     const standardMortality = FB.householdStandardEffect ?
       FB.householdStandardEffect(s, 'mortality') : 0;
+    const medicalProtection = FB.householdMedicalProtection ?
+      FB.householdMedicalProtection(s) : 0;
     const age = FB.ageOf(me, year);
     const station = FB.playerStation(s);
     let q = (age < 30 ? 0.008 : age < 45 ? 0.012 : age < 60 ? 0.03 : age < 70 ? 0.07 : age < 80 ? 0.14 : 0.28) * mortScale;
@@ -2007,6 +2012,7 @@ window.FB = window.FB || {};
     q -= FB.traitAgg(me).health;
     q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
     q -= standardMortality;
+    if (!s.player.travel) q -= medicalProtection;
     q = FB.clamp(q, 0.002, 0.6);
     if (age > 90 || FB.chance(q)) {
       G.die(FB.msg('legend.death.age', {
@@ -2060,6 +2066,9 @@ window.FB = window.FB || {};
       if (p.flags.plague_here) cq += 0.05;
       cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
       if (maintainedHousehold[c.id]) cq -= standardMortality;
+      if (medicalProtection && FB.isHouseholdCharacter(s, c.id)) {
+        cq -= medicalProtection;
+      }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
         const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;
         const wasChild = me.childrenIds.indexOf(c.id) >= 0;

@@ -25,9 +25,72 @@ FBDATA.careers = {
   },
   administration: {
     name:'Administration', icon:'📜', skill:'ste', apprenticeAge:12, apprenticeCost:10,
-    tierMin:1, requiresTech:'royal_chancery', wage:2, masterWage:3.5,
-    ranks:{ apprentice:'Apprentice Clerk', journeyman:'Clerk', master:'Bailiff' },
+    tierMin:1, requiresTech:'bureaucratic_offices', wage:2, masterWage:3.5,
+    learned:true, literacyYears:2,
+    ranks:{ apprentice:'Copyist', journeyman:'Clerk', master:'Learned administrator' },
+    license:{
+      id:'clerk', name:'Clerk’s examination', toRank:'journeyman', age:16,
+      years:2, skills:{ lea:6, ste:5 }, cost:10
+    },
+    specializations:{
+      notary:{
+        name:'Notary', requiresTech:'notarial_contracts',
+        years:8, skills:{ lea:10, ste:8 }, cost:30,
+        fx:{ focusGold:1 }
+      },
+      bailiff:{
+        name:'Bailiff', requiresTech:'professional_bailiffs',
+        years:8, skills:{ lea:8, ste:10 }, cost:30,
+        fx:{ focusStanding:2 }
+      }
+    },
     desc:'Charters, accounts, judgments, and the written machinery of rule.'
+  },
+  physician: {
+    name:'Medicine', icon:'🌿', skill:'lea', apprenticeAge:12, apprenticeCost:8,
+    tierMin:1, requiresTech:'herbals', wage:1.5, masterWage:2.5,
+    learned:true, literacyYears:2,
+    ranks:{ apprentice:'Healer’s pupil', journeyman:'Practitioner', master:'Medical master' },
+    license:{
+      id:'practitioner', name:'Practitioner’s examination', toRank:'journeyman', age:16,
+      years:3, skills:{ lea:7 }, cost:15
+    },
+    specializations:{
+      physician:{
+        name:'Physician', requiresTech:'physicians',
+        years:8, skills:{ lea:11 }, cost:35,
+        fx:{ mortality:0.006 }
+      },
+      apothecary:{
+        name:'Apothecary', requiresTech:'pharmacology',
+        years:8, skills:{ lea:9, ste:7 }, cost:30,
+        fx:{ focusGold:2, mortality:0.003 }
+      }
+    },
+    desc:'Diagnosis, remedies, regimen, and the uncertain care of the sick.'
+  },
+  scholar: {
+    name:'Scholarship', icon:'📚', skill:'lea', apprenticeAge:10, apprenticeCost:5,
+    tierMin:1, requiresTech:'manuscript_codex', wage:1, masterWage:1.75,
+    learned:true, literacyYears:2,
+    ranks:{ apprentice:'Student', journeyman:'Scholar', master:'Learned master' },
+    license:{
+      id:'scholar', name:'Scholarly disputation', toRank:'journeyman', age:16,
+      years:2, skills:{ lea:7 }, cost:10
+    },
+    specializations:{
+      author:{
+        name:'Author', requiresTech:'scriptoria',
+        years:8, skills:{ lea:10 }, cost:25,
+        fx:{ focusGold:2, focusPrestige:1 }, authoredWork:true
+      },
+      astronomer:{
+        name:'Astronomer', requiresTech:'astrolabe',
+        years:8, skills:{ lea:11 }, cost:30,
+        fx:{ focusResearch:1 }
+      }
+    },
+    desc:'Books, disputation, observation, and works meant to outlive their author.'
   },
   soldier: {
     name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1, requiresTech:'spear_shield_drill',

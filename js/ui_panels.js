@@ -2211,6 +2211,12 @@ window.FB = window.FB || {};
             value:step.need
           }));
         }
+        if (step.learning) {
+          requirements.push(FB.T('Lettered'));
+          requirements.push(FB.T('Learning {value}', {
+            value:step.learning
+          }));
+        }
         if (step.prestige) {
           requirements.push(FB.T('{prestige} prestige', {
             prestige:step.prestige

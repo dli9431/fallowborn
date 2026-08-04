@@ -138,6 +138,12 @@ unlocks and label `req` as **Requires all** and `reqAny` as **Requires any one**
 Locked enterprises and deeds remain visible in their contextual pickers and open
 the missing technology directly.
 
+Career discovery includes both levels of learned practice. Manuscript Codex, Herbals,
+and Bureaucratic Offices unlock Scholarship, Medicine, and Administration respectively.
+Reverse discovery also scans each learned career's `specializations` table, so Notarial
+Contracts, Professional Bailiffs, Court Physicians, Compound Pharmacology, Scriptoria,
+and the Astrolabe detail which specialty examination they make available.
+
 ## Research slots, reserve, and completion
 
 A sovereign begins with one slot. `scholarly_networks` unlocks the second and
@@ -205,7 +211,8 @@ the AI selection weight by six, and never interrupts an active project.
 
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
-schooling, household standards, careers, enterprises, credit, and trade partnerships.
+schooling, household standards, careers, career specialties, enterprises, credit, and
+trade partnerships.
 Warfare technologies alter the existing levy/archer/cavalry/retinue classes, overland
 movement, quality, siege progress, and composition; they do not add a second unit taxonomy.
 Seafaring and naval-organization technologies provide two army effects without adding

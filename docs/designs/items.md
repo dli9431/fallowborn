@@ -35,6 +35,12 @@ Definitions may also set `slot`, two-handed `grip:2`, and `ageMin`. Legacy and m
 with none of these fields remain compatible as unique, one-handed objects with generic
 procedural art.
 
+`eventOnly:true` reserves a definition for an explicit grant path. It is excluded from
+ordinary gear, full peddler stock, loot, plots, finds, raids, and war-spoil pools, but may
+still be created by `FB.grantItem` or a specific `giveItem` effect. Author specialties use
+this with four `unique:false` family treatises, so each qualified Author receives a single
+quality-rolled exact instance without flooding the world's random book stock.
+
 **Only worn objects grant power.** Skill and health effects apply to the wearer:
 `FB.skillOf` reads their equipped skill bonuses and yearly NPC mortality reads their
 health protection. Battle, gold, prestige, and piety effects count only when worn by the

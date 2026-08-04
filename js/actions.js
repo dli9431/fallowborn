@@ -56,6 +56,36 @@ window.FB = window.FB || {};
   function patronageResearch(state) {
     return 2 + Math.min(3, FB.skillOf(me(state), 'lea') / 10);
   }
+  function activeCareer(state) {
+    return FB.careerOf ? FB.careerOf(state, me(state)) : null;
+  }
+  function qualifiedCareer(state, profession) {
+    const career = activeCareer(state);
+    return !!(career && career.chosen && career.profession === profession &&
+      career.rank !== 'apprentice' && career.rank !== 'unassigned');
+  }
+  function specializationFx(state) {
+    const specialization = FB.careerSpecialization &&
+      FB.careerSpecialization(state, me(state));
+    return specialization && specialization.fx || {};
+  }
+  function administrationGold(state) {
+    return 2 + FB.skillOf(me(state), 'ste') / 4 +
+      FB.skillOf(me(state), 'lea') / 8 +
+      (Number(specializationFx(state).focusGold) || 0);
+  }
+  function medicineGold(state) {
+    return 1 + FB.skillOf(me(state), 'lea') / 3 +
+      (Number(specializationFx(state).focusGold) || 0);
+  }
+  function scholarshipGold(state) {
+    return 0.5 + FB.skillOf(me(state), 'lea') / 10 +
+      (Number(specializationFx(state).focusGold) || 0);
+  }
+  function scholarshipResearch(state) {
+    return 1 + Math.min(2, FB.skillOf(me(state), 'lea') / 10) +
+      (Number(specializationFx(state).focusResearch) || 0);
+  }
 
   /* ================= FOCUSES (daily) =================
      gain (optional): the focus's expected per-season gold/prestige/piety,
@@ -165,6 +195,67 @@ window.FB = window.FB || {};
       let g = c * (9 + ste / 2) - (1 - c) * 6;
       if (s.player.gold < 10) g *= 0.3;
       return { gold: Math.max(0.5, g) };
+    } },
+
+  { id: 'keep_records', label: '📜 Keep records',
+    vocational:'administration',
+    desc: function () {
+      return 'Draft accounts, instruments, and judgments. (Learning and Stewardship pay)';
+    },
+    show: function (s) {
+      return s.player.tier <= 2 && qualifiedCareer(s, 'administration');
+    },
+    tick: function (s) {
+      s.player.gold += administrationGold(s) / D;
+      const standing = Number(specializationFx(s).focusStanding) || 0;
+      if (standing) {
+        if (s.player.liege) {
+          FB.adjustStanding(s, { kind:'realm', id:s.player.liege },
+            standing / D, 'focus:keep_records');
+        } else {
+          const lord = FB.getRole(s, 'lord', false);
+          if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id },
+            standing / D, 'focus:keep_records');
+        }
+      }
+      if (skillDch(0.35)) skillUp(s, FB.pick(['ste', 'lea']));
+    },
+    gain: function (s) { return { gold:administrationGold(s) }; } },
+
+  { id: 'practice_physic', label: '🌿 Practice physic',
+    vocational:'physician',
+    desc: function () {
+      return 'Diagnose, prescribe, and tend the sick. (Learning pays; qualified care protects the household)';
+    },
+    show: function (s) {
+      return s.player.tier <= 2 && qualifiedCareer(s, 'physician');
+    },
+    tick: function (s) {
+      s.player.gold += medicineGold(s) / D;
+      if (skillDch(0.45)) skillUp(s, 'lea');
+    },
+    gain: function (s) { return { gold:medicineGold(s) }; } },
+
+  { id: 'scholarly_work', label: '📚 Study and write',
+    vocational:'scholar',
+    desc: function () {
+      return 'Copy, argue, observe, and write for patrons. (adds national research)';
+    },
+    show: function (s) {
+      return s.player.tier <= 2 && qualifiedCareer(s, 'scholar');
+    },
+    tick: function (s) {
+      const fx = specializationFx(s);
+      s.player.gold += scholarshipGold(s) / D;
+      s.player.prestige += (Number(fx.focusPrestige) || 0) / D;
+      FB.addResearch(s, scholarshipResearch(s) / D);
+      if (skillDch(0.5)) skillUp(s, 'lea');
+    },
+    gain: function (s) {
+      return {
+        gold:scholarshipGold(s),
+        prestige:Number(specializationFx(s).focusPrestige) || 0
+      };
     } },
 
   { id: 'drill', label: '⚔ Drill at arms',
@@ -4966,7 +5057,8 @@ window.FB = window.FB || {};
     else if (p.profession === 'priest') want = 'serve_church';
     else {
       want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
-        merchant: 'trade_run', administration:'market',
+        merchant: 'trade_run', administration:'keep_records',
+        physician:'practice_physic', scholar:'scholarly_work',
         soldier: 'drill', noble: 'train_arms' })[p.profession];
       /* martial training is gated male: women are steered to the household or
          the court instead of drill/train_arms (validateFocus self-heals saves

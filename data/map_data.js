@@ -745,7 +745,8 @@ FBDATA.holdings = {
    Masterwork instances; qualityFx is added once or twice above the Plain fx.
    Legacy and mod definitions default to unique, one-handed objects.
    slot: head|neck|body|waist|feet|hand|ring · grip: 2 reserves both hands ·
-   ageMin gates equipping · art is a deterministic procedural recipe. */
+   ageMin gates equipping · eventOnly excludes random stock and spoils ·
+   art is a deterministic procedural recipe. */
 FBDATA.items = {
   /* repeatable ordinary gear */
   keen_seax:       { name:'Keen Seax', icon:'🔪', rarity:'common', value:20,
@@ -764,6 +765,26 @@ FBDATA.items = {
     unique:false, slot:'hand', ageMin:6, fx:{ lea:1 }, qualityFx:{ lea:1 },
     art:{ kind:'book', covers:['#65322d','#543120'], pages:['#d9c89e','#c7b486'] },
     desc:'A battered book in a dead tongue that still has things to say.' },
+  book_of_laws:    { name:'Book of Laws', icon:'📘', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#263f63','#394f73'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family author’s ordered account of law, custom, and judgment.' },
+  chronicle_of_princes:{ name:'Chronicle of Princes', icon:'📙', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#70452e','#8a5736'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family author’s record of rulers, quarrels, and remembered deeds.' },
+  treatise_on_virtue:{ name:'Treatise on Virtue', icon:'📗', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#365d45','#497459'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family author’s argument about conduct, duty, and the good life.' },
+  compendium_of_nature:{ name:'Compendium of Nature', icon:'📔', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#6c5c2d','#85733a'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family author’s collection of animals, plants, stones, and wonders.' },
   padded_jack:     { name:'Padded Jack', icon:'🧥', rarity:'common', value:25,
     unique:false, slot:'body', ageMin:12, fx:{ battle:0.03 }, qualityFx:{ battle:0.01 },
     art:{ kind:'jack', cloths:['#76664a','#53624b','#6b4c3f'], threads:['#b49a69','#9a835b'] },
@@ -920,6 +941,9 @@ FBDATA.balance = {
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
   childChance: 0.13, mortalityBase: 0.012,
+  careerExamBaseChance:0.55, careerExamLearningBonus:0.04,
+  careerExamSkillBonus:0.02, careerExamMaxChance:0.90,
+  careerExamCooldownDays:360, learnedPractitionerMortality:0.002,
   /* a rich house keeps its children better fed, watered, and warmed: childhood
      mortality falls by this fraction per station above serf, and each station
      gives a yearly chance the child grows hardier (health +1, up to 8) */

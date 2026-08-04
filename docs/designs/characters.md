@@ -388,13 +388,46 @@ instead of inheriting the dead parent's occupation. That mirror now remains the 
 actual career at every station: acquiring a landed title does not silently replace a
 merchant, craft, clerical, or military occupation with `noble`.
 
-Changing professions archives the complete active record in
+Learned careers may add `specialization`, `examLastTurn`, and `authoredWorkRef` to that
+record. Changing professions archives the complete active record in
 `c.careerHistory[profession]`. Returning to that calling restores its vocational
-rank, experience, guild rank, Guild Standing, and original start year without a
-second entry fee. A restored adult apprentice resumes as a journeyman so a
-childhood apprenticeship cannot reappear as an adult-only dead end. Inactive
+rank, experience, specialization, exam cooldown, authored work, guild rank, Guild
+Standing, and original start year without a second entry fee. A restored adult
+apprentice in an ordinary trade resumes as a journeyman so a childhood apprenticeship
+cannot reappear as an adult-only dead end. A learned trainee remains a trainee until
+they pass the license examination. Inactive
 records do not progress or decay. Old saves begin with an empty history and
-archive their first active calling when it is changed.
+archive their first active calling when it is changed. Old master administrators are
+normalized to Bailiffs, preserving their attained rank while making the new branch
+explicit.
+
+**Learned careers advance through examinations, not age.** Administration, Medicine,
+and Scholarship begin as trainee callings. After two vocational years a still-illiterate
+trainee gains Lettered; ordinary education and religious routes can supply it earlier.
+The license examination requires Lettered, minimum age, vocational years, personal
+skills, a fee, and the career's national prerequisite. Passing creates a Clerk,
+Practitioner, or Scholar. After eight vocational years, each licensed practitioner may
+attempt one of two permanent master specialties: Notary or Bailiff, Physician or
+Apothecary, and Author or Astronomer. Each specialty has its own skill and technology
+requirements. No sex or faith restriction is applied.
+
+An examination spends one day whether it passes or fails. Its chance is 55%, plus 4%
+per Learning point above the requirement and 2% per other required-skill point above
+the requirement, capped at 90%. Failure sets a 360-day cooldown; fees use the national
+training-cost modifier. Licenses grant 5 prestige and specialties grant 15. These values
+live in `FBDATA.balance`, while the requirements and branches live in each career
+definition.
+
+The three paths have distinct bounded payoffs. Keep records earns
+`2 + Stewardship/4 + Learning/8` gold per season; Notaries add 1 gold and Bailiffs add
+2 Standing with the relevant lord. Practice physic earns `1 + Learning/3` gold;
+Apothecaries add 2 gold. Scholarly work earns `.5 + Learning/10` gold and
+`1 + min(2, Learning/10)` national research; Authors add 2 gold and 1 prestige while
+Astronomers add 1 research. A newly qualified Author also creates one repeatable
+quality-rolled family treatise and retains its exact item reference in career state.
+Resident active medical practitioners reduce yearly household mortality by 0.2%,
+Physicians by 0.6%, and Apothecaries by 0.3%; only the single best locally present
+provider applies.
 
 At tier 3+, that career is biography rather than daily employment. The player cannot
 change occupation, seek guild advancement, earn ordinary career experience, or staff
@@ -417,6 +450,12 @@ characters, inactive archived callings, and landed protagonists do not gain it;
 there is no passive decay. The Work and guild detail surfaces state the annual
 source, cap, and commission threshold so spending Standing cannot create a
 permanent unexplained lockout.
+
+Trade leadership treats literacy as professional infrastructure. Promotion from master
+merchant to Guild officer requires Lettered and Learning 6 in addition to the existing
+Stewardship, prestige, years, and Guild Standing gates; Guildmaster requires Lettered and
+Learning 8. Existing officers and guildmasters are grandfathered. Craft guild gates are
+unchanged.
 
 Guildmaster is also the personal qualification for the **Petition for a guild monopoly**
 deed. The deed reads the protagonist's preserved character career, including at tier 3+,
@@ -546,7 +585,9 @@ this first version.
 **Apprenticeship complements tutoring.** A resident child or grandchild old enough for a
 career's `apprenticeAge` may be placed with that trade from their sheet. It costs the
 career's entry fee, adds vocational experience and the career skill during the yearly life
-tick, and becomes journeyman work at sixteen. The ordinary education focus and instruction
+tick, and ordinary trades become journeyman work at sixteen. Learned trainees instead gain
+Lettered after their authored vocational threshold and remain trainees until a passed
+license examination. The ordinary education focus and instruction
 continue in parallel. Family wage contributions remain limited to the player, spouses, and
 unmarried dependent children and grandchildren; other kin and paid retainers do not send
 invisible wages home.

@@ -378,7 +378,7 @@ window.FBDATA = window.FBDATA || {};
   /* Learning, medicine, and natural knowledge — 25. */
   add('manuscript_codex','Manuscript Codex','📕','learning',[100,500],[250,430],[],
     'Bound leaves permit indexing, annotation, and compact libraries.',
-    { leaders:TRADITIONS, unlocks:['practice:codex_books','career:monk','schooling:charity'] });
+    { leaders:TRADITIONS, unlocks:['practice:codex_books','career:monk','career:scholar','schooling:charity'] });
   add('parchment_making','Parchment Making','📜','learning',[-200,500],[480,650],[],
     'Prepared skins provide a durable surface for books and records.',
     { leaders:TRADITIONS, unlocks:['practice:parchment'] });
@@ -393,7 +393,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:geometry'], fx:{ research:0.1 } });
   add('herbals','Materia Medica','🌿','learning',[-400,600],[-50,430],[],
     'Catalogues of substances preserve recipes and warnings for healers.',
-    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine'], fx:{ health:0.001 } });
+    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine','career:physician'], fx:{ health:0.001 } });
   add('surgical_instruments','Surgical Instruments','🩺','learning',[-300,600],[520,740],['bloomery_iron'],
     'Purpose-made probes, knives, forceps, and cauteries support manual treatment.',
     { leaders:TRADITIONS, unlocks:['practice:surgery'] });
@@ -470,7 +470,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:diplomatic_letters'], fx:{ research:0.1 } });
   add('bureaucratic_offices','Bureaucratic Offices','🏛','governance',[-400,600],[500,720],['written_law'],
     'Named offices divide recurring public work among accountable servants.',
-    { leaders:TRADITIONS, unlocks:['practice:public_offices'], fx:{ tax:0.005 } });
+    { leaders:TRADITIONS, unlocks:['practice:public_offices','career:administration'], fx:{ tax:0.005 } });
   add('capitularies','Royal Capitularies','📜','governance',[650,900],[760,920],['written_law','diplomatic_correspondence'],
     'Chaptered royal orders circulate policy among assemblies and local officers.',
     { leaders:['latin'], unlocks:['rule:capitularies'], fx:{ levy:0.01 } });
@@ -521,13 +521,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:cadastral_surveys'], fx:{ tax:0.015 } });
   add('professional_bailiffs','Professional Bailiffs','🗝','governance',[1050,1300],[1170,1320],['manorial_courts','exchequer_accounts'],
     'Paid estate officers turn accounts, collection, and supervision into a career.',
-    { leaders:['latin','islamic'], unlocks:['career:administration'], fx:{ domain:1 } });
+    { leaders:['latin','islamic'], unlocks:['rule:professional_bailiffs'], fx:{ domain:1 } });
   add('representative_estates','Representative Estates','🏛','governance',[1150,1350],[1260,1380],['urban_communes','feudal_oaths'],
     'Clergy, nobles, and towns send authorized speakers to negotiate collective grants.',
     { leaders:['latin'], unlocks:['rule:representative_estates'], fx:{ tax:0.01 } });
   add('royal_chancery','Royal Chancery','📜','governance',[1000,1250],[1120,1280],['royal_catalogue','authenticated_seals'],
     'A permanent writing office carries the crown beyond one household.',
-    { leaders:['byzantine','latin','islamic'], unlocks:['career:administration','rule:royal_chancery'], fx:{ research:0.25, domain:1 } });
+    { leaders:['byzantine','latin','islamic'], unlocks:['rule:royal_chancery'], fx:{ research:0.25, domain:1 } });
 
   /* Warfare and fortification — 32. */
   add('spear_shield_drill','Spear and Shield Drill','🛡','warfare',[-1000,500],[-500,300],[],

@@ -9531,6 +9531,7 @@ window.FB = window.FB || {};
         !(FB.manageableKinKind && FB.manageableKinKind(s, cid))) return;
     const age = FB.ageOf(c, s.date.year);
     const career = FB.careerOf(s, c);
+    const activeCareerDef = career && FBDATA.careers[career.profession];
     const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
     let h = livelihoodNote(s, c) + '<div class="gm-body-text"><p>' + esc(FB.T(
       landedSelf
@@ -9544,7 +9545,11 @@ window.FB = window.FB || {};
       const short = s.player.gold < item.cost;
       const resumeDetail = item.resuming
         ? FB.T('Resume {rank}; guild rank {guild}; Guild Standing {standing}. No new apprenticeship fee.', {
-          rank:item.def.ranks && item.def.ranks[item.restoredRank]
+          rank:item.restoredSpecialization && item.def.specializations &&
+            item.def.specializations[item.restoredSpecialization]
+            ? dt(s, 'career', item.id, item.def,
+              'specializations.' + item.restoredSpecialization + '.name')
+            : item.def.ranks && item.def.ranks[item.restoredRank]
             ? dt(s, 'career', item.id, item.def,
               'ranks.' + item.restoredRank)
             : item.restoredRank,
@@ -9561,19 +9566,90 @@ window.FB = window.FB || {};
         (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough money)')) : '') +
         '</span></button>';
     }
+    if (activeCareerDef && activeCareerDef.learned && activeCareerDef.license) {
+      const license = activeCareerDef.license;
+      const licenseSkills = [];
+      for (const skill in (license.skills || {})) {
+        licenseSkills.push(FB.T('{skill} {value}', {
+          skill:FB.skillName(skill), value:license.skills[skill]
+        }));
+      }
+      if (activeCareerDef.requiresTech) {
+        licenseSkills.push(techRequirementText(s,
+          activeCareerDef.requiresTech));
+      }
+      h += '</div><div class="panelh">' + esc(FB.T('Learned career path')) +
+        '</div><div class="gm-body-text"><p>' + esc(FB.T(
+          'Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}.', {
+            license:dt(s, 'career', career.profession, activeCareerDef,
+              'license.name'),
+            age:Math.max(16, Number(license.age) || 0),
+            years:license.years,
+            requirements:licenseSkills.join(', ')
+          })) + '</p><ul>';
+      for (const specializationId in (activeCareerDef.specializations || {})) {
+        const specialization = activeCareerDef.specializations[specializationId];
+        const requirements = [];
+        for (const skill in (specialization.skills || {})) {
+          requirements.push(FB.T('{skill} {value}', {
+            skill:FB.skillName(skill), value:specialization.skills[skill]
+          }));
+        }
+        if (specialization.requiresTech) {
+          requirements.push(techRequirementText(s, specialization.requiresTech));
+        }
+        h += '<li>' + esc(FB.T(
+          '{specialization}: {years} vocational years, {requirements}.', {
+            specialization:dt(s, 'career', career.profession, activeCareerDef,
+              'specializations.' + specializationId + '.name'),
+            years:specialization.years,
+            requirements:requirements.join(', ')
+          })) + '</li>';
+      }
+      h += '</ul></div><div class="gm-list">';
+    }
+    const careerExams = FB.careerExamOptions ?
+      FB.careerExamOptions(s, c) : [];
+    for (const exam of careerExams) {
+      const label = exam.specialization
+        ? FB.T('Qualify as {rank}', { rank:exam.name })
+        : FB.T('Attempt {examination}', { examination:exam.name });
+      h += '<button class="actionbtn" data-career-exam="' +
+        esc(exam.id) + '"' + (exam.ready ? '' : ' disabled') + '>📚 ' +
+        esc(FB.T('{examination} — {chance}% ({money:gold})', {
+          examination:label, chance:Math.round(exam.chance * 100),
+          gold:exam.cost
+        })) + '<span class="adesc">' + esc(exam.ready
+          ? FB.T('The fee is spent on the attempt. Failure requires waiting {days} days before another professional examination.', {
+            days:FBDATA.balance.careerExamCooldownDays || 360
+          })
+          : FB.T('Unmet: {requirements}', {
+            requirements:exam.missing.join('; ')
+          })) + '</span></button>';
+    }
     const step = FB.guildAdvance(s, c);
     if (step) {
       const blocked = step.blocked || s.player.gold < step.cost;
+      const guildRequirements = [
+        FB.T('Stewardship {value}', { value:step.need })
+      ];
+      if (step.prestige) guildRequirements.push(FB.T('{prestige} prestige', {
+        prestige:step.prestige
+      }));
+      if (step.learning) {
+        guildRequirements.push(FB.T('Lettered'));
+        guildRequirements.push(FB.T('Learning {value}', {
+          value:step.learning
+        }));
+      }
       h += '<button class="actionbtn" id="career-guild"' + (blocked ? ' disabled' : '') + '>🏅 ' +
         esc(FB.T('Seek the next guild rank — {rank} ({money:gold})', {
           rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
         })) + '<span class="adesc">' +
         esc(step.blocked
-          ? (step.prestige
-            ? FB.T('Requires {skill} Stewardship and {prestige} prestige.', {
-              skill:step.need, prestige:step.prestige
-            })
-            : FB.T('Requires {skill} Stewardship.', { skill:step.need }))
+          ? FB.T('Requires {requirements}.', {
+            requirements:guildRequirements.join(', ')
+          })
           : FB.T('Guild standing brings commissions, enterprise access, and better profits.')) +
         '</span></button>';
     }
@@ -9678,6 +9754,16 @@ window.FB = window.FB || {};
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext, function () {
           UI.showLivelihoods();
+        });
+      });
+    });
+    document.querySelectorAll('[data-career-exam]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!FB.takeCareerExam(s, c, b.dataset.careerExam)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
         });
       });
     });
@@ -11358,6 +11444,21 @@ window.FB = window.FB || {};
         if (techRequiresId(entry.data[target].requiresTech, id)) {
           addContent(entry.kind, target);
         }
+      }
+    }
+
+    for (const careerId in (FBDATA.careers || {})) {
+      const career = FBDATA.careers[careerId];
+      for (const specializationId in (career.specializations || {})) {
+        const specialization = career.specializations[specializationId];
+        if (!techRequiresId(specialization.requiresTech, id)) continue;
+        const careerName = dt(s, 'career', careerId, career, 'name');
+        const specializationName = dt(s, 'career', careerId, career,
+          'specializations.' + specializationId + '.name');
+        add('career-specialization:' + careerId + ':' + specializationId,
+          FB.T('Makes the {specialization} examination available in {career}.', {
+            specialization:specializationName, career:careerName
+          }));
       }
     }
 
@@ -14846,8 +14947,8 @@ window.FB = window.FB || {};
       },
       lea:{
         purpose:FB.T('Learning joins literacy, law, medicine, doctrine, and accumulated knowledge.'),
-        consumers:FB.T('It shapes national research, education and tutoring, religious advancement, Papal systems, and knowledge-oriented checks.'),
-        aliases:'research education tutoring religion papal medicine knowledge literacy'
+        consumers:FB.T('It shapes national research, education and tutoring, learned career examinations and rewards, advanced Trade guild leadership, religious advancement, Papal systems, and knowledge-oriented checks.'),
+        aliases:'research education tutoring careers examinations trade guild religion papal medicine knowledge literacy'
       }
     };
     return defs[id];
@@ -15161,7 +15262,8 @@ window.FB = window.FB || {};
       FB.T('A career record keeps rank and experience even while inactive.'),
       guideBody([
         FB.T('Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor.'),
-        FB.T('Changing careers preserves the inactive record’s rank, experience, guild rank, Standing, and start year. Apprentices train until sixteen; landed rulers keep their former calling as biography.')
+        FB.T('Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography.'),
+        FB.T('Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill.')
       ]), 'work livelihood apprenticeship occupation inactive household');
     if (s) {
       for (const id in (FBDATA.careers || {})) {
@@ -15175,15 +15277,22 @@ window.FB = window.FB || {};
           age:def.apprenticeAge
         }));
         if (def.requiresTech) requirements.push(techRequirementText(s, def.requiresTech));
+        const careerParagraphs = [
+          dt(s, 'career', id, def, 'desc'),
+          FB.T('Primary skill: {skill}. {requirements}', {
+            skill:FB.skillName(def.skill),
+            requirements:requirements.join(' · ') || FB.T('No special prerequisite.')
+          })
+        ];
+        if (def.learned) {
+          careerParagraphs.push(FB.T(
+            '{years} trainee years grant Lettered. Licensing and permanent master specializations are shown with their exact experience, skill, technology, fee, chance, and retry requirements in Work & Enterprises.', {
+              years:Math.max(1, Number(def.literacyYears) || 2)
+            }));
+        }
         add('career-' + id, 'careers', name,
           dt(s, 'career', id, def, 'desc'),
-          guideBody([
-            dt(s, 'career', id, def, 'desc'),
-            FB.T('Primary skill: {skill}. {requirements}', {
-              skill:FB.skillName(def.skill),
-              requirements:requirements.join(' · ') || FB.T('No special prerequisite.')
-            })
-          ]), id + ' ' + FB.skillName(def.skill) + ' ' +
+          guideBody(careerParagraphs), id + ' ' + FB.skillName(def.skill) + ' ' +
           requirements.join(' '));
       }
     }

@@ -126,6 +126,15 @@ arrangement's annual learning bonus for every paid term. New years run `FB.livel
 apprenticeship progress and ordinary career experience. All career progression and
 enterprise outcomes use the saved RNG.
 
+Learned trainees use that same yearly tick to accumulate vocational years and earn
+Lettered after the career's literacy threshold, but neither age sixteen nor accumulated
+experience promotes them automatically. Their license and permanent specialty examinations
+are explicit one-day actions with fees, seeded pass rolls, and a failed-attempt cooldown.
+The learned daily foci are Keep records, Practice physic, and Scholarly work; each reads the
+active licensed career and its saved specialty for income, Standing, prestige, or national
+research. Landed protagonists retain learned careers as biography but cannot sit exams or
+perform their hands-on focus, matching the general tier-3+ livelihood rule.
+
 The same boundary runs `FB.techSeason` once for every living sovereign, including in
 Observe mode. Each nation adds `2 + min(4, realm development × 0.04)` research plus
 completed technology bonuses to one shared pool. The pool divides evenly across one,
