@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.107.2';
+  FB.VERSION = '1.108.0';
   FB.CHANGELOG = [
+    { v: '1.108.0', date: '2026-08-03', changes: [
+      'The First steps checklist grows into a full tutorial for a new life: staged tracks now walk through the daily loop, making a living, and starting a family, joined by short scripted story events, tab nudges, and first-look intro sheets on the Land, Network, and Kin tabs.'
+    ] },
     { v: '1.107.2', date: '2026-08-03', changes: [
       'Petitioning your liege for title now grants land inside the realm — never your liege’s seat or his last county — and only a king or emperor can raise you to duke: a duke’s man who gathers a duchy’s lands keeps them as a claim until he answers to the crown or stands alone.'
     ] },
@@ -1699,18 +1702,43 @@ window.FB = window.FB || {};
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
 
-  /* ---------- First steps: a five-item checklist that teaches the core loop ----------
+  /* ---------- Tutorial: staged checklist tracks that teach the game ----------
      Offered to lives created from this version on (player.flags.tutorial is
-     stamped at game start, so old saves never see it). Steps flip from
-     ordinary play — some read live state, some read one-time flags written at
-     the action's choke point. FB.tutorialCheck runs from the coalesced UI
-     refresh: pure state reads, no RNG, and each completion toasts once. */
-  const TUTORIAL_STEPS = [
-    { id:'focus',   label:function () { return FB.T('Set a daily focus'); } },
-    { id:'unpause', label:function () { return FB.T('Let the days flow'); } },
-    { id:'deed',    label:function () { return FB.T('Complete a deed'); } },
-    { id:'event',   label:function () { return FB.T('Answer an event'); } },
-    { id:'gold',    label:function () { return FB.T('Earn your first coin'); } }
+     stamped at game start, so old saves never see it). Tracks run in order;
+     the first eligible unfinished track shows in the Deeds tab. Steps flip
+     from ordinary play — some read live state, some read one-time flags
+     written at the action's choke point. FB.tutorialCheck runs from the
+     coalesced UI refresh: pure state reads, no RNG, and each completion
+     toasts once. Completing a track writes a chronicle line and queues the
+     matching chapter of the scripted tutorial chain (data/events_tutorial.js);
+     completing every eligible track retires the tutorial for this life. */
+  const TUTORIAL_TRACKS = [
+    { id:'first_steps', icon:'🌱', event:null,
+      title:function () { return FB.T('First steps'); },
+      steps:[
+        { id:'focus',   label:function () { return FB.T('Set a daily focus'); } },
+        { id:'unpause', label:function () { return FB.T('Let the days flow'); } },
+        { id:'deed',    label:function () { return FB.T('Complete a deed'); } },
+        { id:'event',   label:function () { return FB.T('Answer an event'); } },
+        { id:'gold',    label:function () { return FB.T('Earn your first coin'); } }
+      ] },
+    { id:'making_a_living', icon:'🌾', event:'tut_livelihood',
+      title:function () { return FB.T('Making a living'); },
+      // livelihoods and enterprises belong to the lower stations — landed
+      // rulers (tier 3+) skip straight to the family track
+      when:function (s) { return s.player.tier <= 2; },
+      steps:[
+        { id:'livelihood', label:function () { return FB.T('Take up a livelihood'); } },
+        { id:'enterprise', label:function () { return FB.T('Start an enterprise'); } },
+        { id:'land',       label:function () { return FB.T('Buy your first land plot'); } }
+      ] },
+    { id:'family_legacy', icon:'👪', event:'tut_legacy',
+      title:function () { return FB.T('Family & legacy'); },
+      steps:[
+        { id:'kin_tab', label:function () { return FB.T('Meet your household in the Kin tab'); } },
+        { id:'wed',     label:function () { return FB.T('Wed a spouse'); } },
+        { id:'heir',    label:function () { return FB.T('Welcome a child'); } }
+      ] }
   ];
   function tutorialStepDone(s, id) {
     const p = s.player, flags = p.flags || {};
@@ -1719,43 +1747,87 @@ window.FB = window.FB || {};
     if (id === 'deed') return !!flags.tut_deed;
     if (id === 'event') return !!flags.tut_event;
     if (id === 'gold') return p.startGold !== undefined && p.gold > p.startGold;
+    if (id === 'livelihood') return !!p.profession;
+    if (id === 'enterprise') return (p.enterprises || []).length > 0;
+    if (id === 'land') return FB.landPlots(s).length > 0;
+    if (id === 'kin_tab') return !!flags.tut_kin_tab;
+    if (id === 'wed' || id === 'heir') {
+      const me = s.chars[p.charId];
+      if (!me) return false;
+      return id === 'wed' ? !!me.spouseId : !!(me.childrenIds && me.childrenIds.length);
+    }
     return false;
   }
   FB.tutorialActive = function (s) {
     return !!(s && s.player && s.player.flags && s.player.flags.tutorial &&
       !s.player.flags.tutorial_done);
   };
-  FB.tutorialStatus = function (s) {
+  /* a "tutorial life" is one the checklist was offered to, finished or not —
+     the wider beginner-guidance layer (panel intros, tab nudges) keys off it */
+  FB.tutorialLife = function (s) {
+    return !!(s && s.player && s.player.flags &&
+      (s.player.flags.tutorial || s.player.flags.tutorial_done));
+  };
+  function tutorialTrackStatus(s, track) {
     const steps = [];
     let done = 0;
-    for (const step of TUTORIAL_STEPS) {
+    for (const step of track.steps) {
       const isDone = tutorialStepDone(s, step.id);
       if (isDone) done++;
       steps.push({ id:step.id, label:step.label(), done:isDone });
     }
-    return { steps:steps, done:done, total:TUTORIAL_STEPS.length };
+    return { track:{ id:track.id, icon:track.icon, title:track.title() },
+      steps:steps, done:done, total:track.steps.length };
+  }
+  FB.tutorialStatus = function (s) {
+    for (const track of TUTORIAL_TRACKS) {
+      if (track.when && !track.when(s)) continue;
+      const status = tutorialTrackStatus(s, track);
+      if (status.done < status.total) return status;
+    }
+    return null; // every eligible track is finished
   };
   FB.tutorialCheck = function (s) {
     if (!FB.tutorialActive(s)) return;
     const hidden = !!(G.uiPrefs && G.uiPrefs.hideBeginnerHints);
     const flags = s.player.flags;
-    const status = FB.tutorialStatus(s);
-    for (const step of status.steps) {
-      if (!step.done || flags['tut_seen_' + step.id]) continue;
-      flags['tut_seen_' + step.id] = 1; // seen marks survive a hints-off phase
-      if (!hidden && FB.ui && FB.ui.toast) {
-        FB.ui.toast('First steps {done}/{total}: {label}', {
-          done:status.done, total:status.total, label:step.label
-        });
+    // chapter one of the scripted chain, a couple of days into the life
+    if (!flags.tut_ev_welcome && s.turn >= 2) {
+      flags.tut_ev_welcome = 1;
+      FB.queueEvent(s, 'tut_welcome', {});
+    }
+    let allDone = true;
+    for (const track of TUTORIAL_TRACKS) {
+      if (track.when && !track.when(s)) continue;
+      const status = tutorialTrackStatus(s, track);
+      for (const step of status.steps) {
+        if (!step.done || flags['tut_seen_' + step.id]) continue;
+        flags['tut_seen_' + step.id] = 1; // seen marks survive a hints-off phase
+        if (!hidden && FB.ui && FB.ui.toast) {
+          FB.ui.toast('{track} {done}/{total}: {label}', {
+            track:status.track.title, done:status.done,
+            total:status.total, label:step.label
+          });
+        }
+      }
+      if (status.done < status.total) { allDone = false; continue; }
+      if (flags['tut_track_' + track.id]) continue;
+      flags['tut_track_' + track.id] = 1;
+      if (track.event) FB.queueEvent(s, track.event, {}); // scripted chain chapter
+      if (!hidden) {
+        FB.news(s, FB.msg('news.tutorial.track_done',
+          '{icon} {track} — the lessons take root.', {
+            icon:track.icon, track:track.title()
+          }));
       }
     }
-    if (status.done < status.total) return;
+    if (!allDone) return;
     flags.tutorial_done = 1;
     delete flags.tutorial;
     if (hidden) return;
     // the news line both toasts (via FB.fx) and lands in the chronicle
-    FB.news(s, FB.msg('news.tutorial.first_steps',
-      '🌱 The first steps are behind you — the chronicle is yours to write.', {}));
+    FB.news(s, FB.msg('news.tutorial.all_done',
+      '🌱 The first lessons are behind you — the chronicle is yours to write.', {}));
   };
 
   G.setPaused = function (v) {

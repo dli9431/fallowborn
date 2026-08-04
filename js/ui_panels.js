@@ -506,6 +506,19 @@ window.FB = window.FB || {};
   }
   UI.ongoingCommitmentsHtml = ongoingCommitmentsHtml;
 
+  /* Tab nudge badges: a gold dot on the tab holding the next unfinished
+     beginner lesson (Deeds until the first deed, Kin until the first
+     look). Pure state reads; the CSS dot carries no meaning on its own. */
+  function updateTabNudges(s) {
+    const on = !!(s && FB.tutorialActive && FB.tutorialActive(s) &&
+      (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints));
+    const flags = (s && s.player && s.player.flags) || {};
+    const deedsTab = document.querySelector('#sidetabs .tab[data-tab="actions"]');
+    if (deedsTab) deedsTab.classList.toggle('nudge', !!(on && !flags.tut_deed));
+    const kinTab = document.querySelector('#lefttabs .tab[data-tab="family"]');
+    if (kinTab) kinTab.classList.toggle('nudge', !!(on && !flags.tut_kin_tab));
+  }
+
   function renderActiveTab() {
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
       if (SH.activeTab === 'prov') renderProv(); else renderLog();
@@ -521,6 +534,7 @@ window.FB = window.FB || {};
     else if (SH.activeTab === 'prov') renderProv();
     else if (SH.activeTab === 'network') renderNetwork();
     else renderLog();
+    updateTabNudges(FB.state);
   }
 
   function renderActions() {
@@ -774,13 +788,15 @@ window.FB = window.FB || {};
     FB.localizeTree(box);
   }
 
-  /* the First-steps checklist: five core-loop lessons for a brand-new life.
-     Step state lives in FB.tutorialStatus (main.js); completion toasts fire
-     from FB.tutorialCheck on the coalesced refresh, so this render stays pure. */
+  /* the tutorial checklist: staged tracks that teach the game to a new life.
+     Track and step state live in FB.tutorialStatus (main.js); completion
+     toasts fire from FB.tutorialCheck on the coalesced refresh, so this
+     render stays pure. */
   function tutorialCardHtml(s) {
     const status = FB.tutorialStatus(s);
+    if (!status) return ''; // every track finished; the card retires this frame
     let h = '<div class="progressnote tutorial-card"><div class="tutorial-head">' +
-      '<b>🌱 ' + esc(FB.T('First steps')) + '</b>' +
+      '<b>' + esc(status.track.icon) + ' ' + esc(status.track.title) + '</b>' +
       '<button type="button" class="btn small" id="tutorial-dismiss">' +
       esc(FB.T('Dismiss')) + '</button></div><ul>';
     for (const step of status.steps) {
@@ -1666,6 +1682,11 @@ window.FB = window.FB || {};
       }
       h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and schooling.</div>';
     } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';
+    if ((!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) &&
+        FB.tutorialLife && FB.tutorialLife(s) && !sps.length && !kids.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        '🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty.')) + '</div>';
+    }
     // the wider family tree — dead kin are shown with †
     function kinSection(title, entries) {
       if (!entries.length) return;
@@ -2634,9 +2655,15 @@ window.FB = window.FB || {};
         '</div>';
     }
 
-    const intro = '<div class="hint">' + esc(FB.T(
+    let intro = '<div class="hint">' + esc(FB.T(
       'The people and institutions tied to this household, and what each tie currently does.')) +
       '</div>';
+    if ((!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) &&
+        FB.tutorialLife && FB.tutorialLife(s) &&
+        !connectionRows.length && !tradeRows.length && !realmRows.length) {
+      intro += '<div class="hint">' + esc(FB.T(
+        '🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here.')) + '</div>';
+    }
     const markup = intro + largeListSurfaceHtml('network', [
       {
         id:'household',
@@ -3799,6 +3826,12 @@ window.FB = window.FB || {};
         function () { return SH.activeTab === name && !selfDrawerOpen(); },
         function () { return true; });
     }
+    // Family track: the Kin tab teaches the family side — stamp its step once
+    if (name === 'family' && FB.tutorialActive && FB.tutorialActive(FB.state)) {
+      FB.state.player.flags.tut_kin_tab = 1;
+    }
+    // a tutorial life gets one small intro sheet per major panel
+    if (UI.maybeShowPanelIntro) UI.maybeShowPanelIntro(name);
   }
 
   UI.cycleTab = function (dir) {

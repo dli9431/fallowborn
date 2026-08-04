@@ -72,6 +72,16 @@ window.FB = window.FB || {};
     }
     h += '<div class="bd-note">' + esc(FB.T(
       'The ± beside the stat is last season’s real change — events and deeds included.')) + '</div>';
+    if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
+      // one beginner teaching line per stat — the shared renderer feeds both
+      // the desktop hover tooltip and the mobile tap sheet
+      const teach = {
+        gold:'Money pays for land, enterprises, gifts — and freedom.',
+        prestige:'Prestige legitimizes advancement: freedom, a manor, a title.',
+        piety:'Piety opens the church’s roads — blessings, offices, good standing.'
+      }[stat];
+      if (teach) h += '<div class="bd-note">🌱 ' + esc(FB.T(teach)) + '</div>';
+    }
     return h;
   }
 

@@ -24456,6 +24456,174 @@
         "text": "Work Between the Stalls"
       }
     },
+    "event.tut_legacy.options.0.desc.default": {
+      "context": "Event tut_legacy, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "The chronicle is only beginning."
+      }
+    },
+    "event.tut_legacy.options.0.effects.log.default": {
+      "context": "Durable event log for tut_legacy, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Vowed to raise a house worth remembering."
+      }
+    },
+    "event.tut_legacy.options.0.label.default": {
+      "context": "Event tut_legacy, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Vow to build something worth inheriting."
+      }
+    },
+    "event.tut_legacy.options.1.desc.default": {
+      "context": "Event tut_legacy, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Bless the line, and the road ahead of it."
+      }
+    },
+    "event.tut_legacy.options.1.label.default": {
+      "context": "Event tut_legacy, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Say a prayer for those who come after."
+      }
+    },
+    "event.tut_legacy.text.default": {
+      "context": "Event tut_legacy, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "By the fire, when the day’s work is done, the thought comes unbidden: a life is short, but a house endures. The children who carry your name will inherit more than your goods — your standing, your grudges, your chronicle. What you begin, they will continue; what you become, they will remember."
+      }
+    },
+    "event.tut_legacy.title.default": {
+      "context": "Event tut_legacy, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "What Outlives a Life"
+      }
+    },
+    "event.tut_livelihood.options.0.desc.default": {
+      "context": "Event tut_livelihood, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Steady work, steady coin — and a name for reliability."
+      }
+    },
+    "event.tut_livelihood.options.0.effects.log.default": {
+      "context": "Durable event log for tut_livelihood, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Made a name for steady work."
+      }
+    },
+    "event.tut_livelihood.options.0.label.default": {
+      "context": "Event tut_livelihood, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Put every lesson to work."
+      }
+    },
+    "event.tut_livelihood.options.1.desc.default": {
+      "context": "Event tut_livelihood, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "A coin saved is a coin toward the next door."
+      }
+    },
+    "event.tut_livelihood.options.1.label.default": {
+      "context": "Event tut_livelihood, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Set aside what can be spared."
+      }
+    },
+    "event.tut_livelihood.text.default": {
+      "context": "Event tut_livelihood, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "The work of your hands is beginning to tell. Coin gathers a little at a time — a livelihood pays season by season, an enterprise grows what it touches, and land underpins it all. And silver spent well buys more than things: freedom, favor, and a name that opens doors."
+      }
+    },
+    "event.tut_livelihood.title.default": {
+      "context": "Event tut_livelihood, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "The Fruits of Labor"
+      }
+    },
+    "event.tut_welcome.options.0.desc.default": {
+      "context": "Event tut_welcome, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "A focus for every day; a deed when the day calls for it. Let the days flow, and answer what they bring you."
+      }
+    },
+    "event.tut_welcome.options.0.effects.log.default": {
+      "context": "Durable event log for tut_welcome, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Welcomed to the neighborhood with bread and good counsel."
+      }
+    },
+    "event.tut_welcome.options.0.label.default": {
+      "context": "Event tut_welcome, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Take the bread — and the advice."
+      }
+    },
+    "event.tut_welcome.options.1.desc.default": {
+      "context": "Event tut_welcome, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "The same lessons, heard with a polite nod and a closed door."
+      }
+    },
+    "event.tut_welcome.options.1.label.default": {
+      "context": "Event tut_welcome, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "Thank them, and keep your own counsel."
+      }
+    },
+    "event.tut_welcome.text.default": {
+      "context": "Event tut_welcome, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "A new face is news in a place like this. Before the first week is out, a neighbor is at the door with a loaf of bread and a lifetime of advice: the days flow on their own once you let them; a daily focus bends them toward your purpose; a deed is done once and done with; and when the world brings you a choice, time itself will wait for your answer."
+      }
+    },
+    "event.tut_welcome.title.default": {
+      "context": "Event tut_welcome, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_tutorial.js",
+      "source": {
+        "text": "A Neighbor’s Welcome"
+      }
+    },
     "event.vassal_demand.options.0.desc.default": {
       "context": "Event vassal_demand, authored option 0, desc, branch default.",
       "glossary": [],
@@ -33941,12 +34109,23 @@
         "text": "🧭 Turned back toward {home}."
       }
     },
-    "news.tutorial.first_steps": {
+    "news.tutorial.all_done": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "🌱 The first steps are behind you — the chronicle is yours to write."
+        "text": "🌱 The first lessons are behind you — the chronicle is yours to write."
+      }
+    },
+    "news.tutorial.track_done": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "icon",
+        "track"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{icon} {track} — the lessons take root."
       }
     },
     "news.war.abandoned": {
@@ -41299,16 +41478,6 @@
         "text": "Your questions turn welcome into insult."
       }
     },
-    "src.00652d85": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "First steps {done}/{total}: {label}"
-      }
-    },
     "src.006602d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43250,6 +43419,16 @@
       ],
       "source": {
         "text": "Every elder remembers the boundary, but none remembers it quite alike. If custom is to stand before judgment, memory must become proof."
+      }
+    },
+    "src.060b73a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Wed a spouse"
       }
     },
     "src.061cad90": {
@@ -45719,6 +45898,16 @@
         "text": "The lessons are yours to spend now."
       }
     },
+    "src.0c7c3269": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Vow to build something worth inheriting."
+      }
+    },
     "src.0c9e7216": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47611,7 +47800,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js"
+        "js/main.js"
       ],
       "source": {
         "text": "First steps"
@@ -48435,6 +48624,16 @@
       ],
       "source": {
         "text": "{days} outbound travel days, {money:cost}, and at least {stay} days in residence; Standing advances only while together."
+      }
+    },
+    "src.13793ab5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Every county of the known world, up close: its settlement, its holder, and its development."
       }
     },
     "src.1379a4e2": {
@@ -51087,6 +51286,16 @@
         "text": "The Levy Is Called"
       }
     },
+    "src.19fbe489": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Retainers serve the household for seasonal pay once you can keep them."
+      }
+    },
     "src.19fe48e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51395,6 +51604,16 @@
       ],
       "source": {
         "text": "Make your case."
+      }
+    },
+    "src.1abdf939": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty."
       }
     },
     "src.1accd85b": {
@@ -52288,6 +52507,16 @@
         "text": "Wheels and bucket chains raise water to higher fields."
       }
     },
+    "src.1dccd268": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Made a name for steady work."
+      }
+    },
     "src.1dd71091": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52830,6 +53059,16 @@
       ],
       "source": {
         "text": "levy"
+      }
+    },
+    "src.1f7eb835": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Connections form through deeds, work, guilds, and your lord’s court."
       }
     },
     "src.1f89134f": {
@@ -53814,6 +54053,16 @@
         "text": "Incendiary Weapons"
       }
     },
+    "src.22075842": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "A new face is news in a place like this. Before the first week is out, a neighbor is at the door with a loaf of bread and a lifetime of advice: the days flow on their own once you let them; a daily focus bends them toward your purpose; a deed is done once and done with; and when the world brings you a choice, time itself will wait for your answer."
+      }
+    },
     "src.22101988": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54313,6 +54562,16 @@
       ],
       "source": {
         "text": ": unlock target is empty."
+      }
+    },
+    "src.235426dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Network tab"
       }
     },
     "src.236780fc": {
@@ -56584,6 +56843,16 @@
         "text": "Household work"
       }
     },
+    "src.295da6d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Kin tab"
+      }
+    },
     "src.29809af7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57442,6 +57711,16 @@
       ],
       "source": {
         "text": "Captured roll adjustment"
+      }
+    },
+    "src.2b9e1efc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_topbar.js"
+      ],
+      "source": {
+        "text": "Money pays for land, enterprises, gifts — and freedom."
       }
     },
     "src.2bcbd1ea": {
@@ -58714,6 +58993,16 @@
       ],
       "source": {
         "text": "Fortify the border farms."
+      }
+    },
+    "src.2f7a41df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Thank them, and keep your own counsel."
       }
     },
     "src.2f7e42be": {
@@ -60654,6 +60943,16 @@
         "text": "Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
       }
     },
+    "src.34f00e0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Steady work, steady coin — and a name for reliability."
+      }
+    },
     "src.34f16340": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61689,6 +61988,16 @@
         "text": "Men wearing the lord’s colors fill the lane. They require food, fodder, and dry floor before they march again — and requirement sounds very much like command."
       }
     },
+    "src.3853283f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Set aside what can be spared."
+      }
+    },
     "src.386b87cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62369,6 +62678,16 @@
       ],
       "source": {
         "text": "Equip Best…"
+      }
+    },
+    "src.3a4f2f73": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "The work of your hands is beginning to tell. Coin gathers a little at a time — a livelihood pays season by season, an enterprise grows what it touches, and land underpins it all. And silver spent well buys more than things: freedom, favor, and a name that opens doors."
       }
     },
     "src.3a4f8c89": {
@@ -63677,6 +63996,16 @@
         "text": "The Emir’s Justice"
       }
     },
+    "src.3dfeff5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Courtship and marriage deeds live in the Deeds tab, under Life & Family."
+      }
+    },
     "src.3e039888": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64638,16 +64967,6 @@
       ],
       "source": {
         "text": "Eligible: living child of the current playable head."
-      }
-    },
-    "src.40a81bc5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "🌱 The first steps are behind you — the chronicle is yours to write."
       }
     },
     "src.40b25032": {
@@ -67816,6 +68135,16 @@
         "text": "{sex} of {age}"
       }
     },
+    "src.491920f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Put every lesson to work."
+      }
+    },
     "src.4922a0c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69361,6 +69690,16 @@
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
       }
     },
+    "src.4d90bb4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Land tab"
+      }
+    },
     "src.4d9e3b0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70163,6 +70502,16 @@
       ],
       "source": {
         "text": "Let it go."
+      }
+    },
+    "src.4fa3a2b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_topbar.js"
+      ],
+      "source": {
+        "text": "Piety opens the church’s roads — blessings, offices, good standing."
       }
     },
     "src.4fb1b549": {
@@ -71952,6 +72301,16 @@
       ],
       "source": {
         "text": "You name the custom and the witnesses to it. The reeve scratches out the line, scowling."
+      }
+    },
+    "src.54897c79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_topbar.js"
+      ],
+      "source": {
+        "text": "Prestige legitimizes advancement: freedom, a manor, a title."
       }
     },
     "src.54a0d680": {
@@ -74210,6 +74569,16 @@
         "text": "Send a third, with apologies."
       }
     },
+    "src.5a811261": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "A coin saved is a coin toward the next door."
+      }
+    },
     "src.5a82f7ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74268,6 +74637,16 @@
       ],
       "source": {
         "text": "The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the investiture."
+      }
+    },
+    "src.5aaadb4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "The Fruits of Labor"
       }
     },
     "src.5aac54c4": {
@@ -75189,6 +75568,16 @@
       ],
       "source": {
         "text": "Could not store mod: {message}"
+      }
+    },
+    "src.5d2dd3a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Take up a livelihood"
       }
     },
     "src.5d3e7a5f": {
@@ -76751,6 +77140,16 @@
       ],
       "source": {
         "text": "Fled a debt-bondage sentence."
+      }
+    },
+    "src.616f0bf6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Welcomed to the neighborhood with bread and good counsel."
       }
     },
     "src.61726fb6": {
@@ -82648,6 +83047,16 @@
         "text": "Seek the next guild rank — {rank} ({money:gold})"
       }
     },
+    "src.71a9c42d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "What Outlives a Life"
+      }
+    },
     "src.71b2fa6d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83888,6 +84297,16 @@
       ],
       "source": {
         "text": "The Pact’s Wax Cools"
+      }
+    },
+    "src.74cea5f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Meet your household in the Kin tab"
       }
     },
     "src.74d08cf1": {
@@ -88652,6 +89071,16 @@
         "text": "{house} — {bloc}"
       }
     },
+    "src.817f2bd8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Buy your first land plot"
+      }
+    },
     "src.8184e92b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90247,6 +90676,16 @@
         "text": "Grant a get"
       }
     },
+    "src.8535c728": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "{icon} {track} — the lessons take root."
+      }
+    },
     "src.853b59af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91598,6 +92037,16 @@
         "text": "Badajoz"
       }
     },
+    "src.89182dce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Family & legacy"
+      }
+    },
     "src.891f8eb3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92020,6 +92469,16 @@
       ],
       "source": {
         "text": "Go with the scouts."
+      }
+    },
+    "src.8a3540f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "The same lessons, heard with a polite nod and a closed door."
       }
     },
     "src.8a4538e7": {
@@ -93286,6 +93745,16 @@
         "text": "Rain comes before the last sheaf is beaten. At least the household ate."
       }
     },
+    "src.8d7b3a90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Good to know"
+      }
+    },
     "src.8d7f44e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94197,6 +94666,16 @@
       ],
       "source": {
         "text": "Large Bell Casting"
+      }
+    },
+    "src.8fc09688": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does."
       }
     },
     "src.8fc0e01d": {
@@ -97109,6 +97588,16 @@
         "text": "Norse Paganism"
       }
     },
+    "src.98652b7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Bless the line, and the road ahead of it."
+      }
+    },
     "src.986d0759": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99386,6 +99875,16 @@
         "text": "Old rights reward a careful memory."
       }
     },
+    "src.9ead9d44": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Making a living"
+      }
+    },
     "src.9eae0e21": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99905,6 +100404,16 @@
       ],
       "source": {
         "text": "👑 {name}: you hold the majority, {held} — independence would make you its king."
+      }
+    },
+    "src.a013bffe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Welcome a child"
       }
     },
     "src.a0172374": {
@@ -100859,6 +101368,16 @@
       ],
       "source": {
         "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
+      }
+    },
+    "src.a296f599": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "A focus for every day; a deed when the day calls for it. Let the days flow, and answer what they bring you."
       }
     },
     "src.a298193d": {
@@ -102885,6 +103404,16 @@
       ],
       "source": {
         "text": "Terrain"
+      }
+    },
+    "src.a800668a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Land is bought plot by plot within a settlement — a cluster of plots makes a manor."
       }
     },
     "src.a8154fa2": {
@@ -105306,6 +105835,16 @@
         "text": "Local habits sharpen your judgment of people."
       }
     },
+    "src.af1ffd56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Personal attention improves one chosen relationship a little each day."
+      }
+    },
     "src.af2a9117": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106470,6 +107009,16 @@
         "text": "· 🔒 lock recorded"
       }
     },
+    "src.b20681a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "By the fire, when the day’s work is done, the thought comes unbidden: a life is short, but a house endures. The children who carry your name will inherit more than your goods — your standing, your grudges, your chronicle. What you begin, they will continue; what you become, they will remember."
+      }
+    },
     "src.b21973ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107139,6 +107688,16 @@
       ],
       "source": {
         "text": "Grace rides with you into your next battle."
+      }
+    },
+    "src.b39d5b4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "The chronicle is only beginning."
       }
     },
     "src.b39e1758": {
@@ -108725,6 +109284,16 @@
         "text": "Arrows"
       }
     },
+    "src.b7cf4849": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Start an enterprise"
+      }
+    },
     "src.b7d96e35": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109445,6 +110014,16 @@
         "text": "No focus chosen"
       }
     },
+    "src.b9bf4227": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Take the bread — and the advice."
+      }
+    },
     "src.b9c64e90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109854,6 +110433,16 @@
       ],
       "source": {
         "text": "Save and apply policy"
+      }
+    },
+    "src.bb34be3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "{track} {done}/{total}: {label}"
       }
     },
     "src.bb404e81": {
@@ -112962,6 +113551,16 @@
       ],
       "source": {
         "text": "Endure the judgment and remember."
+      }
+    },
+    "src.c3cfd7c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends."
       }
     },
     "src.c3dfcf8a": {
@@ -117704,6 +118303,16 @@
         "text": "“Come and take it,” he answers, and rides home to raise his spears."
       }
     },
+    "src.d1263d52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "A Neighbor’s Welcome"
+      }
+    },
     "src.d1313001": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120594,6 +121203,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -121363,6 +121973,16 @@
       ],
       "source": {
         "text": "The {holy} drafts the charter by candlelight. For thirty pieces of silver, {lord} will strike your name from the roll of serfs — forever."
+      }
+    },
+    "src.db3fb363": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "🌱 The first lessons are behind you — the chronicle is yours to write."
       }
     },
     "src.db44f075": {
@@ -124283,6 +124903,16 @@
         "text": "The miller arrives with his tally. Broken wheel or not, he says the lord is owed his customary share."
       }
     },
+    "src.e2cd55b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Vowed to raise a house worth remembering."
+      }
+    },
     "src.e2ce143e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124824,6 +125454,16 @@
       ],
       "source": {
         "text": "Autoresolve war events"
+      }
+    },
+    "src.e47f5b5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Once you hold land, your own counties are managed from this tab."
       }
     },
     "src.e4898197": {
@@ -126476,6 +127116,16 @@
       ],
       "source": {
         "text": "What the Old Folk Remember"
+      }
+    },
+    "src.e863cb67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here."
       }
     },
     "src.e86e02f9": {
@@ -129283,6 +129933,16 @@
       ],
       "source": {
         "text": "Grandchildren"
+      }
+    },
+    "src.f0c0d260": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_tutorial.js"
+      ],
+      "source": {
+        "text": "Say a prayer for those who come after."
       }
     },
     "src.f0c1bb07": {
@@ -132314,6 +132974,16 @@
         "text": "Accompany personally"
       }
     },
+    "src.f94c2677": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Tap a province on the map to inspect it here."
+      }
+    },
     "src.f9508f3f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134440,6 +135110,16 @@
       ],
       "source": {
         "text": "Hiring still uses an office’s authoritative eligibility, entry pay, and confirmation."
+      }
+    },
+    "src.ff7ca5c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Without an heir, the story ends with this life."
       }
     },
     "src.ff93794e": {
@@ -142335,6 +143015,14 @@
         "text": "Buy remaining plots here…"
       }
     },
+    "ui:Buy your first land plot": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Buy your first land plot"
+      }
+    },
     "ui:Buy {plots} plots for {money:cost}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -143325,6 +144013,14 @@
         "text": "Connections"
       }
     },
+    "ui:Connections form through deeds, work, guilds, and your lord’s court.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Connections form through deeds, work, guilds, and your lord’s court."
+      }
+    },
     "ui:Conquered Without Right": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -143627,6 +144323,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Courtship"
+      }
+    },
+    "ui:Courtship and marriage deeds live in the Deeds tab, under Life & Family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Courtship and marriage deeds live in the Deeds tab, under Life & Family."
       }
     },
     "ui:Craft": {
@@ -145231,6 +145935,14 @@
         "text": "Events pause the days until you choose an answer."
       }
     },
+    "ui:Every county of the known world, up close: its settlement, its holder, and its development.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Every county of the known world, up close: its settlement, its holder, and its development."
+      }
+    },
     "ui:Every eligible worker is locked to another enterprise.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -145389,6 +146101,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Family"
+      }
+    },
+    "ui:Family & legacy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Family & legacy"
       }
     },
     "ui:Family armory": {
@@ -145615,7 +146335,7 @@
     "ui:First steps": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/main.js",
       "source": {
         "text": "First steps"
       }
@@ -145911,6 +146631,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Good first actions"
+      }
+    },
+    "ui:Good to know": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Good to know"
       }
     },
     "ui:Govern institutions, manage great vassals, defend the crown, and secure succession.": {
@@ -147336,6 +148064,14 @@
         "text": "Known tie"
       }
     },
+    "ui:Land is bought plot by plot within a settlement — a cluster of plots makes a manor.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Land is bought plot by plot within a settlement — a cluster of plots makes a manor."
+      }
+    },
     "ui:Language": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147829,6 +148565,14 @@
         "text": "Makes {standard}: {level} available."
       }
     },
+    "ui:Making a living": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Making a living"
+      }
+    },
     "ui:Manage assistant…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -148111,6 +148855,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "May keep, reverse, or withdraw the current direction."
+      }
+    },
+    "ui:Meet your household in the Kin tab": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Meet your household in the Kin tab"
       }
     },
     "ui:Member houses": {
@@ -150058,6 +150810,14 @@
         "text": "On success: {result}"
       }
     },
+    "ui:Once you hold land, your own counties are managed from this tab.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Once you hold land, your own counties are managed from this tab."
+      }
+    },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -150988,6 +151748,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Personal attention"
+      }
+    },
+    "ui:Personal attention improves one chosen relationship a little each day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Personal attention improves one chosen relationship a little each day."
       }
     },
     "ui:Personal character…": {
@@ -152921,6 +153689,14 @@
         "text": "Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service."
       }
     },
+    "ui:Retainers serve the household for seasonal pay once you can keep them.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Retainers serve the household for seasonal pay once you can keep them."
+      }
+    },
     "ui:Retire and continue as {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -154510,6 +155286,14 @@
         "text": "Start a life to see the next threshold for the current county."
       }
     },
+    "ui:Start an enterprise": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Start an enterprise"
+      }
+    },
     "ui:Start or load a game before using this shortcut.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154756,12 +155540,28 @@
         "text": "Take this vow"
       }
     },
+    "ui:Take up a livelihood": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Take up a livelihood"
+      }
+    },
     "ui:Take your seat in the settlement council or decide a final territorial grant.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "Take your seat in the settlement council or decide a final territorial grant."
+      }
+    },
+    "ui:Tap a child to set their education focus and schooling.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Tap a child to set their education focus and schooling."
       }
     },
     "ui:Tap a marked county or choose it from the list. Routes use settled counties and authored straits.": {
@@ -154778,6 +155578,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Tap a person for their sheet — and your dealings with them."
+      }
+    },
+    "ui:Tap a province on the map to inspect it here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Tap a province on the map to inspect it here."
       }
     },
     "ui:Tap the 🚩 on the map to give march orders.": {
@@ -155129,6 +155937,30 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block."
+      }
+    },
+    "ui:The Kin tab": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Kin tab"
+      }
+    },
+    "ui:The Land tab": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Land tab"
+      }
+    },
+    "ui:The Network tab": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Network tab"
       }
     },
     "ui:The Papacy cannot be restored from this world state.": {
@@ -155740,6 +156572,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "The people and institutions tied to this household, and what each tie currently does."
+      }
+    },
+    "ui:The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does."
       }
     },
     "ui:The petitioner must first make peace.": {
@@ -157507,12 +158347,28 @@
         "text": "Weaving: {power}/{needed} — patience, whispers, ink."
       }
     },
+    "ui:Wed a spouse": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Wed a spouse"
+      }
+    },
     "ui:Weight-denominated contract; price movement does not change the amount due.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Weight-denominated contract; price movement does not change the amount due."
+      }
+    },
+    "ui:Welcome a child": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Welcome a child"
       }
     },
     "ui:Well-made": {
@@ -157674,6 +158530,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount."
+      }
+    },
+    "ui:Without an heir, the story ends with this life.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Without an heir, the story ends with this life."
       }
     },
     "ui:Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor.": {
@@ -158418,6 +159282,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your household"
+      }
+    },
+    "ui:Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends."
       }
     },
     "ui:Your household is personally free and can accumulate durable property and local influence.": {
@@ -164237,6 +165109,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "⭐ Prestige each season"
+      }
+    },
+    "ui:🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty."
+      }
+    },
+    "ui:🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here."
       }
     },
     "ui:🌱 fertility {percent}%": {

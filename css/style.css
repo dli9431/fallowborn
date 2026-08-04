@@ -2239,3 +2239,9 @@ body.observing #sidetabs .tab[data-tab="network"] { display: none; }
    scoped to .observing so leaving the mode neutralizes it on its own */
 body.observing.obshidepanel #side { flex: 0 0 auto; background: none; border: none; }
 body.observing.obshidepanel #sidetabs, body.observing.obshidepanel #sidebody { display: none; }
+
+/* tutorial tab nudges: a gold dot on the tab holding the next beginner
+   lesson; pure decoration, toggled from updateTabNudges (ui_panels.js) */
+.tab.nudge { position: relative; }
+.tab.nudge::after { content: ''; position: absolute; top: 3px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%; background: #e0c060; }

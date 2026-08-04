@@ -403,21 +403,42 @@ above the category accordions; the accordions split and count only deeds by cate
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Hide beginner hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the
-whole beginner-guidance layer: the path note, the First-steps checklist, and the
-contextual one-line hints below.
+whole beginner-guidance layer: the path note, the tutorial checklist, the scripted
+tutorial chain, tab nudges, panel intro sheets, empty-state guidance lines, stat
+teaching lines, and the contextual one-line hints below.
 
 New lives created from this version on carry `player.flags.tutorial` and a
-`startGold` baseline, which put a dismissible **First steps** checklist at the top of
-the Deeds panel: set a daily focus, let the days flow, complete a deed, answer an
-event, and earn your first coin. Step state comes from `FB.tutorialStatus` (live
-state plus one-time flags written at each action's single choke point: `G.setPaused`,
-`FB.runInstant`, the event-option handler). `FB.tutorialCheck` runs from the
-coalesced `UI.refresh` before the repaint, so a completed checklist disappears in
-that same frame. Completion detection uses only state reads and no RNG; it toasts
-each completion once
-(`tut_seen_*` flags survive a hints-off phase), and retires the checklist with a
-chronicle line when all five are done. Dismiss deletes the flag per save; old saves
-without the flag never see the card.
+`startGold` baseline, which put a dismissible tutorial checklist at the top of the
+Deeds panel. The checklist is staged in tracks (`TUTORIAL_TRACKS` in `js/main.js`),
+and the first eligible unfinished track shows: **First steps** (set a daily focus,
+let the days flow, complete a deed, answer an event, earn your first coin),
+**Making a living** (tier 0–2 only: take up a livelihood, start an enterprise, buy
+a land plot), and **Family & legacy** (open the Kin tab, wed a spouse, welcome a
+child). Step state comes from `FB.tutorialStatus` (live state plus one-time flags
+written at each action's single choke point: `G.setPaused`, `FB.runInstant`, the
+event-option handler, `setTab`). `FB.tutorialCheck` runs from the coalesced
+`UI.refresh` before the repaint, so a finished track disappears in that same frame.
+Completion detection uses only state reads and no RNG; it toasts each completion
+once (`tut_seen_*` flags survive a hints-off phase), marks each finished track
+(`tut_track_*`) with a chronicle line, and retires the tutorial when every eligible
+track is done. Dismiss deletes the flag per save; old saves without the flag never
+see the card.
+
+Track progress also advances a scripted **tutorial event chain**
+(`data/events_tutorial.js`): a neighbor’s welcome queues a couple of days into the
+life, and one chapter queues as each later track completes. The chain is ordinary
+declarative event data — `trigger:{never:true}`, `once:true`, queued via
+`FB.queueEvent` — with small all-positive options so autoresolve stays sane.
+
+Around the checklist, the rest of the beginner layer for a tutorial life
+(`FB.tutorialLife` — the checklist was offered, finished or not): tab **nudge
+dots** mark the tab holding the next unfinished lesson (Deeds until the first deed,
+Kin until the first look); each topbar stat’s breakdown carries one teaching line,
+served by the shared renderer to both the desktop hover tooltip and the mobile tap
+sheet; the Kin and Network panels add a guidance line when they would otherwise be
+empty; and the first time the Land, Network, or Kin tab opens, a small **panel
+intro sheet** (`player.panelIntrosSeen`, cloned from the role orientations) offers
+a summary, three pointers, and a Guide deep-link.
 
 Contextual hints (`UI.hintDue` / `UI.maybeHint` in `ui_misc.js`) deliver a single
 one-line lesson the first time its moment arrives — time controls on the first

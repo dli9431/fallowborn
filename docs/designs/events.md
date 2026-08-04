@@ -254,6 +254,14 @@ variants: the *amir’s* muster and a nod to the warrior-women of the old tales 
 the *chief’s* war-band and the shield-ring among the pagans (Christian/Jewish players get the
 `default` Frankish register).
 
+**The tutorial chain is code-queued teaching content.**
+`data/events_tutorial.js` holds three `trigger:{never:true}`, once-per-life chapters
+queued from `FB.tutorialCheck` (js/main.js): `tut_welcome` a couple of days into a
+tutorial life, `tut_livelihood` when the Making-a-living checklist track completes,
+and `tut_legacy` when the final track completes. Stage flags live in `player.flags`
+and die with the protagonist; dismissing the checklist stops further chapters.
+Options are small and all-positive so automation scores them sanely.
+
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for
 the childhood event filter, [time.md](time.md) for slot days and autoresolve.
 
