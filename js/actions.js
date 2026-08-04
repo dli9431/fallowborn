@@ -3886,7 +3886,8 @@ window.FB = window.FB || {};
       }
     }
     // keep a prudent reserve so upkeep and events never find an empty chest
-    if (best && state.player.gold >= best.cost + 25) FB.build(state, bestPid, bestIdx, best.id);
+    if (!best || state.player.gold < best.cost + 25) return false;
+    return FB.build(state, bestPid, bestIdx, best.id);
   };
 
   /* ================= demesne buildings =================

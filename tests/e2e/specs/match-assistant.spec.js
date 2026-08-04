@@ -311,11 +311,11 @@ test('reserved descendants stay manual and a sealed match returns to Household P
       return {
         protected:FB.isProtected(
           FB.state, 'matchCharacter', ids.childId),
-        betrothedId:child.betrothedId,
+        partnerId:child.spouseId || child.betrothedId || null,
         turn:FB.state.turn
       };
     }, family);
     expect(sealed.protected).toBe(false);
-    expect(sealed.betrothedId).toBe(family.peerId);
+    expect(sealed.partnerId).toBe(family.peerId);
     expect(sealed.turn).toBe(1);
   });

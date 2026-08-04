@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.109.0';
+  FB.VERSION = '1.109.1';
   FB.CHANGELOG = [
+    { v: '1.109.1', date: '2026-08-04', changes: [
+      'Governance vassal rows are more compact, and county autobuild now handles a fully reserved domain cleanly.'
+    ] },
     { v: '1.109.0', date: '2026-08-04', changes: [
       'Management screens now keep their place after nested actions, with reservations that protect land, people, items, and projects from automatic or batch choices. Governance also offers a reviewed domain-cleanup proposal when holdings exceed the limit.'
     ] },

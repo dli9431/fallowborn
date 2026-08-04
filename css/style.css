@@ -1363,7 +1363,7 @@ textarea.modjson, textarea.savetext {
   display: grid;
   grid-template-columns: minmax(150px, .85fr) minmax(390px, 2.25fr)
     minmax(190px, 1fr);
-  gap: 12px; align-items: start; margin: 0; padding: 10px 2px;
+  gap: 12px; align-items: start; margin: 0; padding: 6px 2px;
   border: 0; border-bottom: 1px solid #493c27;
   border-radius: 0; background: transparent;
 }

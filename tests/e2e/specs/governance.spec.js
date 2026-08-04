@@ -584,6 +584,11 @@ test('vassal Governance consolidates Deeds and returns through Estates without m
     })).toBe(before.save);
 
     await page.locator('#governance-close').click();
+    await page.evaluate(function () {
+      FB.state.player.panelIntrosSeen =
+        FB.state.player.panelIntrosSeen || {};
+      FB.state.player.panelIntrosSeen.network = 1;
+    });
     await page.locator('.tab[data-tab="network"]').click();
     await expect(page.locator('#network-governance')).toBeVisible();
     await expect(page.locator('#network-governance')).toContainText(
