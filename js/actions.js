@@ -86,6 +86,19 @@ window.FB = window.FB || {};
     return 1 + Math.min(2, FB.skillOf(me(state), 'lea') / 10) +
       (Number(specializationFx(state).focusResearch) || 0);
   }
+  function administrationStandingTarget(state) {
+    if (state.player.liege) {
+      return { kind:'realm', id:state.player.liege };
+    }
+    const localRealm = (state.holder &&
+      state.holder[state.player.provinceId]) ||
+      (state.owner && state.owner[state.player.provinceId]);
+    if (localRealm && localRealm !== 'player') {
+      return { kind:'realm', id:localRealm };
+    }
+    const lord = FB.getRole(state, 'lord', false);
+    return lord ? { kind:'character', id:lord.id } : null;
+  }
 
   /* ================= FOCUSES (daily) =================
      gain (optional): the focus's expected per-season gold/prestige/piety,
@@ -209,14 +222,9 @@ window.FB = window.FB || {};
       s.player.gold += administrationGold(s) / D;
       const standing = Number(specializationFx(s).focusStanding) || 0;
       if (standing) {
-        if (s.player.liege) {
-          FB.adjustStanding(s, { kind:'realm', id:s.player.liege },
-            standing / D, 'focus:keep_records');
-        } else {
-          const lord = FB.getRole(s, 'lord', false);
-          if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id },
-            standing / D, 'focus:keep_records');
-        }
+        const target = administrationStandingTarget(s);
+        if (target) FB.adjustStanding(s, target,
+          standing / D, 'focus:keep_records');
       }
       if (skillDch(0.35)) skillUp(s, FB.pick(['ste', 'lea']));
     },

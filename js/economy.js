@@ -3223,7 +3223,8 @@ window.FB = window.FB || {};
           career.rank === 'apprentice' || career.rank === 'unassigned') continue;
       const specialization = FB.careerSpecialization(state, c);
       let protection = specialization && specialization.fx &&
-        Number(specialization.fx.mortality);
+        specialization.fx.mortality !== undefined
+        ? Number(specialization.fx.mortality) : NaN;
       if (!isFinite(protection) || protection < 0) {
         protection = Number(FBDATA.balance.learnedPractitionerMortality);
       }

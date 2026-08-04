@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.0';
+  FB.VERSION = '1.110.1';
   FB.CHANGELOG = [
+    { v: '1.110.1', date: '2026-08-04', changes: [
+      'Practitioners now provide their intended household protection, and Bailiffs gain Standing with the local authority even without a direct liege.'
+    ] },
     { v: '1.110.0', date: '2026-08-04', changes: [
       'Literacy now opens Administration, Medicine, and Scholarship career trees with professional examinations, specialist work, and family treatises. Advanced Trade guild leadership also requires letters.'
     ] },

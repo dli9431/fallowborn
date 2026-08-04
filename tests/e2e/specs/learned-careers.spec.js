@@ -350,9 +350,13 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
       })[0];
       const administration = administrationFocus.gain(state);
       me.career.specialization = 'bailiff';
-      const localLord = state.player.liege ? null : FB.getRole(state, 'lord', false);
-      const liegeTarget = state.player.liege
-        ? { kind:'realm', id:state.player.liege }
+      const localRealm = state.player.liege ||
+        (state.holder && state.holder[state.player.provinceId]) ||
+        (state.owner && state.owner[state.player.provinceId]);
+      const localLord = !localRealm || localRealm === 'player'
+        ? FB.getRole(state, 'lord', false) : null;
+      const liegeTarget = localRealm && localRealm !== 'player'
+        ? { kind:'realm', id:localRealm }
         : localLord ? { kind:'character', id:localLord.id } : null;
       const liegeBefore = liegeTarget ? FB.standingOf(state, liegeTarget) : 0;
       const originalChance = FB.chance;
@@ -417,6 +421,7 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
       const craftOfficer = FB.guildAdvance(state, me);
       return {
         administration:administration,
+        bailiffTarget:liegeTarget,
         bailiffStanding:bailiffStanding,
         medicine:medicine,
         scholarship:scholarship,
@@ -430,6 +435,7 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
     });
 
     expect(result.administration.gold).toBeCloseTo(6.75, 8);
+    expect(result.bailiffTarget).toMatchObject({ kind:'realm' });
     expect(result.bailiffStanding).toBeCloseTo(2 / 90, 8);
     expect(result.medicine.gold).toBeCloseTo(19 / 3, 8);
     expect(result.scholarship).toEqual({ gold:3.5, prestige:1 });
