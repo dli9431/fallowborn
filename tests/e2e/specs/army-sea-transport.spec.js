@@ -607,6 +607,7 @@ test('technology and host UI explain sea effects with pointer and keyboard parit
     await startGame(page, testInfo);
 
     await page.evaluate(function () {
+      FB.state.player.tier = 3;
       FB.ui.showTechDetail('convoy_systems');
     });
     await expect(page.locator('#genmodal')).toContainText(

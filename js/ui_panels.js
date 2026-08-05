@@ -473,7 +473,7 @@ window.FB = window.FB || {};
         action:FB.T('Manage…')
       });
     }
-    if (s.player.tier >= 3) {
+    if (FB.techUiRelevant(s)) {
       h += ongoingCommitmentRow({
         id:'research',
         icon:'💡',
@@ -712,7 +712,7 @@ window.FB = window.FB || {};
           btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
         })(item.a.id);
         box.appendChild(btn);
-        if (!item.can && item.a.requiresTech &&
+        if (FB.techUiRelevant(s) && !item.can && item.a.requiresTech &&
             !FB.techRequirementMet(s, item.a.requiresTech)) {
           const techId = firstMissingTech(s, item.a.requiresTech);
           const techButton = document.createElement('button');
@@ -3618,7 +3618,7 @@ window.FB = window.FB || {};
         kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         kv('Settlement growth', esc(settlementDevelopmentText(s, pid))) +
         kv('Historical starting point', esc(bookmarkDevelopmentText(s, pid))) +
-        (realm ? kv('Technological development',
+        (realm && FB.techUiRelevant(s) ? kv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
         kv('Province levy', '~' + esc(menText(s,
           (s.dev[pid] || 1) * B.levyPerDev *

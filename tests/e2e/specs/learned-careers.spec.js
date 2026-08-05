@@ -173,8 +173,10 @@ test('Author qualification creates one preserved event-only family treatise',
       ['manuscript_codex', 'scriptoria'].forEach(function (id) {
         if (record.completed.indexOf(id) < 0) record.completed.push(id);
       });
+      state.player.tier = 3;
       FB.ui.showTechDetail('scriptoria');
       const technologySheet = document.getElementById('gm-body').textContent;
+      state.player.tier = 1;
       const originalChance = FB.chance;
       const originalPick = FB.pick;
       FB.chance = function () { return true; };

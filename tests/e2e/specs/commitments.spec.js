@@ -70,6 +70,61 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await page.getByRole('button', { name:'Close', exact:true }).click();
   });
 
+test('common households do not see ruler-only technology or automation controls',
+  async function ({ page }) {
+    const access = await page.evaluate(function () {
+      FB.game.auto.hosts = 'off';
+      FB.game.auto.build = true;
+      FB.game.auto.research = true;
+      FB.ui.refresh();
+      return FB.techUiRelevant(FB.state);
+    });
+    expect(access).toBe(false);
+    await waitForUiRefresh(page);
+    await expect(page.locator('#btn-auto')).not.toContainText('✓');
+
+    await page.locator('#sidetabs [data-tab="prov"]').click();
+    await expect(page.locator('#tab-prov')).not.toContainText(
+      'Technological development');
+
+    await page.locator('#btn-auto').click();
+    await expect(page.locator('input[name="ar-hosts"]')).toHaveCount(0);
+    await expect(page.locator('#ar-build')).toHaveCount(0);
+    await expect(page.locator('#ar-research')).toHaveCount(0);
+    await expect(page.locator('#ar-research-mode')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).not.toContainText(
+      'Only a sovereign player chooses national technology');
+    await page.locator('#ar-done').click();
+
+    await page.evaluate(function () {
+      FB.ui.showGuide({ closeToGame:true });
+    });
+    await expect(page.locator('#guide-category option[value="technology"]'))
+      .toHaveCount(0);
+    await expect(page.locator('[data-guide-entry="technology"]')).toHaveCount(0);
+    await expect(page.locator('[data-guide-entry^="tech-"]')).toHaveCount(0);
+    await page.locator('#guide-close').click();
+
+    const opened = await page.evaluate(function () {
+      return {
+        catalogue:FB.ui.showTech(),
+        detail:FB.ui.showTechDetail('horizontal_loom')
+      };
+    });
+    expect(opened).toEqual({ catalogue:false, detail:false });
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    await page.evaluate(function () {
+      FB.state.player.tier = 3;
+      FB.ui.showAutoResolve();
+    });
+    await expect(page.locator('input[name="ar-hosts"]')).toHaveCount(3);
+    await expect(page.locator('#ar-build')).toBeVisible();
+    await expect(page.locator('#ar-research')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).toContainText(
+      'Only a sovereign player chooses national technology');
+  });
+
 test('the commitments title collapses and restores its ledger',
   async function ({ page }, testInfo) {
     const summary = page.locator('#ongoing-commitments');

@@ -74,6 +74,21 @@ window.FB = window.FB || {};
       technologies:names.join(', ')
     });
   }
+  function automationAccess(s) {
+    const player = s && s.player;
+    const landed = !!(player && player.tier >= 3);
+    const activeHost = !!(s && FB.playerHost && FB.playerHost(s));
+    const greatHost = !!(s && FB.playerGreatHolyWarHostActive &&
+      FB.playerGreatHolyWarHostActive(s));
+    const technology = !!(s && (FB.techUiRelevant
+      ? FB.techUiRelevant(s) : landed));
+    return {
+      hosts:!!(player && (landed || player.war || activeHost || greatHost)),
+      build:landed,
+      technology:technology,
+      research:technology && FB.isPlayerSovereign(s)
+    };
+  }
   function settlementDevelopmentText(s, pid) {
     const status = FB.settlementDevelopment(s, pid);
     if (!status) return '';
@@ -2247,6 +2262,7 @@ window.FB = window.FB || {};
   /* ===== shared exports (bound by the later UI files) ===== */
   SH.$ = $;
   SH.allianceText = allianceText;
+  SH.automationAccess = automationAccess;
   SH.assetEffectSummary = assetEffectSummary;
   SH.assetMoneyCost = assetMoneyCost;
   SH.assetSeasonalMoneyCost = assetSeasonalMoneyCost;

@@ -1261,8 +1261,8 @@ window.FB = window.FB || {};
     },
     /* Only landed ranks can use the sheet: sovereigns direct national
        research, vassals advocate projects at court (FB.canAdvocateTech).
-       Commoners get a read-only catalog, so the deed stays hidden. */
-    show: function (s) { return s.player.tier >= 3; },
+       Commoners see named household gates, not the national catalogue. */
+    show: function (s) { return FB.techUiRelevant(s); },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast', label: '🍗 Hold a feast', cd: 180,
     desc: function (s) {

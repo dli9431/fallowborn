@@ -175,6 +175,14 @@ AI selection and vassal advocacy do not consult the player household preference.
 technology remains visible and manually selectable, and an explicit manual start clears its
 protection before the project is added to a slot.
 
+Dedicated technology UI follows `FB.techUiRelevant`: only tier-3+ landed rulers
+receive the catalogue, Land rating, Guide catalogue, commitment row, contextual
+detail links, or direct modal routes. This includes both sovereigns who choose
+projects and vassals who may advocate them. Common households still receive the
+exact technology name in a locked household requirement, since national knowledge
+continues to govern careers, education, standards, and enterprises even though the
+household has no research authority.
+
 AI sovereigns fill every slot and use saved RNG to choose from a weighted score. Exposure,
 affordability, historical currency, ruler traits, contextual military/economic needs,
 and useful unlocks raise that score; projects still at 4× or more receive a strong

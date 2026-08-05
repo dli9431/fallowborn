@@ -87629,6 +87629,16 @@
         "text": "Kursk"
       }
     },
+    "src.7af369d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Realm stewardship (once a season):"
+      }
+    },
     "src.7b032c18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124713,16 +124723,6 @@
         "text": "Maximum immediate gold expenditure"
       }
     },
-    "src.de5ad77f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Stewardship (tier 3+, once a season):"
-      }
-    },
     "src.de5b34b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154841,6 +154841,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Realm name"
+      }
+    },
+    "ui:Realm stewardship (once a season):": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Realm stewardship (once a season):"
       }
     },
     "ui:Realm tie": {

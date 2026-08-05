@@ -12,6 +12,7 @@ window.FB = window.FB || {};
   const ACTION_SHORTCUT_KEYS = SH.ACTION_SHORTCUT_KEYS;
   const actionShortcutStatus = SH.actionShortcutStatus;
   const allianceText = SH.allianceText;
+  const automationAccess = SH.automationAccess;
   const assetEffectSummary = SH.assetEffectSummary;
   const assetMoneyCost = SH.assetMoneyCost;
   const assetSeasonalMoneyCost = SH.assetSeasonalMoneyCost;
@@ -350,6 +351,7 @@ window.FB = window.FB || {};
   UI.showAutoResolve = function () {
     const a = FB.game.auto;
     const s = FB.state;
+    const access = automationAccess(s);
     function cb(id, checked, label, desc) {
       return '<label class="autorow"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '> ' +
         label + (desc ? '<span class="adesc">' + desc + '</span>' : '') + '</label>';
@@ -373,14 +375,19 @@ window.FB = window.FB || {};
     h += rb('safe', 'Prudent — avoid risk, prefer sure gains');
     h += rb('bold', 'Bold — chase the bigger prize');
     h += rb('first', 'First option — take the default');
-    h += '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T(
-      'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</p></div>';
-    h += hr('manual', 'Manually — you march the host yourself');
-    h += hr('def', 'Defensive — throw back invaders, then refit at home');
-    h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
-    h += '<div class="gm-body-text" style="margin-top:8px"><p>Stewardship (tier 3+, once a season):</p></div>';
-    h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
-    if (s && FB.isPlayerSovereign(s)) {
+    if (access.hosts) {
+      h += '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T(
+        'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</p></div>';
+      h += hr('manual', 'Manually — you march the host yourself');
+      h += hr('def', 'Defensive — throw back invaders, then refit at home');
+      h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
+    }
+    if (access.build) {
+      h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+        esc(FB.T('Realm stewardship (once a season):')) + '</p></div>';
+      h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
+    }
+    if (access.research) {
       h += cb('ar-research', a.research,
         esc(FB.T('Fill research slots automatically')),
         esc(FB.T('Open slots are filled immediately and whenever a project completes.')));
@@ -389,7 +396,7 @@ window.FB = window.FB || {};
         techAutomationOptions(a.researchMode) + '</select><span class="adesc">' +
         esc(FB.T('A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain.')) +
         '</span></label>';
-    } else if (s) {
+    } else if (access.technology) {
       h += '<div class="hint">' + esc(FB.T(
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
         '</div>';
@@ -401,7 +408,8 @@ window.FB = window.FB || {};
       a.major = $('ar-major').checked;
       a.war = $('ar-war').checked;
       a.all = $('ar-all').checked;
-      a.build = $('ar-build').checked;
+      const build = $('ar-build');
+      if (build) a.build = build.checked;
       const research = $('ar-research');
       if (research) a.research = research.checked;
       const researchMode = $('ar-research-mode');
@@ -10960,14 +10968,18 @@ window.FB = window.FB || {};
       };
       if (item.techLocked) {
         const techId = firstMissingTech(s, item.def.requiresTech);
-        h += '<button class="actionbtn tech-locked-link" data-enterprise-tech="' +
-          esc(techId) + '">' +
+        const canReviewTechnology = FB.techUiRelevant(s);
+        h += '<button class="actionbtn tech-locked-link"' +
+          (canReviewTechnology
+            ? ' data-enterprise-tech="' + esc(techId) + '"'
+            : ' disabled') + '>' +
           esc(FB.T('{icon} {name}', {
             icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name')
           })) + '<span class="adesc">' +
           esc(dt(s, 'enterprise', item.id, item.def, 'desc')) + ' ' +
-          esc(techRequirementText(s, item.def.requiresTech)) + ' ' +
-          esc(FB.T('Open the technology entry.')) +
+          esc(techRequirementText(s, item.def.requiresTech)) +
+          (canReviewTechnology
+            ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
           '</span></button>';
         continue;
       }
@@ -11629,6 +11641,7 @@ window.FB = window.FB || {};
 
   UI.showTech = function () {
     const s = FB.state;
+    if (!FB.techUiRelevant(s)) return false;
     const rid = FB.techRealmId(s);
     const realm = s.realms[rid];
     const record = FB.realmTechRecord(s, rid);
@@ -11766,7 +11779,7 @@ window.FB = window.FB || {};
 
   UI.showTechAutomation = function () {
     const s = FB.state;
-    if (!s || !FB.isPlayerSovereign(s)) return UI.showTech();
+    if (!s || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
     const auto = FB.game.auto;
     const current = auto.research ? techAutomationMode(auto.researchMode) : 'off';
     function choice(mode, label, desc) {
@@ -11810,6 +11823,7 @@ window.FB = window.FB || {};
 
   UI.showTechDetail = function (id) {
     const s = FB.state, def = FBDATA.tech[id];
+    if (!FB.techUiRelevant(s)) return false;
     if (!def) return UI.showTech();
     const rid = FB.techRealmId(s);
     const realm = s.realms[rid];
@@ -15424,14 +15438,14 @@ window.FB = window.FB || {};
         FB.T('Buildings that grant development identify the immediate amount when raised. National technologies can raise every county’s development ceiling in that nation above its base of 10.')
       ]), 'county village town city threshold growth bookmark historical buildings development ceiling');
 
-    add('technology', 'technology', FB.T('Technology and research'),
-      FB.T('Technology belongs to the sovereign nation and unlocks authored content.'),
-      guideBody([
-        FB.T('National research fills sovereign research slots. Knowledge follows sovereign allegiance, not the player’s dynasty or ownership of one county.'),
-        FB.T('Catalogue search includes technology names, descriptions, effects, prerequisite labels, and every authored unlock. Details distinguish prerequisites that require all listed technologies from those that accept any one.'),
-        FB.T('Locked enterprises and deeds link back to their prerequisite technology.')
-      ]), 'research national tech unlock prerequisite all any press house lever oil');
-    if (s) {
+    if (s && FB.techUiRelevant(s)) {
+      add('technology', 'technology', FB.T('Technology and research'),
+        FB.T('Technology belongs to the sovereign nation and unlocks authored content.'),
+        guideBody([
+          FB.T('National research fills sovereign research slots. Knowledge follows sovereign allegiance, not the player’s dynasty or ownership of one county.'),
+          FB.T('Catalogue search includes technology names, descriptions, effects, prerequisite labels, and every authored unlock. Details distinguish prerequisites that require all listed technologies from those that accept any one.'),
+          FB.T('Locked enterprises and deeds link back to their prerequisite technology.')
+        ]), 'research national tech unlock prerequisite all any press house lever oil');
       for (const id in (FBDATA.tech || {})) {
         const def = FBDATA.tech[id];
         const unlocks = techGameplayUnlocks(s, id, def);
@@ -15502,7 +15516,11 @@ window.FB = window.FB || {};
     if (options.category) guideView.category = options.category;
     if (options.query !== undefined) guideView.query = options.query;
     const entries = guideEntries(s);
+    const guideCategories = GUIDE_CATEGORIES.filter(function (category) {
+      return category !== 'technology' || (s && FB.techUiRelevant(s));
+    });
     let activeCategory = guideView.category;
+    if (guideCategories.indexOf(activeCategory) < 0) activeCategory = 'all';
     let activeQuery = guideView.query;
     guideView.entry = '';
     if (options.entry) {
@@ -15522,7 +15540,7 @@ window.FB = window.FB || {};
       esc(FB.T('Topic, alias, unlock, or term')) + '"></label>' +
       '<label><span>' + esc(FB.T('Category')) +
       '</span><select id="guide-category">';
-    for (const category of GUIDE_CATEGORIES) {
+    for (const category of guideCategories) {
       h += '<option value="' + esc(category) + '"' +
         (activeCategory === category ? ' selected' : '') + '>' +
         esc(guideCategoryName(category)) + '</option>';

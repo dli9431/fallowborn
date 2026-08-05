@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.2';
+  FB.VERSION = '1.110.3';
   FB.CHANGELOG = [
+    { v: '1.110.3', date: '2026-08-05', changes: [
+      'Technology and realm automation controls now appear only for roles that can use them, while locked household choices still name their national prerequisite.'
+    ] },
     { v: '1.110.2', date: '2026-08-05', changes: [
       'Defaults now show their path to distraint, can be settled directly, and end in station-specific manor forfeiture, serfdom, or labor service.'
     ] },

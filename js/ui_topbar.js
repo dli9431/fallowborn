@@ -9,6 +9,7 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  const automationAccess = SH.automationAccess;
   const esc = SH.esc;
   const renderActiveTab = SH.renderActiveTab;
 
@@ -139,9 +140,13 @@ window.FB = window.FB || {};
     const kh = FB.isTouch ? '' : '<span class="keyhint">Space</span> ';
     $('btn-endturn').innerHTML = kh + '<span class="pp">' +
       esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
+    const autoAccess = automationAccess(s);
     $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Z</span> ') + '⚙' +
       (FB.game.auto && (FB.game.auto.minor || FB.game.auto.major || FB.game.auto.war || FB.game.auto.all ||
-        (FB.game.auto.hosts && FB.game.auto.hosts !== 'manual')) ? '✓' : '');
+        (autoAccess.hosts && FB.game.auto.hosts &&
+          FB.game.auto.hosts !== 'manual') ||
+        (autoAccess.build && FB.game.auto.build) ||
+        (autoAccess.research && FB.game.auto.research)) ? '✓' : '');
     renderActiveTab();
   }
 

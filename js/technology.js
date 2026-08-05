@@ -1256,6 +1256,14 @@ window.FB = window.FB || {};
     return FB.standingOf(state, { kind:'realm', id:p.liege }) >= 40;
   };
 
+  /* The national catalogue is an authority surface, not a general-purpose
+     encyclopedia. Landed rulers either choose sovereign research or may
+     advocate at court; common households only need the concrete prerequisite
+     named where national knowledge gates one of their own choices. */
+  FB.techUiRelevant = function (state) {
+    return !!(state && state.player && state.player.tier >= 3);
+  };
+
   FB.advocateTech = function (state, id) {
     if (!FB.canAdvocateTech(state, id)) return false;
     var rid = FB.techRealmId(state), record = FB.realmTechRecord(state, rid);

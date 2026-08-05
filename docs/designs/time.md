@@ -109,6 +109,13 @@ without consuming RNG. A preferred domain falls back to the cheapest eligible te
 elsewhere when necessary. The enabled state and priority live in the existing
 `fb_automation` localStorage preference. Vassals cannot choose or automate their
 sovereign's projects, though eligible vassals can advocate one project annually.
+The Automation sheet filters these persistent preferences through the current
+role: host commands appear for landed rulers or a protagonist with an actual
+war/host commitment, auto-building appears only at landed rank, and research
+controls appear only for a sovereign ruler. A landed vassal sees only the
+explanation that the sovereign directs research. Hidden settings remain saved
+for a later eligible life but do not light the Automation checkmark while they
+are inaccessible.
 Event-data `cooldown` stays in
 seasons — the engine multiplies by 90.
 

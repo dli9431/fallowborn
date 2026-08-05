@@ -544,7 +544,13 @@ tier-scaled fee, tax, enterprise, duration, and Common Voice terms, then repeats
 in a confirmation sheet before spending the day.
 Rank & Realm keeps the no-day-cost **Technology…** deed at landed rank and above; commoners
 have no research controls (sovereigns direct projects, vassals may advocate
-them), so the deed stays hidden below tier 3. Its
+them), so the deed stays hidden below tier 3. `FB.techUiRelevant` is the shared
+eligibility rule for every dedicated technology route: below tier 3 the
+commitment row, deed, Land rating, Guide category and generated entries,
+contextual detail links, and modal entry points are absent. A common household
+still sees the exact named national prerequisite where it gates one of its
+careers, standards, schools, or enterprises, because that text explains the
+household choice without presenting an authority surface it cannot use. Its
 mobile-safe full sheet names the effective sovereign nation and traditions, seasonal
 rate, reserve, occupied slots, and active projects. The catalogue supports domain,
 status, and text filters; Active/Available/Exposed/Completed/All views; and stable domain
@@ -572,7 +578,8 @@ remain usable by keyboard, touch, and `file://`. Expanding an entry reveals its 
 guidance in place without replacing the search and result screen. Entries cover basics,
 skills, resources,
 roles, careers, family and inheritance scope, settlements, technology, travel, and
-war and government. Search indexes titles, aliases, key terms, and generated technology
+war and government. The Technology category and its generated catalogue appear only
+while the current protagonist is a landed ruler. Search indexes titles, aliases, key terms, and generated technology
 effects/unlocks. Career and technology entries read live definitions; current
 resource and settlement entries read live state. Self/character skills, Work,
 Technology, settlement, travel, inheritance, Governance, and the conquest picker

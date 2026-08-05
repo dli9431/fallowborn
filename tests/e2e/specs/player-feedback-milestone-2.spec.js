@@ -11,10 +11,11 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('technology search discovers authored unlocks and locked enterprises link back',
+test('technology search discovers unlocks and locked links follow role access',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
+      s.player.tier = 3;
       const record = FB.realmTechRecord(s, FB.techRealmId(s));
       record.completed = record.completed.filter(function (id) {
         return id !== 'horizontal_loom';
@@ -46,6 +47,19 @@ test('technology search discovers authored unlocks and locked enterprises link b
     await lockedWorkshop.click();
     await expect(page.getByRole('heading', { name:/Horizontal Loom/ }))
       .toBeVisible();
+
+    await page.evaluate(function () {
+      FB.state.player.tier = 1;
+      FB.ui.showEnterpriseMarket(0);
+    });
+    const commonWorkshop = page.locator('.tech-locked-link', {
+      hasText:'Workshop'
+    });
+    await expect(commonWorkshop).toBeDisabled();
+    await expect(commonWorkshop).toContainText('Requires Horizontal Loom');
+    await expect(commonWorkshop).not.toContainText('Open the technology entry');
+    await expect(page.locator('[data-enterprise-tech="horizontal_loom"]'))
+      .toHaveCount(0);
   });
 
 test('the role orientation is a focused sheet with a Guide deep link',
@@ -117,8 +131,19 @@ test('the role orientation is a focused sheet with a Guide deep link',
 
     await page.locator('#guide-search').fill('Workshop');
     const technology = page.locator('[data-guide-entry="tech-horizontal_loom"]');
-    await expect(technology).toBeVisible();
-    await expect(technology).toContainText('Horizontal Loom');
+    await expect(technology).toHaveCount(0);
+    await expect(page.locator('#guide-category option[value="technology"]'))
+      .toHaveCount(0);
+
+    await page.evaluate(function () {
+      FB.state.player.tier = 3;
+      FB.ui.showGuide();
+    });
+    await page.locator('#guide-search').fill('Workshop');
+    const landedTechnology = page.locator(
+      '[data-guide-entry="tech-horizontal_loom"]');
+    await expect(landedTechnology).toBeVisible();
+    await expect(landedTechnology).toContainText('Horizontal Loom');
   });
 
 test('succession and child identity explanations use the live family rules',
